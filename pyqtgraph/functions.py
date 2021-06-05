@@ -1423,10 +1423,6 @@ def ndarray_to_qimage(arr, fmt):
     h, w = arr.shape[:2]
     bytesPerLine = arr.strides[0]
     qimg = QtGui.QImage(img_ptr, w, h, bytesPerLine, fmt)
-
-    # Note that the bindings that support ndarray directly already hold a reference
-    # to it. The manual reference below is only needed for those bindings that take
-    # in a raw pointer.
     qimg.data = arr
     return qimg
 
@@ -1511,17 +1507,10 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     return ndarray_to_qimage(imgData, imgFormat)
 
 
-def imageToArray(img, copy=False, transpose=True):
-    """
-    Convert a QImage into numpy array. The image must have format RGB32, ARGB32, or ARGB32_Premultiplied.
-    By default, the image is not copied; changes made to the array will appear in the QImage as well (beware: if 
-    the QImage is collected before the array, there may be trouble).
-    The array will have shape (width, height, (b,g,r,a)).
-    """
-    fmt = img.format()
-    img_ptr = img.bits()
+def qimage_to_ndarray(qimg):
+    img_ptr = qimg.bits()
 
-    if QT_LIB.startswith('PyQt'):
+    if hasattr(img_ptr, 'setsize'): # PyQt sip.voidptr
         # sizeInBytes() was introduced in Qt 5.10
         # however PyQt5 5.12 will fail with:
         #   "TypeError: QImage.sizeInBytes() is a private method"
@@ -1529,14 +1518,37 @@ def imageToArray(img, copy=False, transpose=True):
         #   PyQt5 5.15, PySide2 5.12, PySide2 5.15
         try:
             # 64-bits size
-            nbytes = img.sizeInBytes()
+            nbytes = qimg.sizeInBytes()
         except (TypeError, AttributeError):
             # 32-bits size
-            nbytes = img.byteCount()
+            nbytes = qimg.byteCount()
         img_ptr.setsize(nbytes)
 
-    arr = np.frombuffer(img_ptr, dtype=np.ubyte)
-    arr = arr.reshape(img.height(), img.width(), 4)
+    depth = qimg.depth()
+    if depth in (8, 24, 32):
+        dtype = np.uint8
+        nchan = depth // 8
+    elif depth in (16, 64):
+        dtype = np.uint16
+        nchan = depth // 16
+    else:
+        raise ValueError("Unsupported Image Type")
+    shape = qimg.height(), qimg.width()
+    if nchan != 1:
+        shape = shape + (nchan,)
+    return np.frombuffer(img_ptr, dtype=dtype).reshape(shape)
+
+
+def imageToArray(img, copy=False, transpose=True):
+    """
+    Convert a QImage into numpy array. The image must have format RGB32, ARGB32, or ARGB32_Premultiplied.
+    By default, the image is not copied; changes made to the array will appear in the QImage as well (beware: if
+    the QImage is collected before the array, there may be trouble).
+    The array will have shape (width, height, (b,g,r,a)).
+    """
+    arr = qimage_to_ndarray(img)
+
+    fmt = img.format()
     if fmt == img.Format_RGB32:
         arr[...,3] = 255
     
@@ -1678,69 +1690,92 @@ def downsample(data, n, axis=0, xvals='subsample'):
         return MetaArray(d2, info=info)
 
 
-def arrayToQPath(x, y, connect='all'):
-    """Convert an array of x,y coordinats to QPainterPath as efficiently as possible.
-    The *connect* argument may be 'all', indicating that each point should be
-    connected to the next; 'pairs', indicating that each pair of points
-    should be connected, or an array of int32 values (0 or 1) indicating
+def arrayToQPath(x, y, connect='all', finiteCheck=True):
+    """
+    Convert an array of x,y coordinates to QPainterPath as efficiently as
+    possible. The *connect* argument may be 'all', indicating that each point
+    should be connected to the next; 'pairs', indicating that each pair of
+    points should be connected, or an array of int32 values (0 or 1) indicating
     connections.
+    
+    Parameters
+    ----------
+    x : (N,) ndarray
+        x-values to be plotted
+    y : (N,) ndarray
+        y-values to be plotted, must be same length as `x`
+    connect : {'all', 'pairs', 'finite', (N,) ndarray}, optional
+        Argument detailing how to connect the points in the path. `all` will 
+        have sequential points being connected.  `pairs` generates lines
+        between every other point.  `finite` only connects points that are
+        finite.  If an ndarray is passed, containing int32 values of 0 or 1,
+        only values with 1 will connect to the previous point.  Def
+    finiteCheck : bool, default Ture
+        When false, the check for finite values will be skipped, which can
+        improve performance. If finite values are present in `x` or `y`,
+        an empty QPainterPath will be generated.
+    
+    Returns
+    -------
+    QPainterPath
+        QPainterPath object to be drawn
+    
+    Raises
+    ------
+    ValueError
+        Raised when the connect argument has an invalid value placed within.
+
+    Notes
+    -----
+    A QPainterPath is generated through one of two ways.  When the connect
+    parameter is 'all', a QPolygonF object is created, and
+    ``QPainterPath.addPolygon()`` is called.  For other connect parameters
+    a ``QDataStream`` object is created and the QDataStream >> QPainterPath
+    operator is used to pass the data.  The memory format is as follows
+
+    numVerts(i4)
+    0(i4)   x(f8)   y(f8)    <-- 0 means this vertex does not connect
+    1(i4)   x(f8)   y(f8)    <-- 1 means this vertex connects to the previous vertex
+    ...
+    cStart(i4)   fillRule(i4)
+    
+    see: https://github.com/qt/qtbase/blob/dev/src/gui/painting/qpainterpath.cpp
+
+    All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
+    This binary format may change in future versions of Qt
     """
 
-    ## Create all vertices in path. The method used below creates a binary format so that all
-    ## vertices can be read in at once. This binary format may change in future versions of Qt,
-    ## so the original (slower) method is left here for emergencies:
-        #path.moveTo(x[0], y[0])
-        #if connect == 'all':
-            #for i in range(1, y.shape[0]):
-                #path.lineTo(x[i], y[i])
-        #elif connect == 'pairs':
-            #for i in range(1, y.shape[0]):
-                #if i%2 == 0:
-                    #path.lineTo(x[i], y[i])
-                #else:
-                    #path.moveTo(x[i], y[i])
-        #elif isinstance(connect, np.ndarray):
-            #for i in range(1, y.shape[0]):
-                #if connect[i] == 1:
-                    #path.lineTo(x[i], y[i])
-                #else:
-                    #path.moveTo(x[i], y[i])
-        #else:
-            #raise Exception('connect argument must be "all", "pairs", or array')
-
-    ## Speed this up using >> operator
-    ## Format is:
-    ##    numVerts(i4)
-    ##    0(i4)   x(f8)   y(f8)    <-- 0 means this vertex does not connect
-    ##    1(i4)   x(f8)   y(f8)    <-- 1 means this vertex connects to the previous vertex
-    ##    ...
-    ##    cStart(i4)   fillRule(i4)
-    ##
-    ## see: https://github.com/qt/qtbase/blob/dev/src/gui/painting/qpainterpath.cpp
-
-    ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
-
     path = QtGui.QPainterPath()
-
     n = x.shape[0]
 
-    # create empty array, pad with extra space on either end
-    arr = np.empty(n+2, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')])
+    connect_array = None
+    if isinstance(connect, np.ndarray):
+        # make connect argument contain only str type
+        connect_array, connect = connect, 'array'
 
-    # write first two integers
-    byteview = arr.view(dtype=np.ubyte)
-    byteview[:16] = 0
-    byteview.data[16:20] = struct.pack('>i', n)
+    use_qpolygonf = connect == 'all'
+
+    if use_qpolygonf:
+        backstore = create_qpolygonf(n)
+        arr = np.frombuffer(ndarray_from_qpolygonf(backstore), dtype=[('x', 'f8'), ('y', 'f8')])
+    else:
+        backstore = bytearray(4 + n*20 + 8)
+        arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
+            count=n, offset=4)
+        struct.pack_into('>i', backstore, 0, n)
+        # cStart, fillRule (Qt.OddEvenFill)
+        struct.pack_into('>ii', backstore, 4+n*20, 0, 0)
 
     # Fill array with vertex values
-    arr[1:-1]['x'] = x
-    arr[1:-1]['y'] = y
+    arr['x'] = x
+    arr['y'] = y
 
-    # inf/nans completely prevent the plot from being displayed starting on 
-    # Qt version 5.12.3; these must now be manually cleaned out.
+    # the presence of inf/nans result in an empty QPainterPath being generated
+    # this behavior started in Qt 5.12.3 and was introduced in this commit
+    # https://github.com/qt/qtbase/commit/c04bd30de072793faee5166cff866a4c4e0a9dd7
+    # We therefore replace non-finite values 
     isfinite = None
-    qtver = [int(x) for x in QtVersion.split('.')]
-    if qtver >= [5, 12, 3]:
+    if finiteCheck:
         isfinite = np.isfinite(x) & np.isfinite(y)
         if not np.all(isfinite):
             # credit: Divakar https://stackoverflow.com/a/41191127/643629
@@ -1752,50 +1787,102 @@ def arrayToQPath(x, y, connect='all'):
             if first < len(x):
                 # Replace all non-finite entries from beginning of arr with the first finite one
                 idx[:first] = first
-                arr[1:-1] = arr[1:-1][idx]
+                arr[:] = arr[:][idx]
 
     # decide which points are connected by lines
-    if eq(connect, 'all'):
-        arr[1:-1]['c'] = 1
-    elif eq(connect, 'pairs'):
-        arr[1:-1]['c'][::2] = 0
-        arr[1:-1]['c'][1::2] = 1  # connect every 2nd point to every 1st one
-    elif eq(connect, 'finite'):
+    if connect == 'all':
+        path.addPolygon(backstore)
+        return path
+    elif connect == 'pairs':
+        arr['c'][::2] = 0
+        arr['c'][1::2] = 1  # connect every 2nd point to every 1st one
+    elif connect == 'finite':
         # Let's call a point with either x or y being nan is an invalid point.
         # A point will anyway not connect to an invalid point regardless of the
         # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
         # the next point of an invalid point.
         if isfinite is None:
             isfinite = np.isfinite(x) & np.isfinite(y)
-        arr[2:]['c'] = isfinite
-    elif isinstance(connect, np.ndarray):
-        arr[2:-1]['c'] = connect[:-1]
+        arr[1:]['c'] = isfinite[:-1]
+    elif connect == 'array':
+        arr[1:]['c'] = connect_array[:-1]
     else:
-        raise Exception('connect argument must be "all", "pairs", "finite", or array')
+        raise ValueError('connect argument must be "all", "pairs", "finite", or array')
 
-    arr[1]['c'] = 0  # the first vertex has no previous vertex to connect
+    arr[0]['c'] = 0  # the first vertex has no previous vertex to connect
 
-    byteview.data[-20:-16] = struct.pack('>i', 0)  # cStart
-    byteview.data[-16:-12] = struct.pack('>i', 0)  # fillRule (Qt.OddEvenFill)
-
-    # create datastream object and stream into path
-
-    ## Avoiding this method because QByteArray(str) leaks memory in PySide
-    #buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
-
-    path.strn = byteview.data[16:-12]  # make sure data doesn't run away
-    try:
-        buf = QtCore.QByteArray.fromRawData(path.strn)
-    except TypeError:
-        buf = QtCore.QByteArray(bytes(path.strn))
-    except AttributeError:
-        # PyQt6 raises AttributeError
-        buf = QtCore.QByteArray(path.strn, path.strn.nbytes)
-
+    # create QDataStream object and stream into QPainterPath
+    path.strn = backstore
+    if QT_LIB == "PyQt6" and QtCore.PYQT_VERSION < 0x60101:
+        # due to issue detailed here:
+        # https://www.riverbankcomputing.com/pipermail/pyqt/2021-May/043942.html
+        buf = QtCore.QByteArray(path.strn, len(path.strn))
+    else:
+        buf = QtCore.QByteArray(path.strn)
     ds = QtCore.QDataStream(buf)
     ds >> path
-
     return path
+
+def ndarray_from_qpolygonf(polyline):
+    nbytes = 2 * len(polyline) * 8
+    if QT_LIB == "PySide2":
+        buffer = Qt.shiboken2.VoidPtr(polyline.data(), nbytes, True)
+    elif QT_LIB == "PySide6":
+        buffer = Qt.shiboken6.VoidPtr(polyline.data(), nbytes, True)
+    else:
+        buffer = polyline.data()
+        buffer.setsize(nbytes)
+    memory = np.frombuffer(buffer, np.double).reshape((-1, 2))
+    return memory
+
+def create_qpolygonf(size):
+    if QtVersion.startswith("5"):
+        polyline = QtGui.QPolygonF(size)
+    else:
+        polyline = QtGui.QPolygonF()
+        if QT_LIB == "PySide6":
+            polyline.resize(size)
+        else:
+            polyline.fill(QtCore.QPointF(), size)
+    return polyline
+
+def arrayToQPolygonF(x, y):
+    """
+    Utility function to convert two 1D-NumPy arrays representing curve data
+    (X-axis, Y-axis data) into a single open polygon (QtGui.PolygonF) object.
+    
+    Thanks to PythonQwt for making this code available
+    
+    License/copyright: MIT License © Pierre Raybaut 2020.
+
+    Parameters
+    ----------
+    x : np.array
+        x-axis coordinates for data to be plotted, must have have ndim of 1
+    y : np.array
+        y-axis coordinates for data to be plotted, must have ndim of 1 and 
+        be the same length as x
+    
+    Returns
+    -------
+    QPolygonF
+        Open QPolygonF object that represents the path looking to be plotted
+    
+    Raises
+    ------
+    ValueError
+        When xdata or ydata does not meet the required criteria
+    """
+    if not (
+        x.size == y.size == x.shape[0] == y.shape[0]
+    ):
+        raise ValueError("Arguments must be 1D and the same size")
+    size = x.size
+    polyline = create_qpolygonf(size)
+    memory = ndarray_from_qpolygonf(polyline)
+    memory[:, 0] = x
+    memory[:, 1] = y
+    return polyline
 
 #def isosurface(data, level):
     #"""

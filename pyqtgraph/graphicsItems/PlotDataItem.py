@@ -140,6 +140,11 @@ class PlotDataItem(GraphicsObject):
                               at any time.
             dynamicRangeLimit (float or None) Limit off-screen positions of data points at large
                               magnification to avoids display errors. Disabled if None.
+            skipFiniteCheck   (bool) Optimization parameter that can speed up plot time by
+                              telling the painter to not check and compensate for NaN
+                              values.  If set to True, and NaN values exist, the data
+                              may not be displayed or your plot will take a
+                              significant performance hit.  Defaults to False.
             identical         *deprecated*
             ================= =====================================================================
 
@@ -210,7 +215,7 @@ class PlotDataItem(GraphicsObject):
             'clipToView': False,
             'dynamicRangeLimit': 1e6,
             'dynamicRangeHyst': 3.0,
-
+            'skipFiniteCheck': False,
             'data': None,
         }
         self.setCurveClickable(kargs.get('clickable', False))
@@ -605,11 +610,29 @@ class PlotDataItem(GraphicsObject):
         scatterArgs = {}
 
         if styleUpdate: # repeat style arguments only when changed
-            for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillOutline', 'fillOutline'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
+            for k, v in [
+                ('pen','pen'),
+                ('shadowPen','shadowPen'),
+                ('fillLevel','fillLevel'),
+                ('fillOutline', 'fillOutline'),
+                ('fillBrush', 'brush'),
+                ('antialias', 'antialias'),
+                ('connect', 'connect'),
+                ('stepMode', 'stepMode'),
+                ('skipFiniteCheck', 'skipFiniteCheck')
+            ]:
                 if k in self.opts:
                     curveArgs[v] = self.opts[k]
 
-            for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol'), ('symbolSize', 'size'), ('data', 'data'), ('pxMode', 'pxMode'), ('antialias', 'antialias')]:
+            for k, v in [
+                ('symbolPen','pen'),
+                ('symbolBrush','brush'),
+                ('symbol','symbol'),
+                ('symbolSize', 'size'),
+                ('data', 'data'),
+                ('pxMode', 'pxMode'),
+                ('antialias', 'antialias')
+            ]:
                 if k in self.opts:
                     scatterArgs[v] = self.opts[k]
 
