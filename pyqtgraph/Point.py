@@ -107,7 +107,7 @@ class Point(QtCore.QPointF):
     
     def angle(self, a, units="degrees"):
         """
-        Returns the angle in degrees between this vector and the vector a.
+        Returns the angle in degrees from the vector a to self.
         
         Parameters
         ----------
@@ -120,9 +120,9 @@ class Point(QtCore.QPointF):
         Returns
         -------
         float
-            The angle between the two points
+            The angle between two vectors
         """
-        rads = atan2(a.y(), a.x()) - atan2(self.y(), self.x())
+        rads = atan2(self.y(), self.x()) - atan2(a.y(), a.x())
         if units == "radians":
             return rads
         return degrees(rads)

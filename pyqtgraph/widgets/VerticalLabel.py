@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
+import warnings
 
 __all__ = ['VerticalLabel']
 #class VerticalLabel(QtGui.QLabel):
@@ -46,8 +47,9 @@ class VerticalLabel(QtGui.QLabel):
             rgn = self.contentsRect()
         align = self.alignment()
         #align  = QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter
-            
-        self.hint = p.drawText(rgn, align, self.text())
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.hint = p.drawText(rgn, align, self.text())
         p.end()
         
         if self.orientation == 'vertical':
