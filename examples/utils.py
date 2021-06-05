@@ -69,6 +69,7 @@ examples = OrderedDict([
         ('Line Plot', 'GLLinePlotItem.py'),
         ('Mesh', 'GLMeshItem.py'),
         ('Image', 'GLImageItem.py'),
+        ('Text', 'GLTextItem.py'),
     ])),
     ('Widgets', OrderedDict([
         ('PlotWidget', 'PlotWidget.py'),
