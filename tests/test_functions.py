@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from copy import deepcopy
+from contextlib import suppress
+from pyqtgraph.functions import arrayToQPath, eq
 
 import numpy as np
 import pytest
@@ -245,3 +247,78 @@ def test_siParse(s, suffix, expected):
     else:
         with pytest.raises(expected):
             pg.siParse(s, suffix=suffix)
+
+
+MoveToElement = pg.QtGui.QPainterPath.ElementType.MoveToElement
+LineToElement = pg.QtGui.QPainterPath.ElementType.LineToElement
+@pytest.mark.parametrize(
+    "xs, ys, connect, expected", [
+        (
+            np.arange(6), np.arange(0, -6, step=-1), 'all', (
+                (MoveToElement, 0.0, 0.0),
+                (LineToElement, 1.0, -1.0),
+                (LineToElement, 2.0, -2.0),
+                (LineToElement, 3.0, -3.0),
+                (LineToElement, 4.0, -4.0),
+                (LineToElement, 5.0, -5.0),
+            )
+        ), 
+        (
+            np.arange(6), np.arange(0, -6, step=-1), 'pairs', (
+                (MoveToElement, 0.0, 0.0),
+                (LineToElement, 1.0, -1.0),
+                (MoveToElement, 2.0, -2.0),
+                (LineToElement, 3.0, -3.0),
+                (MoveToElement, 4.0, -4.0),
+                (LineToElement, 5.0, -5.0),
+            )
+        ),
+        (
+            np.arange(5), np.arange(0, -5, step=-1), 'pairs', (
+                (MoveToElement, 0.0, 0.0),
+                (LineToElement, 1.0, -1.0),
+                (MoveToElement, 2.0, -2.0),
+                (LineToElement, 3.0, -3.0),
+                (MoveToElement, 4.0, -4.0)
+            ) 
+        ),
+        (
+            np.arange(5), np.array([0, -1, np.NaN, -3, -4]), 'finite', (
+                (MoveToElement, 0.0, 0.0),
+                (LineToElement, 1.0, -1.0),
+                (LineToElement, 1.0, -1.0),
+                (MoveToElement, 3.0, -3.0),
+                (LineToElement, 4.0, -4.0)
+            ) 
+        ),
+        (
+            np.array([0, 1, np.NaN, 3, 4]), np.arange(0, -5, step=-1), 'finite', (
+                (MoveToElement, 0.0, 0.0),
+                (LineToElement, 1.0, -1.0),
+                (LineToElement, 1.0, -1.0),
+                (MoveToElement, 3.0, -3.0),
+                (LineToElement, 4.0, -4.0)
+            )
+        ),
+        (
+            np.arange(5), np.arange(0, -5, step=-1), np.array([0, 1, 0, 1, 0]), (
+                (MoveToElement, 0.0, 0.0),
+                (MoveToElement, 1.0, -1.0),
+                (LineToElement, 2.0, -2.0),
+                (MoveToElement, 3.0, -3.0),
+                (LineToElement, 4.0, -4.0)
+            )
+        )
+    ]
+)
+def test_arrayToQPath(xs, ys, connect, expected):
+    path = arrayToQPath(xs, ys, connect=connect)
+    for i in range(path.elementCount()):
+        with suppress(NameError):
+            # nan elements add two line-segments, for simplicity of test config
+            # we can ignore the second segment
+            if (eq(element.x, np.nan) or eq(element.y, np.nan)):
+                continue
+        element = path.elementAt(i)
+        assert eq(expected[i], (element.type, element.x, element.y))
+
