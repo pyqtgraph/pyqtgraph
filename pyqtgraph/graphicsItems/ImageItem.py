@@ -27,7 +27,6 @@ class ImageItem(GraphicsObject):
     **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
     """
     # Overall description of ImageItem (including examples) moved to documentation text
-
     sigImageChanged = QtCore.Signal()
     sigRemoveRequested = QtCore.Signal(object)  # self; emitted when 'remove' is selected from context menu
 
@@ -345,18 +344,6 @@ class ImageItem(GraphicsObject):
             
             The default is `False` if a ``levels`` keyword argument is given, and `True` otherwise.
         """
-        # lut                (numpy array) The color lookup table to use when displaying the image.
-        #                    See :func:`setLookupTable <pyqtgraph.ImageItem.setLookupTable>`.
-        # levels             (min, max) The minimum and maximum values to use when rescaling the image
-        #                    data. By default, this will be set to the minimum and maximum values
-        #                    in the image. If the image array has dtype uint8, no rescaling is necessary.
-        # opacity            (float 0.0-1.0)
-        # compositionMode    See :func:`setCompositionMode <pyqtgraph.ImageItem.setCompositionMode>`
-        # border             Sets the pen used when drawing the image border. Default is None.
-        # autoDownsample     (bool) If True, the image is automatically downsampled to match the
-        #                    screen resolution. This improves performance for large images and
-        #                    reduces aliasing. If autoDownsample is not specified, then ImageItem will
-        #                    choose whether to downsample the image based on its size.
         profile = debug.Profiler()
 
         gotNewData = False
@@ -443,12 +430,6 @@ class ImageItem(GraphicsObject):
         # Might eventually need to account for downsampling / clipping here
         # transforms are updated in setOpts call.
         return self._dataTransform
-        # tr = QtGui.QTransform()
-        # if self.axisOrder == 'row-major':
-        #     # transpose
-        #     tr.scale(1, -1)
-        #     tr.rotate(-90)
-        # return tr
 
     def inverseDataTransform(self):
         """Return the transform that maps from this image's local coordinate
@@ -460,22 +441,12 @@ class ImageItem(GraphicsObject):
         """
         # transforms are updated in setOpts call.
         return self._inverseDataTransform
-        # tr = QtGui.QTransform()
-        # if self.axisOrder == 'row-major':
-        #     # transpose
-        #     tr.scale(1, -1)
-        #     tr.rotate(-90)
-        # return tr
 
     def mapToData(self, obj):
         return self._inverseDataTransform.map(obj)
-        # tr = self.inverseDataTransform()
-        # return tr.map(obj)
 
     def mapFromData(self, obj):
         return self._dataTransform.map(obj)
-        # tr = self.dataTransform()
-        # return tr.map(obj)
 
     def quickMinMax(self, targetSize=1e6):
         """

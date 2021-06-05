@@ -2,7 +2,7 @@
 import time
 import pytest
 
-from pyqtgraph.Qt import QtGui, QtTest
+from pyqtgraph.Qt import QtGui, QtTest, QtCore
 import numpy as np
 import pyqtgraph as pg
 from tests.image_testing import assertImageApproved, TransposedImageItem
