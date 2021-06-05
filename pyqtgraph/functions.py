@@ -1507,16 +1507,10 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     return ndarray_to_qimage(imgData, imgFormat)
 
 
-def imageToArray(img, copy=False, transpose=True):
-    """
-    Convert a QImage into numpy array. The image must have format RGB32, ARGB32, or ARGB32_Premultiplied.
-    By default, the image is not copied; changes made to the array will appear in the QImage as well (beware: if 
-    the QImage is collected before the array, there may be trouble).
-    The array will have shape (width, height, (b,g,r,a)).
-    """
-    img_ptr = img.bits()
+def qimage_to_ndarray(qimg):
+    img_ptr = qimg.bits()
 
-    if QT_LIB.startswith('PyQt'):
+    if hasattr(img_ptr, 'setsize'): # PyQt sip.voidptr
         # sizeInBytes() was introduced in Qt 5.10
         # however PyQt5 5.12 will fail with:
         #   "TypeError: QImage.sizeInBytes() is a private method"
@@ -1524,14 +1518,39 @@ def imageToArray(img, copy=False, transpose=True):
         #   PyQt5 5.15, PySide2 5.12, PySide2 5.15
         try:
             # 64-bits size
-            nbytes = img.sizeInBytes()
+            nbytes = qimg.sizeInBytes()
         except (TypeError, AttributeError):
             # 32-bits size
-            nbytes = img.byteCount()
+            nbytes = qimg.byteCount()
         img_ptr.setsize(nbytes)
 
-    arr = np.frombuffer(img_ptr, dtype=np.ubyte)
-    arr = arr.reshape(img.height(), img.width(), 4)
+    depth = qimg.depth()
+    if depth in (8, 24, 32):
+        dtype = np.uint8
+        nchan = depth // 8
+    elif depth in (16, 64):
+        dtype = np.uint16
+        nchan = depth // 16
+    else:
+        raise ValueError("Unsupported Image Type")
+    shape = qimg.height(), qimg.width()
+    if nchan != 1:
+        shape = shape + (nchan,)
+    return np.frombuffer(img_ptr, dtype=dtype).reshape(shape)
+
+
+def imageToArray(img, copy=False, transpose=True):
+    """
+    Convert a QImage into numpy array. The image must have format RGB32, ARGB32, or ARGB32_Premultiplied.
+    By default, the image is not copied; changes made to the array will appear in the QImage as well (beware: if
+    the QImage is collected before the array, there may be trouble).
+    The array will have shape (width, height, (b,g,r,a)).
+    """
+    arr = qimage_to_ndarray(img)
+
+    fmt = img.format()
+    if fmt == img.Format_RGB32:
+        arr[...,3] = 255
     
     if copy:
         arr = arr.copy()
