@@ -236,11 +236,8 @@ class Renderer(GraphicsView):
 
             # see functions.py::makeQImage() for rationale
             if QT_LIB.startswith('PyQt'):
-                if QtCore.PYQT_VERSION == 0x60000:
-                    img_ptr = sip.voidptr(self.shm)
-                else:
-                    # PyQt5, PyQt6 >= 6.0.1
-                    img_ptr = int(sip.voidptr(self.shm))
+                # PyQt5, PyQt6 >= 6.0.1
+                img_ptr = int(sip.voidptr(self.shm))
             else:
                 # PySide2, PySide6
                 img_ptr = self.shm

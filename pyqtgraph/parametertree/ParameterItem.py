@@ -1,4 +1,4 @@
-from ..Qt import QtGui, QtCore, QT_LIB
+from ..Qt import QtGui, QtCore
 from ..python2_3 import asUnicode
 import os, weakref, re
 
@@ -162,13 +162,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         # called when the user-visble title has changed (either opts['title'], or name if title is None)
         self.setText(0, self.param.title())
         fm = QtGui.QFontMetrics(self.font(0))
-
-        if QT_LIB == 'PyQt6':
-            # PyQt6 doesn't allow or-ing of different enum types
-            # so we need to take its value property
-            textFlags = QtCore.Qt.TextFlag.TextSingleLine.value
-        else:
-            textFlags = QtCore.Qt.TextFlag.TextSingleLine
+        textFlags = QtCore.Qt.TextFlag.TextSingleLine
         size = fm.size(textFlags, self.text(0))
         size.setHeight(int(size.height() * 1.35))
         size.setWidth(int(size.width() * 1.15))

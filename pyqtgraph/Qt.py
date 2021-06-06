@@ -316,53 +316,12 @@ if QT_LIB in [PYQT5, PYQT6]:
     loadUiType = uic.loadUiType
 
     QtCore.Signal = QtCore.pyqtSignal
-    
-
-if QT_LIB == PYSIDE6:
-    # PySide6 6.0 has a missing binding
-    if not hasattr(QtGui.QGradient, 'setStops'):
-        def __setStops(self, stops):
-            for pos, color in stops:
-                self.setColorAt(pos, color)
-        QtGui.QGradient.setStops = __setStops
-
-
-if QT_LIB == PYQT6:
-    # shim the old names for QPointF mouse coords
-    QtGui.QSinglePointEvent.localPos = lambda o : o.position()
-    QtGui.QSinglePointEvent.windowPos = lambda o : o.scenePosition()
-    QtGui.QSinglePointEvent.screenPos = lambda o : o.globalPosition()
-
-    QtWidgets.QApplication.exec_ = QtWidgets.QApplication.exec
-
-    # PyQt6 6.0.0 has a bug where it can't handle certain Type values returned
-    # by the Qt library.
-    if QtCore.PYQT_VERSION == 0x60000:
-        def new_method(self, old_method=QtCore.QEvent.type):
-            try:
-                typ = old_method(self)
-            except ValueError:
-                typ = QtCore.QEvent.Type.None_
-            return typ
-        QtCore.QEvent.type = new_method
-        del new_method
-
-    # PyQt6 6.1 renames some enums and flags to be in line with the other bindings.
-    # "Alignment" and "Orientations" are PyQt6 6.0 and are used in the generated
-    # ui files. Pending a regeneration of the template files, which would mean a
-    # drop in support for PyQt6 6.0, provide the old names for PyQt6 6.1.
-    # This is strictly a temporary private shim. Do not depend on it in your code.
-    if hasattr(QtCore.Qt, 'AlignmentFlag') and not hasattr(QtCore.Qt, 'Alignment'):
-        QtCore.Qt.Alignment = QtCore.Qt.AlignmentFlag
-    if hasattr(QtCore.Qt, 'Orientation') and not hasattr(QtCore.Qt, 'Orientations'):
-        QtCore.Qt.Orientations = QtCore.Qt.Orientation
 
 # USE_XXX variables are deprecated
 USE_PYSIDE = QT_LIB == PYSIDE
 USE_PYQT4 = QT_LIB == PYQT4
 USE_PYQT5 = QT_LIB == PYQT5
 
-    
 ## Make sure we have Qt >= 5.12
 versionReq = [5, 12]
 m = re.match(r'(\d+)\.(\d+).*', QtVersion)

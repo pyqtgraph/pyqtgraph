@@ -1559,15 +1559,9 @@ def ndarray_to_qimage(arr, fmt):
     # will trigger the COW mechanism, i.e. a copy is made under the hood.
 
     if QT_LIB.startswith('PyQt'):
-        if QtCore.PYQT_VERSION == 0x60000:
-            # PyQt5          -> const
-            # PyQt6 >= 6.0.1 -> const
-            # PyQt6 == 6.0.0 -> non-const
-            img_ptr = Qt.sip.voidptr(arr)
-        else:
-            # PyQt5          -> non-const
-            # PyQt6 >= 6.0.1 -> non-const
-            img_ptr = int(Qt.sip.voidptr(arr))  # or arr.ctypes.data
+        # PyQt5          -> non-const
+        # PyQt6 >= 6.0.1 -> non-const
+        img_ptr = int(Qt.sip.voidptr(arr))  # or arr.ctypes.data
     else:
         # bindings that support ndarray
         # PyQt5          -> const

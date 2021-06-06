@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore, QT_LIB
+from ..Qt import QtGui, QtCore
 from ..python2_3 import asUnicode
 import numpy as np
 from ..Point import Point
@@ -1130,14 +1130,7 @@ class AxisItem(GraphicsWidget):
                     alignFlags = QtCore.Qt.AlignmentFlag.AlignHCenter|QtCore.Qt.AlignmentFlag.AlignTop
                     rect = QtCore.QRectF(x-width/2., tickStop+offset, width, height)
 
-                if QT_LIB == 'PyQt6':
-                    # PyQt6 doesn't allow or-ing of different enum types
-                    # so we need to take its value property
-                    textFlags = alignFlags.value | QtCore.Qt.TextFlag.TextDontClip.value
-                else:
-                    # for PyQt5, the following expression is not commutative!
-                    textFlags = alignFlags | QtCore.Qt.TextFlag.TextDontClip
-
+                textFlags = alignFlags | QtCore.Qt.TextFlag.TextDontClip    
                 #p.setPen(self.pen())
                 #p.drawText(rect, textFlags, vstr)
                 textSpecs.append((rect, textFlags, vstr))
