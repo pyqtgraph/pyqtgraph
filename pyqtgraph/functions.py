@@ -463,8 +463,8 @@ def CIELabColor(L, a, b, alpha=1.0):
 def colorCIELab(qcol):
     """
     Describes a QColor by an array of CIE L*a*b* values.
-    Also see :func:`CIELabColor() <pyqtgraph.functions.CIELabColor>` .
-    
+    Also see :func:`CIELabColor() <pyqtgraph.CIELabColor>` .
+
     Parameters
     ----------
     qcol: QColor
@@ -503,7 +503,7 @@ def colorCIELab(qcol):
 def colorDistance(colors, metric='CIE76'):
     """
     Returns the perceptual distances between a sequence of QColors.
-    See :func:`CIELabColor() <pyqtgraph.functions.CIELabColor>` for more information.
+    See :func:`CIELabColor() <pyqtgraph.CIELabColor>` for more information.
 
     Parameters
     ----------
