@@ -76,23 +76,31 @@ class ImageItem(GraphicsObject):
 
     def setCompositionMode(self, mode):
         """
-        Change the composition mode of the item to `mode`, used when overlaying multiple ImageItems.
-        See ``QPainter::CompositionMode`` in the Qt documentation for details. 
-
-        Most common arguments:
+        Change the composition mode of the item. This is useful when overlaying
+        multiple items.
         
-        - ``QtGui.QPainter.CompositionMode_SourceOver``:
-            (Default) Image replaces the background if it is opaque. 
-            Otherwise the alpha channel controls the visibility of the background.
+        Parameters
+        ----------
+        mode : ``QtGui.QPainter.CompositionMode``
+            Composition of the item, often used when overlaying items.  Common
+            options include:
 
-        - ``QtGui.QPainter.CompositionMode_Overlay``:
-            The image color is mixed with the background color to reflect the lightness or darkness of the background.
-        
-        - ``QtGui.QPainter.CompositionMode_Plus``:
-            Both the alpha and color of the image and background pixels are added together.
+            ``QPainter.CompositionMode.CompositionMode_SourceOver`` (Default)
+            Image replaces the background if it is opaque. Otherwise, it uses
+            the alpha channel to blend the image with the background.
 
-        - ``QtGui.QPainter.CompositionMode_Multiply``:
-            The output is the image color multiplied by the background.
+            ``QPainter.CompositionMode.CompositionMode_Overlay`` Image color is
+            mixed with the background color to reflect the lightness or
+            darkness of the background
+
+            ``QPainter.CompositionMode.CompositionMode_Plus`` Both the alpha
+            and color of the image and background pixels are added together.
+
+            ``QPainter.CompositionMode.CompositionMode_Plus`` The output is the
+            image color multiplied by the background.
+
+            See ``QPainter::CompositionMode`` in the Qt Documentation for more
+            options and details
         """
         self.paintMode = mode
         self.update()
