@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'FlowchartCtrlTemplate.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.0
+## Created by: Qt User Interface Compiler version 6.1.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -68,7 +68,7 @@ class Ui_Form(object):
         font = QFont()
         font.setBold(True)
         self.fileNameLabel.setFont(font)
-        self.fileNameLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.fileNameLabel.setAlignment(Qt.AlignCenter)
 
         self.gridLayout.addWidget(self.fileNameLabel, 0, 1, 1, 1)
 

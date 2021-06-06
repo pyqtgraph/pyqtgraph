@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'axisCtrlTemplate.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.0
+## Created by: Qt User Interface Compiler version 6.1.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -30,7 +30,7 @@ class Ui_Form(object):
 
         self.linkCombo = QComboBox(Form)
         self.linkCombo.setObjectName(u"linkCombo")
-        self.linkCombo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.linkCombo.setSizeAdjustPolicy(QComboBox.AdjustToContents)
 
         self.gridLayout.addWidget(self.linkCombo, 7, 2, 1, 2)
 

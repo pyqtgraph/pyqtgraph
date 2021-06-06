@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'template.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.0
+## Created by: Qt User Interface Compiler version 6.1.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -26,7 +26,7 @@ class Ui_Form(object):
         self.gridLayout.setObjectName(u"gridLayout")
         self.splitter = QSplitter(Form)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Orientation.Vertical)
+        self.splitter.setOrientation(Qt.Vertical)
         self.layoutWidget = QWidget(self.splitter)
         self.layoutWidget.setObjectName(u"layoutWidget")
         self.verticalLayout = QVBoxLayout(self.layoutWidget)
@@ -35,7 +35,7 @@ class Ui_Form(object):
         self.output = QPlainTextEdit(self.layoutWidget)
         self.output.setObjectName(u"output")
         font = QFont()
-        font.setFamily(u"Monospace")
+        font.setFamilies([u"Monospace"])
         self.output.setFont(font)
         self.output.setReadOnly(True)
 
@@ -117,7 +117,7 @@ class Ui_Form(object):
 
         self.gridLayout_2.addWidget(self.exceptionInfoLabel, 1, 0, 1, 7)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.gridLayout_2.addItem(self.horizontalSpacer, 0, 5, 1, 1)
 

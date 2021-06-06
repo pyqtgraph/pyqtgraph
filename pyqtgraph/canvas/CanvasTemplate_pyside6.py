@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'CanvasTemplate.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.0
+## Created by: Qt User Interface Compiler version 6.1.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -28,20 +28,20 @@ class Ui_Form(object):
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.splitter = QSplitter(Form)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Orientation.Horizontal)
+        self.splitter.setOrientation(Qt.Horizontal)
         self.view = GraphicsView(self.splitter)
         self.view.setObjectName(u"view")
         self.splitter.addWidget(self.view)
         self.vsplitter = QSplitter(self.splitter)
         self.vsplitter.setObjectName(u"vsplitter")
-        self.vsplitter.setOrientation(Qt.Orientation.Vertical)
+        self.vsplitter.setOrientation(Qt.Vertical)
         self.canvasCtrlWidget = QWidget(self.vsplitter)
         self.canvasCtrlWidget.setObjectName(u"canvasCtrlWidget")
         self.gridLayout = QGridLayout(self.canvasCtrlWidget)
         self.gridLayout.setObjectName(u"gridLayout")
         self.autoRangeBtn = QPushButton(self.canvasCtrlWidget)
         self.autoRangeBtn.setObjectName(u"autoRangeBtn")
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(1)
         sizePolicy.setHeightForWidth(self.autoRangeBtn.sizePolicy().hasHeightForWidth())
@@ -70,7 +70,7 @@ class Ui_Form(object):
         __qtreewidgetitem.setText(0, u"1");
         self.itemList.setHeaderItem(__qtreewidgetitem)
         self.itemList.setObjectName(u"itemList")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(100)
         sizePolicy1.setHeightForWidth(self.itemList.sizePolicy().hasHeightForWidth())

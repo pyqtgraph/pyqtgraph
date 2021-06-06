@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'plotConfigTemplate.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.0
+## Created by: Qt User Interface Compiler version 6.1.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -86,7 +86,7 @@ class Ui_Form(object):
 
         self.gridLayout_4.addWidget(self.autoDownsampleCheck, 1, 2, 1, 1)
 
-        self.horizontalSpacer = QSpacerItem(30, 20, QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Minimum)
+        self.horizontalSpacer = QSpacerItem(30, 20, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
         self.gridLayout_4.addItem(self.horizontalSpacer, 2, 0, 1, 1)
 
@@ -161,7 +161,7 @@ class Ui_Form(object):
         self.gridAlphaSlider.setObjectName(u"gridAlphaSlider")
         self.gridAlphaSlider.setMaximum(255)
         self.gridAlphaSlider.setValue(128)
-        self.gridAlphaSlider.setOrientation(Qt.Orientation.Horizontal)
+        self.gridAlphaSlider.setOrientation(Qt.Horizontal)
 
         self.gridLayout_2.addWidget(self.gridAlphaSlider, 2, 1, 1, 1)
 
@@ -186,7 +186,7 @@ class Ui_Form(object):
         self.alphaSlider.setObjectName(u"alphaSlider")
         self.alphaSlider.setMaximum(1000)
         self.alphaSlider.setValue(1000)
-        self.alphaSlider.setOrientation(Qt.Orientation.Horizontal)
+        self.alphaSlider.setOrientation(Qt.Horizontal)
 
         self.horizontalLayout.addWidget(self.alphaSlider)
 
