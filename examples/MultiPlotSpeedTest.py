@@ -45,7 +45,7 @@ def update():
     count += 1
 
     for i in range(nPlots):
-        curves[i].setData(data[(ptr+i)%data.shape[0]])
+        curves[i].setData(data[(ptr+i)%data.shape[0]], skipFiniteCheck=True)
 
     ptr += nPlots
     now = time()

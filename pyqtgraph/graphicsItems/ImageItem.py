@@ -235,7 +235,7 @@ class ImageItem(GraphicsObject):
             self._processingBuffer = self._xp.empty(shape[:2] + (4,), dtype=self._xp.ubyte)
         else:
             self._processingBuffer = self._displayBuffer
-        self.qimage = fn.makeQImage(self._displayBuffer, transpose=False, copy=False)
+        self.qimage = None
 
     def setImage(self, image=None, autoLevels=None, **kargs):
         """
@@ -471,6 +471,7 @@ class ImageItem(GraphicsObject):
         fn.makeARGB(image, lut=lut, levels=levels, output=self._processingBuffer)
         if self._xp == getCupy():
             self._processingBuffer.get(out=self._displayBuffer)
+        self.qimage = fn.ndarray_to_qimage(self._displayBuffer, QtGui.QImage.Format.Format_ARGB32)
 
         self._renderRequired = False
         self._unrenderable = False
