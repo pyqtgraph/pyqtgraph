@@ -20,7 +20,7 @@ class ImageExporter(Exporter):
             scene = item
         bgbrush = scene.views()[0].backgroundBrush()
         bg = bgbrush.color()
-        if bgbrush.style() == QtCore.Qt.NoBrush:
+        if bgbrush.style() == QtCore.Qt.BrushStyle.NoBrush:
             bg.setAlpha(0)
 
         self.params = Parameter(name='params', type='group', children=[
@@ -97,7 +97,7 @@ class ImageExporter(Exporter):
                 'background': self.params['background'],
                 'painter': painter,
                 'resolutionScale': resolutionScale})
-            painter.setRenderHint(QtGui.QPainter.Antialiasing, self.params['antialias'])
+            painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, self.params['antialias'])
             self.getScene().render(painter, QtCore.QRectF(targetRect), QtCore.QRectF(sourceRect))
         finally:
             self.setExportMode(False)

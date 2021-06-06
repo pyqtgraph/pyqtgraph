@@ -68,7 +68,7 @@ class Ui_Form(object):
         font = QFont()
         font.setBold(True)
         self.fileNameLabel.setFont(font)
-        self.fileNameLabel.setAlignment(Qt.AlignCenter)
+        self.fileNameLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout.addWidget(self.fileNameLabel, 0, 1, 1, 1)
 

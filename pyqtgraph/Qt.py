@@ -11,7 +11,6 @@ This module exists to smooth out some of the differences between PySide and PyQt
 """
 
 import os, sys, re, time, subprocess, warnings
-import enum
 
 from .python2_3 import asUnicode
 
@@ -329,34 +328,6 @@ if QT_LIB == PYSIDE6:
 
 
 if QT_LIB == PYQT6:
-    # module.Class.EnumClass.Enum -> module.Class.Enum
-    def promote_enums(module):
-        class_names = [x for x in dir(module) if x.startswith('Q')]
-        for class_name in class_names:
-            klass = getattr(module, class_name)
-            if not isinstance(klass, sip.wrappertype):
-                continue
-            attrib_names = [x for x in dir(klass) if x[0].isupper()]
-            for attrib_name in attrib_names:
-                attrib = getattr(klass, attrib_name)
-                if not isinstance(attrib, enum.EnumMeta):
-                    continue
-                for e in attrib:
-                    setattr(klass, e.name, e)
-
-    promote_enums(QtCore)
-    promote_enums(QtGui)
-    promote_enums(QtWidgets)
-
-    # QKeyEvent::key() returns an int
-    # so comparison with a Key_* enum will always be False
-    # here we convert the enum to its int value
-    keys = ['Up', 'Down', 'Right', 'Left', 'Return', 'Enter', 'Delete', 'Backspace',
-            'PageUp', 'PageDown', 'Home', 'End', 'Tab', 'Backtab', 'Escape', 'Space']
-    for name in keys:
-        e = getattr(QtCore.Qt.Key, 'Key_' + name)
-        setattr(QtCore.Qt, e.name, e.value)
-
     # shim the old names for QPointF mouse coords
     QtGui.QSinglePointEvent.localPos = lambda o : o.position()
     QtGui.QSinglePointEvent.windowPos = lambda o : o.scenePosition()

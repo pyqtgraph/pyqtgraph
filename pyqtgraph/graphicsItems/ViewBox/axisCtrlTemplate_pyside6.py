@@ -30,7 +30,7 @@ class Ui_Form(object):
 
         self.linkCombo = QComboBox(Form)
         self.linkCombo.setObjectName(u"linkCombo")
-        self.linkCombo.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.linkCombo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
 
         self.gridLayout.addWidget(self.linkCombo, 7, 2, 1, 2)
 

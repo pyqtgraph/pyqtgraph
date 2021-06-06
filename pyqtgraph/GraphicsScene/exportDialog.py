@@ -25,7 +25,7 @@ class ExportDialog(QtGui.QWidget):
         self.scene = scene
 
         self.selectBox = QtGui.QGraphicsRectItem()
-        self.selectBox.setPen(fn.mkPen('y', width=3, style=QtCore.Qt.DashLine))
+        self.selectBox.setPen(fn.mkPen('y', width=3, style=QtCore.Qt.PenStyle.DashLine))
         self.selectBox.hide()
         self.scene.addItem(self.selectBox)
         

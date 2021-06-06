@@ -12,6 +12,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.ptime import time
+# pg.setConfigOptions(useOpenGL=True)
 app = pg.mkQApp("MultiPlot Speed Test")
 
 plot = pg.plot()
@@ -22,7 +23,7 @@ nPlots = 100
 nSamples = 500
 curves = []
 for idx in range(nPlots):
-    curve = pg.PlotCurveItem(pen=(idx,nPlots*1.3))
+    curve = pg.PlotCurveItem(pen=({'color': (idx, nPlots*1.3), 'width': 1}), skipFiniteCheck=True)
     plot.addItem(curve)
     curve.setPos(0,idx*6)
     curves.append(curve)
@@ -45,7 +46,7 @@ def update():
     count += 1
 
     for i in range(nPlots):
-        curves[i].setData(data[(ptr+i)%data.shape[0]], skipFiniteCheck=True)
+        curves[i].setData(data[(ptr+i)%data.shape[0]])
 
     ptr += nPlots
     now = time()

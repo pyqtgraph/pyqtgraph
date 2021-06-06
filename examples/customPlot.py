@@ -20,12 +20,12 @@ class CustomViewBox(pg.ViewBox):
         
     ## reimplement right-click to zoom out
     def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.RightButton:
+        if ev.button() == QtCore.Qt.MouseButton.RightButton:
             self.autoRange()
     
     ## reimplement mouseDragEvent to disable continuous axis zoom
     def mouseDragEvent(self, ev, axis=None):
-        if axis is not None and ev.button() == QtCore.Qt.RightButton:
+        if axis is not None and ev.button() == QtCore.Qt.MouseButton.RightButton:
             ev.ignore()
         else:
             pg.ViewBox.mouseDragEvent(self, ev, axis=axis)

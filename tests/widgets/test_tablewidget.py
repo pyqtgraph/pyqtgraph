@@ -61,21 +61,21 @@ def test_TableWidget():
 
     # Test sorting
     w.setData(listOfTuples)
-    w.sortByColumn(0, pg.QtCore.Qt.AscendingOrder)
+    w.sortByColumn(0, pg.QtCore.Qt.SortOrder.AscendingOrder)
     assertTableData(w, sorted(listOfTuples, key=lambda a: a[0]))
     
-    w.sortByColumn(1, pg.QtCore.Qt.AscendingOrder)
+    w.sortByColumn(1, pg.QtCore.Qt.SortOrder.AscendingOrder)
     assertTableData(w, sorted(listOfTuples, key=lambda a: a[1]))
     
-    w.sortByColumn(2, pg.QtCore.Qt.AscendingOrder)
+    w.sortByColumn(2, pg.QtCore.Qt.SortOrder.AscendingOrder)
     assertTableData(w, sorted(listOfTuples, key=lambda a: a[2]))
     
     w.setSortMode(1, 'text')
-    w.sortByColumn(1, pg.QtCore.Qt.AscendingOrder)
+    w.sortByColumn(1, pg.QtCore.Qt.SortOrder.AscendingOrder)
     assertTableData(w, sorted(listOfTuples, key=lambda a: str(a[1])))
 
     w.setSortMode(1, 'index')
-    w.sortByColumn(1, pg.QtCore.Qt.AscendingOrder)
+    w.sortByColumn(1, pg.QtCore.Qt.SortOrder.AscendingOrder)
     assertTableData(w, listOfTuples)
 
     # Test formatting

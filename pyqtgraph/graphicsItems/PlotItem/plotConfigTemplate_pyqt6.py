@@ -61,7 +61,7 @@ class Ui_Form(object):
         self.autoDownsampleCheck.setChecked(True)
         self.autoDownsampleCheck.setObjectName("autoDownsampleCheck")
         self.gridLayout_4.addWidget(self.autoDownsampleCheck, 1, 2, 1, 1)
-        spacerItem = QtWidgets.QSpacerItem(30, 20, QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Policy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(30, 20, QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Minimum)
         self.gridLayout_4.addItem(spacerItem, 2, 0, 1, 1)
         self.downsampleSpin = QtWidgets.QSpinBox(self.decimateGroup)
         self.downsampleSpin.setMinimum(1)

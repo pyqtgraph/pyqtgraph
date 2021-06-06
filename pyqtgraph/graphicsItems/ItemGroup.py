@@ -10,7 +10,7 @@ class ItemGroup(GraphicsObject):
     def __init__(self, *args):
         GraphicsObject.__init__(self, *args)
         if hasattr(self, "ItemHasNoContents"):
-            self.setFlag(self.ItemHasNoContents)
+            self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
     
     def boundingRect(self):
         return QtCore.QRectF()

@@ -18,7 +18,7 @@ class MouseDragEvent(object):
         self.currentItem = None
         self._buttonDownScenePos = {}
         self._buttonDownScreenPos = {}
-        for btn in [QtCore.Qt.LeftButton, QtCore.Qt.MiddleButton, QtCore.Qt.RightButton]:
+        for btn in [QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.MouseButton.MiddleButton, QtCore.Qt.MouseButton.RightButton]:
             self._buttonDownScenePos[btn] = moveEvent.buttonDownScenePos(btn)
             self._buttonDownScreenPos[btn] = moveEvent.buttonDownScreenPos(btn)
         self._scenePos = moveEvent.scenePos()

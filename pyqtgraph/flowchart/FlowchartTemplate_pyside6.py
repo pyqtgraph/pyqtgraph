@@ -28,7 +28,7 @@ class Ui_Form(object):
         self.gridLayout.setObjectName(u"gridLayout")
         self.selDescLabel = QLabel(self.selInfoWidget)
         self.selDescLabel.setObjectName(u"selDescLabel")
-        self.selDescLabel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
+        self.selDescLabel.setAlignment(Qt.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
         self.selDescLabel.setWordWrap(True)
 
         self.gridLayout.addWidget(self.selDescLabel, 0, 0, 1, 1)

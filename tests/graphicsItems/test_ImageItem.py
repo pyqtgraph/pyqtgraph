@@ -154,11 +154,11 @@ def test_ImageItem(transpose=False):
     assertImageApproved(w, 'imageitem/gradient_rgba_float_alpha', 'RGBA float gradient with alpha.')    
 
     # test composition mode
-    img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
+    img.setCompositionMode(QtGui.QPainter.CompositionMode.CompositionMode_Plus)
     assertImageApproved(w, 'imageitem/gradient_rgba_float_additive', 'RGBA float gradient with alpha and additive composition mode.')    
     
     img2.hide()
-    img.setCompositionMode(QtGui.QPainter.CompositionMode_SourceOver)
+    img.setCompositionMode(QtGui.QPainter.CompositionMode.CompositionMode_SourceOver)
     
     # test downsampling
     data = np.fromfunction(lambda x,y: np.cos(0.002 * x**2), (800, 100))

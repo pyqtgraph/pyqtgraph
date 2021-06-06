@@ -155,7 +155,7 @@ class PlotDataItem(GraphicsObject):
             ==========   ================================================
         """
         GraphicsObject.__init__(self)
-        self.setFlag(self.ItemHasNoContents)
+        self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
         self.xData = None
         self.yData = None
         self.xDisp = None

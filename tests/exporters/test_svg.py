@@ -37,7 +37,7 @@ def test_simple(tmpdir):
     
     rect1 = pg.QtGui.QGraphicsRectItem(0, 0, 100, 100)
     rect1.setParentItem(rect)
-    rect1.setFlag(rect1.ItemIgnoresTransformations)
+    rect1.setFlag(rect1.GraphicsItemFlag.ItemIgnoresTransformations)
     rect1.setPos(20, 20)
     rect1.setScale(2)
     
@@ -49,7 +49,7 @@ def test_simple(tmpdir):
     grp.setTransform(tr.translate(200, 0).rotate(30))
     
     rect2 = pg.QtGui.QGraphicsRectItem(0, 0, 100, 25)
-    rect2.setFlag(rect2.ItemClipsChildrenToShape)
+    rect2.setFlag(rect2.GraphicsItemFlag.ItemClipsChildrenToShape)
     rect2.setParentItem(grp)
     rect2.setPos(0,25)
     rect2.setRotation(30)

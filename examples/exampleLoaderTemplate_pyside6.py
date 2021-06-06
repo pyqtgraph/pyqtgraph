@@ -22,7 +22,7 @@ class Ui_Form(object):
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.splitter = QSplitter(Form)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Horizontal)
+        self.splitter.setOrientation(Qt.Orientation.Horizontal)
         self.widget = QWidget(self.splitter)
         self.widget.setObjectName(u"widget")
         self.gridLayout = QGridLayout(self.widget)
@@ -68,7 +68,7 @@ class Ui_Form(object):
         font = QFont()
         font.setBold(True)
         self.loadedFileLabel.setFont(font)
-        self.loadedFileLabel.setAlignment(Qt.AlignCenter)
+        self.loadedFileLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.verticalLayout.addWidget(self.loadedFileLabel)
 

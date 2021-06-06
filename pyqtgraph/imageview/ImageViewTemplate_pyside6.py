@@ -28,7 +28,7 @@ class Ui_Form(object):
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.splitter = QSplitter(Form)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Vertical)
+        self.splitter.setOrientation(Qt.Orientation.Vertical)
         self.layoutWidget = QWidget(self.splitter)
         self.layoutWidget.setObjectName(u"layoutWidget")
         self.gridLayout = QGridLayout(self.layoutWidget)
@@ -47,7 +47,7 @@ class Ui_Form(object):
 
         self.roiBtn = QPushButton(self.layoutWidget)
         self.roiBtn.setObjectName(u"roiBtn")
-        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(1)
         sizePolicy.setHeightForWidth(self.roiBtn.sizePolicy().hasHeightForWidth())
@@ -66,7 +66,7 @@ class Ui_Form(object):
         self.splitter.addWidget(self.layoutWidget)
         self.roiPlot = PlotWidget(self.splitter)
         self.roiPlot.setObjectName(u"roiPlot")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.roiPlot.sizePolicy().hasHeightForWidth())
@@ -125,13 +125,13 @@ class Ui_Form(object):
 
         self.label_8 = QLabel(self.normGroup)
         self.label_8.setObjectName(u"label_8")
-        self.label_8.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_8.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_2.addWidget(self.label_8, 2, 1, 1, 1)
 
         self.label_9 = QLabel(self.normGroup)
         self.label_9.setObjectName(u"label_9")
-        self.label_9.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_9.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_2.addWidget(self.label_9, 2, 3, 1, 1)
 
@@ -142,7 +142,7 @@ class Ui_Form(object):
 
         self.label_10 = QLabel(self.normGroup)
         self.label_10.setObjectName(u"label_10")
-        self.label_10.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_10.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_2.addWidget(self.label_10, 2, 5, 1, 1)
 

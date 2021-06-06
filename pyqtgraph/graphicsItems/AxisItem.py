@@ -611,8 +611,8 @@ class AxisItem(GraphicsWidget):
             finally:
                 painter.end()
             self.picture = picture
-        #p.setRenderHint(p.Antialiasing, False)   ## Sometimes we get a segfault here ???
-        #p.setRenderHint(p.TextAntialiasing, True)
+        #p.setRenderHint(p.RenderHint.Antialiasing, False)   ## Sometimes we get a segfault here ???
+        #p.setRenderHint(p.RenderHint.TextAntialiasing, True)
         self.picture.play(p)
 
     def setTicks(self, ticks):
@@ -1066,7 +1066,7 @@ class AxisItem(GraphicsWidget):
                 if s is None:
                     rects.append(None)
                 else:
-                    br = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, asUnicode(s))
+                    br = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignmentFlag.AlignCenter, asUnicode(s))
                     ## boundingRect is usually just a bit too large
                     ## (but this probably depends on per-font metrics?)
                     br.setHeight(br.height() * 0.8)
@@ -1110,7 +1110,7 @@ class AxisItem(GraphicsWidget):
                     continue
                 vstr = asUnicode(vstr)
                 x = tickPositions[i][j]
-                #textRect = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, vstr)
+                #textRect = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignmentFlag.AlignCenter, vstr)
                 textRect = rects[j]
                 height = textRect.height()
                 width = textRect.width()
@@ -1118,25 +1118,25 @@ class AxisItem(GraphicsWidget):
                 offset = max(0,self.style['tickLength']) + textOffset
 
                 if self.orientation == 'left':
-                    alignFlags = QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter
+                    alignFlags = QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignVCenter
                     rect = QtCore.QRectF(tickStop-offset-width, x-(height/2), width, height)
                 elif self.orientation == 'right':
-                    alignFlags = QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter
+                    alignFlags = QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter
                     rect = QtCore.QRectF(tickStop+offset, x-(height/2), width, height)
                 elif self.orientation == 'top':
-                    alignFlags = QtCore.Qt.AlignHCenter|QtCore.Qt.AlignBottom
+                    alignFlags = QtCore.Qt.AlignmentFlag.AlignHCenter|QtCore.Qt.AlignmentFlag.AlignBottom
                     rect = QtCore.QRectF(x-width/2., tickStop-offset-height, width, height)
                 elif self.orientation == 'bottom':
-                    alignFlags = QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop
+                    alignFlags = QtCore.Qt.AlignmentFlag.AlignHCenter|QtCore.Qt.AlignmentFlag.AlignTop
                     rect = QtCore.QRectF(x-width/2., tickStop+offset, width, height)
 
                 if QT_LIB == 'PyQt6':
                     # PyQt6 doesn't allow or-ing of different enum types
                     # so we need to take its value property
-                    textFlags = alignFlags.value | QtCore.Qt.TextDontClip.value
+                    textFlags = alignFlags.value | QtCore.Qt.TextFlag.TextDontClip.value
                 else:
                     # for PyQt5, the following expression is not commutative!
-                    textFlags = alignFlags | QtCore.Qt.TextDontClip
+                    textFlags = alignFlags | QtCore.Qt.TextFlag.TextDontClip
 
                 #p.setPen(self.pen())
                 #p.drawText(rect, textFlags, vstr)
@@ -1151,8 +1151,8 @@ class AxisItem(GraphicsWidget):
     def drawPicture(self, p, axisSpec, tickSpecs, textSpecs):
         profiler = debug.Profiler()
 
-        p.setRenderHint(p.Antialiasing, False)
-        p.setRenderHint(p.TextAntialiasing, True)
+        p.setRenderHint(p.RenderHint.Antialiasing, False)
+        p.setRenderHint(p.RenderHint.TextAntialiasing, True)
 
         ## draw long line along axis
         pen, p1, p2 = axisSpec

@@ -11,17 +11,17 @@ class CmdInput(QtGui.QLineEdit):
         self.ptr = 0
     
     def keyPressEvent(self, ev):
-        if ev.key() == QtCore.Qt.Key_Up:
+        if ev.key() == QtCore.Qt.Key.Key_Up:
             if self.ptr < len(self.history) - 1:
                 self.setHistory(self.ptr+1)
                 ev.accept()
                 return
-        elif ev.key() ==  QtCore.Qt.Key_Down:
+        elif ev.key() ==  QtCore.Qt.Key.Key_Down:
             if self.ptr > 0:
                 self.setHistory(self.ptr-1)
                 ev.accept()
                 return
-        elif ev.key() == QtCore.Qt.Key_Return:
+        elif ev.key() == QtCore.Qt.Key.Key_Return:
             self.execCmd()
         else:
             super().keyPressEvent(ev)

@@ -31,8 +31,8 @@ def mousePress(widget, pos, button, modifier=None):
     if isinstance(widget, QtGui.QGraphicsView):
         widget = widget.viewport()
     if modifier is None:
-        modifier = QtCore.Qt.NoModifier
-    event = QtGui.QMouseEvent(QtCore.QEvent.MouseButtonPress, pos, button, QtCore.Qt.NoButton, modifier)
+        modifier = QtCore.Qt.KeyboardModifier.NoModifier
+    event = QtGui.QMouseEvent(QtCore.QEvent.Type.MouseButtonPress, pos, button, QtCore.Qt.MouseButton.NoButton, modifier)
     QtGui.QApplication.sendEvent(widget, event)
 
 
@@ -40,8 +40,8 @@ def mouseRelease(widget, pos, button, modifier=None):
     if isinstance(widget, QtGui.QGraphicsView):
         widget = widget.viewport()
     if modifier is None:
-        modifier = QtCore.Qt.NoModifier
-    event = QtGui.QMouseEvent(QtCore.QEvent.MouseButtonRelease, pos, button, QtCore.Qt.NoButton, modifier)
+        modifier = QtCore.Qt.KeyboardModifier.NoModifier
+    event = QtGui.QMouseEvent(QtCore.QEvent.Type.MouseButtonRelease, pos, button, QtCore.Qt.MouseButton.NoButton, modifier)
     QtGui.QApplication.sendEvent(widget, event)
 
 
@@ -49,10 +49,10 @@ def mouseMove(widget, pos, buttons=None, modifier=None):
     if isinstance(widget, QtGui.QGraphicsView):
         widget = widget.viewport()
     if modifier is None:
-        modifier = QtCore.Qt.NoModifier
+        modifier = QtCore.Qt.KeyboardModifier.NoModifier
     if buttons is None:
-        buttons = QtCore.Qt.NoButton
-    event = QtGui.QMouseEvent(QtCore.QEvent.MouseMove, pos, QtCore.Qt.NoButton, buttons, modifier)
+        buttons = QtCore.Qt.MouseButton.NoButton
+    event = QtGui.QMouseEvent(QtCore.QEvent.Type.MouseMove, pos, QtCore.Qt.MouseButton.NoButton, buttons, modifier)
     QtGui.QApplication.sendEvent(widget, event)
 
 

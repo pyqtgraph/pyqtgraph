@@ -20,9 +20,9 @@ class BusyCursor(object):
             if QT_LIB == 'PySide':
                 # pass CursorShape rather than QCursor for PySide
                 # see https://bugreports.qt.io/browse/PYSIDE-243
-                QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+                QtGui.QApplication.setOverrideCursor(QtCore.Qt.CursorShape.WaitCursor)
             else:
-                QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+                QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.CursorShape.WaitCursor))
             BusyCursor.active.append(self)
             self._active = True
         else:

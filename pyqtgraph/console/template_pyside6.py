@@ -26,7 +26,7 @@ class Ui_Form(object):
         self.gridLayout.setObjectName(u"gridLayout")
         self.splitter = QSplitter(Form)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Vertical)
+        self.splitter.setOrientation(Qt.Orientation.Vertical)
         self.layoutWidget = QWidget(self.splitter)
         self.layoutWidget.setObjectName(u"layoutWidget")
         self.verticalLayout = QVBoxLayout(self.layoutWidget)
@@ -117,7 +117,7 @@ class Ui_Form(object):
 
         self.gridLayout_2.addWidget(self.exceptionInfoLabel, 1, 0, 1, 7)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_2.addItem(self.horizontalSpacer, 0, 5, 1, 1)
 

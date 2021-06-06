@@ -31,7 +31,7 @@ class Canvas(QtGui.QWidget):
         self.view = ViewBox()
         self.ui.view.setCentralItem(self.view)
         self.itemList = self.ui.itemList
-        self.itemList.setSelectionMode(self.itemList.ExtendedSelection)
+        self.itemList.setSelectionMode(self.itemList.SelectionMode.ExtendedSelection)
         self.allowTransforms = allowTransforms
         self.multiSelectBox = SelectBox()
         self.view.addItem(self.multiSelectBox)
@@ -165,13 +165,13 @@ class Canvas(QtGui.QWidget):
             citem = item.canvasItem()
         except AttributeError:
             return
-        if item.checkState(0) == QtCore.Qt.Checked:
+        if item.checkState(0) == QtCore.Qt.CheckState.Checked:
             for i in range(item.childCount()):
-                item.child(i).setCheckState(0, QtCore.Qt.Checked)
+                item.child(i).setCheckState(0, QtCore.Qt.CheckState.Checked)
             citem.show()
         else:
             for i in range(item.childCount()):
-                item.child(i).setCheckState(0, QtCore.Qt.Unchecked)
+                item.child(i).setCheckState(0, QtCore.Qt.CheckState.Unchecked)
             citem.hide()
 
     def treeItemSelected(self):
@@ -344,14 +344,14 @@ class Canvas(QtGui.QWidget):
                 insertLocation = i+1
                 
         node = QtGui.QTreeWidgetItem([name])
-        flags = node.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsDragEnabled
+        flags = node.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsDragEnabled
         if not isinstance(citem, GroupCanvasItem):
-            flags = flags & ~QtCore.Qt.ItemIsDropEnabled
+            flags = flags & ~QtCore.Qt.ItemFlag.ItemIsDropEnabled
         node.setFlags(flags)
         if citem.opts['visible']:
-            node.setCheckState(0, QtCore.Qt.Checked)
+            node.setCheckState(0, QtCore.Qt.CheckState.Checked)
         else:
-            node.setCheckState(0, QtCore.Qt.Unchecked)
+            node.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
         
         node.name = name
         parent.insertChild(insertLocation, node)
@@ -391,13 +391,13 @@ class Canvas(QtGui.QWidget):
         
     def itemVisibilityChanged(self, item):
         listItem = item.listItem
-        checked = listItem.checkState(0) == QtCore.Qt.Checked
+        checked = listItem.checkState(0) == QtCore.Qt.CheckState.Checked
         vis = item.isVisible()
         if vis != checked:
             if vis:
-                listItem.setCheckState(0, QtCore.Qt.Checked)
+                listItem.setCheckState(0, QtCore.Qt.CheckState.Checked)
             else:
-                listItem.setCheckState(0, QtCore.Qt.Unchecked)
+                listItem.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
     def removeItem(self, item):
         if isinstance(item, QtGui.QTreeWidgetItem):

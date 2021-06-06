@@ -38,8 +38,8 @@ class GradientWidget(GraphicsView):
         self.item.sigGradientChangeFinished.connect(self.sigGradientChangeFinished)
         self.setCentralItem(self.item)
         self.setOrientation(orientation)
-        self.setCacheMode(self.CacheNone)
-        self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.TextAntialiasing)
+        self.setCacheMode(self.CacheModeFlag.CacheNone)
+        self.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
 
         if QT_LIB == 'PyQt6':
             # PyQt6 doesn't allow or-ing of different enum types
@@ -47,16 +47,16 @@ class GradientWidget(GraphicsView):
             NoFrame = QtWidgets.QFrame.Shape.NoFrame.value
             Plain = QtWidgets.QFrame.Shadow.Plain.value
         else:
-            NoFrame = QtWidgets.QFrame.NoFrame
-            Plain = QtWidgets.QFrame.Plain
+            NoFrame = QtWidgets.QFrame.Shape.NoFrame
+            Plain = QtWidgets.QFrame.Shadow.Plain
         frame_style = NoFrame | Plain
 
         self.setFrameStyle(frame_style)
-        #self.setBackgroundRole(QtGui.QPalette.NoRole)
-        #self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.NoBrush))
+        #self.setBackgroundRole(QtGui.QPalette.ColorRole.NoRole)
+        #self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.BrushStyle.NoBrush))
         #self.setAutoFillBackground(False)
-        #self.setAttribute(QtCore.Qt.WA_PaintOnScreen, False)
-        #self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent, True)
+        #self.setAttribute(QtCore.Qt.WindowType.WindowType.WidgetAttribute.WA_PaintOnScreen, False)
+        #self.setAttribute(QtCore.Qt.WindowType.WindowType.WidgetAttribute.WA_OpaquePaintEvent, True)
 
     def setOrientation(self, ort):
         """Set the orientation of the widget. May be one of 'bottom', 'top', 

@@ -48,7 +48,7 @@ class movableRect(QtGui.QGraphicsRectItem):
         self.setPen(self.savedPen)
         ev.ignore()
     def mousePressEvent(self, ev):
-        if ev.button() == QtCore.Qt.LeftButton:
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
             self.pressDelta = self.mapToParent(ev.pos()) - self.pos()
         else:

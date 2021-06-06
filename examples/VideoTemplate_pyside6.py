@@ -78,7 +78,7 @@ class Ui_MainWindow(object):
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.rawImg = RawImageWidget(self.page_2)
         self.rawImg.setObjectName(u"rawImg")
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.rawImg.sizePolicy().hasHeightForWidth())
@@ -126,7 +126,7 @@ class Ui_MainWindow(object):
 
         self.label_3 = QLabel(self.centralwidget)
         self.label_3.setObjectName(u"label_3")
-        self.label_3.setAlignment(Qt.AlignCenter)
+        self.label_3.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.horizontalLayout_2.addWidget(self.label_3)
 
@@ -148,7 +148,7 @@ class Ui_MainWindow(object):
 
         self.label_2 = QLabel(self.centralwidget)
         self.label_2.setObjectName(u"label_2")
-        self.label_2.setAlignment(Qt.AlignCenter)
+        self.label_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.horizontalLayout.addWidget(self.label_2)
 
@@ -170,7 +170,7 @@ class Ui_MainWindow(object):
 
         self.label_4 = QLabel(self.centralwidget)
         self.label_4.setObjectName(u"label_4")
-        self.label_4.setAlignment(Qt.AlignCenter)
+        self.label_4.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.horizontalLayout_3.addWidget(self.label_4)
 
@@ -200,7 +200,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.gradient, 7, 2, 1, 2)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_2.addItem(self.horizontalSpacer, 3, 3, 1, 1)
 
@@ -209,7 +209,7 @@ class Ui_MainWindow(object):
         font = QFont()
         font.setPointSize(12)
         self.fpsLabel.setFont(font)
-        self.fpsLabel.setAlignment(Qt.AlignCenter)
+        self.fpsLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_2.addWidget(self.fpsLabel, 0, 0, 1, 4)
 
@@ -227,14 +227,14 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.framesSpin = QSpinBox(self.centralwidget)
         self.framesSpin.setObjectName(u"framesSpin")
-        self.framesSpin.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.framesSpin.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.framesSpin.setValue(10)
 
         self.horizontalLayout_4.addWidget(self.framesSpin)
 
         self.widthSpin = QSpinBox(self.centralwidget)
         self.widthSpin.setObjectName(u"widthSpin")
-        self.widthSpin.setButtonSymbols(QAbstractSpinBox.PlusMinus)
+        self.widthSpin.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.PlusMinus)
         self.widthSpin.setMaximum(10000)
         self.widthSpin.setValue(512)
 
@@ -242,7 +242,7 @@ class Ui_MainWindow(object):
 
         self.heightSpin = QSpinBox(self.centralwidget)
         self.heightSpin.setObjectName(u"heightSpin")
-        self.heightSpin.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.heightSpin.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.heightSpin.setMaximum(10000)
         self.heightSpin.setValue(512)
 

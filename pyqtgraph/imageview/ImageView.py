@@ -220,7 +220,7 @@ class ImageView(QtGui.QWidget):
         self.ui.roiPlot.registerPlot(self.name + '_ROI')
         self.view.register(self.name)
         
-        self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
+        self.noRepeatKeys = [QtCore.Qt.Key.Key_Right, QtCore.Qt.Key.Key_Left, QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_PageUp, QtCore.Qt.Key.Key_PageDown]
         
         self.roiClicked() ## initialize roi plot to correct shape / visibility
 
@@ -435,17 +435,17 @@ class ImageView(QtGui.QWidget):
             super().keyPressEvent(ev)
             return
 
-        if ev.key() == QtCore.Qt.Key_Space:
+        if ev.key() == QtCore.Qt.Key.Key_Space:
             if self.playRate == 0:
                 self.play()
             else:
                 self.play(0)
             ev.accept()
-        elif ev.key() == QtCore.Qt.Key_Home:
+        elif ev.key() == QtCore.Qt.Key.Key_Home:
             self.setCurrentIndex(0)
             self.play(0)
             ev.accept()
-        elif ev.key() == QtCore.Qt.Key_End:
+        elif ev.key() == QtCore.Qt.Key.Key_End:
             self.setCurrentIndex(self.getProcessedImage().shape[0]-1)
             self.play(0)
             ev.accept()
@@ -463,7 +463,7 @@ class ImageView(QtGui.QWidget):
             super().keyReleaseEvent(ev)
             return
 
-        if ev.key() in [QtCore.Qt.Key_Space, QtCore.Qt.Key_Home, QtCore.Qt.Key_End]:
+        if ev.key() in [QtCore.Qt.Key.Key_Space, QtCore.Qt.Key.Key_Home, QtCore.Qt.Key.Key_End]:
             ev.accept()
         elif ev.key() in self.noRepeatKeys:
             ev.accept()
@@ -480,22 +480,22 @@ class ImageView(QtGui.QWidget):
     def evalKeyState(self):
         if len(self.keysPressed) == 1:
             key = list(self.keysPressed.keys())[0]
-            if key == QtCore.Qt.Key_Right:
+            if key == QtCore.Qt.Key.Key_Right:
                 self.play(20)
                 self.jumpFrames(1)
                 self.lastPlayTime = ptime.time() + 0.2  ## 2ms wait before start
                                                         ## This happens *after* jumpFrames, since it might take longer than 2ms
-            elif key == QtCore.Qt.Key_Left:
+            elif key == QtCore.Qt.Key.Key_Left:
                 self.play(-20)
                 self.jumpFrames(-1)
                 self.lastPlayTime = ptime.time() + 0.2
-            elif key == QtCore.Qt.Key_Up:
+            elif key == QtCore.Qt.Key.Key_Up:
                 self.play(-100)
-            elif key == QtCore.Qt.Key_Down:
+            elif key == QtCore.Qt.Key.Key_Down:
                 self.play(100)
-            elif key == QtCore.Qt.Key_PageUp:
+            elif key == QtCore.Qt.Key.Key_PageUp:
                 self.play(-1000)
-            elif key == QtCore.Qt.Key_PageDown:
+            elif key == QtCore.Qt.Key.Key_PageDown:
                 self.play(1000)
         else:
             self.play(0)

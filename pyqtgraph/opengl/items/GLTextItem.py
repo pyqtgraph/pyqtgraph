@@ -16,7 +16,7 @@ class GLTextItem(GLGraphicsItem):
         self.setGLOptions(glopts)
 
         self.pos = np.array([0.0, 0.0, 0.0])
-        self.color = QtCore.Qt.white
+        self.color = QtCore.Qt.GlobalColor.white
         self.text = ''
         self.font = QtGui.QFont('Helvetica', 16)
 
@@ -75,7 +75,7 @@ class GLTextItem(GLGraphicsItem):
         painter = QtGui.QPainter(self.view())
         painter.setPen(self.color)
         painter.setFont(self.font)
-        painter.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.TextAntialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
         painter.drawText(text_pos[0], text_pos[1], self.text)
         painter.end()
 
