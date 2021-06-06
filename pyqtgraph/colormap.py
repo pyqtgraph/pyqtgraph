@@ -211,7 +211,7 @@ def makeMonochrome(color='green'):
     available. The following predefined color ramps are available:
     `neutral`, `warm`, `cool`, `green`, `amber`, `blue`, `red`, `pink`, `lavender`.
     
-    The ramp can also be specifiedby a tuple of float values in the range of 0 to 1.
+    The ramp can also be specified by a tuple of float values in the range of 0 to 1.
     In this case `(h, s, l0, l1)` describe hue, saturation, minimum lightness and maximum lightness
     within the HSL color space. The values `l0` and `l1` can be omitted. They default to 
     `l0=0.0` and `l1=1.0` in this case.
@@ -269,7 +269,6 @@ def testBarData(length=768, width=32):
     Returns an NumPy array that represents a modulated color bar ranging from 0 to 1.
     This is used to judge the perceived variation of the color gradient
     """
-    # gradient   = np.linspace(0.05, 0.95, length)
     gradient   = np.linspace(0.00, 1.00, length)
     modulation = -0.04 * np.sin( (np.pi/4) * np.arange(length) )
     data = np.zeros( (length, width) )
@@ -277,7 +276,6 @@ def testBarData(length=768, width=32):
         data[:,idx] = gradient + (idx/(width-1)) * modulation
     np.clip(data, 0.0, 1.0)
     return data
-
 
 class ColorMap(object):
     """
@@ -296,7 +294,6 @@ class ColorMap(object):
     A ColorMap object provides access to the interpolated colors by indexing with a float value:
     ``cm[0.5]`` returns a QColor corresponding to the center of ColorMap `cm`.
     """
-
     ## mapping modes
     CLIP   = 1
     REPEAT = 2
@@ -352,13 +349,13 @@ class ColorMap(object):
         self.color = np.zeros( (len(color), 4) ) # stores float rgba values
         for cnt, idx in enumerate(order):
             self.color[cnt] = mkColor(color[idx]).getRgbF()
+        # alternative code may be more efficinet, but fails to handle lists of QColor.
         # self.color = np.apply_along_axis(
         #     func1d = lambda x: np.uint8( mkColor(x).getRgb() ), # cast RGB integer values to uint8
         #     axis   = -1,
         #     arr    = color,
         #     )[order]
         
-        # print('colors:', self.color )
         self.mapping_mode = self.CLIP # default to CLIP mode   
         if mapping is not None:
             self.setMappingMode( mapping )
@@ -411,9 +408,6 @@ class ColorMap(object):
         colors = self.getColors(mode=self.QCOLOR)
         distances = colorDistance(colors)
         positions = np.insert( np.cumsum(distances), 0, 0.0 )
-        # positions /= positions[-1] # normalize last value to 1.0
-        # print('Distances:', distances)
-        # print('Positions:', positions)
         self.pos = positions / positions[-1] # normalize last value to 1.0
         self.stopsCache = {}
 

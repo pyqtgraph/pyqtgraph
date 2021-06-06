@@ -385,7 +385,7 @@ MATRIX_RGB_FROM_XYZ = np.array( (
     (-0.9692, 1.8760, 0.0416),
     ( 0.0556,-0.2040, 1.0570) ) )
 
-VECTOR_XYZn = np.array( ( 0.9505, 1.0000, 1.0891) ) # white reference at illuminat D65
+VECTOR_XYZn = np.array( ( 0.9505, 1.0000, 1.0891) ) # white reference at illuminant D65
 
 def CIELabColor(L, a, b, alpha=1.0):
     """
@@ -393,12 +393,44 @@ def CIELabColor(L, a, b, alpha=1.0):
     
     Parameters
     ----------
-    L: float
-        Lightness value ranging from 0 to 100
-    a, b: float
-        (green/red) and (blue/yellow) coordinates.
-    alpha: float, optional
-        Opacity, ranging from 0 to 1
+        L: float
+            Lightness value ranging from 0 to 100
+        a, b: float
+            (green/red) and (blue/yellow) coordinates, typically -127 to +127.
+        alpha: float, optional
+            Opacity, ranging from 0 to 1
+
+    Notes
+    -----
+    The CIE L*a*b* color space parametrizes color in terms of a luminance `L` 
+    and the `a` and `b` coordinates that locate the hue in terms of
+    a "green to red" and a "blue to yellow" axis.
+    
+    These coordinates seek to parametrize human color preception in such a way
+    that the Euclidean distance between the coordinates of two colors represents
+    the visual difference between these colors. In particular, the difference
+    
+    ΔE = sqrt( (L1-L2)² + (a1-a2)² + (b1-b2)² ) = 2.3
+    
+    is considered the smallest "just noticeable difference" between colors.
+    
+    This simple equation represents the CIE76 standard. Later standards CIE94
+    and CIE2000 refine the difference calculation ΔE, while maintaining the 
+    L*a*b* coordinates.
+    
+    Alternative (and arguably more accurate) methods exist to quantify color
+    difference, but the CIELab color space remains a convenient approximation.
+    
+    Under a known illumination, assumed to be white standard illuminant D65 
+    here, a CIELab color induces a response in the human eye
+    that is described by the tristimulus value XYZ. Once this is known, an
+    sRGB color can be calculated to induce the same response.
+    
+    More information and underlying mathematics can be found in e.g.
+    "CIELab Color Space" by Gernot Hoffmann, available at
+    http://docs-hoffmann.de/cielab03022003.pdf .
+    
+    Also see :func:`colorDistance() <pyqtgraph.colorDistance>`.
     """ 
     vec_Lab = np.array([L, a, b])
     # convert to tristimulus XYZ values
@@ -406,7 +438,7 @@ def CIELabColor(L, a, b, alpha=1.0):
     vec_XYZ[0] += a / 500                # X1 = (L+16)/116 + a/500
     vec_XYZ[2] -= b / 200                # Z1 = (L+16)/116 - b/200 
     for idx, val in enumerate(vec_XYZ):
-        if val > 0.20689: # 6.9456e-7:
+        if val > 0.20689:
             vec_XYZ[idx] = vec_XYZ[idx]**3
         else:
             vec_XYZ[idx] = (vec_XYZ[idx] - 16/116) / 7.787
@@ -431,6 +463,7 @@ def CIELabColor(L, a, b, alpha=1.0):
 def colorCIELab(qcol):
     """
     Describes a QColor by an array of CIE L*a*b* values.
+    Also see :func:`CIELabColor() <pyqtgraph.functions.CIELabColor>` .
     
     Parameters
     ----------
@@ -439,7 +472,10 @@ def colorCIELab(qcol):
     alpha: Boolean, optional
         If set to true, the returned tuple will include the alpha value 
 
-    Returns NumPy array `[L, a, b]`.
+    Returns
+    -------
+    NumPy array 
+        Color coordinates `[L, a, b]`.
     """
     srgb = qcol.getRgbF()[:3] # get sRGB values from QColor
     # convert gamma-encoded sRGB to linear:
@@ -451,7 +487,6 @@ def colorCIELab(qcol):
             vec_RGB[idx] = val / 12.92 # (s) coefficient
     # converted linear RGB to tristimulus XYZ:
     vec_XYZ = MATRIX_XYZ_FROM_RGB @ vec_RGB
-    # print(f'XYZ: {vec_XYZ}')
     # normalize with white reference and convert to L*a*b* values
     vec_XYZ1 = vec_XYZ / VECTOR_XYZn 
     for idx, val in enumerate(vec_XYZ1):
@@ -459,7 +494,6 @@ def colorCIELab(qcol):
             vec_XYZ1[idx] = vec_XYZ1[idx]**(1/3)
         else:
             vec_XYZ1[idx] = 7.787*vec_XYZ1[idx] + 16/116
-            #   vec_XYZ[idx] = (vec_XYZ[idx] - 16/116) / 7.787
     vec_Lab = np.array([
         116 * vec_XYZ1[1] - 16,              # Y1
         500 * (vec_XYZ1[0] - vec_XYZ1[1]),   # X1 - Y1
@@ -469,18 +503,21 @@ def colorCIELab(qcol):
 def colorDistance(colors, metric='CIE76'):
     """
     Returns the perceptual distances between a sequence of QColors.
+    See :func:`CIELabColor() <pyqtgraph.functions.CIELabColor>` for more information.
 
     Parameters
     ----------
-    colors: list of QColor
-    metric: string, optional
-        Metric used to determined the difference. Only 'CIE76' is supported at this time,
-        where a distance of 2.3 is considered a "just noticeable difference".
-        The default may change as more metrics become available.
+        colors: list of QColor
+            Two or more colors to calculate the distances between.
+        metric: string, optional
+            Metric used to determined the difference. Only 'CIE76' is supported at this time,
+            where a distance of 2.3 is considered a "just noticeable difference".
+            The default may change as more metrics become available.
     
     Returns 
     -------
-    List containing the `N-1` sequential distances between `N` colors.
+    List
+        The `N-1` sequential distances between `N` colors.
     """
     metric = metric.upper()
     if len(colors) < 1: return np.array([], dtype=np.float)
@@ -498,35 +535,35 @@ def colorDistance(colors, metric='CIE76'):
         return np.array(dist)
     raise ValueError(f'Metric {metric} is not available.')
     
-def makeMonochrome2(color='green'):
-    """
-    Returns a ColorMap object imitating a monochrome computer screen.
+# def makeMonochrome2(color='green'):
+#     """
+#     Returns a ColorMap object imitating a monochrome computer screen.
 
-    Parameters
-    ----------
-    color: str of tuple of floats
-        Primary color description. Can be one of predefined identifiers
-        'green', 'amber', 'blue', 'red', 'lavender', 'pink'
-        or a tuple of relative ``(R,G,B)`` contributions in range 0.0 to 1.0
-    """
-    name='dummy'
-    h_val = 0.35 # hue value
-    s_val = 0.60
-    l_min = 0.05
-    l_max = 0.98
-    l_vals = np.linspace(l_min, l_max, num=10)
-    qcol = QtGui.QColor()
-    color_list = []
-    for l_val in l_vals:
-        qcol.setHslF( h_val, s_val, l_val )
-        # print(l_val, qcol.name(), qcol.getRgbF() )
-        color_list.append( qcol.getRgb()[:3] )
+#     Parameters
+#     ----------
+#     color: str of tuple of floats
+#         Primary color description. Can be one of predefined identifiers
+#         'green', 'amber', 'blue', 'red', 'lavender', 'pink'
+#         or a tuple of relative ``(R,G,B)`` contributions in range 0.0 to 1.0
+#     """
+#     name='dummy'
+#     h_val = 0.35 # hue value
+#     s_val = 0.60
+#     l_min = 0.05
+#     l_max = 0.98
+#     l_vals = np.linspace(l_min, l_max, num=10)
+#     qcol = QtGui.QColor()
+#     color_list = []
+#     for l_val in l_vals:
+#         qcol.setHslF( h_val, s_val, l_val )
+#         # print(l_val, qcol.name(), qcol.getRgbF() )
+#         color_list.append( qcol.getRgb()[:3] )
         
         
-    # print(color_list)
-    stops = np.linspace(0.0, 1.0, num=10)
-    cmap = ColorMap(name=name, pos=stops, color=color_list )
-    return cmap
+#     # print(color_list)
+#     stops = np.linspace(0.0, 1.0, num=10)
+#     cmap = ColorMap(name=name, pos=stops, color=color_list )
+#     return cmap
 
     
 def colorTuple(c):
