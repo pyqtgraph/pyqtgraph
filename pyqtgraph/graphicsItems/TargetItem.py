@@ -247,7 +247,7 @@ class TargetItem(UIGraphicsItem):
         return dti.map(tr.map(self._path))
 
     def mouseDragEvent(self, ev):
-        if not self.movable or int(ev.button() & QtCore.Qt.MouseButton.LeftButton) == 0:
+        if not self.movable or ev.button() != QtCore.Qt.MouseButton.LeftButton:
             return
         ev.accept()
         if ev.isStart():
@@ -459,7 +459,7 @@ class TargetLabel(TextItem):
 
     def mouseDragEvent(self, ev):
         targetItem = self.parentItem()
-        if not targetItem.movable or int(ev.button() & QtCore.Qt.MouseButton.LeftButton) == 0:
+        if not targetItem.movable or ev.button() != QtCore.Qt.MouseButton.LeftButton:
             return
         ev.accept()
         if ev.isStart():
