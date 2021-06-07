@@ -12,6 +12,7 @@ examples = OrderedDict([
     ('Plot Customization', 'customPlot.py'),
     ('Timestamps on x axis', 'DateAxisItem.py'),
     ('Image Analysis', 'imageAnalysis.py'),
+    ('Matrix Display', 'MatrixDisplayExample.py'),
     ('Color Maps', 'colorMaps.py'),
     ('Color Gradient Plots', 'ColorGradientPlots.py'),
     ('ViewBox Features', Namespace(filename='ViewBoxFeatures.py', recommended=True)),
