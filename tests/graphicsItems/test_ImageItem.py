@@ -187,7 +187,7 @@ def test_ImageItem_axisorder():
         pg.setConfigOptions(imageAxisOrder=origMode)
         
 def test_setRect():    
-    def transforms_are_the_same(tr1, tr2):
+    def assert_equal_transforms(tr1, tr2):
         dic = { # there seems to be no easy way to get the matrix in one call:
             'tr11': ( tr1.m11(), tr2.m11() ),
             'tr12': ( tr1.m12(), tr2.m12() ),
@@ -199,12 +199,14 @@ def test_setRect():
             'tr32': ( tr1.m32(), tr2.m32() ),
             'tr33': ( tr1.m33(), tr2.m33() )
         }
+        log_string = 'Matrix element mismatch\n'
+        good = True
         for key, values in dic.items():
             val1, val2 = values
             if val1 != val2:
-                print(key,'mismatch:', val1,'!=',val2 )
-                return False
-        return True
+                good = False
+                log_string += f'{key}: {val1} != {val2}\n'
+        assert good, log_string
     
     tr = QtGui.QTransform() # construct a reference transform
     tr.scale(2, 4)          # scale 2x2 image to 4x8
@@ -212,18 +214,18 @@ def test_setRect():
     # the transformed 2x2 image would cover (-2,-4) to (2,4).
     # Now have setRect construct the same transform:
     imgitem = pg.ImageItem(np.eye(2), rect=(-2,-4, 4,8) ) # test tuple of floats
-    assert transforms_are_the_same(tr, imgitem.transform())
+    assert_equal_transforms(tr, imgitem.transform())
 
     imgitem = pg.ImageItem(np.eye(2), rect=QtCore.QRectF(-2,-4, 4,8) ) # test QRectF
-    assert transforms_are_the_same(tr, imgitem.transform())
+    assert_equal_transforms(tr, imgitem.transform())
     
     imgitem = pg.ImageItem(np.eye(2))
     imgitem.setRect(-2,-4, 4,8) # test individual parameters
-    assert transforms_are_the_same(tr, imgitem.transform())
+    assert_equal_transforms(tr, imgitem.transform())
 
     imgitem = pg.ImageItem(np.eye(2))
     imgitem.setRect(QtCore.QRect(-2,-4, 4,8)) # test QRect argument
-    assert transforms_are_the_same(tr, imgitem.transform())
+    assert_equal_transforms(tr, imgitem.transform())
 
 
 def test_dividebyzero():
