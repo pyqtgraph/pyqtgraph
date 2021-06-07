@@ -432,7 +432,6 @@ def CIELabColor(L, a, b, alpha=1.0):
     
     Also see :func:`colorDistance() <pyqtgraph.colorDistance>`.
     """ 
-    vec_Lab = np.array([L, a, b])
     # convert to tristimulus XYZ values
     vec_XYZ = np.full(3, ( L +16)/116 )  # Y1 = (L+16)/116
     vec_XYZ[0] += a / 500                # X1 = (L+16)/116 + a/500
@@ -534,42 +533,10 @@ def colorDistance(colors, metric='CIE76'):
             lab1 = lab2
         return np.array(dist)
     raise ValueError(f'Metric {metric} is not available.')
-    
-# def makeMonochrome2(color='green'):
-#     """
-#     Returns a ColorMap object imitating a monochrome computer screen.
 
-#     Parameters
-#     ----------
-#     color: str of tuple of floats
-#         Primary color description. Can be one of predefined identifiers
-#         'green', 'amber', 'blue', 'red', 'lavender', 'pink'
-#         or a tuple of relative ``(R,G,B)`` contributions in range 0.0 to 1.0
-#     """
-#     name='dummy'
-#     h_val = 0.35 # hue value
-#     s_val = 0.60
-#     l_min = 0.05
-#     l_max = 0.98
-#     l_vals = np.linspace(l_min, l_max, num=10)
-#     qcol = QtGui.QColor()
-#     color_list = []
-#     for l_val in l_vals:
-#         qcol.setHslF( h_val, s_val, l_val )
-#         # print(l_val, qcol.name(), qcol.getRgbF() )
-#         color_list.append( qcol.getRgb()[:3] )
-        
-        
-#     # print(color_list)
-#     stops = np.linspace(0.0, 1.0, num=10)
-#     cmap = ColorMap(name=name, pos=stops, color=color_list )
-#     return cmap
-
-    
 def colorTuple(c):
     """Return a tuple (R,G,B,A) from a QColor"""
     return (c.red(), c.green(), c.blue(), c.alpha())
-
 
 def colorStr(c):
     """Generate a hex string code from a QColor"""

@@ -9,7 +9,6 @@ import initExample
 import numpy as np
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
-import pyqtgraph.functions as fn
 
 name_list = (
     'warm','neutral','cool',
@@ -77,7 +76,7 @@ win.setWindowTitle('pyqtgraph example: Linearized color maps')
 win.show()
 
 bar_width = 32
-bar_data = pg.colormap.testBarData(width=bar_width)
+bar_data = pg.colormap.modulatedBarData(width=bar_width)
 
 num_bars = 0
 

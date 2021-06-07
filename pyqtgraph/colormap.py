@@ -264,10 +264,17 @@ def makeMonochrome(color='green'):
         color_list.append( qcol )
     return ColorMap( None, color_list, name=name, linearize=True )
 
-def testBarData(length=768, width=32):
+def modulatedBarData(length=768, width=32):
     """ 
     Returns an NumPy array that represents a modulated color bar ranging from 0 to 1.
-    This is used to judge the perceived variation of the color gradient
+    This is used to judge the perceived variation of the color gradient.
+    
+    Parameters
+    ----------
+    length: int
+        Length of the data set. Values will vary from 0 to 1 over this axis.
+    width: int
+        Width of the data set. The modulation will vary from 0% to 4% over this axis.    
     """
     gradient   = np.linspace(0.00, 1.00, length)
     modulation = -0.04 * np.sin( (np.pi/4) * np.arange(length) )
@@ -349,7 +356,7 @@ class ColorMap(object):
         self.color = np.zeros( (len(color), 4) ) # stores float rgba values
         for cnt, idx in enumerate(order):
             self.color[cnt] = mkColor(color[idx]).getRgbF()
-        # alternative code may be more efficinet, but fails to handle lists of QColor.
+        # alternative code may be more efficient, but fails to handle lists of QColor.
         # self.color = np.apply_along_axis(
         #     func1d = lambda x: np.uint8( mkColor(x).getRgb() ), # cast RGB integer values to uint8
         #     axis   = -1,

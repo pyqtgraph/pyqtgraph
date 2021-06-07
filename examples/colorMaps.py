@@ -28,7 +28,7 @@ win.setWindowTitle('pyqtgraph example: Color maps')
 win.show()
 
 bar_width = 32
-bar_data = pg.colormap.testBarData(width=bar_width)
+bar_data = pg.colormap.modulatedBarData(width=bar_width)
 
 num_bars = 0
 
