@@ -1208,7 +1208,7 @@ class PlotItem(GraphicsWidget):
         elif showValues is None: # leave labelling untouched
             showValues = (None, None, None, None)
         if size is not False and not isinstance(size, collections.abc.Sized):
-            size = (size, size) # 
+            size = (size, size) # expand single value to describe identical reserved width and height
 
         all_axes = ('left','top','right','bottom')
         for show_axis, show_value, axis_key in zip(selection, showValues, all_axes):
