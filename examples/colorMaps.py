@@ -7,8 +7,6 @@ from Matplotlib or ColorCET.
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
-import numpy as np
-
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 

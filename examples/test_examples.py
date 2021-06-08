@@ -59,7 +59,7 @@ darwin_opengl_broken = (platform.system() == "Darwin" and
 
 darwin_opengl_reason = ("pyopenGL cannot find openGL library on big sur: "
                         "https://github.com/python/cpython/pull/21241")
-       
+
 exceptionCondition = namedtuple("exceptionCondition", ["condition", "reason"])
 conditionalExamples = {
     "hdf5.py": exceptionCondition(
