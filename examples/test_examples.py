@@ -59,6 +59,14 @@ darwin_opengl_broken = (platform.system() == "Darwin" and
 
 darwin_opengl_reason = ("pyopenGL cannot find openGL library on big sur: "
                         "https://github.com/python/cpython/pull/21241")
+       
+darwin_pyside611_mpl_broken = (
+    platform.system() == "Darwin" and
+    Qt.VERSION_INFO.startswith("PySide6 6.1.1 ")
+)
+darwin_pyside611_mpl_reason = (
+    "Matplotlib causes segfaults with PySide 6.1.1 on OSX even without drawing operations."
+)
 
 exceptionCondition = namedtuple("exceptionCondition", ["condition", "reason"])
 conditionalExamples = {
@@ -109,6 +117,10 @@ conditionalExamples = {
     'GLViewWidget.py': exceptionCondition(
         not darwin_opengl_broken,
         reason=darwin_opengl_reason
+    ),
+    'colorMaps.py': exceptionCondition(
+        not darwin_pyside611_mpl_broken,
+        reason=darwin_pyside611_mpl_reason
     )
 }
 
