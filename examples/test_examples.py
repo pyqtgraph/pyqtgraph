@@ -205,8 +205,8 @@ except:
     process.stderr.close()
 
     if (fail or
-        'exception' in stderr.lower() or
-        'error' in stderr.lower()):
+        'Exception:' in stderr or
+        'Error:' in stderr):
         if (not fail 
             and name == "RemoteGraphicsView" 
             and "pyqtgraph.multiprocess.remoteproxy.ClosedError" in stderr):
