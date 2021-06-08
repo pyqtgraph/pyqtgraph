@@ -341,8 +341,14 @@ class ImageItem(GraphicsObject):
             or dark points in the data set.
             
             If False, the search will be omitted.
-            
+
             The default is `False` if a ``levels`` keyword argument is given, and `True` otherwise.
+            
+        levelSamples: int, default 65536
+            When determining minimum and maximum values, ImageItem
+            only inspects a subset of pixels no larger than this number.
+            Setting this larger than the total number of pixels considers all values.
+            
         """
         profile = debug.Profiler()
 
@@ -378,10 +384,8 @@ class ImageItem(GraphicsObject):
             else:
                 autoLevels = True
         if autoLevels:
-            img = self.image
-            while img.size > 2**16:
-                img = img[::2, ::2]
-            mn, mx = self._xp.nanmin(img), self._xp.nanmax(img)
+            level_samples = kargs.pop('levelSamples', 2**16) 
+            mn, mx = self.quickMinMax( targetSize=level_samples )
             # mn and mx can still be NaN if the data is all-NaN
             if mn == mx or self._xp.isnan(mn) or self._xp.isnan(mx):
                 mn = 0
@@ -457,11 +461,15 @@ class ImageItem(GraphicsObject):
         Returns (`min`, `max`).
         """
         data = self.image
-        while data.size > targetSize:
-            ax = self._xp.argmax(data.shape)
-            sl = [slice(None)] * data.ndim
-            sl[ax] = slice(None, None, 2)
-            data = data[sl]
+        if targetSize < 2: # keep at least two pixels
+            targetSize = 2
+        while True:
+            h, w = data.shape[:2]
+            if h * w <= targetSize: break
+            if h > w:
+                data = data[::2, ::] # downsample first axis
+            else:
+                data = data[::, ::2] # downsample second axis
         return self._xp.nanmin(data), self._xp.nanmax(data)
 
     def updateImage(self, *args, **kargs):
