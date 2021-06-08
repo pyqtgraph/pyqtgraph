@@ -17,7 +17,7 @@ import numpy as np
 #from numpy.linalg import norm
 from ..Point import Point
 from ..SRTTransform import SRTTransform
-from math import atan2, cos, sin, hypot, radians
+from math import atan2, cos, degrees, sin, hypot
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
@@ -795,17 +795,28 @@ class ROI(GraphicsObject):
         self.mouseDragHandler.mouseDragEvent(ev)
 
     def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.RightButton and self.isMoving:
-            ev.accept()
-            self.cancelMove()
-        if ev.button() == QtCore.Qt.RightButton and self.contextMenuEnabled():
-            self.raiseContextMenu(ev)
-            ev.accept()
-        elif ev.button() in self.acceptedMouseButtons():
-            ev.accept()
-            self.sigClicked.emit(self, ev)
-        else:
-            ev.ignore()
+        with warnings.catch_warnings():
+            # warning present on pyqt5 5.12 + python 3.8
+            warnings.filterwarnings(
+                "ignore",
+                message=(
+                    ".*Implicit conversion to integers using __int__ is "
+                    "deprecated, and may be removed in a future version of "
+                    "Python."
+                ),
+                category=DeprecationWarning
+            )
+            if ev.button() == QtCore.Qt.RightButton and self.isMoving:
+                ev.accept()
+                self.cancelMove()
+            if ev.button() == QtCore.Qt.RightButton and self.contextMenuEnabled():
+                self.raiseContextMenu(ev)
+                ev.accept()
+            elif ev.button() & self.acceptedMouseButtons():
+                ev.accept()
+                self.sigClicked.emit(self, ev)
+            else:
+                ev.ignore()
 
     def _moveStarted(self):
         self.isMoving = True
@@ -1400,18 +1411,29 @@ class Handle(UIGraphicsItem):
         self.update()
 
     def mouseClickEvent(self, ev):
-        ## right-click cancels drag
-        if ev.button() == QtCore.Qt.RightButton and self.isMoving:
-            self.isMoving = False  ## prevents any further motion
-            self.movePoint(self.startPos, finish=True)
-            ev.accept()
-        elif ev.button() & self.acceptedMouseButtons():
-            ev.accept()
-            if ev.button() == QtCore.Qt.RightButton and self.deletable:
-                self.raiseContextMenu(ev)
-            self.sigClicked.emit(self, ev)
-        else:
-            ev.ignore()        
+        with warnings.catch_warnings():
+            # warning present on pyqt5 5.12 + python 3.8
+            warnings.filterwarnings(
+                "ignore",
+                message=(
+                    ".*Implicit conversion to integers using __int__ is "
+                    "deprecated, and may be removed in a future version of "
+                    "Python."
+                ),
+                category=DeprecationWarning
+            )
+            ## right-click cancels drag
+            if ev.button() == QtCore.Qt.RightButton and self.isMoving:
+                self.isMoving = False  ## prevents any further motion
+                self.movePoint(self.startPos, finish=True)
+                ev.accept()
+            elif ev.button() & self.acceptedMouseButtons():
+                ev.accept()
+                if ev.button() == QtCore.Qt.RightButton and self.deletable:
+                    self.raiseContextMenu(ev)
+                self.sigClicked.emit(self, ev)
+            else:
+                ev.ignore()        
                 
     def buildMenu(self):
         menu = QtGui.QMenu()
@@ -1663,12 +1685,11 @@ class LineROI(ROI):
         pos2 = Point(pos2)
         d = pos2-pos1
         l = d.length()
-        ang = Point(1, 0).angle(d)
-        ra = radians(ang if ang is not None else 0.)
+        ra = Point(1, 0).angle(d, units="radians")
         c = Point(-width/2. * sin(ra), -width/2. * cos(ra))
         pos1 = pos1 + c
         
-        ROI.__init__(self, pos1, size=Point(l, width), angle=ang, **args)
+        ROI.__init__(self, pos1, size=Point(l, width), angle=degrees(ra), **args)
         self.addScaleRotateHandle([0, 0.5], [1, 0.5])
         self.addScaleRotateHandle([1, 0.5], [0, 0.5])
         self.addScaleHandle([0.5, 1], [0.5, 0.5])

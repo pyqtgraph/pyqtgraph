@@ -439,3 +439,9 @@ def mkQApp(name=None):
     if name is not None:
         QAPP.setApplicationName(name)
     return QAPP
+
+
+# exec() is used within _loadUiType, so we define as exec_() here and rename in pg namespace
+def exec_():
+    app = mkQApp()
+    return app.exec() if hasattr(app, 'exec') else app.exec_()

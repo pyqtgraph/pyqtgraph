@@ -11,6 +11,7 @@ __version__ = '0.12.1'
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt4 and PySide.
 from .Qt import QtGui, mkQApp
+from .Qt import exec_ as exec
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
 #if QtGui.QApplication.instance() is None:
@@ -56,6 +57,7 @@ CONFIG_OPTIONS = {
                                  # The default is 'col-major' for backward compatibility, but this may
                                  # change in the future.
     'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
+    'useNumba': False, # When True, use numba
 } 
 
 

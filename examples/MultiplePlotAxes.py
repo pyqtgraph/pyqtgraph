@@ -61,4 +61,4 @@ p2.addItem(pg.PlotCurveItem([10,20,40,80,40,20], pen='b'))
 p3.addItem(pg.PlotCurveItem([3200,1600,800,400,200,100], pen='r'))
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

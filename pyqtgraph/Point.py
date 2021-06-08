@@ -12,21 +12,23 @@ from math import atan2, hypot, degrees
 class Point(QtCore.QPointF):
     """Extension of QPointF which adds a few missing methods."""
     
+    __slots__ = ()
+
     def __init__(self, *args):
         if len(args) == 1:
-            if isinstance(args[0], QtCore.QSizeF):
-                QtCore.QPointF.__init__(self, float(args[0].width()), float(args[0].height()))
+            if isinstance(args[0], (QtCore.QSize, QtCore.QSizeF)):
+                super().__init__(float(args[0].width()), float(args[0].height()))
                 return
-            elif isinstance(args[0], float) or isinstance(args[0], int):
-                QtCore.QPointF.__init__(self, float(args[0]), float(args[0]))
+            elif isinstance(args[0], (int, float)):
+                super().__init__(float(args[0]), float(args[0]))
                 return
             elif hasattr(args[0], '__getitem__'):
-                QtCore.QPointF.__init__(self, float(args[0][0]), float(args[0][1]))
-                return
+                super().__init__(float(args[0][0]), float(args[0][1]))
+                return                
         elif len(args) == 2:
-            QtCore.QPointF.__init__(self, args[0], args[1])
+            super().__init__(args[0], args[1])
             return
-        QtCore.QPointF.__init__(self, *args)
+        super().__init__(*args)
         
     def __len__(self):
         return 2
@@ -41,6 +43,10 @@ class Point(QtCore.QPointF):
             return self.y()
         else:
             raise IndexError("Point has no index %s" % str(i))
+
+    def __iter__(self):
+        yield(self.x())
+        yield(self.y())
         
     def __setitem__(self, i, x):
         if i == 0:
@@ -87,47 +93,67 @@ class Point(QtCore.QPointF):
         return self._math_('__pow__', a)
     
     def _math_(self, op, x):
-        x = Point(x)
-        return Point(getattr(self[0], op)(x[0]), getattr(self[1], op)(x[1]))
+        if not isinstance(x, QtCore.QPointF):
+            x = Point(x)
+        return Point(getattr(self.x(), op)(x.x()), getattr(self.y(), op)(x.y()))
     
     def length(self):
         """Returns the vector length of this Point."""
-        return hypot(self[0], self[1])  # length
+        return hypot(self.x(), self.y())  # length
 
     def norm(self):
         """Returns a vector in the same direction with unit length."""
         return self / self.length()
     
-    def angle(self, a):
-        """Returns the angle in degrees between this vector and the vector a."""
+    def angle(self, a, units="degrees"):
+        """
+        Returns the angle in degrees from the vector a to self.
+        
+        Parameters
+        ----------
+        a : Point, QPointF or QPoint
+            The Point to return the angle with
+        units : str, optional
+            The units with which to compute the angle with, "degrees" or "radians",
+            default "degrees"
+        
+        Returns
+        -------
+        float
+            The angle between two vectors
+        """
         rads = atan2(self.y(), self.x()) - atan2(a.y(), a.x())
+        if units == "radians":
+            return rads
         return degrees(rads)
     
     def dot(self, a):
         """Returns the dot product of a and this Point."""
-        a = Point(a)
-        return self[0]*a[0] + self[1]*a[1]
+        if not isinstance(a, QtCore.QPointF):
+            a = Point(a)
+        return Point.dotProduct(self, a)
     
     def cross(self, a):
-        a = Point(a)
-        return self[0]*a[1] - self[1]*a[0]
+        if not isinstance(a, QtCore.QPointF):
+            a = Point(a)
+        return self.x() * a.y() - self.y() * a.x()
         
     def proj(self, b):
         """Return the projection of this vector onto the vector b"""
-        b1 = b / b.length()
+        b1 = b.norm()
         return self.dot(b1) * b1
     
     def __repr__(self):
-        return "Point(%f, %f)" % (self[0], self[1])
+        return "Point(%f, %f)" % (self.x(), self.y())
 
     def min(self):
-        return min(self[0], self[1])
+        return min(self.x(), self.y())
     
     def max(self):
-        return max(self[0], self[1])
+        return max(self.x(), self.y())
         
     def copy(self):
         return Point(self)
         
     def toQPoint(self):
-        return QtCore.QPoint(int(self[0]), int(self[1]))
+        return self.toPoint()

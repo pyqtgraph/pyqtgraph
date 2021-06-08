@@ -39,4 +39,4 @@ class MainWindow(TemplateBaseClass):
 win = MainWindow()
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

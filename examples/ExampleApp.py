@@ -369,7 +369,8 @@ class ExampleLoader(QtGui.QMainWindow):
             return
         if os.path.isdir(fn):
             fn = os.path.join(fn, '__main__.py')
-        text = open(fn).read()
+        with open(fn, "r") as currentFile:
+            text = currentFile.read()
         self.ui.codeView.setPlainText(text)
         self.ui.loadedFileLabel.setText(fn)
         self.codeBtn.hide()
@@ -384,7 +385,7 @@ class ExampleLoader(QtGui.QMainWindow):
 def main():
     app = pg.mkQApp()
     loader = ExampleLoader()
-    app.exec_()
+    pg.exec()
 
 if __name__ == '__main__':
     main()

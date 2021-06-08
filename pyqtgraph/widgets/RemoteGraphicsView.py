@@ -80,17 +80,14 @@ class RemoteGraphicsView(QtGui.QWidget):
                 self.shm = mmap.mmap(-1, size, self.shmtag) ## can't use tmpfile on windows because the file can only be opened once.
             else:
                 self.shm = mmap.mmap(self.shmFile.fileno(), size, mmap.MAP_SHARED, mmap.PROT_READ)
-        self.shm.seek(0)
-        data = self.shm.read(w*h*4)
-        self._img = QtGui.QImage(data, w, h, QtGui.QImage.Format_ARGB32)
-        self._img.data = data  # data must be kept alive or PySide 1.2.1 (and probably earlier) will crash.
+        self._img = QtGui.QImage(self.shm, w, h, QtGui.QImage.Format.Format_RGB32).copy()
         self.update()
         
     def paintEvent(self, ev):
         if self._img is None:
             return
         p = QtGui.QPainter(self)
-        p.drawImage(self.rect(), self._img, QtCore.QRect(0, 0, self._img.width(), self._img.height()))
+        p.drawImage(self.rect(), self._img, self._img.rect())
         p.end()
 
     def serialize_mouse_enum(self, *args):
@@ -103,7 +100,8 @@ class RemoteGraphicsView(QtGui.QWidget):
         return args
 
     def serialize_mouse_event(self, ev):
-        lpos, gpos = ev.localPos(), ev.screenPos()
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
+        gpos = ev.globalPosition() if hasattr(ev, 'globalPosition') else ev.screenPos()
         typ, btn, btns, mods = self.serialize_mouse_enum(
             ev.type(), ev.button(), ev.buttons(), ev.modifiers())
         return (typ, lpos, gpos, btn, btns, mods)
@@ -140,7 +138,11 @@ class RemoteGraphicsView(QtGui.QWidget):
         return super().wheelEvent(ev)
 
     def enterEvent(self, ev):
-        lws = ev.localPos(), ev.windowPos(), ev.screenPos()
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
+        wpos = ev.scenePosition() if hasattr(ev, 'scenePosition') else ev.windowPos()
+        gpos = ev.globalPosition() if hasattr(ev, 'globalPosition') else ev.screenPos()
+
+        lws = lpos, wpos, gpos
         self._view.enterEvent(lws, _callSync='off')
         return super().enterEvent(ev)
         
@@ -243,7 +245,7 @@ class Renderer(GraphicsView):
                 # PySide2, PySide6
                 img_ptr = self.shm
 
-            self.img = QtGui.QImage(img_ptr, iwidth, iheight, QtGui.QImage.Format_ARGB32)
+            self.img = QtGui.QImage(img_ptr, iwidth, iheight, QtGui.QImage.Format.Format_RGB32)
             self.img.setDevicePixelRatio(dpr)
 
             self.img.fill(0xffffffff)

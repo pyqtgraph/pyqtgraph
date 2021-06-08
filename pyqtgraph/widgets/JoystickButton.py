@@ -19,11 +19,13 @@ class JoystickButton(QtGui.QPushButton):
         
     def mousePressEvent(self, ev):
         self.setChecked(True)
-        self.pressPos = ev.localPos()
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
+        self.pressPos = lpos
         ev.accept()
         
     def mouseMoveEvent(self, ev):
-        dif = ev.localPos()-self.pressPos
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
+        dif = lpos - self.pressPos
         self.setState(dif.x(), -dif.y())
         
     def mouseReleaseEvent(self, ev):
@@ -97,5 +99,4 @@ if __name__ == '__main__':
         
     b.sigStateChanged.connect(fn)
         
-    app.exec_()
-        
+    app.exec() if hasattr(app, 'exec') else app.exec_()

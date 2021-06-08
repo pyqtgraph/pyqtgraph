@@ -32,6 +32,13 @@ except ImportError:
     _has_cupy = False
 
 try:
+    import numba
+    _has_numba = True
+except ImportError:
+    numba = None
+    _has_numba = False
+
+try:
     from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget
 except ImportError:
     RawImageGLWidget = None
@@ -71,6 +78,8 @@ else:
 # read in CLI args
 ui.cudaCheck.setChecked(args.cuda and _has_cupy)
 ui.cudaCheck.setEnabled(_has_cupy)
+ui.numbaCheck.setChecked(_has_numba and pg.getConfigOption("useNumba"))
+ui.numbaCheck.setEnabled(_has_numba)
 ui.framesSpin.setValue(args.frames)
 ui.widthSpin.setValue(args.size[0])
 ui.heightSpin.setValue(args.size[1])
@@ -216,6 +225,11 @@ def noticeCudaCheck():
         xp = np
     mkData()
 
+
+def noticeNumbaCheck():
+    pg.setConfigOption('useNumba', _has_numba and ui.numbaCheck.isChecked())
+
+
 mkData()
 
 
@@ -229,6 +243,7 @@ ui.widthSpin.valueChanged.connect(updateSize)
 ui.heightSpin.valueChanged.connect(updateSize)
 ui.framesSpin.valueChanged.connect(updateSize)
 ui.cudaCheck.toggled.connect(noticeCudaCheck)
+ui.numbaCheck.toggled.connect(noticeNumbaCheck)
 
 
 ptr = 0
@@ -281,4 +296,4 @@ timer.timeout.connect(update)
 timer.start(0)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

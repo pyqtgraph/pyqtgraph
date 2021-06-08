@@ -314,7 +314,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         center = self.opts['center']
         dist = self.opts['distance']
         if self.opts['rotationMethod'] == "quaternion":
-            pos = center - self.opts['rotation'].rotatedVector( Vector(0,0,dist) )
+            pos = Vector(center - self.opts['rotation'].rotatedVector(Vector(0,0,dist) ))
         else:
             # using 'euler' rotation method
             elev = radians(self.opts['elevation'])

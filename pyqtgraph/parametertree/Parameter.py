@@ -441,13 +441,13 @@ class Parameter(QtCore.QObject):
         
     def valueIsDefault(self):
         """Returns True if this parameter's value is equal to the default value."""
-        return self.value() == self.defaultValue()
+        return fn.eq(self.value(), self.defaultValue())
         
     def setLimits(self, limits):
         """Set limits on the acceptable values for this parameter. 
         The format of limits depends on the type of the parameter and
         some parameters do not make use of limits at all."""
-        if 'limits' in self.opts and self.opts['limits'] == limits:
+        if 'limits' in self.opts and fn.eq(self.opts['limits'], limits):
             return
         self.opts['limits'] = limits
         self.sigLimitsChanged.emit(self, limits)

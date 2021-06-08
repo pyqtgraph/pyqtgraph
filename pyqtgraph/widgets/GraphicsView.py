@@ -343,7 +343,7 @@ class GraphicsView(QtGui.QGraphicsView):
 
         if not self.mouseEnabled:
             return
-        lpos = ev.localPos()
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
         self.lastMousePos = lpos
         self.mousePressPos = lpos
         self.clickAccepted = ev.isAccepted()
@@ -360,7 +360,7 @@ class GraphicsView(QtGui.QGraphicsView):
         return   ## Everything below disabled for now..
         
     def mouseMoveEvent(self, ev):
-        lpos = ev.localPos()
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
         if self.lastMousePos is None:
             self.lastMousePos = lpos
         delta = Point(lpos - self.lastMousePos)
