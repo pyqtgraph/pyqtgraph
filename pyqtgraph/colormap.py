@@ -36,6 +36,8 @@ def listMaps(source=None):
         return list_of_maps
     elif source.lower() == 'matplotlib':
         try:
+            import matplotlib
+            matplotlib.use('template')
             import matplotlib.pyplot as mpl_plt
             list_of_maps = mpl_plt.colormaps()
             return list_of_maps

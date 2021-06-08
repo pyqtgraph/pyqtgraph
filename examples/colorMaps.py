@@ -8,6 +8,10 @@ from Matplotlib or ColorCET.
 import initExample
 
 import numpy as np
+
+import matplotlib
+matplotlib.use('template')
+
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 
