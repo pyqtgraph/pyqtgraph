@@ -468,8 +468,6 @@ def colorCIELab(qcol):
     ----------
     qcol: QColor
         QColor to be converted
-    alpha: Boolean, optional
-        If set to true, the returned tuple will include the alpha value 
 
     Returns
     -------
