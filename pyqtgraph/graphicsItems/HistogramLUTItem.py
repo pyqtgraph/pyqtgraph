@@ -268,6 +268,10 @@ class HistogramLUTItem(GraphicsWidget):
         """Enable auto-scaling on the histogram plot."""
         self.vb.enableAutoRange(self.vb.XYAxes)
 
+    def disableAutoHistogramRange(self):
+        """Disable auto-scaling on the histogram plot."""
+        self.vb.disableAutoRange(self.vb.XYAxes)
+
     def setImageItem(self, img):
         """Set an ImageItem to have its levels and LUT automatically controlled by this
         HistogramLUTItem.

@@ -3,6 +3,7 @@ import importlib
 import os
 import warnings
 import weakref
+import collections.abc
 
 import numpy as np
 
@@ -53,6 +54,7 @@ class PlotItem(GraphicsWidget):
     :func:`setYRange <pyqtgraph.ViewBox.setYRange>`,
     :func:`setRange <pyqtgraph.ViewBox.setRange>`,
     :func:`autoRange <pyqtgraph.ViewBox.autoRange>`,
+    :func:`setDefaultPadding <pyqtgraph.ViewBox.setDefaultPadding>`,
     :func:`setXLink <pyqtgraph.ViewBox.setXLink>`,
     :func:`setYLink <pyqtgraph.ViewBox.setYLink>`,
     :func:`setAutoPan <pyqtgraph.ViewBox.setAutoPan>`,
@@ -269,7 +271,7 @@ class PlotItem(GraphicsWidget):
     #Important: don't use a settattr(m, getattr(self.vb, m)) as we'd be leaving the viebox alive
     #because we had a reference to an instance method (creating wrapper methods at runtime instead).
     for m in ['setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan',         # NOTE: 
-              'setAutoVisible', 'setRange', 'autoRange', 'viewRect', 'viewRange',     # If you update this list, please 
+              'setAutoVisible', 'setDefaultPadding', 'setRange', 'autoRange', 'viewRect', 'viewRange',     # If you update this list, please 
               'setMouseEnabled', 'setLimits', 'enableAutoRange', 'disableAutoRange',  # update the class docstring 
               'setAspectLocked', 'invertY', 'invertX', 'register', 'unregister']:                # as well.
                 
@@ -295,7 +297,6 @@ class PlotItem(GraphicsWidget):
         ==============  ==========================================================================================
         """
         
-                
         if axisItems is None:
             axisItems = {}
         
@@ -332,7 +333,9 @@ class PlotItem(GraphicsWidget):
             axis.linkToView(self.vb)
             self.axes[k] = {'item': axis, 'pos': pos}
             self.layout.addItem(axis, *pos)
-            axis.setZValue(-1000)
+            # axis.setZValue(-1000)
+            # place axis above images at z=0, items that want to draw over the axes should be placed at z>=1:
+            axis.setZValue(0.5) 
             axis.setFlag(axis.ItemNegativeZStacksBehindParent)
             
             axisVisible = k in visibleAxes
@@ -1171,7 +1174,63 @@ class PlotItem(GraphicsWidget):
     def hideAxis(self, axis):
         """Hide one of the PlotItem's axes. ('left', 'bottom', 'right', or 'top')"""
         self.showAxis(axis, False)
-            
+        
+    def showAxes(self, selection, showValues=True, size=False):
+        """ 
+        Convenience method for quickly configuring axis settings.
+        
+        Parameters
+        ----------
+        selection: boolean or tuple of booleans (left, top, right, bottom)
+            Determines which AxisItems will be displayed.
+            A single boolean value will set all axes, 
+            so that ``showAxes(True)`` configures the axes to draw a frame.
+        showValues: optional, boolean or tuple of booleans (left, top, right, bottom)
+            Determines if values will be displayed for the ticks of each axis.
+            True value shows values for left and bottom axis (default).
+            False shows no values.
+            None leaves settings unchanged.
+            If not specified, left and bottom axes will be drawn with values.
+        size: optional, float or tuple of floats (width, height)
+            Reserves as fixed amount of space (width for vertical axis, height for horizontal axis)
+            for each axis where tick values are enabled. If only a single float value is given, it
+            will be applied for both width and height. If `None` is given instead of a float value,
+            the axis reverts to automatic allocation of space.
+        """
+        if selection is True: # shortcut: enable all axes, creating a frame
+            selection = (True, True, True, True)
+        elif selection is False: # shortcut: disable all axes
+            selection = (False, False, False, False)
+        if showValues is True: # shortcut: defaults arrangement with labels at left and bottom
+            showValues = (True, False, False, True)
+        elif showValues is False: # shortcut: disable all labels
+            showValues = (False, False, False, False)
+        elif showValues is None: # leave labelling untouched
+            showValues = (None, None, None, None)
+        if size is not False and not isinstance(size, collections.abc.Sized):
+            size = (size, size) # make sure that size is either False or a full set of (width, height)
+
+        all_axes = ('left','top','right','bottom')
+        for show_axis, show_value, axis_key in zip(selection, showValues, all_axes):
+            if show_axis is None:
+                pass # leave axis display as it is.
+            else:
+                if show_axis: self.showAxis(axis_key)
+                else        : self.hideAxis(axis_key)
+                
+            if show_value is None:
+                pass # leave value display as it is.
+            else:
+                ax = self.getAxis(axis_key)
+                ax.setStyle(showValues=show_value)
+                if size is not False: # size adjustment is requested
+                    if axis_key in ('left','right'):
+                        if show_value: ax.setWidth(size[0])
+                        else         : ax.setWidth( None )
+                    elif axis_key in ('top', 'bottom'):
+                        if show_value: ax.setHeight(size[1])
+                        else         : ax.setHeight( None )
+
     def showScale(self, *args, **kargs):
         warnings.warn(
             'PlotItem.showScale has been deprecated and will be removed in 0.13. '

@@ -25,6 +25,9 @@ def test_PlotCurveItem():
     
     c.setData(data, connect='finite')
     assertImageApproved(p, 'plotcurveitem/connectfinite', "Plot curve with finite points connected.")
+
+    c.setData(data, connect='finite', skipFiniteCheck=True)
+    assertImageApproved(p, 'plotcurveitem/connectfinite', "Plot curve with finite points connected using QPolygonF.")
     
     c.setData(data, connect=np.array([1,1,1,0,1,1,0,0,1,0,0,0,1,1,0,0]))
     assertImageApproved(p, 'plotcurveitem/connectarray', "Plot curve with connection array.")
