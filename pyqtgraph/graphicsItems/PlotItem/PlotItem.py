@@ -113,7 +113,7 @@ class PlotItem(GraphicsWidget):
         
         GraphicsWidget.__init__(self, parent)
         
-        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.setSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Expanding)
         
         ## Set up control buttons
         path = os.path.dirname(__file__)
@@ -333,11 +333,9 @@ class PlotItem(GraphicsWidget):
             axis.linkToView(self.vb)
             self.axes[k] = {'item': axis, 'pos': pos}
             self.layout.addItem(axis, *pos)
-            # axis.setZValue(-1000)
             # place axis above images at z=0, items that want to draw over the axes should be placed at z>=1:
             axis.setZValue(0.5) 
-            axis.setFlag(axis.ItemNegativeZStacksBehindParent)
-            
+            axis.setFlag(axis.GraphicsItemFlag.ItemNegativeZStacksBehindParent)           
             axisVisible = k in visibleAxes
             self.showAxis(k, axisVisible)
         
@@ -428,7 +426,7 @@ class PlotItem(GraphicsWidget):
         
     def avgParamListClicked(self, item):
         name = str(item.text())
-        self.paramList[name] = (item.checkState() == QtCore.Qt.Checked)
+        self.paramList[name] = (item.checkState() == QtCore.Qt.CheckState.Checked)
         self.recomputeAverages()
         
     def recomputeAverages(self):
@@ -452,7 +450,7 @@ class PlotItem(GraphicsWidget):
             ### First determine the key of the curve to which this new data should be averaged
             for i in range(self.ctrl.avgParamList.count()):
                 item = self.ctrl.avgParamList.item(i)
-                if item.checkState() == QtCore.Qt.Checked:
+                if item.checkState() == QtCore.Qt.CheckState.Checked:
                     remKeys.append(str(item.text()))
                 else:
                     addKeys.append(str(item.text()))
@@ -709,18 +707,18 @@ class PlotItem(GraphicsWidget):
                     p = '.'.join(p)
                     
                 ## If the parameter is not in the list, add it.
-                matches = self.ctrl.avgParamList.findItems(p, QtCore.Qt.MatchExactly)
+                matches = self.ctrl.avgParamList.findItems(p, QtCore.Qt.MatchFlag.MatchExactly)
                 if len(matches) == 0:
                     i = QtGui.QListWidgetItem(p)
                     if p in self.paramList and self.paramList[p] is True:
-                        i.setCheckState(QtCore.Qt.Checked)
+                        i.setCheckState(QtCore.Qt.CheckState.Checked)
                     else:
-                        i.setCheckState(QtCore.Qt.Unchecked)
+                        i.setCheckState(QtCore.Qt.CheckState.Unchecked)
                     self.ctrl.avgParamList.addItem(i)
                 else:
                     i = matches[0]
                     
-                self.paramList[p] = (i.checkState() == QtCore.Qt.Checked)
+                self.paramList[p] = (i.checkState() == QtCore.Qt.CheckState.Checked)
 
     def writeSvgCurves(self, fileName=None):
         if fileName is None:
@@ -1304,7 +1302,7 @@ class PlotItem(GraphicsWidget):
         self.fileDialog = FileDialog()
         if PlotItem.lastFileDir is not None:
             self.fileDialog.setDirectory(PlotItem.lastFileDir)
-        self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
-        self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
+        self.fileDialog.setFileMode(QtGui.QFileDialog.FileMode.AnyFile)
+        self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptMode.AcceptSave)
         self.fileDialog.show()
         self.fileDialog.fileSelected.connect(handler)

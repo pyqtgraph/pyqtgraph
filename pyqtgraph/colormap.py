@@ -541,7 +541,7 @@ class ColorMap(object):
             color = np.concatenate( (col_n, col_p) )
         grad.setStops(list(zip(pos, color)))
         if self.mapping_mode == self.REPEAT:
-            grad.setSpread( QtGui.QGradient.RepeatSpread )
+            grad.setSpread( QtGui.QGradient.Spread.RepeatSpread )
         return grad
 
     def getBrush(self, span=(0.,1.), orientation='vertical'):

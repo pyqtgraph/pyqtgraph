@@ -27,7 +27,7 @@ def qapp():
     if app is None:
         app = mkQApp()
     yield app
-    app.processEvents(QtCore.QEventLoop.AllEvents, 100)
+    app.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents, 100)
 
 
 def test_signal_proxy_slot(qapp):
@@ -44,7 +44,7 @@ def test_signal_proxy_slot(qapp):
 
     sender.signalSend.emit()
     proxy.flush()
-    qapp.processEvents(QtCore.QEventLoop.AllEvents, 10)
+    qapp.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents, 10)
 
     assert receiver.counter > 0
 
@@ -68,7 +68,7 @@ def test_signal_proxy_disconnect_slot(qapp):
 
     sender.signalSend.emit()
     proxy.flush()
-    qapp.processEvents(QtCore.QEventLoop.AllEvents, 10)
+    qapp.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents, 10)
 
     assert receiver.counter == 0
 
@@ -86,7 +86,7 @@ def test_signal_proxy_no_slot_start(qapp):
 
     sender.signalSend.emit()
     proxy.flush()
-    qapp.processEvents(QtCore.QEventLoop.AllEvents, 10)
+    qapp.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents, 10)
     assert receiver.counter == 0
 
     # Start a connect
@@ -94,7 +94,7 @@ def test_signal_proxy_no_slot_start(qapp):
     assert proxy.blockSignal is False
     sender.signalSend.emit()
     proxy.flush()
-    qapp.processEvents(QtCore.QEventLoop.AllEvents, 10)
+    qapp.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents, 10)
     assert receiver.counter > 0
 
     # An additional connect should raise an AssertionError
@@ -119,12 +119,12 @@ def test_signal_proxy_slot_block(qapp):
         sender.signalSend.emit()
         sender.signalSend.emit()
         proxy.flush()
-        qapp.processEvents(QtCore.QEventLoop.AllEvents, 10)
+        qapp.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents, 10)
 
         assert receiver.counter == 0
 
     sender.signalSend.emit()
     proxy.flush()
-    qapp.processEvents(QtCore.QEventLoop.AllEvents, 10)
+    qapp.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents, 10)
 
     assert receiver.counter > 0

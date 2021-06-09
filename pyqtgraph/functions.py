@@ -307,7 +307,7 @@ def mkBrush(*args, **kwds):
     elif len(args) == 1:
         arg = args[0]
         if arg is None:
-            return QtGui.QBrush(QtCore.Qt.NoBrush)
+            return QtGui.QBrush(QtCore.Qt.BrushStyle.NoBrush)
         elif isinstance(arg, QtGui.QBrush):
             return QtGui.QBrush(arg)
         else:
@@ -330,7 +330,6 @@ def mkPen(*args, **kargs):
         mkPen(None)   # (no pen)
     
     In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`    """
-    
     color = kargs.get('color', None)
     width = kargs.get('width', 1)
     style = kargs.get('style', None)
@@ -345,7 +344,7 @@ def mkPen(*args, **kargs):
         if isinstance(arg, QtGui.QPen):
             return QtGui.QPen(arg)  ## return a copy of this pen
         elif arg is None:
-            style = QtCore.Qt.NoPen
+            style = QtCore.Qt.PenStyle.NoPen
         else:
             color = arg
     if len(args) > 1:
@@ -1560,15 +1559,9 @@ def ndarray_to_qimage(arr, fmt):
     # will trigger the COW mechanism, i.e. a copy is made under the hood.
 
     if QT_LIB.startswith('PyQt'):
-        if QtCore.PYQT_VERSION == 0x60000:
-            # PyQt5          -> const
-            # PyQt6 >= 6.0.1 -> const
-            # PyQt6 == 6.0.0 -> non-const
-            img_ptr = Qt.sip.voidptr(arr)
-        else:
-            # PyQt5          -> non-const
-            # PyQt6 >= 6.0.1 -> non-const
-            img_ptr = int(Qt.sip.voidptr(arr))  # or arr.ctypes.data
+        # PyQt5          -> non-const
+        # PyQt6 >= 6.0.1 -> non-const
+        img_ptr = int(Qt.sip.voidptr(arr))  # or arr.ctypes.data
     else:
         # bindings that support ndarray
         # PyQt5          -> const
@@ -1619,7 +1612,7 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     
     copied = False
     if imgData.ndim == 2:
-        imgFormat = QtGui.QImage.Format_Grayscale8
+        imgFormat = QtGui.QImage.Format.Format_Grayscale8
     elif imgData.ndim == 3:
         # If we didn't explicitly specify alpha, check the array shape.
         if alpha is None:
@@ -1638,9 +1631,9 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         profile("add alpha channel")
         
         if alpha:
-            imgFormat = QtGui.QImage.Format_ARGB32
+            imgFormat = QtGui.QImage.Format.Format_ARGB32
         else:
-            imgFormat = QtGui.QImage.Format_RGB32
+            imgFormat = QtGui.QImage.Format.Format_RGB32
     else:
         raise TypeError("Image array must have ndim = 2 or 3.")
         
@@ -1706,7 +1699,7 @@ def imageToArray(img, copy=False, transpose=True):
     arr = qimage_to_ndarray(img)
 
     fmt = img.format()
-    if fmt == img.Format_RGB32:
+    if fmt == img.Format.Format_RGB32:
         arr[...,3] = 255
     
     if copy:
@@ -1936,7 +1929,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
             count=n, offset=4)
         struct.pack_into('>i', backstore, 0, n)
-        # cStart, fillRule (Qt.OddEvenFill)
+        # cStart, fillRule (Qt.FillRule.OddEvenFill)
         struct.pack_into('>ii', backstore, 4+n*20, 0, 0)
 
     # Fill array with vertex values

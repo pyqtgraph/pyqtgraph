@@ -119,11 +119,11 @@ def renderSymbol(symbol, size, pen, brush, device=None):
     ## Render a spot with the given parameters to a pixmap
     penPxWidth = max(math.ceil(pen.widthF()), 1)
     if device is None:
-        device = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth), QtGui.QImage.Format_ARGB32)
+        device = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth), QtGui.QImage.Format.Format_ARGB32)
         device.fill(0)
     p = QtGui.QPainter(device)
     try:
-        p.setRenderHint(p.Antialiasing)
+        p.setRenderHint(p.RenderHint.Antialiasing)
         p.translate(device.width()*0.5, device.height()*0.5)
         drawSymbol(p, symbol, size, pen, brush)
     finally:
@@ -1140,7 +1140,7 @@ class ScatterPlotItem(GraphicsObject):
 
             else:
                 # render each symbol individually
-                p.setRenderHint(p.Antialiasing, aa)
+                p.setRenderHint(p.RenderHint.Antialiasing, aa)
 
                 for pt, style in zip(
                         pts[:, viewMask].T,
@@ -1164,7 +1164,7 @@ class ScatterPlotItem(GraphicsObject):
                     drawSymbol(p2, *style)
                 p2.end()
 
-            p.setRenderHint(p.Antialiasing, aa)
+            p.setRenderHint(p.RenderHint.Antialiasing, aa)
             self.picture.play(p)
 
     def points(self):
@@ -1224,7 +1224,7 @@ class ScatterPlotItem(GraphicsObject):
                 & (self.data['y'] - h < b))
 
     def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.LeftButton:
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             pts = self.pointsAt(ev.pos())
             if len(pts) > 0:
                 self.ptsClicked = pts

@@ -66,10 +66,10 @@ win.resize(1000,800)
 
 lw = pg.GraphicsLayoutWidget()
 lw.setFixedWidth(1000)
-lw.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+lw.setSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Expanding)
 
 scr = QtGui.QScrollArea()
-scr.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+scr.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
 scr.setWidget(lw)
 win.setCentralWidget(scr)
 win.setWindowTitle('pyqtgraph example: Linearized color maps')

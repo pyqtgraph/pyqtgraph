@@ -73,22 +73,21 @@ class GraphicsView(QtGui.QGraphicsView):
             useOpenGL = getConfigOption('useOpenGL')
         
         self.useOpenGL(useOpenGL)
-        
-        self.setCacheMode(self.CacheBackground)
+        self.setCacheMode(self.CacheModeFlag.CacheBackground)
         
         ## This might help, but it's probably dangerous in the general case..
         #self.setOptimizationFlag(self.DontSavePainterState, True)
         
-        self.setBackgroundRole(QtGui.QPalette.NoRole)
+        self.setBackgroundRole(QtGui.QPalette.ColorRole.NoRole)
         self.setBackground(background)
         
-        self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.setFrameShape(QtGui.QFrame.NoFrame)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setTransformationAnchor(QtGui.QGraphicsView.NoAnchor)
-        self.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
-        self.setViewportUpdateMode(QtGui.QGraphicsView.MinimalViewportUpdate)
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
+        self.setFrameShape(QtGui.QFrame.Shape.NoFrame)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setTransformationAnchor(QtGui.QGraphicsView.ViewportAnchor.NoAnchor)
+        self.setResizeAnchor(QtGui.QGraphicsView.ViewportAnchor.AnchorViewCenter)
+        self.setViewportUpdateMode(QtGui.QGraphicsView.ViewportUpdateMode.MinimalViewportUpdate)
         
         
         self.lockedViewports = []
@@ -124,9 +123,9 @@ class GraphicsView(QtGui.QGraphicsView):
         """Enable or disable default antialiasing.
         Note that this will only affect items that do not specify their own antialiasing options."""
         if aa:
-            self.setRenderHints(self.renderHints() | QtGui.QPainter.Antialiasing)
+            self.setRenderHints(self.renderHints() | QtGui.QPainter.RenderHint.Antialiasing)
         else:
-            self.setRenderHints(self.renderHints() & ~QtGui.QPainter.Antialiasing)
+            self.setRenderHints(self.renderHints() & ~QtGui.QPainter.RenderHint.Antialiasing)
         
     def setBackground(self, background):
         """
@@ -216,9 +215,9 @@ class GraphicsView(QtGui.QGraphicsView):
             self.resetTransform()
         else:
             if self.aspectLocked:
-                self.fitInView(self.range, QtCore.Qt.KeepAspectRatio)
+                self.fitInView(self.range, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
             else:
-                self.fitInView(self.range, QtCore.Qt.IgnoreAspectRatio)
+                self.fitInView(self.range, QtCore.Qt.AspectRatioMode.IgnoreAspectRatio)
             
         if propagate:
             for v in self.lockedViewports:
@@ -374,13 +373,13 @@ class GraphicsView(QtGui.QGraphicsView):
         if self.clickAccepted:  ## Ignore event if an item in the scene has already claimed it.
             return
         
-        if ev.buttons() == QtCore.Qt.RightButton:
+        if ev.buttons() == QtCore.Qt.MouseButton.RightButton:
             delta = Point(fn.clip_scalar(delta[0], -50, 50), fn.clip_scalar(-delta[1], -50, 50))
             scale = 1.01 ** delta
             self.scale(scale[0], scale[1], center=self.mapToScene(self.mousePressPos))
             self.sigDeviceRangeChanged.emit(self, self.range)
 
-        elif ev.buttons() in [QtCore.Qt.MiddleButton, QtCore.Qt.LeftButton]:  ## Allow panning by left or mid button.
+        elif ev.buttons() in [QtCore.Qt.MouseButton.MiddleButton, QtCore.Qt.MouseButton.LeftButton]:  ## Allow panning by left or mid button.
             px = self.pixelSize()
             tr = -delta * px
             

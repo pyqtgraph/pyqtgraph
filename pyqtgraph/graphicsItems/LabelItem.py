@@ -119,10 +119,10 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.setMinimumHeight(bounds.height())
         
         self._sizeHint = {
-            QtCore.Qt.MinimumSize: (bounds.width(), bounds.height()),
-            QtCore.Qt.PreferredSize: (bounds.width(), bounds.height()),
-            QtCore.Qt.MaximumSize: (-1, -1),  #bounds.width()*2, bounds.height()*2),
-            QtCore.Qt.MinimumDescent: (0, 0)  ##?? what is this?
+            QtCore.Qt.SizeHint.MinimumSize: (bounds.width(), bounds.height()),
+            QtCore.Qt.SizeHint.PreferredSize: (bounds.width(), bounds.height()),
+            QtCore.Qt.SizeHint.MaximumSize: (-1, -1),  #bounds.width()*2, bounds.height()*2),
+            QtCore.Qt.SizeHint.MinimumDescent: (0, 0)  ##?? what is this?
         }
         self.updateGeometry()
         

@@ -311,7 +311,7 @@ class ImageTester(QtGui.QWidget):
         self.label = QtGui.QLabel()
         self.layout.addWidget(self.label, 1, 0, 1, 2)
         self.label.setWordWrap(True)
-        font = QtGui.QFont("monospace", 14, QtGui.QFont.Bold)
+        font = QtGui.QFont("monospace", 14, QtGui.QFont.Weight.Bold)
         self.label.setFont(font)
 
         self.passBtn = QtGui.QPushButton('Pass')
@@ -377,7 +377,7 @@ class ImageTester(QtGui.QWidget):
             v.image.setImage(np.zeros((1, 1, 3), dtype=np.ubyte))
 
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Escape:
+        if event.key() == QtCore.Qt.Key.Key_Escape:
             self.lastKey = 'esc'
         else:
             self.lastKey = str(event.text()).lower()

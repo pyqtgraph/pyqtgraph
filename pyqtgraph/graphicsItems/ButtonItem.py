@@ -50,7 +50,7 @@ class ButtonItem(GraphicsObject):
         self.setOpacity(0.7)
         
     def paint(self, p, *args):
-        p.setRenderHint(p.Antialiasing)
+        p.setRenderHint(p.RenderHint.Antialiasing)
         p.drawPixmap(0, 0, self.pixmap)
         
     def boundingRect(self):

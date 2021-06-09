@@ -22,8 +22,8 @@ def test_InfiniteLine():
     vline = plt.addLine(x=1)
     assert vline.angle == 90
     br = vline.mapToView(QtGui.QPolygonF(vline.boundingRect()))
-    assert br.containsPoint(pg.Point(1, 5), QtCore.Qt.OddEvenFill)
-    assert not br.containsPoint(pg.Point(5, 0), QtCore.Qt.OddEvenFill)
+    assert br.containsPoint(pg.Point(1, 5), QtCore.Qt.FillRule.OddEvenFill)
+    assert not br.containsPoint(pg.Point(5, 0), QtCore.Qt.FillRule.OddEvenFill)
     hline = plt.addLine(y=0)
     assert hline.angle == 0
     assert hline.boundingRect().contains(pg.Point(5, 0))
@@ -44,10 +44,10 @@ def test_InfiniteLine():
     # test bounding rect for oblique line
     br = oline.mapToScene(oline.boundingRect())
     pos = oline.mapToScene(pg.Point(2, 0))
-    assert br.containsPoint(pos, QtCore.Qt.OddEvenFill)
+    assert br.containsPoint(pos, QtCore.Qt.FillRule.OddEvenFill)
     px = pg.Point(-0.5, -1.0 / 3**0.5)
-    assert br.containsPoint(pos + 5 * px, QtCore.Qt.OddEvenFill)
-    assert not br.containsPoint(pos + 7 * px, QtCore.Qt.OddEvenFill)
+    assert br.containsPoint(pos + 5 * px, QtCore.Qt.FillRule.OddEvenFill)
+    assert not br.containsPoint(pos + 7 * px, QtCore.Qt.FillRule.OddEvenFill)
     plt.close()
 
 def test_mouseInteraction():
@@ -67,7 +67,7 @@ def test_mouseInteraction():
     pos2 = pos - QtCore.QPointF(200, 200)
     mouseMove(plt, pos)
     assert vline.mouseHovering is True and hline.mouseHovering is False
-    mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
+    mouseDrag(plt, pos, pos2, QtCore.Qt.MouseButton.LeftButton)
     px = vline.pixelLength(pg.Point(1, 0), ortho=True)
     assert abs(vline.value() - plt.plotItem.vb.mapSceneToView(pos2).x()) <= px
 
@@ -77,7 +77,7 @@ def test_mouseInteraction():
     pos2 = pos + QtCore.QPointF(-20, -20)
     mouseMove(plt, pos)
     assert vline.mouseHovering is False and hline.mouseHovering is False
-    mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
+    mouseDrag(plt, pos, pos2, QtCore.Qt.MouseButton.LeftButton)
     assert hline.value() == 0
 
     # test vertical drag
@@ -85,7 +85,7 @@ def test_mouseInteraction():
     pos2 = pos - QtCore.QPointF(50, 50)
     mouseMove(plt, pos)
     assert vline.mouseHovering is False and hline.mouseHovering is True
-    mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
+    mouseDrag(plt, pos, pos2, QtCore.Qt.MouseButton.LeftButton)
     px = hline.pixelLength(pg.Point(1, 0), ortho=True)
     assert abs(hline.value() - plt.plotItem.vb.mapSceneToView(pos2).y()) <= px
 
@@ -94,6 +94,6 @@ def test_mouseInteraction():
     pos2 = pos - QtCore.QPointF(50, 50)
     mouseMove(plt, pos)
     assert hline2.mouseHovering == False
-    mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
+    mouseDrag(plt, pos, pos2, QtCore.Qt.MouseButton.LeftButton)
     assert hline2.value() == -1
     plt.close()

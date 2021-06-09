@@ -90,6 +90,10 @@ conditionalExamples = {
         not darwin_opengl_broken,
         reason=darwin_opengl_reason
     ),
+    'GLTextItem.py': exceptionCondition(
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
+    ),
     'GLLinePlotItem.py': exceptionCondition(
         not darwin_opengl_broken,
         reason=darwin_opengl_reason

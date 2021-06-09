@@ -55,7 +55,7 @@ class GroupBox(QtGui.QGroupBox):
         
         if c is True:
             self.collapseBtn.setPath(self.closePath)
-            self.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred, closing=True)
+            self.setSizePolicy(QtGui.QSizePolicy.Policy.Preferred, QtGui.QSizePolicy.Policy.Preferred, closing=True)
         elif c is False:
             self.collapseBtn.setPath(self.openPath)
             self.setSizePolicy(self._lastSizePolicy)

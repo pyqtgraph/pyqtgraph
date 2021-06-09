@@ -30,7 +30,7 @@ class CurvePoint(GraphicsObject):
         self.setProperty('index', 0)
         
         if hasattr(self, 'ItemHasNoContents'):
-            self.setFlags(self.flags() | self.ItemHasNoContents)
+            self.setFlags(self.flags() | self.GraphicsItemFlag.ItemHasNoContents)
         
         if pos is not None:
             self.setPos(pos)
@@ -113,7 +113,7 @@ class CurveArrow(CurvePoint):
         CurvePoint.__init__(self, curve, index=index, pos=pos)
         if opts.get('pxMode', True):
             opts['pxMode'] = False
-            self.setFlags(self.flags() | self.ItemIgnoresTransformations)
+            self.setFlags(self.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
         opts['angle'] = 0
         self.arrow = ArrowItem.ArrowItem(**opts)
         self.arrow.setParentItem(self)

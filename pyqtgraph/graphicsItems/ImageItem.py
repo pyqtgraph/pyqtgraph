@@ -76,23 +76,31 @@ class ImageItem(GraphicsObject):
 
     def setCompositionMode(self, mode):
         """
-        Change the composition mode of the item to `mode`, used when overlaying multiple ImageItems.
-        See ``QPainter::CompositionMode`` in the Qt documentation for details. 
-
-        Most common arguments:
+        Change the composition mode of the item. This is useful when overlaying
+        multiple items.
         
-        - ``QtGui.QPainter.CompositionMode_SourceOver``:
-            (Default) Image replaces the background if it is opaque. 
-            Otherwise the alpha channel controls the visibility of the background.
+        Parameters
+        ----------
+        mode : ``QtGui.QPainter.CompositionMode``
+            Composition of the item, often used when overlaying items.  Common
+            options include:
 
-        - ``QtGui.QPainter.CompositionMode_Overlay``:
-            The image color is mixed with the background color to reflect the lightness or darkness of the background.
-        
-        - ``QtGui.QPainter.CompositionMode_Plus``:
-            Both the alpha and color of the image and background pixels are added together.
+            ``QPainter.CompositionMode.CompositionMode_SourceOver`` (Default)
+            Image replaces the background if it is opaque. Otherwise, it uses
+            the alpha channel to blend the image with the background.
 
-        - ``QtGui.QPainter.CompositionMode_Multiply``:
-            The output is the image color multiplied by the background.
+            ``QPainter.CompositionMode.CompositionMode_Overlay`` Image color is
+            mixed with the background color to reflect the lightness or
+            darkness of the background
+
+            ``QPainter.CompositionMode.CompositionMode_Plus`` Both the alpha
+            and color of the image and background pixels are added together.
+
+            ``QPainter.CompositionMode.CompositionMode_Plus`` The output is the
+            image color multiplied by the background.
+
+            See ``QPainter::CompositionMode`` in the Qt Documentation for more
+            options and details
         """
         self.paintMode = mode
         self.update()
@@ -902,7 +910,7 @@ class ImageItem(GraphicsObject):
         parent items, but its position will be transformed as usual.
         (see ``GraphicsItem::ItemIgnoresTransformations`` in the Qt documentation)
         """
-        self.setFlag(self.ItemIgnoresTransformations, b)
+        self.setFlag(self.GraphicsItemFlag.ItemIgnoresTransformations, b)
 
     def setScaledMode(self):
         self.setPxMode(False)
@@ -949,7 +957,7 @@ class ImageItem(GraphicsObject):
         return max(1, int(1.0 / w)), max(1, int(1.0 / h))
 
     def mouseDragEvent(self, ev):
-        if ev.button() != QtCore.Qt.LeftButton:
+        if ev.button() != QtCore.Qt.MouseButton.LeftButton:
             ev.ignore()
             return
         elif self.drawKernel is not None:
@@ -957,10 +965,10 @@ class ImageItem(GraphicsObject):
             self.drawAt(ev.pos(), ev)
 
     def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.RightButton:
+        if ev.button() == QtCore.Qt.MouseButton.RightButton:
             if self.raiseContextMenu(ev):
                 ev.accept()
-        if self.drawKernel is not None and ev.button() == QtCore.Qt.LeftButton:
+        if self.drawKernel is not None and ev.button() == QtCore.Qt.MouseButton.LeftButton:
             self.drawAt(ev.pos(), ev)
 
     def raiseContextMenu(self, ev):
@@ -985,11 +993,11 @@ class ImageItem(GraphicsObject):
         return self.menu
 
     def hoverEvent(self, ev):
-        if not ev.isExit() and self.drawKernel is not None and ev.acceptDrags(QtCore.Qt.LeftButton):
-            ev.acceptClicks(QtCore.Qt.LeftButton) ## we don't use the click, but we also don't want anyone else to use it.
-            ev.acceptClicks(QtCore.Qt.RightButton)
+        if not ev.isExit() and self.drawKernel is not None and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
+            ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton) ## we don't use the click, but we also don't want anyone else to use it.
+            ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)
         elif not ev.isExit() and self.removable:
-            ev.acceptClicks(QtCore.Qt.RightButton)  ## accept context menu clicks
+            ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)  ## accept context menu clicks
 
     def tabletEvent(self, ev):
         pass

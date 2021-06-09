@@ -6,15 +6,15 @@ app = pg.mkQApp()
 def test_basics_graphics_view():
     view = pg.GraphicsView()
     background_role = view.backgroundRole()
-    assert background_role == QtGui.QPalette.Window
+    assert background_role == QtGui.QPalette.ColorRole.Window
 
     assert view.backgroundBrush().color() == QtGui.QColor(0, 0, 0, 255)
 
-    assert view.focusPolicy() == QtCore.Qt.StrongFocus
-    assert view.transformationAnchor() == QtGui.QGraphicsView.NoAnchor
-    minimal_update = QtGui.QGraphicsView.MinimalViewportUpdate
+    assert view.focusPolicy() == QtCore.Qt.FocusPolicy.StrongFocus
+    assert view.transformationAnchor() == QtGui.QGraphicsView.ViewportAnchor.NoAnchor
+    minimal_update = QtGui.QGraphicsView.ViewportUpdateMode.MinimalViewportUpdate
     assert view.viewportUpdateMode() == minimal_update
-    assert view.frameShape() == QtGui.QFrame.NoFrame
+    assert view.frameShape() == QtGui.QFrame.Shape.NoFrame
     assert view.hasMouseTracking() is True
 
     # Default properties
@@ -32,11 +32,11 @@ def test_basics_graphics_view():
     # --------------------------------------
     view.setBackground("w")
     assert view._background == "w"
-    assert view.backgroundBrush().color() == QtCore.Qt.white
+    assert view.backgroundBrush().color() == QtCore.Qt.GlobalColor.white
 
     # Set anti aliasing
     # --------------------------------------
-    aliasing = QtGui.QPainter.Antialiasing
+    aliasing = QtGui.QPainter.RenderHint.Antialiasing
     # Default is set to `False`
     assert view.renderHints() & aliasing != aliasing
     view.setAntialiasing(True)

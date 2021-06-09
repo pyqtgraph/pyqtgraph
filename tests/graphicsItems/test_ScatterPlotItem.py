@@ -63,7 +63,7 @@ def test_scatterplotitem():
             spot.setData(None)
             app.processEvents()
 
-    plot.clear()
+    plot.close()
 
 
 def test_init_spots():
