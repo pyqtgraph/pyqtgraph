@@ -14,9 +14,6 @@ class BusyCursor(object):
     May be nested. If called from a non-gui thread, then the cursor will not be affected.
     """
 
-    active = []
-    nesting_count = 0
-
     def __enter__(self):
         app = QtCore.QCoreApplication.instance()
         self._active = (app is not None) and (QtCore.QThread.currentThread() == app.thread())
