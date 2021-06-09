@@ -12,7 +12,7 @@ def BusyCursor():
     active = (app is not None) and (QtCore.QThread.currentThread() == app.thread())
     try:
         if active:
-            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.CursorShape.WaitCursor))
         yield
     finally:
         if active:
