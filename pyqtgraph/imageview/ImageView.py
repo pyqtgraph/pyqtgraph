@@ -12,32 +12,34 @@ Widget used for displaying 2D or 3D data. Features:
   - ROI plotting
   - Image normalization through a variety of methods
 """
+import numpy as np
 import os
 from math import log10
-import numpy as np
 
+from .. import (
+    debug,
+    functions as fn,
+    getConfigOption,
+    ImageItem,
+    InfiniteLine,
+    LinearRegionItem,
+    ptime,
+    ROI,
+    SignalProxy,
+    ViewBox,
+)
 from ..Qt import QtCore, QtGui, QT_LIB
-from .. import functions as fn
-import importlib
-ui_template = importlib.import_module(
-    f'.ImageViewTemplate_{QT_LIB.lower()}', package=__package__)
-
-from ..graphicsItems.ImageItem import *
-from ..graphicsItems.ROI import *
-from ..graphicsItems.LinearRegionItem import *
-from ..graphicsItems.InfiniteLine import *
-from ..graphicsItems.ViewBox import *
-from ..graphicsItems.VTickGroup import VTickGroup
 from ..graphicsItems.GradientEditorItem import addGradientListToDocstring
-from .. import ptime as ptime
-from .. import debug as debug
-from ..SignalProxy import SignalProxy
-from .. import getConfigOption
+from ..graphicsItems.VTickGroup import VTickGroup
 
 try:
     from bottleneck import nanmin, nanmax
 except ImportError:
     from numpy import nanmin, nanmax
+
+import importlib
+ui_template = importlib.import_module(
+    f'.ImageViewTemplate_{QT_LIB.lower()}', package=__package__)
 
 translate = QtCore.QCoreApplication.translate
 
