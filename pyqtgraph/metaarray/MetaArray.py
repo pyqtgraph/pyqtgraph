@@ -124,7 +124,7 @@ class MetaArray(object):
     nameTypes = [basestring, tuple]
     @staticmethod
     def isNameType(var):
-        return any([isinstance(var, t) for t in MetaArray.nameTypes])
+        return any(isinstance(var, t) for t in MetaArray.nameTypes)
         
         
     ## methods to wrap from embedded ndarray / HDF5 
@@ -1330,8 +1330,6 @@ if __name__ == '__main__':
     #### File I/O tests
     
     print("\n================  File I/O Tests  ===================\n")
-    import tempfile
-    tf = tempfile.mktemp()
     tf = 'test.ma'
     # write whole array
     

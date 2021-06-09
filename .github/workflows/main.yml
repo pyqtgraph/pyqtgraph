@@ -24,27 +24,22 @@ jobs:
           - python-version: "3.8"
             qt-lib: "pyqt"
             qt-version: "PyQt5~=5.15.0"
-            numpy-version: "~=1.19.0"
+            numpy-version: "~=1.20.0"
           - python-version: "3.8"
             qt-lib: "pyside"
             qt-version: "PySide2~=5.15.0"
-            numpy-version: "~=1.19.0"
+            numpy-version: "~=1.20.0"
           - python-version: "3.9"
             qt-lib: "pyqt"
             qt-version: "PyQt6"
-            numpy-version: "~=1.19.0"
+            numpy-version: "~=1.20.0"
           - python-version: "3.9"
             qt-lib: "pyside"
             qt-version: "PySide6"
-            numpy-version: "~=1.19.0"
+            numpy-version: "~=1.20.0"
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Checkout test-data
-      uses: actions/checkout@v2
-      with:
-        repository: pyqtgraph/test-data
-        path: .pyqtgraph/test-data
     - name: Setup Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -69,10 +64,10 @@ jobs:
       shell: cmd
     - name: Install Dependencies
       run: |
-        pip install --upgrade pip
-        pip install ${{ matrix.qt-version }} numpy${{ matrix.numpy-version }} scipy pyopengl h5py matplotlib
-        pip install .
-        pip install pytest pytest-cov pytest-xdist coverage
+        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install ${{ matrix.qt-version }} numpy${{ matrix.numpy-version }} scipy pyopengl h5py matplotlib numba
+        python -m pip install --use-feature=in-tree-build .
+        python -m pip install pytest
     - name: "Install Linux VirtualDisplay"
       if: runner.os == 'Linux'
       run: |
@@ -80,14 +75,14 @@ jobs:
         sudo apt-get install -y libxkbcommon-x11-0 x11-utils
         sudo apt-get install --no-install-recommends -y libyaml-dev libegl1-mesa libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0
         sudo apt-get install -y libopengl0
-        pip install pytest-xvfb
+        python -m pip install pytest-xvfb
     - name: 'Debug Info'
       run: |
         echo python location: `which python`
         echo python version: `python --version`
         echo pytest location: `which pytest`
         echo installed packages
-        pip list
+        python -m pip list
         echo pyqtgraph system info
         python -c "import pyqtgraph as pg; pg.systemInfo()"
       shell: bash
@@ -106,10 +101,9 @@ jobs:
     - name: Run Tests
       run: |
         mkdir $SCREENSHOT_DIR
-        pytest . -v \
-          -n auto \
-          --junitxml pytest.xml \
-          --cov pyqtgraph --cov-report=xml --cov-report=html
+        pytest tests -v \
+          --junitxml pytest.xml 
+        pytest examples -v
       shell: bash
     - name: Upload Screenshots
       uses: actions/upload-artifact@v2
@@ -120,29 +114,9 @@ jobs:
     env:
       SCREENSHOT_DIR: ./screenshots
 
-  build-docs:
-    name: build docs
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Python 3.9
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - name: Install Dependencies
-        run: |
-          cd doc
-          python -m pip install -r requirements.txt
-      - name: Build Documentation
-        run: |
-          cd doc
-          make html SPHINXOPTS='-W --keep-going -v'
-
   build-wheel:
     name: build wheel
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
       - name: Setup Python 3.9

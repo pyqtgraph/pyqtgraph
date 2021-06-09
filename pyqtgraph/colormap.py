@@ -1,23 +1,30 @@
 import numpy as np
 from .Qt import QtGui, QtCore
-from .python2_3 import basestring
-from .functions import mkColor, eq
+from .functions import mkColor, eq, colorDistance
 from os import path, listdir
-import collections
+from collections.abc import Callable, Sequence
+import warnings
 
 _mapCache = {}
 
 def listMaps(source=None):
     """
-    Warning, highly experimental, subject to change.
+    .. warning:: Experimental, subject to change.
 
-    List available color maps
-    ===============  =================================================================
-    **Arguments:**
-    source           'matplotlib' lists maps that can be imported from MatPlotLib
-                     'colorcet' lists maps that can be imported from ColorCET
-                     otherwise local maps are listed
-    ===============  =================================================================
+    List available color maps.
+
+    Parameters
+    ----------
+    source: str, optional
+        Color map source. If omitted, locally stored maps are listed. Otherwise
+
+        - 'matplotlib' lists maps that can be imported from Matplotlib
+        - 'colorcet' lists maps that can be imported from ColorCET
+
+    Returns
+    -------
+    list of str
+        Known color map names.
     """
     if source is None:
         pathname = path.join(path.dirname(__file__), 'colors','maps')
@@ -32,7 +39,7 @@ def listMaps(source=None):
             import matplotlib.pyplot as mpl_plt
             list_of_maps = mpl_plt.colormaps()
             return list_of_maps
-        except ModuleNotFoundError: 
+        except ModuleNotFoundError:
             return []
     elif source.lower() == 'colorcet':
         try:
@@ -40,35 +47,46 @@ def listMaps(source=None):
             list_of_maps = list( colorcet.palette.keys() )
             list_of_maps.sort()
             return list_of_maps
-        except ModuleNotFoundError: 
+        except ModuleNotFoundError:
             return []
-    return []    
+    return []
 
 
 def get(name, source=None, skipCache=False):
     """
-    Warning, highly experimental, subject to change.
+    .. warning:: Experimental, subject to change.
 
-    Returns a ColorMap object from a local definition or imported from another library
-    ===============  =================================================================
-    **Arguments:**
-    name             Name of color map. Can be a path to a defining file.
-    source           'matplotlib' imports a map defined by Matplotlib
-                     'colorcet' imports a maps defined by ColorCET
-                     otherwise local data is used
-    ===============  =================================================================
+    Returns a ColorMap object from a local definition or imported from another library.
+    The generated ColorMap objects are cached for fast repeated access.
+
+    Parameters
+    ----------
+    name: str
+        Name of color map. In addition to the included maps, this can also
+        be a path to a file in the local folder. See the files in the
+        ``pyqtgraph/colors/maps/`` folder for examples of the format.
+    source: str, optional
+        If omitted, a locally stored map is returned. Otherwise
+
+        - 'matplotlib' imports a map defined by Matplotlib.
+        - 'colorcet' imports a map defined by ColorCET.
+
+    skipCache: bool, optional
+        If `skipCache=True`, the internal cache is skipped and a new
+        ColorMap object is generated. This can load an unaltered copy
+        when the previous ColorMap object has been modified.
     """
     if not skipCache and name in _mapCache:
         return _mapCache[name]
     if source is None:
-        return _get_from_file(name)
+        return _getFromFile(name)
     elif source == 'matplotlib':
-        return _get_from_matplotlib(name)
+        return getFromMatplotlib(name)
     elif source == 'colorcet':
-        return _get_from_colorcet(name)
+        return getFromColorcet(name)
     return None
 
-def _get_from_file(name):
+def _getFromFile(name):
     filename = name
     if filename[0] !='.': # load from built-in directory
         dirname = path.dirname(__file__)
@@ -95,7 +113,7 @@ def _get_from_file(name):
                 color_tuple = tuple( [ int(255*float(c)+0.5) for c in comp ] )
             else:
                 hex_str = parts[0]
-                if hex_str[0] == '#': 
+                if hex_str[0] == '#':
                     hex_str = hex_str[1:] # strip leading #
                 if len(hex_str) < 3: continue # not enough information
                 if len(hex_str) == 3: # parse as abbreviated RGB
@@ -109,13 +127,18 @@ def _get_from_file(name):
         # end of line reading loop
     # end of open
     cm = ColorMap(
-        pos=np.linspace(0.0, 1.0, len(color_list)), 
+        pos=np.linspace(0.0, 1.0, len(color_list)),
         color=color_list) #, names=color_names)
-    _mapCache[name] = cm
+    if cm is not None:
+        cm.name = name
+        _mapCache[name] = cm
     return cm
 
-def _get_from_matplotlib(name):
-    """ import colormap from matplotlib definition """
+def getFromMatplotlib(name):
+    """ 
+    Generates a ColorMap object from a Matplotlib definition.
+    Same as ``colormap.get(name, source='matplotlib')``.
+    """
     # inspired and informed by "mpl_cmaps_in_ImageItem.py", published by Sebastian Hoefer at 
     # https://github.com/honkomonk/pyqtgraph_sandbox/blob/master/mpl_cmaps_in_ImageItem.py
     try:
@@ -126,7 +149,7 @@ def _get_from_matplotlib(name):
     col_map = mpl_plt.get_cmap(name)
     if hasattr(col_map, '_segmentdata'): # handle LinearSegmentedColormap
         data = col_map._segmentdata
-        if ('red' in data) and isinstance(data['red'], collections.Sequence):
+        if ('red' in data) and isinstance(data['red'], Sequence):
             positions = set() # super-set of handle positions in individual channels
             for key in ['red','green','blue']:
                 for tup in data[key]:
@@ -142,21 +165,22 @@ def _get_from_matplotlib(name):
                 col_data[:,idx] = np.interp(col_data[:,3], positions, comp_vals)
             cm = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
         # some color maps (gnuplot in particular) are defined by RGB component functions:
-        elif ('red' in data) and isinstance(data['red'], collections.Callable):
+        elif ('red' in data) and isinstance(data['red'], Callable):
             col_data = np.zeros((64, 4))
             col_data[:,-1] = np.linspace(0., 1., 64)
             for idx, key in enumerate(['red','green','blue']):
                 col_data[:,idx] = np.clip( data[key](col_data[:,-1]), 0, 1)
-            cm = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)  
+            cm = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
     elif hasattr(col_map, 'colors'): # handle ListedColormap
         col_data = np.array(col_map.colors)
         cm = ColorMap(pos=np.linspace(0.0, 1.0, col_data.shape[0]), color=255*col_data[:,:3]+0.5 )
     if cm is not None:
+        cm.name = name
         _mapCache[name] = cm
     return cm
 
-def _get_from_colorcet(name):
-    """ import colormap from colorcet definition """
+def getFromColorcet(name):
+    """ Generates a ColorMap object from a colorcet definition. Same as ``colormap.get(name, source='colorcet')``. """
     try:
         import colorcet
     except ModuleNotFoundError:
@@ -165,44 +189,118 @@ def _get_from_colorcet(name):
     color_list = []
     for hex_str in color_strings:
         if hex_str[0] != '#': continue
-        if len(hex_str) != 7:            
+        if len(hex_str) != 7:
             raise ValueError('Invalid color string '+str(hex_str)+' in colorcet import.')
         color_tuple = tuple( bytes.fromhex( hex_str[1:] ) )
         color_list.append( color_tuple )
-    if len(color_list) == 0: 
+    if len(color_list) == 0:
         return None
     cm = ColorMap(
-        pos=np.linspace(0.0, 1.0, len(color_list)), 
+        pos=np.linspace(0.0, 1.0, len(color_list)),
         color=color_list) #, names=color_names)
-    _mapCache[name] = cm
+    if cm is not None:
+        cm.name = name
+        _mapCache[name] = cm
     return cm
+    
+def makeMonochrome(color='green'):
+    """
+    Returns a ColorMap object with a dark to bright ramp and adjustable tint.
+    
+    In addition to neutral, warm or cold grays, imitations of monochrome computer monitors are also
+    available. The following predefined color ramps are available:
+    `neutral`, `warm`, `cool`, `green`, `amber`, `blue`, `red`, `pink`, `lavender`.
+    
+    The ramp can also be specified by a tuple of float values in the range of 0 to 1.
+    In this case `(h, s, l0, l1)` describe hue, saturation, minimum lightness and maximum lightness
+    within the HSL color space. The values `l0` and `l1` can be omitted. They default to 
+    `l0=0.0` and `l1=1.0` in this case.
 
+    Parameters
+    ----------
+    color: str or tuple of floats
+        Color description. Can be one of the predefined identifiers, or a tuple
+        `(h, s, l0, l1)`, `(h, s)` or (`h`).
+        'green', 'amber', 'blue', 'red', 'lavender', 'pink'
+        or a tuple of relative ``(R,G,B)`` contributions in range 0.0 to 1.0
+    """
+    name=f'Monochrome {color}'
+    defaults = {
+        'neutral': (0.00, 0.00, 0.00, 1.00),
+        'warm'   : (0.10, 0.08, 0.00, 0.95),
+        'cool'   : (0.60, 0.08, 0.00, 0.95),
+        'green'  : (0.35, 0.55, 0.02, 0.90),
+        'amber'  : (0.09, 0.80, 0.02, 0.80),
+        'blue'   : (0.58, 0.85, 0.02, 0.95),
+        'red'    : (0.01, 0.60, 0.02, 0.90),
+        'pink'   : (0.93, 0.65, 0.02, 0.95),
+        'lavender': (0.75, 0.50, 0.02, 0.90)
+    }
+    if isinstance(color, str):
+        if color in defaults:
+            h_val, s_val, l_min, l_max = defaults[color]
+        else:
+            valid = ','.join(defaults.keys())
+            raise ValueError(f"Undefined color descriptor '{color}', known values are:\n{valid}")
+    else:
+        s_val = 0.70 # set up default values
+        l_min = 0.00
+        l_max = 1.00
+        if not hasattr(color,'__len__'):
+            h_val = float(color)
+        elif len(color) == 1:
+            h_val = color[0]
+        elif len(color) == 2:
+            h_val, s_val = color
+        elif len(color) == 4:
+            h_val, s_val, l_min, l_max = color
+        else:
+            raise ValueError(f"Invalid color descriptor '{color}'")
+    l_vals = np.linspace(l_min, l_max, num=10)
+    color_list = []
+    for l_val in l_vals:
+        qcol = QtGui.QColor()
+        qcol.setHslF( h_val, s_val, l_val )
+        color_list.append( qcol )
+    return ColorMap( None, color_list, name=name, linearize=True )
+
+def modulatedBarData(length=768, width=32):
+    """ 
+    Returns an NumPy array that represents a modulated color bar ranging from 0 to 1.
+    This is used to judge the perceived variation of the color gradient.
+    
+    Parameters
+    ----------
+    length: int
+        Length of the data set. Values will vary from 0 to 1 over this axis.
+    width: int
+        Width of the data set. The modulation will vary from 0% to 4% over this axis.    
+    """
+    gradient   = np.linspace(0.00, 1.00, length)
+    modulation = -0.04 * np.sin( (np.pi/4) * np.arange(length) )
+    data = np.zeros( (length, width) )
+    for idx in range(width):
+        data[:,idx] = gradient + (idx/(width-1)) * modulation
+    np.clip(data, 0.0, 1.0)
+    return data
 
 class ColorMap(object):
     """
-    A ColorMap defines a relationship between a scalar value and a range of colors. 
-    ColorMaps are commonly used for false-coloring monochromatic images, coloring 
-    scatter-plot points, and coloring surface plots by height. 
+    ColorMap(pos, color, mapping=ColorMap.CLIP)
 
-    Each color map is defined by a set of colors, each corresponding to a
-    particular scalar value. For example:
+    ColorMap stores a mapping of specific data values to colors, for example:
 
-        | 0.0  -> black
-        | 0.2  -> red
-        | 0.6  -> yellow
-        | 1.0  -> white
+        | 0.0 → black
+        | 0.2 → red
+        | 0.6 → yellow
+        | 1.0 → white
 
-    The colors for intermediate values are determined by interpolating between 
-    the two nearest colors in either RGB or HSV color space.
+    The colors for intermediate values are determined by interpolating between
+    the two nearest colors in RGB color space.
 
-    To provide user-defined color mappings, see :class:`GradientWidget <pyqtgraph.GradientWidget>`.
+    A ColorMap object provides access to the interpolated colors by indexing with a float value:
+    ``cm[0.5]`` returns a QColor corresponding to the center of ColorMap `cm`.
     """
-
-    ## color interpolation modes
-    RGB = 1
-    HSV_POS = 2
-    HSV_NEG = 3
-
     ## mapping modes
     CLIP   = 1
     REPEAT = 2
@@ -215,96 +313,158 @@ class ColorMap(object):
     QCOLOR = 3
 
     enumMap = {
-        'rgb': RGB,
-        # 'hsv+': HSV_POS,
-        # 'hsv-': HSV_NEG,
-        # 'clip': CLIP,
-        # 'repeat': REPEAT,
+        'clip': CLIP,
+        'repeat': REPEAT,
+        'mirror': MIRROR,
+        'diverging': DIVERGING,
         'byte': BYTE,
         'float': FLOAT,
         'qcolor': QCOLOR,
     }
 
-    def __init__(self, pos, color, mode=None, mapping=None): #, names=None):
+    def __init__(self, pos, color, mapping=CLIP, mode=None, linearize=False, name=''):
         """
-        ===============     =================================================================
-        **Arguments:**
-        pos                 Array of positions where each color is defined
-        color               Array of colors.
-                            Values are interpreted via 
-                            :func:`mkColor() <pyqtgraph.mkColor>`.
-        mode                Array of color modes (ColorMap.RGB, HSV_POS, or HSV_NEG)
-                            indicating the color space that should be used when
-                            interpolating between stops. Note that the last mode value is
-                            ignored. By default, the mode is entirely RGB.
-        mapping             Mapping mode (ColorMap.CLIP, REPEAT, MIRROR, or DIVERGING)
-                            controlling mapping of relative index to color. 
-                            CLIP maps colors to [0.0;1.0]
-                            REPEAT maps colors to repeating intervals [0.0;1.0];[1.0-2.0],...
-                            MIRROR maps colors to [0.0;-1.0] and [0.0;+1.0] identically
-                            DIVERGING maps colors to [-1.0;+1.0]
-        ===============     =================================================================
-        """
-        self.pos = np.array(pos)
-        order = np.argsort(self.pos)
-        self.pos = self.pos[order]
-        self.color = np.apply_along_axis(
-            func1d = lambda x: mkColor(x).getRgb(),
-            axis   = -1,
-            arr    = color,
-            )[order]
-        if mode is None:
-            mode = np.ones(len(pos))
-        self.mode = mode
-
-        if mapping is None:
-            self.mapping_mode = self.CLIP
-        elif mapping == self.REPEAT:
-            self.mapping_mode = self.REPEAT
-        elif mapping == self.DIVERGING:
-            self.mapping_mode = self.DIVERGING
-        elif mapping == self.MIRROR:
-            self.mapping_mode = self.MIRROR
-        else:
-            self.mapping_mode = self.CLIP
+        __init__(pos, color, mapping=ColorMap.CLIP)
         
+        Parameters
+        ----------
+        pos: array_like of float in range 0 to 1, or None
+            Assigned positions of specified colors. `None` sets equal spacing.
+        color: array_like of colors
+            List of colors, interpreted via :func:`mkColor() <pyqtgraph.mkColor>`.
+        mapping: str or int, optional
+            Controls how values outside the 0 to 1 range are mapped to colors.
+            See :func:`setMappingMode() <ColorMap.setMappingMode>` for details. 
+            
+            The default of `ColorMap.CLIP` continues to show
+            the colors assigned to 0 and 1 for all values below or above this range, respectively.
+        """
+        self.name = name # storing a name helps identify ColorMaps sampled by Palette
+        if mode is not None:
+            warnings.warn(
+                "'mode' argument is deprecated and does nothing.",
+                DeprecationWarning, stacklevel=2
+        )
+        if pos is None:
+            order = range(len(color))
+            self.pos = np.linspace(0.0, 1.0, num=len(color))
+        else:
+            self.pos = np.array(pos)
+            order = np.argsort(self.pos)
+            self.pos = self.pos[order]
+        
+        self.color = np.zeros( (len(color), 4) ) # stores float rgba values
+        for cnt, idx in enumerate(order):
+            self.color[cnt] = mkColor(color[idx]).getRgbF()
+        # alternative code may be more efficient, but fails to handle lists of QColor.
+        # self.color = np.apply_along_axis(
+        #     func1d = lambda x: np.uint8( mkColor(x).getRgb() ), # cast RGB integer values to uint8
+        #     axis   = -1,
+        #     arr    = color,
+        #     )[order]
+        
+        self.mapping_mode = self.CLIP # default to CLIP mode   
+        if mapping is not None:
+            self.setMappingMode( mapping )
         self.stopsCache = {}
+        if linearize: self.linearize()
+
+    def setMappingMode(self, mapping):
+        """
+        Sets the way that values outside of the range 0 to 1 are mapped to colors.
+
+        Parameters
+        ----------
+        mapping: int or str
+            Sets mapping mode to
+
+            - `ColorMap.CLIP` or 'clip': Values are clipped to the range 0 to 1. ColorMap defaults to this.
+            - `ColorMap.REPEAT` or 'repeat': Colors repeat cyclically, i.e. range 1 to 2 repeats the colors for 0 to 1.
+            - `ColorMap.MIRROR` or 'mirror': The range 0 to -1 uses same colors (in reverse order) as 0 to 1.
+            - `ColorMap.DIVERGING` or 'diverging': Colors are mapped to -1 to 1 such that the central value appears at 0.
+        """
+        if isinstance(mapping, str):
+            mapping = self.enumMap[mapping.lower()]
+        if mapping in [self.CLIP, self.REPEAT, self.DIVERGING, self.MIRROR]:
+            self.mapping_mode = mapping # only allow defined values
+        else:
+            raise ValueError("Undefined mapping type '{:s}'".format(str(mapping)) )
+            
+    def __str__(self):
+        """ provide human-readable identifier """
+        if self.name is None:
+            return 'unnamed ColorMap({:d})'.format(len(self.pos))
+        return "ColorMap({:d}):'{:s}'".format(len(self.pos),self.name)
 
     def __getitem__(self, key):
         """ Convenient shorthand access to palette colors """
-        if isinstance(key, int): # access by color index 
+        if isinstance(key, int): # access by color index
             return self.getByIndex(key)
         # otherwise access by map
         try: # accept any numerical format that converts to float
-            float_idx = float(key) 
+            float_idx = float(key)
             return self.mapToQColor(float_idx)
         except ValueError: pass
         return None
 
-    def map(self, data, mode='byte'):
+    def linearize(self):
         """
-        Return an array of colors corresponding to the values in *data*. 
-        Data must be either a scalar position or an array (any shape) of positions.
-        
-        The *mode* argument determines the type of data returned:
+        Adjusts the positions assigned to color stops to approximately equalize the perceived color difference
+        for a fixed step.
+        """
+        colors = self.getColors(mode=self.QCOLOR)
+        distances = colorDistance(colors)
+        positions = np.insert( np.cumsum(distances), 0, 0.0 )
+        self.pos = positions / positions[-1] # normalize last value to 1.0
+        self.stopsCache = {}
 
-        =========== ===============================================================
-        byte        (default) Values are returned as 0-255 unsigned bytes.
-        float       Values are returned as 0.0-1.0 floats. 
-        qcolor      Values are returned as an array of QColor objects.
-        =========== ===============================================================
+    def reverse(self):
         """
-        if isinstance(mode, basestring):
+        Reverses the color map, so that the color assigned to a value of 1 now appears at 0 and vice versa.
+        This is convenient to adjust imported color maps.
+        """
+        self.pos = 1.0 - np.flip( self.pos )
+        self.color = np.flip( self.color, axis=0 )
+        self.stopsCache = {}
+
+    def map(self, data, mode=BYTE):
+        """
+        map(data, mode=ColorMap.BYTE)
+
+        Returns an array of colors corresponding to a single value or an array of values.
+        Data must be either a scalar position or an array (any shape) of positions.
+
+        Parameters
+        ----------
+        data: float or array_like of float
+            Scalar value(s) to be mapped to colors
+
+        mode: str or int, optional
+            Determines return format:
+
+            - `ColorMap.BYTE` or 'byte': Colors are returned as 0-255 unsigned bytes. (default)
+            - `ColorMap.FLOAT` or 'float': Colors are returned as 0.0-1.0 floats.
+            - `ColorMap.QCOLOR` or 'qcolor': Colors are returned as QColor objects.
+
+        Returns
+        -------
+        array of color.dtype
+            for `ColorMap.BYTE` or `ColorMap.FLOAT`:
+
+            RGB values for each `data` value, arranged in the same shape as `data`.
+        list of QColor objects
+            for `ColorMap.QCOLOR`:
+
+            Colors for each `data` value as Qcolor objects.
+        """
+        if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
-            
+
         if mode == self.QCOLOR:
             pos, color = self.getStops(self.BYTE)
         else:
             pos, color = self.getStops(mode)
 
-        # Interpolate
-        # TODO: is griddata faster?
-        #          interp = scipy.interpolate.griddata(pos, color, data)
         if np.isscalar(data):
             interp = np.empty((color.shape[1],), dtype=color.dtype)
         else:
@@ -331,7 +491,7 @@ class ColorMap(object):
                 return [QtGui.QColor(*x) for x in interp]
         else:
             return interp
-        
+
     def mapToQColor(self, data):
         """Convenience function; see :func:`map() <pyqtgraph.ColorMap.map>`."""
         return self.map(data, mode=self.QCOLOR)
@@ -345,37 +505,115 @@ class ColorMap(object):
         return self.map(data, mode=self.FLOAT)
 
     def getByIndex(self, idx):
-        """Retrieve palette QColor by index"""
+        """Retrieve a QColor by the index of the stop it is assigned to."""
         return QtGui.QColor( *self.color[idx] )
 
     def getGradient(self, p1=None, p2=None):
-        """Return a QLinearGradient object spanning from QPoints p1 to p2."""
-        if p1 == None:
+        """
+        Returns a QtGui.QLinearGradient corresponding to this ColorMap.
+        The span and orientiation is given by two points in plot coordinates.
+
+        When no parameters are given for `p1` and `p2`, the gradient is mapped to the
+        `y` coordinates 0 to 1, unless the color map is defined for a more limited range.
+
+        Parameters
+        ----------
+        p1: QtCore.QPointF, default (0,0)
+            Starting point (value 0) of the gradient.
+        p2: QtCore.QPointF, default (dy,0)
+            End point (value 1) of the gradient. Default parameter `dy` is the span of ``max(pos) - min(pos)``
+            over which the color map is defined, typically `dy=1`.
+        """
+        if p1 is None:
             p1 = QtCore.QPointF(0,0)
-        if p2 == None:
+        if p2 is None:
             p2 = QtCore.QPointF(self.pos.max()-self.pos.min(),0)
-        g = QtGui.QLinearGradient(p1, p2)
-        
+        grad = QtGui.QLinearGradient(p1, p2)
+
         pos, color = self.getStops(mode=self.BYTE)
         color = [QtGui.QColor(*x) for x in color]
-        g.setStops(list(zip(pos, color)))
-        return g
+        if self.mapping_mode == self.MIRROR:
+            pos_n = (1. - np.flip(pos)) / 2
+            col_n = np.flip( color, axis=0 )
+            pos_p = (1. + pos) / 2
+            col_p = color
+            pos   = np.concatenate( (pos_n, pos_p) )
+            color = np.concatenate( (col_n, col_p) )
+        grad.setStops(list(zip(pos, color)))
+        if self.mapping_mode == self.REPEAT:
+            grad.setSpread( QtGui.QGradient.Spread.RepeatSpread )
+        return grad
+
+    def getBrush(self, span=(0.,1.), orientation='vertical'):
+        """
+        Returns a QBrush painting with the color map applied over the selected span of plot values.
+        When the mapping mode is set to `ColorMap.MIRROR`, the selected span includes the color map twice,
+        first in reversed order and then normal.
+
+        Parameters
+        ----------
+        span : tuple (min, max), default (0.0, 1.0)
+            Span of data values covered by the gradient:
+
+            - Color map value 0.0 will appear at `min`,
+            - Color map value 1.0 will appear at `max`.
+
+        orientation : str, default 'vertical'
+            Orientiation of the gradient:
+
+            - 'vertical': `span` corresponds to the `y` coordinate.
+            - 'horizontal': `span` corresponds to the `x` coordinate.
+        """
+        if orientation == 'vertical':
+            grad = self.getGradient( p1=QtCore.QPointF(0.,span[0]), p2=QtCore.QPointF(0.,span[1]) )
+        elif orientation == 'horizontal':
+            grad = self.getGradient( p1=QtCore.QPointF(span[0],0.), p2=QtCore.QPointF(span[1],0.) )
+        else:
+            raise ValueError("Orientation must be 'vertical' or 'horizontal'")
+        return QtGui.QBrush(grad)
+
+    def getPen(self, span=(0.,1.), orientation='vertical', width=1.0):
+        """
+        Returns a QPen that draws according to the color map based on vertical or horizontal position.
+
+        Parameters
+        ----------
+        span : tuple (min, max), default (0.0, 1.0)
+            Span of the data values covered by the gradient:
+
+            - Color map value 0.0 will appear at `min`.
+            - Color map value 1.0 will appear at `max`.
+
+        orientation : str, default 'vertical'
+            Orientiation of the gradient:
+
+            - 'vertical' creates a vertical gradient, where `span` corresponds to the `y` coordinate.
+            - 'horizontal' creates a horizontal gradient, where `span` correspnds to the `x` coordinate.
+
+        width : int or float
+            Width of the pen in pixels on screen.
+        """
+        brush = self.getBrush( span=span, orientation=orientation )
+        pen = QtGui.QPen(brush, width)
+        pen.setCosmetic(True)
+        return pen
 
     def getColors(self, mode=None):
-        """Return list of all color stops converted to the specified mode.
-        If mode is None, then no conversion is done."""
-        if isinstance(mode, basestring):
+        """Returns a list of all color stops, converted to the specified mode.
+        If `mode` is None, no conversion is performed.
+        """
+        if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
-        
+
         color = self.color
         if mode in [self.BYTE, self.QCOLOR] and color.dtype.kind == 'f':
             color = (color * 255).astype(np.ubyte)
         elif mode == self.FLOAT and color.dtype.kind != 'f':
             color = color.astype(float) / 255.
-            
+
         if mode == self.QCOLOR:
             color = [QtGui.QColor(*x) for x in color]
-            
+
         return color
 
     def getStops(self, mode):
@@ -383,30 +621,47 @@ class ColorMap(object):
         if mode not in self.stopsCache:
             color = self.color
             if mode == self.BYTE and color.dtype.kind == 'f':
-                color = (color * 255).astype(np.ubyte)
+                color = (color*255).astype(np.ubyte)
             elif mode == self.FLOAT and color.dtype.kind != 'f':
                 color = color.astype(float) / 255.
-        
-            ## to support HSV mode, we need to do a little more work..
             self.stopsCache[mode] = (self.pos, color)
         return self.stopsCache[mode]
 
-    def getLookupTable(self, start=0.0, stop=1.0, nPts=512, alpha=None, mode='byte'):
+    def getLookupTable(self, start=0.0, stop=1.0, nPts=512, alpha=None, mode=BYTE):
         """
-        Return an RGB(A) lookup table (ndarray). 
-        
-        ===============   =============================================================================
-        **Arguments:**
-        start             The starting value in the lookup table (default=0.0)
-        stop              The final value in the lookup table (default=1.0)
-        nPts              The number of points in the returned lookup table.
-        alpha             True, False, or None - Specifies whether or not alpha values are included
-                          in the table. If alpha is None, it will be automatically determined.
-        mode              Determines return type: 'byte' (0-255), 'float' (0.0-1.0), or 'qcolor'.
-                          See :func:`map() <pyqtgraph.ColorMap.map>`.
-        ===============   =============================================================================
+        getLookupTable(start=0.0, stop=1.0, nPts=512, alpha=None, mode=ColorMap.BYTE)
+
+        Returns an equally-spaced lookup table of RGB(A) values created
+        by interpolating the specified color stops.
+
+        Parameters
+        ----------
+        start:  float, default=0.0
+            The starting value in the lookup table
+        stop: float, default=1.0
+            The final value in the lookup table
+        nPts: int, default is 512
+            The number of points in the returned lookup table.
+        alpha: True, False, or None
+            Specifies whether or not alpha values are included in the table.
+            If alpha is None, it will be automatically determined.
+        mode: int or str, default is `ColorMap.BYTE`
+            Determines return type as described in :func:`map() <pyqtgraph.ColorMap.map>`, can be
+            either `ColorMap.BYTE` (0 to 255), `ColorMap.FLOAT` (0.0 to 1.0) or `ColorMap.QColor`.
+
+        Returns
+        -------
+        array of color.dtype
+            for `ColorMap.BYTE` or `ColorMap.FLOAT`:
+
+            RGB values for each `data` value, arranged in the same shape as `data`.
+            If alpha values are included the array has shape (`nPts`, 4), otherwise (`nPts`, 3).
+        list of QColor objects
+            for `ColorMap.QCOLOR`:
+
+            Colors for each `data` value as QColor objects.
         """
-        if isinstance(mode, basestring):
+        if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
 
         if alpha is None:
@@ -421,13 +676,13 @@ class ColorMap(object):
             return table
 
     def usesAlpha(self):
-        """Return True if any stops have an alpha < 255"""
+        """Returns `True` if any stops have assigned colors with alpha < 255."""
         max = 1.0 if self.color.dtype.kind == 'f' else 255
         return np.any(self.color[:,3] != max)
 
     def isMapTrivial(self):
         """
-        Return True if the gradient has exactly two stops in it: black at 0.0 and white at 1.0.
+        Returns `True` if the gradient has exactly two stops in it: Black at 0.0 and white at 1.0.
         """
         if len(self.pos) != 2:
             return False

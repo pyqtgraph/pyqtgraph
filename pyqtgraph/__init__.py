@@ -4,13 +4,14 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.11.1.dev0'
+__version__ = '0.12.1'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt4 and PySide.
 from .Qt import QtGui, mkQApp
+from .Qt import exec_ as exec
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
 #if QtGui.QApplication.instance() is None:
@@ -36,8 +37,6 @@ if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
     useOpenGL = False
 elif 'darwin' in sys.platform: ## openGL can have a major impact on mac, but also has serious bugs
     useOpenGL = False
-    if QtGui.QApplication.instance() is not None:
-        print('Warning: QApplication was created before pyqtgraph was imported; there may be problems.')
 else:
     useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
                 
@@ -49,8 +48,6 @@ CONFIG_OPTIONS = {
     'background': 'k',        ## default background for GraphicsWidget
     'antialias': False,
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
-    'useWeave': False,       ## Use weave to speed up some operations, if it is available
-    'weaveDebug': False,    ## Print full error message if weave compile fails
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
     'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
     'crashWarning': False,  # If True, print warnings about situations that may result in a crash
@@ -60,6 +57,7 @@ CONFIG_OPTIONS = {
                                  # The default is 'col-major' for backward compatibility, but this may
                                  # change in the future.
     'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
+    'useNumba': False, # When True, use numba
 } 
 
 
@@ -227,6 +225,7 @@ from .graphicsItems.GraphicsWidgetAnchor import *
 from .graphicsItems.PlotCurveItem import * 
 from .graphicsItems.ButtonItem import * 
 from .graphicsItems.GradientEditorItem import * 
+from .graphicsItems.ColorBarItem import * 
 from .graphicsItems.MultiPlotItem import * 
 from .graphicsItems.ErrorBarItem import * 
 from .graphicsItems.IsocurveItem import * 
@@ -234,7 +233,8 @@ from .graphicsItems.LinearRegionItem import *
 from .graphicsItems.FillBetweenItem import * 
 from .graphicsItems.LegendItem import * 
 from .graphicsItems.ScatterPlotItem import * 
-from .graphicsItems.ItemGroup import * 
+from .graphicsItems.ItemGroup import *
+from .graphicsItems.TargetItem import * 
 
 from .widgets.MultiPlotWidget import * 
 from .widgets.ScatterPlotWidget import * 

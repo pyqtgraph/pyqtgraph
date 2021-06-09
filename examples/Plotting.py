@@ -95,8 +95,5 @@ lr.sigRegionChanged.connect(updatePlot)
 p9.sigXRangeChanged.connect(updateRegion)
 updatePlot()
 
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

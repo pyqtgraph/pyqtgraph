@@ -1,3 +1,4 @@
+from math import hypot
 from ..Qt import QtGui, QtCore
 from .. import functions as fn
 import numpy as np
@@ -98,12 +99,12 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         self.setBrush(fn.mkBrush(self.opts['brush']))
         
         if self.opts['pxMode']:
-            self.setFlags(self.flags() | self.ItemIgnoresTransformations)
+            self.setFlags(self.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
         else:
-            self.setFlags(self.flags() & ~self.ItemIgnoresTransformations)
+            self.setFlags(self.flags() & ~self.GraphicsItemFlag.ItemIgnoresTransformations)
 
     def paint(self, p, *args):
-        p.setRenderHint(QtGui.QPainter.Antialiasing)
+        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         super().paint(p, *args)
         
         #p.setPen(fn.mkPen('r'))
@@ -135,7 +136,7 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         pad = 0
         if self.opts['pxMode']:
             br = self.boundingRect()
-            pad += (br.width()**2 + br.height()**2) ** 0.5
+            pad += hypot(br.width(), br.height())
         pen = self.pen()
         if pen.isCosmetic():
             pad += max(1, pen.width()) * 0.7072

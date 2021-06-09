@@ -66,7 +66,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.setMinimumWidth(0)
         self._lastFontHeight = None
         
-        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
+        self.setSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Preferred)
         self.errorBox = ErrorBox(self.lineEdit())
         
         self.opts = {
@@ -104,7 +104,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.val = D(asUnicode(value))  ## Value is precise decimal. Ordinary math not allowed.
         self.updateText()
         self.skipValidate = False
-        self.setCorrectionMode(self.CorrectToPreviousValue)
+        self.setCorrectionMode(self.CorrectionMode.CorrectToPreviousValue)
         self.setKeyboardTracking(False)
         self.proxy = SignalProxy(self.sigValueChanging, slot=self.delayedChange, delay=self.opts['delay'])
         self.setOpts(**kwargs)
@@ -223,6 +223,10 @@ class SpinBox(QtGui.QAbstractSpinBox):
 
             if 'format' not in opts:
                 self.opts['format'] = asUnicode("{value:d}{suffixGap}{suffix}")
+
+        if self.opts['dec']:
+            if self.opts.get('minStep') is None:
+                self.opts['minStep'] = self.opts['step']
         
         if 'delay' in opts:
             self.proxy.setDelay(opts['delay'])
@@ -390,7 +394,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         return QtCore.QSize(120, 0)
     
     def stepEnabled(self):
-        return self.StepUpEnabled | self.StepDownEnabled        
+        return self.StepEnabledFlag.StepUpEnabled | self.StepEnabledFlag.StepDownEnabled        
     
     def stepBy(self, n):
         if isinf(self.val) or isnan(self.val):
@@ -474,29 +478,29 @@ class SpinBox(QtGui.QAbstractSpinBox):
 
     def validate(self, strn, pos):
         if self.skipValidate:
-            ret = QtGui.QValidator.Acceptable
+            ret = QtGui.QValidator.State.Acceptable
         else:
             try:
                 val = self.interpret()
                 if val is False:
-                    ret = QtGui.QValidator.Intermediate
+                    ret = QtGui.QValidator.State.Intermediate
                 else:
                     if self.valueInRange(val):
                         if not self.opts['delayUntilEditFinished']:
                             self.setValue(val, update=False)
-                        ret = QtGui.QValidator.Acceptable
+                        ret = QtGui.QValidator.State.Acceptable
                     else:
-                        ret = QtGui.QValidator.Intermediate
+                        ret = QtGui.QValidator.State.Intermediate
                         
             except:
                 import sys
                 sys.excepthook(*sys.exc_info())
-                ret = QtGui.QValidator.Intermediate
+                ret = QtGui.QValidator.State.Intermediate
             
         ## draw / clear border
-        if ret == QtGui.QValidator.Intermediate:
+        if ret == QtGui.QValidator.State.Intermediate:
             self.textValid = False
-        elif ret == QtGui.QValidator.Acceptable:
+        elif ret == QtGui.QValidator.State.Acceptable:
             self.textValid = True
         ## note: if text is invalid, we don't change the textValid flag 
         ## since the text will be forced to its previous state anyway
@@ -596,12 +600,12 @@ class ErrorBox(QtGui.QWidget):
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
         parent.installEventFilter(self)
-        self.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self._resize()
         self.setVisible(False)
         
     def eventFilter(self, obj, ev):
-        if ev.type() == QtCore.QEvent.Resize:
+        if ev.type() == QtCore.QEvent.Type.Resize:
             self._resize()
         return False
 

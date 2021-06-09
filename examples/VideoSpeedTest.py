@@ -18,6 +18,8 @@ import pyqtgraph as pg
 import pyqtgraph.ptime as ptime
 from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
 
+pg.setConfigOption('imageAxisOrder', 'row-major')
+
 import importlib
 ui_template = importlib.import_module(f'VideoTemplate_{QT_LIB.lower()}')
 
@@ -28,6 +30,13 @@ try:
 except ImportError:
     cp = None
     _has_cupy = False
+
+try:
+    import numba
+    _has_numba = True
+except ImportError:
+    numba = None
+    _has_numba = False
 
 try:
     from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget
@@ -69,6 +78,8 @@ else:
 # read in CLI args
 ui.cudaCheck.setChecked(args.cuda and _has_cupy)
 ui.cudaCheck.setEnabled(_has_cupy)
+ui.numbaCheck.setChecked(_has_numba and pg.getConfigOption("useNumba"))
+ui.numbaCheck.setEnabled(_has_numba)
 ui.framesSpin.setValue(args.frames)
 ui.widthSpin.setValue(args.size[0])
 ui.heightSpin.setValue(args.size[1])
@@ -157,7 +168,7 @@ def mkData():
                 dt = xp.uint16
                 loc = 4096
                 scale = 1024
-                mx = 2**16
+                mx = 2**16 - 1
             elif cacheKey[0] == 'float':
                 dt = xp.float32
                 loc = 1.0
@@ -165,19 +176,25 @@ def mkData():
                 mx = 1.0
             else:
                 raise ValueError(f"unable to handle dtype: {cacheKey[0]}")
-            
+
+            chan_shape = (height, width)
             if ui.rgbCheck.isChecked():
-                data = xp.random.normal(size=(frames,width,height,3), loc=loc, scale=scale)
-                data = pg.gaussianFilter(data, (0, 6, 6, 0))
+                frame_shape = chan_shape + (3,)
             else:
-                data = xp.random.normal(size=(frames,width,height), loc=loc, scale=scale)
-                data = pg.gaussianFilter(data, (0, 6, 6))
-            if cacheKey[0] != 'float':
-                data = xp.clip(data, 0, mx)
-            data = data.astype(dt)
-            data[:, 10, 10:50] = mx
-            data[:, 9:12, 48] = mx
-            data[:, 8:13, 47] = mx
+                frame_shape = chan_shape
+            data = xp.empty((frames,) + frame_shape, dtype=dt)
+            view = data.reshape((-1,) + chan_shape)
+            for idx in range(view.shape[0]):
+                subdata = xp.random.normal(loc=loc, scale=scale, size=chan_shape)
+                # note: gaussian filtering has been removed as it slows down array
+                #       creation greatly.
+                if cacheKey[0] != 'float':
+                    xp.clip(subdata, 0, mx, out=subdata)
+                view[idx] = subdata
+
+            data[:, 10:50, 10] = mx
+            data[:, 48, 9:12] = mx
+            data[:, 47, 8:13] = mx
             cache = {cacheKey: data} # clear to save memory (but keep one to prevent unnecessary regeneration)
 
         data = cache[cacheKey]
@@ -208,6 +225,11 @@ def noticeCudaCheck():
         xp = np
     mkData()
 
+
+def noticeNumbaCheck():
+    pg.setConfigOption('useNumba', _has_numba and ui.numbaCheck.isChecked())
+
+
 mkData()
 
 
@@ -221,6 +243,7 @@ ui.widthSpin.valueChanged.connect(updateSize)
 ui.heightSpin.valueChanged.connect(updateSize)
 ui.framesSpin.valueChanged.connect(updateSize)
 ui.cudaCheck.toggled.connect(noticeCudaCheck)
+ui.numbaCheck.toggled.connect(noticeNumbaCheck)
 
 
 ptr = 0
@@ -272,10 +295,5 @@ timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
 
-
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

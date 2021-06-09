@@ -39,9 +39,5 @@ size[...,2] = np.random.normal(size=(10,10))
 bg = gl.GLBarGraphItem(pos, size)
 w.addItem(bg)
 
-
-## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

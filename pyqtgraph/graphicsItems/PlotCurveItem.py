@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui, QtWidgets
 HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
-
+import math
 import warnings
 import numpy as np
 from .GraphicsObject import GraphicsObject
@@ -51,7 +51,7 @@ class PlotCurveItem(GraphicsObject):
         self.clear()
 
         ## this is disastrous for performance.
-        #self.setCacheMode(QtGui.QGraphicsItem.DeviceCoordinateCache)
+        #self.setCacheMode(QtGui.QGraphicsItem.CacheMode.DeviceCoordinateCache)
 
         self.metaData = {}
         self.opts = {
@@ -65,6 +65,7 @@ class PlotCurveItem(GraphicsObject):
             'connect': 'all',
             'mouseWidth': 8, # width of shape responding to mouse click
             'compositionMode': None,
+            'skipFiniteCheck': True
         }
         if 'pen' not in kargs:
             self.opts['pen'] = fn.mkPen('w')
@@ -93,20 +94,32 @@ class PlotCurveItem(GraphicsObject):
             self._boundingRect = None
 
     def setCompositionMode(self, mode):
-        """Change the composition mode of the item (see QPainter::CompositionMode
-        in the Qt documentation). This is useful when overlaying multiple items.
+        """
+        Change the composition mode of the item. This is useful when overlaying
+        multiple items.
+        
+        Parameters
+        ----------
+        mode : ``QtGui.QPainter.CompositionMode``
+            Composition of the item, often used when overlaying items.  Common
+            options include:
 
-        ============================================  ============================================================
-        **Most common arguments:**
-        QtGui.QPainter.CompositionMode_SourceOver     Default; image replaces the background if it
-                                                      is opaque. Otherwise, it uses the alpha channel to blend
-                                                      the image with the background.
-        QtGui.QPainter.CompositionMode_Overlay        The image color is mixed with the background color to
-                                                      reflect the lightness or darkness of the background.
-        QtGui.QPainter.CompositionMode_Plus           Both the alpha and color of the image and background pixels
-                                                      are added together.
-        QtGui.QPainter.CompositionMode_Multiply       The output is the image color multiplied by the background.
-        ============================================  ============================================================
+            ``QPainter.CompositionMode.CompositionMode_SourceOver`` (Default)
+            Image replaces the background if it is opaque. Otherwise, it uses
+            the alpha channel to blend the image with the background.
+
+            ``QPainter.CompositionMode.CompositionMode_Overlay`` Image color is
+            mixed with the background color to reflect the lightness or
+            darkness of the background
+
+            ``QPainter.CompositionMode.CompositionMode_Plus`` Both the alpha
+            and color of the image and background pixels are added together.
+
+            ``QPainter.CompositionMode.CompositionMode_Plus`` The output is the
+            image color multiplied by the background.
+
+            See ``QPainter::CompositionMode`` in the Qt Documentation for more
+            options and details
         """
         self.opts['compositionMode'] = mode
         self.update()
@@ -131,6 +144,8 @@ class PlotCurveItem(GraphicsObject):
         elif ax == 1:
             d = y
             d2 = x
+        else:
+            raise ValueError("Invalid axis value")
 
         ## If an orthogonal range is specified, mask the data now
         if orthoRange is not None:
@@ -149,7 +164,7 @@ class PlotCurveItem(GraphicsObject):
                 # All-NaN data is acceptable; Explicit numpy warning is not needed.
                 warnings.simplefilter("ignore")
                 b = (np.nanmin(d), np.nanmax(d))
-            if any(np.isinf(b)):
+            if math.isinf(b[0]) or math.isinf(b[1]):
                 mask = np.isfinite(d)
                 d = d[mask]
                 if len(d) == 0:
@@ -175,7 +190,7 @@ class PlotCurveItem(GraphicsObject):
         spen = self.opts['shadowPen']
         if not pen.isCosmetic():
             b = (b[0] - pen.widthF()*0.7072, b[1] + pen.widthF()*0.7072)
-        if spen is not None and not spen.isCosmetic() and spen.style() != QtCore.Qt.NoPen:
+        if spen is not None and not spen.isCosmetic() and spen.style() != QtCore.Qt.PenStyle.NoPen:
             b = (b[0] - spen.widthF()*0.7072, b[1] + spen.widthF()*0.7072)
 
         self._boundsCache[ax] = [(frac, orthoRange), b]
@@ -187,7 +202,7 @@ class PlotCurveItem(GraphicsObject):
         w = 0
         if pen.isCosmetic():
             w += pen.widthF()*0.7072
-        if spen is not None and spen.isCosmetic() and spen.style() != QtCore.Qt.NoPen:
+        if spen is not None and spen.isCosmetic() and spen.style() != QtCore.Qt.PenStyle.NoPen:
             w = max(w, spen.widthF()*0.7072)
         if self.clickable:
             w = max(w, self.opts['mouseWidth']//2 + 1)
@@ -334,6 +349,11 @@ class PlotCurveItem(GraphicsObject):
                         connectivity, specify an array of boolean values.
         compositionMode See :func:`setCompositionMode
                         <pyqtgraph.PlotCurveItem.setCompositionMode>`.
+        skipFiniteCheck Optimization parameter that can speed up plot time by
+                        telling the painter to not check and compensate for NaN
+                        values.  If set to True, and NaN values exist, the data
+                        may not be displayed or your plot will take a
+                        significant performance hit.  Defaults to False.
         =============== ========================================================
 
         If non-keyword arguments are used, they will be interpreted as
@@ -371,9 +391,10 @@ class PlotCurveItem(GraphicsObject):
             if data.dtype.kind == 'c':
                 raise Exception("Can not plot complex data types.")
 
+
         profiler("data checks")
 
-        #self.setCacheMode(QtGui.QGraphicsItem.NoCache)  ## Disabling and re-enabling the cache works around a bug in Qt 4.6 causing the cached results to display incorrectly
+        #self.setCacheMode(QtGui.QGraphicsItem.CacheMode.NoCache)  ## Disabling and re-enabling the cache works around a bug in Qt 4.6 causing the cached results to display incorrectly
                                                         ##    Test this bug with test_PlotWidget and zoom in on the animated plot
         self.yData = kargs['y'].view(np.ndarray)
         self.xData = kargs['x'].view(np.ndarray)
@@ -419,6 +440,8 @@ class PlotCurveItem(GraphicsObject):
         if 'antialias' in kargs:
             self.opts['antialias'] = kargs['antialias']
 
+        self.opts['skipFiniteCheck'] = kargs.get('skipFiniteCheck', False)
+
         profiler('set')
         self.update()
         profiler('update')
@@ -456,10 +479,12 @@ class PlotCurveItem(GraphicsObject):
                 y[0] = self.opts['fillLevel']
                 y[-1] = self.opts['fillLevel']
 
-        path = fn.arrayToQPath(x, y, connect=self.opts['connect'])
-
-        return path
-
+        return fn.arrayToQPath(
+            x,
+            y,
+            connect=self.opts['connect'],
+            finiteCheck=not self.opts['skipFiniteCheck']
+        )
 
     def getPath(self):
         if self.path is None:
@@ -494,7 +519,7 @@ class PlotCurveItem(GraphicsObject):
         else:
             aa = self.opts['antialias']
 
-        p.setRenderHint(p.Antialiasing, aa)
+        p.setRenderHint(p.RenderHint.Antialiasing, aa)
 
         cmode = self.opts['compositionMode']
         if cmode is not None:
@@ -523,7 +548,7 @@ class PlotCurveItem(GraphicsObject):
             else:
                 sp = fn.mkPen(self.opts['shadowPen'])
 
-            if sp.style() != QtCore.Qt.NoPen:
+            if sp.style() != QtCore.Qt.PenStyle.NoPen:
                 p.setPen(sp)
                 p.drawPath(path)
 
@@ -630,7 +655,7 @@ class PlotCurveItem(GraphicsObject):
         return self._mouseShape
 
     def mouseClickEvent(self, ev):
-        if not self.clickable or ev.button() != QtCore.Qt.LeftButton:
+        if not self.clickable or ev.button() != QtCore.Qt.MouseButton.LeftButton:
             return
         if self.mouseShape().contains(ev.pos()):
             ev.accept()

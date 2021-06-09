@@ -1,4 +1,4 @@
-from ..Qt import QtGui, QtCore, QT_LIB
+from ..Qt import QtGui, QtCore
 from ..python2_3 import asUnicode
 import os, weakref, re
 
@@ -42,17 +42,17 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         ## called when Parameter opts changed
         opts = self.param.opts
         
-        flags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+        flags = QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled
         if opts.get('renamable', False):
             if opts.get('title', None) is not None:
                 raise Exception("Cannot make parameter with both title != None and renamable == True.")
-            flags |= QtCore.Qt.ItemIsEditable
+            flags |= QtCore.Qt.ItemFlag.ItemIsEditable
         
         ## handle movable / dropEnabled options
         if opts.get('movable', False):
-            flags |= QtCore.Qt.ItemIsDragEnabled
+            flags |= QtCore.Qt.ItemFlag.ItemIsDragEnabled
         if opts.get('dropEnabled', False):
-            flags |= QtCore.Qt.ItemIsDropEnabled
+            flags |= QtCore.Qt.ItemFlag.ItemIsDropEnabled
         self.setFlags(flags)
 
     
@@ -162,13 +162,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         # called when the user-visble title has changed (either opts['title'], or name if title is None)
         self.setText(0, self.param.title())
         fm = QtGui.QFontMetrics(self.font(0))
-
-        if QT_LIB == 'PyQt6':
-            # PyQt6 doesn't allow or-ing of different enum types
-            # so we need to take its value property
-            textFlags = QtCore.Qt.TextSingleLine.value
-        else:
-            textFlags = QtCore.Qt.TextSingleLine
+        textFlags = QtCore.Qt.TextFlag.TextSingleLine
         size = fm.size(textFlags, self.text(0))
         size.setHeight(int(size.height() * 1.35))
         size.setWidth(int(size.width() * 1.15))

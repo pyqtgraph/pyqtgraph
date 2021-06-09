@@ -61,6 +61,10 @@ wave_speed      = 0.3
 wave_length     = 10
 color_speed     = 0.3
 
+timer = QtCore.QTimer()
+timer.setSingleShot(True)
+# not using QTimer.singleShot() because of persistence on PyQt. see PR #1605
+
 i=0
 def updateData():
     global i
@@ -74,12 +78,10 @@ def updateData():
                  new_z)
 
     i += wave_speed
-    QtCore.QTimer.singleShot(1000//fps, updateData)
+    timer.start(1000//fps)
 
+timer.timeout.connect(updateData)
 updateData()
 
-## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

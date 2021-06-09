@@ -41,7 +41,7 @@ def format(color, style=''):
     _format = QTextCharFormat()
     _format.setForeground(_color)
     if 'bold' in style:
-        _format.setFontWeight(QFont.Bold)
+        _format.setFontWeight(QFont.Weight.Bold)
     if 'italic' in style:
         _format.setFontItalic(True)
 
@@ -275,7 +275,7 @@ class ExampleLoader(QtGui.QMainWindow):
         self.hl = PythonHighlighter(self.ui.codeView.document())
         app = QtGui.QApplication.instance()
         app.paletteChanged.connect(self.updateTheme)
-        self.codeLayout.addItem(QtGui.QSpacerItem(100,100,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding), 0, 0)
+        self.codeLayout.addItem(QtGui.QSpacerItem(100,100,QtGui.QSizePolicy.Policy.Expanding,QtGui.QSizePolicy.Policy.Expanding), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
         self.codeBtn.hide()
 
@@ -301,8 +301,8 @@ class ExampleLoader(QtGui.QMainWindow):
         # first, a dark background
         c = QtGui.QColor('#171717')
         p = self.ui.codeView.palette()
-        p.setColor(QtGui.QPalette.Active, QtGui.QPalette.Base, c)
-        p.setColor(QtGui.QPalette.Inactive, QtGui.QPalette.Base, c)
+        p.setColor(QtGui.QPalette.ColorGroup.Active, QtGui.QPalette.ColorRole.Base, c)
+        p.setColor(QtGui.QPalette.ColorGroup.Inactive, QtGui.QPalette.ColorRole.Base, c)
         self.ui.codeView.setPalette(p)
         # then, a light font
         f = QtGui.QTextCharFormat()
@@ -360,15 +360,7 @@ class ExampleLoader(QtGui.QMainWindow):
             fn = self.currentFile()
             if fn is None:
                 return
-            if sys.platform.startswith('win'):
-                args = [os.P_NOWAIT, sys.executable, '"'+sys.executable+'"', '"' + fn + '"']
-            else:
-                args = [os.P_NOWAIT, sys.executable, sys.executable, fn]
-            if env is None:
-                os.spawnl(*args)
-            else:
-                args.append(env)
-                os.spawnle(*args)
+            subprocess.Popen([sys.executable, fn], env=env)
 
     def showFile(self):
         fn = self.currentFile()
@@ -377,7 +369,8 @@ class ExampleLoader(QtGui.QMainWindow):
             return
         if os.path.isdir(fn):
             fn = os.path.join(fn, '__main__.py')
-        text = open(fn).read()
+        with open(fn, "r") as currentFile:
+            text = currentFile.read()
         self.ui.codeView.setPlainText(text)
         self.ui.loadedFileLabel.setText(fn)
         self.codeBtn.hide()
@@ -392,8 +385,7 @@ class ExampleLoader(QtGui.QMainWindow):
 def main():
     app = pg.mkQApp()
     loader = ExampleLoader()
-    app.exec_()
-# or condition so pytest runs ExampleApp as part of test suite
+    pg.exec()
+
 if __name__ == '__main__':
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        main()
+    main()

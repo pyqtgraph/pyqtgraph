@@ -108,3 +108,4 @@ rtr.cvs
 .tags*
 
 .asv/
+asv.conf.json

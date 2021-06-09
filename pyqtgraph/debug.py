@@ -5,14 +5,21 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 
+
 from __future__ import print_function
 
 import sys, traceback, time, gc, re, types, weakref, inspect, os, cProfile, threading
+import warnings
 from . import ptime
 from numpy import ndarray
-from .Qt import QtCore, QtGui
-from .util.mutex import Mutex
+from .Qt import QtCore, QT_LIB
 from .util import cprint
+if sys.version.startswith("3.8") and QT_LIB == "PySide2":
+    from .Qt import PySide2
+    if tuple(map(int, PySide2.__version__.split("."))) < (5, 14):
+        warnings.warn("Due to PYSIDE-1140, ThreadChase and ThreadColor won't work")
+from .util.mutex import Mutex
+
 
 __ftraceDepth = 0
 def ftrace(func):
@@ -106,11 +113,10 @@ def getExc(indent=4, prefix='|  ', skip=1):
 def printExc(msg='', indent=4, prefix='|'):
     """Print an error message followed by an indented exception backtrace
     (This function is intended to be called within except: blocks)"""
-    exc = getExc(indent, prefix + '  ', skip=2)
-    print("[%s]  %s\n" % (time.strftime("%H:%M:%S"), msg))
-    print(" "*indent + prefix + '='*30 + '>>')
-    print(exc)
-    print(" "*indent + prefix + '='*30 + '<<')
+    exc = getExc(indent=0, prefix="", skip=2)
+    # print(" "*indent + prefix + '='*30 + '>>')
+    warnings.warn("\n".join([msg, exc]), RuntimeWarning, stacklevel=2)
+    # print(" "*indent + prefix + '='*30 + '<<')
 
     
 def printTrace(msg='', indent=4, prefix='|'):
@@ -195,7 +201,7 @@ def findRefPath(startObj, endObj, maxLen=8, restart=True, seen={}, path=None, ig
             #print prefix+"  FRAME"
             continue
         try:
-            if any([r is x for x in  path]):
+            if any(r is x for x in  path):
                 #print prefix+"  LOOP", objChainString([r]+path)
                 continue
         except:
@@ -275,7 +281,7 @@ def refPathString(chain):
         o2 = chain[i]
         cont = False
         if isinstance(o1, list) or isinstance(o1, tuple):
-            if any([o2 is x for x in o1]):
+            if any(o2 is x for x in o1):
                 s += "[%d]" % o1.index(o2)
                 continue
         #print "  not list"

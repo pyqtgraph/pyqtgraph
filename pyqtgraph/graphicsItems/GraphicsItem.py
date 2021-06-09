@@ -1,4 +1,5 @@
 import warnings
+from math import hypot
 from collections import OrderedDict
 from functools import reduce
 from ..Qt import QtGui, QtCore, isQObjectAlive
@@ -167,7 +168,7 @@ class GraphicsItem(object):
             p = p.parentItem()
             if p is None:
                 break
-            if p.flags() & self.ItemClipsChildrenToShape:
+            if p.flags() & self.GraphicsItemFlag.ItemClipsChildrenToShape:
                 parents.append(p)
         return parents
     
@@ -308,7 +309,7 @@ class GraphicsItem(object):
         v = self.pixelVectors()
         if v == (None, None):
             return None, None
-        return (v[0].x()**2+v[0].y()**2)**0.5, (v[1].x()**2+v[1].y()**2)**0.5
+        return (hypot(v[0].x(), v[0].y()), hypot(v[1].x(), v[1].y()))  # lengths
 
     def pixelWidth(self):
         ## deprecated
@@ -437,19 +438,16 @@ class GraphicsItem(object):
         """
         if relativeItem is None:
             relativeItem = self.parentItem()
-            
 
         tr = self.itemTransform(relativeItem)
         if isinstance(tr, tuple):  ## difference between pyside and pyqt
             tr = tr[0]
-        #vec = tr.map(Point(1,0)) - tr.map(Point(0,0))
         vec = tr.map(QtCore.QLineF(0,0,1,0))
-        #return Point(vec).angle(Point(1,0))
         return vec.angleTo(QtCore.QLineF(vec.p1(), vec.p1()+QtCore.QPointF(1,0)))
         
     #def itemChange(self, change, value):
         #ret = self._qtBaseClass.itemChange(self, change, value)
-        #if change == self.ItemParentHasChanged or change == self.ItemSceneHasChanged:
+        #if change == self.GraphicsItemChange.ItemParentHasChanged or change == self.ItemSceneHasChanged:
             #print "Item scene changed:", self
             #self.setChildScene(self)  ## This is bizarre.
         #return ret
@@ -555,6 +553,8 @@ class GraphicsItem(object):
         """
         Called whenever the view coordinates of the ViewBox containing this item have changed.
         """
+        # when this is called, _cachedView is not invalidated.
+        # this means that for functions overriding viewRangeChanged, viewRect() may be stale.
         pass
     
     def viewTransformChanged(self):

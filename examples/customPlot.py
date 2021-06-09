@@ -20,12 +20,12 @@ class CustomViewBox(pg.ViewBox):
         
     ## reimplement right-click to zoom out
     def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.RightButton:
+        if ev.button() == QtCore.Qt.MouseButton.RightButton:
             self.autoRange()
     
     ## reimplement mouseDragEvent to disable continuous axis zoom
     def mouseDragEvent(self, ev, axis=None):
-        if axis is not None and ev.button() == QtCore.Qt.RightButton:
+        if axis is not None and ev.button() == QtCore.Qt.MouseButton.RightButton:
             ev.ignore()
         else:
             pg.ViewBox.mouseDragEvent(self, ev, axis=axis)
@@ -42,7 +42,7 @@ class CustomTickSliderItem(pg.TickSliderItem):
             self.removeTick(tick)
         
         for pos in ticks:
-            tickItem = self.addTick(pos, movable=False, color="333333")
+            tickItem = self.addTick(pos, movable=False, color="#333333")
             self.all_ticks[pos] = tickItem
         
         self.updateRange(None, self._range)
@@ -91,8 +91,5 @@ pw.setWindowTitle('pyqtgraph example: customPlot')
 r = pg.PolyLineROI([(0,0), (10, 10)])
 pw.addItem(r)
 
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

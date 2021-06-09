@@ -157,15 +157,5 @@ def remove():
     v4.removeItem(r4)
 r4.sigRemoveRequested.connect(remove)
 
-
-
-
-
-
-
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

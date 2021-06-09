@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'template.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.0
+## Created by: Qt User Interface Compiler version 6.1.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -35,7 +35,7 @@ class Ui_Form(object):
         self.output = QPlainTextEdit(self.layoutWidget)
         self.output.setObjectName(u"output")
         font = QFont()
-        font.setFamily(u"Monospace")
+        font.setFamilies([u"Monospace"])
         self.output.setFont(font)
         self.output.setReadOnly(True)
 

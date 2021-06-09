@@ -52,10 +52,11 @@ win.setWindowTitle('pyqtgraph example: Non-uniform Image')
 
 p = cw.addPlot(title="Power Losses [W]", row=0, col=0)
 
-lut = pg.HistogramLUTItem()
+lut = pg.HistogramLUTItem(orientation="horizontal")
 
 p.setMouseEnabled(x=False, y=False)
 
+cw.nextRow()
 cw.addItem(lut)
 
 # load the gradient
@@ -78,9 +79,5 @@ p.setLabel(axis='left', text='Torque [Nm]')
 p.axes['bottom']['item'].setZValue(1000)
 p.axes['left']['item'].setZValue(1000)
 
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

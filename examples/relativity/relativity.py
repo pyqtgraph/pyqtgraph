@@ -57,14 +57,14 @@ class RelativityGUI(QtGui.QWidget):
         self.layout.setContentsMargins(0,0,0,0)
         self.setLayout(self.layout)
         self.splitter = QtGui.QSplitter()
-        self.splitter.setOrientation(QtCore.Qt.Horizontal)
+        self.splitter.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.layout.addWidget(self.splitter)
         
         self.tree = ParameterTree(showHeader=False)
         self.splitter.addWidget(self.tree)
         
         self.splitter2 = QtGui.QSplitter()
-        self.splitter2.setOrientation(QtCore.Qt.Vertical)
+        self.splitter2.setOrientation(QtCore.Qt.Orientation.Vertical)
         self.splitter.addWidget(self.splitter2)
         
         self.worldlinePlots = pg.GraphicsLayoutWidget()
@@ -750,7 +750,7 @@ class ClockItem(pg.ItemGroup):
         #pass
 
 if __name__ == '__main__':
-    pg.mkQApp()
+    app = pg.mkQApp()
     #import pyqtgraph.console
     #cw = pyqtgraph.console.ConsoleWidget()
     #cw.show()
@@ -759,10 +759,5 @@ if __name__ == '__main__':
     win.setWindowTitle("Relativity!")
     win.show()
     win.resize(1100,700)
-    
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
-    
-    
-    #win.params.param('Objects').restoreState(state, removeChildren=False)
 
+    pg.exec()

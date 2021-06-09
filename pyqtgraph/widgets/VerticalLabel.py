@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
+import warnings
 
 __all__ = ['VerticalLabel']
 #class VerticalLabel(QtGui.QLabel):
     #def paintEvent(self, ev):
         #p = QtGui.QPainter(self)
         #p.rotate(-90)
-        #self.hint = p.drawText(QtCore.QRect(-self.height(), 0, self.height(), self.width()), QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, self.text())
+        #self.hint = p.drawText(QtCore.QRect(-self.height(), 0, self.height(), self.width()), QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter, self.text())
         #p.end()
         #self.setMinimumWidth(self.hint.height())
         #self.setMinimumHeight(self.hint.width())
@@ -45,9 +46,10 @@ class VerticalLabel(QtGui.QLabel):
         else:
             rgn = self.contentsRect()
         align = self.alignment()
-        #align  = QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter
-            
-        self.hint = p.drawText(rgn, align, self.text())
+        #align  = QtCore.Qt.AlignmentFlag.AlignTop|QtCore.Qt.AlignmentFlag.AlignHCenter
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.hint = p.drawText(rgn, align, self.text())
         p.end()
         
         if self.orientation == 'vertical':

@@ -51,7 +51,7 @@ class Graph(pg.GraphItem):
         
         
     def mouseDragEvent(self, ev):
-        if ev.button() != QtCore.Qt.LeftButton:
+        if ev.button() != QtCore.Qt.MouseButton.LeftButton:
             ev.ignore()
             return
         
@@ -129,8 +129,5 @@ g.setData(pos=pos, adj=adj, pen=lines, size=1, symbol=symbols, pxMode=False, tex
 
 
 
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

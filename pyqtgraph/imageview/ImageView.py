@@ -12,14 +12,16 @@ Widget used for displaying 2D or 3D data. Features:
   - ROI plotting
   - Image normalization through a variety of methods
 """
-import os, sys
+import os
+from math import log10
 import numpy as np
 
 from ..Qt import QtCore, QtGui, QT_LIB
+from .. import functions as fn
 import importlib
 ui_template = importlib.import_module(
     f'.ImageViewTemplate_{QT_LIB.lower()}', package=__package__)
-    
+
 from ..graphicsItems.ImageItem import *
 from ..graphicsItems.ROI import *
 from ..graphicsItems.LinearRegionItem import *
@@ -221,7 +223,7 @@ class ImageView(QtGui.QWidget):
         self.ui.roiPlot.registerPlot(self.name + '_ROI')
         self.view.register(self.name)
         
-        self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
+        self.noRepeatKeys = [QtCore.Qt.Key.Key_Right, QtCore.Qt.Key.Key_Left, QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_PageUp, QtCore.Qt.Key.Key_PageDown]
         
         self.roiClicked() ## initialize roi plot to correct shape / visibility
 
@@ -280,7 +282,7 @@ class ImageView(QtGui.QWidget):
         
         if not isinstance(img, np.ndarray):
             required = ['dtype', 'max', 'min', 'ndim', 'shape', 'size']
-            if not all([hasattr(img, attr) for attr in required]):
+            if not all(hasattr(img, attr) for attr in required):
                 raise TypeError("Image must be NumPy array or any object "
                                 "that provides compatible attributes/methods:\n"
                                 "  %s" % str(required))
@@ -496,18 +498,19 @@ class ImageView(QtGui.QWidget):
         if not self.hasTimeAxis():
             super().keyPressEvent(ev)
             return
-        if ev.key() == QtCore.Qt.Key_Space:
+
+        if ev.key() == QtCore.Qt.Key.Key_Space:
             if self.playRate == 0:
                 fps = (self.nframes-1) / (self.tVals[-1] - self.tVals[0])
                 self.play(fps)
             else:
                 self.play(self.playRate)
             ev.accept()
-        elif ev.key() == QtCore.Qt.Key_Home:
+        elif ev.key() == QtCore.Qt.Key.Key_Home:
             self.setCurrentIndex(0)
             self.play(0)
             ev.accept()
-        elif ev.key() == QtCore.Qt.Key_End:
+        elif ev.key() == QtCore.Qt.Key.Key_End:
             self.setCurrentIndex(self.nframes-1)
             self.play(0)
             ev.accept()
@@ -525,7 +528,7 @@ class ImageView(QtGui.QWidget):
             super().keyReleaseEvent(ev)
             return
 
-        if ev.key() in [QtCore.Qt.Key_Space, QtCore.Qt.Key_Home, QtCore.Qt.Key_End]:
+        if ev.key() in [QtCore.Qt.Key.Key_Space, QtCore.Qt.Key.Key_Home, QtCore.Qt.Key.Key_End]:
             ev.accept()
         elif ev.key() in self.noRepeatKeys:
             ev.accept()
@@ -542,22 +545,22 @@ class ImageView(QtGui.QWidget):
     def evalKeyState(self):
         if len(self.keysPressed) == 1:
             key = list(self.keysPressed.keys())[0]
-            if key == QtCore.Qt.Key_Right:
+            if key == QtCore.Qt.Key.Key_Right:
                 self.play(20)
                 self.jumpFrames(1)
                 self.lastPlayTime = ptime.time() + 0.2  ## 2ms wait before start
                                                         ## This happens *after* jumpFrames, since it might take longer than 2ms
-            elif key == QtCore.Qt.Key_Left:
+            elif key == QtCore.Qt.Key.Key_Left:
                 self.play(-20)
                 self.jumpFrames(-1)
                 self.lastPlayTime = ptime.time() + 0.2
-            elif key == QtCore.Qt.Key_Up:
+            elif key == QtCore.Qt.Key.Key_Up:
                 self.play(-100)
-            elif key == QtCore.Qt.Key_Down:
+            elif key == QtCore.Qt.Key.Key_Down:
                 self.play(100)
-            elif key == QtCore.Qt.Key_PageUp:
+            elif key == QtCore.Qt.Key.Key_PageUp:
                 self.play(-1000)
-            elif key == QtCore.Qt.Key_PageDown:
+            elif key == QtCore.Qt.Key.Key_PageDown:
                 self.play(1000)
         else:
             self.play(0)
@@ -576,7 +579,7 @@ class ImageView(QtGui.QWidget):
         
     def setCurrentIndex(self, ind):
         """Set the currently displayed frame index."""
-        index = np.clip(ind, 0, self.nframes-1)
+        index = fn.clip_scalar(ind, 0, self.nframes-1)
         self.currentIndex = index
         self.updateImage()
         self.ignoreTimeLine = True
@@ -629,7 +632,7 @@ class ImageView(QtGui.QWidget):
             self.roi.show()
             #self.ui.roiPlot.show()
             self.ui.roiPlot.setMouseEnabled(True, True)
-            self.ui.splitter.setSizes([self.height()*0.6, self.height()*0.4])
+            self.ui.splitter.setSizes([int(self.height()*0.6), int(self.height()*0.4)])
             self.ui.splitter.handle(1).setEnabled(True)
             self.roiCurve.show()
             self.roiChanged()
@@ -881,7 +884,7 @@ class ImageView(QtGui.QWidget):
         img = self.getProcessedImage()
         if self.hasTimeAxis():
             base, ext = os.path.splitext(fileName)
-            fmt = "%%s%%0%dd%%s" % int(np.log10(img.shape[0])+1)
+            fmt = "%%s%%0%dd%%s" % int(log10(img.shape[0])+1)
             for i in range(img.shape[0]):
                 self.imageItem.setImage(img[i], autoLevels=False)
                 self.imageItem.save(fmt % (base, i, ext))

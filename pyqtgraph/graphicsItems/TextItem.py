@@ -1,4 +1,4 @@
-import numpy as np
+from math import atan2, degrees
 from ..Qt import QtCore, QtGui
 from ..Point import Point
 from .. import functions as fn
@@ -171,10 +171,10 @@ class TextItem(GraphicsObject):
             self.updateTransform()
             p.setTransform(self.sceneTransform())
         
-        if self.border.style() != QtCore.Qt.NoPen or self.fill.style() != QtCore.Qt.NoBrush:
+        if self.border.style() != QtCore.Qt.PenStyle.NoPen or self.fill.style() != QtCore.Qt.BrushStyle.NoBrush:
             p.setPen(self.border)
             p.setBrush(self.fill)
-            p.setRenderHint(p.Antialiasing, True)
+            p.setRenderHint(p.RenderHint.Antialiasing, True)
             p.drawPolygon(self.textItem.mapToParent(self.textItem.boundingRect()))
         
     def setVisible(self, v):
@@ -208,7 +208,7 @@ class TextItem(GraphicsObject):
         angle = -self.angle
         if self.rotateAxis is not None:
             d = pt.map(self.rotateAxis) - pt.map(Point(0, 0))
-            a = np.arctan2(d.y(), d.x()) * 180 / np.pi
+            a = degrees(atan2(d.y(), d.x()))
             angle += a
         t.rotate(angle)  
         self.setTransform(t)

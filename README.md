@@ -29,12 +29,12 @@ This project supports:
 
 * All minor versions of Python released 42 months prior to the project, and at minimum the two latest minor versions.
 * All minor versions of numpy released in the 24 months prior to the project, and at minimum the last three minor versions.
-* All minor versions of Qt 5 and Qt 6 currently supported by upstream Qt
+* All Qt5 versions from 5.12-5.15, and Qt6 6.1
 
 Currently this means:
 
 * Python 3.7+
-* Qt 5.12-6.0
+* Qt 5.12-5.15, 6.1
 * Required
   * PyQt5, PyQt6, PySide2 or PySide6
   * `numpy` 1.17+
@@ -55,15 +55,18 @@ The following table represents the python environments we test in our CI system.
 | Qt-Bindings    | Python 3.7         | Python 3.8         | Python 3.9         |
 | :------------- | :----------------: | :----------------: | :----------------: |
 | PySide2-5.12   | :white_check_mark: | :x:                | :x:                |
-| PyQt5-5.12     | :white_check_mark: | :x:                | :x:                |
-| PySide2-5.15   | :x:                | :white_check_mark: | :x:                |
-| PyQt5-5.15     | :x:                | :white_check_mark: | :x:                |
-| PySide6-6.0    | :x:                | :x:                | :white_check_mark: |
-| PyQt6-6.0      | :x:                | :x:                | :white_check_mark: |
+| PyQt5-5.12     | :white_check_mark: |                    | :x:                |
+| PySide2-5.15   |                    | :white_check_mark: |                    |
+| PyQt5-5.15     |                    | :white_check_mark: |                    |
+| PySide6-6.1    |                    |                    | :white_check_mark: |
+| PyQt6-6.1      |                    |                    | :white_check_mark: |
+
+* :x: - Not compatible
+* :white_check_mark: - Tested
 
 Support
 -------
-  
+
 * Report issues on the [GitHub issue tracker](https://github.com/pyqtgraph/pyqtgraph/issues)
 * Post questions to the [mailing list / forum](https://groups.google.com/forum/?fromgroups#!forum/pyqtgraph) or [StackOverflow](https://stackoverflow.com/questions/tagged/pyqtgraph)
 
@@ -86,3 +89,20 @@ Documentation
 The official documentation lives at [pyqtgraph.readthedocs.io](https://pyqtgraph.readthedocs.io)
 
 The easiest way to learn pyqtgraph is to browse through the examples; run `python -m pyqtgraph.examples` to launch the examples application.  
+
+Used By
+-------
+
+Here is a partial listing of some of the applications that make use of PyQtGraph!
+
+* [ACQ4](https://github.com/acq4/acq4)
+* [Orange3](https://orangedatamining.com/)
+* [neurotic](https://neurotic.readthedocs.io)
+* [ephyviewer](https://ephyviewer.readthedocs.io)
+* [Joulescope](https://www.joulescope.com/)
+* [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
+* [argos](https://github.com/titusjan/argos)
+* [PySpectra](http://hasyweb.desy.de/services/computing/Spock/node138.html)
+* [Semi-Supervised Semantic Annotator](https://gitlab.com/ficsresearch/s3ah)
+
+Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!

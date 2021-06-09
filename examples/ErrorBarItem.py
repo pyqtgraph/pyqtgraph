@@ -26,8 +26,5 @@ err = pg.ErrorBarItem(x=x, y=y, top=top, bottom=bottom, beam=0.5)
 plt.addItem(err)
 plt.plot(x, y, symbol='o', pen={'color': 0.8, 'width': 2})
 
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()
