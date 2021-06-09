@@ -248,6 +248,18 @@ def test_siParse(s, suffix, expected):
         with pytest.raises(expected):
             pg.siParse(s, suffix=suffix)
 
+def test_CIELab_reconversion():
+    color_list = [ pg.Qt.QtGui.QColor('#100235') ] # known problematic values
+    for _ in range(20):
+        qcol = pg.Qt.QtGui.QColor()
+        qcol.setRgbF( *np.random.random((3)) )
+        color_list.append(qcol)
+    
+    for qcol1 in color_list:
+        vec_Lab  = pg.functions.colorCIELab( qcol1 )
+        qcol2 = pg.functions.CIELabColor(*vec_Lab)
+        for val1, val2 in zip( qcol1.getRgb(), qcol2.getRgb() ):
+            assert abs(val1-val2)<=1, f'Excess CIELab reconversion error ({qcol1.name() } > {vec_Lab } > {qcol2.name()})'
 
 MoveToElement = pg.QtGui.QPainterPath.ElementType.MoveToElement
 LineToElement = pg.QtGui.QPainterPath.ElementType.LineToElement
@@ -321,4 +333,3 @@ def test_arrayToQPath(xs, ys, connect, expected):
                 continue
         element = path.elementAt(i)
         assert eq(expected[i], (element.type, element.x, element.y))
-
