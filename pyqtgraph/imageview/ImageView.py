@@ -43,6 +43,7 @@ ui_template = importlib.import_module(
 
 translate = QtCore.QCoreApplication.translate
 
+
 class PlotROI(ROI):
     def __init__(self, size):
         ROI.__init__(self, pos=[0,0], size=size) #, scaleSnap=True, translateSnap=True)
@@ -129,10 +130,12 @@ class ImageView(QtGui.QWidget):
         self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
         self.scene = self.ui.graphicsView.scene()
-        self.opts = {'autoLevels':True, 
-                     'autoRange':True, 
-                     'autoHistogramRange':True, 
-                     'discreteTimeLine':False}
+        self.opts = {
+            "autoLevels": True,
+            "autoRange": True,
+            "autoHistogramRange": True,
+            "discreteTimeLine": False,
+        }
         self.ui.histogram.setLevelMode(levelMode)
         self.ignoreTimeLine = False
         
@@ -237,9 +240,6 @@ class ImageView(QtGui.QWidget):
         **Arguments:**
         img                (numpy array) the image to be displayed. See :func:`ImageItem.setImage` and
                            *notes* below.
-        xvals              (numpy array) 1D array of z-axis values corresponding to the first axis
-                           in a 3D image. For video, this array should contain the time of each 
-                           frame.
         autoRange          (bool) whether to scale/pan the view to fit the image.
         autoLevels         (bool) whether to update the white/black levels to fit the image.
         levels             (min, max); the white and black level values to use.
@@ -248,6 +248,8 @@ class ImageView(QtGui.QWidget):
                        
                                {'t':0, 'x':1, 'y':2, 'c':3};
         
+        xvals              (numpy array) 1D array of values corresponding to the first axis in a 3D
+                           image. For video, this array should contain the time of each frame.
         pos                Change the position of the displayed image
         scale              Change the scale of the displayed image
         transform          Set the transform of the displayed image. This option overrides *pos*
@@ -821,7 +823,7 @@ class ImageView(QtGui.QWidget):
             return
     
         image = self.getProcessedImage()
-        if autoHistogramRange == None:
+        if autoHistogramRange is None:
             autoHistogramRange = self.opts['autoHistogramRange']
         if autoHistogramRange:
             self.ui.histogram.setHistogramRange(self.levelMin, self.levelMax)
@@ -840,13 +842,12 @@ class ImageView(QtGui.QWidget):
             image = image[self.currentIndex]
             
         self.imageItem.updateImage(image)
-            
-            
+
     def timeIndex(self, slider):
         ## Return the time and frame index indicated by a slider
         if not self.hasTimeAxis():
             return (0,0)
-        
+
         t = slider.value()
 
         xv = self.tVals
@@ -855,7 +856,6 @@ class ImageView(QtGui.QWidget):
         else:
             if len(xv) < 2:
                 return (0,0)
-            #totTime = xv[-1] + (xv[-1]-xv[-2])
             inds = np.argwhere(xv <= t)
             if len(inds) < 1:
                 return (0,t)
