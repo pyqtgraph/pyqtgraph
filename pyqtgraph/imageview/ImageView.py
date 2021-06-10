@@ -436,47 +436,6 @@ class ImageView(QtGui.QWidget):
         else:
             return self.image.shape[0]
 
-    def setHistogramPrintView(self, printView=True, showHistogram=False):
-        '''
-        transforms the histogram into a more common shape to export the image
-        for some season this method doesn't work when called in LUTHistogram directly
-        * show/hide histogram plot
-        * resize area <- TODO: works with static sizes, changes this!
-        if hide:
-        * set histogramAxis to current range
-        * disable mouseinteraction for histogramAxis
-        '''
-        h = self.ui.histogram
-        if printView:
-            #fit range to axis
-                #because h.gradient doens't go to the border
-                #we need to extent the current region to be in level
-                #with the gradient
-            r = h.region.getRegion()
-            ysize = h.vb.boundingRect().height()
-            yRangePerPx = (r[1]-r[0]) / ysize
-            distGradient2VbBorder = 9
-            y_offset = distGradient2VbBorder * yRangePerPx
-            
-            h.vb.setYRange(r[0]-y_offset,r[1]+y_offset, padding=0)
-            if showHistogram:
-                h.region.hide()   
-            else:       
-                h.vb.hide()
-                h.vb.setMinimumWidth(0)
-                h.setFixedWidth(95)
-            h.vb.state['mouseEnabled'][1] = False
-        else:   
-            h.vb.setMinimumWidth(45)
-            h.region.show()
-            h.vb.show()
-            h.setMinimumWidth(135)
-            h.vb.state['mouseEnabled'][1] = True     
-        h.gradient.showTicks(not printView)
-        h.update()
-        h.gradient.update() 
-
- 
     def autoLevels(self):
         """Set the min/max intensity levels automatically to match the image data."""
         self.setLevels(rgba=self._imageLevels)

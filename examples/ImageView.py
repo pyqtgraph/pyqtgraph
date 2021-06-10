@@ -31,7 +31,6 @@ win.setCentralWidget(imv)
 win.show()
 win.setWindowTitle('pyqtgraph example: ImageView')
 imv.setHistogramLabel("Histogram label goes here")
-imv.setHistogramPrintView(printView=False)
 
 ## Create random 3D data set with time varying signals
 dataRed = np.ones((100, 200, 200)) * np.linspace(90, 150, 100)[:, np.newaxis, np.newaxis]
