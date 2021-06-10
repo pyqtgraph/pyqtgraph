@@ -431,6 +431,12 @@ class ImageView(QtGui.QWidget):
 
     @property
     def nframes(self):
+        """
+        Returns
+        -------
+        int
+            The number of frames in the image data.
+        """
         if self.image is None:
             return 0
         else:
@@ -816,9 +822,16 @@ class ImageView(QtGui.QWidget):
         self.imageItem.updateImage(image)
 
     def timeIndex(self, slider):
-        ## Return the time and frame index indicated by a slider
+        """
+        Returns
+        -------
+        int
+            The index of the frame closest to the timeline slider.
+        float
+            The time value of the slider.
+        """
         if not self.hasTimeAxis():
-            return (0,0)
+            return 0, 0
 
         t = slider.value()
 
@@ -827,11 +840,11 @@ class ImageView(QtGui.QWidget):
             ind = int(t)
         else:
             if len(xv) < 2:
-                return (0,0)
+                return 0, 0
             inds = np.argwhere(xv <= t)
             if len(inds) < 1:
-                return (0,t)
-            ind = inds[-1,0]
+                return 0, t
+            ind = inds[-1, 0]
         return ind, t
 
     def getView(self):
