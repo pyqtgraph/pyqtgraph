@@ -228,11 +228,31 @@ class ImageView(QtGui.QWidget):
         self.ui.roiPlot.registerPlot(self.name + '_ROI')
         self.view.register(self.name)
         
-        self.noRepeatKeys = [QtCore.Qt.Key.Key_Right, QtCore.Qt.Key.Key_Left, QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_PageUp, QtCore.Qt.Key.Key_PageDown]
+        self.noRepeatKeys = [
+            QtCore.Qt.Key.Key_Right,
+            QtCore.Qt.Key.Key_Left,
+            QtCore.Qt.Key.Key_Up,
+            QtCore.Qt.Key.Key_Down,
+            QtCore.Qt.Key.Key_PageUp,
+            QtCore.Qt.Key.Key_PageDown,
+        ]
         
         self.roiClicked() ## initialize roi plot to correct shape / visibility
 
-    def setImage(self, img, autoRange=None, autoLevels=None, levels=None, axes=None, xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True, levelMode=None):
+    def setImage(
+            self,
+            img,
+            autoRange=None,
+            autoLevels=None,
+            levels=None,
+            axes=None,
+            xvals=None,
+            pos=None,
+            scale=None,
+            transform=None,
+            autoHistogramRange=True,
+            levelMode=None,
+    ):
         """
         Set the image to be displayed in the widget.
         
