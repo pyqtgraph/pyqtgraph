@@ -557,15 +557,11 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         pixels[...,3] = 255
         
         glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
-        
-        # swap B,R channels for Qt
-        tmp = pixels[...,0].copy()
-        pixels[...,0] = pixels[...,2]
-        pixels[...,2] = tmp
-        pixels = pixels[::-1] # flip vertical
-        
-        img = fn.makeQImage(pixels, transpose=False)
-        return img
+
+        pixels = pixels[::-1].copy() # flip vertical
+
+        qimg = fn.ndarray_to_qimage(pixels, QtGui.QImage.Format.Format_RGBA8888)
+        return qimg
         
     def renderToArray(self, size, format=GL_BGRA, type=GL_UNSIGNED_BYTE, textureSize=1024, padding=256):
         w,h = map(int, size)
