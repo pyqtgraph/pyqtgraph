@@ -85,38 +85,41 @@ class ImageView(QtGui.QWidget):
     sigTimeChanged = QtCore.Signal(object, object)
     sigProcessingChanged = QtCore.Signal(object)
     
-    def __init__(self, parent=None, name="ImageView", view=None, imageItem=None, 
-                 levelMode='mono', *args):
+    def __init__(
+            self,
+            parent=None,
+            name="ImageView",
+            view=None,
+            imageItem=None,
+            levelMode='mono',
+            discreteTimeLine=False,
+            *args,
+    ):
         """
         By default, this class creates an :class:`ImageItem <pyqtgraph.ImageItem>` to display image data
-        and a :class:`ViewBox <pyqtgraph.ViewBox>` to contain the ImageItem. 
-        
-        ============= =========================================================
-        **Arguments** 
-        parent        (QWidget) Specifies the parent widget to which
-                      this ImageView will belong. If None, then the ImageView
-                      is created with no parent.
-        name          (str) The name used to register both the internal ViewBox
-                      and the PlotItem used to display ROI data. See the *name*
-                      argument to :func:`ViewBox.__init__() 
-                      <pyqtgraph.ViewBox.__init__>`.
-        view          (ViewBox or PlotItem) If specified, this will be used
-                      as the display area that contains the displayed image. 
-                      Any :class:`ViewBox <pyqtgraph.ViewBox>`, 
-                      :class:`PlotItem <pyqtgraph.PlotItem>`, or other 
-                      compatible object is acceptable.
-        imageItem     (ImageItem) If specified, this object will be used to
-                      display the image. Must be an instance of ImageItem
-                      or other compatible object.
-        levelMode     See the *levelMode* argument to 
-                      :func:`HistogramLUTItem.__init__() 
-                      <pyqtgraph.HistogramLUTItem.__init__>`
-        ============= =========================================================
-        
-        Note: to display axis ticks inside the ImageView, instantiate it 
-        with a PlotItem instance as its view::
-                
-            pg.ImageView(view=pg.PlotItem())
+        and a :class:`ViewBox <pyqtgraph.ViewBox>` to contain the ImageItem.
+
+        Parameters
+        ----------
+        parent : QWidget
+            Specifies the parent widget to which this ImageView will belong. If None, then the ImageView is created with
+            no parent.
+        name : str
+            The name used to register both the internal ViewBox and the PlotItem used to display ROI data. See the
+            *name* argument to :func:`ViewBox.__init__() <pyqtgraph.ViewBox.__init__>`.
+        view : ViewBox or PlotItem
+            If specified, this will be used as the display area that contains the displayed image. Any
+            :class:`ViewBox <pyqtgraph.ViewBox>`, :class:`PlotItem <pyqtgraph.PlotItem>`, or other compatible object is
+            acceptable. Note: to display axis ticks inside the ImageView, instantiate it with a PlotItem instance as its
+            view::
+                pg.ImageView(view=pg.PlotItem())
+        imageItem : ImageItem
+            If specified, this object will be used to display the image. Must be an instance of ImageItem or other
+            compatible object.
+        levelMode : str
+            See the *levelMode* argument to :func:`HistogramLUTItem.__init__() <pyqtgraph.HistogramLUTItem.__init__>`
+        discreteTimeLine : bool
+            Whether to snap to xvals / frame numbers when interacting with the timeline position.
         """
         QtGui.QWidget.__init__(self, parent, *args)
         self._imageLevels = None  # [(min, max), ...] per channel image metrics
@@ -130,12 +133,7 @@ class ImageView(QtGui.QWidget):
         self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
         self.scene = self.ui.graphicsView.scene()
-        self.opts = {
-            "autoLevels": True,
-            "autoRange": True,
-            "autoHistogramRange": True,
-            "discreteTimeLine": False,
-        }
+        self.discreteTimeLine = discreteTimeLine
         self.ui.histogram.setLevelMode(levelMode)
         self.ignoreTimeLine = False
         
@@ -242,8 +240,8 @@ class ImageView(QtGui.QWidget):
     def setImage(
             self,
             img,
-            autoRange=None,
-            autoLevels=None,
+            autoRange=True,
+            autoLevels=True,
             levels=None,
             axes=None,
             xvals=None,
@@ -295,11 +293,6 @@ class ImageView(QtGui.QWidget):
         
         """
         profiler = debug.Profiler()
-
-        if autoLevels is None:
-            autoLevels = self.opts['autoLevels']
-        if autoRange is None:
-            autoRange = self.opts['autoRange']
 
         if hasattr(img, 'implements') and img.implements('MetaArray'):
             img = img.asarray()
@@ -826,9 +819,7 @@ class ImageView(QtGui.QWidget):
         if ind != self.currentIndex:
             self.currentIndex = ind
             self.updateImage()
-        #self.timeLine.setPos(time)
-        #self.emit(QtCore.SIGNAL('timeChanged'), ind, time)
-        if self.opts['discreteTimeLine']:
+        if self.discreteTimeLine:
             with fn.SignalBlock(self.timeLine.sigPositionChanged, self.timeLineChanged):
                 if self.tVals is not None:
                     self.timeLine.setPos(self.tVals[ind])
@@ -843,8 +834,6 @@ class ImageView(QtGui.QWidget):
             return
     
         image = self.getProcessedImage()
-        if autoHistogramRange is None:
-            autoHistogramRange = self.opts['autoHistogramRange']
         if autoHistogramRange:
             self.ui.histogram.setHistogramRange(self.levelMin, self.levelMax)
         
