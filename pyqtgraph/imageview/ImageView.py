@@ -406,8 +406,7 @@ class ImageView(QtGui.QWidget):
     def play(self, rate=None):
         """Begin automatically stepping frames forward at the given rate (in fps).
         This can also be accessed by pressing the spacebar."""
-        #print "play:", rate
-        if rate is None: 
+        if rate is None:
             rate = self.fps
         self.playRate = rate
 
@@ -517,7 +516,9 @@ class ImageView(QtGui.QWidget):
             return
 
         if ev.key() == QtCore.Qt.Key.Key_Space:
-            if self.playRate == 0:
+            if self.playTimer.isActive():
+                self.play(0)
+            elif self.playRate == 0:
                 fps = (self.nframes-1) / (self.tVals[-1] - self.tVals[0])
                 self.play(fps)
             else:
