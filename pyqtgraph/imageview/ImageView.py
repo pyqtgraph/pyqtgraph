@@ -807,9 +807,11 @@ class ImageView(QtGui.QWidget):
         #self.timeLine.setPos(time)
         #self.emit(QtCore.SIGNAL('timeChanged'), ind, time)
         if self.opts['discreteTimeLine']:
-            self.timeLine.sigPositionChanged.disconnect(self.timeLineChanged)
-            self.timeLine.setPos(self.currentIndex)
-            self.timeLine.sigPositionChanged.connect(self.timeLineChanged)
+            with fn.SignalBlock(self.timeLine.sigPositionChanged, self.timeLineChanged):
+                if self.tVals is not None:
+                    self.timeLine.setPos(self.tVals[ind])
+                else:
+                    self.timeLine.setPos(ind)
 
         self.sigTimeChanged.emit(ind, time)
 
