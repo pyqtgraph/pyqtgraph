@@ -431,7 +431,10 @@ class ImageView(QtGui.QWidget):
 
     @property
     def nframes(self):
-        return self.getProcessedImage().shape[0]
+        if self.image is None:
+            return 0
+        else:
+            return self.image.shape[0]
 
     def setHistogramPrintView(self, printView=True, showHistogram=False):
         '''
