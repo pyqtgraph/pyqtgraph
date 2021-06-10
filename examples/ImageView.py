@@ -47,6 +47,7 @@ data = np.concatenate(
 
 # Display the data and assign each frame a time value from 1.0 to 3.0
 imv.setImage(data, xvals=np.linspace(1., 3., data.shape[0]))
+imv.play(10)
 
 ## Set a custom color map
 colors = [
