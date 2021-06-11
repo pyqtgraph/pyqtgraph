@@ -29,8 +29,7 @@ class CurvePoint(GraphicsObject):
         self.setProperty('position', 0.0)
         self.setProperty('index', 0)
         
-        if hasattr(self, 'ItemHasNoContents'):
-            self.setFlags(self.flags() | self.GraphicsItemFlag.ItemHasNoContents)
+        self.setFlags(self.flags() | self.GraphicsItemFlag.ItemHasNoContents)
         
         if pos is not None:
             self.setPos(pos)
