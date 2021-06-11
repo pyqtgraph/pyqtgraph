@@ -19,6 +19,12 @@ from collections import OrderedDict
 from .. import debug
 from ..python2_3 import basestring
 
+if QT_LIB == 'PySide2':
+    from shiboken2 import wrapInstance
+elif QT_LIB == 'PySide6':
+    from shiboken6 import wrapInstance
+elif QT_LIB in ['PyQt5', 'PyQt6']:
+    from ..Qt import sip
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
 
@@ -36,7 +42,8 @@ __all__ = ['ScatterPlotItem', 'SpotItem']
 # as the separate calls to this method are the current bottleneck.
 # See: https://bugreports.qt.io/browse/PYSIDE-163
 
-_USE_QRECT = QT_LIB not in ['PySide2', 'PySide6']
+_USE_QRECT = False
+_USE_PXFRAGS = True
 
 ## Build all symbol paths
 name_list = ['o', 's', 't', 't1', 't2', 't3', 'd', '+', 'x', 'p', 'h', 'star',
@@ -1099,13 +1106,37 @@ class ScatterPlotItem(GraphicsObject):
             p.resetTransform()
 
             if self.opts['useCache'] and self._exportOpts is False:
-                # Map pts to (x, y) coordinates of targetRect
-                pts -= self.data['sourceRect']['w'] / 2
-
                 # Draw symbols from pre-rendered atlas
                 pm = self.fragmentAtlas.pixmap
 
-                if _USE_QRECT:
+                if _USE_PXFRAGS:
+                    # x, y is the center of the target rect
+                    # drawPixmapFragments takes floating-point coords,
+                    # so casting to int here is for rounding towards zero
+                    xy = pts[:, viewMask].T.astype(int)
+                    sr = self.data['sourceRect'][viewMask]
+
+                    frags = np.empty((sr.size, 10), dtype=np.float64)
+                    frags[:, 0:2] = xy
+                    frags[:, 2:6] = np.frombuffer(sr, dtype=int).reshape((-1, 4)) # sx, sy, sw, sh
+                    frags[:, 6:10] = [1.0, 1.0, 0.0, 1.0]   # scaleX, scaleY, rotation, opacity
+
+                    if QT_LIB.startswith('PyQt'):
+                        frags_lst = list(map(sip.wrapinstance,
+                            itertools.count(frags.ctypes.data, frags.strides[0]),
+                            itertools.repeat(QtGui.QPainter.PixmapFragment, frags.shape[0])))
+                        draw_args = frags_lst, pm
+                    else:
+                        frags_ptr = wrapInstance(frags.ctypes.data, QtGui.QPainter.PixmapFragment)
+                        draw_args = frags_ptr, frags.shape[0], pm
+
+                    profiler('prep')
+                    p.drawPixmapFragments(*draw_args)
+                    profiler('draw')
+                elif _USE_QRECT:
+                    # Map pts to (x, y) coordinates of targetRect
+                    pts -= self.data['sourceRect']['w'] / 2
+
                     # Update targetRects if necessary
                     updateMask = viewMask & (~self.data['targetQRectValid'])
                     if np.any(updateMask):
@@ -1129,6 +1160,9 @@ class ScatterPlotItem(GraphicsObject):
                                   self.data['sourceQRect'][viewMask].tolist()))
                     profiler('draw')
                 else:
+                    # Map pts to (x, y) coordinates of targetRect
+                    pts -= self.data['sourceRect']['w'] / 2
+
                     x, y = pts[:, viewMask].astype(int)
                     sr = self.data['sourceRect'][viewMask]
 
