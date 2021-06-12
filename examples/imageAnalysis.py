@@ -16,7 +16,7 @@ import numpy as np
 # Interpret image data as row-major instead of col-major
 pg.setConfigOptions(imageAxisOrder='row-major')
 
-app = pg.mkQApp()
+pg.mkQApp()
 win = pg.GraphicsLayoutWidget()
 win.setWindowTitle('pyqtgraph example: Image Analysis')
 
@@ -29,10 +29,6 @@ p1.addItem(img)
 
 lr = pg.LinearRegionItem(values=(1.5, 2.5), clipItem=img)
 p1.addItem(lr)
-
-#def setRegionBounds():
-#    lr.setBounds((img.width(), img.height()))
-#img.sigImageChanged.connect(setRegionBounds)
 
 # Custom ROI for selecting an image region
 roi = pg.ROI([-8, 14], [6, 5])
