@@ -323,7 +323,7 @@ class RemoteEventHandler(object):
         self.send(request='result', reqId=reqId, callSync='off', opts=dict(result=result))
     
     def replyError(self, reqId, *exc):
-        print("error: %s %s %s" % (self.name, str(reqId), str(exc[1])))
+        # print("error: %s %s %s" % (self.name, str(reqId), str(exc[1])))
         excStr = traceback.format_exception(*exc)
         try:
             self.send(request='error', reqId=reqId, callSync='off', opts=dict(exception=exc[1], excString=excStr))
@@ -503,9 +503,13 @@ class RemoteEventHandler(object):
             #print ''.join(result)
             exc, excStr = result
             if exc is not None:
-                warnings.warn("===== Remote process raised exception on request: =====", RemoteExceptionWarning)
-                warnings.warn(''.join(excStr), RemoteExceptionWarning)
-                warnings.warn("===== Local Traceback to request follows: =====", RemoteExceptionWarning)
+                # PySide6 6.1.0 does an attribute lookup for feature testing
+                # in such a case, failure is normal 
+                normal = ["AttributeError"]
+                if not any(excStr[-1].startswith(x) for x in normal):
+                    warnings.warn("===== Remote process raised exception on request: =====", RemoteExceptionWarning)
+                    warnings.warn(''.join(excStr), RemoteExceptionWarning)
+                    warnings.warn("===== Local Traceback to request follows: =====", RemoteExceptionWarning)
                 raise exc
             else:
                 print(''.join(excStr))

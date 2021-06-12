@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from .TableWidget import TableWidget
 from ..python2_3 import asUnicode
 import types, traceback
@@ -21,7 +21,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
     """
     def __init__(self, parent=None, data=None):
         QtGui.QTreeWidget.__init__(self, parent)
-        self.setVerticalScrollMode(self.ScrollPerPixel)
+        self.setVerticalScrollMode(self.ScrollMode.ScrollPerPixel)
         self.setData(data)
         self.setColumnCount(3)
         self.setHeaderLabels(['key / index', 'type', 'value'])
@@ -65,7 +65,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
             subnode = QtGui.QTreeWidgetItem(["", "", ""])
             node.addChild(subnode)
             self.setItemWidget(subnode, 0, widget)
-            self.setFirstItemColumnSpanned(subnode, True)
+            subnode.setFirstColumnSpanned(True)
             
         # recurse to children
         for key, data in childs.items():
@@ -93,7 +93,10 @@ class DataTreeWidget(QtGui.QTreeWidget):
             if isinstance(data, OrderedDict):
                 childs = data
             else:
-                childs = OrderedDict(sorted(data.items()))
+                try:
+                    childs = OrderedDict(sorted(data.items()))
+                except TypeError: # if sorting falls
+                    childs = OrderedDict(data.items())
         elif isinstance(data, (list, tuple)):
             desc = "length=%d" % len(data)
             childs = OrderedDict(enumerate(data))

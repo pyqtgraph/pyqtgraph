@@ -11,7 +11,7 @@ import pyqtgraph as pg
 pg.setConfigOptions(imageAxisOrder='row-major')
 
 ## create GUI
-app = QtGui.QApplication([])
+app = pg.mkQApp("ROI Types Examples")
 
 w = pg.GraphicsLayoutWidget(show=True, size=(800,800), border=True)
 v = w.addViewBox(colspan=2)
@@ -41,7 +41,7 @@ v.addItem(im1)
 v.addItem(im2)
 im2.moveBy(110, 20)
 v.setRange(QtCore.QRectF(0, 0, 200, 120))
-im1.scale(0.8, 0.5)
+im1.setTransform(QtGui.QTransform.fromScale(0.8, 0.5))
 
 im3 = pg.ImageItem()
 v2 = w.addViewBox(1,0)
@@ -118,10 +118,5 @@ t = QtCore.QTimer()
 t.timeout.connect(updateImage)
 t.start(50)
 
-
-
-## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

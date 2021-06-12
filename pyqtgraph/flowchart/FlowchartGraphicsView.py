@@ -4,6 +4,7 @@ from ..widgets.GraphicsView import GraphicsView
 from ..GraphicsScene import GraphicsScene
 from ..graphicsItems.ViewBox import ViewBox
 
+translate = QtCore.QCoreApplication.translate
 
 class FlowchartGraphicsView(GraphicsView):
     
@@ -14,7 +15,7 @@ class FlowchartGraphicsView(GraphicsView):
         GraphicsView.__init__(self, *args, useOpenGL=False)
         self._vb = FlowchartViewBox(widget, lockAspect=True, invertY=True)
         self.setCentralItem(self._vb)
-        self.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        self.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
     
     def viewBox(self):
         return self._vb
@@ -37,5 +38,5 @@ class FlowchartViewBox(ViewBox):
     def getContextMenus(self, ev):
         ## called by scene to add menus on to someone else's context menu
         menu = self.widget.buildMenu(ev.scenePos())
-        menu.setTitle("Add node")
+        menu.setTitle(translate("Context Menu", "Add node"))
         return [menu, ViewBox.getMenu(self, ev)]

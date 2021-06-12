@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>PyQtGraph</string>
   </property>
   <widget class="QGroupBox" name="averageGroup">
    <property name="geometry">
@@ -192,17 +192,23 @@
   <widget class="QFrame" name="transformGroup">
    <property name="geometry">
     <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>154</width>
-     <height>79</height>
+     <x>10</x>
+     <y>10</y>
+     <width>171</width>
+     <height>101</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
-     <widget class="QCheckBox" name="fftCheck">
+    <property name="margin">
+     <number>0</number>
+    </property>
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <item row="2" column="0">
+     <widget class="QCheckBox" name="logYCheck">
       <property name="text">
-       <string>Power Spectrum (FFT)</string>
+       <string>Log Y</string>
       </property>
      </widget>
     </item>
@@ -213,10 +219,24 @@
       </property>
      </widget>
     </item>
-    <item row="2" column="0">
-     <widget class="QCheckBox" name="logYCheck">
+    <item row="0" column="0">
+     <widget class="QCheckBox" name="fftCheck">
       <property name="text">
-       <string>Log Y</string>
+       <string>Power Spectrum (FFT)</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QCheckBox" name="derivativeCheck">
+      <property name="text">
+       <string>dy/dx</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0">
+     <widget class="QCheckBox" name="phasemapCheck">
+      <property name="text">
+       <string>Y vs. Y'</string>
       </property>
      </widget>
     </item>

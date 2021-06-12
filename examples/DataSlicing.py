@@ -14,7 +14,7 @@ import numpy as np
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Data Slicing Example")
 
 ## Create window with two ImageView widgets
 win = QtGui.QMainWindow()
@@ -57,8 +57,5 @@ imv1.setLevels(-0.003, 0.003)
 
 update()
 
-## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

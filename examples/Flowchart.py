@@ -19,7 +19,7 @@ import pyqtgraph as pg
 import numpy as np
 import pyqtgraph.metaarray as metaarray
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Flowchart Example")
 
 ## Create main window with grid layout
 win = QtGui.QMainWindow()
@@ -75,10 +75,5 @@ fc.connectTerminals(fc['dataIn'], pw1Node['In'])
 fc.connectTerminals(fNode['Out'], pw2Node['In'])
 fc.connectTerminals(fNode['Out'], fc['dataOut'])
 
-
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

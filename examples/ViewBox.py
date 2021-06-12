@@ -18,7 +18,7 @@ import numpy as np
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("ViewBox Example")
 mw = QtGui.QMainWindow()
 mw.setWindowTitle('pyqtgraph example: ViewBox')
 mw.show()
@@ -48,7 +48,7 @@ class movableRect(QtGui.QGraphicsRectItem):
         self.setPen(self.savedPen)
         ev.ignore()
     def mousePressEvent(self, ev):
-        if ev.button() == QtCore.Qt.LeftButton:
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
             self.pressDelta = self.mapToParent(ev.pos()) - self.pos()
         else:
@@ -93,8 +93,5 @@ t = QtCore.QTimer()
 t.timeout.connect(updateData)
 t.start(50)
 
-## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

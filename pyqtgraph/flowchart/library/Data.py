@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ..Node import Node
-from ...Qt import QtGui, QtCore
+from ...Qt import QtGui, QtCore, QtWidgets
 import numpy as np
 import sys
 from .common import *
@@ -63,18 +63,18 @@ class ColumnSelectNode(Node):
         self.columnList.clear()
         for c in cols:
             item = QtGui.QListWidgetItem(c)
-            item.setFlags(QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsUserCheckable)
+            item.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled|QtCore.Qt.ItemFlag.ItemIsUserCheckable)
             if c in self.columns:
-                item.setCheckState(QtCore.Qt.Checked)
+                item.setCheckState(QtCore.Qt.CheckState.Checked)
             else:
-                item.setCheckState(QtCore.Qt.Unchecked)
+                item.setCheckState(QtCore.Qt.CheckState.Unchecked)
             self.columnList.addItem(item)
         self.columnList.blockSignals(False)
         
 
     def itemChanged(self, item):
         col = str(item.text())
-        if item.checkState() == QtCore.Qt.Checked:
+        if item.checkState() == QtCore.Qt.CheckState.Checked:
             if col not in self.columns:
                 self.columns.add(col)
                 self.addOutput(col)
@@ -160,10 +160,9 @@ class RegionSelectNode(CtrlNode):
                 sliced = data[0:s['start']:s['stop']]
             else:
                 mask = (data['time'] >= s['start']) * (data['time'] < s['stop'])
-            sliced = data[mask]
+                sliced = data[mask]
         else:
             sliced = None
-            
         return {'selected': sliced, 'widget': self.items, 'region': region}
         
         
@@ -173,6 +172,20 @@ class RegionSelectNode(CtrlNode):
         self.update()
         
         
+class TextEdit(QtWidgets.QTextEdit):
+    def __init__(self, on_update):
+        super().__init__()
+        self.on_update = on_update
+        self.lastText = None
+
+    def focusOutEvent(self, ev):
+        text = str(self.toPlainText())
+        if text != self.lastText:
+            self.lastText = text
+            self.on_update()
+        super().focusOutEvent(ev)
+
+
 class EvalNode(Node):
     """Return the output of a string evaluated/executed by the python interpreter.
     The string may be either an expression or a python script, and inputs are accessed as the name of the terminal. 
@@ -190,14 +203,11 @@ class EvalNode(Node):
         
         self.ui = QtGui.QWidget()
         self.layout = QtGui.QGridLayout()
-        self.text = QtGui.QTextEdit()
+        self.text = TextEdit(self.update)
         self.text.setTabStopWidth(30)
         self.text.setPlainText("# Access inputs as args['input_name']\nreturn {'output': None} ## one key per output terminal")
         self.layout.addWidget(self.text, 1, 0, 1, 2)
         self.ui.setLayout(self.layout)
-        
-        self.text.focusOutEvent = self.focusOutEvent
-        self.lastText = None
         
     def ctrlWidget(self):
         return self.ui
@@ -220,13 +230,6 @@ class EvalNode(Node):
 
     def code(self):
         return self.text.toPlainText()
-        
-    def focusOutEvent(self, ev):
-        text = str(self.text.toPlainText())
-        if text != self.lastText:
-            self.lastText = text
-            self.update()
-        return QtGui.QTextEdit.focusOutEvent(self.text, ev)
         
     def process(self, display=True, **args):
         l = locals()

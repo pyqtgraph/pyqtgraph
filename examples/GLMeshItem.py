@@ -11,7 +11,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("GLMeshItem Example")
 w = gl.GLViewWidget()
 w.show()
 w.setWindowTitle('pyqtgraph example: GLMeshItem')
@@ -117,13 +117,5 @@ m6.rotate(0., 0, 1, 1)
 w.addItem(m5)
 w.addItem(m6)
 
-
-
-    
-
-
-## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

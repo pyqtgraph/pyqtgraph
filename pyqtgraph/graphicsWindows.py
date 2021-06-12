@@ -11,6 +11,7 @@ from .widgets.PlotWidget import *
 from .imageview import *
 from .widgets.GraphicsLayoutWidget import GraphicsLayoutWidget
 from .widgets.GraphicsView import GraphicsView
+import warnings
 
 
 class GraphicsWindow(GraphicsLayoutWidget):
@@ -21,6 +22,11 @@ class GraphicsWindow(GraphicsLayoutWidget):
     is intended for use from the interactive python prompt.
     """
     def __init__(self, title=None, size=(800,600), **kargs):
+        warnings.warn(
+            'GraphicsWindow is deprecated, use GraphicsLayoutWidget instead,'
+            'will be removed in 0.13',
+            DeprecationWarning, stacklevel=2
+        )
         mkQApp()
         GraphicsLayoutWidget.__init__(self, **kargs)
         self.resize(*size)
@@ -34,6 +40,10 @@ class TabWindow(QtGui.QMainWindow):
     (deprecated)
     """
     def __init__(self, title=None, size=(800,600)):
+        warnings.warn(
+            'TabWindow is deprecated, will be removed in 0.13',
+            DeprecationWarning, stacklevel=2
+        )
         mkQApp()
         QtGui.QMainWindow.__init__(self)
         self.resize(*size)
@@ -48,10 +58,17 @@ class TabWindow(QtGui.QMainWindow):
     
 
 class PlotWindow(PlotWidget):
+    sigClosed = QtCore.Signal(object)
+
     """
     (deprecated; use :class:`~pyqtgraph.PlotWidget` instead)
     """
     def __init__(self, title=None, **kargs):
+        warnings.warn(
+            'PlotWindow is deprecated, use PlotWidget instead,'
+            'will be removed in 0.13',
+            DeprecationWarning, stacklevel=2
+        )    
         mkQApp()
         self.win = QtGui.QMainWindow()
         PlotWidget.__init__(self, **kargs)
@@ -62,12 +79,23 @@ class PlotWindow(PlotWidget):
             self.win.setWindowTitle(title)
         self.win.show()
 
+    def closeEvent(self, event):
+        PlotWidget.closeEvent(self, event)
+        self.sigClosed.emit(self)
+
 
 class ImageWindow(ImageView):
+    sigClosed = QtCore.Signal(object)
+
     """
     (deprecated; use :class:`~pyqtgraph.ImageView` instead)
     """
     def __init__(self, *args, **kargs):
+        warnings.warn(
+            'ImageWindow is deprecated, use ImageView instead'
+            'will be removed in 0.13',
+            DeprecationWarning, stacklevel=2
+        ) 
         mkQApp()
         self.win = QtGui.QMainWindow()
         self.win.resize(800,600)
@@ -77,9 +105,12 @@ class ImageWindow(ImageView):
         ImageView.__init__(self, self.win)
         if len(args) > 0 or len(kargs) > 0:
             self.setImage(*args, **kargs)
+        
         self.win.setCentralWidget(self)
         for m in ['resize']:
             setattr(self, m, getattr(self.win, m))
-        #for m in ['setImage', 'autoRange', 'addItem', 'removeItem', 'blackLevel', 'whiteLevel', 'imageItem']:
-            #setattr(self, m, getattr(self.cw, m))
         self.win.show()
+    
+    def closeEvent(self, event):
+        ImageView.closeEvent(self, event)
+        self.sigClosed.emit(self)

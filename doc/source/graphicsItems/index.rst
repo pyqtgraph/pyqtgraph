@@ -12,12 +12,15 @@ Contents:
     plotdataitem
     plotitem
     imageitem
+    colorbaritem
+    pcolormeshitem
     graphitem
     viewbox
     linearregionitem
     infiniteline
     roi
     graphicslayout
+    multiplotitem
     plotcurveitem
     scatterplotitem
     isocurveitem
@@ -44,3 +47,4 @@ Contents:
     uigraphicsitem
     graphicswidgetanchor
     dateaxisitem
+    targetitem

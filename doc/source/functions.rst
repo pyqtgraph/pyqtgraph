@@ -30,11 +30,17 @@ Qt uses the classes QColor, QPen, and QBrush to determine how to draw lines and 
 
 .. autofunction:: pyqtgraph.intColor
 
+.. autofunction:: pyqtgraph.CIELabColor
+
+.. autofunction:: pyqtgraph.colorCIELab
+
 .. autofunction:: pyqtgraph.colorTuple
 
 .. autofunction:: pyqtgraph.colorStr
 
 .. autofunction:: pyqtgraph.glColor
+
+.. autofunction:: pyqtgraph.colorDistance
 
 
 Data Slicing
@@ -64,6 +70,8 @@ SI Unit Conversion Functions
 .. autofunction:: pyqtgraph.siScale
 
 .. autofunction:: pyqtgraph.siEval
+
+.. autofunction:: pyqtgraph.siParse
 
 
 Image Preparation Functions
@@ -100,5 +108,3 @@ Miscellaneous Functions
 .. autofunction:: pyqtgraph.systemInfo
 
 .. autofunction:: pyqtgraph.exit
-
-

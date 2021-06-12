@@ -30,9 +30,12 @@ class DockDrop(object):
         
     def dragMoveEvent(self, ev):
         #print "drag move"
-        ld = ev.pos().x()
+        # QDragMoveEvent inherits QDropEvent which provides posF()
+        # PyQt6 provides only position()
+        posF = ev.posF() if hasattr(ev, 'posF') else ev.position()
+        ld = posF.x()
         rd = self.width() - ld
-        td = ev.pos().y()
+        td = posF.y()
         bd = self.height() - td
         
         mn = min(ld, rd, td, bd)
@@ -88,7 +91,7 @@ class DropAreaOverlay(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         self.dropArea = None
         self.hide()
-        self.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         
     def setDropArea(self, area):
         self.dropArea = area

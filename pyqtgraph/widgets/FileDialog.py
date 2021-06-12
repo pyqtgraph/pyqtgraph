@@ -11,4 +11,4 @@ class FileDialog(QtGui.QFileDialog):
         QtGui.QFileDialog.__init__(self, *args)
         
         if sys.platform == 'darwin': 
-            self.setOption(QtGui.QFileDialog.DontUseNativeDialog)
+            self.setOption(QtGui.QFileDialog.Option.DontUseNativeDialog)

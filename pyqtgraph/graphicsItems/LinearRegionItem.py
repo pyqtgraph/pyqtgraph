@@ -43,8 +43,9 @@ class LinearRegionItem(GraphicsObject):
         **Arguments:**
         values          A list of the positions of the lines in the region. These are not
                         limits; limits can be set by specifying bounds.
-        orientation     Options are 'vertical' or 'horizontal', indicating the 
-                        The default is 'vertical', indicating that the 
+        orientation     Options are 'vertical' or 'horizontal'
+                        The default is 'vertical', indicating that the region is bounded
+                        by vertical lines.
         brush           Defines the brush that fills the region. Can be any arguments that
                         are valid for :func:`mkBrush <pyqtgraph.mkBrush>`. Default is
                         transparent blue.
@@ -106,8 +107,9 @@ class LinearRegionItem(GraphicsObject):
                 # and down in horizontal mode. 
                 InfiniteLine(QtCore.QPointF(0, values[0]), angle=0, **lineKwds), 
                 InfiniteLine(QtCore.QPointF(0, values[1]), angle=0, **lineKwds)]
-            self.lines[0].scale(1, -1)
-            self.lines[1].scale(1, -1)
+            tr = QtGui.QTransform.fromScale(1, -1)
+            self.lines[0].setTransform(tr, True)
+            self.lines[1].setTransform(tr, True)
         elif orientation in ('vertical', LinearRegionItem.Vertical):
             self.lines = [
                 InfiniteLine(QtCore.QPointF(values[0], 0), angle=90, **lineKwds), 
@@ -118,8 +120,8 @@ class LinearRegionItem(GraphicsObject):
         for l in self.lines:
             l.setParentItem(self)
             l.sigPositionChangeFinished.connect(self.lineMoveFinished)
-        self.lines[0].sigPositionChanged.connect(lambda: self.lineMoved(0))
-        self.lines[1].sigPositionChanged.connect(lambda: self.lineMoved(1))
+        self.lines[0].sigPositionChanged.connect(self._line0Moved)
+        self.lines[1].sigPositionChanged.connect(self._line1Moved)
             
         if brush is None:
             brush = QtGui.QBrush(QtGui.QColor(0, 0, 255, 50))
@@ -222,12 +224,7 @@ class LinearRegionItem(GraphicsObject):
         self.update()
 
     def boundingRect(self):
-        br = self.getViewBox().itemBoundingRect(self.clipItem) if self.clipItem \
-            else self.viewRect()
-
-        # br = self.viewRect()  # bounds of containing ViewBox mapped to local coords.
-
-        # TODO: enforce item bounding rect from clipItem
+        br = QtCore.QRectF(self.viewRect())  # bounds of containing ViewBox mapped to local coords.
 
         rng = self.getRegion()
         if self.orientation in ('vertical', LinearRegionItem.Vertical):
@@ -276,12 +273,18 @@ class LinearRegionItem(GraphicsObject):
         
         self.prepareGeometryChange()
         self.sigRegionChanged.emit(self)
-            
+
+    def _line0Moved(self):
+        self.lineMoved(0)
+
+    def _line1Moved(self):
+        self.lineMoved(1)
+
     def lineMoveFinished(self):
         self.sigRegionChangeFinished.emit(self)
 
     def mouseDragEvent(self, ev):
-        if not self.movable or int(ev.button() & QtCore.Qt.LeftButton) == 0:
+        if not self.movable or ev.button() != QtCore.Qt.MouseButton.LeftButton:
             return
         ev.accept()
         
@@ -307,7 +310,7 @@ class LinearRegionItem(GraphicsObject):
             self.sigRegionChanged.emit(self)
             
     def mouseClickEvent(self, ev):
-        if self.moving and ev.button() == QtCore.Qt.RightButton:
+        if self.moving and ev.button() == QtCore.Qt.MouseButton.RightButton:
             ev.accept()
             for i, l in enumerate(self.lines):
                 l.setPos(self.startPositions[i])
@@ -316,7 +319,7 @@ class LinearRegionItem(GraphicsObject):
             self.sigRegionChangeFinished.emit(self)
 
     def hoverEvent(self, ev):
-        if self.movable and (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
+        if self.movable and (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
             self.setMouseHover(True)
         else:
             self.setMouseHover(False)

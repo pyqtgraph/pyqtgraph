@@ -2,6 +2,8 @@ from ..Qt import QtGui, QtCore
 from ..python2_3 import asUnicode
 import os, weakref, re
 
+translate = QtCore.QCoreApplication.translate
+
 class ParameterItem(QtGui.QTreeWidgetItem):
     """
     Abstract ParameterTree item. 
@@ -16,10 +18,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
     """
     
     def __init__(self, param, depth=0):
-        title = param.opts.get('title', None)
-        if title is None:
-            title = param.name()
-        QtGui.QTreeWidgetItem.__init__(self, [title, ''])
+        QtGui.QTreeWidgetItem.__init__(self, [param.title(), ''])
 
         self.param = param
         self.param.registerItem(self)  ## let parameter know this item is connected to it (for debugging)
@@ -43,17 +42,17 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         ## called when Parameter opts changed
         opts = self.param.opts
         
-        flags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+        flags = QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled
         if opts.get('renamable', False):
             if opts.get('title', None) is not None:
                 raise Exception("Cannot make parameter with both title != None and renamable == True.")
-            flags |= QtCore.Qt.ItemIsEditable
+            flags |= QtCore.Qt.ItemFlag.ItemIsEditable
         
         ## handle movable / dropEnabled options
         if opts.get('movable', False):
-            flags |= QtCore.Qt.ItemIsDragEnabled
+            flags |= QtCore.Qt.ItemFlag.ItemIsDragEnabled
         if opts.get('dropEnabled', False):
-            flags |= QtCore.Qt.ItemIsDropEnabled
+            flags |= QtCore.Qt.ItemFlag.ItemIsDropEnabled
         self.setFlags(flags)
 
     
@@ -104,17 +103,19 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         pass
                 
     def contextMenuEvent(self, ev):
-        if not self.param.opts.get('removable', False) and not self.param.opts.get('renamable', False)\
-                and "context" not in self.param.opts:
+        opts = self.param.opts
+        
+        if not opts.get('removable', False) and not opts.get('renamable', False)\
+                and "context" not in opts:
             return
         
         ## Generate context menu for renaming/removing parameter
         self.contextMenu = QtGui.QMenu() # Put in global name space to prevent garbage collection
         self.contextMenu.addSeparator()
-        if self.param.opts.get('renamable', False):
-            self.contextMenu.addAction('Rename').triggered.connect(self.editName)
-        if self.param.opts.get('removable', False):
-            self.contextMenu.addAction("Remove").triggered.connect(self.requestRemove)
+        if opts.get('renamable', False):
+            self.contextMenu.addAction(translate("ParameterItem", 'Rename')).triggered.connect(self.editName)
+        if opts.get('removable', False):
+            self.contextMenu.addAction(translate("ParameterItem", "Remove")).triggered.connect(self.requestRemove)
         
         # context menu
         context = opts.get('context', None)
@@ -155,8 +156,18 @@ class ParameterItem(QtGui.QTreeWidgetItem):
     def nameChanged(self, param, name):
         ## called when the parameter's name has changed.
         if self.param.opts.get('title', None) is None:
-            self.setText(0, name)
-    
+            self.titleChanged()
+
+    def titleChanged(self):
+        # called when the user-visble title has changed (either opts['title'], or name if title is None)
+        self.setText(0, self.param.title())
+        fm = QtGui.QFontMetrics(self.font(0))
+        textFlags = QtCore.Qt.TextFlag.TextSingleLine
+        size = fm.size(textFlags, self.text(0))
+        size.setHeight(int(size.height() * 1.35))
+        size.setWidth(int(size.width() * 1.15))
+        self.setSizeHint(0, size)
+
     def limitsChanged(self, param, limits):
         """Called when the parameter's limits have changed"""
         pass
@@ -172,17 +183,13 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             self.setHidden(not opts['visible'])
 
         if 'expanded' in opts:
-            if self.param.opts['syncExpanded']:
-                if self.isExpanded() != opts['expanded']:
-                    self.setExpanded(opts['expanded'])
-        
-        if 'syncExpanded' in opts:
-            if opts['syncExpanded']:
-                if self.isExpanded() != self.param.opts['expanded']:
-                    self.setExpanded(self.param.opts['expanded'])
+            if self.isExpanded() != opts['expanded']:
+                self.setExpanded(opts['expanded'])
+
+        if 'title' in opts:
+            self.titleChanged()
 
         self.updateFlags()
-
 
     def contextMenuTriggered(self, name):
         def trigger():

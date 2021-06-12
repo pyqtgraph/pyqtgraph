@@ -1,12 +1,12 @@
 # Contributing to PyQtGraph
 
-Contributions to pyqtgraph are welcome!
+Contributions to pyqtgraph are welcome! Be kind and respectful! See [our Code of Conduct](CODE_OF_CONDUCT.md) for details.
 
 Please use the following guidelines when preparing changes:
 
 ## Submitting Code Changes
 
-* The preferred method for submitting changes is by github pull request against the "develop" branch.
+* The preferred method for submitting changes is by github pull request against the "master" branch.
 * Pull requests should include only a focused and related set of changes. Mixed features and unrelated changes may be rejected.
 * For major changes, it is recommended to discuss your plans on the mailing list or in a github issue before putting in too much effort.
 * The following deprecations are being considered by the maintainers
@@ -70,3 +70,14 @@ As PyQtGraph supports a wide array of Qt-bindings, and python versions, we make 
 ### Continous Integration
 
 For our Continuous Integration, we utilize Azure Pipelines.  Tested configurations are visible on [README](README.md).  More information on coverage and test failures can be found on the respective tabs of the [build results page](https://dev.azure.com/pyqtgraph/pyqtgraph/_build?definitionId=1)
+
+### Benchmarks
+
+( *Still under development* ) To ensure this library is performant, we use [Air Speed Velocity (asv)](https://asv.readthedocs.io/en/stable/) to run benchmarks. For developing on core functions and classes, be aware of any impact your changes have on their speed. To configure and run asv:
+```
+pip install asv
+python setup.py asv_config
+asv run
+```
+
+( TODO publish results )

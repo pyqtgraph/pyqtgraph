@@ -12,7 +12,7 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("DateAxisItem Example")
 
 # Create a plot with a date-time axis
 w = pg.PlotWidget(axisItems = {'bottom': pg.DateAxisItem()})
@@ -26,8 +26,5 @@ w.plot(now-(2*np.pi/x)**2*100*np.pi*1e7, np.sin(x), symbol='o')
 w.setWindowTitle('pyqtgraph example: DateAxisItem')
 w.show()
 
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        app.exec_()
+    pg.exec()

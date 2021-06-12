@@ -46,7 +46,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
+        Form.setWindowTitle(_translate("Form", "PyQtGraph"))
         self.translateLabel.setText(_translate("Form", "Translate:"))
         self.rotateLabel.setText(_translate("Form", "Rotate:"))
         self.scaleLabel.setText(_translate("Form", "Scale:"))

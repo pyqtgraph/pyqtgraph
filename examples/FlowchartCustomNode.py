@@ -13,7 +13,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Flowchart Custom Node Example")
 
 ## Create main window with a grid layout inside
 win = QtGui.QMainWindow()
@@ -150,10 +150,5 @@ fc.connectTerminals(fc['dataIn'], v1Node['data'])
 fc.connectTerminals(fNode['dataOut'], v2Node['data'])
 fc.connectTerminals(fNode['dataOut'], fc['dataOut'])
 
-
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

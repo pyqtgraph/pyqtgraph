@@ -20,6 +20,12 @@
 #     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #     OTHER DEALINGS IN THE SOFTWARE.
 
+import warnings
+warnings.warn(
+    "OrderedDict is in the standard library for supported versions of Python. Will be removed in 0.13",
+    DeprecationWarning, stacklevel=2
+)
+
 import sys
 if sys.version[0] > '2':
     from collections import OrderedDict

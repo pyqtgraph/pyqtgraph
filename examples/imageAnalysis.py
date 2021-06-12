@@ -75,8 +75,8 @@ hist.setLevels(data.min(), data.max())
 iso.setData(pg.gaussianFilter(data, (2, 2)))
 
 # set position and scale of image
-img.scale(0.2, 0.2)
-img.translate(-50, 0)
+tr = QtGui.QTransform()
+img.setTransform(tr.scale(0.2, 0.2).translate(-50, 0))
 
 # zoom to fit imageo
 p1.autoRange()  
@@ -117,9 +117,5 @@ def imageHoverEvent(event):
 # but it works for a very simple use like this. 
 img.hoverEvent = imageHoverEvent
 
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

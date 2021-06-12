@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>PyQtGraph</string>
   </property>
   <widget class="QWidget" name="selInfoWidget" native="true">
    <property name="geometry">
@@ -40,7 +40,6 @@
      <widget class="QLabel" name="selNameLabel">
       <property name="font">
        <font>
-        <weight>75</weight>
         <bold>true</bold>
        </font>
       </property>

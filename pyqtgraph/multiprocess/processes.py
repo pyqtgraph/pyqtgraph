@@ -6,7 +6,7 @@ except ImportError:
     import pickle
 
 from .remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
-from ..Qt import QT_LIB
+from ..Qt import QT_LIB, mkQApp
 from ..util import cprint  # color printing for debugging
 
 
@@ -429,7 +429,7 @@ class QtProcess(Process):
         This allows signals to be connected from the child process to the parent.
         """
         self.timer.timeout.connect(self.processRequests)
-        self.timer.start(interval*1000)
+        self.timer.start(int(interval*1000))
         
     def stopRequestProcessing(self):
         self.timer.stop()
@@ -451,14 +451,14 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
     app = QtGui.QApplication.instance()
     #print app
     if app is None:
-        app = QtGui.QApplication([])
+        app = mkQApp()
         app.setQuitOnLastWindowClosed(False)  ## generally we want the event loop to stay open 
                                               ## until it is explicitly closed by the parent process.
     
     global HANDLER
     HANDLER = RemoteQtEventHandler(conn, name, ppid, debug=debug)
     HANDLER.startEventTimer()
-    app.exec_()
+    app.exec() if hasattr(app, 'exec') else app.exec_()
 
 import threading
 class FileForwarder(threading.Thread):
@@ -489,12 +489,12 @@ class FileForwarder(threading.Thread):
             while not self.finish.is_set():
                 line = self.input.readline()
                 with self.lock:
-                    cprint.cout(self.color, line, -1)
+                    cprint.cout(self.color, line.decode('utf8'), -1)
         elif self.output == 'stderr' and self.color is not False:
             while not self.finish.is_set():
                 line = self.input.readline()
                 with self.lock:
-                    cprint.cerr(self.color, line, -1)
+                    cprint.cerr(self.color, line.decode('utf8'), -1)
         else:
             if isinstance(self.output, str):
                 self.output = getattr(sys, self.output)

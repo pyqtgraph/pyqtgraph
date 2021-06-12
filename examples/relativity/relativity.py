@@ -57,14 +57,14 @@ class RelativityGUI(QtGui.QWidget):
         self.layout.setContentsMargins(0,0,0,0)
         self.setLayout(self.layout)
         self.splitter = QtGui.QSplitter()
-        self.splitter.setOrientation(QtCore.Qt.Horizontal)
+        self.splitter.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.layout.addWidget(self.splitter)
         
         self.tree = ParameterTree(showHeader=False)
         self.splitter.addWidget(self.tree)
         
         self.splitter2 = QtGui.QSplitter()
-        self.splitter2.setOrientation(QtCore.Qt.Vertical)
+        self.splitter2.setOrientation(QtCore.Qt.Orientation.Vertical)
         self.splitter.addWidget(self.splitter2)
         
         self.worldlinePlots = pg.GraphicsLayoutWidget()
@@ -131,7 +131,7 @@ class RelativityGUI(QtGui.QWidget):
     def setAnimation(self, a):
         if a:
             self.lastAnimTime = pg.ptime.time()
-            self.animTimer.start(self.animDt*1000)
+            self.animTimer.start(int(self.animDt*1000))
         else:
             self.animTimer.stop()
             
@@ -654,15 +654,6 @@ class Animation(pg.ItemGroup):
             item = ClockItem(cl)
             self.addItem(item)
             self.items[name] = item
-            
-        #self.timer = timer
-        #self.timer.timeout.connect(self.step)
-        
-    #def run(self, run):
-        #if not run:
-            #self.timer.stop()
-        #else:
-            #self.timer.start(self.dt)
         
     def restart(self):
         for cl in self.items.values():
@@ -678,7 +669,8 @@ class ClockItem(pg.ItemGroup):
         pg.ItemGroup.__init__(self)
         self.size = clock.size
         self.item = QtGui.QGraphicsEllipseItem(QtCore.QRectF(0, 0, self.size, self.size))
-        self.item.translate(-self.size*0.5, -self.size*0.5)
+        tr = QtGui.QTransform.fromTranslate(-self.size*0.5, -self.size*0.5)
+        self.item.setTransform(tr)
         self.item.setPen(pg.mkPen(100,100,100))
         self.item.setBrush(clock.brush)
         self.hand = QtGui.QGraphicsLineItem(0, 0, 0, self.size*0.5)
@@ -722,19 +714,19 @@ class ClockItem(pg.ItemGroup):
         t = data['pt'][self.i]
         self.hand.setRotation(-0.25 * t * 360.)
         
-        self.resetTransform()
         v = data['v'][self.i]
         gam = (1.0 - v**2)**0.5
-        self.scale(gam, 1.0)
+        self.setTransform(QtGui.QTransform.fromScale(gam, 1.0))
         
         f = data['f'][self.i]
-        self.flare.resetTransform()
+        tr = QtGui.QTransform()
         if f < 0:
-            self.flare.translate(self.size*0.4, 0)
+            tr.translate(self.size*0.4, 0)
         else:
-            self.flare.translate(-self.size*0.4, 0)
+            tr.translate(-self.size*0.4, 0)
         
-        self.flare.scale(-f * (0.5+np.random.random()*0.1), 1.0)
+        tr.scale(-f * (0.5+np.random.random()*0.1), 1.0)
+        self.flare.setTransform(tr)
         
         if self._spaceline is not None:
             self._spaceline.setPos(pg.Point(data['x'][self.i], data['t'][self.i]))
@@ -758,7 +750,7 @@ class ClockItem(pg.ItemGroup):
         #pass
 
 if __name__ == '__main__':
-    pg.mkQApp()
+    app = pg.mkQApp()
     #import pyqtgraph.console
     #cw = pyqtgraph.console.ConsoleWidget()
     #cw.show()
@@ -767,10 +759,5 @@ if __name__ == '__main__':
     win.setWindowTitle("Relativity!")
     win.show()
     win.resize(1100,700)
-    
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
-    
-    
-    #win.params.param('Objects').restoreState(state, removeChildren=False)
 
+    pg.exec()

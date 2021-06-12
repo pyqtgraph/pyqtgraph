@@ -196,7 +196,7 @@ class GLMeshItem(GLGraphicsItem):
                     if faces is None:
                         glDrawArrays(GL_TRIANGLES, 0, np.product(verts.shape[:-1]))
                     else:
-                        faces = faces.astype(np.uint).flatten()
+                        faces = faces.astype(np.uint32).flatten()
                         glDrawElements(GL_TRIANGLES, faces.shape[0], GL_UNSIGNED_INT, faces)
                 finally:
                     glDisableClientState(GL_NORMAL_ARRAY)

@@ -12,7 +12,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph.Point import Point
 
 #generate layout
-app = QtGui.QApplication([])
+app = pg.mkQApp("Crosshair Example")
 win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: crosshair')
 label = pg.LabelItem(justify='right')
@@ -80,8 +80,5 @@ proxy = pg.SignalProxy(p1.scene().sigMouseMoved, rateLimit=60, slot=mouseMoved)
 #p1.scene().sigMouseMoved.connect(mouseMoved)
 
 
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

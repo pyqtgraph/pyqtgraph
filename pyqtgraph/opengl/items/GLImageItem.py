@@ -76,6 +76,7 @@ class GLImageItem(GLGraphicsItem):
     def paint(self):
         if self._needUpdate:
             self._updateTexture()
+            self._needUpdate = False
         glEnable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, self.texture)
         

@@ -22,7 +22,7 @@ def some_func2():
         return sys.exc_info()[2]
 
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("DataTreeWidget Example")
 d = {
     'a list': [1,2,3,4,5,6, {'nested1': 'aaaaa', 'nested2': 'bbbbb'}, "seven"],
     'a dict': {
@@ -42,8 +42,5 @@ tree.setWindowTitle('pyqtgraph example: DataTreeWidget')
 tree.resize(600,600)
 
 
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

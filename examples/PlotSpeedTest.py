@@ -12,7 +12,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.ptime import time
-app = QtGui.QApplication([])
+app = pg.mkQApp("Plot Speed Test")
 
 p = pg.plot()
 p.setWindowTitle('pyqtgraph example: PlotSpeedTest')
@@ -48,10 +48,5 @@ timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
     
-
-
-## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

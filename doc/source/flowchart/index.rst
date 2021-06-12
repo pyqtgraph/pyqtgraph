@@ -40,7 +40,7 @@ In the example above, each terminal is defined by a dictionary of options which 
 
 Once the flowchart is created, add its control widget to your application::
     
-    ctrl = fc.ctrlWidget()
+    ctrl = fc.widget()
     myLayout.addWidget(ctrl)  ## read Qt docs on QWidget and layouts for more information
 
 The control widget provides several features:

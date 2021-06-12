@@ -11,7 +11,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Isocurve Example")
 
 ## make pretty looping data
 frames = 200
@@ -53,8 +53,5 @@ timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(50)
     
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

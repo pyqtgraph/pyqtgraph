@@ -24,6 +24,8 @@ pg.setConfigOptions(antialias=True)  ## this will be expensive for the local plo
 view.pg.setConfigOptions(antialias=True)  ## prettier plots at no cost to the main process! 
 view.setWindowTitle('pyqtgraph example: RemoteSpeedTest')
 
+app.aboutToQuit.connect(view.close)
+
 label = QtGui.QLabel()
 rcheck = QtGui.QCheckBox('plot remote')
 rcheck.setChecked(True)
@@ -70,10 +72,5 @@ timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
 
-
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

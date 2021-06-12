@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from .Qt import QtCore, QtGui
 
 class ThreadsafeTimer(QtCore.QObject):
@@ -15,15 +16,15 @@ class ThreadsafeTimer(QtCore.QObject):
         self.timer.timeout.connect(self.timerFinished)
         self.timer.moveToThread(QtCore.QCoreApplication.instance().thread())
         self.moveToThread(QtCore.QCoreApplication.instance().thread())
-        self.sigTimerStopRequested.connect(self.stop, QtCore.Qt.QueuedConnection)
-        self.sigTimerStartRequested.connect(self.start, QtCore.Qt.QueuedConnection)
+        self.sigTimerStopRequested.connect(self.stop, QtCore.Qt.ConnectionType.QueuedConnection)
+        self.sigTimerStartRequested.connect(self.start, QtCore.Qt.ConnectionType.QueuedConnection)
         
         
     def start(self, timeout):
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
         if isGuiThread:
             #print "start timer", self, "from gui thread"
-            self.timer.start(timeout)
+            self.timer.start(int(timeout))
         else:
             #print "start timer", self, "from remote thread"
             self.sigTimerStartRequested.emit(timeout)

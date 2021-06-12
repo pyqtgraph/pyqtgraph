@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
+from .. import ptime
 
 __all__ = ['ProgressDialog']
 
@@ -40,7 +41,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         nested         (bool) If True, then this progress bar will be displayed inside
                        any pre-existing progress dialogs that also allow nesting.
         ============== ================================================================
-        """    
+        """
         # attributes used for nesting dialogs
         self.nestedLayout = None
         self._nestableWidgets = None
@@ -48,6 +49,9 @@ class ProgressDialog(QtGui.QProgressDialog):
         self._topDialog = None
         self._subBars = []
         self.nested = nested
+
+        # for rate-limiting Qt event processing during progress bar update
+        self._lastProcessEvents = None
         
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
         self.disabled = disable or (not isGuiThread)
@@ -69,7 +73,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         else:
             self.setMinimumDuration(wait)
             
-        self.setWindowModality(QtCore.Qt.WindowModal)
+        self.setWindowModality(QtCore.Qt.WindowType.WindowModality.WindowModal)
         self.setValue(self.minimum())
         if noCancel:
             self.setCancelButton(None)
@@ -78,7 +82,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         if self.disabled:
             return self
         if self.busyCursor:
-            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.CursorShape.WaitCursor))
         
         if self.nested and len(ProgressDialog.allDialogs) > 0:
             topDialog = ProgressDialog.allDialogs[0]
@@ -191,7 +195,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         if self._nestingReady:
             # don't let progress dialog manage widgets anymore.
             return
-        return QtGui.QProgressDialog.resizeEvent(self, ev)
+        return super().resizeEvent(ev)
 
     ## wrap all other functions to make sure they aren't being called from non-gui threads
     
@@ -202,8 +206,11 @@ class ProgressDialog(QtGui.QProgressDialog):
         
         # Qt docs say this should happen automatically, but that doesn't seem
         # to be the case.
-        if self.windowModality() == QtCore.Qt.WindowModal:
-            QtGui.QApplication.processEvents()
+        if self.windowModality() == QtCore.Qt.WindowType.WindowModality.WindowModal:
+            now = ptime.time()
+            if self._lastProcessEvents is None or (now - self._lastProcessEvents) > 0.2:
+                QtGui.QApplication.processEvents()
+                self._lastProcessEvents = now
         
     def setLabelText(self, val):
         if self.disabled:
@@ -252,7 +259,7 @@ class ProgressWidget(QtGui.QWidget):
         self.layout.addWidget(bar)
         
     def eventFilter(self, obj, ev):
-        return ev.type() == QtCore.QEvent.Paint
+        return ev.type() == QtCore.QEvent.Type.Paint
     
     def hide(self):
         # hide label and bar, but continue occupying the same space in the layout

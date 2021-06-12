@@ -10,7 +10,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Log Plot Example")
 
 win = pg.GraphicsLayoutWidget(show=True, title="Basic plotting examples")
 win.resize(1000,600)
@@ -30,8 +30,5 @@ p5.setLabel('bottom', "Y Axis", units='s')
 p5.setLogMode(x=True, y=False)
 
 
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

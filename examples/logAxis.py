@@ -9,7 +9,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Log Axis Example")
 
 w = pg.GraphicsLayoutWidget(show=True)
 w.setWindowTitle('pyqtgraph example: logAxis')
@@ -34,9 +34,5 @@ p3.plot(x, y)
 
 #p.getAxis('bottom').setLogMode(True)
 
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

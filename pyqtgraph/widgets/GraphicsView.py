@@ -5,25 +5,15 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-from ..Qt import QtCore, QtGui, QT_LIB
-
-try:
-    from ..Qt import QtOpenGL
-    HAVE_OPENGL = True
-except ImportError:
-    HAVE_OPENGL = False
-
+from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
 from ..Point import Point
-import sys, os
-import warnings
-from .FileDialog import FileDialog
 from ..GraphicsScene import GraphicsScene
-import numpy as np
 from .. import functions as fn
 from .. import debug as debug
 from .. import getConfigOption
 
 __all__ = ['GraphicsView']
+
 
 class GraphicsView(QtGui.QGraphicsView):
     """Re-implementation of QGraphicsView that removes scrollbars and allows unambiguous control of the 
@@ -57,7 +47,7 @@ class GraphicsView(QtGui.QGraphicsView):
         useOpenGL       If True, the GraphicsView will use OpenGL to do all of its
                         rendering. This can improve performance on some systems,
                         but may also introduce bugs (the combination of 
-                        QGraphicsView and QGLWidget is still an 'experimental' 
+                        QGraphicsView and QOpenGLWidget is still an 'experimental'
                         feature of Qt)
         background      Set the background color of the GraphicsView. Accepts any
                         single argument accepted by 
@@ -83,22 +73,21 @@ class GraphicsView(QtGui.QGraphicsView):
             useOpenGL = getConfigOption('useOpenGL')
         
         self.useOpenGL(useOpenGL)
-        
-        self.setCacheMode(self.CacheBackground)
+        self.setCacheMode(self.CacheModeFlag.CacheBackground)
         
         ## This might help, but it's probably dangerous in the general case..
         #self.setOptimizationFlag(self.DontSavePainterState, True)
         
-        self.setBackgroundRole(QtGui.QPalette.NoRole)
+        self.setBackgroundRole(QtGui.QPalette.ColorRole.NoRole)
         self.setBackground(background)
         
-        self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.setFrameShape(QtGui.QFrame.NoFrame)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setTransformationAnchor(QtGui.QGraphicsView.NoAnchor)
-        self.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
-        self.setViewportUpdateMode(QtGui.QGraphicsView.MinimalViewportUpdate)
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
+        self.setFrameShape(QtGui.QFrame.Shape.NoFrame)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setTransformationAnchor(QtGui.QGraphicsView.ViewportAnchor.NoAnchor)
+        self.setResizeAnchor(QtGui.QGraphicsView.ViewportAnchor.AnchorViewCenter)
+        self.setViewportUpdateMode(QtGui.QGraphicsView.ViewportUpdateMode.MinimalViewportUpdate)
         
         
         self.lockedViewports = []
@@ -129,14 +118,14 @@ class GraphicsView(QtGui.QGraphicsView):
         self.mouseEnabled = False
         self.scaleCenter = False  ## should scaling center around view center (True) or mouse click (False)
         self.clickAccepted = False
-        
+
     def setAntialiasing(self, aa):
         """Enable or disable default antialiasing.
         Note that this will only affect items that do not specify their own antialiasing options."""
         if aa:
-            self.setRenderHints(self.renderHints() | QtGui.QPainter.Antialiasing)
+            self.setRenderHints(self.renderHints() | QtGui.QPainter.RenderHint.Antialiasing)
         else:
-            self.setRenderHints(self.renderHints() & ~QtGui.QPainter.Antialiasing)
+            self.setRenderHints(self.renderHints() & ~QtGui.QPainter.RenderHint.Antialiasing)
         
     def setBackground(self, background):
         """
@@ -152,11 +141,11 @@ class GraphicsView(QtGui.QGraphicsView):
     
     def paintEvent(self, ev):
         self.scene().prepareForPaint()
-        return QtGui.QGraphicsView.paintEvent(self, ev)
+        return super().paintEvent(ev)
     
     def render(self, *args, **kwds):
         self.scene().prepareForPaint()
-        return QtGui.QGraphicsView.render(self, *args, **kwds)
+        return super().render(*args, **kwds)
         
     
     def close(self):
@@ -170,9 +159,11 @@ class GraphicsView(QtGui.QGraphicsView):
 
     def useOpenGL(self, b=True):
         if b:
+            HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
             if not HAVE_OPENGL:
-                raise Exception("Requested to use OpenGL with QGraphicsView, but QtOpenGL module is not available.")
-            v = QtOpenGL.QGLWidget()
+                raise Exception("Requested to use OpenGL with QGraphicsView, but QOpenGLWidget is not available.")
+
+            v = QtWidgets.QOpenGLWidget()
         else:
             v = QtGui.QWidget()
             
@@ -224,9 +215,9 @@ class GraphicsView(QtGui.QGraphicsView):
             self.resetTransform()
         else:
             if self.aspectLocked:
-                self.fitInView(self.range, QtCore.Qt.KeepAspectRatio)
+                self.fitInView(self.range, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
             else:
-                self.fitInView(self.range, QtCore.Qt.IgnoreAspectRatio)
+                self.fitInView(self.range, QtCore.Qt.AspectRatioMode.IgnoreAspectRatio)
             
         if propagate:
             for v in self.lockedViewports:
@@ -323,11 +314,9 @@ class GraphicsView(QtGui.QGraphicsView):
         GraphicsView.setRange(self, r1, padding=[0, padding], propagate=False)
         
     def wheelEvent(self, ev):
-        QtGui.QGraphicsView.wheelEvent(self, ev)
+        super().wheelEvent(ev)
         if not self.mouseEnabled:
-            ev.ignore()
             return
-        
         delta = 0
         if QT_LIB in ['PyQt4', 'PySide']:
             delta = ev.delta()
@@ -348,20 +337,21 @@ class GraphicsView(QtGui.QGraphicsView):
         self.scene().leaveEvent(ev)  ## inform scene when mouse leaves
         
     def mousePressEvent(self, ev):
-        QtGui.QGraphicsView.mousePressEvent(self, ev)
+        super().mousePressEvent(ev)
         
 
         if not self.mouseEnabled:
             return
-        self.lastMousePos = Point(ev.pos())
-        self.mousePressPos = ev.pos()
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
+        self.lastMousePos = lpos
+        self.mousePressPos = lpos
         self.clickAccepted = ev.isAccepted()
         if not self.clickAccepted:
             self.scene().clearSelection()
         return   ## Everything below disabled for now..
         
     def mouseReleaseEvent(self, ev):
-        QtGui.QGraphicsView.mouseReleaseEvent(self, ev)
+        super().mouseReleaseEvent(ev)
         if not self.mouseEnabled:
             return 
         self.sigMouseReleased.emit(ev)
@@ -369,26 +359,27 @@ class GraphicsView(QtGui.QGraphicsView):
         return   ## Everything below disabled for now..
         
     def mouseMoveEvent(self, ev):
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
         if self.lastMousePos is None:
-            self.lastMousePos = Point(ev.pos())
-        delta = Point(ev.pos() - QtCore.QPoint(*self.lastMousePos))
-        self.lastMousePos = Point(ev.pos())
+            self.lastMousePos = lpos
+        delta = Point(lpos - self.lastMousePos)
+        self.lastMousePos = lpos
 
-        QtGui.QGraphicsView.mouseMoveEvent(self, ev)
+        super().mouseMoveEvent(ev)
         if not self.mouseEnabled:
             return
-        self.sigSceneMouseMoved.emit(self.mapToScene(ev.pos()))
+        self.sigSceneMouseMoved.emit(self.mapToScene(lpos))
             
         if self.clickAccepted:  ## Ignore event if an item in the scene has already claimed it.
             return
         
-        if ev.buttons() == QtCore.Qt.RightButton:
-            delta = Point(np.clip(delta[0], -50, 50), np.clip(-delta[1], -50, 50))
+        if ev.buttons() == QtCore.Qt.MouseButton.RightButton:
+            delta = Point(fn.clip_scalar(delta[0], -50, 50), fn.clip_scalar(-delta[1], -50, 50))
             scale = 1.01 ** delta
             self.scale(scale[0], scale[1], center=self.mapToScene(self.mousePressPos))
             self.sigDeviceRangeChanged.emit(self, self.range)
 
-        elif ev.buttons() in [QtCore.Qt.MidButton, QtCore.Qt.LeftButton]:  ## Allow panning by left or mid button.
+        elif ev.buttons() in [QtCore.Qt.MouseButton.MiddleButton, QtCore.Qt.MouseButton.LeftButton]:  ## Allow panning by left or mid button.
             px = self.pixelSize()
             tr = -delta * px
             
@@ -406,18 +397,3 @@ class GraphicsView(QtGui.QGraphicsView):
         
     def dragEnterEvent(self, ev):
         ev.ignore()  ## not sure why, but for some reason this class likes to consume drag events
-
-    def _del(self):
-        try:
-            if self.parentWidget() is None and self.isVisible():
-                msg = "Visible window deleted. To prevent this, store a reference to the window object."
-                try:
-                    warnings.warn(msg, RuntimeWarning, stacklevel=2)
-                except TypeError:
-                    # warnings module not available during interpreter shutdown
-                    pass
-        except RuntimeError:
-            pass
-
-if sys.version_info[0] == 3 and sys.version_info[1] >= 4:
-    GraphicsView.__del__ = GraphicsView._del

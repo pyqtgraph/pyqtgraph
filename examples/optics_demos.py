@@ -15,7 +15,7 @@ import pyqtgraph as pg
 import numpy as np
 from pyqtgraph import Point
 
-app = pg.QtGui.QApplication([])
+app = pg.mkQApp("Optics Demo")
 
 w = pg.GraphicsLayoutWidget(show=True, border=0.5)
 w.resize(1000, 900)
@@ -159,12 +159,5 @@ timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(40)
 
-
-
-
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

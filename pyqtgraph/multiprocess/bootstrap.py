@@ -1,5 +1,6 @@
 """For starting up remote processes"""
 import sys, pickle, os
+import importlib
 
 if __name__ == '__main__':
     if hasattr(os, 'setpgrp'):
@@ -25,17 +26,16 @@ if __name__ == '__main__':
 
     pyqtapis = opts.pop('pyqtapis', None)
     if pyqtapis is not None:
-        import sip
-        for k,v in pyqtapis.items():
-            sip.setapi(k, v)
+        try:
+            from PyQt5 import sip
+        except ImportError:
+            import sip
+            for k,v in pyqtapis.items():
+                sip.setapi(k, v)
         
     qt_lib = opts.pop('qt_lib', None)
-    if qt_lib == 'PySide':
-        import PySide
-    elif qt_lib == 'PySide2':
-        import PySide2
-    elif qt_lib == 'PyQt5':
-        import PyQt5        
+    if qt_lib is not None:
+        globals()[qt_lib] = importlib.import_module(qt_lib)
     
     targetStr = opts.pop('targetStr')
     try:

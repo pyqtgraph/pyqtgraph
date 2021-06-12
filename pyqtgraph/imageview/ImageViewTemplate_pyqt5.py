@@ -134,7 +134,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
+        Form.setWindowTitle(_translate("Form", "PyQtGraph"))
         self.roiBtn.setText(_translate("Form", "ROI"))
         self.menuBtn.setText(_translate("Form", "Norm"))
         self.normGroup.setTitle(_translate("Form", "Normalization"))

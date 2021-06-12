@@ -7,7 +7,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Gradiant Editor Example")
 mw = pg.GraphicsView()
 mw.resize(800,800)
 mw.show()
@@ -20,9 +20,5 @@ mw.show()
 ge = pg.GradientEditorItem()
 mw.setCentralItem(ge)
 
-
-## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

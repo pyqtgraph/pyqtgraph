@@ -40,7 +40,7 @@ print( "process finished")
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
-app = pg.QtGui.QApplication([])
+app = pg.mkQApp("Multiprocess Example")
 
 print( "\n=================\nStart QtProcess")
 import sys
@@ -51,9 +51,3 @@ d1 = proc.transfer(np.random.normal(size=1000))
 d2 = proc.transfer(np.random.normal(size=1000))
 rpg = proc._import('pyqtgraph')
 plt = rpg.plot(d1+d2)
-
-
-## Start Qt event loop unless running in interactive mode or using pyside.
-#import sys
-#if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-    #QtGui.QApplication.instance().exec_()
