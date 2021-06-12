@@ -16,7 +16,7 @@ import numpy as np
 # Interpret image data as row-major instead of col-major
 pg.setConfigOptions(imageAxisOrder='row-major')
 
-pg.mkQApp()
+app = pg.mkQApp()
 win = pg.GraphicsLayoutWidget()
 win.setWindowTitle('pyqtgraph example: Image Analysis')
 
@@ -29,7 +29,10 @@ p1.addItem(img)
 
 lr = pg.LinearRegionItem(values=(1.5, 2.5), clipItem=img)
 p1.addItem(lr)
-# lr.setClipItem(item=img)   # this is an alternate way
+
+#def setRegionBounds():
+#    lr.setBounds((img.width(), img.height()))
+#img.sigImageChanged.connect(setRegionBounds)
 
 # Custom ROI for selecting an image region
 roi = pg.ROI([-8, 14], [6, 5])
@@ -110,7 +113,7 @@ def imageHoverEvent(event):
     val = data[i, j]
     ppos = img.mapToParent(pos)
     x, y = ppos.x(), ppos.y()
-    p1.setTitle("pos: (%0.1f, %0.1f)  pixel: (%d, %d)  value: %g" % (x, y, i, j, val))
+    p1.setTitle("pos: (%0.1f, %0.1f)  pixel: (%d, %d)  value: %.3g" % (x, y, i, j, val))
 
 # Monkey-patch the image to use our custom hover function. 
 # This is generally discouraged (you should subclass ImageItem instead),

@@ -136,10 +136,12 @@ class LinearRegionItem(GraphicsObject):
         self.setMovable(movable)
 
         self.clipItem = None
+        self._clipItemBoundsCache = None
         self.setClipItem(clipItem)
 
     def getRegion(self):
         """Return the values at the edges of the region."""
+
         r = (self.lines[0].value(), self.lines[1].value())
         if self.swapMode == 'sort':
             return (min(r), max(r))
@@ -185,6 +187,8 @@ class LinearRegionItem(GraphicsObject):
         Does not affect the current position of the region unless it is outside the new bounds. 
         See :func:`setRegion <pyqtgraph.LinearRegionItem.setRegion>` to set the position 
         of the region."""
+        # TODO distinguish between being called by user and _updateClipItemBounds - user
+        # call should probably invalidate clipItem
         for l in self.lines:
             l.setBounds(bounds)
         
@@ -210,21 +214,32 @@ class LinearRegionItem(GraphicsObject):
         rectangle range. The item must share the same ViewBox as this
         instance. If item is None, then no clipping is performed.
         """
-        if item is None:
-            self.clipItem = None
+        self.clipItem = item
+        self._clipItemBoundsCache = None
+        self.setBounds((None, None))
 
+    def _updateClipItemBounds(self):
+        # set region bounds corresponding to clipItem
+        item_vb = self.clipItem.getViewBox()
+        if item_vb is None:
+            return
+
+        item_bounds = item_vb.childrenBounds(items=(self.clipItem,))
+        if item_bounds == self._clipItemBoundsCache or None in item_bounds:
+            return
+
+        self._clipItemBoundsCache = item_bounds
+
+        if self.orientation in ('horizontal', LinearRegionItem.Horizontal):
+            self.setBounds(item_bounds[1])
         else:
-            item_vb = item.getViewBox()
-            vb = self.getViewBox()
-            if vb is not None and item_vb is not vb:
-                raise RuntimeError('ViewBox of item to clip is not the same as '
-                                   'here: {}'.format(item))
-            self.clipItem = item
-
-        self.update()
+            self.setBounds(item_bounds[0])
 
     def boundingRect(self):
         br = QtCore.QRectF(self.viewRect())  # bounds of containing ViewBox mapped to local coords.
+
+        if self.clipItem is not None:
+            self._updateClipItemBounds()
 
         rng = self.getRegion()
         if self.orientation in ('vertical', LinearRegionItem.Vertical):
