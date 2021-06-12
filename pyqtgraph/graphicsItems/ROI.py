@@ -23,6 +23,7 @@ from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
 from .. import getConfigOption
 import warnings
+import sys
 
 translate = QtCore.QCoreApplication.translate
 
@@ -1287,7 +1288,7 @@ class ROI(GraphicsObject):
             return np.empty((width, height), dtype=float)
         
         im = QtGui.QImage(width, height, QtGui.QImage.Format.Format_ARGB32)
-        im.fill(0x0)
+        im.fill(QtCore.Qt.GlobalColor.transparent)
         p = QtGui.QPainter(im)
         p.setPen(fn.mkPen(None))
         p.setBrush(fn.mkBrush('w'))
@@ -1297,8 +1298,9 @@ class ROI(GraphicsObject):
         p.translate(-bounds.topLeft())
         p.drawPath(shape)
         p.end()
-        mask = fn.imageToArray(im, transpose=True)[:,:,0].astype(float) / 255.
-        return mask
+        cidx = 0 if sys.byteorder == 'little' else 3
+        mask = fn.qimage_to_ndarray(im)[...,cidx].T
+        return mask.astype(float) / 255
         
     def getGlobalTransform(self, relativeTo=None):
         """Return global transformation (rotation angle+translation) required to move 
