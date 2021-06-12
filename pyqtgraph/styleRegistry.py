@@ -191,7 +191,7 @@ class StyleRegistry(QtCore.QObject):
         if desc is False: return None # not a valid pen id
         name, width, alpha = desc
         if name is None:
-            return QtGui.QPen( QtCore.Qt.NoPen )
+            return QtGui.QPen( QtCore.Qt.PenStyle.NoPen )
         if name[0] == '#': # skip cache and registry for fixed hex colors
             name, alpha_from_hex = _expand_rgba_hex_string( name )
             if name is None: return None
@@ -225,7 +225,7 @@ class StyleRegistry(QtCore.QObject):
         if desc is False: return None # not a valid brush id
         name, alpha = desc
         if name is None:
-            return QtGui.QBrush( QtCore.Qt.NoBrush ) 
+            return QtGui.QBrush( QtCore.Qt.BrushStyle.NoBrush ) 
         if name[0] == '#': # skip cache and registry for fixed hex colors
             name, alpha_from_hex = _expand_rgba_hex_string( name )
             if name is None: return None
@@ -239,7 +239,7 @@ class StyleRegistry(QtCore.QObject):
             return None # unknown color identifier
         if not skipCache and desc in self.brush_cache:
             return self.brush_cache[desc]
-        qbrush = QtGui.QBrush(QtCore.Qt.SolidPattern) # make sure this brush fills once color is set
+        qbrush = QtGui.QBrush(QtCore.Qt.BrushStyle.SolidPattern) # make sure this brush fills once color is set
         self._update_QBrush(qbrush,desc)
         if register: self.register( qbrush, desc ) # register for updates on palette change
         if not skipCache: # skipCache disable both reading and writing cache
