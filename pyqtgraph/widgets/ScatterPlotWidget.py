@@ -37,11 +37,11 @@ class ScatterPlotWidget(QtGui.QSplitter):
     sigScatterPlotHovered = QtCore.Signal(object, object, object)
 
     def __init__(self, parent=None):
-        QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
-        self.ctrlPanel = QtGui.QSplitter(QtCore.Qt.Vertical)
+        QtGui.QSplitter.__init__(self, QtCore.Qt.Orientation.Horizontal)
+        self.ctrlPanel = QtGui.QSplitter(QtCore.Qt.Orientation.Vertical)
         self.addWidget(self.ctrlPanel)
         self.fieldList = QtGui.QListWidget()
-        self.fieldList.setSelectionMode(self.fieldList.ExtendedSelection)
+        self.fieldList.setSelectionMode(self.fieldList.SelectionMode.ExtendedSelection)
         self.ptree = ptree.ParameterTree(showHeader=False)
         self.filter = DataFilterParameter()
         self.colorMap = ColorMapParameter()

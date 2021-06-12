@@ -42,8 +42,8 @@ class RemoteGraphicsView(QtGui.QWidget):
         self._view = rpgRemote.Renderer(*args, **remoteKwds)
         self._view._setProxyOptions(deferGetattr=True)
         
-        self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
+        self.setSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Expanding)
         self.setMouseTracking(True)
         self.shm = None
         shmFileName = self._view.shmFileName()
@@ -100,7 +100,8 @@ class RemoteGraphicsView(QtGui.QWidget):
         return args
 
     def serialize_mouse_event(self, ev):
-        lpos, gpos = ev.localPos(), ev.screenPos()
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
+        gpos = ev.globalPosition() if hasattr(ev, 'globalPosition') else ev.screenPos()
         typ, btn, btns, mods = self.serialize_mouse_enum(
             ev.type(), ev.button(), ev.buttons(), ev.modifiers())
         return (typ, lpos, gpos, btn, btns, mods)
@@ -137,7 +138,11 @@ class RemoteGraphicsView(QtGui.QWidget):
         return super().wheelEvent(ev)
 
     def enterEvent(self, ev):
-        lws = ev.localPos(), ev.windowPos(), ev.screenPos()
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
+        wpos = ev.scenePosition() if hasattr(ev, 'scenePosition') else ev.windowPos()
+        gpos = ev.globalPosition() if hasattr(ev, 'globalPosition') else ev.screenPos()
+
+        lws = lpos, wpos, gpos
         self._view.enterEvent(lws, _callSync='off')
         return super().enterEvent(ev)
         
@@ -231,11 +236,8 @@ class Renderer(GraphicsView):
 
             # see functions.py::makeQImage() for rationale
             if QT_LIB.startswith('PyQt'):
-                if QtCore.PYQT_VERSION == 0x60000:
-                    img_ptr = sip.voidptr(self.shm)
-                else:
-                    # PyQt5, PyQt6 >= 6.0.1
-                    img_ptr = int(sip.voidptr(self.shm))
+                # PyQt5, PyQt6 >= 6.0.1
+                img_ptr = int(sip.voidptr(self.shm))
             else:
                 # PySide2, PySide6
                 img_ptr = self.shm

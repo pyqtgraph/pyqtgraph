@@ -32,7 +32,7 @@ class RawImageWidget(QtGui.QWidget):
         This also greatly reduces the speed at which it will draw frames.
         """
         QtGui.QWidget.__init__(self, parent)
-        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Expanding))
         self.scaled = scaled
         self.opts = None
         self.image = None

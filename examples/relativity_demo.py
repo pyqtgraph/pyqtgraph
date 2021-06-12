@@ -17,4 +17,4 @@ win.show()
 win.loadPreset(None, 'Twin Paradox (grid)')
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

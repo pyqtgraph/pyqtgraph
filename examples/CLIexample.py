@@ -19,4 +19,4 @@ data = np.random.normal(size=(500,500))
 pg.image(data, title="Simplest possible image example")
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

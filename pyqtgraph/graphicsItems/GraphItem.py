@@ -131,7 +131,7 @@ class GraphItem(GraphicsObject):
         if self.picture == None:
             self.generatePicture()
         if getConfigOption('antialias') is True:
-            p.setRenderHint(p.Antialiasing)
+            p.setRenderHint(p.RenderHint.Antialiasing)
         self.picture.play(p)
         
     def boundingRect(self):

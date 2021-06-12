@@ -27,4 +27,4 @@ plt.addItem(err)
 plt.plot(x, y, symbol='o', pen={'color': 0.8, 'width': 2})
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

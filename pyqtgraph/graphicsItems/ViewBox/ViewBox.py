@@ -56,7 +56,10 @@ class ChildGroup(ItemGroup):
 
     def itemChange(self, change, value):
         ret = ItemGroup.itemChange(self, change, value)
-        if change == self.ItemChildAddedChange or change == self.ItemChildRemovedChange:
+        if change in [
+            self.GraphicsItemChange.ItemChildAddedChange,
+            self.GraphicsItemChange.ItemChildRemovedChange,
+        ]:
             try:
                 itemsChangedListeners = self.itemsChangedListeners
             except AttributeError:
@@ -106,25 +109,27 @@ class ViewBox(GraphicsWidget):
     NamedViews = weakref.WeakValueDictionary()   # name: ViewBox
     AllViews = weakref.WeakKeyDictionary()       # ViewBox: None
 
-    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None, invertX=False):
+    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None, invertX=False, defaultPadding=0.02):
         """
-        ==============  =============================================================
+        =================  =============================================================
         **Arguments:**
-        *parent*        (QGraphicsWidget) Optional parent widget
-        *border*        (QPen) Do draw a border around the view, give any
-                        single argument accepted by :func:`mkPen <pyqtgraph.mkPen>`
-        *lockAspect*    (False or float) The aspect ratio to lock the view
-                        coorinates to. (or False to allow the ratio to change)
-        *enableMouse*   (bool) Whether mouse can be used to scale/pan the view
-        *invertY*       (bool) See :func:`invertY <pyqtgraph.ViewBox.invertY>`
-        *invertX*       (bool) See :func:`invertX <pyqtgraph.ViewBox.invertX>`
-        *enableMenu*    (bool) Whether to display a context menu when
-                        right-clicking on the ViewBox background.
-        *name*          (str) Used to register this ViewBox so that it appears
-                        in the "Link axis" dropdown inside other ViewBox
-                        context menus. This allows the user to manually link
-                        the axes of any other view to this one.
-        ==============  =============================================================
+        *parent*           (QGraphicsWidget) Optional parent widget
+        *border*           (QPen) Do draw a border around the view, give any
+                           single argument accepted by :func:`mkPen <pyqtgraph.mkPen>`
+        *lockAspect*       (False or float) The aspect ratio to lock the view
+                           coorinates to. (or False to allow the ratio to change)
+        *enableMouse*      (bool) Whether mouse can be used to scale/pan the view
+        *invertY*          (bool) See :func:`invertY <pyqtgraph.ViewBox.invertY>`
+        *invertX*          (bool) See :func:`invertX <pyqtgraph.ViewBox.invertX>`
+        *enableMenu*       (bool) Whether to display a context menu when
+                           right-clicking on the ViewBox background.
+        *name*             (str) Used to register this ViewBox so that it appears
+                           in the "Link axis" dropdown inside other ViewBox
+                           context menus. This allows the user to manually link
+                           the axes of any other view to this one.
+        *defaultPadding*   (float) fraction of the data range that will be added
+                           as padding by default
+        =================  =============================================================
         """
 
         GraphicsWidget.__init__(self, parent)
@@ -147,11 +152,12 @@ class ViewBox(GraphicsWidget):
             'xInverted': invertX,
             'aspectLocked': False,    ## False if aspect is unlocked, otherwise float specifies the locked ratio.
             'autoRange': [True, True],  ## False if auto range is disabled,
-                                          ## otherwise float gives the fraction of data that is visible
+                                        ## otherwise float gives the fraction of data that is visible
             'autoPan': [False, False],         ## whether to only pan (do not change scaling) when auto-range is enabled
             'autoVisibleOnly': [False, False], ## whether to auto-range only to the visible portion of a plot
             'linkedViews': [None, None],  ## may be None, "viewName", or weakref.ref(view)
                                           ## a name string indicates that the view *should* link to another, but no view with that name exists yet.
+            'defaultPadding': defaultPadding,
 
             'mouseEnabled': [enableMouse, enableMouse],
             'mouseMode': ViewBox.PanMode if getConfigOption('leftButtonPan') else ViewBox.RectMode,
@@ -174,8 +180,8 @@ class ViewBox(GraphicsWidget):
 
         self.locateGroup = None  ## items displayed when using ViewBox.locate(item)
 
-        self.setFlag(self.ItemClipsChildrenToShape)
-        self.setFlag(self.ItemIsFocusable, True)  ## so we can receive key presses
+        self.setFlag(self.GraphicsItemFlag.ItemClipsChildrenToShape)
+        self.setFlag(self.GraphicsItemFlag.ItemIsFocusable, True)  ## so we can receive key presses
 
         ## childGroup is required so that ViewBox has local coordinates similar to device coordinates.
         ## this is a workaround for a Qt + OpenGL bug that causes improper clipping
@@ -214,7 +220,7 @@ class ViewBox(GraphicsWidget):
         self.axHistoryPointer = -1 # pointer into the history. Allows forward/backward movement, not just "undo"
 
         self.setZValue(-100)
-        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Expanding))
 
         self.setAspectLocked(lockAspect)
 
@@ -497,8 +503,8 @@ class ViewBox(GraphicsWidget):
         *xRange*           (min,max) The range that should be visible along the x-axis.
         *yRange*           (min,max) The range that should be visible along the y-axis.
         *padding*          (float) Expand the view by a fraction of the requested range.
-                           By default, this value is set between 0.02 and 0.1 depending on
-                           the size of the ViewBox.
+                           By default, this value is set between the default padding value
+                           and 0.1 depending on the size of the ViewBox.
         *update*           (bool) If True, update the range of the ViewBox immediately.
                            Otherwise, the update is deferred until before the next render.
         *disableAutoRange* (bool) If True, auto-ranging is diabled. Otherwise, it is left
@@ -628,7 +634,7 @@ class ViewBox(GraphicsWidget):
         """
         Set the visible Y range of the view to [*min*, *max*].
         The *padding* argument causes the range to be set larger by the fraction specified.
-        (by default, this value is between 0.02 and 0.1 depending on the size of the ViewBox)
+        (by default, this value is between the default padding and 0.1 depending on the size of the ViewBox)
         """
         self.setRange(yRange=[min, max], update=update, padding=padding)
 
@@ -636,7 +642,7 @@ class ViewBox(GraphicsWidget):
         """
         Set the visible X range of the view to [*min*, *max*].
         The *padding* argument causes the range to be set larger by the fraction specified.
-        (by default, this value is between 0.02 and 0.1 depending on the size of the ViewBox)
+        (by default, this value is between the default padding and 0.1 depending on the size of the ViewBox)
         """
         self.setRange(xRange=[min, max], update=update, padding=padding)
 
@@ -646,14 +652,14 @@ class ViewBox(GraphicsWidget):
         Note that this is not the same as enableAutoRange, which causes the view to
         automatically auto-range whenever its contents are changed.
 
-        ==============  ============================================================
+        ==============  =============================================================
         **Arguments:**
         padding         The fraction of the total data range to add on to the final
-                        visible range. By default, this value is set between 0.02
-                        and 0.1 depending on the size of the ViewBox.
+                        visible range. By default, this value is set between the 
+                        default padding and 0.1 depending on the size of the ViewBox.
         items           If specified, this is a list of items to consider when
                         determining the visible range.
-        ==============  ============================================================
+        ==============  =============================================================
         """
         if item is None:
             bounds = self.childrenBoundingRect(items=items)
@@ -665,10 +671,14 @@ class ViewBox(GraphicsWidget):
 
     def suggestPadding(self, axis):
         l = self.width() if axis==0 else self.height()
+        def_pad = self.state['defaultPadding']
+        if def_pad == 0.: 
+            return def_pad # respect requested zero padding
+        max_pad = max(0.1, def_pad) # don't shrink a large default padding
         if l > 0:
-            padding = fn.clip_scalar(1./(l**0.5), 0.02, 0.1)
+            padding = fn.clip_scalar( 50*def_pad / (l**0.5), def_pad, max_pad)
         else:
-            padding = 0.02
+            padding = def_pad
         return padding
 
     def setLimits(self, **kwds):
@@ -1110,6 +1120,13 @@ class ViewBox(GraphicsWidget):
         """
         self.border = fn.mkPen(*args, **kwds)
         self.borderRect.setPen(self.border)
+    
+    def setDefaultPadding(self, padding=0.02):
+        """
+        Sets the fraction of the data range that is used to pad the view range in when auto-ranging.
+        By default, this fraction is 0.02.
+        """
+        self.state['defaultPadding'] = padding
 
     def setAspectLocked(self, lock=True, ratio=1):
         """
@@ -1211,7 +1228,7 @@ class ViewBox(GraphicsWidget):
         self.sigRangeChangedManually.emit(mask)
 
     def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.RightButton and self.menuEnabled():
+        if ev.button() == QtCore.Qt.MouseButton.RightButton and self.menuEnabled():
             ev.accept()
             self.raiseContextMenu(ev)
 
@@ -1243,7 +1260,7 @@ class ViewBox(GraphicsWidget):
             mask[1-axis] = 0.0
 
         ## Scale or translate based on mouse button
-        if ev.button() in [QtCore.Qt.LeftButton, QtCore.Qt.MiddleButton]:
+        if ev.button() in [QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.MouseButton.MiddleButton]:
             if self.state['mouseMode'] == ViewBox.RectMode and axis is None:
                 if ev.isFinish():  ## This is the final move in the drag; change the view scale now
                     #print "finish"
@@ -1268,7 +1285,7 @@ class ViewBox(GraphicsWidget):
                 if x is not None or y is not None:
                     self.translateBy(x=x, y=y)
                 self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
-        elif ev.button() & QtCore.Qt.RightButton:
+        elif ev.button() & QtCore.Qt.MouseButton.RightButton:
             #print "vb.rightDrag"
             if self.state['aspectLocked'] is not False:
                 mask[0] = 0
@@ -1284,7 +1301,7 @@ class ViewBox(GraphicsWidget):
             x = s[0] if mouseEnabled[0] == 1 else None
             y = s[1] if mouseEnabled[1] == 1 else None
 
-            center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.RightButton)))
+            center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.MouseButton.RightButton)))
             self._resetTarget()
             self.scaleBy(x=x, y=y, center=center)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
@@ -1304,7 +1321,7 @@ class ViewBox(GraphicsWidget):
             self.scaleHistory(-1)
         elif ev.text() in ['+', '=']:
             self.scaleHistory(1)
-        elif ev.key() == QtCore.Qt.Key_Backspace:
+        elif ev.key() == QtCore.Qt.Key.Key_Backspace:
             self.scaleHistory(len(self.axHistory))
         else:
             ev.ignore()
@@ -1407,7 +1424,7 @@ class ViewBox(GraphicsWidget):
 
                 itemBounds.append((bounds, useX, useY, pxPad))
             else:
-                if item.flags() & item.ItemHasNoContents:
+                if item.flags() & item.GraphicsItemFlag.ItemHasNoContents:
                     continue
                 bounds = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
                 itemBounds.append((bounds, True, True, 0))

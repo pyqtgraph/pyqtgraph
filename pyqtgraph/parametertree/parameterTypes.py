@@ -47,7 +47,7 @@ class WidgetParameterItem(ParameterItem):
         if self.asSubItem:
             self.subItem = QtGui.QTreeWidgetItem()
             self.subItem.depth = self.depth + 1
-            self.subItem.setFlags(QtCore.Qt.NoItemFlags)
+            self.subItem.setFlags(QtCore.Qt.ItemFlag.NoItemFlags)
             self.addChild(self.subItem)
 
         self.defaultBtn = QtGui.QPushButton()
@@ -178,11 +178,11 @@ class WidgetParameterItem(ParameterItem):
         ## filter widget's events
         ## catch TAB to change focus
         ## catch focusOut to hide editor
-        if ev.type() == ev.KeyPress:
-            if ev.key() == QtCore.Qt.Key_Tab:
+        if ev.type() == ev.Type.KeyPress:
+            if ev.key() == QtCore.Qt.Key.Key_Tab:
                 self.focusNext(forward=True)
                 return True ## don't let anyone else see this event
-            elif ev.key() == QtCore.Qt.Key_Backtab:
+            elif ev.key() == QtCore.Qt.Key.Key_Backtab:
                 self.focusNext(forward=False)
                 return True ## don't let anyone else see this event
             
@@ -256,7 +256,7 @@ class WidgetParameterItem(ParameterItem):
     def showEditor(self):
         self.widget.show()
         self.displayLabel.hide()
-        self.widget.setFocus(QtCore.Qt.OtherFocusReason)
+        self.widget.setFocus(QtCore.Qt.FocusReason.OtherFocusReason)
         if isinstance(self.widget, SpinBox):
             self.widget.selectNumber()  # select the numerical portion of the text for quick editing
 
@@ -418,7 +418,7 @@ class GroupParameterItem(ParameterItem):
             addText = param.opts['addText']
             if 'addList' in param.opts:
                 self.addWidget = QtGui.QComboBox()
-                self.addWidget.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
+                self.addWidget.setSizeAdjustPolicy(QtGui.QComboBox.SizeAdjustPolicy.AdjustToContents)
                 self.updateAddList()
                 self.addWidget.currentIndexChanged.connect(self.addChanged)
             else:
@@ -432,7 +432,7 @@ class GroupParameterItem(ParameterItem):
             l.addStretch()
             self.addWidgetBox = w
             self.addItem = QtGui.QTreeWidgetItem([])
-            self.addItem.setFlags(QtCore.Qt.ItemIsEnabled)
+            self.addItem.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
             self.addItem.depth = self.depth + 1
             ParameterItem.addChild(self, self.addItem)
             self.addItem.setSizeHint(0, self.addWidgetBox.sizeHint())

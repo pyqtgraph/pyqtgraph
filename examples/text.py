@@ -53,4 +53,4 @@ timer.timeout.connect(update)
 timer.start(10)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

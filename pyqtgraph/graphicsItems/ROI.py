@@ -23,6 +23,7 @@ from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
 from .. import getConfigOption
 import warnings
+import sys
 
 translate = QtCore.QCoreApplication.translate
 
@@ -122,7 +123,7 @@ class ROI(GraphicsObject):
                             Note that clicking is disabled by default to prevent
                             stealing clicks from objects behind the ROI. To 
                             enable clicking, call 
-                            roi.setAcceptedMouseButtons(QtCore.Qt.LeftButton). 
+                            roi.setAcceptedMouseButtons(QtCore.Qt.MouseButton.LeftButton). 
                             See QtGui.QGraphicsItem documentation for more 
                             details.
     sigRemoveRequested      Emitted when the user selects 'remove' from the 
@@ -144,7 +145,7 @@ class ROI(GraphicsObject):
                  movable=True, rotatable=True, resizable=True, removable=False,
                  aspectLocked=False):
         GraphicsObject.__init__(self, parent)
-        self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
+        self.setAcceptedMouseButtons(QtCore.Qt.MouseButton.NoButton)
         pos = Point(pos)
         size = Point(size)
         self.aspectLocked = aspectLocked
@@ -722,20 +723,20 @@ class ROI(GraphicsObject):
     def hoverEvent(self, ev):
         hover = False
         if not ev.isExit():
-            if self.translatable and ev.acceptDrags(QtCore.Qt.LeftButton):
+            if self.translatable and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
                 hover=True
                 
-            for btn in [QtCore.Qt.LeftButton, QtCore.Qt.RightButton, QtCore.Qt.MiddleButton]:
+            for btn in [QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.MouseButton.RightButton, QtCore.Qt.MouseButton.MiddleButton]:
                 if (self.acceptedMouseButtons() & btn) and ev.acceptClicks(btn):
                     hover=True
             if self.contextMenuEnabled():
-                ev.acceptClicks(QtCore.Qt.RightButton)
+                ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)
                 
         if hover:
             self.setMouseHover(True)
-            ev.acceptClicks(QtCore.Qt.LeftButton)  ## If the ROI is hilighted, we should accept all clicks to avoid confusion.
-            ev.acceptClicks(QtCore.Qt.RightButton)
-            ev.acceptClicks(QtCore.Qt.MiddleButton)
+            ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton)  ## If the ROI is hilighted, we should accept all clicks to avoid confusion.
+            ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)
+            ev.acceptClicks(QtCore.Qt.MouseButton.MiddleButton)
             self.sigHoverEvent.emit(self)
         else:
             self.setMouseHover(False)
@@ -795,17 +796,28 @@ class ROI(GraphicsObject):
         self.mouseDragHandler.mouseDragEvent(ev)
 
     def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.RightButton and self.isMoving:
-            ev.accept()
-            self.cancelMove()
-        if ev.button() == QtCore.Qt.RightButton and self.contextMenuEnabled():
-            self.raiseContextMenu(ev)
-            ev.accept()
-        elif ev.button() in self.acceptedMouseButtons():
-            ev.accept()
-            self.sigClicked.emit(self, ev)
-        else:
-            ev.ignore()
+        with warnings.catch_warnings():
+            # warning present on pyqt5 5.12 + python 3.8
+            warnings.filterwarnings(
+                "ignore",
+                message=(
+                    ".*Implicit conversion to integers using __int__ is "
+                    "deprecated, and may be removed in a future version of "
+                    "Python."
+                ),
+                category=DeprecationWarning
+            )
+            if ev.button() == QtCore.Qt.MouseButton.RightButton and self.isMoving:
+                ev.accept()
+                self.cancelMove()
+            if ev.button() == QtCore.Qt.MouseButton.RightButton and self.contextMenuEnabled():
+                self.raiseContextMenu(ev)
+                ev.accept()
+            elif ev.button() & self.acceptedMouseButtons():
+                ev.accept()
+                self.sigClicked.emit(self, ev)
+            else:
+                ev.ignore()
 
     def _moveStarted(self):
         self.isMoving = True
@@ -831,13 +843,7 @@ class ROI(GraphicsObject):
         ## called by Handles when they are moved. 
         ## pos is the new position of the handle in scene coords, as requested by the handle.
         if modifiers is None:
-            try:
-                # this works for PyQt6 6.1 and other bindings
-                modifiers = QtCore.Qt.KeyboardModifier.NoModifier
-            except AttributeError:
-                # this works for PyQt6 6.0 and other bindings
-                modifiers = QtCore.Qt.KeyboardModifiers(0)
-
+            modifiers = QtCore.Qt.KeyboardModifier.NoModifier
         newState = self.stateCopy()
         index = self.indexOfHandle(handle)
         h = self.handles[index]
@@ -859,7 +865,7 @@ class ROI(GraphicsObject):
             lp1 = self.mapFromParent(p1) - cs
         
         if h['type'] == 't':
-            snap = True if (modifiers & QtCore.Qt.ControlModifier) else None
+            snap = True if (modifiers & QtCore.Qt.KeyboardModifier.ControlModifier) else None
             self.translate(p1-p0, snap=snap, update=False)
         
         elif h['type'] == 'f':
@@ -876,12 +882,12 @@ class ROI(GraphicsObject):
                 lp1[1] = 0
             
             ## snap 
-            if self.scaleSnap or (modifiers & QtCore.Qt.ControlModifier):
+            if self.scaleSnap or (modifiers & QtCore.Qt.KeyboardModifier.ControlModifier):
                 lp1[0] = round(lp1[0] / self.scaleSnapSize) * self.scaleSnapSize
                 lp1[1] = round(lp1[1] / self.scaleSnapSize) * self.scaleSnapSize
                 
             ## preserve aspect ratio (this can override snapping)
-            if h['lockAspect'] or (modifiers & QtCore.Qt.AltModifier):
+            if h['lockAspect'] or (modifiers & QtCore.Qt.KeyboardModifier.AltModifier):
                 #arv = Point(self.preMoveState['size']) - 
                 lp1 = lp1.proj(lp0)
             
@@ -936,10 +942,10 @@ class ROI(GraphicsObject):
                 return
             
             ## determine new rotation angle, constrained if necessary
-            ang = newState['angle'] - lp1.angle(lp0)
+            ang = newState['angle'] - lp0.angle(lp1)
             if ang is None:  ## this should never happen..
                 return
-            if self.rotateSnap or (modifiers & QtCore.Qt.ControlModifier):
+            if self.rotateSnap or (modifiers & QtCore.Qt.KeyboardModifier.ControlModifier):
                 ang = round(ang / self.rotateSnapAngle) * self.rotateSnapAngle
             
             ## create rotation transform
@@ -972,10 +978,10 @@ class ROI(GraphicsObject):
             except OverflowError:
                 return
             
-            ang = newState['angle'] - lp1.angle(lp0)
+            ang = newState['angle'] - lp0.angle(lp1)
             if ang is None:
                 return
-            if self.rotateSnap or (modifiers & QtCore.Qt.ControlModifier):
+            if self.rotateSnap or (modifiers & QtCore.Qt.KeyboardModifier.ControlModifier):
                 ang = round(ang / self.rotateSnapAngle) * self.rotateSnapAngle
 
             if self.aspectLocked or h['center'][0] != h['pos'][0]:
@@ -1076,7 +1082,7 @@ class ROI(GraphicsObject):
         # Note: don't use self.boundingRect here, because subclasses may need to redefine it.
         r = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
         
-        p.setRenderHint(QtGui.QPainter.Antialiasing)
+        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         p.setPen(self.currentPen)
         p.translate(r.left(), r.top())
         p.scale(r.width(), r.height())
@@ -1281,8 +1287,8 @@ class ROI(GraphicsObject):
         if width == 0 or height == 0:
             return np.empty((width, height), dtype=float)
         
-        im = QtGui.QImage(width, height, QtGui.QImage.Format_ARGB32)
-        im.fill(0x0)
+        im = QtGui.QImage(width, height, QtGui.QImage.Format.Format_ARGB32)
+        im.fill(QtCore.Qt.GlobalColor.transparent)
         p = QtGui.QPainter(im)
         p.setPen(fn.mkPen(None))
         p.setBrush(fn.mkBrush('w'))
@@ -1292,8 +1298,9 @@ class ROI(GraphicsObject):
         p.translate(-bounds.topLeft())
         p.drawPath(shape)
         p.end()
-        mask = fn.imageToArray(im, transpose=True)[:,:,0].astype(float) / 255.
-        return mask
+        cidx = 0 if sys.byteorder == 'little' else 3
+        mask = fn.qimage_to_ndarray(im)[...,cidx].T
+        return mask.astype(float) / 255
         
     def getGlobalTransform(self, relativeTo=None):
         """Return global transformation (rotation angle+translation) required to move 
@@ -1361,10 +1368,10 @@ class Handle(UIGraphicsItem):
         self.menu = self.buildMenu()
         
         UIGraphicsItem.__init__(self, parent=parent)
-        self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
+        self.setAcceptedMouseButtons(QtCore.Qt.MouseButton.NoButton)
         self.deletable = deletable
         if deletable:
-            self.setAcceptedMouseButtons(QtCore.Qt.RightButton)        
+            self.setAcceptedMouseButtons(QtCore.Qt.MouseButton.RightButton)        
         self.setZValue(11)
             
     def connectROI(self, roi):
@@ -1377,9 +1384,9 @@ class Handle(UIGraphicsItem):
     def setDeletable(self, b):
         self.deletable = b
         if b:
-            self.setAcceptedMouseButtons(self.acceptedMouseButtons() | QtCore.Qt.RightButton)
+            self.setAcceptedMouseButtons(self.acceptedMouseButtons() | QtCore.Qt.MouseButton.RightButton)
         else:
-            self.setAcceptedMouseButtons(self.acceptedMouseButtons() & ~QtCore.Qt.RightButton)
+            self.setAcceptedMouseButtons(self.acceptedMouseButtons() & ~QtCore.Qt.MouseButton.RightButton)
 
     def removeClicked(self):
         self.sigRemoveRequested.emit(self)
@@ -1387,9 +1394,9 @@ class Handle(UIGraphicsItem):
     def hoverEvent(self, ev):
         hover = False
         if not ev.isExit():
-            if ev.acceptDrags(QtCore.Qt.LeftButton):
+            if ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
                 hover=True
-            for btn in [QtCore.Qt.LeftButton, QtCore.Qt.RightButton, QtCore.Qt.MiddleButton]:
+            for btn in [QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.MouseButton.RightButton, QtCore.Qt.MouseButton.MiddleButton]:
                 if (self.acceptedMouseButtons() & btn) and ev.acceptClicks(btn):
                     hover=True
                     
@@ -1400,18 +1407,29 @@ class Handle(UIGraphicsItem):
         self.update()
 
     def mouseClickEvent(self, ev):
-        ## right-click cancels drag
-        if ev.button() == QtCore.Qt.RightButton and self.isMoving:
-            self.isMoving = False  ## prevents any further motion
-            self.movePoint(self.startPos, finish=True)
-            ev.accept()
-        elif ev.button() & self.acceptedMouseButtons():
-            ev.accept()
-            if ev.button() == QtCore.Qt.RightButton and self.deletable:
-                self.raiseContextMenu(ev)
-            self.sigClicked.emit(self, ev)
-        else:
-            ev.ignore()        
+        with warnings.catch_warnings():
+            # warning present on pyqt5 5.12 + python 3.8
+            warnings.filterwarnings(
+                "ignore",
+                message=(
+                    ".*Implicit conversion to integers using __int__ is "
+                    "deprecated, and may be removed in a future version of "
+                    "Python."
+                ),
+                category=DeprecationWarning
+            )
+            ## right-click cancels drag
+            if ev.button() == QtCore.Qt.MouseButton.RightButton and self.isMoving:
+                self.isMoving = False  ## prevents any further motion
+                self.movePoint(self.startPos, finish=True)
+                ev.accept()
+            elif ev.button() & self.acceptedMouseButtons():
+                ev.accept()
+                if ev.button() == QtCore.Qt.MouseButton.RightButton and self.deletable:
+                    self.raiseContextMenu(ev)
+                self.sigClicked.emit(self, ev)
+            else:
+                ev.ignore()        
                 
     def buildMenu(self):
         menu = QtGui.QMenu()
@@ -1432,7 +1450,7 @@ class Handle(UIGraphicsItem):
         menu.popup(QtCore.QPoint(pos.x(), pos.y()))    
 
     def mouseDragEvent(self, ev):
-        if ev.button() != QtCore.Qt.LeftButton:
+        if ev.button() != QtCore.Qt.MouseButton.LeftButton:
             return
         ev.accept()
         
@@ -1464,12 +1482,7 @@ class Handle(UIGraphicsItem):
 
     def movePoint(self, pos, modifiers=None, finish=True):
         if modifiers is None:
-            try:
-                # this works for PyQt6 6.1 and other bindings
-                modifiers = QtCore.Qt.KeyboardModifier.NoModifier
-            except AttributeError:
-                # this works for PyQt6 6.0 and other bindings
-                modifiers = QtCore.Qt.KeyboardModifiers(0)
+            modifiers = QtCore.Qt.KeyboardModifier.NoModifier
         for r in self.rois:
             if not r.checkPointMove(self, pos, modifiers):
                 return
@@ -1493,7 +1506,7 @@ class Handle(UIGraphicsItem):
                 self.path.lineTo(x, y)            
             
     def paint(self, p, opt, widget):
-        p.setRenderHints(p.Antialiasing, True)
+        p.setRenderHints(p.RenderHint.Antialiasing, True)
         p.setPen(self.currentPen)
         
         p.drawPath(self.shape())
@@ -1542,10 +1555,10 @@ class MouseDragHandler(object):
         self.roi = roi
         self.dragMode = None
         self.startState = None
-        self.snapModifier = QtCore.Qt.ControlModifier
-        self.translateModifier = QtCore.Qt.NoModifier
-        self.rotateModifier = QtCore.Qt.AltModifier
-        self.scaleModifier = QtCore.Qt.ShiftModifier
+        self.snapModifier = QtCore.Qt.KeyboardModifier.ControlModifier
+        self.translateModifier = QtCore.Qt.KeyboardModifier.NoModifier
+        self.rotateModifier = QtCore.Qt.KeyboardModifier.AltModifier
+        self.scaleModifier = QtCore.Qt.KeyboardModifier.ShiftModifier
         self.rotateSpeed = 0.5
         self.scaleSpeed = 1.01
 
@@ -1553,7 +1566,7 @@ class MouseDragHandler(object):
         roi = self.roi
 
         if ev.isStart():
-            if ev.button() == QtCore.Qt.LeftButton:
+            if ev.button() == QtCore.Qt.MouseButton.LeftButton:
                 roi.setSelected(True)
                 mods = ev.modifiers() & ~self.snapModifier
                 if roi.translatable and mods == self.translateModifier:
@@ -1663,7 +1676,7 @@ class LineROI(ROI):
         pos2 = Point(pos2)
         d = pos2-pos1
         l = d.length()
-        ra = d.angle(Point(1, 0), units="radians")
+        ra = Point(1, 0).angle(d, units="radians")
         c = Point(-width/2. * sin(ra), -width/2. * cos(ra))
         pos1 = pos1 + c
         
@@ -1849,7 +1862,7 @@ class EllipseROI(ROI):
         
     def paint(self, p, opt, widget):
         r = self.boundingRect()
-        p.setRenderHint(QtGui.QPainter.Antialiasing)
+        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         p.setPen(self.currentPen)
         
         p.scale(r.width(), r.height())## workaround for GL bug
@@ -1967,7 +1980,7 @@ class PolygonROI(ROI):
         return [p['item'].pos() for p in self.handles]
             
     def paint(self, p, *args):
-        p.setRenderHint(QtGui.QPainter.Antialiasing)
+        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         p.setPen(self.currentPen)
         for i in range(len(self.handles)):
             h1 = self.handles[i]['item'].pos()
@@ -2081,11 +2094,11 @@ class PolyLineROI(ROI):
         else:
             self.segments.insert(index, seg)
         seg.sigClicked.connect(self.segmentClicked)
-        seg.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
+        seg.setAcceptedMouseButtons(QtCore.Qt.MouseButton.LeftButton)
         seg.setZValue(self.zValue()+1)
         for h in seg.handles:
             h['item'].setDeletable(True)
-            h['item'].setAcceptedMouseButtons(h['item'].acceptedMouseButtons() | QtCore.Qt.LeftButton) ## have these handles take left clicks too, so that handles cannot be added on top of other handles
+            h['item'].setAcceptedMouseButtons(h['item'].acceptedMouseButtons() | QtCore.Qt.MouseButton.LeftButton) ## have these handles take left clicks too, so that handles cannot be added on top of other handles
         
     def setMouseHover(self, hover):
         ## Inform all the ROI's segments that the mouse is(not) hovering over it
@@ -2223,7 +2236,7 @@ class LineSegmentROI(ROI):
         self.movePoint(self.getHandles()[1], p2)
             
     def paint(self, p, *args):
-        p.setRenderHint(QtGui.QPainter.Antialiasing)
+        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         p.setPen(self.currentPen)
         h1 = self.endpoints[0].pos()
         h2 = self.endpoints[1].pos()
@@ -2298,7 +2311,7 @@ class _PolyLineSegment(LineSegmentROI):
         # accept drags even though we discard them to prevent competition with parent ROI
         # (unless parent ROI is not movable)
         if self.parentItem().translatable:
-            ev.acceptDrags(QtCore.Qt.LeftButton)
+            ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton)
         return LineSegmentROI.hoverEvent(self, ev)
 
 
@@ -2341,7 +2354,7 @@ class CrosshairROI(ROI):
     
     def paint(self, p, *args):
         radius = self.getState()['size'][1]
-        p.setRenderHint(QtGui.QPainter.Antialiasing)
+        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         p.setPen(self.currentPen)
         
         p.drawLine(Point(0, -radius), Point(0, radius))
@@ -2358,7 +2371,7 @@ class RulerROI(LineSegmentROI):
 
         vec = Point(h2) - Point(h1)
         length = vec.length()
-        angle = Point(1, 0).angle(vec)
+        angle = vec.angle(Point(1, 0))
 
         pvec = p2 - p1
         pvecT = Point(pvec.y(), -pvec.x())
@@ -2367,7 +2380,7 @@ class RulerROI(LineSegmentROI):
         p.resetTransform()
 
         txt = fn.siFormat(length, suffix='m') + '\n%0.1f deg' % angle
-        p.drawText(QtCore.QRectF(pos.x()-50, pos.y()-50, 100, 100), QtCore.Qt.AlignCenter, txt)
+        p.drawText(QtCore.QRectF(pos.x()-50, pos.y()-50, 100, 100), QtCore.Qt.AlignmentFlag.AlignCenter, txt)
 
     def boundingRect(self):
         r = LineSegmentROI.boundingRect(self)
@@ -2400,7 +2413,7 @@ class TriangleROI(ROI):
 
     def paint(self, p, *args):
         r = self.boundingRect()
-        p.setRenderHint(QtGui.QPainter.Antialiasing)
+        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         p.scale(r.width(), r.height())
         p.setPen(self.currentPen)
         p.drawPolygon(self.poly)

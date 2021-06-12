@@ -1,6 +1,6 @@
 import numpy as np
 from .Qt import QtGui, QtCore
-from .functions import mkColor, eq, clip_array
+from .functions import mkColor, eq, colorDistance
 from os import path, listdir
 from collections.abc import Callable, Sequence
 import warnings
@@ -130,7 +130,9 @@ def _getFromFile(name):
     cmap = ColorMap( name=name,
         pos=np.linspace(0.0, 1.0, len(color_list)),
         color=color_list) #, names=color_names)
-    _mapCache[name] = cmap
+    if cmap is not None:
+        cmap.name = name
+        _mapCache[name] = cmap
     return cmap
 
 def getFromMatplotlib(name):
@@ -175,6 +177,7 @@ def getFromMatplotlib(name):
         cmap = ColorMap( name=name,
             pos = np.linspace(0.0, 1.0, col_data.shape[0]), color=255*col_data[:,:3]+0.5 )
     if cmap is not None:
+        cmap.name = name
         _mapCache[name] = cmap
     return cmap
 
@@ -197,231 +200,91 @@ def getFromColorcet(name):
     cmap = ColorMap( name=name,
         pos=np.linspace(0.0, 1.0, len(color_list)), 
         color=color_list) #, names=color_names)
-    _mapCache[name] = cmap
-    return cmap
+    if cm is not None:
+        cm.name = name
+        _mapCache[name] = cm
+    return cm
     
 def makeMonochrome(color='green'):
     """
-    Returns a ColorMap object imitating a monochrome computer screen.
+    Returns a ColorMap object with a dark to bright ramp and adjustable tint.
+    
+    In addition to neutral, warm or cold grays, imitations of monochrome computer monitors are also
+    available. The following predefined color ramps are available:
+    `neutral`, `warm`, `cool`, `green`, `amber`, `blue`, `red`, `pink`, `lavender`.
+    
+    The ramp can also be specified by a tuple of float values in the range of 0 to 1.
+    In this case `(h, s, l0, l1)` describe hue, saturation, minimum lightness and maximum lightness
+    within the HSL color space. The values `l0` and `l1` can be omitted. They default to 
+    `l0=0.0` and `l1=1.0` in this case.
 
     Parameters
     ----------
-    color: str of tuple of floats
-        Primary color description. Can be one of predefined identifiers
+    color: str or tuple of floats
+        Color description. Can be one of the predefined identifiers, or a tuple
+        `(h, s, l0, l1)`, `(h, s)` or (`h`).
         'green', 'amber', 'blue', 'red', 'lavender', 'pink'
         or a tuple of relative ``(R,G,B)`` contributions in range 0.0 to 1.0
     """
-    name = f'monochrome-{color}' # if needed, this automatically stringifies numerical tuples
-    stops   = np.array([0.000, 0.167, 0.247, 0.320, 0.411, 0.539, 0.747, 1.000])
-    active  = np.array([   16,    72,   113,   147,   177,   205,   231,   255])
-    leakage = np.array([    0,     1,     7,    21,    45,    80,   127,   191])
-    delta_arr = active - leakage
-    predefined = {
-        'green': (0.00, 1.00, 0.33), 'amber'   : (1.00, 0.50, 0.00),
-        'blue' : (0.00, 0.50, 1.00), 'red'     : (1.00, 0.10, 0.00),
-        'pink' : (1.00, 0.10, 0.50), 'lavender': (0.67, 0.33, 1.00)
+    name=f'Monochrome {color}'
+    defaults = {
+        'neutral': (0.00, 0.00, 0.00, 1.00),
+        'warm'   : (0.10, 0.08, 0.00, 0.95),
+        'cool'   : (0.60, 0.08, 0.00, 0.95),
+        'green'  : (0.35, 0.55, 0.02, 0.90),
+        'amber'  : (0.09, 0.80, 0.02, 0.80),
+        'blue'   : (0.58, 0.85, 0.02, 0.95),
+        'red'    : (0.01, 0.60, 0.02, 0.90),
+        'pink'   : (0.93, 0.65, 0.02, 0.95),
+        'lavender': (0.75, 0.50, 0.02, 0.90)
     }
-    if color in predefined: color = predefined[color]
-    if not isinstance(color, tuple):
-        definitions = [f"'{key}'" for key in predefined]
-        raise ValueError("'color' needs to be an (R,G,B) tuple of floats or one of "+definitions.join(', ') )
-    r, g, b = color
-    
-    color_list = [
-        (
-            r * delta + leak,
-            g * delta + leak,
-            b * delta + leak
-        ) for leak, delta in zip(leakage, delta_arr)
-    ]
-    # color_list = []
-    # for leak, delta in zip(leakage, delta_arr):
-    #     color_tuple = (
-    #         r * delta + leak,
-    #         g * delta + leak,
-    #         b * delta + leak )
-    #     color_list.append(color_tuple)
-    cmap = ColorMap(name=name, pos=stops, color=color_list )
-    return cmap
-    
-def sRGB_from_RGB( rgb ):
-    s_coeff = 12.92
-    t_coeff = 0.0031308         # transition val_RGB
-    # u_coeff = s_coeff * t_coeff # transition val_sRGB
-    vec_sRGB = np.zeros(3)
-    for idx, val in enumerate( rgb[:3] ):
-        if val > t_coeff:
-            vec_sRGB[idx] = 1.055 * val**(1/2.4) - 0.055
+    if isinstance(color, str):
+        if color in defaults:
+            h_val, s_val, l_min, l_max = defaults[color]
         else:
-            vec_sRGB[idx] = s_coeff * val
-    return vec_sRGB
-
-def RGB_from_sRGB( srgb ):
-    s_coeff = 12.92
-    t_coeff = 0.0031308         # transition val_RGB
-    u_coeff = s_coeff * t_coeff # transition val_sRGB
-    vec_RGB = np.zeros(3)
-    for idx, val in enumerate( srgb[:3] ):
-        if val > u_coeff:
-            vec_RGB[idx] = ((val+0.055)/1.055)**2.4
+            valid = ','.join(defaults.keys())
+            raise ValueError(f"Undefined color descriptor '{color}', known values are:\n{valid}")
+    else:
+        s_val = 0.70 # set up default values
+        l_min = 0.00
+        l_max = 1.00
+        if not hasattr(color,'__len__'):
+            h_val = float(color)
+        elif len(color) == 1:
+            h_val = color[0]
+        elif len(color) == 2:
+            h_val, s_val = color
+        elif len(color) == 4:
+            h_val, s_val, l_min, l_max = color
         else:
-            vec_RGB[idx] = val / s_coeff
-    return vec_RGB
-
-# matrices taken from 
-# "Fundamentals of Imaging Colour Spaces", by Prof. Dr. Charles A. Wüthrich
-# https://www.uni-weimar.de/fileadmin/user/fak/medien/professuren/Computer_Graphics/3-ima-color-spaces17.pdf
-# and "CIELab Color Space", by Gernot Hoffmann
-# http://docs-hoffmann.de/cielab03022003.pdf
-
-MATRIX_XYZ_FROM_RGB = np.array( (
-    ( 0.4124, 0.3576, 0.1805),
-    ( 0.2126, 0.7152, 0.0722),
-    ( 0.0193, 0.1192, 0.9505) ) )
-    
-MATRIX_RGB_FROM_XYZ = np.array( (
-    ( 3.2410,-1.5374,-0.4985),
-    (-0.9692, 1.8760, 0.0416),
-    ( 0.0556,-0.2040, 1.0570) ) )
-
-# white reference at standard illuminat D65
-VECTOR_XYZn = np.array( ( 0.9505, 1.0000, 1.0891) ) 
-
-def XYZfromQColor(col):
-    """
-    Converts a QColor's sRGB values to tri-stimulant XYZ
-    """
-    srgb = col.getRgbF()[:3] # get sRGB values from QColor
-    # convert gamma-encoded sRGB to linear:
-    s_coeff = 12.92
-    t_coeff = 0.0031308         # transition val_RGB
-    u_coeff = s_coeff * t_coeff # transition val_sRGB
-    vec_RGB = np.zeros(3)
-    for idx, val in enumerate( srgb ):
-        if val > u_coeff:
-            vec_RGB[idx] = ((val+0.055)/1.055)**2.4
-        else:
-            vec_RGB[idx] = val / s_coeff
-    # converted RGB to XYZ:
-    vec_XYZ = MATRIX_XYZ_FROM_RGB @ vec_RGB
-    return vec_XYZ
-
-def CIELabfromXYZ(vec_XYZ):
-    """
-    Converts tri-stimulant XYZ to CIELab values 
-    """
-    vec_XYZ1 = vec_XYZ / VECTOR_XYZn # normalize with white reference
-    for idx, val in enumerate(vec_XYZ1):
-        if val > 0.008856:
-            vec_XYZ1[idx] = vec_XYZ1[idx]**(1/3)
-        else:
-            vec_XYZ1[idx] = 7.787*vec_XYZ1[idx] + 16/116
-    vec_Lab = np.array([
-        116 * vec_XYZ1[1] - 16,              # Y1
-        500 * (vec_XYZ1[0] - vec_XYZ1[1]),   # X1 - Y1
-        200 * (vec_XYZ1[1] - vec_XYZ1[2]) ]) # Y1 - Z1
-    return vec_Lab
-    
-def XYZfromCIELab(vec_Lab):
-    """
-    Converts vector of CIELab values to tri-stimulant XYZ 
-    """
-    vec_XYZ = np.full(3, (vec_Lab[0]+16)/116 )  # Y1 = (L+16)/116
-    vec_XYZ[0] += vec_Lab[1] / 500              # X1 = (L+16)/116 + a/500
-    vec_XYZ[2] -= vec_Lab[2] / 200              # Z1 = (L+16)/116 - b/200 
-    for idx, val in enumerate(vec_XYZ):
-        if val > 6.9456e-7:
-            vec_XYZ[idx] = vec_XYZ[idx]**3
-        else:
-            vec_XYZ[idx] = (vec_XYZ[idx] - 16/116) / 7.787
-    return vec_XYZ * VECTOR_XYZn # apply white reference
-
-def QColorfromXYZ(vec_XYZ):
-    """ 
-    Converts tri-stimulant XYZ values to an sRGB QColor
-    """
-    if not isinstance(vec_XYZ, np.ndarray):
-        vec_XYZ = np.array( vec_XYZ )
-    # convert XYZ to linear RGB
-    vec_RGB =  MATRIX_RGB_FROM_XYZ @ vec_XYZ
-    # gamma-encode linear RGB
-    s_coeff = 12.92
-    t_coeff = 0.0031308 # transition val_RGB
-    arr_sRGB = np.zeros(3)
-    for idx, val in enumerate( vec_RGB[:3] ):
-        if val > t_coeff:
-            arr_sRGB[idx] = 1.055 * val**(1/2.4) - 0.055
-        else:
-            arr_sRGB[idx] = s_coeff * val
-    arr_sRGB = clip_array( arr_sRGB, 0.0, 1.0 ) # avoid QColor errors
-    qcol = QtGui.QColor()
-    qcol.setRgbF( *arr_sRGB )
-    return qcol
-
-    
-def makeMonochrome2(color='green'):
-    """
-    Returns a ColorMap object imitating a monochrome computer screen.
-
-    Parameters
-    ----------
-    color: str of tuple of floats
-        Primary color description. Can be one of predefined identifiers
-        'green', 'amber', 'blue', 'red', 'lavender', 'pink'
-        or a tuple of relative ``(R,G,B)`` contributions in range 0.0 to 1.0
-    """
-    name='dummy'
-    h_val = 0.35 # hue value
-    s_val = 0.60
-    l_min = 0.05
-    l_max = 0.98
+            raise ValueError(f"Invalid color descriptor '{color}'")
     l_vals = np.linspace(l_min, l_max, num=10)
-    qcol = QtGui.QColor()
     color_list = []
     for l_val in l_vals:
+        qcol = QtGui.QColor()
         qcol.setHslF( h_val, s_val, l_val )
-        # print(l_val, qcol.name(), qcol.getRgbF() )
-        color_list.append( qcol.getRgb()[:3] )
-        
-        
-    # print(color_list)
-    stops = np.linspace(0.0, 1.0, num=10)
-    cmap = ColorMap(name=name, pos=stops, color=color_list )
-    return cmap
+        color_list.append( qcol )
+    return ColorMap( None, color_list, name=name, linearize=True )
+
+def modulatedBarData(length=768, width=32):
+    """ 
+    Returns an NumPy array that represents a modulated color bar ranging from 0 to 1.
+    This is used to judge the perceived variation of the color gradient.
     
-        
-    # name = f'monochrome-{color}' # if needed, this automatically stringifies numerical tuples
-    # stops   = np.array([0.000, 0.167, 0.247, 0.320, 0.411, 0.539, 0.747, 1.000])
-    # active  = np.array([   16,    72,   113,   147,   177,   205,   231,   255])
-    # leakage = np.array([    0,     1,     7,    21,    45,    80,   127,   191])
-    # delta_arr = active - leakage
-    # predefined = {
-    #     'green': (0.00, 1.00, 0.33), 'amber'   : (1.00, 0.50, 0.00),
-    #     'blue' : (0.00, 0.50, 1.00), 'red'     : (1.00, 0.10, 0.00),
-    #     'pink' : (1.00, 0.10, 0.50), 'lavender': (0.67, 0.33, 1.00)
-    # }
-    # if color in predefined: color = predefined[color]
-    # if not isinstance(color, tuple):
-    #     definitions = [f"'{key}'" for key in predefined]
-    #     raise ValueError("'color' needs to be an (R,G,B) tuple of floats or one of "+definitions.join(', ') )
-    # r, g, b = color
-    
-    # color_list = [
-    #     (
-    #         r * delta + leak,
-    #         g * delta + leak,
-    #         b * delta + leak
-    #     ) for leak, delta in zip(leakage, delta_arr)
-    # ]
-    # # color_list = []
-    # # for leak, delta in zip(leakage, delta_arr):
-    # #     color_tuple = (
-    # #         r * delta + leak,
-    # #         g * delta + leak,
-    # #         b * delta + leak )
-    # #     color_list.append(color_tuple)
-    # cmap = ColorMap(name=name, pos=stops, color=color_list )
-    # return cmap
+    Parameters
+    ----------
+    length: int
+        Length of the data set. Values will vary from 0 to 1 over this axis.
+    width: int
+        Width of the data set. The modulation will vary from 0% to 4% over this axis.    
+    """
+    gradient   = np.linspace(0.00, 1.00, length)
+    modulation = -0.04 * np.sin( (np.pi/4) * np.arange(length) )
+    data = np.zeros( (length, width) )
+    for idx in range(width):
+        data[:,idx] = gradient + (idx/(width-1)) * modulation
+    np.clip(data, 0.0, 1.0)
+    return data
 
 class ColorMap(object):
     """
@@ -440,7 +303,6 @@ class ColorMap(object):
     A ColorMap object provides access to the interpolated colors by indexing with a float value:
     ``cm[0.5]`` returns a QColor corresponding to the center of ColorMap `cm`.
     """
-
     ## mapping modes
     CLIP   = 1
     REPEAT = 2
@@ -462,14 +324,14 @@ class ColorMap(object):
         'qcolor': QCOLOR,
     }
 
-    def __init__(self, pos, color, mapping=CLIP, mode=None, name=None): #, names=None):
+    def __init__(self, pos, color, mapping=CLIP, mode=None, linearize=False, name=''):
         """
         __init__(pos, color, mapping=ColorMap.CLIP)
         
         Parameters
         ----------
-        pos: array_like of float in range 0 to 1
-            Assigned positions of specified colors
+        pos: array_like of float in range 0 to 1, or None
+            Assigned positions of specified colors. `None` sets equal spacing.
         color: array_like of colors
             List of colors, interpreted via :func:`mkColor() <pyqtgraph.mkColor>`.
         mapping: str or int, optional
@@ -485,19 +347,29 @@ class ColorMap(object):
                 "'mode' argument is deprecated and does nothing.",
                 DeprecationWarning, stacklevel=2
         )
-        self.pos = np.array(pos)
-        order = np.argsort(self.pos)
-        self.pos = self.pos[order]
-        self.color = np.apply_along_axis(
-            func1d = lambda x: np.uint8( mkColor(x).getRgb() ), # cast RGB integer values to uint8
-            axis   = -1,
-            arr    = color,
-            )[order]
+        if pos is None:
+            order = range(len(color))
+            self.pos = np.linspace(0.0, 1.0, num=len(color))
+        else:
+            self.pos = np.array(pos)
+            order = np.argsort(self.pos)
+            self.pos = self.pos[order]
+        
+        self.color = np.zeros( (len(color), 4) ) # stores float rgba values
+        for cnt, idx in enumerate(order):
+            self.color[cnt] = mkColor(color[idx]).getRgbF()
+        # alternative code may be more efficient, but fails to handle lists of QColor.
+        # self.color = np.apply_along_axis(
+        #     func1d = lambda x: np.uint8( mkColor(x).getRgb() ), # cast RGB integer values to uint8
+        #     axis   = -1,
+        #     arr    = color,
+        #     )[order]
         
         self.mapping_mode = self.CLIP # default to CLIP mode   
         if mapping is not None:
             self.setMappingMode( mapping )
         self.stopsCache = {}
+        if linearize: self.linearize()
 
     def setMappingMode(self, mapping):
         """
@@ -537,6 +409,17 @@ class ColorMap(object):
             return self.mapToQColor(float_idx)
         except ValueError: pass
         return None
+
+    def linearize(self):
+        """
+        Adjusts the positions assigned to color stops to approximately equalize the perceived color difference
+        for a fixed step.
+        """
+        colors = self.getColors(mode=self.QCOLOR)
+        distances = colorDistance(colors)
+        positions = np.insert( np.cumsum(distances), 0, 0.0 )
+        self.pos = positions / positions[-1] # normalize last value to 1.0
+        self.stopsCache = {}
 
     def reverse(self):
         """
@@ -661,7 +544,7 @@ class ColorMap(object):
             color = np.concatenate( (col_n, col_p) )
         grad.setStops(list(zip(pos, color)))
         if self.mapping_mode == self.REPEAT:
-            grad.setSpread( QtGui.QGradient.RepeatSpread )
+            grad.setSpread( QtGui.QGradient.Spread.RepeatSpread )
         return grad
 
     def getBrush(self, span=(0.,1.), orientation='vertical'):

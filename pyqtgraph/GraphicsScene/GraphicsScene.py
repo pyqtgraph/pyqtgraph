@@ -165,18 +165,18 @@ class GraphicsScene(QtGui.QGraphicsScene):
             ## set focus on the topmost focusable item under this click
             items = self.items(ev.scenePos())
             for i in items:
-                if i.isEnabled() and i.isVisible() and (i.flags() & i.ItemIsFocusable):
-                    i.setFocus(QtCore.Qt.MouseFocusReason)
+                if i.isEnabled() and i.isVisible() and (i.flags() & i.GraphicsItemFlag.ItemIsFocusable):
+                    i.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)
                     break
 
     def _moveEventIsAllowed(self):
         # For ignoring events that are too close together
-        
+
         # Max number of events per second
         rateLimit = getConfigOption('mouseRateLimit')
         if rateLimit <= 0:
             return True
-        
+
         # Delay between events (in milliseconds)
         delay = 1000.0 / rateLimit
         if getMillis() - self._lastMoveEventTime >= delay:
@@ -201,7 +201,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     now = ptime.time()
                     init = False
                     ## keep track of which buttons are involved in dragging
-                    for btn in [QtCore.Qt.LeftButton, QtCore.Qt.MiddleButton, QtCore.Qt.RightButton]:
+                    for btn in [QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.MouseButton.MiddleButton, QtCore.Qt.MouseButton.RightButton]:
                         if not (ev.buttons() & btn):
                             continue
                         if btn not in self.dragButtons:  ## see if we've dragged far enough yet
@@ -304,9 +304,9 @@ class GraphicsScene(QtGui.QGraphicsScene):
         # Update last hover event unless:
         #   - mouse is dragging (move+buttons); in this case we want the dragged
         #     item to continue receiving events until the drag is over
-        #   - event is not a mouse event (QEvent.Leave sometimes appears here)
-        if (ev.type() == ev.GraphicsSceneMousePress or 
-            (ev.type() == ev.GraphicsSceneMouseMove and not ev.buttons())):
+        #   - event is not a mouse event (QEvent.Type.Leave sometimes appears here)
+        if (ev.type() == ev.Type.GraphicsSceneMousePress or 
+            (ev.type() == ev.Type.GraphicsSceneMouseMove and not ev.buttons())):
             self.lastHoverEvent = event  ## save this so we can ask about accepted events later.
 
     def sendDragEvent(self, ev, init=False, final=False):
@@ -344,8 +344,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
                         if event.isAccepted():
                             #print "   --> accepted"
                             self.dragItem = item
-                            if item.flags() & item.ItemIsFocusable:
-                                item.setFocus(QtCore.Qt.MouseFocusReason)
+                            if item.flags() & item.GraphicsItemFlag.ItemIsFocusable:
+                                item.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)
                             break
         elif self.dragItem is not None:
             event.currentItem = self.dragItem
@@ -389,8 +389,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
                             debug.printExc("Error sending click event:")
                             
                         if ev.isAccepted():
-                            if item.flags() & item.ItemIsFocusable:
-                                item.setFocus(QtCore.Qt.MouseFocusReason)
+                            if item.flags() & item.GraphicsItemFlag.ItemIsFocusable:
+                                item.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)
                             break
         self.sigMouseClicked.emit(ev)
         return ev.isAccepted()
@@ -419,7 +419,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         item = QtGui.QGraphicsScene.itemAt(self, *args)
         return self.translateGraphicsItem(item)
 
-    def itemsNearEvent(self, event, selMode=QtCore.Qt.IntersectsItemShape, sortOrder=QtCore.Qt.DescendingOrder, hoverable=False):
+    def itemsNearEvent(self, event, selMode=QtCore.Qt.ItemSelectionMode.IntersectsItemShape, sortOrder=QtCore.Qt.SortOrder.DescendingOrder, hoverable=False):
         """
         Return an iterator that iterates first through the items that directly intersect point (in Z order)
         followed by any other items that are within the scene's click radius.

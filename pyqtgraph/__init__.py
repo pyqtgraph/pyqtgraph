@@ -11,6 +11,7 @@ __version__ = '0.12.1'
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt4 and PySide.
 from .Qt import QtGui, mkQApp
+from .Qt import exec_ as exec
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
 #if QtGui.QApplication.instance() is None:
@@ -284,7 +285,7 @@ from .ptime import time
 from .Qt import isQObjectAlive
 from .ThreadsafeTimer import *
 from .palette import *
-from . import colorRegistry
+from . import styleRegistry
 
 
 def setConfigOption(opt, value):
@@ -295,7 +296,7 @@ def setConfigOption(opt, value):
 
     # Intercept background / foreground updates and manually apply them to the palette:
     if opt in ('background', 'foreground'):
-        color_dict = functions.COLOR_REGISTRY.colors()
+        color_dict = functions.STYLE_REGISTRY.colors()
         if value in color_dict:
             qcol = color_dict[value]
         else:
@@ -304,7 +305,7 @@ def setConfigOption(opt, value):
             color_dict['gr_bg'] = qcol
         elif opt == 'foreground':
             color_dict['gr_fg'] = qcol
-        functions.COLOR_REGISTRY.redefinePalette(colors=None)
+        functions.STYLE_REGISTRY.redefinePalette(colors=None)
 
     CONFIG_OPTIONS[opt] = value
 

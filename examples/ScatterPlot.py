@@ -135,4 +135,4 @@ w4.addItem(s4)
 s4.sigClicked.connect(clicked)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

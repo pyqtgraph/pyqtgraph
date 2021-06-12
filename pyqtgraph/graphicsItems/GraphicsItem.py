@@ -168,7 +168,7 @@ class GraphicsItem(object):
             p = p.parentItem()
             if p is None:
                 break
-            if p.flags() & self.ItemClipsChildrenToShape:
+            if p.flags() & self.GraphicsItemFlag.ItemClipsChildrenToShape:
                 parents.append(p)
         return parents
     
@@ -447,7 +447,7 @@ class GraphicsItem(object):
         
     #def itemChange(self, change, value):
         #ret = self._qtBaseClass.itemChange(self, change, value)
-        #if change == self.ItemParentHasChanged or change == self.ItemSceneHasChanged:
+        #if change == self.GraphicsItemChange.ItemParentHasChanged or change == self.ItemSceneHasChanged:
             #print "Item scene changed:", self
             #self.setChildScene(self)  ## This is bizarre.
         #return ret

@@ -41,5 +41,5 @@ p3.setLabel('left', "Label to test offset")
 #QtGui.QApplication.processEvents()
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()
 

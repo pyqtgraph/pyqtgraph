@@ -33,7 +33,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
 
         QtWidgets.QOpenGLWidget.__init__(self, parent)
         
-        self.setFocusPolicy(QtCore.Qt.ClickFocus)
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy.ClickFocus)
 
         if rotationMethod not in {"euler", "quaternion"}:
             raise RuntimeError("Rotation method should be either 'euler' or 'quaternion'")
@@ -53,7 +53,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         self.reset()
         self.items = []
         
-        self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
+        self.noRepeatKeys = [QtCore.Qt.Key.Key_Right, QtCore.Qt.Key.Key_Left, QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_PageUp, QtCore.Qt.Key.Key_PageDown]
         self.keysPressed = {}
         self.keyTimer = QtCore.QTimer()
         self.keyTimer.timeout.connect(self.evalKeyState)
@@ -314,7 +314,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         center = self.opts['center']
         dist = self.opts['distance']
         if self.opts['rotationMethod'] == "quaternion":
-            pos = center - self.opts['rotation'].rotatedVector( Vector(0,0,dist) )
+            pos = Vector(center - self.opts['rotation'].rotatedVector(Vector(0,0,dist) ))
         else:
             # using 'euler' rotation method
             elev = radians(self.opts['elevation'])
@@ -437,13 +437,13 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         diff = lpos - self.mousePos
         self.mousePos = lpos
         
-        if ev.buttons() == QtCore.Qt.LeftButton:
-            if (ev.modifiers() & QtCore.Qt.ControlModifier):
+        if ev.buttons() == QtCore.Qt.MouseButton.LeftButton:
+            if (ev.modifiers() & QtCore.Qt.KeyboardModifier.ControlModifier):
                 self.pan(diff.x(), diff.y(), 0, relative='view')
             else:
                 self.orbit(-diff.x(), diff.y())
-        elif ev.buttons() == QtCore.Qt.MiddleButton:
-            if (ev.modifiers() & QtCore.Qt.ControlModifier):
+        elif ev.buttons() == QtCore.Qt.MouseButton.MiddleButton:
+            if (ev.modifiers() & QtCore.Qt.KeyboardModifier.ControlModifier):
                 self.pan(diff.x(), 0, diff.y(), relative='view-upright')
             else:
                 self.pan(diff.x(), diff.y(), 0, relative='view-upright')
@@ -469,7 +469,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             delta = ev.angleDelta().x()
             if delta == 0:
                 delta = ev.angleDelta().y()
-        if (ev.modifiers() & QtCore.Qt.ControlModifier):
+        if (ev.modifiers() & QtCore.Qt.KeyboardModifier.ControlModifier):
             self.opts['fov'] *= 0.999**delta
         else:
             self.opts['distance'] *= 0.999**delta
@@ -498,17 +498,17 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         speed = 2.0
         if len(self.keysPressed) > 0:
             for key in self.keysPressed:
-                if key == QtCore.Qt.Key_Right:
+                if key == QtCore.Qt.Key.Key_Right:
                     self.orbit(azim=-speed, elev=0)
-                elif key == QtCore.Qt.Key_Left:
+                elif key == QtCore.Qt.Key.Key_Left:
                     self.orbit(azim=speed, elev=0)
-                elif key == QtCore.Qt.Key_Up:
+                elif key == QtCore.Qt.Key.Key_Up:
                     self.orbit(azim=0, elev=-speed)
-                elif key == QtCore.Qt.Key_Down:
+                elif key == QtCore.Qt.Key.Key_Down:
                     self.orbit(azim=0, elev=speed)
-                elif key == QtCore.Qt.Key_PageUp:
+                elif key == QtCore.Qt.Key.Key_PageUp:
                     pass
-                elif key == QtCore.Qt.Key_PageDown:
+                elif key == QtCore.Qt.Key.Key_PageDown:
                     pass
                 self.keyTimer.start(16)
         else:
@@ -557,15 +557,11 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         pixels[...,3] = 255
         
         glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
-        
-        # swap B,R channels for Qt
-        tmp = pixels[...,0].copy()
-        pixels[...,0] = pixels[...,2]
-        pixels[...,2] = tmp
-        pixels = pixels[::-1] # flip vertical
-        
-        img = fn.makeQImage(pixels, transpose=False)
-        return img
+
+        pixels = pixels[::-1].copy() # flip vertical
+
+        qimg = fn.ndarray_to_qimage(pixels, QtGui.QImage.Format.Format_RGBA8888)
+        return qimg
         
     def renderToArray(self, size, format=GL_BGRA, type=GL_UNSIGNED_BYTE, textureSize=1024, padding=256):
         w,h = map(int, size)

@@ -58,4 +58,4 @@ imv1.setLevels(-0.003, 0.003)
 update()
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

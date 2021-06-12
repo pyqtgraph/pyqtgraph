@@ -29,12 +29,12 @@ This project supports:
 
 * All minor versions of Python released 42 months prior to the project, and at minimum the two latest minor versions.
 * All minor versions of numpy released in the 24 months prior to the project, and at minimum the last three minor versions.
-* All minor versions of Qt 5 and Qt 6 currently supported by upstream Qt
+* All Qt5 versions from 5.12-5.15, and Qt6 6.1
 
 Currently this means:
 
 * Python 3.7+
-* Qt 5.12-6.0
+* Qt 5.12-5.15, 6.1
 * Required
   * PyQt5, PyQt6, PySide2 or PySide6
   * `numpy` 1.17+
@@ -58,8 +58,8 @@ The following table represents the python environments we test in our CI system.
 | PyQt5-5.12     | :white_check_mark: |                    | :x:                |
 | PySide2-5.15   |                    | :white_check_mark: |                    |
 | PyQt5-5.15     |                    | :white_check_mark: |                    |
-| PySide6-6.0    |                    |                    | :white_check_mark: |
-| PyQt6-6.0      |                    |                    | :white_check_mark: |
+| PySide6-6.1    |                    |                    | :white_check_mark: |
+| PyQt6-6.1      |                    |                    | :white_check_mark: |
 
 * :x: - Not compatible
 * :white_check_mark: - Tested

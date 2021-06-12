@@ -198,7 +198,7 @@ class Palette(object):
     """
     def __init__(self, cmap=None, colors=None ):
         super().__init__()
-        self.palette = fn.COLOR_REGISTRY.defaultColors()
+        self.palette = fn.STYLE_REGISTRY.defaultColors()
         # self.palette  = { # populate dictionary of QColors with legacy defaults
         #     'b': QtGui.QColor(  0,  0,255,255), 'g': QtGui.QColor(  0,255,  0,255), 
         #     'r': QtGui.QColor(255,  0,  0,255), 'c': QtGui.QColor(  0,255,255,255),
@@ -416,4 +416,4 @@ class Palette(object):
         Applies this palette to the overall PyQtGraph color scheme.
         This provides the palette to NamedColorManager, which triggers a global refresh of named colors
         """
-        fn.COLOR_REGISTRY.redefinePalette( colors=self.palette )
+        fn.STYLE_REGISTRY.redefinePalette( colors=self.palette )

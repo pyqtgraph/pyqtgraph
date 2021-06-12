@@ -40,4 +40,4 @@ legend.addItem(c2, 'curve2')
 legend.addItem(s1, 'scatter')
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

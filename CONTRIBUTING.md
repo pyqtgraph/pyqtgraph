@@ -1,6 +1,6 @@
 # Contributing to PyQtGraph
 
-Contributions to pyqtgraph are welcome!
+Contributions to pyqtgraph are welcome! Be kind and respectful! See [our Code of Conduct](CODE_OF_CONDUCT.md) for details.
 
 Please use the following guidelines when preparing changes:
 

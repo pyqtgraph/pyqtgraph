@@ -31,4 +31,4 @@ for c in curves:
     c.sigClicked.connect(plotClicked)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

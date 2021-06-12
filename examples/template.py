@@ -16,4 +16,4 @@ app = mkQApp()
 # win.setWindowTitle('pyqtgraph example: ____')
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

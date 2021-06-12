@@ -46,4 +46,4 @@ timer.start(30)
 
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

@@ -1330,8 +1330,6 @@ if __name__ == '__main__':
     #### File I/O tests
     
     print("\n================  File I/O Tests  ===================\n")
-    import tempfile
-    tf = tempfile.mktemp()
     tf = 'test.ma'
     # write whole array
     

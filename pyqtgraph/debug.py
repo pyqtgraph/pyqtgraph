@@ -113,11 +113,10 @@ def getExc(indent=4, prefix='|  ', skip=1):
 def printExc(msg='', indent=4, prefix='|'):
     """Print an error message followed by an indented exception backtrace
     (This function is intended to be called within except: blocks)"""
-    exc = getExc(indent, prefix + '  ', skip=2)
-    print("[%s]  %s\n" % (time.strftime("%H:%M:%S"), msg))
-    print(" "*indent + prefix + '='*30 + '>>')
-    print(exc)
-    print(" "*indent + prefix + '='*30 + '<<')
+    exc = getExc(indent=0, prefix="", skip=2)
+    # print(" "*indent + prefix + '='*30 + '>>')
+    warnings.warn("\n".join([msg, exc]), RuntimeWarning, stacklevel=2)
+    # print(" "*indent + prefix + '='*30 + '<<')
 
     
 def printTrace(msg='', indent=4, prefix='|'):

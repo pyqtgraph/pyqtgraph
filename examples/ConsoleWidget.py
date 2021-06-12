@@ -30,4 +30,4 @@ c.show()
 c.setWindowTitle('pyqtgraph example: ConsoleWidget')
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

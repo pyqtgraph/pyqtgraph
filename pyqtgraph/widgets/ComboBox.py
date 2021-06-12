@@ -24,7 +24,7 @@ class ComboBox(QtGui.QComboBox):
         
         #self.value = default
         if 'darwin' in sys.platform: ## because MacOSX can show names that are wider than the comboBox
-            self.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
+            self.setSizeAdjustPolicy(QtGui.QComboBox.SizeAdjustPolicy.AdjustToContents)
             #self.setMinimumContentsLength(10)
         self._chosenText = None
         self._items = OrderedDict()

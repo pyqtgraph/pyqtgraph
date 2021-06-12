@@ -43,4 +43,4 @@ window.setWindowTitle('pyqtgraph example: DateAxisItem_QtDesigner')
 window.show()
 
 if __name__ == '__main__':
-    app.exec_()
+    pg.exec()

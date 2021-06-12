@@ -35,4 +35,4 @@ p3.plot(x, y)
 #p.getAxis('bottom').setLogMode(True)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

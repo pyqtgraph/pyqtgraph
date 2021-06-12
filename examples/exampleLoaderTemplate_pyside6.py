@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'exampleLoaderTemplate.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.0
+## Created by: Qt User Interface Compiler version 6.1.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -75,7 +75,7 @@ class Ui_Form(object):
         self.codeView = QPlainTextEdit(self.widget1)
         self.codeView.setObjectName(u"codeView")
         font1 = QFont()
-        font1.setFamily(u"Courier New")
+        font1.setFamilies([u"Courier New"])
         self.codeView.setFont(font1)
 
         self.verticalLayout.addWidget(self.codeView)

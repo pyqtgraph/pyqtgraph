@@ -14,7 +14,7 @@ class GradientLegend(UIGraphicsItem):
         self.size = size
         self.offset = offset
         UIGraphicsItem.__init__(self)
-        self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
+        self.setAcceptedMouseButtons(QtCore.Qt.MouseButton.NoButton)
         self.brush = QtGui.QBrush(QtGui.QColor(200,0,0))
         self.pen = QtGui.QPen(QtGui.QColor(0,0,0))
         self.labels = {'max': 1, 'min': 0}
@@ -57,7 +57,7 @@ class GradientLegend(UIGraphicsItem):
         labelWidth = 0
         labelHeight = 0
         for k in self.labels:
-            b = p.boundingRect(QtCore.QRectF(0, 0, 0, 0), QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter, str(k))
+            b = p.boundingRect(QtCore.QRectF(0, 0, 0, 0), QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter, str(k))
             labelWidth = max(labelWidth, b.width())
             labelHeight = max(labelHeight, b.height())
             
@@ -111,4 +111,4 @@ class GradientLegend(UIGraphicsItem):
         lw = labelWidth
         for k in self.labels:
             y = y1 + self.labels[k] * (y2-y1)
-            p.drawText(QtCore.QRectF(tx, y - lh/2, lw, lh), QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter, str(k))
+            p.drawText(QtCore.QRectF(tx, y - lh/2, lw, lh), QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter, str(k))

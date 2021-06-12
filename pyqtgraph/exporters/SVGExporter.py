@@ -26,7 +26,7 @@ class SVGExporter(Exporter):
             scene = item
         bgbrush = scene.views()[0].backgroundBrush()
         bg = bgbrush.color()
-        if bgbrush.style() == QtCore.Qt.NoBrush:
+        if bgbrush.style() == QtCore.Qt.BrushStyle.NoBrush:
             bg.setAlpha(0)
 
         self.params = Parameter(name='params', type='group', children=[
@@ -207,7 +207,7 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
         try:
             p.setTransform(tr)
             opt = QtGui.QStyleOptionGraphicsItem()
-            if item.flags() & QtGui.QGraphicsItem.ItemUsesExtendedStyleOption:
+            if item.flags() & QtGui.QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption:
                 opt.exposedRect = item.boundingRect()
             item.paint(p, opt, None)
         finally:
@@ -253,7 +253,7 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
     childGroup = g1  ## add children directly to this node unless we are clipping
     if not isinstance(item, QtGui.QGraphicsScene):
         ## See if this item clips its children
-        if item.flags() & item.ItemClipsChildrenToShape:
+        if item.flags() & item.GraphicsItemFlag.ItemClipsChildrenToShape:
             ## Generate svg for just the path
             path = QtGui.QGraphicsPathItem(item.mapToScene(item.shape()))
             item.scene().addItem(path)
@@ -416,7 +416,7 @@ def itemTransform(item, root):
         return tr
         
     
-    if item.flags() & item.ItemIgnoresTransformations:
+    if item.flags() & item.GraphicsItemFlag.ItemIgnoresTransformations:
         pos = item.pos()
         parent = item.parentItem()
         if parent is not None:
@@ -433,7 +433,7 @@ def itemTransform(item, root):
             if nextRoot is None:
                 nextRoot = root
                 break
-            if nextRoot is root or (nextRoot.flags() & nextRoot.ItemIgnoresTransformations):
+            if nextRoot is root or (nextRoot.flags() & nextRoot.GraphicsItemFlag.ItemIgnoresTransformations):
                 break
         
         if isinstance(nextRoot, QtGui.QGraphicsScene):

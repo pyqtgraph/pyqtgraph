@@ -59,4 +59,4 @@ g = pg.GridItem()
 vb.addItem(g)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

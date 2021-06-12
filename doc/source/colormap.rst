@@ -73,6 +73,9 @@ API Reference
 
 .. autofunction:: pyqtgraph.colormap.getFromColorcet
 
+.. autofunction:: pyqtgraph.colormap.modulatedBarData
+
+
 
 
 .. autoclass:: pyqtgraph.ColorMap

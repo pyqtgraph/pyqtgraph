@@ -1,5 +1,5 @@
 import sys
-from PyQt4 import QtGui
+from pyqtgraph.Qt import QtGui
 import pyqtgraph as pg
 from pyqtgraph.graphicsItems import TextItem
 # For packages that require scipy, these may be needed: 

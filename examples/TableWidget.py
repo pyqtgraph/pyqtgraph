@@ -27,4 +27,4 @@ data = np.array([
 w.setData(data)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

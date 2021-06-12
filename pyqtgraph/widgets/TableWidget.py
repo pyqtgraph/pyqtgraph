@@ -54,9 +54,9 @@ class TableWidget(QtGui.QTableWidget):
         
         self.itemClass = TableWidgetItem
         
-        self.setVerticalScrollMode(self.ScrollPerPixel)
-        self.setSelectionMode(QtGui.QAbstractItemView.ContiguousSelection)
-        self.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+        self.setVerticalScrollMode(self.ScrollMode.ScrollPerPixel)
+        self.setSelectionMode(QtGui.QAbstractItemView.SelectionMode.ContiguousSelection)
+        self.setSizePolicy(QtGui.QSizePolicy.Policy.Preferred, QtGui.QSizePolicy.Policy.Preferred)
         self.clear()
         
         kwds.setdefault('sortable', True)
@@ -149,7 +149,7 @@ class TableWidget(QtGui.QTableWidget):
             
         if (self._sorting and self.horizontalHeadersSet and 
             self.horizontalHeader().sortIndicatorSection() >= self.columnCount()):
-            self.sortByColumn(0, QtCore.Qt.AscendingOrder)
+            self.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
     
     def setEditable(self, editable=True):
         self.editable = editable
@@ -368,7 +368,7 @@ class TableWidget(QtGui.QTableWidget):
         self.contextMenu.popup(ev.globalPos())
         
     def keyPressEvent(self, ev):
-        if ev.matches(QtGui.QKeySequence.Copy):
+        if ev.matches(QtGui.QKeySequence.StandardKey.Copy):
             ev.accept()
             self.copySel()
         else:
@@ -386,7 +386,7 @@ class TableWidgetItem(QtGui.QTableWidgetItem):
         self._defaultFormat = '%0.3g'
         self.sortMode = 'value'
         self.index = index
-        flags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+        flags = QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled
         self.setFlags(flags)
         self.setValue(val)
         self.setFormat(format)
@@ -396,9 +396,9 @@ class TableWidgetItem(QtGui.QTableWidgetItem):
         Set whether this item is user-editable.
         """
         if editable:
-            self.setFlags(self.flags() | QtCore.Qt.ItemIsEditable)
+            self.setFlags(self.flags() | QtCore.Qt.ItemFlag.ItemIsEditable)
         else:
-            self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEditable)
+            self.setFlags(self.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
             
     def setSortMode(self, mode):
         """

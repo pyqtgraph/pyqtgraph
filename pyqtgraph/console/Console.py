@@ -230,7 +230,7 @@ class ConsoleWidget(QtGui.QWidget):
             atBottom = scroll == sb.maximum()
             scrollToBottom = atBottom
 
-        self.output.moveCursor(QtGui.QTextCursor.End)
+        self.output.moveCursor(QtGui.QTextCursor.MoveOperation.End)
         if html:
             self.output.textCursor().insertHtml(strn)
         else:

@@ -27,4 +27,4 @@ w.setWindowTitle('pyqtgraph example: DateAxisItem')
 w.show()
 
 if __name__ == '__main__':
-    app.exec_()
+    pg.exec()

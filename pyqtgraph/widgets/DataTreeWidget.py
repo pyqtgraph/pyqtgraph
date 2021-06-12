@@ -21,7 +21,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
     """
     def __init__(self, parent=None, data=None):
         QtGui.QTreeWidget.__init__(self, parent)
-        self.setVerticalScrollMode(self.ScrollPerPixel)
+        self.setVerticalScrollMode(self.ScrollMode.ScrollPerPixel)
         self.setData(data)
         self.setColumnCount(3)
         self.setHeaderLabels(['key / index', 'type', 'value'])

@@ -51,7 +51,7 @@ class Graph(pg.GraphItem):
         
         
     def mouseDragEvent(self, ev):
-        if ev.button() != QtCore.Qt.LeftButton:
+        if ev.button() != QtCore.Qt.MouseButton.LeftButton:
             ev.ignore()
             return
         
@@ -130,4 +130,4 @@ g.setData(pos=pos, adj=adj, pen=lines, size=1, symbol=symbols, pxMode=False, tex
 
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

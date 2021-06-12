@@ -247,7 +247,7 @@ class TargetItem(UIGraphicsItem):
         return dti.map(tr.map(self._path))
 
     def mouseDragEvent(self, ev):
-        if not self.movable or int(ev.button() & QtCore.Qt.LeftButton) == 0:
+        if not self.movable or ev.button() != QtCore.Qt.MouseButton.LeftButton:
             return
         ev.accept()
         if ev.isStart():
@@ -263,7 +263,7 @@ class TargetItem(UIGraphicsItem):
             self.sigPositionChangeFinished.emit(self)
 
     def mouseClickEvent(self, ev):
-        if self.moving and ev.button() == QtCore.Qt.RightButton:
+        if self.moving and ev.button() == QtCore.Qt.MouseButton.RightButton:
             ev.accept()
             self.moving = False
             self.sigPositionChanged.emit(self)
@@ -283,7 +283,7 @@ class TargetItem(UIGraphicsItem):
         self.update()
 
     def hoverEvent(self, ev):
-        if self.movable and (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
+        if self.movable and (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
             self.setMouseHover(True)
         else:
             self.setMouseHover(False)
@@ -459,7 +459,7 @@ class TargetLabel(TextItem):
 
     def mouseDragEvent(self, ev):
         targetItem = self.parentItem()
-        if not targetItem.movable or int(ev.button() & QtCore.Qt.LeftButton) == 0:
+        if not targetItem.movable or ev.button() != QtCore.Qt.MouseButton.LeftButton:
             return
         ev.accept()
         if ev.isStart():

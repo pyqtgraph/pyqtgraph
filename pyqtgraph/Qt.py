@@ -11,7 +11,6 @@ This module exists to smooth out some of the differences between PySide and PyQt
 """
 
 import os, sys, re, time, subprocess, warnings
-import enum
 
 from .python2_3 import asUnicode
 
@@ -391,7 +390,6 @@ USE_PYSIDE = QT_LIB == PYSIDE
 USE_PYQT4 = QT_LIB == PYQT4
 USE_PYQT5 = QT_LIB == PYQT5
 
-    
 ## Make sure we have Qt >= 5.12
 versionReq = [5, 12]
 m = re.match(r'(\d+)\.(\d+).*', QtVersion)
@@ -439,3 +437,9 @@ def mkQApp(name=None):
     if name is not None:
         QAPP.setApplicationName(name)
     return QAPP
+
+
+# exec() is used within _loadUiType, so we define as exec_() here and rename in pg namespace
+def exec_():
+    app = mkQApp()
+    return app.exec() if hasattr(app, 'exec') else app.exec_()

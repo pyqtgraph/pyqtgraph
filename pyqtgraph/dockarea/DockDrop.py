@@ -91,7 +91,7 @@ class DropAreaOverlay(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         self.dropArea = None
         self.hide()
-        self.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         
     def setDropArea(self, area):
         self.dropArea = area
