@@ -120,7 +120,7 @@ def renderSymbol(symbol, size, pen, brush, device=None):
     penPxWidth = max(math.ceil(pen.widthF()), 1)
     if device is None:
         device = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth), QtGui.QImage.Format.Format_ARGB32)
-        device.fill(0)
+        device.fill(QtCore.Qt.GlobalColor.transparent)
     p = QtGui.QPainter(device)
     try:
         p.setRenderHint(p.RenderHint.Antialiasing)
