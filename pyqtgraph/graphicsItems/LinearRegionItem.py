@@ -68,14 +68,10 @@ class LinearRegionItem(GraphicsObject):
                         * None means that no attempt is made to handle swapped line 
                           positions.
                         The default is "sort".
-
-        clipItem        An item whose boundingRect will be used to clip the
-                        rectangle of the marked region. The clipItem must
-                        share the same ViewBox. This is useful when a
-                        LinearRegionItem is added on top of an ImageItem,
-                        and the visual region should not extend beyond the
-                        ImageItem.
-
+        clipItem        An item whose bounds will be used to set the region bounds. This is
+                        useful when a LinearRegionItem is added on top of an
+                        :class:`~pyqtgraph.ImageItem` or :class:`~pyqtgraph.PlotItem`
+                        and the visual region should not extend beyond its range.
         ==============  =====================================================================
         """
         
@@ -209,10 +205,9 @@ class LinearRegionItem(GraphicsObject):
         self.update()
 
     def setClipItem(self, item=None):
-        """
-        Set an item, the boundingRect of which will be used to clip the
-        rectangle range. The item must share the same ViewBox as this
-        instance. If item is None, then no clipping is performed.
+        """Set an item to which the region is bounded.
+
+        If ``None``, then no clipping is performed.
         """
         self.clipItem = item
         self._clipItemBoundsCache = None
