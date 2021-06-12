@@ -132,9 +132,6 @@ class LinearRegionItem(GraphicsObject):
         self.setHoverBrush(hoverBrush)
         
         self.setMovable(movable)
-
-        self.clipItem = None
-        self._clipItemBoundsCache = None
         self.setClipItem(clipItem)
 
     def getRegion(self):
