@@ -61,12 +61,14 @@ class LinearRegionItem(GraphicsObject):
                         view.
         swapMode        Sets the behavior of the region when the lines are moved such that
                         their order reverses:
+
                         * "block" means the user cannot drag one line past the other
                         * "push" causes both lines to be moved if one would cross the other
                         * "sort" means that lines may trade places, but the output of
                           getRegion always gives the line positions in ascending order.
                         * None means that no attempt is made to handle swapped line 
                           positions.
+
                         The default is "sort".
         clipItem        An item whose bounds will be used to set the region bounds. This is
                         useful when a LinearRegionItem is added on top of an
