@@ -305,15 +305,15 @@ class StyleRegistry(QtCore.QObject):
         self.registered_objects[registration] = (weakref.ref(obj), desc)
         fin = weakref.finalize(obj, self.unregister, registration)
         fin.atexit = False # no need to clean up registry on program exit
-        # print('registering', registration, '(',str(obj),'):',str(desc))
+        print('registering', registration, '(',str(obj),'):',str(desc))
 
     def unregister(self, registration):
         """
         Removes obj (QColor, QPen or QBrush) from the registry, usually called by finalize on deletion
         """
-        # obj, desc = self.registered_objects[registration]
-        # print('unregistering', registration, '(',str(obj),'):',str(desc))
-        # del obj, desc
+        obj, desc = self.registered_objects[registration]
+        print('unregistering', registration, '(',str(obj),'):',str(desc))
+        del obj, desc
         # 
         # if registration in self.registered_objects:
         del self.registered_objects[registration]
