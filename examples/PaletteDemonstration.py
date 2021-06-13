@@ -168,4 +168,4 @@ main_window = MainWindow()
 
 ## Start Qt event loop
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

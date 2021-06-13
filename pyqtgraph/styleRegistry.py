@@ -89,6 +89,9 @@ class StyleRegistry(QtCore.QObject):
         self.color_dic.update( DEFAULT_COLORS)
         # set of objects that are registered for update on palette change:
         self.registered_objects = {} # stores registration: (weakref(object), descriptor), deletion handled by weakref.finalize
+        # DEBUG ----------------------------
+        self.unregistered_objects = {} # set of registrations that have already been deleted.
+        # ----------------------------------
         self.color_cache = weakref.WeakValueDictionary() # keeps a cache of QColor objects, key: (name, alpha)
         self.pen_cache   = weakref.WeakValueDictionary() # keeps a cache of QPen   objects, key: (name, width, alpha)
         self.brush_cache = weakref.WeakValueDictionary() # keeps a cache of QBrush objects, key: (name, alpha)
@@ -297,11 +300,20 @@ class StyleRegistry(QtCore.QObject):
         """
         Registers obj (QColor, QPen or QBrush) to be updated according to the descriptor on palette change
         """
-        if hasattr(obj,'registration'):
+        if hasattr(obj,'colorRegistration'):
             registration = obj.registration
         else:
             registration = next(StyleRegistry._registrationGenerator)
             obj.registration = registration # patch in attribute
+        if registration in self.registered_objects:
+            print('re-registering',registration,' objects is:', obj, 'was:', self.registered_objects[registration] )
+            raise RuntimeError('re-registering object')
+            quit()
+        # if registration > 0:
+        #     if (registration-1) not in self.registered_objects:
+        #         print('previous registration',registration-1,'is not in list of registered objects!')
+        #         raise RuntimeError('re-registering object')
+        #         quit()
         self.registered_objects[registration] = (weakref.ref(obj), desc)
         fin = weakref.finalize(obj, self.unregister, registration)
         fin.atexit = False # no need to clean up registry on program exit
@@ -311,9 +323,16 @@ class StyleRegistry(QtCore.QObject):
         """
         Removes obj (QColor, QPen or QBrush) from the registry, usually called by finalize on deletion
         """
+        if registration in self.unregistered_objects:
+            print('unregistering',registration,', which was previous unregistered!')
+            raise RuntimeError('double un-registering object')
+            quit()
+            
         obj, desc = self.registered_objects[registration]
         print('unregistering', registration, '(',str(obj),'):',str(desc))
         del obj, desc
+        
+        self.unregistered_objects[registration] = True
         # 
         # if registration in self.registered_objects:
         del self.registered_objects[registration]

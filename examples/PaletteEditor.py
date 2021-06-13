@@ -381,7 +381,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for field_list in color_fields:
             key, pos, text = field_list
             lab  = QtWidgets.QLabel(text)
-            lab.setAlignment(QtCore.Qt.AlignCenter)
+            lab.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             edt = QtWidgets.QLineEdit()
             edt.editingFinished.connect(self.handle_color_update)
             row = row_idx + pos[0]
@@ -418,4 +418,4 @@ main_window = MainWindow()
 
 ## Start Qt event loop
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

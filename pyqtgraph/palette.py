@@ -328,7 +328,7 @@ class Palette(object):
         app = QtWidgets.QApplication.instance()
         if app is None: return None        
         qPalette = app.palette()
-        col_grp = QtGui.QPalette.Active
+        col_grp = QtGui.QPalette.ColorGroup.Active
         colors = {}
         for key, alpha, col_role in (
             ('gr_bg' , None, QtGui.QPalette.ColorRole.Base),       # background color for e.g. text entry
