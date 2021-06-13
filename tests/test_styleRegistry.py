@@ -17,9 +17,10 @@ def test_registration():
 def test_specification_formats():
     next_reg = None
     reg = pg.functions.styleRegistry()
-    reg.registered_objects = {} # force-clear registry
+    initial_length = len(reg.registered_objects)
+    # reg.registered_objects = {} # force-clear registry
     obj_list = [] # start building a list of test objects
-    assert len(reg.registered_objects) == len(obj_list) # registry should be empty
+    assert len(reg.registered_objects)-initial_length == len(obj_list) # registry should be empty
     args = ( # Do we expect a registered pen (or 'None'?) for this parameter?
         ( True, ('p0', 1, 255) ),
         ( True, ('p1', None, 192) ),
@@ -84,7 +85,7 @@ def test_specification_formats():
         else:
             assert not hasattr(color,'registration')
         del color
-    assert len(reg.registered_objects) == len(obj_list)
+    assert len(reg.registered_objects)-initial_length == len(obj_list)
 
     new_colors = (
         ('p0', QtGui.QColor('#000001') ),
@@ -104,12 +105,12 @@ def test_specification_formats():
     del obj
     del qcol # do not keep extra references
 
-    assert len(reg.registered_objects) == len(obj_list)
+    assert len(reg.registered_objects)-initial_length == len(obj_list)
     obj_list = [] # delete all objects
     print('remaining registered objects:', reg.registered_objects )
     assert (
-        len(reg.registered_objects) == 0 or # All cleared by finalize calls, except that 
-        len(reg.registered_objects) == 1    # PySide seems to be left with one surviving reference
+        len(reg.registered_objects)-initial_length == 0 or # All cleared by finalize calls, except that 
+        len(reg.registered_objects)-initial_length == 1    # PySide seems to be left with one surviving reference
     )
 
 def test_mkColor_edge_case_specifications():

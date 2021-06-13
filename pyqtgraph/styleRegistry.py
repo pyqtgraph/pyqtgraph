@@ -5,6 +5,7 @@ import weakref
 import itertools
 import collections
 import warnings
+import time
 
 __all__ = ['StyleRegistry']
 
@@ -89,9 +90,8 @@ class StyleRegistry(QtCore.QObject):
         self.color_dic.update( DEFAULT_COLORS)
         # set of objects that are registered for update on palette change:
         self.registered_objects = {} # stores registration: (weakref(object), descriptor), deletion handled by weakref.finalize
-        # DEBUG ----------------------------
-        self.unregistered_objects = {} # set of registrations that have already been deleted.
-        # ----------------------------------
+        # DEBUG
+        # self.registered_history = {} # stores all previous registrations for debugging
         self.color_cache = weakref.WeakValueDictionary() # keeps a cache of QColor objects, key: (name, alpha)
         self.pen_cache   = weakref.WeakValueDictionary() # keeps a cache of QPen   objects, key: (name, width, alpha)
         self.brush_cache = weakref.WeakValueDictionary() # keeps a cache of QBrush objects, key: (name, alpha)
@@ -302,40 +302,35 @@ class StyleRegistry(QtCore.QObject):
         """
         if hasattr(obj,'colorRegistration'):
             registration = obj.registration
+            if registration in self.registered_objects:
+                # if this object is already registered, we should not try to add another finalize call.
+                return
         else:
             registration = next(StyleRegistry._registrationGenerator)
             obj.registration = registration # patch in attribute
-        if registration in self.registered_objects:
-            print('re-registering',registration,' objects is:', obj, 'was:', self.registered_objects[registration] )
-            raise RuntimeError('re-registering object')
-            quit()
-        # if registration > 0:
-        #     if (registration-1) not in self.registered_objects:
-        #         print('previous registration',registration-1,'is not in list of registered objects!')
-        #         raise RuntimeError('re-registering object')
-        #         quit()
         self.registered_objects[registration] = (weakref.ref(obj), desc)
-        fin = weakref.finalize(obj, self.unregister, registration)
+        # DEBUG:
+        # self.registered_history[registration] = (weakref.ref(obj), desc)
+        fin = weakref.finalize(obj, self.unregister, registration )
         fin.atexit = False # no need to clean up registry on program exit
-        print('registering', registration, '(',str(obj),'):',str(desc))
+        # DEBUG:
+        # print('registering', registration, '(',str(obj),'):',str(desc))
 
     def unregister(self, registration):
         """
         Removes obj (QColor, QPen or QBrush) from the registry, usually called by finalize on deletion
         """
-        if registration in self.unregistered_objects:
-            print('unregistering',registration,', which was previous unregistered!')
-            raise RuntimeError('double un-registering object')
-            quit()
-            
-        obj, desc = self.registered_objects[registration]
-        print('unregistering', registration, '(',str(obj),'):',str(desc))
+        obj, desc = self.registered_objects.pop(registration, (False, False))        
+        if obj is False:
+            # DEBUG:
+            # obj_hist, desc_hist = self.registered_history.get(registration, (False, False))
+            # if obj_hist is not False:
+            #     raise RuntimeError(f'Unregistered object {registration} already unregistered, previously registered as {obj_hist} ({desc_hist}).')
+            raise RuntimeError(f'Unregistered object {registration} unlisted.')
+
+        # DEBUG:
+        # print('unregistering', registration, '(',str(obj),'):',str(desc))
         del obj, desc
-        
-        self.unregistered_objects[registration] = True
-        # 
-        # if registration in self.registered_objects:
-        del self.registered_objects[registration]
 
     def colors(self):
         """ return current list of colors """
@@ -357,7 +352,7 @@ class StyleRegistry(QtCore.QObject):
             self.color_dic.clear()
             self.color_dic.update(colors)
 
-        # notifies registerd color objects of new assignments:
+        # notifies registered color objects of new assignments:
         for ref, desc in self.registered_objects.values():
             # ref, desc = self.registered_objects[key]
             obj = ref()
