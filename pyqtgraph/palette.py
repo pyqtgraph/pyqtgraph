@@ -317,12 +317,12 @@ class Palette(object):
         """
         Retrieves the current Qt 'active' palette and extracts the following colors:
         =====================================  ============================================================================
-        'gr_fg','gr_txt' from QPalette.Text    (foreground color used with Base)
-        'gr_bg'  from QPalette.Base            (background color for e.g. text entry widgets)
-        'gr_wdw' from QPalette.Window          (a general background color)
-        'gr_reg' from QPalette.AlternateBase   (alternating row background color)
-        'gr_acc' from QPalette.Link            (color used for unvisited hyperlinks)
-        'gr_hlt' from QPalette.Highlight       (color to indicate a selected item)
+        'gr_fg','gr_txt' from ColorRole.Text   (foreground color used with Base)
+        'gr_bg'  from ColorRole.Base           (background color for e.g. text entry widgets)
+        'gr_wdw' from ColorRole.Window         (a general background color)
+        'gr_reg' from ColorRole.AlternateBase  (alternating row background color)
+        'gr_acc' from ColorRole.Link           (color used for unvisited hyperlinks)
+        'gr_hlt' from ColorRole.Highlight      (color to indicate a selected item)
         =====================================  ============================================================================
         """
         app = QtWidgets.QApplication.instance()
@@ -331,32 +331,34 @@ class Palette(object):
         col_grp = QtGui.QPalette.Active
         colors = {}
         for key, alpha, col_role in (
-            ('gr_bg' , None, QtGui.QPalette.Base),       # background color for e.g. text entry
-            ('gr_fg' , None, QtGui.QPalette.WindowText), # overall foreground text color
-            ('gr_txt', None, QtGui.QPalette.Text),       # foreground color used with Base
-            ('gr_reg',  128, QtGui.QPalette.AlternateBase), # alternating row background color
-            ('gr_acc', None, QtGui.QPalette.Link),       # color of unvisited hyperlink
-            # ('gr_reg',  128, QtGui.QPalette.Highlight), # alternating row background color
-            # ('gr_acc', None, QtGui.QPalette.Highlight),       # color of unvisited hyperlink
-            ('gr_hlt', None, QtGui.QPalette.Highlight),  # color to indicate a selected item
-            ('ui_wind', None, QtGui.QPalette.Window),    # a general background color
-            ('ui_text', None, QtGui.QPalette.WindowText) #  overall foreground text color
+            ('gr_bg' , None, QtGui.QPalette.ColorRole.Base),       # background color for e.g. text entry
+            ('gr_fg' , None, QtGui.QPalette.ColorRole.WindowText), # overall foreground text color
+            ('gr_txt', None, QtGui.QPalette.ColorRole.Text),       # foreground color used with Base
+            ('gr_reg',  128, QtGui.QPalette.ColorRole.AlternateBase), # alternating row background color
+            ('gr_acc', None, QtGui.QPalette.ColorRole.Link),       # color of unvisited hyperlink
+            # ('gr_reg',  128, QtGui.QPalette.ColorRole.Highlight), # alternating row background color
+            # ('gr_acc', None, QtGui.QPalette.ColorRole.Highlight),       # color of unvisited hyperlink
+            ('gr_hlt', None, QtGui.QPalette.ColorRole.Highlight),  # color to indicate a selected item
+            ('ui_wind', None, QtGui.QPalette.ColorRole.Window),    # a general background color
+            ('ui_text', None, QtGui.QPalette.ColorRole.WindowText) #  overall foreground text color
         ):
             qcol = qPalette.color(col_grp, col_role)
             if alpha is not None: qcol.setAlpha(alpha)
             colors[key] = qcol
         self.add(colors)        
         colors = {
-            'b': QtCore.Qt.blue  , 'c': QtCore.Qt.cyan, 'g': QtCore.Qt.green  , 
-            'y': QtCore.Qt.yellow, 'r': QtCore.Qt.red , 'm': QtCore.Qt.magenta,
-            'w': QtCore.Qt.white , 's': QtCore.Qt.gray, 'k': QtCore.Qt.black  ,
-            'l': QtCore.Qt.lightGray, 'd': QtCore.Qt.darkGray
+            'b': QtCore.Qt.GlobalColor.blue , 'c': QtCore.Qt.GlobalColor.cyan, 
+            'g': QtCore.Qt.GlobalColor.green, 'y': QtCore.Qt.GlobalColor.yellow,
+            'r': QtCore.Qt.GlobalColor.red  , 'm': QtCore.Qt.GlobalColor.magenta,
+            'w': QtCore.Qt.GlobalColor.white, 's': QtCore.Qt.GlobalColor.gray,
+            'k': QtCore.Qt.GlobalColor.black, 'l': QtCore.Qt.GlobalColor.lightGray,
+            'd': QtCore.Qt.GlobalColor.darkGray
         }
         if not self.dark: # darken some colors for light mode
-            colors['c'] = QtCore.Qt.darkCyan
-            colors['g'] = QtCore.Qt.darkGreen
-            colors['y'] = QtCore.Qt.darkYellow
-            colors['m'] = QtCore.Qt.darkMagenta
+            colors['c'] = QtCore.Qt.GlobalColor.darkCyan
+            colors['g'] = QtCore.Qt.GlobalColor.darkGreen
+            colors['y'] = QtCore.Qt.GlobalColor.darkYellow
+            colors['m'] = QtCore.Qt.GlobalColor.darkMagenta
         self.add(colors)
         colors = { 
             'p'+str(idx) : name 
