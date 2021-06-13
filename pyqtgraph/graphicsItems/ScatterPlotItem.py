@@ -171,6 +171,29 @@ def _mkBrush(*args, **kwargs):
         return fn.mkBrush(*args, **kwargs)
 
 
+class PixmapFragments:
+    def __init__(self):
+        self._array = np.empty((0, 10), dtype=np.float64)
+        self.ptrs = None
+
+    def array(self, size):
+        if size > self._array.shape[0]:
+            self._array = np.empty((size + 16, 10), dtype=np.float64)
+            if QT_LIB.startswith('PyQt'):
+                self.ptrs = list(map(sip.wrapinstance,
+                    itertools.count(self._array.ctypes.data, self._array.strides[0]),
+                    itertools.repeat(QtGui.QPainter.PixmapFragment, self._array.shape[0])))
+            else:
+                self.ptrs = wrapInstance(self._array.ctypes.data, QtGui.QPainter.PixmapFragment)
+        return self._array[:size]
+
+    def draw(self, painter, size, pixmap):
+        if QT_LIB.startswith('PyQt'):
+            painter.drawPixmapFragments(self.ptrs[:size], pixmap)
+        else:
+            painter.drawPixmapFragments(self.ptrs, size, pixmap)
+
+
 class SymbolAtlas(object):
     """
     Used to efficiently construct a single QPixmap containing all rendered symbols
@@ -1116,22 +1139,16 @@ class ScatterPlotItem(GraphicsObject):
                     xy = pts[:, viewMask].T.astype(int)
                     sr = self.data['sourceRect'][viewMask]
 
-                    frags = np.empty((sr.size, 10), dtype=np.float64)
+                    if not hasattr(self, 'pixmap_fragments'):
+                        self.pixmap_fragments = PixmapFragments()
+
+                    frags = self.pixmap_fragments.array(sr.size)
                     frags[:, 0:2] = xy
                     frags[:, 2:6] = np.frombuffer(sr, dtype=int).reshape((-1, 4)) # sx, sy, sw, sh
                     frags[:, 6:10] = [1.0, 1.0, 0.0, 1.0]   # scaleX, scaleY, rotation, opacity
 
-                    if QT_LIB.startswith('PyQt'):
-                        frags_lst = list(map(sip.wrapinstance,
-                            itertools.count(frags.ctypes.data, frags.strides[0]),
-                            itertools.repeat(QtGui.QPainter.PixmapFragment, frags.shape[0])))
-                        draw_args = frags_lst, pm
-                    else:
-                        frags_ptr = wrapInstance(frags.ctypes.data, QtGui.QPainter.PixmapFragment)
-                        draw_args = frags_ptr, frags.shape[0], pm
-
                     profiler('prep')
-                    p.drawPixmapFragments(*draw_args)
+                    self.pixmap_fragments.draw(p, sr.size, pm)
                     profiler('draw')
                 elif _USE_QRECT:
                     # Map pts to (x, y) coordinates of targetRect
