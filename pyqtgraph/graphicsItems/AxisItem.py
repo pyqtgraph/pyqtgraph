@@ -100,12 +100,12 @@ class AxisItem(GraphicsWidget):
         self.setRange(0, 1)
 
         if pen is None:
-            self.setPen()
+            self.setPen('gr_fg') # default foreground color
         else:
             self.setPen(pen)
 
         if textPen is None:
-            self.setTextPen()
+            self.setTextPen('gr_txt') # default text color
         else:
             self.setTextPen(pen)
 
@@ -158,7 +158,7 @@ class AxisItem(GraphicsWidget):
         tickAlpha           (float or int or None) If None, pyqtgraph will draw the
                             ticks with the alpha it deems appropriate.  Otherwise, 
                             the alpha will be fixed at the value passed.  With int, 
-                            accepted values are [0..255].  With vaule of type
+                            accepted values are [0..255].  With value of type
                             float, accepted values are from [0..1].
         =================== =======================================================
 
@@ -418,7 +418,8 @@ class AxisItem(GraphicsWidget):
     def pen(self):
         if self._pen is None:
             return fn.mkPen(getConfigOption('foreground'))
-        return fn.mkPen(self._pen)
+        return self._pen
+        # return fn.mkPen(self._pen)
 
     def setPen(self, *args, **kwargs):
         """
@@ -448,7 +449,8 @@ class AxisItem(GraphicsWidget):
         if args or kwargs:
             self._textPen = fn.mkPen(*args, **kwargs)
         else:
-            self._textPen = fn.mkPen(getConfigOption('foreground'))
+            # self._textPen = fn.mkPen(getConfigOption('foreground'))
+            self._textPen = fn.mkPen('gr_fg')
         self.labelStyle['color'] = '#' + fn.colorStr(self._textPen.color())[:6]
         self._updateLabel()
 
@@ -973,9 +975,9 @@ class AxisItem(GraphicsWidget):
                 
             lineAlpha = self.style["tickAlpha"]
             if lineAlpha is None:
-                lineAlpha = 255 / (i+1)
-                if self.grid is not False:
-                    lineAlpha *= self.grid/255. * fn.clip_scalar((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
+                lineAlpha = (255 * 2) // (i+2) #  (was 1/(i+1) falling too quickly over first steps
+                # if self.grid is not False:
+                #     lineAlpha *= self.grid/255. * fn.clip_scalar((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
             elif isinstance(lineAlpha, float):
                 lineAlpha *= 255
                 lineAlpha = max(0, int(round(lineAlpha)))
@@ -985,7 +987,12 @@ class AxisItem(GraphicsWidget):
                     raise ValueError("lineAlpha should be [0..255]")
             else:
                 raise TypeError("Line Alpha should be of type None, float or int")
-
+            
+            # tickColor.setAlpha(int(lineAlpha)) # independent copy of color
+            tickPen = QtGui.QPen( self.pen() )
+            tickColor = tickPen.color()
+            tickColor.setAlpha( int(lineAlpha) )
+            tickPen.setColor( tickColor )
             for v in ticks:
                 ## determine actual position to draw this tick
                 x = (v * xScale) - offset
@@ -1000,13 +1007,8 @@ class AxisItem(GraphicsWidget):
                 p2[axis] = tickStop
                 if self.grid is False:
                     p2[axis] += tickLength*tickDir
-                tickPen = self.pen()
-                color = tickPen.color()
-                color.setAlpha(int(lineAlpha))
-                tickPen.setColor(color)
                 tickSpecs.append((tickPen, Point(p1), Point(p2)))
         profiler('compute ticks')
-
 
         if self.style['stopAxisAtTick'][0] is True:
             minTickPosition = min(map(min, tickPositions))
@@ -1025,7 +1027,6 @@ class AxisItem(GraphicsWidget):
                 stop = min(span[1].x(), maxTickPosition)
                 span[1].setX(stop)
         axisSpec = (self.pen(), span[0], span[1])
-
 
         textOffset = self.style['tickTextOffset'][axis]  ## spacing between axis and text
         #if self.style['autoExpandTextSpace'] is True:
@@ -1208,3 +1209,10 @@ class AxisItem(GraphicsWidget):
         if lv is None:
             return
         return lv.mouseClickEvent(event)
+        
+    def updateGraphStyle(self):
+        """ self.picture needs to be invalidated to initiate full redraw """
+        self.picture = None
+        self.labelStyle['color'] = self._textPen.color().name()
+        self._updateLabel()
+        super().updateGraphStyle()

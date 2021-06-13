@@ -115,13 +115,15 @@ class LinearRegionItem(GraphicsObject):
         self.lines[1].sigPositionChanged.connect(self._line1Moved)
             
         if brush is None:
-            brush = QtGui.QBrush(QtGui.QColor(0, 0, 255, 50))
+            # brush = QtGui.QBrush(QtGui.QColor(0, 0, 255, 50))
+            brush = ('gr_reg',128)
         self.setBrush(brush)
         
         if hoverBrush is None:
-            c = self.brush.color()
-            c.setAlpha(min(c.alpha() * 2, 255))
-            hoverBrush = fn.mkBrush(c)
+            hoverBrush = ('gr_reg')
+            # c = self.brush.color()
+            # c.setAlpha(min(c.alpha() * 2, 255))
+            # hoverBrush = fn.mkBrush(c)
         self.setHoverBrush(hoverBrush)
         
         self.setMovable(movable)

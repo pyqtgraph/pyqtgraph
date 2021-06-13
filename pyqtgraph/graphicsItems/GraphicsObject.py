@@ -2,8 +2,11 @@ from ..Qt import QtGui, QtCore, QT_LIB
 if QT_LIB.startswith('PyQt'):
     from ..Qt import sip
 from .GraphicsItem import GraphicsItem
+from .. import functions as fn
 
 __all__ = ['GraphicsObject']
+DEBUG_REDRAW = False
+    
 class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
     """
     **Bases:** :class:`GraphicsItem <pyqtgraph.graphicsItems.GraphicsItem>`, :class:`QtGui.QGraphicsObject`
@@ -16,6 +19,7 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
         QtGui.QGraphicsObject.__init__(self, *args)
         self.setFlag(self.GraphicsItemFlag.ItemSendsGeometryChanges)
         GraphicsItem.__init__(self)
+        fn.STYLE_REGISTRY.graphStyleChanged.connect(self.updateGraphStyle)
         
     def itemChange(self, change, value):
         ret = super().itemChange(change, value)
@@ -37,3 +41,10 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
             ret = sip.cast(ret, QtGui.QGraphicsItem)
 
         return ret
+
+    # Slot for graphStyleChanged signal emitted by StyleRegistry, omitted decorator: @QtCore.Slot()
+    def updateGraphStyle(self):
+        """ called to trigger redraw after all registered colors have been updated """
+        # self._boundingRect = None
+        self.update()
+        if DEBUG_REDRAW: print('  GraphicsObject: redraw after style change:', self)

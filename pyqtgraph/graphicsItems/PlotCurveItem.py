@@ -556,7 +556,6 @@ class PlotCurveItem(GraphicsObject):
             cp = self.opts['pen']
         else:
             cp = fn.mkPen(self.opts['pen'])
-
         p.setPen(cp)
         if self.opts['fillOutline'] and self.fillPath is not None:
             p.drawPath(self.fillPath)

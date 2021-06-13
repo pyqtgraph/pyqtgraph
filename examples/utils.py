@@ -1,7 +1,6 @@
 from collections import OrderedDict
 from argparse import Namespace
 
-
 examples = OrderedDict([
     ('Command-line usage', 'CLIexample.py'),
     ('Basic Plotting', Namespace(filename='Plotting.py', recommended=True)),
@@ -32,7 +31,9 @@ examples = OrderedDict([
     ('Colors', OrderedDict([
         ('Color Maps', 'colorMaps.py'),
         ('Color Map Linearization', 'colorMapsLinearized.py'),
-        ('Color Gradient Plots', 'ColorGradientPlots.py')
+        ('Color Gradient Plots', 'ColorGradientPlots.py'),
+        ('Palette demonstration','PaletteDemonstration.py'),
+        ('Palette editor','PaletteEditor.py'),
     ])),
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),

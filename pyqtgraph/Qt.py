@@ -316,6 +316,7 @@ if QT_LIB in [PYQT5, PYQT6]:
     loadUiType = uic.loadUiType
 
     QtCore.Signal = QtCore.pyqtSignal
+    # QtCore.Slot   = QtCore.pyqtSlot # The current policy is to avoid slot decorators.
 
 # USE_XXX variables are deprecated
 USE_PYSIDE = QT_LIB == PYSIDE

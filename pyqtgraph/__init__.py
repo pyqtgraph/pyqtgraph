@@ -45,7 +45,7 @@ CONFIG_OPTIONS = {
     'leftButtonPan': True,  ## if false, left button drags a rubber band for zooming in viewbox
     # foreground/background take any arguments to the 'mkColor' in /pyqtgraph/functions.py
     'foreground': 'd',  ## default foreground color for axes, labels, etc.
-    'background': 'k',        ## default background for GraphicsWidget
+    'background': 'k',        ## default background for GraphicsView
     'antialias': False,
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
@@ -60,21 +60,26 @@ CONFIG_OPTIONS = {
     'useNumba': False, # When True, use numba
 } 
 
+# def setConfigOption(opt, value):
+#     if opt not in CONFIG_OPTIONS:
+#         raise KeyError('Unknown configuration option "%s"' % opt)
+#     if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
+#         raise ValueError('imageAxisOrder must be either "row-major" or "col-major"')
+#     # setConfigOption should be relocated to have access to functions.py
+#     # Then background / foreground updates can be intercepted and applied to the palette
+#     if opt == 'background':
+#         functions.Colors['gr_bg'] = functions.Colors[value]
+#     if opt == 'foreground':
+#         functions.Colors['gr_fg'] = functions.Colors[value]
+#     CONFIG_OPTIONS[opt] = value
 
-def setConfigOption(opt, value):
-    if opt not in CONFIG_OPTIONS:
-        raise KeyError('Unknown configuration option "%s"' % opt)
-    if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
-        raise ValueError('imageAxisOrder must be either "row-major" or "col-major"')
-    CONFIG_OPTIONS[opt] = value
-
-def setConfigOptions(**opts):
-    """Set global configuration options. 
+# def setConfigOptions(**opts):
+#     """Set global configuration options. 
     
-    Each keyword argument sets one global option. 
-    """
-    for k,v in opts.items():
-        setConfigOption(k, v)
+#     Each keyword argument sets one global option. 
+#     """
+#     for k,v in opts.items():
+#         setConfigOption(k, v)
 
 def getConfigOption(opt):
     """Return the value of a single global configuration option.
@@ -279,6 +284,38 @@ from .colormap import *
 from .ptime import time
 from .Qt import isQObjectAlive
 from .ThreadsafeTimer import *
+from .palette import *
+from . import styleRegistry
+
+
+def setConfigOption(opt, value):
+    if opt not in CONFIG_OPTIONS:
+        raise KeyError('Unknown configuration option "%s"' % opt)
+    if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
+        raise ValueError('imageAxisOrder must be either "row-major" or "col-major"')
+
+    # Intercept background / foreground updates and manually apply them to the palette:
+    if opt in ('background', 'foreground'):
+        color_dict = functions.STYLE_REGISTRY.colors()
+        if value in color_dict:
+            qcol = color_dict[value]
+        else:
+            qcol = functions.mkColor(value)
+        if opt == 'background':
+            color_dict['gr_bg'] = qcol
+        elif opt == 'foreground':
+            color_dict['gr_fg'] = qcol
+        functions.STYLE_REGISTRY.redefinePalette(colors=None)
+
+    CONFIG_OPTIONS[opt] = value
+
+def setConfigOptions(**opts):
+    """Set global configuration options. 
+    
+    Each keyword argument sets one global option. 
+    """
+    for k,v in opts.items():
+        setConfigOption(k, v)
 
 
 ##############################################################

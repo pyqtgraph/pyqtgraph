@@ -22,7 +22,6 @@ from ..python2_3 import basestring
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
 
-
 # When pxMode=True for ScatterPlotItem, QPainter.drawPixmap is used for drawing, which
 # has multiple type signatures. One takes int coordinates of source and target
 # rectangles, and another takes QRectF objects. The latter approach has the overhead of
@@ -158,6 +157,8 @@ def _mkBrush(*args, **kwargs):
     sole argument. This is used to avoid unnecessary cache misses in SymbolAtlas which
     uses the QBrush object id in its key.
     """
+    # Comment: This should really become standard behaviour in mkBrush.
+    # It is necessary to work with NamedColor in any case.
     if len(args) == 1 and isinstance(args[0], QtGui.QBrush):
         return args[0]
     else:
@@ -264,6 +265,7 @@ class SymbolAtlas(object):
         images = []
         data = []
         for key, style in styles.items():
+            # print('\nrender:', style[2].color().name(), style[3].color().name(), style)
             img = renderSymbol(*style)
             arr = fn.imageToArray(img, copy=False, transpose=False)
             images.append(img)  # keep these to delay garbage collection
@@ -422,8 +424,8 @@ class ScatterPlotItem(GraphicsObject):
             'name': None,
             'symbol': 'o',
             'size': 7,
-            'pen': fn.mkPen(getConfigOption('foreground')),
-            'brush': fn.mkBrush(100, 100, 150),
+            'pen': fn.mkPen('gr_fg'), # getConfigOption('foreground')),
+            'brush': fn.mkBrush(('gr_fg',128)), # (100, 100, 150),
             'hoverable': False,
             'tip': 'x: {x:.3g}\ny: {y:.3g}\ndata={data}'.format,
         }
@@ -496,7 +498,6 @@ class ScatterPlotItem(GraphicsObject):
         Add new points to the scatter plot.
         Arguments are the same as setData()
         """
-
         ## deal with non-keyword arguments
         if len(args) == 1:
             kargs['spots'] = args[0]
@@ -1267,6 +1268,14 @@ class ScatterPlotItem(GraphicsObject):
     def _hasHoverStyle(self):
         return any(self.opts['hover' + opt.title()] != _DEFAULT_STYLE[opt]
                    for opt in ['symbol', 'size', 'pen', 'brush'])
+                   
+    def updateGraphStyle(self):
+        """ overridden to trigger symbol atlas refresh """
+        self.fragmentAtlas.clear()
+        self.data['sourceRect'] = (0, 0, 0, 0)
+        self.updateSpots(self.data)
+        super().updateGraphStyle()
+
 
 
 class SpotItem(object):

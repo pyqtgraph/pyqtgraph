@@ -89,13 +89,15 @@ class InfiniteLine(GraphicsObject):
         self.setPos(pos)
 
         if pen is None:
-            pen = (200, 200, 100)
+            # pen = (200, 200, 100)
+            pen = ('gr_acc')
         self.setPen(pen)
         
         if hoverPen is None:
-            self.setHoverPen(color=(255,0,0), width=self.pen.width())
-        else:
-            self.setHoverPen(hoverPen)
+            width = self.pen.width()
+            hoverPen = ('gr_hlt', width)
+            # self.setHoverPen(color=(255,0,0), width=self.pen.width())
+        self.setHoverPen(hoverPen)
         
         self.span = span
         self.currentPen = self.pen

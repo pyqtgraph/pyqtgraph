@@ -89,7 +89,6 @@ class GraphicsView(QtGui.QGraphicsView):
         self.setResizeAnchor(QtGui.QGraphicsView.ViewportAnchor.AnchorViewCenter)
         self.setViewportUpdateMode(QtGui.QGraphicsView.ViewportUpdateMode.MinimalViewportUpdate)
         
-        
         self.lockedViewports = []
         self.lastMousePos = None
         self.setMouseTracking(True)
@@ -119,6 +118,10 @@ class GraphicsView(QtGui.QGraphicsView):
         self.scaleCenter = False  ## should scaling center around view center (True) or mouse click (False)
         self.clickAccepted = False
 
+        # connect to style update signals from StyleRegistry:
+        fn.STYLE_REGISTRY.graphStyleChanged.connect(self.updateGraphStyle)
+
+
     def setAntialiasing(self, aa):
         """Enable or disable default antialiasing.
         Note that this will only affect items that do not specify their own antialiasing options."""
@@ -133,11 +136,12 @@ class GraphicsView(QtGui.QGraphicsView):
         To use the defaults specified py pyqtgraph.setConfigOption, use background='default'.
         To make the background transparent, use background=None.
         """
-        self._background = background
         if background == 'default':
-            background = getConfigOption('background')
-        brush = fn.mkBrush(background)
-        self.setBackgroundBrush(brush)
+            # background = getConfigOption('background')
+            background = 'gr_bg' # default graphics background color
+        self._background = background # maintained for compatibility
+        self._bgBrush = fn.mkBrush(self._background)
+        self.setBackgroundBrush( self._bgBrush )
     
     def paintEvent(self, ev):
         self.scene().prepareForPaint()
@@ -146,8 +150,7 @@ class GraphicsView(QtGui.QGraphicsView):
     def render(self, *args, **kwds):
         self.scene().prepareForPaint()
         return super().render(*args, **kwds)
-        
-    
+
     def close(self):
         self.centralWidget = None
         self.scene().clear()
@@ -172,8 +175,7 @@ class GraphicsView(QtGui.QGraphicsView):
     def keyPressEvent(self, ev):
         self.scene().keyPressEvent(ev)  ## bypass view, hand event directly to scene
                                         ## (view likes to eat arrow key events)
-        
-        
+
     def setCentralItem(self, item):
         return self.setCentralWidget(item)
         
@@ -294,9 +296,8 @@ class GraphicsView(QtGui.QGraphicsView):
         range = QtCore.QRectF(tl.x(), tl.y(), w, h)
         GraphicsView.setRange(self, range, padding=0)
         self.sigScaleChanged.connect(image.setScaledMode)
-        
-        
-        
+
+
     def lockXRange(self, v1):
         if not v1 in self.lockedViewports:
             self.lockedViewports.append(v1)
@@ -397,3 +398,9 @@ class GraphicsView(QtGui.QGraphicsView):
         
     def dragEnterEvent(self, ev):
         ev.ignore()  ## not sure why, but for some reason this class likes to consume drag events
+
+    # Slot for graphStyleChanged signal emitted by StyleRegistry, omitted decorator: @QtCore.Slot()
+    def updateGraphStyle(self):
+        """ called to trigger redraw after all registered colors have been updated """
+        self.setBackgroundBrush( self._bgBrush )
+        # self.update()

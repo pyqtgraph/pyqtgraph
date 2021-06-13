@@ -14,6 +14,7 @@ import struct
 import sys
 import warnings
 import math
+import collections
 
 import numpy as np
 from .util.cupy_helper import getCupy
@@ -22,10 +23,18 @@ from .util.numba_helper import getNumbaFunctions
 from . import debug, reload
 from .Qt import QtGui, QtCore, QT_LIB, QtVersion
 from . import Qt
+from .styleRegistry import StyleRegistry
+
 from .metaarray import MetaArray
 from collections import OrderedDict
-from .python2_3 import asUnicode, basestring
+from .python2_3 import asUnicode
 
+# legacy color definitions:
+# StyleRegistry now maintains the primary list of palette colors,
+# accessible through functions.STYLE_REGISTRY.colors().
+# For backwards compatibility, this dictionary is updated to contain the same information.
+#
+# For the user, colors and color palettes are most conveniently accessed through a Palette object.
 Colors = {
     'b': QtGui.QColor(0,0,255,255),
     'g': QtGui.QColor(0,255,0,255),
@@ -37,8 +46,9 @@ Colors = {
     'w': QtGui.QColor(255,255,255,255),
     'd': QtGui.QColor(150,150,150,255),
     'l': QtGui.QColor(200,200,200,255),
-    's': QtGui.QColor(100,100,150,255),
-}  
+    's': QtGui.QColor(100,100,150,255)
+}
+STYLE_REGISTRY = StyleRegistry( Colors )
 
 SI_PREFIXES = asUnicode('yzafpnµm kMGTPEZY')
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
@@ -206,15 +216,19 @@ class Color(QtGui.QColor):
         
     def __getitem__(self, ind):
         return (self.red, self.green, self.blue, self.alpha)[ind]()
-        
-    
+
+def styleRegistry():
+    """ Returns the StyleRegistry object managing registered colors """
+    return STYLE_REGISTRY
+
 def mkColor(*args):
     """
-    Convenience function for constructing QColor from a variety of argument 
+    Convenience function for constructing QColor from a variety of argument
     types. Accepted arguments are:
     
-    ================ ================================================
-     'c'             one of: r, g, b, c, m, y, k, w
+    ================ ===========================================================
+     'name'          any color name specifed in active palette
+     ('name', alpha) color name from palette with specified opacity 0-255
      R, G, B, [A]    integers 0-255
      (R, G, B, [A])  tuple of integers 0-255
      float           greyscale, 0.0-1.0
@@ -225,146 +239,217 @@ def mkColor(*args):
      "#RRGGBB"       will be removed in 0.13
      "#RRGGBBAA"     
      QColor          QColor instance; makes a copy.
-    ================ ================================================
+    ================ ===========================================================
     """
-    err = 'Not sure how to make a color from "%s"' % str(args)
-    if len(args) == 1:
-        if isinstance(args[0], basestring):
-            c = args[0]
-            if len(c) == 1:
-                try:
-                    return Colors[c]
-                except KeyError:
-                    raise ValueError('No color named "%s"' % c)
-            if c[0] == '#':
-                c = c[1:]
-            else:
-                warnings.warn(
-                    "Parsing of hex strings that do not start with '#' is"
-                    "deprecated and support will be removed in 0.13",
-                    DeprecationWarning, stacklevel=2
-                )
-            if len(c) == 3:
-                r = int(c[0]*2, 16)
-                g = int(c[1]*2, 16)
-                b = int(c[2]*2, 16)
-                a = 255
-            elif len(c) == 4:
-                r = int(c[0]*2, 16)
-                g = int(c[1]*2, 16)
-                b = int(c[2]*2, 16)
-                a = int(c[3]*2, 16)
-            elif len(c) == 6:
-                r = int(c[0:2], 16)
-                g = int(c[2:4], 16)
-                b = int(c[4:6], 16)
-                a = 255
-            elif len(c) == 8:
-                r = int(c[0:2], 16)
-                g = int(c[2:4], 16)
-                b = int(c[4:6], 16)
-                a = int(c[6:8], 16)
-            else:
-                raise ValueError(f"Unknown how to convert string {c} to color")
-        elif isinstance(args[0], QtGui.QColor):
-            return QtGui.QColor(args[0])
-        elif np.issubdtype(type(args[0]), np.floating):
-            r = g = b = int(args[0] * 255)
+    # print('mkColor called:',args)
+    while ( # unravel single element sublists
+        isinstance(args, (tuple, list) )
+        and len(args) == 1
+    ): 
+        args = args[0]
+    # now args is either a non-list entity, or a multi-element tuple
+    if args is None:
+        raise TypeError('Color specifier cannot be None.')
+
+    if isinstance(args, QtGui.QColor):
+        if hasattr(args,'registration'):
+            return args # pass through registered pen directly
+        return QtGui.QColor(args)  ## return a copy of this color
+
+    # no short-circuit, continue parsing to construct a QPen and register it if appropriate
+    err = f'Could not create a color from {args} (type: {type(args)})'
+    result = STYLE_REGISTRY.getRegisteredColor(args)
+    if result is not None: # return this color if we got one.
+        return result
+    
+    # print('trying extra methods on',args)
+    if isinstance(args, str): # need to rule out strings first.
+        warnings.warn(
+            "Legacy code was invoked to handle '"+args+"', this code will be removed in 0.13",
+             DeprecationWarning, stacklevel=2
+        )
+        c = args
+        if len(c) == 1:
+            try:
+                return Colors[c]
+            except KeyError:
+                raise ValueError('No color named "%s"' % c)
+        if c[0] == '#':
+            c = c[1:]
+        else:
+            warnings.warn(
+                "Parsing of hex strings that do not start with '#' is"
+                "deprecated and support will be removed in 0.13",
+                DeprecationWarning, stacklevel=2
+            )
+        if len(c) == 3:
+            r = int(c[0]*2, 16)
+            g = int(c[1]*2, 16)
+            b = int(c[2]*2, 16)
             a = 255
-        elif hasattr(args[0], '__len__'):
-            if len(args[0]) == 3:
-                r, g, b = args[0]
-                a = 255
-            elif len(args[0]) == 4:
-                r, g, b, a = args[0]
-            elif len(args[0]) == 2:
-                return intColor(*args[0])
-            else:
-                raise TypeError(err)
-        elif np.issubdtype(type(args[0]), np.integer):
-            return intColor(args[0])
+        elif len(c) == 4:
+            r = int(c[0]*2, 16)
+            g = int(c[1]*2, 16)
+            b = int(c[2]*2, 16)
+            a = int(c[3]*2, 16)
+        elif len(c) == 6:
+            r = int(c[0:2], 16)
+            g = int(c[2:4], 16)
+            b = int(c[4:6], 16)
+            a = 255
+        elif len(c) == 8:
+            r = int(c[0:2], 16)
+            g = int(c[2:4], 16)
+            b = int(c[4:6], 16)
+            a = int(c[6:8], 16)
+        else:
+            raise ValueError(f"Unknown how to convert string {c} to color")
+        # elif isinstance(args[0], QtGui.QColor):
+        #     return QtGui.QColor(args[0])    # list-like, not a dictionary
+    # if hasattr(args, "__getitem__") and not isinstance(args, collections.abc.Mapping)
+    elif isinstance( args, (collections.abc.Sequence, np.ndarray) ):
+        if len(args) == 3:
+            r, g, b = args
+            a = 255
+        elif len(args) == 4:
+            r, g, b, a = args
+        elif len(args) == 2:
+            # print('making int color, two arguments')
+            return intColor(*args)
         else:
             raise TypeError(err)
-    elif len(args) == 3:
-        r, g, b = args
+    # elif np.issubdtype(type(args), np.floating):
+    elif isinstance(args, float): # numpy floats are instances of float...
+        # print('making grayscale color')
+        r = g = b = int(args * 255)
         a = 255
-    elif len(args) == 4:
-        r, g, b, a = args
+    # ...numpy ints are not instances of int. But boolean values are. So this doesn't work:
+    # elif isinstance(args, (int, np.integer)): 
+    elif np.issubdtype(type(args), np.integer): # single index into color enumeration
+        # print('making int color')
+        return intColor(args)
     else:
         raise TypeError(err)
-    args = [int(a) if np.isfinite(a) else 0 for a in (r, g, b, a)]
+    args = [ clip_scalar(int(val), 0, 255) if math.isfinite(val) else 0 for val in (r, g, b, a)]
     return QtGui.QColor(*args)
 
 
-def mkBrush(*args, **kwds):
+def mkBrush(*args, **kargs):
     """
     | Convenience function for constructing Brush.
     | This function always constructs a solid brush and accepts the same arguments as :func:`mkColor() <pyqtgraph.mkColor>`
     | Calling mkBrush(None) returns an invisible brush.
     """
-    if 'color' in kwds:
-        color = kwds['color']
-    elif len(args) == 1:
-        arg = args[0]
-        if arg is None:
-            return QtGui.QBrush(QtCore.Qt.BrushStyle.NoBrush)
-        elif isinstance(arg, QtGui.QBrush):
-            return QtGui.QBrush(arg)
-        else:
-            color = arg
-    elif len(args) > 1:
-        color = args
-    return QtGui.QBrush(mkColor(color))
+    while ( # unravel single element sublists
+        isinstance(args, (tuple, list) )
+        and len(args) == 1
+    ): 
+        args = args[0]
+    # now args is either a non-list entity, or a multi-element tuple
+    # short-circuits:
+    if isinstance(args, QtGui.QBrush):
+        if hasattr(args,'registration'):
+            return args # pass through registered brush directly
+        return QtGui.QBrush(args)  # return a copy of an uregistered brush
 
+    if isinstance(args, dict): 
+        return mkBrush(**args) # retry with kwargs assigned from dictionary
+
+    # if args is None:
+    #     return QtGui.QBrush( QtCore.Qt.NoBrush ) # explicit None means "no brush"
+
+    # no short-circuit, continue parsing to construct a QBrush and register it if appropriate
+    if 'hsv' in kargs: # hsv argument takes precedence
+        qcol = hsvColor( *kargs['hsv'] )
+        return QtGui.QBrush(qcol)
+
+    if 'color' in kargs: # 'color' KW-argument overrides unnamed arguments
+        args = kargs['color'] 
+
+    if args is None: # explicit None means "no brush"
+        return QtGui.QBrush( QtCore.Qt.BrushStyle.NoBrush )
+
+    if args == () or args == []:
+        # print('  functions: returning default color registered brush')
+        return STYLE_REGISTRY.getRegisteredBrush('gr_fg')
+
+    # Do the the arguments make a suitable brush descriptor?
+    result = STYLE_REGISTRY.getRegisteredBrush(args)
+    if result is not None: 
+        # print( result, type(result) )
+        # print('setting hex:', result.color().name(), result.color().alpha() )
+        return result
+        
+    # Otherwise make a QBrush
+    qcol = mkColor(args)
+    return QtGui.QBrush(qcol)
 
 def mkPen(*args, **kargs):
     """
-    Convenience function for constructing QPen. 
+    Convenience function for constructing QPen.
     
     Examples::
-    
+        mkPen(QPen)
+        mkPen( ('r', width, alpha) )
         mkPen(color)
         mkPen(color, width=2)
         mkPen(cosmetic=False, width=4.5, color='r')
         mkPen({'color': "#FF0", width: 2})
         mkPen(None)   # (no pen)
+        mkPen()       # default color
     
     In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`    """
-    color = kargs.get('color', None)
-    width = kargs.get('width', 1)
-    style = kargs.get('style', None)
+    # print('mkPen called:',args,kargs)
+    while ( # unravel single element sublists
+        isinstance(args, (tuple, list) )
+        and len(args) == 1
+    ): 
+        args = args[0]
+    # now args is either a non-list entity, or a multi-element tuple
+    # short-circuits:
+    if isinstance(args, QtGui.QPen):
+        if hasattr(args,'registration'):
+            return args # pass through registered pen directly
+        return QtGui.QPen(args)  ## return a copy of this pen
+
+    elif isinstance(args, dict): 
+        return mkPen(**args) # retry with kwargs assigned from dictionary
+
+    # if args is None:
+    #     return QtGui.QPen( QtCore.Qt.NoPen ) # explicit None means "no pen"
+
+    # no short-circuit, continue parsing to construct a QPen and register it if appropriate
+    width = kargs.get('width', 1) # width 1 unless specified otherwise
+    if 'hsv' in kargs: # hsv argument takes precedence
+        qcol = hsvColor( *kargs['hsv'] )
+        qpen = QtGui.QPen(QtGui.QBrush(qcol), width)
+    else:
+        if 'color' in kargs:
+            args = kargs['color'] # 'color' KW-argument overrides unnamed arguments
+        if args is None:
+            return QtGui.QPen( QtCore.Qt.PenStyle.NoPen ) # explicit None means "no pen"
+        if args == () or args == []:
+            # print('  functions: returning default color registered brush')
+            qpen = STYLE_REGISTRY.getRegisteredPen( ('gr_fg', width) ) # default foreground color
+        else:
+            result = STYLE_REGISTRY.getRegisteredPen(args)
+            if result is not None: # return this pen if we got one
+                qpen = result
+            else: # make a regular QPen
+                qcol = mkColor(args)
+                qpen = QtGui.QPen(QtGui.QBrush(qcol), width)
+    # now apply styles according to kw arguments:
+    style = kargs.get('style', None) 
     dash = kargs.get('dash', None)
     cosmetic = kargs.get('cosmetic', True)
-    hsv = kargs.get('hsv', None)
-    
-    if len(args) == 1:
-        arg = args[0]
-        if isinstance(arg, dict):
-            return mkPen(**arg)
-        if isinstance(arg, QtGui.QPen):
-            return QtGui.QPen(arg)  ## return a copy of this pen
-        elif arg is None:
-            style = QtCore.Qt.PenStyle.NoPen
-        else:
-            color = arg
-    if len(args) > 1:
-        color = args
-        
-    if color is None:
-        color = mkColor('l')
-    if hsv is not None:
-        color = hsvColor(*hsv)
-    else:
-        color = mkColor(color)
-        
-    pen = QtGui.QPen(QtGui.QBrush(color), width)
-    pen.setCosmetic(cosmetic)
+    if qpen is None:
+        raise ValueError("Failed to construct QPen from arguments '{args}','{kargs}'." )
+    qpen.setCosmetic(cosmetic)
     if style is not None:
-        pen.setStyle(style)
+        qpen.setStyle(style)
     if dash is not None:
-        pen.setDashPattern(dash)
-    return pen
-
+        qpen.setDashPattern(dash)
+    return qpen
 
 def hsvColor(hue, sat=1.0, val=1.0, alpha=1.0):
     """Generate a QColor from HSVa values. (all arguments are float 0.0-1.0)"""
@@ -568,12 +653,14 @@ def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, mi
 def glColor(*args, **kargs):
     """
     Convert a color to OpenGL color format (r,g,b,a) floats 0.0-1.0
-    Accepts same arguments as :func:`mkColor <pyqtgraph.mkColor>`.
+    Accepts a QColor or any argument available for :func:`mkColor <pyqtgraph.mkColor>`.
     """
-    c = mkColor(*args, **kargs)
+    if isinstance(args, QtGui.QColor):
+        c = args
+    else:
+        c = mkColor(*args, **kargs)
     return (c.red()/255., c.green()/255., c.blue()/255., c.alpha()/255.)
 
-    
 
 def makeArrowPath(headLen=20, headWidth=None, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0):
     """
@@ -1806,7 +1893,6 @@ def downsample(data, n, axis=0, xvals='subsample'):
     if (hasattr(data, 'implements') and data.implements('MetaArray')):
         ma = data
         data = data.view(np.ndarray)
-        
     
     if hasattr(axis, '__len__'):
         if not hasattr(n, '__len__'):

@@ -5,6 +5,8 @@ from os import path, listdir
 from collections.abc import Callable, Sequence
 import warnings
 
+__all__ = ['ColorMap']
+
 _mapCache = {}
 
 def listMaps(source=None):
@@ -102,7 +104,6 @@ def _getFromFile(name):
         else:
             csv_mode = False
         for line in fh:
-            name = None
             line = line.strip()
             if len(line) == 0: continue # empty line
             if line[0] == ';': continue # comment
@@ -126,13 +127,13 @@ def _getFromFile(name):
             idx += 1
         # end of line reading loop
     # end of open
-    cm = ColorMap(
+    cmap = ColorMap( name=name,
         pos=np.linspace(0.0, 1.0, len(color_list)),
         color=color_list) #, names=color_names)
-    if cm is not None:
-        cm.name = name
-        _mapCache[name] = cm
-    return cm
+    if cmap is not None:
+        cmap.name = name
+        _mapCache[name] = cmap
+    return cmap
 
 def getFromMatplotlib(name):
     """ 
@@ -145,7 +146,7 @@ def getFromMatplotlib(name):
         import matplotlib.pyplot as mpl_plt
     except ModuleNotFoundError:
         return None
-    cm = None
+    cmap = None
     col_map = mpl_plt.get_cmap(name)
     if hasattr(col_map, '_segmentdata'): # handle LinearSegmentedColormap
         data = col_map._segmentdata
@@ -163,21 +164,22 @@ def getFromMatplotlib(name):
                     positions[idx2] = tup[0]
                     comp_vals[idx2] = tup[1] # these are sorted in the raw data
                 col_data[:,idx] = np.interp(col_data[:,3], positions, comp_vals)
-            cm = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
+            cmap = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
         # some color maps (gnuplot in particular) are defined by RGB component functions:
         elif ('red' in data) and isinstance(data['red'], Callable):
             col_data = np.zeros((64, 4))
             col_data[:,-1] = np.linspace(0., 1., 64)
             for idx, key in enumerate(['red','green','blue']):
                 col_data[:,idx] = np.clip( data[key](col_data[:,-1]), 0, 1)
-            cm = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
+            cmap = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
     elif hasattr(col_map, 'colors'): # handle ListedColormap
         col_data = np.array(col_map.colors)
-        cm = ColorMap(pos=np.linspace(0.0, 1.0, col_data.shape[0]), color=255*col_data[:,:3]+0.5 )
-    if cm is not None:
-        cm.name = name
-        _mapCache[name] = cm
-    return cm
+        cmap = ColorMap( name=name,
+            pos = np.linspace(0.0, 1.0, col_data.shape[0]), color=255*col_data[:,:3]+0.5 )
+    if cmap is not None:
+        cmap.name = name
+        _mapCache[name] = cmap
+    return cmap
 
 def getFromColorcet(name):
     """ Generates a ColorMap object from a colorcet definition. Same as ``colormap.get(name, source='colorcet')``. """
@@ -190,13 +192,13 @@ def getFromColorcet(name):
     for hex_str in color_strings:
         if hex_str[0] != '#': continue
         if len(hex_str) != 7:
-            raise ValueError('Invalid color string '+str(hex_str)+' in colorcet import.')
+            raise ValueError(f"Invalid color string '{hex_str}' in colorcet import.")
         color_tuple = tuple( bytes.fromhex( hex_str[1:] ) )
         color_list.append( color_tuple )
     if len(color_list) == 0:
         return None
-    cm = ColorMap(
-        pos=np.linspace(0.0, 1.0, len(color_list)),
+    cmap = ColorMap( name=name,
+        pos=np.linspace(0.0, 1.0, len(color_list)), 
         color=color_list) #, names=color_names)
     if cm is not None:
         cm.name = name
@@ -388,8 +390,9 @@ class ColorMap(object):
         if mapping in [self.CLIP, self.REPEAT, self.DIVERGING, self.MIRROR]:
             self.mapping_mode = mapping # only allow defined values
         else:
-            raise ValueError("Undefined mapping type '{:s}'".format(str(mapping)) )
-            
+            raise ValueError(f"Undefined mapping type '{mapping}'")
+        self.stopsCache = {}
+    
     def __str__(self):
         """ provide human-readable identifier """
         if self.name is None:
