@@ -173,19 +173,21 @@ def _mkBrush(*args, **kwargs):
 
 class PixmapFragments:
     def __init__(self):
-        self._array = np.empty((0, 10), dtype=np.float64)
-        self.ptrs = None
+        self.alloc(0)
+
+    def alloc(self, size):
+        self.arr = np.empty((size, 10), dtype=np.float64)
+        if QT_LIB.startswith('PyQt'):
+            self.ptrs = list(map(sip.wrapinstance,
+                itertools.count(self.arr.ctypes.data, self.arr.strides[0]),
+                itertools.repeat(QtGui.QPainter.PixmapFragment, self.arr.shape[0])))
+        else:
+            self.ptrs = wrapInstance(self.arr.ctypes.data, QtGui.QPainter.PixmapFragment)
 
     def array(self, size):
-        if size > self._array.shape[0]:
-            self._array = np.empty((size + 16, 10), dtype=np.float64)
-            if QT_LIB.startswith('PyQt'):
-                self.ptrs = list(map(sip.wrapinstance,
-                    itertools.count(self._array.ctypes.data, self._array.strides[0]),
-                    itertools.repeat(QtGui.QPainter.PixmapFragment, self._array.shape[0])))
-            else:
-                self.ptrs = wrapInstance(self._array.ctypes.data, QtGui.QPainter.PixmapFragment)
-        return self._array[:size]
+        if size > self.arr.shape[0]:
+            self.alloc(size + 16)
+        return self.arr[:size]
 
     def draw(self, painter, size, pixmap):
         if QT_LIB.startswith('PyQt'):
