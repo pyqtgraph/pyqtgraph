@@ -1134,9 +1134,7 @@ class ScatterPlotItem(GraphicsObject):
 
                 if _USE_PXFRAGS:
                     # x, y is the center of the target rect
-                    # drawPixmapFragments takes floating-point coords,
-                    # so casting to int here is for rounding towards zero
-                    xy = pts[:, viewMask].T.astype(int)
+                    xy = pts[:, viewMask].T
                     sr = self.data['sourceRect'][viewMask]
 
                     if not hasattr(self, 'pixmap_fragments'):
