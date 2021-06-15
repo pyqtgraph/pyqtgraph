@@ -154,6 +154,17 @@ class PixmapFragments:
         self.alloc(0)
 
     def alloc(self, size):
+        # The C++ native API is:
+        #   drawPixmapFragments(const PixmapFragment *fragments, int fragmentCount,
+        #                       const QPixmap &pixmap)
+        #
+        # PySide exposes this API whereas PyQt wraps it to be more Pythonic.
+        # In PyQt, a Python list of PixmapFragment instances needs to be provided.
+        # This is inefficient because:
+        # 1) constructing the Python list involves calling sip.wrapinstance multiple times.
+        #    - this is mitigated here by reusing the instance pointers
+        # 2) PyQt will anyway deconstruct the Python list and repack the PixmapFragment
+        #    instances into a contiguous array, in order to call the underlying C++ native API.
         self.arr = np.empty((size, 10), dtype=np.float64)
         if QT_LIB.startswith('PyQt'):
             self.ptrs = list(map(sip.wrapinstance,
