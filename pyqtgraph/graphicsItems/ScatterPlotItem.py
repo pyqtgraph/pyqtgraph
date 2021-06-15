@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
 import warnings
-from itertools import repeat, chain
-try:
-    from itertools import imap
-except ImportError:
-    imap = map
 import itertools
 import math
 import numpy as np
@@ -17,7 +12,6 @@ from .GraphicsObject import GraphicsObject
 from .. import getConfigOption
 from collections import OrderedDict
 from .. import debug
-from ..python2_3 import basestring
 
 if QT_LIB == 'PySide2':
     from shiboken2 import wrapInstance
@@ -92,7 +86,7 @@ def drawSymbol(painter, symbol, size, pen, brush):
     painter.scale(size, size)
     painter.setPen(pen)
     painter.setBrush(brush)
-    if isinstance(symbol, basestring):
+    if isinstance(symbol, str):
         symbol = Symbols[symbol]
     if np.isscalar(symbol):
         symbol = list(Symbols.values())[symbol % len(Symbols)]
@@ -215,7 +209,7 @@ class SymbolAtlas(object):
         if new:
             self._extend(new)
 
-        return list(imap(self._coords.__getitem__, keys))
+        return list(map(self._coords.__getitem__, keys))
 
     def __len__(self):
         return len(self._coords)
@@ -658,7 +652,7 @@ class ScatterPlotItem(GraphicsObject):
                 pens = pens[kargs['mask']]
             if len(pens) != len(dataSet):
                 raise Exception("Number of pens does not match number of points (%d != %d)" % (len(pens), len(dataSet)))
-            dataSet['pen'] = list(imap(_mkPen, pens))
+            dataSet['pen'] = list(map(_mkPen, pens))
         else:
             self.opts['pen'] = _mkPen(*args, **kargs)
 
@@ -680,7 +674,7 @@ class ScatterPlotItem(GraphicsObject):
                 brushes = brushes[kargs['mask']]
             if len(brushes) != len(dataSet):
                 raise Exception("Number of brushes does not match number of points (%d != %d)" % (len(brushes), len(dataSet)))
-            dataSet['brush'] = list(imap(_mkBrush, brushes))
+            dataSet['brush'] = list(map(_mkBrush, brushes))
         else:
             self.opts['brush'] = _mkBrush(*args, **kargs)
 
@@ -866,7 +860,7 @@ class ScatterPlotItem(GraphicsObject):
         if self.opts['pxMode'] and self.opts['useCache']:
             w, pw = 0, self.fragmentAtlas.maxWidth
         else:
-            w, pw = max(chain([(self._maxSpotWidth, self._maxSpotPxWidth)],
+            w, pw = max(itertools.chain([(self._maxSpotWidth, self._maxSpotPxWidth)],
                               self._measureSpotSizes(**kwargs)))
         self._maxSpotWidth = w
         self._maxSpotPxWidth = pw
