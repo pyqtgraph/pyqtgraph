@@ -1,9 +1,12 @@
 import pyqtgraph as pg
 from math import isclose
+import pytest
 
 app = pg.mkQApp()
 
+skip_monkey_reason = "monkeypatch causing segfaults"
 
+@pytest.mark.skipif(True, reason=skip_monkey_reason)
 def test_AxisItem_stopAxisAtTick(monkeypatch):
     def test_bottom(p, axisSpec, tickSpecs, textSpecs):
         viewPixelSize = view.viewPixelSize()
@@ -93,6 +96,7 @@ def test_AxisItem_leftRelink():
     assert fake_view.sigResized.calls == ['connect', 'disconnect']
 
 
+@pytest.mark.skipif(True, reason=skip_monkey_reason)
 def test_AxisItem_tickFont(monkeypatch):
     def collides(textSpecs):
         fontMetrics = pg.Qt.QtGui.QFontMetrics(font)
