@@ -29,22 +29,6 @@ elif QT_LIB in ['PyQt5', 'PyQt6']:
 __all__ = ['ScatterPlotItem', 'SpotItem']
 
 
-# When pxMode=True for ScatterPlotItem, QPainter.drawPixmap is used for drawing, which
-# has multiple type signatures. One takes int coordinates of source and target
-# rectangles, and another takes QRectF objects. The latter approach has the overhead of
-# updating these objects, which can be almost as much as drawing.
-# For PyQt5, drawPixmap is significantly faster with QRectF coordinates for some
-# reason, offsetting this overhead. For PySide2 this is not the case, and the QRectF
-# maintenance overhead is an unnecessary burden. If this performance issue is solved
-# by PyQt5, the QRectF coordinate approach can be removed by simply deleting all of the
-# "if _USE_QRECT" code blocks in ScatterPlotItem. Ideally, drawPixmap would accept the
-# numpy arrays of coordinates directly, which would improve performance significantly,
-# as the separate calls to this method are the current bottleneck.
-# See: https://bugreports.qt.io/browse/PYSIDE-163
-
-_USE_QRECT = False
-_USE_PXFRAGS = True
-
 ## Build all symbol paths
 name_list = ['o', 's', 't', 't1', 't2', 't3', 'd', '+', 'x', 'p', 'h', 'star',
              'arrow_up', 'arrow_right', 'arrow_down', 'arrow_left', 'crosshair']
@@ -434,18 +418,11 @@ class ScatterPlotItem(GraphicsObject):
             ])
         ]
 
-        if _USE_QRECT:
-            dtype.extend([
-                ('sourceQRect', object),
-                ('targetQRect', object),
-                ('targetQRectValid', bool)
-            ])
-            self._sourceQRect = {}
-
         self.data = np.empty(0, dtype=dtype)
         self.bounds = [None, None]  ## caches data bounds
         self._maxSpotWidth = 0      ## maximum size of the scale-variant portion of all spots
         self._maxSpotPxWidth = 0    ## maximum size of the scale-invariant portion of all spots
+        self._pixmapFragments = PixmapFragments()
         self.opts = {
             'pxMode': True,
             'useCache': True,  ## If useCache is False, symbols are re-drawn on every paint.
@@ -582,10 +559,6 @@ class ScatterPlotItem(GraphicsObject):
         newData = self.data[len(oldData):]
         newData['size'] = -1  ## indicates to use default size
         newData['visible'] = True
-
-        if _USE_QRECT:
-            newData['targetQRect'] = [QtCore.QRectF() for _ in range(numPts)]
-            newData['targetQRectValid'] = False
 
         if 'spots' in kargs:
             spots = kargs['spots']
@@ -846,18 +819,6 @@ class ScatterPlotItem(GraphicsObject):
                     list(zip(*self._style(['symbol', 'size', 'pen', 'brush'], data=dataSet, idx=mask)))
                 ]
                 dataSet['sourceRect'][mask] = coords
-                if _USE_QRECT:
-                    rects = []
-                    for c in coords:
-                        try:
-                            rect = self._sourceQRect[c]
-                        except KeyError:
-                            rect = QtCore.QRectF(*c)
-                            self._sourceQRect[c] = rect
-                        rects.append(rect)
-
-                    dataSet['sourceQRect'][mask] = rects
-                    dataSet['targetQRectValid'][mask] = False
 
             self._maybeRebuildAtlas()
         else:
@@ -875,8 +836,6 @@ class ScatterPlotItem(GraphicsObject):
                 list(zip(*self._style(['symbol', 'size', 'pen', 'brush'])))
             )
             self.data['sourceRect'] = 0
-            if _USE_QRECT:
-                self._sourceQRect.clear()
             self.updateSpots()
 
     def _style(self, opts, data=None, idx=None, scale=None):
@@ -1059,8 +1018,6 @@ class ScatterPlotItem(GraphicsObject):
         self.prepareGeometryChange()
         GraphicsObject.viewTransformChanged(self)
         self.bounds = [None, None]
-        if _USE_QRECT:
-            self.data['targetQRectValid'] = False
 
     def setExportMode(self, *args, **kwds):
         GraphicsObject.setExportMode(self, *args, **kwds)
@@ -1132,63 +1089,19 @@ class ScatterPlotItem(GraphicsObject):
 
             if self.opts['useCache'] and self._exportOpts is False:
                 # Draw symbols from pre-rendered atlas
-                pm = self.fragmentAtlas.pixmap
 
-                if _USE_PXFRAGS:
-                    # x, y is the center of the target rect
-                    xy = pts[:, viewMask].T
-                    sr = self.data['sourceRect'][viewMask]
+                # x, y is the center of the target rect
+                xy = pts[:, viewMask].T
+                sr = self.data['sourceRect'][viewMask]
 
-                    if not hasattr(self, 'pixmap_fragments'):
-                        self.pixmap_fragments = PixmapFragments()
+                frags = self._pixmapFragments.array(sr.size)
+                frags[:, 0:2] = xy
+                frags[:, 2:6] = np.frombuffer(sr, dtype=int).reshape((-1, 4)) # sx, sy, sw, sh
+                frags[:, 6:10] = [1.0, 1.0, 0.0, 1.0]   # scaleX, scaleY, rotation, opacity
 
-                    frags = self.pixmap_fragments.array(sr.size)
-                    frags[:, 0:2] = xy
-                    frags[:, 2:6] = np.frombuffer(sr, dtype=int).reshape((-1, 4)) # sx, sy, sw, sh
-                    frags[:, 6:10] = [1.0, 1.0, 0.0, 1.0]   # scaleX, scaleY, rotation, opacity
-
-                    profiler('prep')
-                    self.pixmap_fragments.draw(p, sr.size, pm)
-                    profiler('draw')
-                elif _USE_QRECT:
-                    # Map pts to (x, y) coordinates of targetRect
-                    pts -= self.data['sourceRect']['w'] / 2
-
-                    # Update targetRects if necessary
-                    updateMask = viewMask & (~self.data['targetQRectValid'])
-                    if np.any(updateMask):
-                        x, y = pts[:, updateMask].tolist()
-                        tr = self.data['targetQRect'][updateMask].tolist()
-                        w = self.data['sourceRect']['w'][updateMask].tolist()
-                        list(imap(QtCore.QRectF.setRect, tr, x, y, w, w))
-                        self.data['targetQRectValid'][updateMask] = True
-
-                    profiler('prep')
-                    if QT_LIB == 'PyQt4':
-                        p.drawPixmapFragments(
-                            self.data['targetQRect'][viewMask].tolist(),
-                            self.data['sourceQRect'][viewMask].tolist(),
-                            pm
-                        )
-                    else:
-                        list(imap(p.drawPixmap,
-                                  self.data['targetQRect'][viewMask].tolist(),
-                                  repeat(pm),
-                                  self.data['sourceQRect'][viewMask].tolist()))
-                    profiler('draw')
-                else:
-                    # Map pts to (x, y) coordinates of targetRect
-                    pts -= self.data['sourceRect']['w'] / 2
-
-                    x, y = pts[:, viewMask].astype(int)
-                    sr = self.data['sourceRect'][viewMask]
-
-                    profiler('prep')
-                    list(imap(p.drawPixmap,
-                              x.tolist(), y.tolist(), repeat(pm),
-                              sr['x'].tolist(), sr['y'].tolist(), sr['w'].tolist(), sr['h'].tolist()))
-                    profiler('draw')
-
+                profiler('prep')
+                self._pixmapFragments.draw(p, len(frags), self.fragmentAtlas.pixmap)
+                profiler('draw')
             else:
                 # render each symbol individually
                 p.setRenderHint(p.RenderHint.Antialiasing, aa)
