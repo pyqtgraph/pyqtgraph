@@ -46,6 +46,7 @@ Currently this means:
   * `colorcet` for supplemental colormaps
   * [`cupy`](https://docs.cupy.dev/en/stable/install.html) for CUDA-enhanced image processing
     * On Windows, CUDA toolkit must be >= 11.1
+  * [`numba`] used to accelerate repeated image display for ImageItem
 
 Qt Bindings Test Matrix
 -----------------------
