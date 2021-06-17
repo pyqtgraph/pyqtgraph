@@ -13,11 +13,12 @@ class GraphicsLayout(GraphicsWidget):
     This is usually created automatically as part of a :class:`GraphicsWindow <pyqtgraph.GraphicsWindow>` or :class:`GraphicsLayoutWidget <pyqtgraph.GraphicsLayoutWidget>`.
     """
 
-
     def __init__(self, parent=None, border=None):
         GraphicsWidget.__init__(self, parent)
         if border is True:
             border = (100,100,100)
+        elif border is False:
+            border = None  
         self.border = border
         self.layout = QtGui.QGraphicsGridLayout()
         self.setLayout(self.layout)
