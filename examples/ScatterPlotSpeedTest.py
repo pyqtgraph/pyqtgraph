@@ -47,7 +47,7 @@ def fmt(name):
 oldFmt = ptree.Parameter.RUN_TITLE_FORMAT
 ptree.Parameter.RUN_TITLE_FORMAT = fmt
 
-@param.interact_decorator(childrenOnly=True,
+@param.interact_decorator(nest=False,
                           count=dict(limits=[1, None], step=100),
                           size=dict(limits=[1, None])
                           )
@@ -68,7 +68,7 @@ def mkDataAndItem(count=500, size=10):
     mkItem()
 
 
-@param.interact_decorator(childrenOnly=True)
+@param.interact_decorator(nest=False)
 def mkItem(pxMode=True, _USE_QRECT=pyqtgraph.graphicsItems.ScatterPlotItem._USE_QRECT,
            useCache=True):
     global item
@@ -77,7 +77,7 @@ def mkItem(pxMode=True, _USE_QRECT=pyqtgraph.graphicsItems.ScatterPlotItem._USE_
     p.clear()
     p.addItem(item)
 
-@param.interact_decorator(childrenOnly=True)
+@param.interact_decorator(nest=False)
 def getData(randomize=False):
     pos = data['pos']
     pen = data['pen']
@@ -96,7 +96,7 @@ modeOpts = dict(name='mode',
                         translate('ScatterPlot', 'Simulate Pan/Zoom'): 'panZoom',
                         translate('ScatterPlot', 'Simulate Hover'): 'hover'},
                 )
-@param.interact_decorator(True, mode=modeOpts)
+@param.interact_decorator(nest=False, mode=modeOpts)
 def update(mode='reuseItem'):
     global ptr, lastTime, fps
     if mode == 'newItem':

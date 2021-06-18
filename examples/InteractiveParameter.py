@@ -69,7 +69,7 @@ def runOnBtnOrChange_listOpts(a=5):
     return a
 
 
-@host.interact_decorator(childrenOnly=True)
+@host.interact_decorator(nest=False)
 @printResult
 def onlyTheArgumentsAppear(thisIsAFunctionArg=True):
     return thisIsAFunctionArg

@@ -606,28 +606,21 @@ class Parameter(QtCore.QObject):
             #print self, "Add child:", type(chOpts), id(chOpts)
             self.addChild(chOpts)
 
-    def interact_decorator(self, childrenOnly=False, **opts):
+    def interact_decorator(self, **opts):
         """
         Decorator version of `Parameter.interact`. All options are forwarded there, except for `func` so it can be
         wrapped. Intended to be called using a GroupParameter, and the interactive parameter will be added
-        as a child.
-
-        ==============  ========================================================================
-        **Arguments:**
-        childrenOnly    `interact` returns a GroupParameter where each child is bound to an interactive
-                        function parameter. If *False*, this group parameter is added to
+        as a child. Note that unless a parent is explicitly passed, it will be set to 'self'
         """
         def wrapper(func):
-            if childrenOnly:
-                opts.update(parent=self)
-            host = self.interact(func, **opts)
-            if not childrenOnly:
-                self.addChild(host)
+            opts.setdefault('parent', self)
+            self.interact(func, **opts)
             return func
         return wrapper
 
     @classmethod
-    def interact(cls, func, runOpts=None, ignores=None, deferred=None, parent=None, runFunc=None, **overrides):
+    def interact(cls, func, runOpts=None, ignores=None, deferred=None, parent=None, runFunc=None,
+                 nest=True, existOk=True, **overrides):
         """
         Interacts with a function by making Parameters for each argument. if any non-defaults exist, a value must be
         provided for them in `descrs`. If this value should *not* be made into a parameter, include its name in `ignores`.
@@ -637,8 +630,10 @@ class Parameter(QtCore.QObject):
         runOpts         How the function should be run. Can be one or more of Parameter.<RUN_BUTTON, CHANGED, or CHANGING>.
                         If *None*, defaults to Parmeter.RUN_DEFAULT which can be set by the user.
         ignores         Names of function arguments which shouldn't have parameters created
-        deferred        function arguments whose values should come from function evaluations rather than Parameters.
-                          This is helpful for providing external variables as function arguments.
+        deferred        function arguments whose values should come from function evaluations rather than Parameters
+                        (must be a function that accepts no inputs and returns the desired value). This is helpful
+                        for providing external variables as function arguments, while making sure they are up
+                        to date.
         parent          Parent in which to add arguemnt Parameters. If *None*, a new group parameter is created.
         runFunc         Often, override or decorator functions will use a definition only accepting kwargs and pass them
                         to a different function. When this is the case, pass the raw, undecorated version to `interact`
@@ -654,6 +649,11 @@ class Parameter(QtCore.QObject):
 
                         param = Parameter.interact(a, runFunc=aWithLog)
                         ```
+        nest            If *True*, the interacted function is given its own GroupParameter, and arguments to that
+                        function are 'nested' inside as its children. If *False*, function arguments are directly
+                        added to this paremeter instead of being placed inside a child GroupParameter
+        existOk         Whether it is OK for existing paramter names to bind to this function. See behavior during
+                        'Parameter.insertChild'
         overrides       Override descriptions to provide additional parameter options for each argument. Moreover,
                         extra parameters can be defined here if the original function allowed **kwargs. Each override
                         can be a value (e.g. 5) or a dict specification of a parameter
@@ -662,11 +662,16 @@ class Parameter(QtCore.QObject):
         """
         if runOpts is None:
             runOpts = cls.RUN_DEFAULT
-        if parent is None:
+        if parent is None or nest:
             parentOpts = dict(type='group', name=func.__name__)
             if cls.RUN_TITLE_FORMAT is not None:
                 parentOpts['title'] = cls.RUN_TITLE_FORMAT(parentOpts['name'])
-            parent = Parameter.create(**parentOpts)
+            host = Parameter.create(**parentOpts)
+            if parent is not None:
+                # Parent was provided and nesting is enabled, so place created args inside the nested GroupParmeter
+                parent.addChild(host, existOk=existOk)
+            parent = host
+
         funcParams = inspect.signature(func).parameters
 
         if deferred is None:
@@ -687,6 +692,9 @@ class Parameter(QtCore.QObject):
         def runFunc_changing(_param, value):
             return runFunc(**{_param.name(): value})
 
+
+        # Possibly keep track of created children to determine run button characteristics after while loop
+        # createdChildren = []
         # Make pyqtgraph parameters from each parameter
         # Use list instead of funcParams.items() so kwargs can add to the iterable
         checkNames = list(funcParams)
@@ -731,21 +739,27 @@ class Parameter(QtCore.QObject):
             # Maybe override was a value without a type, prefer this over signature value when it exists
             pgDict.setdefault('type', type(pgDict['value']).__name__)
 
-            child = parent.addChild(pgDict)
+            child = parent.addChild(pgDict, existOk=existOk)
             if cls.RUN_CHANGED in runOpts:
                 child.sigValueChanged.connect(runFunc)
             if cls.RUN_CHANGING in runOpts:
                 child.sigValueChanging.connect(runFunc_changing)
+            # createdChildren.append(child)
 
         ret = parent
-        if cls.RUN_BUTTON in runOpts or not parent.hasChildren():
+        # It doesn't make sense to register a parameter-less function without a button-run, since it will never
+        # run and didn't create any children... Should this be an error/warning?
+        # if not createdChildren and cls.RUN_BUTTON not in runOpts:
+        #     warnings.warn(f'Interacting with function "{parent.title()}", but it is not runnable'
+        #                   f' by button and possesses no parameters, so this is a no-op.', UserWarning)
+        if cls.RUN_BUTTON in runOpts:
             # Add an extra button child which can activate the function
-            name = 'Run' if parent.hasChildren() else func.__name__
+            name = 'Run' if nest else func.__name__
             child = cls.create(name=name, type='action')
             # Return just the button if no other params were allowed
             if not parent.hasChildren():
                 ret = child
-            parent.addChild(child)
+            parent.addChild(child, existOk=existOk)
             child.sigActivated.connect(runFunc)
         return ret
         

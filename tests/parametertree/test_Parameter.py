@@ -139,7 +139,7 @@ def test_interact():
     host.child('a', 'Run').activate()
     assert value == 5
 
-    @host.interact_decorator(childrenOnly=True, runOpts=p.RUN_CHANGED)
+    @host.interact_decorator(nest=False, runOpts=p.RUN_CHANGED)
     @retain
     def b(y=6):
         return y
