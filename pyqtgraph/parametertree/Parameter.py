@@ -578,14 +578,14 @@ class Parameter(QtCore.QObject):
             return ParameterItem(self, depth=depth)
 
 
-    def addChild(self, child, autoIncrementName=None):
+    def addChild(self, child, autoIncrementName=None, existOk=False):
         """
         Add another parameter to the end of this parameter's child list.
         
-        See insertChild() for a description of the *autoIncrementName* 
-        argument.
+        See insertChild() for a description of the *autoIncrementName* and *existOk*
+        arguments.
         """
-        return self.insertChild(len(self.childs), child, autoIncrementName=autoIncrementName)
+        return self.insertChild(len(self.childs), child, autoIncrementName=autoIncrementName, existOk=existOk)
 
     def addChildren(self, children):
         """
@@ -749,7 +749,7 @@ class Parameter(QtCore.QObject):
             child.sigActivated.connect(runFunc)
         return ret
         
-    def insertChild(self, pos, child, autoIncrementName=None):
+    def insertChild(self, pos, child, autoIncrementName=None, existOk=False):
         """
         Insert a new child at pos.
         If pos is a Parameter, then insert at the position of that Parameter.
@@ -760,6 +760,9 @@ class Parameter(QtCore.QObject):
         the name will be adjusted to avoid prior name collisions. This 
         behavior may be overridden by specifying the *autoIncrementName* 
         argument. This argument was added in version 0.9.9.
+
+        If 'autoIncrementName' is *False*, an error is raised when the inserted child already exists. However, if
+        'existOk' is *True*, the existing child will be returned instead, and this child will *not* be inserted.
         """
         if isinstance(child, dict):
             child = Parameter.create(**child)
@@ -769,8 +772,10 @@ class Parameter(QtCore.QObject):
             if autoIncrementName is True or (autoIncrementName is None and child.opts.get('autoIncrementName', False)):
                 name = self.incrementName(name)
                 child.setName(name)
+            elif existOk:
+                return self.names[name]
             else:
-                raise Exception("Already have child named %s" % str(name))
+                raise ValueError("Already have child named %s" % str(name))
         if isinstance(pos, Parameter):
             pos = self.childs.index(pos)
             

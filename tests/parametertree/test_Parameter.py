@@ -25,6 +25,17 @@ def test_parameter_hasdefault():
     p = Parameter(default=None, **opts)
     assert not p.hasDefault()
 
+def test_add_child():
+    p = Parameter.create(name='test', type='group', children=[
+        dict(name='ch1', type='bool', value=True),
+        dict(name='ch2', type='bool', value=False),
+    ])
+    with pytest.raises(ValueError):
+        p.addChild(dict(name='ch1', type='int', value=0))
+    existing = p.child('ch1')
+    ch = p.addChild(dict(name='ch1', type='int', value=0), existOk=True)
+    assert ch is existing
+
 
 def test_unpack_parameter():
     # test that **unpacking correctly returns child name/value maps
