@@ -36,6 +36,8 @@ def test_add_child():
     ch = p.addChild(dict(name='ch1', type='int', value=0), existOk=True)
     assert ch is existing
 
+    ch = p.addChild(dict(name='ch1', type='int', value=0), autoIncrementName=True)
+    assert ch.name() == 'ch3'
 
 def test_unpack_parameter():
     # test that **unpacking correctly returns child name/value maps
