@@ -22,54 +22,54 @@ def printResult(func):
 
 host = Parameter(name='Interactive Parameter Use', type='group')
 
-@host.interact_deco()
+@host.interact_decorator()
 @printResult
 def easySample(a=5, b=6):
     return a + b
 
-@host.interact_deco()
+@host.interact_decorator()
 @printResult
 def stringParams(a='5', b='6'):
     return a + b
 
-@host.interact_deco(a=10)
+@host.interact_decorator(a=10)
 @printResult
 def requiredParam(a, b=10):
     return a + b
 
-@host.interact_deco(ignores=['a'])
+@host.interact_decorator(ignores=['a'])
 @printResult
 def ignoredAParam(a=10, b=20):
     return a*b
 
-@host.interact_deco(runOpts=Parameter.RUN_BTN)
+@host.interact_decorator(runOpts=Parameter.RUN_BUTTON)
 @printResult
 def runOnButton(a=10, b=20):
     return a + b
 
 x = 5
-@host.interact_deco(deferred={'x': lambda: x})
+@host.interact_decorator(deferred={'x': lambda: x})
 @printResult
 def accessVarInDifferentScope(x, y=10):
     return x + y
 
-oldFmt = Parameter.RUN_TITLE_FMT
-Parameter.RUN_TITLE_FMT = lambda name: name.upper()
-@host.interact_deco()
+oldFmt = Parameter.RUN_TITLE_FORMAT
+Parameter.RUN_TITLE_FORMAT = lambda name: name.upper()
+@host.interact_decorator()
 @printResult
 def capslocknames(a=5):
     return a
-Parameter.RUN_TITLE_FMT = oldFmt
+Parameter.RUN_TITLE_FORMAT = oldFmt
 
-@host.interact_deco(runOpts=(Parameter.RUN_CHANGED, Parameter.RUN_BTN),
-                    a={'type': 'list', 'limits': [5, 10, 20]}
-)
+@host.interact_decorator(runOpts=(Parameter.RUN_CHANGED, Parameter.RUN_BUTTON),
+                         a={'type': 'list', 'limits': [5, 10, 20]}
+                         )
 @printResult
 def runOnBtnOrChange_listOpts(a=5):
     return a
 
 
-@host.interact_deco(childrenOnly=True)
+@host.interact_decorator(childrenOnly=True)
 @printResult
 def onlyTheArgumentsAppear(thisIsAFunctionArg=True):
     return thisIsAFunctionArg

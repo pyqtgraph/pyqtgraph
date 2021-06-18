@@ -44,7 +44,7 @@ def test_unpack_parameter():
     assert result['c'] == 3.0
 
 def test_interact():
-    Parameter.RUN_DEFAULT = Parameter.RUN_BTN
+    Parameter.RUN_DEFAULT = Parameter.RUN_BUTTON
     value = None
     def retain(func):
         """Retain result for post-call analysis"""
@@ -90,15 +90,15 @@ def test_interact():
     host.child('y').sigValueChanging.emit(host.child('y'), 100)
     assert value == (10, 100)
 
-    oldFmt = p.RUN_TITLE_FMT
+    oldFmt = p.RUN_TITLE_FORMAT
     try:
-        p.RUN_TITLE_FMT = lambda name: name.upper()
+        p.RUN_TITLE_FORMAT = lambda name: name.upper()
         host = p.interact(a, x={'title': 'different', 'value': 5})
         titles = [p.title() for p in host]
         for ch in 'different', 'Y':
             assert ch in titles
     finally:
-        p.RUN_TITLE_FMT = oldFmt
+        p.RUN_TITLE_FORMAT = oldFmt
 
     oldDflt = p.RUN_DEFAULT
     try:
@@ -119,7 +119,7 @@ def test_interact():
     assert value == 12
 
     host = Parameter.create(name='test deco', type='group')
-    @host.interact_deco()
+    @host.interact_decorator()
     @retain
     def a(x=5):
         return x
@@ -128,7 +128,7 @@ def test_interact():
     host.child('a', 'Run').activate()
     assert value == 5
 
-    @host.interact_deco(childrenOnly=True, runOpts=p.RUN_CHANGED)
+    @host.interact_decorator(childrenOnly=True, runOpts=p.RUN_CHANGED)
     @retain
     def b(y=6):
         return y

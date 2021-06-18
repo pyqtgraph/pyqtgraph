@@ -102,7 +102,7 @@ class Parameter(QtCore.QObject):
             #pass
         #return QtCore.QObject.__new__(cls, *args, **opts)
 
-    RUN_BTN = 'button'
+    RUN_BUTTON = 'button'
     """Indicator for `interactive` parameter which runs the function on pressing a button parameter"""
     RUN_CHANGED = 'changed'
     """
@@ -117,7 +117,7 @@ class Parameter(QtCore.QObject):
     RUN_DEFAULT = RUN_CHANGED
     """Default behavior for running"""
 
-    RUN_TITLE_FMT = None
+    RUN_TITLE_FORMAT = None
     """
     Formatter to create a parameter title from its name when using `Parameter.interact. If not *None*, must be
     a callable of the form (name: str) -> str 
@@ -606,11 +606,16 @@ class Parameter(QtCore.QObject):
             #print self, "Add child:", type(chOpts), id(chOpts)
             self.addChild(chOpts)
 
-    def interact_deco(self, childrenOnly=False, **opts):
+    def interact_decorator(self, childrenOnly=False, **opts):
         """
         Decorator version of `Parameter.interact`. All options are forwarded there, except for `func` so it can be
         wrapped. Intended to be called using a GroupParameter, and the interactive parameter will be added
-        as a child
+        as a child.
+
+        ==============  ========================================================================
+        **Arguments:**
+        childrenOnly    `interact` returns a GroupParameter where each child is bound to an interactive
+                        function parameter. If *False*, this group parameter is added to
         """
         def wrapper(func):
             if childrenOnly:
@@ -629,7 +634,7 @@ class Parameter(QtCore.QObject):
         ==============  ========================================================================
         **Arguments:**
         func            function with which to interact
-        runOpts         How the function should be run. Can be one or more of Parameter.<RUN_BTN, CHANGED, or CHANGING>.
+        runOpts         How the function should be run. Can be one or more of Parameter.<RUN_BUTTON, CHANGED, or CHANGING>.
                         If *None*, defaults to Parmeter.RUN_DEFAULT which can be set by the user.
         ignores         Names of function arguments which shouldn't have parameters created
         deferred        function arguments whose values should come from function evaluations rather than Parameters.
@@ -659,8 +664,8 @@ class Parameter(QtCore.QObject):
             runOpts = cls.RUN_DEFAULT
         if parent is None:
             parentOpts = dict(type='group', name=func.__name__)
-            if cls.RUN_TITLE_FMT is not None:
-                parentOpts['title'] = cls.RUN_TITLE_FMT(parentOpts['name'])
+            if cls.RUN_TITLE_FORMAT is not None:
+                parentOpts['title'] = cls.RUN_TITLE_FORMAT(parentOpts['name'])
             parent = Parameter.create(**parentOpts)
         funcParams = inspect.signature(func).parameters
 
@@ -717,8 +722,8 @@ class Parameter(QtCore.QObject):
             if not isinstance(pgDict, dict):
                 pgDict = {'value': pgDict}
             pgDict['name'] = name
-            if cls.RUN_TITLE_FMT and 'title' not in pgDict:
-                pgDict['title'] = cls.RUN_TITLE_FMT(name)
+            if cls.RUN_TITLE_FORMAT and 'title' not in pgDict:
+                pgDict['title'] = cls.RUN_TITLE_FORMAT(name)
             if param and not required:
                 # Maybe the user never specified type and value, since they can come directly from the default
                 default = param.default
@@ -733,7 +738,7 @@ class Parameter(QtCore.QObject):
                 child.sigValueChanging.connect(runFunc_changing)
 
         ret = parent
-        if cls.RUN_BTN in runOpts or not parent.hasChildren():
+        if cls.RUN_BUTTON in runOpts or not parent.hasChildren():
             # Add an extra button child which can activate the function
             name = 'Run' if parent.hasChildren() else func.__name__
             child = cls.create(name=name, type='action')
