@@ -1,5 +1,5 @@
 from ..Qt import QtCore, QtGui
-from . import PenSelectorDialogbox
+from .PenSelectorDialogbox import PenSelectorDialogbox
 from ..functions import mkColor
 
 class PenSelectorDialog(QtGui.QDialog):
