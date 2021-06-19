@@ -1188,9 +1188,11 @@ class AxisItem(GraphicsWidget):
         lv = self.linkedView()
         if lv is None:
             return
-        if lv.geometry().contains(event.scenePos()):
+        if lv.sceneBoundingRect().contains(event.scenePos()):
+            print('in')
             lv.wheelEvent(event)
         else:
+            print('out')
             if self.orientation in ['left', 'right']:
                 lv.wheelEvent(event, axis=1)
             else:
@@ -1201,7 +1203,7 @@ class AxisItem(GraphicsWidget):
         lv = self.linkedView()
         if lv is None:
             return
-        if lv.geometry().contains(event.scenePos()):
+        if lv.sceneBoundingRect().contains(event.buttonDownScenePos()):
             return lv.mouseDragEvent(event)
         if self.orientation in ['left', 'right']:
             return lv.mouseDragEvent(event, axis=1)
