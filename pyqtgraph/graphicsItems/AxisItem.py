@@ -1151,7 +1151,7 @@ class AxisItem(GraphicsWidget):
         pen, p1, p2 = axisSpec
         p.setPen(pen)
         p.drawLine(p1, p2)
-        p.translate(0.5,0)  ## resolves some damn pixel ambiguity
+        # p.translate(0.5,0)  ## resolves some damn pixel ambiguity
 
         ## draw ticks
         for pen, p1, p2 in tickSpecs:
@@ -1184,20 +1184,25 @@ class AxisItem(GraphicsWidget):
         else:
             self._updateHeight()
 
-    def wheelEvent(self, ev):
+    def wheelEvent(self, event):
         lv = self.linkedView()
         if lv is None:
             return
-        if self.orientation in ['left', 'right']:
-            lv.wheelEvent(ev, axis=1)
+        if lv.geometry().contains(event.scenePos()):
+            lv.wheelEvent(event)
         else:
-            lv.wheelEvent(ev, axis=0)
-        ev.accept()
+            if self.orientation in ['left', 'right']:
+                lv.wheelEvent(event, axis=1)
+            else:
+                lv.wheelEvent(event, axis=0)
+        event.accept()
 
     def mouseDragEvent(self, event):
         lv = self.linkedView()
         if lv is None:
             return
+        if lv.geometry().contains(event.scenePos()):
+            return lv.mouseDragEvent(event)
         if self.orientation in ['left', 'right']:
             return lv.mouseDragEvent(event, axis=1)
         else:
