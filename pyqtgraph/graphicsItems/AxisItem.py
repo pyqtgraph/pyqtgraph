@@ -1188,11 +1188,12 @@ class AxisItem(GraphicsWidget):
         lv = self.linkedView()
         if lv is None:
             return
+        # Did the event occur inside the linked ViewBox (and not over the axis iteself)?
         if lv.sceneBoundingRect().contains(event.scenePos()):
-            print('in')
+            # pass event to linked ViewBox without marking it as single axis zoom
             lv.wheelEvent(event)
         else:
-            print('out')
+            # pass event to linked viewbox with appropriate single axis zoom parameter
             if self.orientation in ['left', 'right']:
                 lv.wheelEvent(event, axis=1)
             else:
@@ -1203,8 +1204,11 @@ class AxisItem(GraphicsWidget):
         lv = self.linkedView()
         if lv is None:
             return
+        # Did the mouse down event occur inside the linked ViewBox (and not the axis)?
         if lv.sceneBoundingRect().contains(event.buttonDownScenePos()):
+            # pass event to linked ViewBox without marking it as single axis pan
             return lv.mouseDragEvent(event)
+        # otherwise pass event to linked viewbox with appropriate single axis parameter
         if self.orientation in ['left', 'right']:
             return lv.mouseDragEvent(event, axis=1)
         else:
