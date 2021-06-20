@@ -1037,7 +1037,7 @@ class PenParameterItem(ParameterItem):
         self.pdialog = PenSelectorDialog(fn.mkPen(self.pen),QtGui.QApplication.activeWindow())
         self.pdialog.penChanged.connect(self.penChanged)
         self.pdialog.finished.connect(self.penChangeFinished)
-        self.pdialog.exec_()
+        self.pdialog.exec()
 
     def penChangeFinished(self,ret):
         #finished changing

@@ -2,6 +2,13 @@ from ..Qt import QtCore, QtGui
 from .PenSelectorDialogbox import PenSelectorDialogbox
 from ..functions import mkColor
 
+def _mkComboMap(cbox, styles):
+    """
+    Various versions of pyqt don't treat enum values the same when setting combo box values.
+    This lets retrieved combo box values be mapped to the true style enum
+    """
+    return {cbox.itemData(ii): style for ii, style in enumerate(styles)}
+
 class PenSelectorDialog(QtGui.QDialog):
     penChanged = QtCore.Signal(object)
 
@@ -14,13 +21,12 @@ class PenSelectorDialog(QtGui.QDialog):
         # PyQt5 doesn't, so construct manually for compatibility
         ps = QtCore.Qt.PenStyle
         lineStyles = [ps.SolidLine,ps.DashLine,ps.DotLine,ps.DashDotLine,ps.DashDotDotLine]#,ps.CustomDashLine]
-        self.lineStyles = {int(style): style for style in lineStyles}
         comboboxBackgroundColor = self.ui.comboBoxPenStyle.palette().base().color()
         comboboxSize = self.ui.comboBoxPenStyle.size()
         w,h = comboboxSize.width(),comboboxSize.height()
         self.ui.comboBoxPenStyle.setIconSize(comboboxSize)
         #create style images:
-        for s in self.lineStyles.values():
+        for s in lineStyles:
             p = QtGui.QPixmap(comboboxSize)
             p.fill(comboboxBackgroundColor)
             painter = QtGui.QPainter(p)
@@ -29,21 +35,23 @@ class PenSelectorDialog(QtGui.QDialog):
             painter.end()
             self.ui.comboBoxPenStyle.addItem(QtGui.QIcon(p), '', s)
 
+        self.lineStyles = _mkComboMap(self.ui.comboBoxPenStyle, lineStyles)
+
         #create cap and end options
         cs = QtCore.Qt.PenCapStyle
         js = QtCore.Qt.PenJoinStyle
         capStyles = [cs.SquareCap,cs.FlatCap,cs.RoundCap]
-        self.capStyles = {int(style): style for style in capStyles}
         joinStyles = [js.BevelJoin,js.MiterJoin,js.RoundJoin]
-        self.joinStyles = {int(style): style for style in joinStyles}
         self.capStylesNames = ["Square cap","Flat cap","Round cap"]
         self.joinStylesNames = ["Bevel join","Miter join","Round join"]
 
-        for s,n in zip(self.capStyles,self.capStylesNames):
+        for s,n in zip(capStyles,self.capStylesNames):
             self.ui.comboBoxPenCapStyle.addItem(n,s)
+        self.capStyles = _mkComboMap(self.ui.comboBoxPenCapStyle, capStyles)
 
-        for s,n in zip(self.joinStyles,self.joinStylesNames):
+        for s,n in zip(joinStyles,self.joinStylesNames):
             self.ui.comboBoxPenJoinStyle.addItem(n,s)
+        self.joinStyles = _mkComboMap(self.ui.comboBoxPenJoinStyle, joinStyles)
 
 
         self.ui.comboBoxPenStyle.currentIndexChanged.connect(self.updatePen)
@@ -69,15 +77,15 @@ class PenSelectorDialog(QtGui.QDialog):
         cboxes = [self.ui.comboBoxPenStyle, self.ui.comboBoxPenCapStyle, self.ui.comboBoxPenJoinStyle]
         styleMaps = [self.lineStyles, self.capStyles, self.joinStyles]
         for styleMap, cbox in zip(styleMaps, cboxes):
-            intData = cbox.itemData(cbox.currentIndex())
-            cboxArgs.append(styleMap[intData])
+            data = cbox.itemData(cbox.currentIndex())
+            cboxArgs.append(styleMap[data])
         penWidth = self.ui.doubleSpinBoxPenWidth.value()
         penColor = self.ui.pushButtonPenColor.color()
         self.pen= QtGui.QPen(penColor, penWidth, *cboxArgs)
 
         displaySize = self.ui.labelPenPreview.size()
         palette = self.ui.labelPenPreview.palette()
-        labelBackgroundColor = palette.color(palette.Window)
+        labelBackgroundColor = palette.color(palette.ColorRole.Window)
         w,h = displaySize.width(),displaySize.height()
         
         #draw a squigly line to show what the pen looks like.
