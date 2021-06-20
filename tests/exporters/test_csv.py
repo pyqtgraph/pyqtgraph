@@ -2,6 +2,7 @@
 CSV export test
 """
 from __future__ import division, print_function, absolute_import
+import numpy as np
 import pyqtgraph as pg
 import csv
 import tempfile
@@ -19,11 +20,11 @@ def test_CSVExporter():
     plt.plot(y=y1, name='myPlot')
 
     y2 = [3,4,6,1,2,4,2,3,5,3,5,1,3]
-    x2 = pg.np.linspace(0, 1.0, len(y2))
+    x2 = np.linspace(0, 1.0, len(y2))
     plt.plot(x=x2, y=y2)
 
     y3 = [1,5,2,3,4,6,1,2,4,2,3,5,3]
-    x3 = pg.np.linspace(0, 1.0, len(y3)+1)
+    x3 = np.linspace(0, 1.0, len(y3)+1)
     plt.plot(x=x3, y=y3, stepMode="center")
 
     ex = pg.exporters.CSVExporter(plt.plotItem)

@@ -14,9 +14,11 @@ from ..InfiniteLine import InfiniteLine
 from ..LabelItem import LabelItem
 from ..LegendItem import LegendItem
 from ..PlotDataItem import PlotDataItem
+from ..PlotCurveItem import PlotCurveItem
+from ..ScatterPlotItem import ScatterPlotItem
 from ..ViewBox import ViewBox
 from ... import functions as fn
-from ... import icons, PlotCurveItem, ScatterPlotItem
+from ... import icons
 from ...Qt import QtGui, QtCore, QT_LIB
 from ...WidgetGroup import WidgetGroup
 from ...python2_3 import basestring

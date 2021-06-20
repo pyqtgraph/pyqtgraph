@@ -4,6 +4,7 @@ from ..SignalProxy import SignalProxy
 from collections import OrderedDict
 from ..python2_3 import asUnicode, basestring
 
+__all__ = ['ComboBox']
 
 class ComboBox(QtGui.QComboBox):
     """Extends QComboBox to add extra functionality.

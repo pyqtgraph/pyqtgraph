@@ -12,6 +12,7 @@ from .ViewBox import *
 from .GradientEditorItem import *
 from .LinearRegionItem import *
 from .PlotDataItem import *
+from .PlotCurveItem import *
 from .AxisItem import *
 from .GridItem import *
 from ..Point import Point
