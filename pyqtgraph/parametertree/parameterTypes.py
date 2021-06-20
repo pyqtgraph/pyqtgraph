@@ -775,16 +775,16 @@ def popupFilePicker(parent=None, winTitle='', fileFilter='', existing=True, asFo
       options.
     """
     fileDlg = QtWidgets.QFileDialog(parent)
-    fileMode = fileDlg.AnyFile
+    fileMode = fileDlg.FileMode.AnyFile
     opts = fileDlg.options()
     if existing:
         # Existing files only
-        fileMode = fileDlg.ExistingFiles if selectMultiple else fileDlg.ExistingFile
+        fileMode = fileDlg.FileMode.ExistingFiles if selectMultiple else fileDlg.FileMode.ExistingFile
     else:
-        fileDlg.setAcceptMode(fileDlg.AcceptSave)
+        fileDlg.setAcceptMode(fileDlg.AcceptMode.AcceptSave)
     if asFolder:
-        fileMode = fileDlg.Directory
-        opts |= fileDlg.ShowDirsOnly
+        fileMode = fileDlg.FileMode.Directory
+        opts |= fileDlg.Option.ShowDirsOnly
     fileDlg.setFileMode(fileMode)
     fileDlg.setOptions(opts)
     fileDlg.setModal(True)
@@ -794,7 +794,7 @@ def popupFilePicker(parent=None, winTitle='', fileFilter='', existing=True, asFo
 
     fileDlg.setWindowTitle(winTitle)
 
-    if fileDlg.exec_():
+    if fileDlg.exec():
         # Append filter type
         singleExtReg = r'(\.\w+)'
         # Extensions of type 'myfile.ext.is.multi.part' need to capture repeating pattern of singleExt
@@ -842,7 +842,11 @@ class FilePickerParameterItem(WidgetParameterItem):
         curVal = self.param.value()
         useDir = curVal or str(os.getcwd())
         opts = self.param.opts
-        opts['startDir'] = str(Path(useDir).absolute())
+        startDir = Path(useDir).absolute()
+        if startDir.is_file():
+            startDir = startDir.parent
+        if startDir.exists():
+            opts['startDir'] = str(startDir)
         fname = popupFilePicker(None, 'Select File', **opts)
         if fname is None:
             return
