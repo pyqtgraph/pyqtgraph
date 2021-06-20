@@ -1,3 +1,4 @@
+from ..Qt import QtCore, QtGui, QtWidgets
 # -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui
 from ..python2_3 import asUnicode
@@ -5,15 +6,16 @@ from .Parameter import Parameter, registerParameterType
 from .ParameterItem import ParameterItem
 from ..widgets.SpinBox import SpinBox
 from ..widgets.ColorButton import ColorButton
+from ..widgets.PenSelectorDialog import PenSelectorDialog
 from ..colormap import ColorMap
 from .. import icons as icons
 from .. import functions as fn
 from collections import OrderedDict
-import os
-
-from ..widgets.PenSelectorDialog import PenSelectorDialog
-
+import re
 import numpy as np
+import os
+from pathlib import Path
+
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -746,90 +748,115 @@ class TextParameter(Parameter):
 
 registerParameterType('text', TextParameter, override=True)
 
-class FileDialogItem(ParameterItem):
 
-    def __init__(self, param, depth):
-        ParameterItem.__init__(self, param, depth)
+class Emitter(QtCore.QObject):
+    """
+    WidgetParameterItem is not a QObject, and the slider's value needs to be converted before
+    emitting. So, create an emitter class here that can be used instead
+    """
+    sigChanging = QtCore.Signal(object, object)
+    sigChanged = QtCore.Signal(object, object)
 
-        self.dialogTypes={
-        "getExistingDirectory" : (QtGui.QFileDialog().getExistingDirectory,"Open directory"),
-        #"getExistingDirectoryUrl" : (QtGui.QFileDialog().getExistingDirectoryUrl,"Open directory"),
-        "getOpenFileName" : (QtGui.QFileDialog().getOpenFileName,"Open file"),
-        "getOpenFileNames" : (QtGui.QFileDialog().getOpenFileNames,"Open files"),
-        #"getOpenFileUrl" : (QtGui.QFileDialog().getOpenFileUrl,"Open directory"),
-        #"getOpenFileUrls" : (QtGui.QFileDialog().getOpenFileUrls,"Open directory"),
-        "getSaveFileName" : (QtGui.QFileDialog().getSaveFileName,"Save file"),
-        #"getSaveFileUrl" : (QtGui.QFileDialog().getSaveFileUrl,"Open directory"),
-        "openFiles" : (QtGui.QFileDialog().getOpenFileNames,"Open files"),
-        "openFile" : (QtGui.QFileDialog().getOpenFileName,"Open file"),
-        "openDirectory" : (QtGui.QFileDialog().getExistingDirectory,"Open directory"),
-        "saveFile" : (QtGui.QFileDialog().getSaveFileName,"Save file")}
 
-        self.layoutWidget = QtGui.QWidget()
-        self.layout = QtGui.QHBoxLayout()
-        self.layoutWidget.setLayout(self.layout)
-        self.button = QtGui.QPushButton(param.name())
-        self.label = QtGui.QLabel()
-        #self.layout.addSpacing(100)
-        self.layout.addWidget(self.button)
-        self.layout.addWidget(self.label)
-        self.layout.addStretch()
-        self.setText(0, '')
+def popupFilePicker(parent=None, winTitle='', fileFilter='', existing=True, asFolder=False,
+                    selectMultiple=False, startDir=None, **kwargs):
+  """
+  Thin wrapper around Qt file picker dialog. Used internally so all options are consistent
+  among all requests for external file information
 
-        self.returnedValues = None
-        self.lastDirectory = os.path.dirname(os.path.abspath(__file__))
-        self.button.clicked.connect(self.buttonClicked)
+  :param parent: Dialog parent
+  :param winTitle: Title of dialog window
+  :param fileFilter: File filter as required by the Qt dialog
+  :param existing: Whether the file is already existing, or is being newly created
+  :param asFolder: Whether the dialog should select folders or files
+  :param selectMultiple: Whether multiple files can be selected. If `asFolder` is
+    *True*, this parameter is ignored.
+  :param startDir: Where in the file system to open this dialog
+  :param kwargs: Consumes additional arguments so dictionary unpacking can be used
+    with the lengthy file signature. In the future, this may allow additional config
+    options.
+  """
+  fileDlg = QtWidgets.QFileDialog(parent)
+  fileMode = fileDlg.AnyFile
+  opts = fileDlg.options()
+  if existing:
+    # Existing files only
+    fileMode = fileDlg.ExistingFiles if selectMultiple else fileDlg.ExistingFile
+  else:
+    fileDlg.setAcceptMode(fileDlg.AcceptSave)
+  if asFolder:
+    fileMode = fileDlg.Directory
+    opts |= fileDlg.ShowDirsOnly
+  fileDlg.setFileMode(fileMode)
+  fileDlg.setOptions(opts)
+  fileDlg.setModal(True)
+  if startDir is not None:
+    fileDlg.setDirectory(startDir)
+  fileDlg.setNameFilter(fileFilter)
 
-    def treeWidgetChanged(self):
-        ParameterItem.treeWidgetChanged(self)
-        tree = self.treeWidget()
-        if tree is None:
-            return
+  fileDlg.setWindowTitle(winTitle)
 
-        tree.resizeColumnToContents(0)
-        tree.setItemWidget(self, 0, self.layoutWidget)
+  if fileDlg.exec_():
+    # Append filter type
+    singleExtReg = r'(\.\w+)'
+    # Extensions of type 'myfile.ext.is.multi.part' need to capture repeating pattern of singleExt
+    suffMatch = re.search(rf'({singleExtReg}+)', fileDlg.selectedNameFilter())
+    if suffMatch:
+      # Strip leading '.' if it exists
+      ext = suffMatch.group(1)
+      if ext.startswith('.'):
+        ext = ext[1:]
+      fileDlg.setDefaultSuffix(ext)
+    fList = fileDlg.selectedFiles()
+  else:
+    fList = []
 
-    def buttonClicked(self):
-        filterString = self.param.opts.get('filterString', "All files (*.*)")
-        dialogType = self.param.opts.get('dialogType', "getOpenFileName")
-        dialogFunction, dialogCaption = self.dialogTypes[dialogType]
-        dialogCaption = self.param.opts.get('dialogCaption', dialogCaption)
+  if selectMultiple:
+    return fList
+  elif len(fList) > 0:
+    return fList[0]
+  else:
+    return None
 
-        if dialogType in ["getExistingDirectory","openDirectory"]:
-            fn = dialogFunction(None, dialogCaption, self.lastDirectory)
-            fn = os.path.realpath(asUnicode(fn))
-            if fn=="": return 0
-            self.lastDirectory = os.path.dirname(fn)
-            self.label.setText(str(fn))
-            tooltip = str(os.path.realpath(fn))
-        elif dialogType in ["getOpenFileNames","openFiles"]:
-            fn = dialogFunction(None, dialogCaption, self.lastDirectory, filterString)
-            fn = [os.path.realpath(asUnicode(f)) for f in fn if os.path.isfile(f) and f != ""]
-            if len(fn)<=0: return 0
-            self.lastDirectory = os.path.dirname(fn[0])
-            self.label.setText(str(fn[0]))
-            tooltip = "\n".join(fn)
-        else:
-            fn = dialogFunction(None, dialogCaption, self.lastDirectory, filterString)
-            if fn == "": return 0
-            fn = os.path.realpath(asUnicode(fn))
-            self.lastDirectory = os.path.dirname(fn)
-            self.label.setText(str(fn))
-            tooltip = str(fn)
+class FilePickerParameterItem(WidgetParameterItem):
 
-        self.label.setToolTip(tooltip)
-        self.param.fileSelected(fn)
 
-class FileDialogParameter(Parameter):
-    """Used for displaying a button within the tree."""
-    itemClass = FileDialogItem
-    sigFileSelected = QtCore.Signal(object,object)
+  def __init__(self, param, depth):
+      self._emitter = Emitter()
+      super().__init__(param, depth)
 
-    def fileSelected(self,f):
-        self.sigFileSelected.emit(self,f)
-        self.emitStateChanged('fileSelected', f)
+  def makeWidget(self):
+    param = self.param
 
-registerParameterType('file', FileDialogParameter, override=True)
+    if param.opts['value'] is None:
+      param.opts['value'] = ''
+    fpath = param.opts['value']
+    param.opts.setdefault('asFolder', False)
+    param.opts.setdefault('existing', True)
+    button = QtWidgets.QPushButton()
+    button.setValue = lambda val: button.setText(str(val))
+    button.sigChanged = self._emitter.sigChanged
+    button.value = button.text
+    button.setText(fpath)
+    button.clicked.connect(self._retrieveFolderName_gui)
+
+    return button
+
+  def _retrieveFolderName_gui(self):
+    curVal = self.param.value()
+    useDir = curVal or str(os.getcwd())
+    opts = self.param.opts
+    opts['startDir'] = str(Path(useDir).absolute())
+    fname = popupFilePicker(None, 'Select File', **opts)
+    if fname is None:
+      return
+    self.param.setValue(fname)
+    self._emitter.sigChanged.emit(self, fname)
+
+class FilePickerParameter(Parameter):
+  itemClass = FilePickerParameterItem
+
+registerParameterType('file', FilePickerParameter, override=True)
 
 class ProgressBarParameterItem(WidgetParameterItem):
     def makeWidget(self):
@@ -844,11 +871,6 @@ class ProgressBarParameter(Parameter):
     itemClass = ProgressBarParameterItem
 
 registerParameterType('progress', ProgressBarParameter, override=True)
-
-# WidgetParameterItem is not a QObject, and the slider's value needs to be converted before
-# emitting. So, create an emitter class here that can be used instead
-class Emitter(QtCore.QObject):
-    sigChanging = QtCore.Signal(object, object)
 
 class SliderParameterItem(WidgetParameterItem):
     slider: QtGui.QSlider

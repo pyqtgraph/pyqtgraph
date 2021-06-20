@@ -84,11 +84,11 @@ params = [
         {'name': 'Slider', 'type': 'slider', 'value':50, 'limits':(0,100)},
         {'name': 'Font', 'type': 'font', 'value':QtGui.QFont("Comic Sans MS")},
         {'name': 'Calendar', 'type': 'calendar', 'value':QtCore.QDate.currentDate().addMonths(1)},
-        {'name': 'Open files', 'type': 'file', "dialogType":"openFiles"},
-        {'name': 'Open file', 'type': 'file', "dialogType":"openFile"},
-        {'name': 'Open directory', 'type': 'file', "dialogType":"openDirectory"},
-        {'name': 'Save file', 'type': 'file', "dialogType":"saveFile"},
-        {'name': 'Save txt file', 'type': 'file', "dialogType":"saveFile", "filterString":"*.txt", "dialogCaption": "Save a text file"}
+        {'name': 'Open files', 'type': 'file', 'selectMultiple': True},
+        {'name': 'Open file', 'type': 'file'},
+        {'name': 'Open directory', 'type': 'file', 'asFolder': True},
+        {'name': 'Save file', 'type': 'file', 'existing': True},
+        {'name': 'Save txt file', 'type': 'file', 'existing': True, 'fileFilter':'*.txt'}
     ]},    
     {'name': 'Numerical Parameter Options', 'type': 'group', 'children': [
         {'name': 'Units + SI prefix', 'type': 'float', 'value': 1.2e-6, 'step': 1e-6, 'siPrefix': True, 'suffix': 'V'},
