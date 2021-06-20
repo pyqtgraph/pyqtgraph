@@ -2,6 +2,7 @@
 import pytest
 from functools import wraps
 from pyqtgraph.parametertree import Parameter
+from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
 
 
 def test_parameter_hasdefault():
@@ -57,7 +58,7 @@ def test_unpack_parameter():
     assert result['c'] == 3.0
 
 def test_interact():
-    Parameter.RUN_DEFAULT = Parameter.RUN_BUTTON
+    GP.defaultRunOpts = GP.RUN_BUTTON
     value = None
     def retain(func):
         """Retain result for post-call analysis"""
@@ -73,19 +74,19 @@ def test_interact():
         return x, y
 
     with pytest.raises(ValueError):
-        Parameter.interact(a)
+        GP.interact(a)
 
-    host = Parameter.interact(a, x=10)
+    host = GP.interact(a, x=10)
     for child in 'x', 'y':
         assert child in host.names
 
-    host = Parameter.interact(a, x=10, y={'type': 'list', 'limits': [5, 10]})
+    host = GP.interact(a, x=10, y={'type': 'list', 'limits': [5, 10]})
     testParam = host.child('y')
     assert testParam.type() == 'list'
     assert testParam.opts['limits'] == [5,10]
 
     myval = 5
-    host = Parameter.interact(a, deferred=dict(x=lambda: myval))
+    host = GP.interact(a, deferred=dict(x=lambda: myval))
     assert 'x' not in host.names
     host.child('Run').activate()
     assert value == (5, 5)
@@ -93,8 +94,7 @@ def test_interact():
     host.child('Run').activate()
     assert value == (10, 5)
 
-    p = Parameter
-    host = Parameter.interact(a, x=10, y=50, ignores=['x'], runOpts=(p.RUN_CHANGED, p.RUN_CHANGING))
+    host = GP.interact(a, x=10, y=50, ignores=['x'], runOpts=(GP.RUN_CHANGED, GP.RUN_CHANGING))
     for child in 'x', 'Run':
         assert child not in host.names
 
@@ -103,36 +103,28 @@ def test_interact():
     host.child('y').sigValueChanging.emit(host.child('y'), 100)
     assert value == (10, 100)
 
-    oldFmt = p.RUN_TITLE_FORMAT
-    try:
-        p.RUN_TITLE_FORMAT = lambda name: name.upper()
-        host = p.interact(a, x={'title': 'different', 'value': 5})
+    with GP.interactiveOptsContext(runTitleFormat=str.upper):
+        host = GP.interact(a, x={'title': 'different', 'value': 5})
         titles = [p.title() for p in host]
         for ch in 'different', 'Y':
             assert ch in titles
-    finally:
-        p.RUN_TITLE_FORMAT = oldFmt
 
-    oldDflt = p.RUN_DEFAULT
-    try:
-        p.RUN_DEFAULT = p.RUN_CHANGED
-        host = p.interact(a, x=5)
+    with GP.interactiveOptsContext(defaultRunOpts=GP.RUN_CHANGED):
+        host = GP.interact(a, x=5)
         host['y'] = 20
         assert value == (5, 20)
-    finally:
-        p.RUN_DEFAULT = oldDflt
 
     @retain
     def kwargTest(a, b=5, **c):
         return a + b - c.get('test', None)
-    host = p.interact(kwargTest, a=10, test=3)
+    host = GP.interact(kwargTest, a=10, test=3)
     for ch in 'a', 'b', 'test':
         assert ch in host.names
     host.child('Run').activate()
     assert value == 12
 
-    host = Parameter.create(name='test deco', type='group')
-    @host.interact_decorator()
+    host = GP.create(name='test deco', type='group')
+    @host.interactDecorator()
     @retain
     def a(x=5):
         return x
@@ -141,7 +133,7 @@ def test_interact():
     host.child('a', 'Run').activate()
     assert value == 5
 
-    @host.interact_decorator(nest=False, runOpts=p.RUN_CHANGED)
+    @host.interactDecorator(nest=False, runOpts=GP.RUN_CHANGED)
     @retain
     def b(y=6):
         return y
@@ -156,7 +148,7 @@ def test_interact():
     @retain
     def override(**kwargs):
         return raw(**kwargs)
-    host = p.interact(raw, runFunc=override, runOpts=p.RUN_CHANGED)
+    host = GP.interact(raw, runFunc=override, runOpts=GP.RUN_CHANGED)
     assert 'x' in host.names
     host['x'] = 100
     assert value == 100

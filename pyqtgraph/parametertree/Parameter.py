@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from .. import functions as fn
 from ..Qt import QtGui, QtCore
 import os, weakref, re
@@ -7,7 +6,6 @@ from collections import OrderedDict
 from ..python2_3 import asUnicode, basestring
 from .ParameterItem import ParameterItem
 import warnings
-import inspect
 
 PARAM_TYPES = {}
 PARAM_NAMES = {}
@@ -102,29 +100,6 @@ class Parameter(QtCore.QObject):
             #pass
         #return QtCore.QObject.__new__(cls, *args, **opts)
 
-    RUN_BUTTON = 'button'
-    """Indicator for `interactive` parameter which runs the function on pressing a button parameter"""
-    RUN_CHANGED = 'changed'
-    """
-    Indicator for `interactive` parameter which runs the function every time one `sigValueChanged` is emitted from
-    any of the parameters
-    """
-    RUN_CHANGING = 'changing'
-    """
-    Indicator for `interactive` parameter which runs the function every time one `sigValueChanging` is emitted from
-    any of the parameters
-    """
-    RUN_DEFAULT = RUN_CHANGED
-    """Default behavior for running"""
-
-    RUN_TITLE_FORMAT = None
-    """
-    Formatter to create a parameter title from its name when using `Parameter.interact. If not *None*, must be
-    a callable of the form (name: str) -> str 
-    """
-
-
-    
     @staticmethod
     def create(**opts):
         """
@@ -606,163 +581,6 @@ class Parameter(QtCore.QObject):
             #print self, "Add child:", type(chOpts), id(chOpts)
             self.addChild(chOpts)
 
-    def interact_decorator(self, **opts):
-        """
-        Decorator version of `Parameter.interact`. All options are forwarded there, except for `func` so it can be
-        wrapped. Intended to be called using a GroupParameter, and the interactive parameter will be added
-        as a child. Note that unless a parent is explicitly passed, it will be set to 'self'
-        """
-        def wrapper(func):
-            opts.setdefault('parent', self)
-            self.interact(func, **opts)
-            return func
-        return wrapper
-
-    @classmethod
-    def interact(cls, func, runOpts=None, ignores=None, deferred=None, parent=None, runFunc=None,
-                 nest=True, existOk=True, **overrides):
-        """
-        Interacts with a function by making Parameters for each argument. if any non-defaults exist, a value must be
-        provided for them in `descrs`. If this value should *not* be made into a parameter, include its name in `ignores`.
-        ==============  ========================================================================
-        **Arguments:**
-        func            function with which to interact
-        runOpts         How the function should be run. Can be one or more of Parameter.<RUN_BUTTON, CHANGED, or CHANGING>.
-                        If *None*, defaults to Parmeter.RUN_DEFAULT which can be set by the user.
-        ignores         Names of function arguments which shouldn't have parameters created
-        deferred        function arguments whose values should come from function evaluations rather than Parameters
-                        (must be a function that accepts no inputs and returns the desired value). This is helpful
-                        for providing external variables as function arguments, while making sure they are up
-                        to date.
-        parent          Parent in which to add arguemnt Parameters. If *None*, a new group parameter is created.
-        runFunc         Often, override or decorator functions will use a definition only accepting kwargs and pass them
-                        to a different function. When this is the case, pass the raw, undecorated version to `interact`
-                        and pass the function to run with the arguments here. I.e. use `runFunc` in the following
-                        scenario:
-                        ```
-                        def a(x=5, y=6):
-                            return x + y
-
-                        def aWithLog(**kwargs):
-                            print('Running A')
-                            return a(**kwargs)
-
-                        param = Parameter.interact(a, runFunc=aWithLog)
-                        ```
-        nest            If *True*, the interacted function is given its own GroupParameter, and arguments to that
-                        function are 'nested' inside as its children. If *False*, function arguments are directly
-                        added to this paremeter instead of being placed inside a child GroupParameter
-        existOk         Whether it is OK for existing paramter names to bind to this function. See behavior during
-                        'Parameter.insertChild'
-        overrides       Override descriptions to provide additional parameter options for each argument. Moreover,
-                        extra parameters can be defined here if the original function allowed **kwargs. Each override
-                        can be a value (e.g. 5) or a dict specification of a parameter
-                        (e.g. dict(type='list', limits=[0, 10, 20]))
-        ==============  ========================================================================
-        """
-        if runOpts is None:
-            runOpts = cls.RUN_DEFAULT
-        if parent is None or nest:
-            parentOpts = dict(type='group', name=func.__name__)
-            if cls.RUN_TITLE_FORMAT is not None:
-                parentOpts['title'] = cls.RUN_TITLE_FORMAT(parentOpts['name'])
-            host = Parameter.create(**parentOpts)
-            if parent is not None:
-                # Parent was provided and nesting is enabled, so place created args inside the nested GroupParmeter
-                parent.addChild(host, existOk=existOk)
-            parent = host
-
-        funcParams = inspect.signature(func).parameters
-
-        if deferred is None:
-            deferred = {}
-        # Values can't come both from deferred and overrides/params, so ensure they don't get created
-        if ignores is None:
-            ignores = []
-        ignores = list(ignores) + list(deferred)
-
-        toExec = runFunc or func
-        def runFunc(**extra):
-            kwargs = {p.name(): p.value() for p in parent if p.name() in checkNames}
-            for kk, vv in deferred.items():
-                kwargs[kk] = vv()
-            kwargs.update(**extra)
-            return toExec(**kwargs)
-
-        def runFunc_changing(_param, value):
-            return runFunc(**{_param.name(): value})
-
-
-        # Possibly keep track of created children to determine run button characteristics after while loop
-        # createdChildren = []
-        # Make pyqtgraph parameters from each parameter
-        # Use list instead of funcParams.items() so kwargs can add to the iterable
-        checkNames = list(funcParams)
-        ii = 0
-        while ii < len(checkNames):
-            name = checkNames[ii]
-            ii += 1
-            # May be none if this is an override name after function accepted kwargs
-            param = funcParams.get(name)
-            # Kwargs will be the last item encountered, so the only extra terms to go through are what aren't already
-            # children
-            if param and param.kind is param.VAR_KEYWORD:
-                # Pretend any unhandled overrides should be used as if they were keyword arguments
-                # 'set' would work nicer than list comprehension, but doesn't preserve definition order
-                notInSignature = [n for n in overrides if n not in parent.names]
-                checkNames.extend(notInSignature)
-                continue
-
-            # Make sure args without defaults have overrides
-            required = param is not None and param.default is param.empty
-            if required and name not in overrides and name not in deferred:
-                raise ValueError(f'Cannot interact with "{func} since it has required parameter "{name}"'
-                                 f' with no default or deferred value provided.')
-            if name in ignores:
-                # Don't make a parameter for this child
-                # However, make sure to recycle their values if provided
-                if name in overrides:
-                    # Use default arg to avoid loop binding issue
-                    deferred.setdefault(name, lambda _n=name: overrides[_n])
-                continue
-
-            pgDict = overrides.get(name, {})
-            if not isinstance(pgDict, dict):
-                pgDict = {'value': pgDict}
-            pgDict['name'] = name
-            if cls.RUN_TITLE_FORMAT and 'title' not in pgDict:
-                pgDict['title'] = cls.RUN_TITLE_FORMAT(name)
-            if param and not required:
-                # Maybe the user never specified type and value, since they can come directly from the default
-                default = param.default
-                pgDict.setdefault('value', default)
-            # Maybe override was a value without a type, prefer this over signature value when it exists
-            pgDict.setdefault('type', type(pgDict['value']).__name__)
-
-            child = parent.addChild(pgDict, existOk=existOk)
-            if cls.RUN_CHANGED in runOpts:
-                child.sigValueChanged.connect(runFunc)
-            if cls.RUN_CHANGING in runOpts:
-                child.sigValueChanging.connect(runFunc_changing)
-            # createdChildren.append(child)
-
-        ret = parent
-        # It doesn't make sense to register a parameter-less function without a button-run, since it will never
-        # run and didn't create any children... Should this be an error/warning?
-        # if not createdChildren and cls.RUN_BUTTON not in runOpts:
-        #     warnings.warn(f'Interacting with function "{parent.title()}", but it is not runnable'
-        #                   f' by button and possesses no parameters, so this is a no-op.', UserWarning)
-        if cls.RUN_BUTTON in runOpts:
-            # Add an extra button child which can activate the function
-            name = 'Run' if nest else func.__name__
-            child = cls.create(name=name, type='action')
-            # Return just the button if no other params were allowed
-            if not parent.hasChildren():
-                ret = child
-            parent.addChild(child, existOk=existOk)
-            child.sigActivated.connect(runFunc)
-        return ret
-        
     def insertChild(self, pos, child, autoIncrementName=None, existOk=False):
         """
         Insert a new child at pos.
@@ -1011,7 +829,6 @@ class Parameter(QtCore.QObject):
             if len(changes) > 0:
                 self.sigTreeStateChanged.emit(self, changes)
 
-
 class SignalBlocker(object):
     def __init__(self, enterFn, exitFn):
         self.enterFn = enterFn
@@ -1022,6 +839,4 @@ class SignalBlocker(object):
         
     def __exit__(self, exc_type, exc_value, tb):
         self.exitFn()
-    
-    
     
