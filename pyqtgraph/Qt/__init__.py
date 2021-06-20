@@ -12,7 +12,7 @@ This module exists to smooth out some of the differences between PySide and PyQt
 
 import os, sys, re, time, subprocess, warnings
 
-from .python2_3 import asUnicode
+from ..python2_3 import asUnicode
 
 PYSIDE = 'PySide'
 PYSIDE2 = 'PySide2'
@@ -204,6 +204,28 @@ elif QT_LIB == PYSIDE6:
 
 else:
     raise ValueError("Invalid Qt lib '%s'" % QT_LIB)
+
+
+# For historical reasons, pyqtgraph maintains a Qt4-ish interface back when
+# there wasn't a QtWidgets module. This _was_ done by monkey-patching all of
+# QtWidgets into the QtGui module. The next section of code mirrors the
+# various symbols from QtCore, QtGui and QtWidgets into the corresponding local
+# ones.
+# Thus, when monkey-patching happens later on in this file, they will only affect
+# the local modules and not the global modules.
+def _copy_attrs(dst, src):
+    for o in dir(src):
+        if not hasattr(dst, o):
+            setattr(dst, o, getattr(src, o))
+    return dst
+
+from .imports import QtCore as tmp
+QtCore = _copy_attrs(tmp, QtCore)
+from .imports import QtGui as tmp
+QtGui = _copy_attrs(tmp, QtGui)
+from .imports import QtWidgets as tmp
+QtWidgets = _copy_attrs(tmp, QtWidgets)
+del tmp
 
 
 # common to PyQt5, PyQt6, PySide2 and PySide6
