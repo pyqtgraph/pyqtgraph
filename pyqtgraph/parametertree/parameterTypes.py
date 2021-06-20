@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 from ..Qt import QtCore, QtGui
 from ..python2_3 import asUnicode
 from .Parameter import Parameter, registerParameterType
@@ -10,9 +9,11 @@ from ..colormap import ColorMap
 from .. import icons as icons
 from .. import functions as fn
 from collections import OrderedDict
-import os, sys
+import os
 
 from ..widgets.PenSelectorDialog import PenSelectorDialog
+
+import numpy as np
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -844,20 +845,118 @@ class ProgressBarParameter(Parameter):
 
 registerParameterType('progress', ProgressBarParameter, override=True)
 
+# WidgetParameterItem is not a QObject, and the slider's value needs to be converted before
+# emitting. So, create an emitter class here that can be used instead
+class Emitter(QtCore.QObject):
+    sigChanging = QtCore.Signal(object, object)
+
 class SliderParameterItem(WidgetParameterItem):
+    slider: QtGui.QSlider
+    span: np.ndarray
+    charSpan: np.ndarray
+
+    def __init__(self, param, depth):
+        # Bind emitter to self to avoid garbage collection
+        self.emitter = Emitter()
+        self.sigChanging = self.emitter.sigChanging
+        self._suffix = None
+        super().__init__(param, depth)
+
+    def optsChanged(self, param, opts):
+        if 'suffix' in opts:
+            self.setSuffix(opts['suffix'])
+            self.slider.valueChanged.emit(self.slider.value())
+        super().optsChanged(param, opts)
+
+    def updateDisplayLabel(self, value=None):
+        if value is None:
+            value = self.param.value()
+        value = asUnicode(value)
+        if self._suffix is None:
+            suffixTxt = ''
+        else:
+            suffixTxt = f' {self._suffix}'
+        self.displayLabel.setText(value + suffixTxt)
+
+    def setSuffix(self, suffix):
+        self._suffix = suffix
+        self._updateLabel(self.slider.value())
+
     def makeWidget(self):
-        w = QtGui.QSlider()
-        w.setOrientation(QtCore.Qt.Orientation.Horizontal)
-        w.setMaximumHeight(20)
-        w.sigChanged = w.valueChanged
-        def setLimits(limits):
-            w.setMinimum(min(limits))
-            w.setMaximum(max(limits))
-        self.limitsChanged = setLimits
-        self.limitsChanged(self.param.opts['limits'])
-        self.widget = w
-        self.hideWidget = False
+        param = self.param
+        opts = param.opts
+        self._suffix = opts.get('suffix')
+
+        self.slider = QtGui.QSlider()
+        self.slider.setOrientation(QtCore.Qt.Orientation.Horizontal)
+        lbl = QtGui.QLabel()
+        lbl.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
+
+        w = QtGui.QWidget()
+        layout = QtGui.QHBoxLayout()
+        w.setLayout(layout)
+        layout.addWidget(lbl)
+        layout.addWidget(self.slider)
+
+        def setValue(v):
+            self.slider.setValue(self.spanToSliderValue(v))
+        def getValue():
+            return self.span[self.slider.value()].item()
+
+        def vChanged(v):
+            lbl.setText(self.prettyTextValue(v))
+        self.slider.valueChanged.connect(vChanged)
+
+        def onMove(pos):
+            self.sigChanging.emit(self, self.span[pos].item())
+        self.slider.sliderMoved.connect(onMove)
+
+        w.setValue = setValue
+        w.value = getValue
+        w.sigChanged = self.slider.valueChanged
+        w.sigChanging = self.sigChanging
+        self.optsChanged(param, opts)
         return w
+
+    # def updateDisplayLabel(self, value=None):
+    #   self.displayLabel.setText(self.prettyTextValue(value))
+
+    def spanToSliderValue(self, v):
+        return int(np.argmin(np.abs(self.span-v)))
+
+    def prettyTextValue(self, v):
+        if self._suffix is None:
+            suffixTxt = ''
+        else:
+            suffixTxt = f' {self._suffix}'
+        format_ = self.param.opts.get('format', None)
+        cspan = self.charSpan
+        if format_ is None:
+            format_ = f'{{0:>{cspan.dtype.itemsize}}}{suffixTxt}'
+        return format_.format(cspan[v].decode())
+
+    def optsChanged(self, param, opts):
+        try:
+            super().optsChanged(param, opts)
+        except AttributeError as ex:
+            pass
+        span = opts.get('span', None)
+        if span is None:
+            step = opts.get('step', 1)
+            start, stop = opts['limits']
+            # Add a bit to 'stop' since python slicing excludes the last value
+            span = np.arange(start, stop+step, step)
+        precision = opts.get('precision', 2)
+        if precision is not None:
+            span = span.round(precision)
+        self.span = span
+        self.charSpan = np.char.array(span)
+        w = self.slider
+        w.setMinimum(0)
+        w.setMaximum(len(span)-1)
+
+    def limitsChanged(self, param, limits):
+        self.optsChanged(param, dict(limits=limits))
 
 class SliderParameter(Parameter):
     itemClass = SliderParameterItem
