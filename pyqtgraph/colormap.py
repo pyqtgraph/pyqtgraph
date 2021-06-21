@@ -602,13 +602,13 @@ class ColorMap(object):
 
     def getColors(self, mode=BYTE):
         """
-        Returns a tuple (stops, colors) containing a list of all stops (ranging 0.0 to 1.0)
-        and a list of the associated colors.
+        Returns a list of the colors associated with the stops of the color map.
         
         The parameter `mode` can be one of
-        - `ColorMap.BYTE` or 'byte' to return colors as RGBA tuples in byte format (0-255)
-        - `ColorMap.FLOAT` or 'float' to return colors as RGBA tuples in float format (0.0 to 1.0)
-        - `ColorMap.QCOLOR' or 'qcolor' to return a list of QColors
+            - `ColorMap.BYTE` or 'byte' to return colors as RGBA tuples in byte format (0 to 255)
+            - `ColorMap.FLOAT` or 'float' to return colors as RGBA tuples in float format (0.0 to 1.0)
+            - `ColorMap.QCOLOR` or 'qcolor' to return a list of QColors
+            
         The default is byte format.
         """
         stops, color = self.getStops(mode=mode)
@@ -620,9 +620,10 @@ class ColorMap(object):
         and a list of the associated colors.
         
         The parameter `mode` can be one of
-        - `ColorMap.BYTE` or 'byte' to return colors as RGBA tuples in byte format (0-255)
-        - `ColorMap.FLOAT` or 'float' to return colors as RGBA tuples in float format (0.0 to 1.0)
-        - `ColorMap.QCOLOR' or 'qcolor' to return a list of QColors
+            - `ColorMap.BYTE` or 'byte' to return colors as RGBA tuples in byte format (0 to 255)
+            - `ColorMap.FLOAT` or 'float' to return colors as RGBA tuples in float format (0.0 to 1.0)
+            - `ColorMap.QCOLOR` or 'qcolor' to return a list of QColors
+
         The default is byte format.
         """
         if isinstance(mode, str):
