@@ -5,6 +5,8 @@ from os import path, listdir
 from collections.abc import Callable, Sequence
 import warnings
 
+__all__ = ['ColorMap']
+
 _mapCache = {}
 
 def listMaps(source=None):
@@ -598,32 +600,45 @@ class ColorMap(object):
         pen.setCosmetic(True)
         return pen
 
-    def getColors(self, mode=None):
-        """Returns a list of all color stops, converted to the specified mode.
-        If `mode` is None, no conversion is performed.
+    def getColors(self, mode=BYTE):
+        """
+        Returns a list of the colors associated with the stops of the color map.
+        
+        The parameter `mode` can be one of
+            - `ColorMap.BYTE` or 'byte' to return colors as RGBA tuples in byte format (0 to 255)
+            - `ColorMap.FLOAT` or 'float' to return colors as RGBA tuples in float format (0.0 to 1.0)
+            - `ColorMap.QCOLOR` or 'qcolor' to return a list of QColors
+            
+        The default is byte format.
+        """
+        stops, color = self.getStops(mode=mode)
+        return color
+
+    def getStops(self, mode=BYTE):
+        """
+        Returns a tuple (stops, colors) containing a list of all stops (ranging 0.0 to 1.0)
+        and a list of the associated colors.
+        
+        The parameter `mode` can be one of
+            - `ColorMap.BYTE` or 'byte' to return colors as RGBA tuples in byte format (0 to 255)
+            - `ColorMap.FLOAT` or 'float' to return colors as RGBA tuples in float format (0.0 to 1.0)
+            - `ColorMap.QCOLOR` or 'qcolor' to return a list of QColors
+
+        The default is byte format.
         """
         if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
 
-        color = self.color
-        if mode in [self.BYTE, self.QCOLOR] and color.dtype.kind == 'f':
-            color = (color * 255).astype(np.ubyte)
-        elif mode == self.FLOAT and color.dtype.kind != 'f':
-            color = color.astype(float) / 255.
-
-        if mode == self.QCOLOR:
-            color = [QtGui.QColor(*x) for x in color]
-
-        return color
-
-    def getStops(self, mode):
-        ## Get fully-expanded set of RGBA stops in either float or byte mode.
         if mode not in self.stopsCache:
             color = self.color
             if mode == self.BYTE and color.dtype.kind == 'f':
                 color = (color*255).astype(np.ubyte)
             elif mode == self.FLOAT and color.dtype.kind != 'f':
                 color = color.astype(float) / 255.
+            elif mode == self.QCOLOR:
+                if color.dtype.kind == 'f':
+                    color = (color*255).astype(np.ubyte)
+                color = [QtGui.QColor(*x) for x in color]
             self.stopsCache[mode] = (self.pos, color)
         return self.stopsCache[mode]
 
