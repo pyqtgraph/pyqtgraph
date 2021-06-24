@@ -1,18 +1,16 @@
 from ..Qt import QtGui, QtCore
 from .UIGraphicsItem import *
-from .GraphicsItem import *
 from .. import functions as fn
 
 __all__ = ['GradientLegend']
 
 class GradientLegend(UIGraphicsItem):
-# class GradientLegend(GraphicsItem):
     """
     Draws a color gradient rectangle along with text labels denoting the value at specific
     points along the gradient.
     """
     
-    def __init__(self, size, offset):        
+    def __init__(self, size, offset):
         self.size = size
         self.offset = offset
         UIGraphicsItem.__init__(self)
