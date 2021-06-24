@@ -1,16 +1,18 @@
 from ..Qt import QtGui, QtCore
 from .UIGraphicsItem import *
+from .GraphicsItem import *
 from .. import functions as fn
 
 __all__ = ['GradientLegend']
 
 class GradientLegend(UIGraphicsItem):
+# class GradientLegend(GraphicsItem):
     """
     Draws a color gradient rectangle along with text labels denoting the value at specific
     points along the gradient.
     """
     
-    def __init__(self, size, offset):
+    def __init__(self, size, offset):        
         self.size = size
         self.offset = offset
         UIGraphicsItem.__init__(self)
@@ -21,6 +23,7 @@ class GradientLegend(UIGraphicsItem):
         self.gradient = QtGui.QLinearGradient()
         self.gradient.setColorAt(0, QtGui.QColor(0,0,0))
         self.gradient.setColorAt(1, QtGui.QColor(255,0,0))
+        self.setZValue(100) # draw on top of ordinary plots
         
     def setGradient(self, g):
         self.gradient = g
@@ -45,14 +48,17 @@ class GradientLegend(UIGraphicsItem):
         
     def paint(self, p, opt, widget):
         UIGraphicsItem.paint(self, p, opt, widget)
-        rect = self.boundingRect()   ## Boundaries of visible area in scene coords.
-        unit = self.pixelSize()       ## Size of one view pixel in scene coords.
-        if unit[0] is None:  
-            return
-        
-        ## Have to scale painter so that text and gradients are correct size and not upside down
-        p.scale(unit[0], -unit[1])
 
+        p.save() # save painter state before we change transformation
+        view = self.getViewBox()
+        if view is not None:
+            trans = view.sceneTransform()
+            p.setTransform( trans ) # draw in ViewBox pixel coordinates
+            rect = view.rect()
+        else:
+            rect = QtCore.QRectF(0,0, 100, 100) # use dummy values when no associated ViewBox exists.
+            rect = self.boundingRect() # should generatore dummy values
+        
         ## determine max width of all labels
         labelWidth = 0
         labelHeight = 0
@@ -63,10 +69,10 @@ class GradientLegend(UIGraphicsItem):
             
         textPadding = 2  # in px
         
-        xR = rect.right()  / unit[0]
-        xL = rect.left()   / unit[0]
-        yB = -(rect.top()    / unit[1])
-        yT = -(rect.bottom() / unit[1])
+        xR = rect.right()
+        xL = rect.left()
+        yT = rect.top()
+        yB = rect.bottom()
         
         # coordinates describe edges of text and bar, additional margins will be added for background
         if self.offset[0] < 0:
@@ -112,3 +118,5 @@ class GradientLegend(UIGraphicsItem):
         for k in self.labels:
             y = y1 + self.labels[k] * (y2-y1)
             p.drawText(QtCore.QRectF(tx, y - lh/2, lw, lh), QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter, str(k))
+
+        p.restore() # restore QPainter transform to original state
