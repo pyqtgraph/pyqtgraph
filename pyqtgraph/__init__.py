@@ -285,6 +285,10 @@ from .GraphicsScene import GraphicsScene
 from .python2_3 import asUnicode
 from .util.cupy_helper import getCupy
 
+# indirect imports known to be used outside of the library
+from .metaarray import MetaArray
+from .ordereddict import OrderedDict
+
 
 ##############################################################
 ## PyQt and PySide both are prone to crashing on exit. 
