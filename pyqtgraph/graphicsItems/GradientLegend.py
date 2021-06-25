@@ -47,15 +47,13 @@ class GradientLegend(UIGraphicsItem):
     def paint(self, p, opt, widget):
         UIGraphicsItem.paint(self, p, opt, widget)
 
-        p.save() # save painter state before we change transformation
         view = self.getViewBox()
-        if view is not None:
-            trans = view.sceneTransform()
-            p.setTransform( trans ) # draw in ViewBox pixel coordinates
-            rect = view.rect()
-        else:
-            rect = QtCore.QRectF(0,0, 100, 100) # use dummy values when no associated ViewBox exists.
-            rect = self.boundingRect() # should generatore dummy values
+        if view is None:
+            return
+        p.save() # save painter state before we change transformation
+        trans = view.sceneTransform()
+        p.setTransform( trans ) # draw in ViewBox pixel coordinates
+        rect = view.rect()
         
         ## determine max width of all labels
         labelWidth = 0
