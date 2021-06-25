@@ -5,7 +5,7 @@ import sys
 import subprocess
 from argparse import Namespace
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
+from pyqtgraph.Qt import QtWidgets, QtGui, QtCore, QT_LIB
 from collections import OrderedDict
 from .utils import examples
 
@@ -188,7 +188,7 @@ class PythonHighlighter(QSyntaxHighlighter):
 
     @property
     def styles(self):
-        app = QtGui.QApplication.instance()
+        app = QtWidgets.QApplication.instance()
         return DARK_STYLES if app.property('darkMode') else LIGHT_STYLES
 
     def highlightBlock(self, text):
@@ -261,23 +261,25 @@ class PythonHighlighter(QSyntaxHighlighter):
 
 
 
-class ExampleLoader(QtGui.QMainWindow):
+class ExampleLoader(QtWidgets.QMainWindow):
     def __init__(self):
-        QtGui.QMainWindow.__init__(self)
+        QtWidgets.QMainWindow.__init__(self)
         self.ui = ui_template.Ui_Form()
-        self.cw = QtGui.QWidget()
+        self.cw = QtWidgets.QWidget()
         self.setCentralWidget(self.cw)
         self.ui.setupUi(self.cw)
         self.setWindowTitle("PyQtGraph Examples")
-        self.codeBtn = QtGui.QPushButton('Run Edited Code')
-        self.codeLayout = QtGui.QGridLayout()
+        self.codeBtn = QtWidgets.QPushButton('Run Edited Code')
+        self.codeLayout = QtWidgets.QGridLayout()
         self.ui.codeView.setLayout(self.codeLayout)
         self.hl = PythonHighlighter(self.ui.codeView.document())
-        app = QtGui.QApplication.instance()
+        app = QtWidgets.QApplication.instance()
         app.paletteChanged.connect(self.updateTheme)
-        self.codeLayout.addItem(QtGui.QSpacerItem(100,100,QtGui.QSizePolicy.Policy.Expanding,QtGui.QSizePolicy.Policy.Expanding), 0, 0)
+        self.codeLayout.addItem(QtWidgets.QSpacerItem(100,100,QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Expanding), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
         self.codeBtn.hide()
+
+        self.ui.exampleFilter.textChanged.connect(self.onFilter)
 
         global examples
         self.itemCache = []
@@ -292,6 +294,30 @@ class ExampleLoader(QtGui.QMainWindow):
         self.ui.exampleTree.itemDoubleClicked.connect(self.loadFile)
         self.ui.codeView.textChanged.connect(self.codeEdited)
         self.codeBtn.clicked.connect(self.runEditedCode)
+
+    def onFilter(self, text):
+        QTWI = QtWidgets.QTreeWidgetItemIterator
+        flag = QTWI.IteratorFlag.NoChildren
+        treeIter = QTWI(self.ui.exampleTree, flag)
+        item = treeIter.value()
+        text = text.lower()
+        while item is not None:
+            parent = item.parent()
+            parentText = '' if not parent else parent.text(0)
+            show = (item.childCount() or text in item.text(0).lower() or text in parentText.lower())
+            item.setHidden(not show)
+
+            # If all children of a parent are gone, hide it
+            if parent:
+                hideParent = True
+                for ii in range(parent.childCount()):
+                    if not parent.child(ii).isHidden():
+                        hideParent = False
+                        break
+                parent.setHidden(hideParent)
+
+            treeIter += 1
+            item = treeIter.value()
 
     def simulate_black_mode(self):
         """
@@ -309,7 +335,7 @@ class ExampleLoader(QtGui.QMainWindow):
         f.setForeground(QtGui.QColor('white'))
         self.ui.codeView.setCurrentCharFormat(f)
         # finally, override application automatic detection
-        app = QtGui.QApplication.instance()
+        app = QtWidgets.QApplication.instance()
         app.setProperty('darkMode', True)
 
     def updateTheme(self):
@@ -318,7 +344,7 @@ class ExampleLoader(QtGui.QMainWindow):
     def populateTree(self, root, examples):
         bold_font = None
         for key, val in examples.items():
-            item = QtGui.QTreeWidgetItem([key])
+            item = QtWidgets.QTreeWidgetItem([key])
             self.itemCache.append(item) # PyQt 4.9.6 no longer keeps references to these wrappers,
                                         # so we need to make an explicit reference or else the .file
                                         # attribute will disappear.

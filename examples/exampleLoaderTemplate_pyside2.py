@@ -1,79 +1,109 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'exampleLoaderTemplate.ui',
-# licensing of 'exampleLoaderTemplate.ui' applies.
-#
-# Created: Mon Feb 22 18:33:36 2021
-#      by: pyside2-uic  running on PySide2 5.12.6
-#
-# WARNING! All changes made in this file will be lost!
+################################################################################
+## Form generated from reading UI file 'exampleLoaderTemplate.ui'
+##
+## Created by: Qt User Interface Compiler version 5.15.2
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
-        Form.setObjectName("Form")
+        if not Form.objectName():
+            Form.setObjectName(u"Form")
         Form.resize(846, 552)
-        self.gridLayout_2 = QtWidgets.QGridLayout(Form)
-        self.gridLayout_2.setObjectName("gridLayout_2")
-        self.splitter = QtWidgets.QSplitter(Form)
-        self.splitter.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter.setObjectName("splitter")
-        self.widget = QtWidgets.QWidget(self.splitter)
-        self.widget.setObjectName("widget")
-        self.gridLayout = QtWidgets.QGridLayout(self.widget)
+        self.gridLayout_2 = QGridLayout(Form)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.splitter = QSplitter(Form)
+        self.splitter.setObjectName(u"splitter")
+        self.splitter.setOrientation(Qt.Horizontal)
+        self.layoutWidget = QWidget(self.splitter)
+        self.layoutWidget.setObjectName(u"layoutWidget")
+        self.gridLayout = QGridLayout(self.layoutWidget)
+        self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout.setObjectName("gridLayout")
-        self.exampleTree = QtWidgets.QTreeWidget(self.widget)
-        self.exampleTree.setObjectName("exampleTree")
-        self.exampleTree.headerItem().setText(0, "1")
+        self.exampleTree = QTreeWidget(self.layoutWidget)
+        __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setText(0, u"1");
+        self.exampleTree.setHeaderItem(__qtreewidgetitem)
+        self.exampleTree.setObjectName(u"exampleTree")
         self.exampleTree.header().setVisible(False)
-        self.gridLayout.addWidget(self.exampleTree, 0, 0, 1, 2)
-        self.qtLibCombo = QtWidgets.QComboBox(self.widget)
-        self.qtLibCombo.setObjectName("qtLibCombo")
+
+        self.gridLayout.addWidget(self.exampleTree, 1, 0, 1, 2)
+
+        self.loadBtn = QPushButton(self.layoutWidget)
+        self.loadBtn.setObjectName(u"loadBtn")
+
+        self.gridLayout.addWidget(self.loadBtn, 4, 1, 1, 1)
+
+        self.label = QLabel(self.layoutWidget)
+        self.label.setObjectName(u"label")
+
+        self.gridLayout.addWidget(self.label, 2, 0, 1, 1)
+
+        self.qtLibCombo = QComboBox(self.layoutWidget)
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
-        self.gridLayout.addWidget(self.qtLibCombo, 1, 1, 1, 1)
-        self.label = QtWidgets.QLabel(self.widget)
-        self.label.setObjectName("label")
-        self.gridLayout.addWidget(self.label, 1, 0, 1, 1)
-        self.loadBtn = QtWidgets.QPushButton(self.widget)
-        self.loadBtn.setObjectName("loadBtn")
-        self.gridLayout.addWidget(self.loadBtn, 3, 1, 1, 1)
-        self.widget1 = QtWidgets.QWidget(self.splitter)
-        self.widget1.setObjectName("widget1")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.widget1)
+        self.qtLibCombo.setObjectName(u"qtLibCombo")
+
+        self.gridLayout.addWidget(self.qtLibCombo, 2, 1, 1, 1)
+
+        self.exampleFilter = QLineEdit(self.layoutWidget)
+        self.exampleFilter.setObjectName(u"exampleFilter")
+
+        self.gridLayout.addWidget(self.exampleFilter, 0, 0, 1, 2)
+
+        self.splitter.addWidget(self.layoutWidget)
+        self.layoutWidget1 = QWidget(self.splitter)
+        self.layoutWidget1.setObjectName(u"layoutWidget1")
+        self.verticalLayout = QVBoxLayout(self.layoutWidget1)
+        self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.loadedFileLabel = QtWidgets.QLabel(self.widget1)
-        font = QtGui.QFont()
+        self.loadedFileLabel = QLabel(self.layoutWidget1)
+        self.loadedFileLabel.setObjectName(u"loadedFileLabel")
+        font = QFont()
         font.setBold(True)
         self.loadedFileLabel.setFont(font)
-        self.loadedFileLabel.setText("")
-        self.loadedFileLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.loadedFileLabel.setObjectName("loadedFileLabel")
+        self.loadedFileLabel.setAlignment(Qt.AlignCenter)
+
         self.verticalLayout.addWidget(self.loadedFileLabel)
-        self.codeView = QtWidgets.QPlainTextEdit(self.widget1)
-        font = QtGui.QFont()
-        font.setFamily("Courier New")
-        self.codeView.setFont(font)
-        self.codeView.setObjectName("codeView")
+
+        self.codeView = QPlainTextEdit(self.layoutWidget1)
+        self.codeView.setObjectName(u"codeView")
+        font1 = QFont()
+        self.codeView.setFont(font1)
+
         self.verticalLayout.addWidget(self.codeView)
-        self.gridLayout_2.addWidget(self.splitter, 0, 0, 1, 1)
+
+        self.splitter.addWidget(self.layoutWidget1)
+
+        self.gridLayout_2.addWidget(self.splitter, 1, 0, 1, 1)
+
 
         self.retranslateUi(Form)
-        QtCore.QMetaObject.connectSlotsByName(Form)
+
+        QMetaObject.connectSlotsByName(Form)
+    # setupUi
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "PyQtGraph", None, -1))
-        self.qtLibCombo.setItemText(0, QtWidgets.QApplication.translate("Form", "default", None, -1))
-        self.qtLibCombo.setItemText(1, QtWidgets.QApplication.translate("Form", "PyQt5", None, -1))
-        self.qtLibCombo.setItemText(2, QtWidgets.QApplication.translate("Form", "PySide2", None, -1))
-        self.qtLibCombo.setItemText(3, QtWidgets.QApplication.translate("Form", "PySide6", None, -1))
-        self.qtLibCombo.setItemText(4, QtWidgets.QApplication.translate("Form", "PyQt6", None, -1))
-        self.label.setText(QtWidgets.QApplication.translate("Form", "Qt Library:", None, -1))
-        self.loadBtn.setText(QtWidgets.QApplication.translate("Form", "Run Example", None, -1))
+        Form.setWindowTitle(QCoreApplication.translate("Form", u"PyQtGraph", None))
+        self.loadBtn.setText(QCoreApplication.translate("Form", u"Run Example", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Qt Library:", None))
+        self.qtLibCombo.setItemText(0, QCoreApplication.translate("Form", u"default", None))
+        self.qtLibCombo.setItemText(1, QCoreApplication.translate("Form", u"PyQt5", None))
+        self.qtLibCombo.setItemText(2, QCoreApplication.translate("Form", u"PySide2", None))
+        self.qtLibCombo.setItemText(3, QCoreApplication.translate("Form", u"PySide6", None))
+        self.qtLibCombo.setItemText(4, QCoreApplication.translate("Form", u"PyQt6", None))
 
+        self.exampleFilter.setPlaceholderText(QCoreApplication.translate("Form", u"Type to filter...", None))
+        self.loadedFileLabel.setText("")
+    # retranslateUi
