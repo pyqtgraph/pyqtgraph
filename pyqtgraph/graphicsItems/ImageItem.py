@@ -900,7 +900,7 @@ class ImageItem(GraphicsObject):
                 step = int(self._xp.ceil((mx - mn) / 500.))
                 bins = []
                 if step > 0.0:
-                    bins = self._xp.arange(mn, mx + 1.01 * step, step, dtype=self._xp.int)
+                    bins = self._xp.arange(mn, mx + 1.01 * step, step, dtype=int)
             else:
                 # for float data, let numpy select the bins.
                 bins = self._xp.linspace(mn, mx, 500)
