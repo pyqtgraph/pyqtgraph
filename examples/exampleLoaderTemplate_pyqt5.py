@@ -62,6 +62,7 @@ class Ui_Form(object):
         self.verticalLayout.addWidget(self.loadedFileLabel)
         self.codeView = QtWidgets.QPlainTextEdit(self.layoutWidget1)
         font = QtGui.QFont()
+        font.setFamily("Courier New")
         self.codeView.setFont(font)
         self.codeView.setObjectName("codeView")
         self.verticalLayout.addWidget(self.codeView)

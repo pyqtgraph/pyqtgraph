@@ -80,6 +80,7 @@ class Ui_Form(object):
         self.codeView = QPlainTextEdit(self.layoutWidget1)
         self.codeView.setObjectName(u"codeView")
         font1 = QFont()
+        font1.setFamily(u"Courier New")
         self.codeView.setFont(font1)
 
         self.verticalLayout.addWidget(self.codeView)

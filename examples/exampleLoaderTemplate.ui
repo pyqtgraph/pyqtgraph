@@ -105,7 +105,9 @@
        <item>
         <widget class="QPlainTextEdit" name="codeView">
          <property name="font">
-          <font/>
+          <font>
+            <family>Courier New</family>
+          </font>
          </property>
         </widget>
        </item>
