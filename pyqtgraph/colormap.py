@@ -151,7 +151,7 @@ def getFromMatplotlib(name):
     col_map = mpl_plt.get_cmap(name)
     if hasattr(col_map, '_segmentdata'): # handle LinearSegmentedColormap
         data = col_map._segmentdata
-        if ('red' in data) and isinstance(data['red'], Sequence):
+        if ('red' in data) and isinstance(data['red'], (Sequence, np.ndarray)):
             positions = set() # super-set of handle positions in individual channels
             for key in ['red','green','blue']:
                 for tup in data[key]:
