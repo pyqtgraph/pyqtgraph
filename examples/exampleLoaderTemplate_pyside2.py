@@ -62,7 +62,9 @@ class Ui_Form(object):
 
         self.gridLayout.addWidget(self.exampleFilter, 0, 0, 1, 1)
 
-        self.searchFiles = QCheckBox(self.layoutWidget)
+        self.searchFiles = QComboBox(self.layoutWidget)
+        self.searchFiles.addItem("")
+        self.searchFiles.addItem("")
         self.searchFiles.setObjectName(u"searchFiles")
 
         self.gridLayout.addWidget(self.searchFiles, 0, 1, 1, 1)
@@ -111,6 +113,8 @@ class Ui_Form(object):
 
         self.label.setText(QCoreApplication.translate("Form", u"Qt Library:", None))
         self.exampleFilter.setPlaceholderText(QCoreApplication.translate("Form", u"Type to filter...", None))
-        self.searchFiles.setText(QCoreApplication.translate("Form", u"Search files", None))
+        self.searchFiles.setItemText(0, QCoreApplication.translate("Form", u"Title Search", None))
+        self.searchFiles.setItemText(1, QCoreApplication.translate("Form", u"Content Search", None))
+
         self.loadedFileLabel.setText("")
     # retranslateUi

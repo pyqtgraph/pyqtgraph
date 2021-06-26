@@ -32,7 +32,7 @@ def buildFileList(examples, files=None):
 
 path = os.path.abspath(os.path.dirname(__file__))
 files = [("Example App", "RunExampleApp.py")]
-for ex in [utils.examples, utils.others]:
+for ex in [utils.examples_, utils.others]:
     files = buildFileList(ex, files)
 files = sorted(set(files))
 frontends = {
@@ -157,6 +157,7 @@ try:
     {0}
     import initExample
     import pyqtgraph as pg
+    pg.Qt.QtWidgets.QWidget.show = lambda *args: None
     import {1}
     import sys
     print("test complete")

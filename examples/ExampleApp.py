@@ -8,7 +8,7 @@ from argparse import Namespace
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets, QtGui, QtCore, QT_LIB
 from collections import OrderedDict
-from .utils import examples
+from .utils import examples_
 from functools import lru_cache
 
 path = os.path.abspath(os.path.dirname(__file__))
@@ -149,7 +149,7 @@ class PythonHighlighter(QSyntaxHighlighter):
     ]
 
     def __init__(self, document):
-        QSyntaxHighlighter.__init__(self, document)
+        super().__init__(document)
 
         # Multi-line strings (expression, flag, style)
         self.tri_single = (QRegularExpression("'''"), 1, 'string2')
@@ -285,12 +285,12 @@ class PythonHighlighter(QSyntaxHighlighter):
             self.setFormat(start, length, style)
 
 
-def unnestDict(exDict):
+def unnestedDict(exDict):
     """Converts a dict-of-dicts to a singly nested dict for non-recursive parsing"""
     out = {}
     for kk, vv in exDict.items():
         if isinstance(vv, dict):
-            out.update(unnestDict(vv))
+            out.update(unnestedDict(vv))
         else:
             out[kk] = vv
     return out
@@ -319,25 +319,23 @@ class ExampleLoader(QtWidgets.QMainWindow):
         textFil = self.ui.exampleFilter
         self.curListener = None
 
-        def onCheckStateChanged(state):
-            state = QtCore.Qt.CheckState(state)
+        def onCheckStateChanged(searchType):
             if self.curListener is not None:
                 self.curListener.disconnect()
             self.curListener = textFil.textChanged
-            if state is QtCore.Qt.CheckState.Checked:
-                self.curListener.connect(lambda: self.filterByContent(textFil.text()))
+            if searchType == 'Content Search':
+                self.curListener.connect(self.filterByContent)
             else:
                 self.hl.searchText = None
                 self.curListener.connect(self.filterByTitle)
             # Fire on current text, too
             self.curListener.emit(textFil.text())
 
-        self.ui.searchFiles.stateChanged.connect(onCheckStateChanged)
-        onCheckStateChanged(self.ui.searchFiles.checkState())
+        self.ui.searchFiles.currentTextChanged.connect(onCheckStateChanged)
+        onCheckStateChanged(self.ui.searchFiles.currentText())
 
-        global examples
         self.itemCache = []
-        self.populateTree(self.ui.exampleTree.invisibleRootItem(), examples)
+        self.populateTree(self.ui.exampleTree.invisibleRootItem(), examples_)
         self.ui.exampleTree.expandAll()
 
         self.resize(1000,500)
@@ -351,7 +349,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
         # from showing "run edited code" by checking for actual content change
         oldText = self.ui.codeView.toPlainText()
         def onTextChange():
-            nonlocal  oldText
+            nonlocal oldText
             newText = self.ui.codeView.toPlainText()
             if newText != oldText:
                 oldText = newText
@@ -364,9 +362,9 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.showExamplesByTitle(self.getMatchingTitles(text))
         self.hl.setDocument(self.ui.codeView.document())
 
-    def filterByContent(self, text):
+    def filterByContent(self, text=None):
         # Don't filter very short strings
-        checkDict = unnestDict(examples)
+        checkDict = unnestedDict(examples_)
         self.hl.searchText = text
         # Need to reapply to current document
         self.hl.setDocument(self.ui.codeView.document())
@@ -383,7 +381,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
 
     def getMatchingTitles(self, text, exDict=None, acceptAll=False):
         if exDict is None:
-            exDict = examples
+            exDict = examples_
         text = text.lower()
         titles = []
         for kk, vv in exDict.items():
@@ -461,7 +459,6 @@ class ExampleLoader(QtWidgets.QMainWindow):
     def currentFile(self):
         item = self.ui.exampleTree.currentItem()
         if hasattr(item, 'file'):
-            global path
             return os.path.join(path, item.file)
         return None
 
