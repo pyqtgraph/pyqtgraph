@@ -9,6 +9,7 @@ from .. import functions as fn
 import weakref
 import operator
 
+__all__ = ['GraphicsItem']
 
 # Recipe from https://docs.python.org/3.8/library/collections.html#collections.OrderedDict
 # slightly adapted for Python 3.7 compatibility

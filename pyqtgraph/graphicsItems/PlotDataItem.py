@@ -11,6 +11,7 @@ from .. import functions as fn
 from .. import debug as debug
 from .. import getConfigOption
 
+__all__ = ['PlotDataItem']
 
 class PlotDataItem(GraphicsObject):
     """

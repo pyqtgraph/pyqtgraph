@@ -10,6 +10,7 @@ from .ViewBox import ViewBox
 import string
 import warnings
 
+__all__ = ['TargetItem', 'TargetLabel']
 
 class TargetItem(UIGraphicsItem):
     """Draws a draggable target symbol (circle plus crosshair).

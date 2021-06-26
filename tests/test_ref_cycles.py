@@ -37,7 +37,7 @@ def test_PlotWidget():
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             w = pg.PlotWidget(*args, **kwds)
-        data = pg.np.array([1,5,2,4,3])
+        data = np.array([1,5,2,4,3])
         c = w.plot(data, name='stuff')
         w.addLegend()
         
