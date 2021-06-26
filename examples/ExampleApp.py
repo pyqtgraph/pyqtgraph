@@ -341,7 +341,18 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.ui.loadBtn.clicked.connect(self.loadFile)
         self.ui.exampleTree.currentItemChanged.connect(self.showFile)
         self.ui.exampleTree.itemDoubleClicked.connect(self.loadFile)
-        self.ui.codeView.textChanged.connect(self.codeEdited)
+
+        # textChanged fires when the highlighter is reassigned the same document. Prevent this
+        # from showing "run edited code" by checking for actual content change
+        oldText = self.ui.codeView.toPlainText()
+        def onTextChange():
+            nonlocal  oldText
+            newText = self.ui.codeView.toPlainText()
+            if newText != oldText:
+                oldText = newText
+                self.codeEdited()
+
+        self.ui.codeView.textChanged.connect(onTextChange)
         self.codeBtn.clicked.connect(self.runEditedCode)
 
     def filterByTitle(self, text):
