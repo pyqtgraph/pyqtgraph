@@ -273,7 +273,8 @@ class PythonHighlighter(QSyntaxHighlighter):
         if not self.searchText:
             return
         expr = f'(?i){self.searchText}'
-        style = charFormat('#000', background='y')
+        color = '#fff' if app.property('darkMode') else '#000'
+        style = charFormat(color, background='y')
         for match in re.finditer(expr, text):
             start = match.start()
             length = match.end() - start
@@ -306,7 +307,8 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.hl = PythonHighlighter(self.ui.codeView.document())
         app = QtWidgets.QApplication.instance()
         app.paletteChanged.connect(self.updateTheme)
-        self.codeLayout.addItem(QtWidgets.QSpacerItem(100,100,QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Expanding), 0, 0)
+        policy = QtWidgets.QSizePolicy.Policy.Expanding
+        self.codeLayout.addItem(QtWidgets.QSpacerItem(100,100, policy, policy), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
         self.codeBtn.hide()
 
