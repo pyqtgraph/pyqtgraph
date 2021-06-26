@@ -316,10 +316,11 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.curListener = None
 
         def onCheckStateChanged(state):
+            state = QtCore.Qt.CheckState(state)
             if self.curListener is not None:
                 self.curListener.disconnect()
             self.curListener = textFil.textChanged
-            if state == QtCore.Qt.CheckState.Checked:
+            if state is QtCore.Qt.CheckState.Checked:
                 self.curListener.connect(lambda: self.filterByContent(textFil.text()))
             else:
                 self.hl.searchText = None
