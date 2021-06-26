@@ -274,7 +274,11 @@ class PythonHighlighter(QSyntaxHighlighter):
         if not self.searchText:
             return
         expr = f'(?i){self.searchText}'
-        style = charFormat('#000', background='y')
+        palette: QtGui.QPalette = app.palette()
+        color = palette.highlight().color()
+        fgndColor = palette.color(palette.ColorGroup.Current,
+                                  palette.ColorRole.Text).name()
+        style = charFormat(fgndColor, background=color.name())
         for match in re.finditer(expr, text):
             start = match.start()
             length = match.end() - start
