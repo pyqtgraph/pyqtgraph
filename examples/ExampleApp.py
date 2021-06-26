@@ -4,6 +4,9 @@ import re
 import sys
 import subprocess
 from argparse import Namespace
+
+import qdarkstyle
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets, QtGui, QtCore, QT_LIB
 from collections import OrderedDict
@@ -273,8 +276,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         if not self.searchText:
             return
         expr = f'(?i){self.searchText}'
-        color = '#fff' if app.property('darkMode') else '#000'
-        style = charFormat(color, background='y')
+        style = charFormat('#000', background='y')
         for match in re.finditer(expr, text):
             start = match.start()
             length = match.end() - start
@@ -504,9 +506,42 @@ class ExampleLoader(QtWidgets.QMainWindow):
     def runEditedCode(self):
         self.loadFile(edited=True)
 
+def make_dark_QPalette():
+    """ manually define a dark mode palette """
+    BLACK      = QtGui.QColor('#000000')
+    BG_LIGHT   = QtGui.QColor('#505354')
+    BG_NORMAL  = QtGui.QColor('#2e3132')
+    BG_DARK    = QtGui.QColor('#0e1112')
+    FG_LIGHT   = QtGui.QColor('#f0f4f5')
+    FG_NORMAL  = QtGui.QColor('#d4d8d9')
+    FG_DARK    = QtGui.QColor('#b8bcbd')
+    SEL_LIGHT  = QtGui.QColor('#148CD2')
+    SEL_NORMAL = QtGui.QColor('#1464A0')
+    SEL_DARK   = QtGui.QColor('#14506E')
+    qpal = QtGui.QPalette( QtGui.QColor(BG_DARK) )
+    for ptype in (  QtGui.QPalette.ColorGroup.Active,  QtGui.QPalette.ColorGroup.Inactive ):
+        qpal.setColor( ptype, QtGui.QPalette.ColorRole.Window, BG_NORMAL )
+        qpal.setColor( ptype, QtGui.QPalette.ColorRole.WindowText, FG_LIGHT ) # or white?
+        qpal.setColor( ptype, QtGui.QPalette.ColorRole.Base, BG_DARK )
+        qpal.setColor( ptype, QtGui.QPalette.ColorRole.Text, FG_LIGHT )
+        qpal.setColor( ptype, QtGui.QPalette.ColorRole.AlternateBase, BG_DARK )
+        qpal.setColor( ptype, QtGui.QPalette.ColorRole.ToolTipBase, BG_LIGHT )
+        qpal.setColor( ptype, QtGui.QPalette.ColorRole.ToolTipText, FG_LIGHT )
+        qpal.setColor( ptype, QtGui.QPalette.ColorRole.Button, BG_NORMAL )
+        qpal.setColor( ptype, QtGui.QPalette.ColorRole.ButtonText, FG_LIGHT )
+        qpal.setColor( ptype, QtGui.QPalette.ColorRole.Link, SEL_NORMAL )
+        qpal.setColor( ptype, QtGui.QPalette.ColorRole.LinkVisited, FG_NORMAL )
+        qpal.setColor( ptype, QtGui.QPalette.ColorRole.Highlight, SEL_LIGHT )
+        qpal.setColor( ptype, QtGui.QPalette.ColorRole.HighlightedText, BLACK )
+    qpal.setColor( QtGui.QPalette.ColorGroup.Disabled, QtGui.QPalette.ColorRole.Button, BG_NORMAL )
+    qpal.setColor( QtGui.QPalette.ColorGroup.Disabled, QtGui.QPalette.ColorRole.ButtonText, FG_DARK )
+    qpal.setColor( QtGui.QPalette.ColorGroup.Disabled, QtGui.QPalette.ColorRole.WindowText, FG_DARK )
+    return qpal
+
 
 def main():
     app = pg.mkQApp()
+    app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api=pg.QT_LIB))
     loader = ExampleLoader()
     pg.exec()
 
