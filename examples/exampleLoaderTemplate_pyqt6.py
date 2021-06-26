@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file '.\examples\exampleLoaderTemplate.ui'
+# Form implementation generated from reading ui file 'examples/exampleLoaderTemplate.ui'
 #
 # Created by: PyQt6 UI code generator 6.1.1
 #
@@ -27,13 +27,10 @@ class Ui_Form(object):
         self.exampleTree.setObjectName("exampleTree")
         self.exampleTree.headerItem().setText(0, "1")
         self.exampleTree.header().setVisible(False)
-        self.gridLayout.addWidget(self.exampleTree, 1, 0, 1, 2)
+        self.gridLayout.addWidget(self.exampleTree, 2, 0, 1, 2)
         self.loadBtn = QtWidgets.QPushButton(self.layoutWidget)
         self.loadBtn.setObjectName("loadBtn")
-        self.gridLayout.addWidget(self.loadBtn, 4, 1, 1, 1)
-        self.label = QtWidgets.QLabel(self.layoutWidget)
-        self.label.setObjectName("label")
-        self.gridLayout.addWidget(self.label, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.loadBtn, 5, 1, 1, 1)
         self.qtLibCombo = QtWidgets.QComboBox(self.layoutWidget)
         self.qtLibCombo.setObjectName("qtLibCombo")
         self.qtLibCombo.addItem("")
@@ -41,10 +38,16 @@ class Ui_Form(object):
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
-        self.gridLayout.addWidget(self.qtLibCombo, 2, 1, 1, 1)
+        self.gridLayout.addWidget(self.qtLibCombo, 3, 1, 1, 1)
+        self.label = QtWidgets.QLabel(self.layoutWidget)
+        self.label.setObjectName("label")
+        self.gridLayout.addWidget(self.label, 3, 0, 1, 1)
         self.exampleFilter = QtWidgets.QLineEdit(self.layoutWidget)
         self.exampleFilter.setObjectName("exampleFilter")
-        self.gridLayout.addWidget(self.exampleFilter, 0, 0, 1, 2)
+        self.gridLayout.addWidget(self.exampleFilter, 0, 0, 1, 1)
+        self.searchFiles = QtWidgets.QCheckBox(self.layoutWidget)
+        self.searchFiles.setObjectName("searchFiles")
+        self.gridLayout.addWidget(self.searchFiles, 0, 1, 1, 1)
         self.layoutWidget1 = QtWidgets.QWidget(self.splitter)
         self.layoutWidget1.setObjectName("layoutWidget1")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.layoutWidget1)
@@ -73,10 +76,11 @@ class Ui_Form(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "PyQtGraph"))
         self.loadBtn.setText(_translate("Form", "Run Example"))
-        self.label.setText(_translate("Form", "Qt Library:"))
         self.qtLibCombo.setItemText(0, _translate("Form", "default"))
         self.qtLibCombo.setItemText(1, _translate("Form", "PyQt5"))
         self.qtLibCombo.setItemText(2, _translate("Form", "PySide2"))
         self.qtLibCombo.setItemText(3, _translate("Form", "PySide6"))
         self.qtLibCombo.setItemText(4, _translate("Form", "PyQt6"))
+        self.label.setText(_translate("Form", "Qt Library:"))
         self.exampleFilter.setPlaceholderText(_translate("Form", "Type to filter..."))
+        self.searchFiles.setText(_translate("Form", "Search files"))

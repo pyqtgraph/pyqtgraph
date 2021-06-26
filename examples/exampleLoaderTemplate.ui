@@ -21,7 +21,7 @@
      </property>
      <widget class="QWidget" name="layoutWidget">
       <layout class="QGridLayout" name="gridLayout">
-       <item row="1" column="0" colspan="2">
+       <item row="2" column="0" colspan="2">
         <widget class="QTreeWidget" name="exampleTree">
          <attribute name="headerVisible">
           <bool>false</bool>
@@ -33,21 +33,14 @@
          </column>
         </widget>
        </item>
-       <item row="4" column="1">
+       <item row="5" column="1">
         <widget class="QPushButton" name="loadBtn">
          <property name="text">
           <string>Run Example</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Qt Library:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
+       <item row="3" column="1">
         <widget class="QComboBox" name="qtLibCombo">
          <item>
           <property name="text">
@@ -76,10 +69,24 @@
          </item>
         </widget>
        </item>
-       <item row="0" column="0" colspan="2">
+       <item row="3" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Qt Library:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
         <widget class="QLineEdit" name="exampleFilter">
          <property name="placeholderText">
           <string>Type to filter...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QCheckBox" name="searchFiles">
+         <property name="text">
+          <string>Search files</string>
          </property>
         </widget>
        </item>
@@ -106,7 +113,7 @@
         <widget class="QPlainTextEdit" name="codeView">
          <property name="font">
           <font>
-            <family>Courier New</family>
+           <family>Courier New</family>
           </font>
          </property>
         </widget>

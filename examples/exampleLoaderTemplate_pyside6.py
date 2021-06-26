@@ -3,14 +3,14 @@
 ################################################################################
 ## Form generated from reading UI file 'exampleLoaderTemplate.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.1.0
+## Created by: Qt User Interface Compiler version 6.1.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
+from PySide6.QtCore import *  # type: ignore
+from PySide6.QtGui import *  # type: ignore
+from PySide6.QtWidgets import *  # type: ignore
 
 
 class Ui_Form(object):
@@ -35,17 +35,12 @@ class Ui_Form(object):
         self.exampleTree.setObjectName(u"exampleTree")
         self.exampleTree.header().setVisible(False)
 
-        self.gridLayout.addWidget(self.exampleTree, 1, 0, 1, 2)
+        self.gridLayout.addWidget(self.exampleTree, 2, 0, 1, 2)
 
         self.loadBtn = QPushButton(self.layoutWidget)
         self.loadBtn.setObjectName(u"loadBtn")
 
-        self.gridLayout.addWidget(self.loadBtn, 4, 1, 1, 1)
-
-        self.label = QLabel(self.layoutWidget)
-        self.label.setObjectName(u"label")
-
-        self.gridLayout.addWidget(self.label, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.loadBtn, 5, 1, 1, 1)
 
         self.qtLibCombo = QComboBox(self.layoutWidget)
         self.qtLibCombo.addItem("")
@@ -55,12 +50,22 @@ class Ui_Form(object):
         self.qtLibCombo.addItem("")
         self.qtLibCombo.setObjectName(u"qtLibCombo")
 
-        self.gridLayout.addWidget(self.qtLibCombo, 2, 1, 1, 1)
+        self.gridLayout.addWidget(self.qtLibCombo, 3, 1, 1, 1)
+
+        self.label = QLabel(self.layoutWidget)
+        self.label.setObjectName(u"label")
+
+        self.gridLayout.addWidget(self.label, 3, 0, 1, 1)
 
         self.exampleFilter = QLineEdit(self.layoutWidget)
         self.exampleFilter.setObjectName(u"exampleFilter")
 
-        self.gridLayout.addWidget(self.exampleFilter, 0, 0, 1, 2)
+        self.gridLayout.addWidget(self.exampleFilter, 0, 0, 1, 1)
+
+        self.searchFiles = QCheckBox(self.layoutWidget)
+        self.searchFiles.setObjectName(u"searchFiles")
+
+        self.gridLayout.addWidget(self.searchFiles, 0, 1, 1, 1)
 
         self.splitter.addWidget(self.layoutWidget)
         self.layoutWidget1 = QWidget(self.splitter)
@@ -98,13 +103,14 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"PyQtGraph", None))
         self.loadBtn.setText(QCoreApplication.translate("Form", u"Run Example", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Qt Library:", None))
         self.qtLibCombo.setItemText(0, QCoreApplication.translate("Form", u"default", None))
         self.qtLibCombo.setItemText(1, QCoreApplication.translate("Form", u"PyQt5", None))
         self.qtLibCombo.setItemText(2, QCoreApplication.translate("Form", u"PySide2", None))
         self.qtLibCombo.setItemText(3, QCoreApplication.translate("Form", u"PySide6", None))
         self.qtLibCombo.setItemText(4, QCoreApplication.translate("Form", u"PyQt6", None))
 
+        self.label.setText(QCoreApplication.translate("Form", u"Qt Library:", None))
         self.exampleFilter.setPlaceholderText(QCoreApplication.translate("Form", u"Type to filter...", None))
+        self.searchFiles.setText(QCoreApplication.translate("Form", u"Search files", None))
         self.loadedFileLabel.setText("")
     # retranslateUi

@@ -8,6 +8,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets, QtGui, QtCore, QT_LIB
 from collections import OrderedDict
 from .utils import examples
+from functools import lru_cache
 
 path = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, path)
@@ -28,7 +29,7 @@ QTextCharFormat = QtGui.QTextCharFormat
 QSyntaxHighlighter = QtGui.QSyntaxHighlighter
 
 
-def format(color, style=''):
+def charFormat(color, style='', background=None):
     """
     Return a QTextCharFormat with the given attributes.
     """
@@ -44,6 +45,8 @@ def format(color, style=''):
         _format.setFontWeight(QFont.Weight.Bold)
     if 'italic' in style:
         _format.setFontItalic(True)
+    if background is not None:
+        _format.setBackground(pg.mkColor(background))
 
     return _format
 
@@ -95,28 +98,28 @@ class DarkThemeColors:
 
 
 LIGHT_STYLES = {
-    'keyword': format(LightThemeColors.Blue, 'bold'),
-    'operator': format(LightThemeColors.Red, 'bold'),
-    'brace': format(LightThemeColors.Purple),
-    'defclass': format(LightThemeColors.Indigo, 'bold'),
-    'string': format(LightThemeColors.Amber),
-    'string2': format(LightThemeColors.DeepPurple),
-    'comment': format(LightThemeColors.Green, 'italic'),
-    'self': format(LightThemeColors.Blue, 'bold'),
-    'numbers': format(LightThemeColors.Teal),
+    'keyword': charFormat(LightThemeColors.Blue, 'bold'),
+    'operator': charFormat(LightThemeColors.Red, 'bold'),
+    'brace': charFormat(LightThemeColors.Purple),
+    'defclass': charFormat(LightThemeColors.Indigo, 'bold'),
+    'string': charFormat(LightThemeColors.Amber),
+    'string2': charFormat(LightThemeColors.DeepPurple),
+    'comment': charFormat(LightThemeColors.Green, 'italic'),
+    'self': charFormat(LightThemeColors.Blue, 'bold'),
+    'numbers': charFormat(LightThemeColors.Teal),
 }
 
 
 DARK_STYLES = {
-    'keyword': format(DarkThemeColors.Blue, 'bold'),
-    'operator': format(DarkThemeColors.Red, 'bold'),
-    'brace': format(DarkThemeColors.Purple),
-    'defclass': format(DarkThemeColors.Indigo, 'bold'),
-    'string': format(DarkThemeColors.Amber),
-    'string2': format(DarkThemeColors.DeepPurple),
-    'comment': format(DarkThemeColors.Green, 'italic'),
-    'self': format(DarkThemeColors.Blue, 'bold'),
-    'numbers': format(DarkThemeColors.Teal),
+    'keyword': charFormat(DarkThemeColors.Blue, 'bold'),
+    'operator': charFormat(DarkThemeColors.Red, 'bold'),
+    'brace': charFormat(DarkThemeColors.Purple),
+    'defclass': charFormat(DarkThemeColors.Indigo, 'bold'),
+    'string': charFormat(DarkThemeColors.Amber),
+    'string2': charFormat(DarkThemeColors.DeepPurple),
+    'comment': charFormat(DarkThemeColors.Green, 'italic'),
+    'self': charFormat(DarkThemeColors.Blue, 'bold'),
+    'numbers': charFormat(DarkThemeColors.Teal),
 }
 
 
@@ -185,6 +188,7 @@ class PythonHighlighter(QSyntaxHighlighter):
             (r'#[^\n]*', 0, 'comment'),
         ]
         self.rules = rules
+        self.searchText = None
 
     @property
     def styles(self):
@@ -195,7 +199,8 @@ class PythonHighlighter(QSyntaxHighlighter):
         """Apply syntax highlighting to the given block of text.
         """
         # Do other syntax formatting
-        for expression, nth, format in self.rules:
+        rules = self.rules.copy()
+        for expression, nth, format in rules:
             format = self.styles[format]
 
             for n, match in enumerate(re.finditer(expression, text)):
@@ -204,6 +209,8 @@ class PythonHighlighter(QSyntaxHighlighter):
                 start = match.start()
                 length = match.end() - start
                 self.setFormat(start, length, format)
+
+        self.applySearchHighlight(text)
         self.setCurrentBlockState(0)
 
         # Do multi-line strings
@@ -249,15 +256,39 @@ class PythonHighlighter(QSyntaxHighlighter):
                 length = len(text) - start + add
             # Apply formatting
             self.setFormat(start, length, self.styles[style])
+            # Highlighting sits on top of this formatting
             # Look for the next match
             match = delimiter.match(text, start + length)
             start = match.capturedStart()
+
+        self.applySearchHighlight(text)
 
         # Return True if still inside a multi-line string, False otherwise
         if self.currentBlockState() == in_state:
             return True
         else:
             return False
+
+    def applySearchHighlight(self, text):
+        if not self.searchText:
+            return
+        expr = f'(?i){self.searchText}'
+        style = charFormat('#000', background='y')
+        for match in re.finditer(expr, text):
+            start = match.start()
+            length = match.end() - start
+            self.setFormat(start, length, style)
+
+
+def unnestDict(exDict):
+    """Converts a dict-of-dicts to a singly nested dict for non-recursive parsing"""
+    out = {}
+    for kk, vv in exDict.items():
+        if isinstance(vv, dict):
+            out.update(unnestDict(vv))
+        else:
+            out[kk] = vv
+    return out
 
 
 
@@ -279,7 +310,23 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
         self.codeBtn.hide()
 
-        self.ui.exampleFilter.textChanged.connect(self.onFilter)
+        textFil = self.ui.exampleFilter
+        self.curListener = None
+
+        def onCheckStateChanged(state):
+            if self.curListener is not None:
+                self.curListener.disconnect()
+            self.curListener = textFil.textChanged
+            if state == QtCore.Qt.CheckState.Checked:
+                self.curListener.connect(lambda: self.filterByContent(textFil.text()))
+            else:
+                self.hl.searchText = None
+                self.curListener.connect(self.filterByTitle)
+            # Fire on current text, too
+            self.curListener.emit(textFil.text())
+
+        self.ui.searchFiles.stateChanged.connect(onCheckStateChanged)
+        onCheckStateChanged(self.ui.searchFiles.checkState())
 
         global examples
         self.itemCache = []
@@ -295,16 +342,48 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.ui.codeView.textChanged.connect(self.codeEdited)
         self.codeBtn.clicked.connect(self.runEditedCode)
 
-    def onFilter(self, text):
+    def filterByTitle(self, text):
+        self.showExamplesByTitle(self.getMatchingTitles(text))
+        self.hl.setDocument(self.ui.codeView.document())
+
+    def filterByContent(self, text):
+        # Don't filter very short strings
+        checkDict = unnestDict(examples)
+        self.hl.searchText = text
+        # Need to reapply to current document
+        self.hl.setDocument(self.ui.codeView.document())
+        titles = []
+        text = text.lower()
+        for kk, vv in checkDict.items():
+            if isinstance(vv, Namespace):
+                vv = vv.filename
+            filename = os.path.join(path, vv)
+            contents = self.getExampleContent(filename).lower()
+            if text in contents:
+                titles.append(kk)
+        self.showExamplesByTitle(titles)
+
+    def getMatchingTitles(self, text, exDict=None, acceptAll=False):
+        if exDict is None:
+            exDict = examples
+        text = text.lower()
+        titles = []
+        for kk, vv in exDict.items():
+            matched = acceptAll or text in kk.lower()
+            if isinstance(vv, dict):
+                titles.extend(self.getMatchingTitles(text, vv, acceptAll=matched))
+            elif matched:
+                titles.append(kk)
+        return titles
+
+    def showExamplesByTitle(self, titles):
         QTWI = QtWidgets.QTreeWidgetItemIterator
         flag = QTWI.IteratorFlag.NoChildren
         treeIter = QTWI(self.ui.exampleTree, flag)
         item = treeIter.value()
-        text = text.lower()
         while item is not None:
             parent = item.parent()
-            parentText = '' if not parent else parent.text(0)
-            show = (item.childCount() or text in item.text(0).lower() or text in parentText.lower())
+            show = (item.childCount() or item.text(0) in titles)
             item.setHidden(not show)
 
             # If all children of a parent are gone, hide it
@@ -390,16 +469,21 @@ class ExampleLoader(QtWidgets.QMainWindow):
 
     def showFile(self):
         fn = self.currentFile()
-        if fn is None:
-            self.ui.codeView.clear()
-            return
-        if os.path.isdir(fn):
-            fn = os.path.join(fn, '__main__.py')
-        with open(fn, "r") as currentFile:
-            text = currentFile.read()
+        text = self.getExampleContent(fn)
         self.ui.codeView.setPlainText(text)
         self.ui.loadedFileLabel.setText(fn)
         self.codeBtn.hide()
+
+    @lru_cache(100)
+    def getExampleContent(self, filename):
+        if filename is None:
+            self.ui.codeView.clear()
+            return
+        if os.path.isdir(filename):
+            filename = os.path.join(filename, '__main__.py')
+        with open(filename, "r") as currentFile:
+            text = currentFile.read()
+        return text
 
     def codeEdited(self):
         self.codeBtn.show()
