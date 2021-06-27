@@ -32,7 +32,7 @@ def buildFileList(examples, files=None):
 
 path = os.path.abspath(os.path.dirname(__file__))
 files = [("Example App", "RunExampleApp.py")]
-for ex in [utils.examples, utils.others]:
+for ex in [utils.examples_, utils.others]:
     files = buildFileList(ex, files)
 files = sorted(set(files))
 frontends = {

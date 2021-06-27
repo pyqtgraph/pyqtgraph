@@ -1,8 +1,8 @@
 from collections import OrderedDict
 from argparse import Namespace
 
-
-examples = OrderedDict([
+# Avoid clash with module name
+examples_ = OrderedDict([
     ('Command-line usage', 'CLIexample.py'),
     ('Basic Plotting', Namespace(filename='Plotting.py', recommended=True)),
     ('ImageView', 'ImageView.py'),
