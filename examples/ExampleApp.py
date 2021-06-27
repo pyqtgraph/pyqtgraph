@@ -319,7 +319,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
         textFil = self.ui.exampleFilter
         self.curListener = None
 
-        def onCheckStateChanged(searchType):
+        def onComboChanged(searchType):
             if self.curListener is not None:
                 self.curListener.disconnect()
             self.curListener = textFil.textChanged
@@ -331,8 +331,8 @@ class ExampleLoader(QtWidgets.QMainWindow):
             # Fire on current text, too
             self.curListener.emit(textFil.text())
 
-        self.ui.searchFiles.currentTextChanged.connect(onCheckStateChanged)
-        onCheckStateChanged(self.ui.searchFiles.currentText())
+        self.ui.searchFiles.currentTextChanged.connect(onComboChanged)
+        onComboChanged(self.ui.searchFiles.currentText())
 
         self.itemCache = []
         self.populateTree(self.ui.exampleTree.invisibleRootItem(), examples_)
@@ -530,6 +530,9 @@ class ExampleLoader(QtWidgets.QMainWindow):
 def main():
     app = pg.mkQApp()
     loader = ExampleLoader()
+    loader.ui.exampleTree.setCurrentIndex(
+        loader.ui.exampleTree.model().index(0,0)
+    )
     pg.exec()
 
 if __name__ == '__main__':

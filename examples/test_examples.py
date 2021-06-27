@@ -157,7 +157,6 @@ try:
     {0}
     import initExample
     import pyqtgraph as pg
-    pg.Qt.QtWidgets.QWidget.show = lambda *args: None
     import {1}
     import sys
     print("test complete")
