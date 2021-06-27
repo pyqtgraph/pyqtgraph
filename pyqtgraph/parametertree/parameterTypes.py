@@ -834,11 +834,11 @@ class FilePickerParameterItem(WidgetParameterItem):
         button.sigChanged = self._emitter.sigChanged
         button.value = button.text
         button.setText(fpath)
-        button.clicked.connect(self._retrieveFolderName_gui)
+        button.clicked.connect(self._retrieveFileSelection_gui)
 
         return button
 
-    def _retrieveFolderName_gui(self):
+    def _retrieveFileSelection_gui(self):
         curVal = self.param.value()
         useDir = curVal or str(os.getcwd())
         opts = self.param.opts
@@ -847,7 +847,7 @@ class FilePickerParameterItem(WidgetParameterItem):
             startDir = startDir.parent
         if startDir.exists():
             opts['startDir'] = str(startDir)
-        fname = popupFilePicker(None, 'Select File', **opts)
+        fname = popupFilePicker(None, self.param.title(), **opts)
         if fname is None:
             return
         self.param.setValue(fname)
