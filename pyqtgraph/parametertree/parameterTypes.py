@@ -205,12 +205,14 @@ class WidgetParameterItem(ParameterItem):
         ParameterItem.valueChanged(self, param, val)
         if force or not fn.eq(val, self.widget.value()):
             try:
-                self.widget.sigChanged.disconnect(self.widgetValueChanged)
+                if self.widget.sigChanged is not None:
+                    self.widget.sigChanged.disconnect(self.widgetValueChanged)
                 self.param.sigValueChanged.disconnect(self.valueChanged)
                 self.widget.setValue(val)
                 self.param.setValue(self.widget.value())
             finally:
-                self.widget.sigChanged.connect(self.widgetValueChanged)
+                if self.widget.sigChanged is not None:
+                    self.widget.sigChanged.connect(self.widgetValueChanged)
                 self.param.sigValueChanged.connect(self.valueChanged)
         self.updateDisplayLabel()  ## always make sure label is updated, even if values match!
         self.updateDefaultBtn()
