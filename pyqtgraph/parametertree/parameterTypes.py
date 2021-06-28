@@ -1023,77 +1023,69 @@ class CalendarParameterItem(WidgetParameterItem):
 class CalendarParameter(Parameter):
     itemClass = CalendarParameterItem
 
-class PenParameterItem(ParameterItem):
+class PenParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):
-        ParameterItem.__init__(self, param, depth)
-        self.layoutWidget = QtWidgets.QWidget()
-        self.layout = QtWidgets.QHBoxLayout()
-        self.layoutWidget.setLayout(self.layout)
+        super().__init__(param, depth)
+        self.pen = QtGui.QPen()
+        self.displayLabel.paintEvent = self.displayPaintEvent
+
+        self.pdialog = PenSelectorDialog(fn.mkPen(self.pen))
+        self.pdialog.setModal(True)
+        self.pdialog.accepted.connect(self.penChangeFinished)
+
+
+    def makeWidget(self):
         self.button = QtWidgets.QPushButton()
         #larger button
         self.button.setFixedWidth(100)
-        self.layout.addWidget(self.button)
-        self.layout.addStretch()
-        self.pen = QtGui.QPen()
         self.button.clicked.connect(self.buttonClicked)
-        #clear button for drawing, override paint event
-        self.setText(0, '')
         self.button.paintEvent = self.buttonPaintEvent
+        self.button.value = self.value
+        self.button.setValue = self.setValue
+        self.button.sigChanged = None
+        return self.button
 
     def value(self):
         return self.pen
 
-    def setValue(self,pen):
-        self.penChanged(pen)
-
-    def treeWidgetChanged(self):
-        ParameterItem.treeWidgetChanged(self)
-        tree = self.treeWidget()
-        if tree is None:
-            return
-
-        tree.resizeColumnToContents(0)
-        tree.setItemWidget(self, 0, self.layoutWidget)
-
-    def buttonClicked(self):
-        #open up the pen selector dialog
-        self.oldPen = fn.mkPen(self.param.value())
-        self.pdialog = PenSelectorDialog(fn.mkPen(self.pen),QtWidgets.QApplication.activeWindow())
-        self.pdialog.penChanged.connect(self.penChanged)
-        self.pdialog.finished.connect(self.penChangeFinished)
-        self.pdialog.exec()
-
-    def penChangeFinished(self,ret):
-        #finished changing
-        if not ret:
-            #revert if cancel
-            self.penChanged(self.oldPen)
-        else:
-            #event if accepted
-            self.param.penChanged(self.pen)
-
-    def penChanged(self,pen):
+    def setValue(self, pen):
         if not isinstance(pen,QtGui.QPen):
             pen = fn.mkPen(pen)
         pen.setCosmetic(True)
         self.pen = pen
 
-    def buttonPaintEvent(self, event):
-        #draw a button as usual
-        QtWidgets.QPushButton.paintEvent(self.button, event)
+    def updateDisplayLabel(self, value=None):
+        return super().updateDisplayLabel('')
+
+    def buttonClicked(self):
+        #open up the pen selector dialog
+        self.pdialog.exec()
+
+    def penChangeFinished(self):
+        self.param.setValue(self.pdialog.pen)
+
+    def penPaintEvent(self, event, item):
+        # draw item as usual
+        type(item).paintEvent(item, event)
 
         path = QtGui.QPainterPath()
-        displaySize = self.button.size()
-        w,h = displaySize.width(),displaySize.height()
-        #draw a squiggle with the pen
-        path.moveTo(w*.2,h*.2)
-        path.lineTo(w*.4,h*.8)
-        path.cubicTo(w*.5,h*.1,w*.7,h*.1,w*.8,h*.8)
+        displaySize = item.size()
+        w, h = displaySize.width(), displaySize.height()
+        # draw a squiggle with the pen
+        path.moveTo(w * .2, h * .2)
+        path.lineTo(w * .4, h * .8)
+        path.cubicTo(w * .5, h * .1, w * .7, h * .1, w * .8, h * .8)
 
-        painter = QtGui.QPainter(self.button)
+        painter = QtGui.QPainter(item)
         painter.setPen(self.pen)
         painter.drawPath(path)
         painter.end()
+
+    def buttonPaintEvent(self, event):
+        return self.penPaintEvent(event, self.button)
+
+    def displayPaintEvent(self, event):
+        return self.penPaintEvent(event, self.displayLabel)
 
 class PenParameter(Parameter):
     itemClass = PenParameterItem

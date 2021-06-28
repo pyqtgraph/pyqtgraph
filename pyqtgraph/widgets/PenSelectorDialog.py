@@ -1,100 +1,97 @@
-from ..Qt import QtCore, QtGui
-from .PenSelectorDialogbox import PenSelectorDialogbox
-from ..functions import mkColor
+from ..Qt import QtCore, QtGui, QtWidgets
+from ..parametertree import Parameter, ParameterTree
+from ..functions import mkPen
 
-def _mkComboMap(cbox, styles):
-    """
-    Various versions of pyqt don't treat enum values the same when setting combo box values.
-    This lets retrieved combo box values be mapped to the true style enum
-    """
-    return {cbox.itemData(ii): style for ii, style in enumerate(styles)}
+import re
 
-class PenSelectorDialog(QtGui.QDialog):
-    penChanged = QtCore.Signal(object)
+class PenSelectorDialog(QtWidgets.QDialog):
+    def __init__(self, initialPen='k'):
+        super().__init__()
+        self.param = self.mkParam()
+        self.tree = ParameterTree(showHeader=False)
+        self.tree.setParameters(self.param, showTop=False)
+        self.setupUi()
+        self.setModal(True)
 
-    def __init__(self, initialPen = None, parent = None):
-        QtGui.QDialog.__init__(self, parent)
-        self.ui = PenSelectorDialogbox()
-        self.ui.setupUi(self)
-        # Combo boxes don't like enum values, so they get converted to int. But, PySide/Qt6 doesn't accept int
-        # pen constructor values, so map the int to enum values. PySide/Qt6 Enums let you iterate over them, but
-        # PyQt5 doesn't, so construct manually for compatibility
-        ps = QtCore.Qt.PenStyle
-        lineStyles = [ps.SolidLine,ps.DashLine,ps.DotLine,ps.DashDotLine,ps.DashDotDotLine]#,ps.CustomDashLine]
-        comboboxBackgroundColor = self.ui.comboBoxPenStyle.palette().base().color()
-        comboboxSize = self.ui.comboBoxPenStyle.size()
-        w,h = comboboxSize.width(),comboboxSize.height()
-        self.ui.comboBoxPenStyle.setIconSize(comboboxSize)
-        #create style images:
-        for s in lineStyles:
-            p = QtGui.QPixmap(comboboxSize)
-            p.fill(comboboxBackgroundColor)
-            painter = QtGui.QPainter(p)
-            painter.setPen(QtGui.QPen(mkColor('k'),2,s))
-            painter.drawLine(0,h/2,w,h/2)
-            painter.end()
-            self.ui.comboBoxPenStyle.addItem(QtGui.QIcon(p), '', s)
+        self.pen = mkPen(initialPen)
+        self.updatePen(**self.param)
 
-        self.lineStyles = _mkComboMap(self.ui.comboBoxPenStyle, lineStyles)
-
-        #create cap and end options
+    def mkParam(self):
         cs = QtCore.Qt.PenCapStyle
         js = QtCore.Qt.PenJoinStyle
-        capStyles = [cs.SquareCap,cs.FlatCap,cs.RoundCap]
-        joinStyles = [js.BevelJoin,js.MiterJoin,js.RoundJoin]
-        self.capStylesNames = ["Square cap","Flat cap","Round cap"]
-        self.joinStylesNames = ["Bevel join","Miter join","Round join"]
+        ps = QtCore.Qt.PenStyle
+        param = Parameter.create(name='Params', type='group', children=[
+            dict(name='penWidth', value=1.0, type='float'),
+            dict(name='penColor', type='color', value='k'),
+            dict(name='penStyle', type='list', limits={
+                'Solid': ps.SolidLine,
+                'Dashed': ps.DashLine,
+                'Dash dot': ps.DashDotLine,
+                'Dash dot dot': ps.DashDotDotLine
+            }),
+            dict(name='penCapStyle', type='list', limits={
+                'Square cap': cs.SquareCap,
+                'Flat cap': cs.FlatCap,
+                'Round cap': cs.RoundCap,
+            }),
+            dict(name='penJoinStyle', type='list', limits={
+                'Bevel join': js.BevelJoin,
+                'Miter join': js.MiterJoin,
+                'Round join': js.RoundJoin
+            })
 
-        for s,n in zip(capStyles,self.capStylesNames):
-            self.ui.comboBoxPenCapStyle.addItem(n,s)
-        self.capStyles = _mkComboMap(self.ui.comboBoxPenCapStyle, capStyles)
+        ])
 
-        for s,n in zip(joinStyles,self.joinStylesNames):
-            self.ui.comboBoxPenJoinStyle.addItem(n,s)
-        self.joinStyles = _mkComboMap(self.ui.comboBoxPenJoinStyle, joinStyles)
+        for p in param:
+            name = p.name()
+            replace = r'\1 \2'
+            name = re.sub(r'(\w)([A-Z])', replace, name)
+            name = name.title().strip()
+            p.setOpts(title=name)
+            p.sigValueChanged.connect(self.updatePenFromParam)
+        return param
 
+    def updatePenFromParam(self, param, val):
+        kwargs = dict(self.param)
+        kwargs[param.name()] = val
+        self.updatePen(**kwargs)
 
-        self.ui.comboBoxPenStyle.currentIndexChanged.connect(self.updatePen)
-        self.ui.comboBoxPenCapStyle.currentIndexChanged.connect(self.updatePen)
-        self.ui.comboBoxPenJoinStyle.currentIndexChanged.connect(self.updatePen)
-        self.ui.pushButtonPenColor.sigColorChanged.connect(self.updatePen)
-        self.ui.doubleSpinBoxPenWidth.valueChanged.connect(self.updatePen)
-        self.pen = None
+    def setupUi(self):
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.tree)
 
-        if initialPen is not None:
-            self.blockSignals(True)
-            self.ui.comboBoxPenStyle.setCurrentIndex(self.ui.comboBoxPenStyle.findData(initialPen.style()))
-            self.ui.comboBoxPenCapStyle.setCurrentIndex(self.ui.comboBoxPenCapStyle.findData(initialPen.capStyle()))
-            self.ui.comboBoxPenJoinStyle.setCurrentIndex(self.ui.comboBoxPenJoinStyle.findData(initialPen.joinStyle()))
-            self.ui.pushButtonPenColor.setColor(initialPen.color())
-            self.ui.doubleSpinBoxPenWidth.setValue(initialPen.widthF())
-            self.blockSignals(False)
+        self.buttonBoxAcceptCancel = QtWidgets.QDialogButtonBox(self)
+        self.buttonBoxAcceptCancel.setOrientation(QtCore.Qt.Orientation.Horizontal)
+        self.buttonBoxAcceptCancel.setStandardButtons(
+            QtWidgets.QDialogButtonBox.StandardButton.Cancel | QtWidgets.QDialogButtonBox.StandardButton.Ok)
+        self.buttonBoxAcceptCancel.accepted.connect(self.accept)
+        self.buttonBoxAcceptCancel.rejected.connect(self.reject)
 
-        self.updatePen(0)
+        self.labelPenPreview = QtWidgets.QLabel()
+        self.labelPenPreview.setMinimumSize(10,30)
+        self.tree.setMinimumSize(240, 115)
+        self.tree.setMaximumHeight(115)
 
-    def updatePen(self, dummy):
-        cboxArgs = []
-        cboxes = [self.ui.comboBoxPenStyle, self.ui.comboBoxPenCapStyle, self.ui.comboBoxPenJoinStyle]
-        styleMaps = [self.lineStyles, self.capStyles, self.joinStyles]
-        for styleMap, cbox in zip(styleMaps, cboxes):
-            data = cbox.itemData(cbox.currentIndex())
-            cboxArgs.append(styleMap[data])
-        penWidth = self.ui.doubleSpinBoxPenWidth.value()
-        penColor = self.ui.pushButtonPenColor.color()
-        self.pen= QtGui.QPen(penColor, penWidth, *cboxArgs)
+        layout.addWidget(self.labelPenPreview)
+        layout.addWidget(self.buttonBoxAcceptCancel)
 
-        displaySize = self.ui.labelPenPreview.size()
-        palette = self.ui.labelPenPreview.palette()
+        self.setLayout(layout)
+        self.resize(240, 300)
+
+    def updatePen(self, penColor, penWidth, penStyle, penCapStyle, penJoinStyle):
+        self.pen = QtGui.QPen(penColor, penWidth, penStyle, penCapStyle, penJoinStyle)
+
+        displaySize = self.labelPenPreview.size()
+        w, h = displaySize.width(), displaySize.height()
+        palette = self.labelPenPreview.palette()
         labelBackgroundColor = palette.color(palette.ColorRole.Window)
-        w,h = displaySize.width(),displaySize.height()
-        
-        #draw a squigly line to show what the pen looks like.
-        path = QtGui.QPainterPath()
-        path.moveTo(w*.2,h*.2)
-        path.lineTo(w*.8,h*.2)
-        path.lineTo(w*.2,h*.5)
-        path.cubicTo(w*.1,h*1,w*.5,h*.25,w*.8,h*.8)
 
+        # draw a squigly line to show what the pen looks like.
+        path = QtGui.QPainterPath()
+        path.moveTo(w * .2, h * .2)
+        path.lineTo(w * .8, h * .2)
+        path.lineTo(w * .2, h * .5)
+        path.cubicTo(w * .1, h * 1, w * .5, h * .25, w * .8, h * .8)
 
         p = QtGui.QPixmap(displaySize)
         p.fill(labelBackgroundColor)
@@ -102,5 +99,8 @@ class PenSelectorDialog(QtGui.QDialog):
         painter.setPen(self.pen)
         painter.drawPath(path)
         painter.end()
-        self.ui.labelPenPreview.setPixmap(p)
-        self.penChanged.emit(self.pen)
+        self.labelPenPreview.setPixmap(p)
+
+    def resizeEvent(self, ev):
+        super().resizeEvent(ev)
+        self.updatePen(**self.param)
