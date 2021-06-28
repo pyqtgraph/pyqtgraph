@@ -1009,6 +1009,7 @@ class FontParameter(Parameter):
 
 class CalendarParameterItem(WidgetParameterItem):
     def makeWidget(self):
+        self.asSubItem = True
         w = QtWidgets.QCalendarWidget()
         w.setMaximumHeight(200)
         w.sigChanged = w.selectionChanged
