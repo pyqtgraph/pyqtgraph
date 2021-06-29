@@ -56,13 +56,7 @@ class WidgetParameterItem(ParameterItem):
             self.subItem.setFlags(QtCore.Qt.ItemFlag.NoItemFlags)
             self.addChild(self.subItem)
 
-        self.defaultBtn = QtWidgets.QPushButton()
-        self.defaultBtn.setAutoDefault(False)
-        self.defaultBtn.setFixedWidth(20)
-        self.defaultBtn.setFixedHeight(20)
-        modDir = os.path.dirname(__file__)
-        self.defaultBtn.setIcon(icons.getGraphIcon('default'))
-        self.defaultBtn.clicked.connect(self.defaultClicked)
+        self.defaultBtn = self.makeDefaultButton()
 
         self.displayLabel = QtWidgets.QLabel()
 
@@ -193,6 +187,15 @@ class WidgetParameterItem(ParameterItem):
                 return True ## don't let anyone else see this event
 
         return False
+
+    def makeDefaultButton(self):
+        defaultBtn = QtWidgets.QPushButton()
+        defaultBtn.setAutoDefault(False)
+        defaultBtn.setFixedWidth(20)
+        defaultBtn.setFixedHeight(20)
+        defaultBtn.setIcon(icons.getGraphIcon('default'))
+        defaultBtn.clicked.connect(self.defaultClicked)
+        return defaultBtn
 
     def setFocus(self):
         self.showEditor()
@@ -758,41 +761,44 @@ class Emitter(QtCore.QObject):
     sigChanged = QtCore.Signal(object, object)
 
 
-def popupFilePicker(parent=None, winTitle='', fileFilter='', existing=True, asFolder=False,
-                    selectMultiple=False, startDir=None, **kwargs):
+def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, **kwargs):
     """
     Thin wrapper around Qt file picker dialog. Used internally so all options are consistent
     among all requests for external file information
 
-    :param parent: Dialog parent
-    :param winTitle: Title of dialog window
-    :param fileFilter: File filter as required by the Qt dialog
-    :param existing: Whether the file is already existing, or is being newly created
-    :param asFolder: Whether the dialog should select folders or files
-    :param selectMultiple: Whether multiple files can be selected. If `asFolder` is
-      *True*, this parameter is ignored.
-    :param startDir: Where in the file system to open this dialog
-    :param kwargs: Consumes additional arguments so dictionary unpacking can be used
-      with the lengthy file signature. In the future, this may allow additional config
-      options.
+    ============== ========================================================
+    **Arguments:**
+    parent         Dialog parent
+    winTitle       Title of dialog window
+    nameFilter     File filter as required by the Qt dialog
+    directory      Where in the file system to open this dialog
+    kwargs         Any enum value accepted by a QFileDialog and its value. Values can be a string or list of strings,
+                   i.e. fileMode='AnyFile', options=['ShowDirsOnly', 'DontResolveSymlinks']
+    ============== ========================================================
+
     """
     fileDlg = QtWidgets.QFileDialog(parent)
-    fileMode = fileDlg.FileMode.AnyFile
-    opts = fileDlg.options()
-    if existing:
-        # Existing files only
-        fileMode = fileDlg.FileMode.ExistingFiles if selectMultiple else fileDlg.FileMode.ExistingFile
-    else:
-        fileDlg.setAcceptMode(fileDlg.AcceptMode.AcceptSave)
-    if asFolder:
-        fileMode = fileDlg.FileMode.Directory
-        opts |= fileDlg.Option.ShowDirsOnly
-    fileDlg.setFileMode(fileMode)
-    fileDlg.setOptions(opts)
+    NO_MATCH = object()
+    for kk, vv in kwargs.items():
+        # Convert string or list representations into true flags
+        if isinstance(vv, str):
+            vv = [vv]
+        # 'fileMode' -> 'FileMode'
+        formattedName = kk[0].upper() + kk[1:]
+        enumCls = getattr(fileDlg, formattedName, NO_MATCH)
+        if enumCls is NO_MATCH:
+            continue
+        outEnum = getattr(fileDlg, kk)()
+        for flag in vv:
+            outEnum |= getattr(enumCls, flag)
+        setFunc = getattr(fileDlg, f'set{formattedName}')
+        # Some Qt implementations turn into ints by this point
+        setFunc(enumCls(outEnum))
+
     fileDlg.setModal(True)
-    if startDir is not None:
-        fileDlg.setDirectory(startDir)
-    fileDlg.setNameFilter(fileFilter)
+    if directory is not None:
+        fileDlg.setDirectory(directory)
+    fileDlg.setNameFilter(nameFilter)
 
     fileDlg.setWindowTitle(winTitle)
 
@@ -811,7 +817,7 @@ def popupFilePicker(parent=None, winTitle='', fileFilter='', existing=True, asFo
     else:
         fList = []
 
-    if selectMultiple:
+    if fileDlg.fileMode() == fileDlg.FileMode.ExistingFiles:
         return fList
     elif len(fList) > 0:
         return fList[0]
@@ -820,25 +826,17 @@ def popupFilePicker(parent=None, winTitle='', fileFilter='', existing=True, asFo
 
 class FilePickerParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):
-        self._emitter = Emitter()
+        # Temporarily consider string during construction
+        param.opts['type'] = 'str'
         super().__init__(param, depth)
+        param.opts['type'] = 'file'
 
-    def makeWidget(self):
-        param = self.param
-
-        if param.opts['value'] is None:
-            param.opts['value'] = ''
-        fpath = param.opts['value']
-        param.opts.setdefault('asFolder', False)
-        param.opts.setdefault('existing', True)
-        button = QtWidgets.QPushButton()
-        button.setValue = lambda val: button.setText(str(val))
-        button.sigChanged = self._emitter.sigChanged
-        button.value = button.text
-        button.setText(fpath)
+        button = QtWidgets.QPushButton('...')
+        button.setFixedWidth(25)
+        button.setContentsMargins(0, 0, 0, 0)
         button.clicked.connect(self._retrieveFileSelection_gui)
-
-        return button
+        self.layoutWidget.layout().insertWidget(2, button)
+        # self.layoutWidget.layout().insertWidget(3, self.defaultBtn)
 
     def _retrieveFileSelection_gui(self):
         curVal = self.param.value()
@@ -848,12 +846,11 @@ class FilePickerParameterItem(WidgetParameterItem):
         if startDir.is_file():
             startDir = startDir.parent
         if startDir.exists():
-            opts['startDir'] = str(startDir)
+            opts['directory'] = str(startDir)
         fname = popupFilePicker(None, self.param.title(), **opts)
         if fname is None:
             return
         self.param.setValue(fname)
-        self._emitter.sigChanged.emit(self, fname)
 
 class FilePickerParameter(Parameter):
     itemClass = FilePickerParameterItem
@@ -1025,14 +1022,23 @@ class CalendarParameter(Parameter):
 
 class PenParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):
-        super().__init__(param, depth)
         self.pen = QtGui.QPen()
-        self.displayLabel.paintEvent = self.displayPaintEvent
 
         self.pdialog = PenSelectorDialog(fn.mkPen(self.pen))
         self.pdialog.setModal(True)
         self.pdialog.accepted.connect(self.penChangeFinished)
 
+        super().__init__(param, depth)
+        self.displayLabel.paintEvent = self.displayPaintEvent
+
+    def optsChanged(self, param, opts):
+        setParams = self.pdialog.param
+        self.param.blockTreeChangeSignal()
+        for kk in set(setParams.names).intersection(opts):
+            setParams[kk] = opts[kk]
+        self.setValue(self.pdialog.pen)
+        self.param.unblockTreeChangeSignal()
+        super().optsChanged(param, opts)
 
     def makeWidget(self):
         self.button = QtWidgets.QPushButton()
@@ -1052,10 +1058,13 @@ class PenParameterItem(WidgetParameterItem):
         if not isinstance(pen,QtGui.QPen):
             pen = fn.mkPen(pen)
         pen.setCosmetic(True)
+        self.pdialog.updateParamFromPen(self.pdialog.param, pen)
         self.pen = pen
 
     def updateDisplayLabel(self, value=None):
-        return super().updateDisplayLabel('')
+        super().updateDisplayLabel('')
+        self.displayLabel.update()
+        self.widget.update()
 
     def buttonClicked(self):
         #open up the pen selector dialog
@@ -1091,10 +1100,32 @@ class PenParameter(Parameter):
     itemClass = PenParameterItem
     sigPenChanged = QtCore.Signal(object,object)
 
+    def __init__(self, **opts):
+        self._penToOptsConverter = PenSelectorDialog.mkParam()
+        initialPen = fn.mkPen(opts.get('value', None))
+        # Combine pen and opts into one pen
+        PenSelectorDialog.updateParamFromPen(self._penToOptsConverter, initialPen)
+        for opt in set(self._penToOptsConverter.names).intersection(opts):
+            self._penToOptsConverter[opt] = opts[opt]
+            # This option is now part of the pen, so it's no longer needed
+            del opts[opt]
+        PenSelectorDialog.updatePenFromParam(initialPen, self._penToOptsConverter)
+        opts['value'] = initialPen
+        super().__init__(**opts)
+
     def penChanged(self,pen):
         self.opts['value'] = pen
         self.sigPenChanged.emit(self, pen)
         self.emitStateChanged('penChanged', pen)
+
+    def saveState(self, filter=None):
+        state = super().saveState(filter)
+        overrideState = dict(**self._penToOptsConverter)
+        PenSelectorDialog.updateParamFromPen(overrideState, state['value'])
+        # OK to make a black pen, since the saved options will create a correct pen on reload
+        state['value'] = 'k'
+        state.update(overrideState)
+        return state
 
 registerParameterType('pen', PenParameter, override=True)
 registerParameterType('progress', ProgressBarParameter, override=True)

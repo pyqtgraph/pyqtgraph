@@ -79,12 +79,12 @@ params = [
         {'name': 'Action Parameter', 'type': 'action', 'tip': 'Click me'},
     ]},
     {'name': 'Custom Parameter Options', 'type': 'group', 'children': [
-        {'name': 'Pen', 'type': 'pen', 'value': pg.mkPen(color=(255,0,0), width=1)},
+        {'name': 'Pen', 'type': 'pen', 'value': pg.mkPen(color=(0,0,0), width=1), 'width': 2, 'color': 'r'},
         {'name': 'Progress bar', 'type': 'progress', 'value':50, 'limits':(0,100)},
         {'name': 'Slider', 'type': 'slider', 'value':50, 'limits':(0,100)},
         {'name': 'Font', 'type': 'font', 'value':QtGui.QFont("Comic Sans MS")},
         {'name': 'Calendar', 'type': 'calendar', 'value':QtCore.QDate.currentDate().addMonths(1)},
-        {'name': 'Save txt file', 'type': 'file', 'existing': False, 'fileFilter':'*.txt'}
+        {'name': 'Open python file', 'type': 'file', 'fileMode': 'ExistingFile', 'nameFilter': 'Python file (*.py);;', 'value': __file__}
     ]},
     {'name': 'Numerical Parameter Options', 'type': 'group', 'children': [
         {'name': 'Units + SI prefix', 'type': 'float', 'value': 1.2e-6, 'step': 1e-6, 'siPrefix': True, 'suffix': 'V'},
@@ -153,11 +153,11 @@ for child in p.children():
         ch2.sigValueChanging.connect(valueChanging)
         
 
-
 def save():
     global state
     state = p.saveState()
-    
+QtCore.QTimer.singleShot(0, save)
+
 def restore():
     global state
     add = p['Save/Restore functionality', 'Restore State', 'Add missing items']
