@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
+from ..Qt import QtCore, QtGui, QtWidgets
 from OpenGL.GL import *
 import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
@@ -466,13 +466,9 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         #self.swapBuffers()
         
     def wheelEvent(self, ev):
-        delta = 0
-        if QT_LIB in ['PyQt4', 'PySide']:
-            delta = ev.delta()
-        else:
-            delta = ev.angleDelta().x()
-            if delta == 0:
-                delta = ev.angleDelta().y()
+        delta = ev.angleDelta().x()
+        if delta == 0:
+            delta = ev.angleDelta().y()
         if (ev.modifiers() & QtCore.Qt.KeyboardModifier.ControlModifier):
             self.opts['fov'] *= 0.999**delta
         else:
