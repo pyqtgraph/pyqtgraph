@@ -23,7 +23,7 @@ heavy leverage of numpy for number crunching, Qt's GraphicsView framework for
 Requirements
 ------------
 
-pyqtgraph has adopted [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html).
+PyQtGraph has adopted [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html).
 
 This project supports:
 
@@ -38,15 +38,21 @@ Currently this means:
 * Required
   * [PyQt5](https://www.riverbankcomputing.com/software/pyqt/), [PyQt6](https://www.riverbankcomputing.com/software/pyqt/), [PySide2](https://wiki.qt.io/Qt_for_Python) or [PySide6](https://wiki.qt.io/Qt_for_Python)
   * [`numpy`](https://github.com/numpy/numpy) 1.17+
-* Optional
-  * [`scipy`](https://github.com/scipy/scipy) for image processing
-  * [`pyopengl`](https://github.com/mcfletch/pyopengl) for 3D graphics
-    * [`pyopengl`](https://github.com/mcfletch/pyopengl) on macOS Big Sur only works with python 3.9.1+
-  * [`h5py`](https://github.com/h5py/h5py) for large hdf5 binary format support
-  * [`colorcet`](https://github.com/holoviz/colorcet) for supplemental colormaps
-  * [`matplotlib`](https://github.com/matplotlib/matplotlib) for supplemental colormaps
-  * [`cupy`](https://docs.cupy.dev/en/stable/install.html) for CUDA-enhanced image processing
-    * On Windows, CUDA toolkit must be >= 11.1
+
+Optional added functionalities
+------------------------------
+
+Through 3rd part libraries, additional functionality may be added to PyQtGraph, see the table below for a summary.
+
+| Library                                                  |                                                                                                                            Added functionality                                                                                                                            |
+|----------------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| [`scipy`](https://github.com/scipy/scipy)                | <ul style="list-style-type: None;text-align: left;"><li> Image processing through [`ndimage`](https://docs.scipy.org/doc/scipy/reference/ndimage.html)</li><li> Data array filtering through [`signal`](https://docs.scipy.org/doc/scipy/reference/signal.html) </li><ul> |
+| [`pyopengl`](https://github.com/mcfletch/pyopengl)       | <ul style="list-style-type: None;text-align: left;"><li> 3D graphics </li><li> Faster image processing </li><li>Note: on macOS Big Sur only works with python 3.9.1+</li></ul>                                                                                            |
+| [`h5py`](https://github.com/h5py/h5py)                   | <ul style="list-style-type: None;text-align: left;"><li> Export in hdf5 format </li></ul>                                                                                                                                                                                 |
+| [`colorcet`](https://github.com/holoviz/colorcet)        | <ul style="list-style-type: None;text-align: left;"><li> Add a collection of perceptually uniform colormaps </li></ul>                                                                                                                                                    |
+| [`matplotlib`](https://github.com/matplotlib/matplotlib) | <ul style="list-style-type: None;text-align: left;"><li> Export of PlotItem in matplotlib figure </li><li> Add matplotlib collection of colormaps </li></ul>                                                                                                              |
+| [`cupy`](https://docs.cupy.dev/en/stable/install.html)   | <ul style="list-style-type: None;text-align: left;"><li> CUDA-enhanced image processing </li><li> Note: On Windows, CUDA toolkit must be >= 11.1 </li></ul>                                                                                                               |
+| [`numba`](https://github.com/numba/numba)                | <ul style="list-style-type: None;text-align: left;"><li> Faster image processing </li></ul>                                                                                                                                                                               |
 
 Qt Bindings Test Matrix
 -----------------------
@@ -81,7 +87,7 @@ Installation Methods
   * Last released version: `conda install -c conda-forge pyqtgraph`
 * To install system-wide from source distribution: `python setup.py install`
 * Many linux package repositories have release versions.
-* To use with a specific project, simply copy the pyqtgraph subdirectory
+* To use with a specific project, simply copy the PyQtGraph subdirectory
   anywhere that is importable from your project.
 
 Documentation
@@ -89,7 +95,7 @@ Documentation
 
 The official documentation lives at [pyqtgraph.readthedocs.io](https://pyqtgraph.readthedocs.io)
 
-The easiest way to learn pyqtgraph is to browse through the examples; run `python -m pyqtgraph.examples` to launch the examples application.  
+The easiest way to learn PyQtGraph is to browse through the examples; run `python -m pyqtgraph.examples` to launch the examples application.  
 
 Used By
 -------
