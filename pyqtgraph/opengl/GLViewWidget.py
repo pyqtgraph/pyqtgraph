@@ -8,7 +8,6 @@ import warnings
 from math import cos, sin, tan, radians
 ##Vector = QtGui.QVector3D
 
-ShareWidget = None
 
 class GLViewWidget(QtWidgets.QOpenGLWidget):
     
@@ -99,10 +98,12 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
 
     def addItem(self, item):
         self.items.append(item)
-        if hasattr(item, 'initializeGL'):
+
+        if self.isValid():
             self.makeCurrent()
             try:
                 item.initializeGL()
+                item.setInitialized()
             except:
                 self.checkOpenGLVersion('Error while adding item %s to GLViewWidget.' % str(item))
                 
@@ -128,7 +129,10 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         self.update()        
         
     def initializeGL(self):
-        self.resizeGL(self.width(), self.height())
+        for item in self.items:
+            if not item.initialized():
+                item.initializeGL()
+                item.setInitialized()
         
     def setBackgroundColor(self, *args, **kwds):
         """
