@@ -1034,9 +1034,11 @@ class PenParameterItem(WidgetParameterItem):
     def optsChanged(self, param, opts):
         setParams = self.pdialog.param
         self.param.blockTreeChangeSignal()
+        setParams.blockTreeChangeSignal()
         for kk in set(setParams.names).intersection(opts):
             setParams[kk] = opts[kk]
         self.setValue(self.pdialog.pen)
+        setParams.unblockTreeChangeSignal()
         self.param.unblockTreeChangeSignal()
         super().optsChanged(param, opts)
 
@@ -1120,11 +1122,19 @@ class PenParameter(Parameter):
 
     def saveState(self, filter=None):
         state = super().saveState(filter)
-        overrideState = dict(**self._penToOptsConverter)
-        PenSelectorDialog.updateParamFromPen(overrideState, state['value'])
+        PenSelectorDialog.updateParamFromPen(self._penToOptsConverter, state['value'])
+        overrideState = self._penToOptsConverter.saveState(filter)['children']
         # OK to make a black pen, since the saved options will create a correct pen on reload
         state['value'] = 'k'
-        state.update(overrideState)
+        overrideOpts = {}
+        for kk, vv in overrideState.items():
+            vv = vv['value']
+            if hasattr(vv, 'name'):
+                # Convert enums to string
+                lstParam = self._penToOptsConverter.child(kk)
+                vv = lstParam.reverse[1][lstParam.reverse[0].index(vv)]
+            overrideOpts[kk] = vv
+        state.update(overrideOpts)
         return state
 
 registerParameterType('pen', PenParameter, override=True)
