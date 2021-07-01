@@ -155,7 +155,6 @@ for child in p.children():
 
 def save():
     global state
-    state = p.saveState()
 QtCore.QTimer.singleShot(0, save)
 
 def restore():
@@ -183,8 +182,8 @@ layout.addWidget(t2, 1, 1, 1, 1)
 win.show()
 
 ## test save/restore
-s = p.saveState()
-p.restoreState(s)
+state = p.saveState()
+p.restoreState(state)
 
 if __name__ == '__main__':
     pg.exec()
