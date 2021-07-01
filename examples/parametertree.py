@@ -156,6 +156,7 @@ for child in p.children():
 
 def save():
     global state
+    state = p.saveState()
 QtCore.QTimer.singleShot(0, save)
 
 def restore():
