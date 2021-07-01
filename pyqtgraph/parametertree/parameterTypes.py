@@ -957,12 +957,6 @@ class SliderParameterItem(WidgetParameterItem):
         self._suffix = None
         super().__init__(param, depth)
 
-    def optsChanged(self, param, opts):
-        if 'suffix' in opts:
-            self.setSuffix(opts['suffix'])
-            self.slider.valueChanged.emit(self.slider.value())
-        super().optsChanged(param, opts)
-
     def updateDisplayLabel(self, value=None):
         if value is None:
             value = self.param.value()
@@ -1049,6 +1043,9 @@ class SliderParameterItem(WidgetParameterItem):
         w = self.slider
         w.setMinimum(0)
         w.setMaximum(len(span)-1)
+        if 'suffix' in opts:
+            self.setSuffix(opts['suffix'])
+            self.slider.valueChanged.emit(self.slider.value())
 
     def limitsChanged(self, param, limits):
         self.optsChanged(param, dict(limits=limits))
