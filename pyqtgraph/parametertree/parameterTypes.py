@@ -1093,11 +1093,93 @@ class CalendarParameterItem(WidgetParameterItem):
         w.setValue = w.setSelectedDate
         self.widget = w
         self.hideWidget = False
-        self.param.opts['default'] = QtCore.QDate.currentDate()
+        self.param.opts.setdefault('default', QtCore.QDate.currentDate())
         return w
 
 class CalendarParameter(Parameter):
     itemClass = CalendarParameterItem
+
+    def __init__(self, **opts):
+        opts.setdefault('format', 'TextDate')
+        super().__init__(**opts)
+
+    def _interpretFormat(self, fmt=None):
+        fmt = fmt or self.opts.get('format')
+        if hasattr(QtCore.Qt.DateFormat, fmt):
+            fmt = getattr(QtCore.Qt.DateFormat, fmt)
+        return fmt
+
+    def _interpretValue(self, v):
+        if isinstance(v, str):
+            fmt = self._interpretFormat()
+            if fmt is None:
+                raise ValueError('Cannot parse date string without a set format')
+            v = QtCore.QDate.fromString(v, fmt)
+        return v
+
+    def saveState(self, filter=None):
+        state = super().saveState(filter)
+        fmt = self._interpretFormat()
+        state['value'] = state['value'].toString(fmt)
+        return state
+
+
+class QtEnumParameter(ListParameter):
+    def __init__(self, enum, **opts):
+        self.enum = enum
+        opts.setdefault('name', enum.__name__)
+        self.enumMap = self._getAllowedEnums(enum)
+
+        opts.update(limits=self.formattedLimits())
+        super().__init__(**opts)
+
+    def setValue(self, value, blockSignal=None):
+        if isinstance(value, str):
+            value = self.enumMap[value]
+        super().setValue(value, blockSignal)
+
+    def formattedLimits(self):
+        # Title-cased words without the ending substring for brevity
+        substringEnd = None
+        mapping = self.enumMap
+        shortestName = min(len(name) for name in mapping)
+        names = list(mapping)
+        cmpName, *names = names
+        for ii in range(-1, -shortestName-1, -1):
+            if any(cmpName[ii] != curName[ii] for curName in names):
+                substringEnd = ii+1
+                break
+        # Special case of 0: Set to none to avoid null string
+        if substringEnd == 0:
+            substringEnd = None
+        limits = {}
+        for kk, vv in self.enumMap.items():
+            limits[kk[:substringEnd]] = vv
+        return limits
+
+    def saveState(self, filter=None):
+        state = super().saveState(filter)
+        state['value'] = list(self.enumMap)[list(self.enumMap.values()).index(state['value'])]
+        return state
+
+    @staticmethod
+    def _getAllowedEnums(enum):
+        """Pyside provides a dict for easy evaluation"""
+        if 'PySide' in QT_LIB:
+            vals = enum.values
+        elif 'PyQt5' in QT_LIB:
+            vals = {}
+            for key in dir(QtCore.Qt):
+                value = getattr(QtCore.Qt, key)
+                if isinstance(value, enum):
+                    vals[key] = value
+        elif 'PyQt6' in QT_LIB:
+            vals = {e.name: e.value for e in enum}
+        else:
+            raise RuntimeError(f'Cannot find associated enum values for qt lib {QT_LIB}')
+        # Remove "M<enum>" since it's not a real option
+        vals.pop(f'M{enum.__name__}', None)
+        return vals
 
 class PenParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):
