@@ -905,6 +905,15 @@ class FileParameterItem(WidgetParameterItem):
             return
         self.param.setValue(fname)
 
+    def updateDefaultBtn(self):
+        # Override since a readonly label should still allow reverting to default
+        ## enable/disable default btn
+        self.defaultBtn.setEnabled(
+            not self.param.valueIsDefault() and self.param.opts['enabled'])
+
+        # hide / show
+        self.defaultBtn.setVisible(self.param.hasDefault())
+
     def updateDisplayLabel(self, value=None):
         lbl = self.displayLabel
         if value is None:
