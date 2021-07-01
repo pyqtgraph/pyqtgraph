@@ -1213,7 +1213,10 @@ class PenParameterItem(WidgetParameterItem):
 
     def buttonClicked(self):
         #open up the pen selector dialog
-        self.pdialog.exec()
+        # Copy in case of rejection
+        prePen = QtGui.QPen(self.pen)
+        if self.pdialog.exec() != QtWidgets.QDialog.DialogCode.Accepted:
+            self.pdialog.updateParamFromPen(self.pdialog.param, prePen)
 
     def penChangeFinished(self):
         self.param.setValue(self.pdialog.pen)

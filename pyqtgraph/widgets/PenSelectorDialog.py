@@ -20,7 +20,7 @@ class PenPreviewArea(QtWidgets.QLabel):
         ret =super().mouseMoveEvent(ev)
         if not (ev.buttons() & QtCore.Qt.MouseButton.LeftButton):
             return ret
-        pos = ev.pos()
+        pos = ev.position() if hasattr(ev, 'position') else ev.localPos()
         if pos != self.lastPos:
             self.penLocs.append(pos)
             self.lastPos = QtCore.QPointF(pos)
