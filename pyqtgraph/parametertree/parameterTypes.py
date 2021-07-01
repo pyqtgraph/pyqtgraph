@@ -761,7 +761,18 @@ class Emitter(QtCore.QObject):
     sigChanged = QtCore.Signal(object, object)
 
 
-def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, **kwargs):
+def _enumToInt(enum):
+    """Resolve the differences between qt bindings for turning enums into ints for or-operations"""
+    if QT_LIB == 'PyQt5':
+        out = enum
+    elif QT_LIB == 'PyQt6':
+        out = enum.value
+    else:
+        # PySide is consistent
+        out = int(enum)
+    return out
+
+def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, selectFile=None, **kwargs):
     """
     Thin wrapper around Qt file picker dialog. Used internally so all options are consistent
     among all requests for external file information
@@ -772,6 +783,7 @@ def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, **k
     winTitle       Title of dialog window
     nameFilter     File filter as required by the Qt dialog
     directory      Where in the file system to open this dialog
+    selectFile     File to preselect
     kwargs         Any enum value accepted by a QFileDialog and its value. Values can be a string or list of strings,
                    i.e. fileMode='AnyFile', options=['ShowDirsOnly', 'DontResolveSymlinks']
     ============== ========================================================
@@ -785,20 +797,31 @@ def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, **k
             vv = [vv]
         # 'fileMode' -> 'FileMode'
         formattedName = kk[0].upper() + kk[1:]
-        enumCls = getattr(fileDlg, formattedName, NO_MATCH)
-        if enumCls is NO_MATCH:
+        # Edge case: "Options" has enum "Option"
+        if formattedName == 'Options':
+            enumCls = fileDlg.Option
+        else:
+            enumCls = getattr(fileDlg, formattedName, NO_MATCH)
+        setFunc = getattr(fileDlg, f'set{formattedName}', NO_MATCH)
+        if enumCls is NO_MATCH or setFunc is NO_MATCH:
             continue
         outEnum = getattr(fileDlg, kk)()
+        # Ugh, enum composition is different in each lib too
+        builder = _enumToInt(outEnum)
+        # if outEnum is a true enum, '|' isn't directly supported, so turn it into an int temporarily
         for flag in vv:
-            outEnum |= getattr(enumCls, flag)
-        setFunc = getattr(fileDlg, f'set{formattedName}')
+            curVal = _enumToInt(getattr(enumCls, flag))
+            builder |= curVal
+        outEnum = enumCls(builder)
         # Some Qt implementations turn into ints by this point
-        setFunc(enumCls(outEnum))
+        setFunc(outEnum)
 
     fileDlg.setModal(True)
     if directory is not None:
         fileDlg.setDirectory(directory)
     fileDlg.setNameFilter(nameFilter)
+    if selectFile is not None:
+        fileDlg.selectFile(selectFile)
 
     fileDlg.setWindowTitle(winTitle)
 
@@ -824,8 +847,9 @@ def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, **k
     else:
         return None
 
-class FilePickerParameterItem(WidgetParameterItem):
+class FileParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):
+        self._value = None
         # Temporarily consider string during construction
         param.opts['type'] = 'str'
         super().__init__(param, depth)
@@ -836,24 +860,66 @@ class FilePickerParameterItem(WidgetParameterItem):
         button.setContentsMargins(0, 0, 0, 0)
         button.clicked.connect(self._retrieveFileSelection_gui)
         self.layoutWidget.layout().insertWidget(2, button)
+        self.displayLabel.resizeEvent = self._newResizeEvent
         # self.layoutWidget.layout().insertWidget(3, self.defaultBtn)
+
+    def makeWidget(self):
+        w = super().makeWidget()
+        w.setValue = self.setValue
+        w.value = self.value
+        return w
+
+    def _newResizeEvent(self, ev):
+        ret = type(self.displayLabel).resizeEvent(self.displayLabel, ev)
+        self.updateDisplayLabel()
+        return ret
+
+    def setValue(self, value):
+        self._value = value
+        self.widget.setText(asUnicode(value))
+
+    def value(self):
+        return self._value
 
     def _retrieveFileSelection_gui(self):
         curVal = self.param.value()
+        if isinstance(curVal, list) and len(curVal):
+            # All files should be from the same directory, in principle
+            # Since no mechanism exists for preselecting multiple, the most sensible
+            # thing is to select nothing in the preview dialog
+            curVal = Path(curVal[0])
+            if curVal.is_file():
+                curVal = curVal.parent
         useDir = curVal or str(os.getcwd())
         opts = self.param.opts
         startDir = Path(useDir).absolute()
         if startDir.is_file():
+            opts['selectFile'] = startDir.name
             startDir = startDir.parent
         if startDir.exists():
             opts['directory'] = str(startDir)
         fname = popupFilePicker(None, self.param.title(), **opts)
-        if fname is None:
+        if not fname:
             return
         self.param.setValue(fname)
 
-class FilePickerParameter(Parameter):
-    itemClass = FilePickerParameterItem
+    def updateDisplayLabel(self, value=None):
+        lbl = self.displayLabel
+        if value is None:
+            value = self.param.value()
+        value = asUnicode(value)
+        font = lbl.font()
+        metrics = QtGui.QFontMetricsF(font)
+        value = metrics.elidedText(value, QtCore.Qt.TextElideMode.ElideLeft, lbl.width()-5)
+        return super().updateDisplayLabel(value)
+
+class FileParameter(Parameter):
+    itemClass = FileParameterItem
+
+    def __init__(self, **opts):
+        opts.setdefault('readonly', True)
+        super().__init__(**opts)
+
 
 class ProgressBarParameterItem(WidgetParameterItem):
     def makeWidget(self):
@@ -1139,7 +1205,7 @@ class PenParameter(Parameter):
 
 registerParameterType('pen', PenParameter, override=True)
 registerParameterType('progress', ProgressBarParameter, override=True)
-registerParameterType('file', FilePickerParameter, override=True)
+registerParameterType('file', FileParameter, override=True)
 registerParameterType('slider', SliderParameter, override=True)
 registerParameterType('calendar', CalendarParameter, override=True)
 registerParameterType('font', FontParameter, override=True)
