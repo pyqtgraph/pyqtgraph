@@ -1070,6 +1070,19 @@ class FontParameterItem(WidgetParameterItem):
 class FontParameter(Parameter):
     itemClass = FontParameterItem
 
+    def _interpretValue(self, v):
+        if isinstance(v, str):
+            newVal = QtGui.QFont()
+            if not newVal.fromString(v):
+                raise ValueError(f'Error parsing font "{v}"')
+            v = newVal
+        return v
+
+    def saveState(self, filter=None):
+        state = super().saveState(filter)
+        state['value'] = state['value'].toString()
+        return state
+
 class CalendarParameterItem(WidgetParameterItem):
     def makeWidget(self):
         self.asSubItem = True
