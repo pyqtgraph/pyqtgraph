@@ -3,14 +3,14 @@ from ..parametertree import Parameter, ParameterTree
 from ..functions import mkPen
 
 import re
-
+from contextlib import ExitStack
 
 class PenPreviewArea(QtWidgets.QLabel):
-    def __init__(self):
+    def __init__(self, pen):
         super().__init__()
         self.penLocs = []
         self.lastPos = None
-        self.pen = None
+        self.pen = pen
 
     def mousePressEvent(self, ev):
         self.penLocs.clear()
@@ -27,15 +27,7 @@ class PenPreviewArea(QtWidgets.QLabel):
             self.update()
         return ret
 
-    def setPen(self, pen):
-        self.pen = pen
-        self.update()
-
     def paintEvent(self, *args):
-        displaySize = self.size()
-        w, h = displaySize.width(), displaySize.height()
-        palette = self.palette()
-        labelBackgroundColor = palette.color(palette.ColorRole.Window)
         painter = QtGui.QPainter(self)
         # draw a squigly line to show what the pen looks like.
         if len(self.penLocs) < 1:
@@ -62,42 +54,26 @@ class PenPreviewArea(QtWidgets.QLabel):
 class PenSelectorDialog(QtWidgets.QDialog):
     def __init__(self, initialPen='k'):
         super().__init__()
-        self.param = self.mkParam()
-        for p in self.param:
-            p.sigValueChanged.connect(self.applyPenOpts)
+        self.pen = mkPen(initialPen)
+        self.param = self.mkParam(self.pen)
         self.tree = ParameterTree(showHeader=False)
         self.tree.setParameters(self.param, showTop=False)
         self.setupUi()
         self.setModal(True)
 
-        self.pen = mkPen(initialPen)
-        self.updatePen(**self.param)
-
     @staticmethod
-    def mkParam():
+    def mkParam(boundPen=None):
+        # Import here to avoid cyclic dependency
+        from ..parametertree.parameterTypes import QtEnumParameter
         cs = QtCore.Qt.PenCapStyle
         js = QtCore.Qt.PenJoinStyle
         ps = QtCore.Qt.PenStyle
         param = Parameter.create(name='Params', type='group', children=[
-            dict(name='width', value=1.0, type='float'),
             dict(name='color', type='color', value='k'),
-            dict(name='style', type='list', limits={
-                'Solid': ps.SolidLine,
-                'Dashed': ps.DashLine,
-                'Dash dot': ps.DashDotLine,
-                'Dash dot dot': ps.DashDotDotLine
-            }),
-            dict(name='capStyle', type='list', limits={
-                'Square cap': cs.SquareCap,
-                'Flat cap': cs.FlatCap,
-                'Round cap': cs.RoundCap,
-            }),
-            dict(name='joinStyle', type='list', limits={
-                'Bevel join': js.BevelJoin,
-                'Miter join': js.MiterJoin,
-                'Round join': js.RoundJoin
-            })
-
+            dict(name='width', value=1, type='int', limits=[0, None]),
+            QtEnumParameter(ps, name='style', value='SolidLine'),
+            QtEnumParameter(cs, name='capStyle'),
+            QtEnumParameter(js, name='joinStyle'),
         ])
 
         for p in param:
@@ -106,18 +82,47 @@ class PenSelectorDialog(QtWidgets.QDialog):
             name = re.sub(r'(\w)([A-Z])', replace, name)
             name = name.title().strip()
             p.setOpts(title=name)
+            
+        def setterWrapper(setter):
+            """Ignores the 'param' argument of sigValueChanged"""
+            def newSetter(_, value):
+                return setter(value)
+            return newSetter
+
+        if boundPen is not None:
+            PenSelectorDialog.updateParamFromPen(param, boundPen)
+            for p in param:
+                setter, setName = PenSelectorDialog._setterForParam(p.name(), boundPen, returnName=True)
+                # Instead, set the parameter which will signal the old setter
+                setattr(boundPen, setName, p.setValue)
+                p.sigValueChanged.connect(setterWrapper(setter))
+                # Populate initial value
         return param
 
     @staticmethod
-    def updatePenFromParam(pen, penOptsParam):
+    def updatePenFromParam(penOptsParam, pen=None):
+        if pen is None:
+            pen = mkPen()
         for param in penOptsParam:
-            formatted = param.name()
-            formatted = formatted[0].upper() + formatted[1:]
-            setter = getattr(pen, f'set{formatted}')
+            setter = PenSelectorDialog._setterForParam(param.name(), pen)
             setter(param.value())
+        return pen
 
-    def applyPenOpts(self):
-        self.updatePen(**self.param)
+    def updatePenFromOpts(self, penOpts, pen=None):
+        if pen is None:
+            pen = mkPen()
+        useKeys = set(penOpts).intersection(self.param.names)
+        for kk in useKeys:
+            setter = self._setterForParam(kk, pen)
+            setter(penOpts[kk])
+
+    @staticmethod
+    def _setterForParam(paramName, obj, returnName=False):
+        formatted = paramName[0].upper() + paramName[1:]
+        setter = getattr(obj, f'set{formatted}')
+        if returnName:
+            return setter, formatted
+        return setter
 
     @staticmethod
     def updateParamFromPen(param, pen):
@@ -125,9 +130,16 @@ class PenSelectorDialog(QtWidgets.QDialog):
         Applies settings from a pen to either a Parameter or dict. The Parameter or dict must already
         be populated with the relevant keys that can be found in `PenSelectorDialog.mkParam`.
         """
-        names = param if isinstance(param, dict) else param.names
+        stack = ExitStack()
+        if isinstance(param, Parameter):
+            names = param.names
+            # Block changes until all are finalized
+            stack.enter_context(param.treeChangeBlocker())
+        else:
+            names = param
         for opt in names:
             param[opt] = getattr(pen, opt)()
+        stack.close()
 
     def setupUi(self):
         layout = QtWidgets.QVBoxLayout()
@@ -140,7 +152,11 @@ class PenSelectorDialog(QtWidgets.QDialog):
         self.buttonBoxAcceptCancel.accepted.connect(self.accept)
         self.buttonBoxAcceptCancel.rejected.connect(self.reject)
 
-        self.labelPenPreview = PenPreviewArea()
+        self.labelPenPreview = PenPreviewArea(self.pen)
+        def maybeUpdatePreview(_, changes):
+            if any('value' in c[1] for c in changes):
+                self.labelPenPreview.update()
+        self.param.sigTreeStateChanged.connect(maybeUpdatePreview)
         infoLbl = QtWidgets.QLabel('Click and drag below to test the pen')
         infoLbl.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         policy = QtGui.QSizePolicy.Policy
@@ -155,11 +171,3 @@ class PenSelectorDialog(QtWidgets.QDialog):
 
         self.setLayout(layout)
         self.resize(240, 300)
-
-    def updatePen(self, color, width, style, capStyle, joinStyle):
-        self.pen = QtGui.QPen(color, width, style, capStyle, joinStyle)
-        self.labelPenPreview.setPen(self.pen)
-
-    def resizeEvent(self, ev):
-        super().resizeEvent(ev)
-        self.updatePen(**self.param)

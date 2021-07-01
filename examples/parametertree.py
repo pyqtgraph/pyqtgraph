@@ -79,7 +79,7 @@ params = [
         {'name': 'Action Parameter', 'type': 'action', 'tip': 'Click me'},
     ]},
     {'name': 'Custom Parameter Options', 'type': 'group', 'children': [
-        {'name': 'Pen', 'type': 'pen', 'value': pg.mkPen(color=(0,0,0), width=1), 'width': 2, 'color': 'r'},
+        {'name': 'Pen', 'type': 'pen', 'value': pg.mkPen(color=(255,0,0), width=2)},
         {'name': 'Progress bar', 'type': 'progress', 'value':50, 'limits':(0,100)},
         {'name': 'Slider', 'type': 'slider', 'value':50, 'limits':(0,100)},
         {'name': 'Font', 'type': 'font', 'value':QtGui.QFont("Inter")},

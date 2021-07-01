@@ -1,6 +1,4 @@
-from ..Qt import QtCore, QtGui, QtWidgets
-# -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
 from ..python2_3 import asUnicode
 from .Parameter import Parameter, registerParameterType
 from .ParameterItem import ParameterItem
@@ -1156,7 +1154,8 @@ class QtEnumParameter(ListParameter):
 
     def saveState(self, filter=None):
         state = super().saveState(filter)
-        state['value'] = list(self.enumMap)[list(self.enumMap.values()).index(state['value'])]
+        reverseMap = dict(zip(self.enumMap.values(), self.enumMap))
+        state['value'] = reverseMap[state['value']]
         return state
 
     @staticmethod
@@ -1171,7 +1170,7 @@ class QtEnumParameter(ListParameter):
                 if isinstance(value, enum):
                     vals[key] = value
         elif 'PyQt6' in QT_LIB:
-            vals = {e.name: e.value for e in enum}
+            vals = {e.name: e for e in enum}
         else:
             raise RuntimeError(f'Cannot find associated enum values for qt lib {QT_LIB}')
         # Remove "M<enum>" since it's not a real option
@@ -1180,25 +1179,11 @@ class QtEnumParameter(ListParameter):
 
 class PenParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):
-        self.pen = QtGui.QPen()
-
-        self.pdialog = PenSelectorDialog(fn.mkPen(self.pen))
+        self.pdialog = PenSelectorDialog(fn.mkPen(param.pen))
         self.pdialog.setModal(True)
         self.pdialog.accepted.connect(self.penChangeFinished)
-
         super().__init__(param, depth)
         self.displayLabel.paintEvent = self.displayPaintEvent
-
-    def optsChanged(self, param, opts):
-        setParams = self.pdialog.param
-        self.param.blockTreeChangeSignal()
-        setParams.blockTreeChangeSignal()
-        for kk in set(setParams.names).intersection(opts):
-            setParams[kk] = opts[kk]
-        self.setValue(self.pdialog.pen)
-        setParams.unblockTreeChangeSignal()
-        self.param.unblockTreeChangeSignal()
-        super().optsChanged(param, opts)
 
     def makeWidget(self):
         self.button = QtWidgets.QPushButton()
@@ -1211,15 +1196,15 @@ class PenParameterItem(WidgetParameterItem):
         self.button.sigChanged = None
         return self.button
 
+    @property
+    def pen(self):
+        return self.pdialog.pen
+
     def value(self):
         return self.pen
 
     def setValue(self, pen):
-        if not isinstance(pen,QtGui.QPen):
-            pen = fn.mkPen(pen)
-        pen.setCosmetic(True)
         self.pdialog.updateParamFromPen(self.pdialog.param, pen)
-        self.pen = pen
 
     def updateDisplayLabel(self, value=None):
         super().updateDisplayLabel('')
@@ -1257,43 +1242,62 @@ class PenParameterItem(WidgetParameterItem):
         return self.penPaintEvent(event, self.displayLabel)
 
 class PenParameter(Parameter):
+    """
+    Stores value in format (color, width, style, capStyle, joinStyle)
+    """
     itemClass = PenParameterItem
     sigPenChanged = QtCore.Signal(object,object)
 
     def __init__(self, **opts):
-        self._penToOptsConverter = PenSelectorDialog.mkParam()
-        initialPen = fn.mkPen(opts.get('value', None))
-        # Combine pen and opts into one pen
-        PenSelectorDialog.updateParamFromPen(self._penToOptsConverter, initialPen)
-        for opt in set(self._penToOptsConverter.names).intersection(opts):
-            self._penToOptsConverter[opt] = opts[opt]
-            # This option is now part of the pen, so it's no longer needed
-            del opts[opt]
-        PenSelectorDialog.updatePenFromParam(initialPen, self._penToOptsConverter)
-        opts['value'] = initialPen
+        self.pen = QtGui.QPen()
+        self.penOptsParam = PenSelectorDialog.mkParam(self.pen)
         super().__init__(**opts)
-
-    def penChanged(self,pen):
-        self.opts['value'] = pen
-        self.sigPenChanged.emit(self, pen)
-        self.emitStateChanged('penChanged', pen)
 
     def saveState(self, filter=None):
         state = super().saveState(filter)
-        PenSelectorDialog.updateParamFromPen(self._penToOptsConverter, state['value'])
-        overrideState = self._penToOptsConverter.saveState(filter)['children']
-        # OK to make a black pen, since the saved options will create a correct pen on reload
-        state['value'] = 'k'
-        overrideOpts = {}
-        for kk, vv in overrideState.items():
-            vv = vv['value']
-            if hasattr(vv, 'name'):
-                # Convert enums to string
-                lstParam = self._penToOptsConverter.child(kk)
-                vv = lstParam.reverse[1][lstParam.reverse[0].index(vv)]
-            overrideOpts[kk] = vv
-        state.update(overrideOpts)
+        overrideState = self.penOptsParam.saveState(filter)['children']
+        state['value'] = tuple(s['value'] for s in overrideState.values())
         return state
+
+    def _interpretValue(self, v):
+        return self.mkPen(v)
+
+    def setValue(self, value, blockSignal=None):
+        if not fn.eq(value, self.pen):
+            value = self.mkPen(value)
+            PenSelectorDialog.updateParamFromPen(self.penOptsParam, value)
+        return super().setValue(self.pen, blockSignal)
+
+    def applyOptsToPen(self, **opts):
+        # Transform opts into a value for the current pen
+        paramNames = set(opts).intersection(self.penOptsParam.names)
+        # Value should be overridden by opts
+        with self.treeChangeBlocker():
+            if 'value' in opts:
+                pen = self.mkPen(opts.pop('value'))
+                if not fn.eq(pen, self.pen):
+                    PenSelectorDialog.updateParamFromPen(self.penOptsParam, pen)
+            penOpts = {}
+            for kk in paramNames:
+                penOpts[kk] = opts[kk]
+                self.penOptsParam[kk] = opts[kk]
+        return penOpts
+
+    def setOpts(self, **opts):
+        # Transform opts into a value
+        penOpts = self.applyOptsToPen(**opts)
+        if penOpts:
+            self.setValue(self.pen)
+        return super().setOpts(**opts)
+
+    def mkPen(self, *args, **kwargs):
+        """Thin wrapper around fn.mkPen which accepts the serialized state from saveState"""
+        if len(args) == 1 and isinstance(args[0], tuple) and len(args[0]) == len(self.penOptsParam.childs):
+            opts = dict(zip(self.penOptsParam.names, args[0]))
+            self.applyOptsToPen(**opts)
+            args = (self.pen,)
+            kwargs = {}
+        return fn.mkPen(*args, **kwargs)
 
 registerParameterType('pen', PenParameter, override=True)
 registerParameterType('progress', ProgressBarParameter, override=True)
