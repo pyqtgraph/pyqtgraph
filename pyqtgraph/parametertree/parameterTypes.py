@@ -849,9 +849,10 @@ class FileParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):
         self._value = None
         # Temporarily consider string during construction
+        oldType = param.opts.get('type')
         param.opts['type'] = 'str'
         super().__init__(param, depth)
-        param.opts['type'] = 'file'
+        param.opts['type'] = oldType
 
         button = QtWidgets.QPushButton('...')
         button.setFixedWidth(25)
@@ -865,6 +866,9 @@ class FileParameterItem(WidgetParameterItem):
         w = super().makeWidget()
         w.setValue = self.setValue
         w.value = self.value
+        # Doesn't make much sense to have a 'changing' signal since filepaths should be complete before value
+        # is emitted
+        delattr(w, 'sigChanging')
         return w
 
     def _newResizeEvent(self, ev):
