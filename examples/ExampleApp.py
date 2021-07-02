@@ -518,6 +518,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
         if key == Key.Key_F:
             self.ui.exampleFilter.setFocus()
             event.accept()
+            return
 
         if key not in [Key.Key_Plus, Key.Key_Minus, Key.Key_Underscore, Key.Key_Equal, Key.Key_0]:
             return ret
