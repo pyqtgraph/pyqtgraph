@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-This example demonstrates generating ColorMap objects from external data.
-It displays the full list of color maps available as local files or by import 
-from Matplotlib or ColorCET.
+This example displays all color maps currently available, either as local data
+or imported from Matplotlib of ColorCET.
 """
 ## Add path to library (just for examples; you do not need this)
 import initExample
@@ -49,19 +48,22 @@ def add_bar(lw, name, cm):
 
 add_heading(lw, 'local color maps')
 list_of_maps = pg.colormap.listMaps()
+list_of_maps = sorted( list_of_maps, key=lambda x: x.swapcase() )
 for map_name in list_of_maps:
     cm = pg.colormap.get(map_name)
     add_bar(lw, map_name, cm)
 
 add_heading(lw, 'Matplotlib import')
 list_of_maps = pg.colormap.listMaps('matplotlib')
+list_of_maps = sorted( list_of_maps, key=lambda x: x.lower() )
 for map_name in list_of_maps:
     cm = pg.colormap.get(map_name, source='matplotlib', skipCache=True)
     if cm is not None:
         add_bar(lw, map_name, cm)
 
 add_heading(lw, 'ColorCET import')
-list_of_maps = pg.colormap.listMaps('colorcet')   
+list_of_maps = pg.colormap.listMaps('colorcet')
+list_of_maps = sorted( list_of_maps, key=lambda x: x.lower() )
 for map_name in list_of_maps:
     cm = pg.colormap.get(map_name, source='colorcet', skipCache=True)
     if cm is not None:

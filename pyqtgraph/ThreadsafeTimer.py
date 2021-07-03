@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from .Qt import QtCore, QtGui
 
+__all__ = ['ThreadsafeTimer']
+
 class ThreadsafeTimer(QtCore.QObject):
     """
     Thread-safe replacement for QTimer.

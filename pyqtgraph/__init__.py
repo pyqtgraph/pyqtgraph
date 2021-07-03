@@ -10,7 +10,7 @@ __version__ = '0.12.1'
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt4 and PySide.
-from .Qt import QtGui, mkQApp
+from .Qt import QtCore, QtGui, mkQApp
 from .Qt import exec_ as exec
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
@@ -279,6 +279,15 @@ from .colormap import *
 from .ptime import time
 from .Qt import isQObjectAlive
 from .ThreadsafeTimer import *
+
+# indirect imports used within library
+from .GraphicsScene import GraphicsScene
+from .python2_3 import asUnicode
+from .util.cupy_helper import getCupy
+
+# indirect imports known to be used outside of the library
+from .metaarray import MetaArray
+from .ordereddict import OrderedDict
 
 
 ##############################################################

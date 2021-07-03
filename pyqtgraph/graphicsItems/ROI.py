@@ -1676,8 +1676,8 @@ class LineROI(ROI):
         pos2 = Point(pos2)
         d = pos2-pos1
         l = d.length()
-        ra = Point(1, 0).angle(d, units="radians")
-        c = Point(-width/2. * sin(ra), -width/2. * cos(ra))
+        ra = d.angle(Point(1, 0), units="radians")
+        c = Point(width/2. * sin(ra), -width/2. * cos(ra))
         pos1 = pos1 + c
         
         ROI.__init__(self, pos1, size=Point(l, width), angle=degrees(ra), **args)

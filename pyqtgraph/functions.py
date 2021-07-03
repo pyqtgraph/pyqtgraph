@@ -26,6 +26,31 @@ from .metaarray import MetaArray
 from collections import OrderedDict
 from .python2_3 import asUnicode, basestring
 
+# in order of appearance in this file.
+# add new functions to this list only if they are to reside in pg namespace.
+__all__ = [
+    'siScale', 'siFormat', 'siParse', 'siEval', 'siApply',
+    'Color', 'mkColor', 'mkBrush', 'mkPen', 'hsvColor',
+    'CIELabColor', 'colorCIELab', 'colorDistance',
+    'colorTuple', 'colorStr', 'intColor', 'glColor',
+    'makeArrowPath', 'eq',
+    'affineSliceCoords', 'affineSlice',
+    'interweaveArrays', 'interpolateArray', 'subArray',
+    'transformToArray', 'transformCoordinates',
+    'solve3DTransform', 'solveBilinearTransform',
+    'clip_scalar', 'clip_array', 'rescaleData', 'applyLookupTable',
+    'makeRGBA', 'makeARGB',
+    # 'try_fastpath_argb', 'ndarray_to_qimage',
+    'makeQImage',
+    # 'qimage_to_ndarray',
+    'imageToArray', 'colorToAlpha',
+    'gaussianFilter', 'downsample', 'arrayToQPath',
+    # 'ndarray_from_qpolygonf', 'create_qpolygonf', 'arrayToQPolygonF',
+    'isocurve', 'traceImage', 'isosurface',
+    'invertQTransform',
+    'pseudoScatter', 'toposort', 'disconnect', 'SignalBlock']
+
+
 Colors = {
     'b': QtGui.QColor(0,0,255,255),
     'g': QtGui.QColor(0,255,0,255),

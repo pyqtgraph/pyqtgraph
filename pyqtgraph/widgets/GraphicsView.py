@@ -317,13 +317,9 @@ class GraphicsView(QtGui.QGraphicsView):
         super().wheelEvent(ev)
         if not self.mouseEnabled:
             return
-        delta = 0
-        if QT_LIB in ['PyQt4', 'PySide']:
-            delta = ev.delta()
-        else:
-            delta = ev.angleDelta().x()
-            if delta == 0:
-                delta = ev.angleDelta().y()
+        delta = ev.angleDelta().x()
+        if delta == 0:
+            delta = ev.angleDelta().y()
                 
         sc = 1.001 ** delta
         #self.scale *= sc
