@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
+from ..Qt import QtCore, QtGui, QtWidgets
 from OpenGL.GL import *
 import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
@@ -8,7 +8,6 @@ import warnings
 from math import cos, sin, tan, radians
 ##Vector = QtGui.QVector3D
 
-ShareWidget = None
 
 class GLViewWidget(QtWidgets.QOpenGLWidget):
     
@@ -99,10 +98,11 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
 
     def addItem(self, item):
         self.items.append(item)
-        if hasattr(item, 'initializeGL'):
+
+        if self.isValid():
             self.makeCurrent()
             try:
-                item.initializeGL()
+                item.initialize()
             except:
                 self.checkOpenGLVersion('Error while adding item %s to GLViewWidget.' % str(item))
                 
@@ -128,7 +128,12 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         self.update()        
         
     def initializeGL(self):
-        self.resizeGL(self.width(), self.height())
+        """
+        Initialize items that were not initialized during addItem().
+        """
+        for item in self.items:
+            if not item.isInitialized():
+                item.initialize()
         
     def setBackgroundColor(self, *args, **kwds):
         """
@@ -463,13 +468,9 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         #self.swapBuffers()
         
     def wheelEvent(self, ev):
-        delta = 0
-        if QT_LIB in ['PyQt4', 'PySide']:
-            delta = ev.delta()
-        else:
-            delta = ev.angleDelta().x()
-            if delta == 0:
-                delta = ev.angleDelta().y()
+        delta = ev.angleDelta().x()
+        if delta == 0:
+            delta = ev.angleDelta().y()
         if (ev.modifiers() & QtCore.Qt.KeyboardModifier.ControlModifier):
             self.opts['fov'] *= 0.999**delta
         else:
