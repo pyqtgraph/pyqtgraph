@@ -104,7 +104,6 @@ def _getFromFile(name):
         else:
             csv_mode = False
         for line in fh:
-            name = None
             line = line.strip()
             if len(line) == 0: continue # empty line
             if line[0] == ';': continue # comment
@@ -132,6 +131,7 @@ def _getFromFile(name):
         pos=np.linspace(0.0, 1.0, len(color_list)),
         color=color_list) #, names=color_names)
     if cm is not None:
+        print('naming color map:', name)
         cm.name = name
         _mapCache[name] = cm
     return cm
