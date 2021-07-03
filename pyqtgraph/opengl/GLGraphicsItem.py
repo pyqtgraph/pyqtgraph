@@ -228,10 +228,11 @@ class GLGraphicsItem(QtCore.QObject):
         view, as it may be obscured or outside of the current view area."""
         return self.__visible
     
-    def setInitialized(self, init=True):
-        self.__initialized = init
+    def initialize(self):
+        self.initializeGL()
+        self.__initialized = True
 
-    def initialized(self):
+    def isInitialized(self):
         return self.__initialized
     
     def initializeGL(self):
@@ -240,7 +241,7 @@ class GLGraphicsItem(QtCore.QObject):
         The widget's GL context is made current before this method is called.
         (So this would be an appropriate time to generate lists, upload textures, etc.)
         """
-        self.setInitialized()
+        pass
     
     def setupGLState(self):
         """

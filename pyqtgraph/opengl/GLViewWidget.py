@@ -102,8 +102,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         if self.isValid():
             self.makeCurrent()
             try:
-                item.initializeGL()
-                item.setInitialized()
+                item.initialize()
             except:
                 self.checkOpenGLVersion('Error while adding item %s to GLViewWidget.' % str(item))
                 
@@ -129,10 +128,12 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         self.update()        
         
     def initializeGL(self):
+        """
+        Initialize items that were not initialized during addItem().
+        """
         for item in self.items:
-            if not item.initialized():
-                item.initializeGL()
-                item.setInitialized()
+            if not item.isInitialized():
+                item.initialize()
         
     def setBackgroundColor(self, *args, **kwds):
         """
