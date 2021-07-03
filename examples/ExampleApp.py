@@ -318,6 +318,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
 
         textFil = self.ui.exampleFilter
         self.curListener = None
+        self.ui.exampleFilter.setFocus()
 
         def onComboChanged(searchType):
             if self.curListener is not None:
@@ -512,6 +513,13 @@ class ExampleLoader(QtWidgets.QMainWindow):
             return ret
         key = event.key()
         Key = QtCore.Qt.Key
+
+        # Allow quick navigate to search
+        if key == Key.Key_F:
+            self.ui.exampleFilter.setFocus()
+            event.accept()
+            return
+
         if key not in [Key.Key_Plus, Key.Key_Minus, Key.Key_Underscore, Key.Key_Equal, Key.Key_0]:
             return ret
         font = self.ui.codeView.font()
@@ -525,7 +533,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
             # Reset to original size
             font.setPointSize(10)
         self.ui.codeView.setFont(font)
-        return event.accept()
+        event.accept()
 
 def main():
     app = pg.mkQApp()
