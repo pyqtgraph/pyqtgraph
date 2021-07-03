@@ -131,7 +131,6 @@ def _getFromFile(name):
         pos=np.linspace(0.0, 1.0, len(color_list)),
         color=color_list) #, names=color_names)
     if cm is not None:
-        print('naming color map:', name)
         cm.name = name
         _mapCache[name] = cm
     return cm
