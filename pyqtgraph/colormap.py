@@ -104,7 +104,6 @@ def _getFromFile(name):
         else:
             csv_mode = False
         for line in fh:
-            name = None
             line = line.strip()
             if len(line) == 0: continue # empty line
             if line[0] == ';': continue # comment
