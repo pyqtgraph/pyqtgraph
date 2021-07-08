@@ -43,6 +43,7 @@ pyqtgraph-0.12.2
     - #1876 Fix LineROI handle positions being way off-base in some circumstances
     - #1871 Allow adding items to GLViewWidget before calling GLViewWidget.show()
     - #1864 Draw GradientLegend in ViewBox coordinate system with correct orientation
+    - #1875 Fixed mouse events in GLViewWidget for PyQt6 bindings
 
   API/Behavior Changes:
     - #519 Expose clickable property in PlotDataItem
