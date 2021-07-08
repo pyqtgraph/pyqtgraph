@@ -38,6 +38,16 @@ Currently this means:
 * Required
   * [PyQt5](https://www.riverbankcomputing.com/software/pyqt/), [PyQt6](https://www.riverbankcomputing.com/software/pyqt/), [PySide2](https://wiki.qt.io/Qt_for_Python) or [PySide6](https://wiki.qt.io/Qt_for_Python)
   * [`numpy`](https://github.com/numpy/numpy) 1.17+
+* Optional
+  * `scipy` for image processing
+  * `pyopengl` for 3D graphics
+    * `pyopengl` on macOS Big Sur only works with python 3.9.1+
+  * `hdf5` for large hdf5 binary format support
+  * `colorcet` for supplemental colormaps
+  * [`cupy`](https://docs.cupy.dev/en/stable/install.html) for CUDA-enhanced image processing
+    * On Windows, CUDA toolkit must be >= 11.1
+  * [`numba`] used to accelerate repeated image display for ImageItem
+
 
 Optional added functionalities
 ------------------------------
