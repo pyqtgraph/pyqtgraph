@@ -722,7 +722,7 @@ def eq(a, b):
         else:
             return e.all()
     else:
-        raise Exception("== operator returned type %s" % str(type(e)))
+        raise TypeError("== operator returned type %s" % str(type(e)))
 
 
 def affineSliceCoords(shape, origin, vectors, axes):
