@@ -3,6 +3,8 @@ from .. import functions as fn
 from .PlotDataItem import PlotDataItem
 from .PlotCurveItem import PlotCurveItem
 
+__all__ = ['FillBetweenItem']
+
 class FillBetweenItem(QtGui.QGraphicsPathItem):
     """
     GraphicsItem filling the space between two PlotDataItems.

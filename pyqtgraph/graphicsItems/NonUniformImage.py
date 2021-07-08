@@ -6,6 +6,7 @@ from .GraphicsObject import GraphicsObject
 from .. import mkBrush, mkPen
 from .. import functions as fn
 
+__all__ = ['NonUniformImage']
 
 class NonUniformImage(GraphicsObject):
     """

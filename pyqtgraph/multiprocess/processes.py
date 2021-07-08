@@ -122,13 +122,24 @@ class Process(RemoteEventHandler):
         targetStr = pickle.dumps(target)  ## double-pickle target so that child has a chance to 
                                           ## set its sys.path properly before unpickling the target
         pid = os.getpid() # we must send pid to child because windows does not have getppid
-        
+
+        # When running in a venv on Windows platform, since Python >= 3.7.3, the launched
+        # subprocess is a grandchild instead of a child, leading to self.proc.pid not being
+        # the pid of the launched subprocess.
+        # https://bugs.python.org/issue38905
+        #
+        # As a workaround, when we detect such a situation, we perform exchange of pids via
+        # the multiprocessing connection. Technically, only the launched subprocess needs to
+        # send its pid back. Practically, we hijack the ppid parameter to indicate to the
+        # subprocess that pid exchange is needed.
+        xchg_pids = sys.platform == 'win32' and os.getenv('VIRTUAL_ENV') is not None
+
         ## Send everything the remote process needs to start correctly
         data = dict(
             name=name+'_child', 
             port=port, 
             authkey=authkey, 
-            ppid=pid, 
+            ppid=pid if not xchg_pids else None,
             targetStr=targetStr, 
             path=sysPath, 
             qt_lib=QT_LIB,
@@ -150,7 +161,14 @@ class Process(RemoteEventHandler):
                 else:
                     raise
 
-        RemoteEventHandler.__init__(self, conn, name+'_parent', pid=self.proc.pid, debug=self.debug)
+        child_pid = self.proc.pid
+        if xchg_pids:
+            # corresponding code is in:
+            #   remoteproxy.py::RemoteEventHandler.__init__()
+            conn.send(pid)
+            child_pid = conn.recv()
+
+        RemoteEventHandler.__init__(self, conn, name+'_parent', pid=child_pid, debug=self.debug)
         self.debugMsg('Connected to child process.')
         
         atexit.register(self.join)

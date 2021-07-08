@@ -6,6 +6,8 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 
 from matplotlib.figure import Figure
 
+__all__ = ['MatplotlibWidget']
+
 class MatplotlibWidget(QtGui.QWidget):
     """
     Implements a Matplotlib figure inside a QWidget.

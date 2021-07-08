@@ -4,6 +4,7 @@ from ..Point import Point
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 
+__all__ = ['TextItem']
 
 class TextItem(GraphicsObject):
     """

@@ -12,7 +12,7 @@ This module exists to smooth out some of the differences between PySide and PyQt
 
 import os, sys, re, time, subprocess, warnings
 
-from .python2_3 import asUnicode
+from ..python2_3 import asUnicode
 
 PYSIDE = 'PySide'
 PYSIDE2 = 'PySide2'
@@ -130,11 +130,30 @@ def _loadUiType(uiFile):
     return form_class, base_class
 
 
+# For historical reasons, pyqtgraph maintains a Qt4-ish interface back when
+# there wasn't a QtWidgets module. This _was_ done by monkey-patching all of
+# QtWidgets into the QtGui module. This monkey-patching modifies QtGui at a
+# global level.
+# To avoid this, we now maintain a local "mirror" of QtCore, QtGui and QtWidgets.
+# Thus, when monkey-patching happens later on in this file, they will only affect
+# the local modules and not the global modules.
+def _copy_attrs(src, dst):
+    for o in dir(src):
+        if not hasattr(dst, o):
+            setattr(dst, o, getattr(src, o))
+
+from . import QtCore, QtGui, QtWidgets
+
 if QT_LIB == PYQT5:
     # We're using PyQt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure for Qt5
-    from PyQt5 import QtGui, QtCore, QtWidgets, sip, uic
-    
+    import PyQt5.QtCore, PyQt5.QtGui, PyQt5.QtWidgets
+    _copy_attrs(PyQt5.QtCore, QtCore)
+    _copy_attrs(PyQt5.QtGui, QtGui)
+    _copy_attrs(PyQt5.QtWidgets, QtWidgets)
+
+    from PyQt5 import sip, uic
+
     try:
         from PyQt5 import QtSvg
     except ImportError as err:
@@ -147,7 +166,12 @@ if QT_LIB == PYQT5:
     VERSION_INFO = 'PyQt5 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 elif QT_LIB == PYQT6:
-    from PyQt6 import QtGui, QtCore, QtWidgets, sip, uic
+    import PyQt6.QtCore, PyQt6.QtGui, PyQt6.QtWidgets
+    _copy_attrs(PyQt6.QtCore, QtCore)
+    _copy_attrs(PyQt6.QtGui, QtGui)
+    _copy_attrs(PyQt6.QtWidgets, QtWidgets)
+
+    from PyQt6 import sip, uic
 
     try:
         from PyQt6 import QtSvg
@@ -165,7 +189,10 @@ elif QT_LIB == PYQT6:
     VERSION_INFO = 'PyQt6 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 elif QT_LIB == PYSIDE2:
-    from PySide2 import QtGui, QtCore, QtWidgets
+    import PySide2.QtCore, PySide2.QtGui, PySide2.QtWidgets
+    _copy_attrs(PySide2.QtCore, QtCore)
+    _copy_attrs(PySide2.QtGui, QtGui)
+    _copy_attrs(PySide2.QtWidgets, QtWidgets)
     
     try:
         from PySide2 import QtSvg
@@ -182,7 +209,10 @@ elif QT_LIB == PYSIDE2:
     VERSION_INFO = 'PySide2 ' + PySide2.__version__ + ' Qt ' + QtCore.__version__
 
 elif QT_LIB == PYSIDE6:
-    from PySide6 import QtGui, QtCore, QtWidgets
+    import PySide6.QtCore, PySide6.QtGui, PySide6.QtWidgets
+    _copy_attrs(PySide6.QtCore, QtCore)
+    _copy_attrs(PySide6.QtGui, QtGui)
+    _copy_attrs(PySide6.QtWidgets, QtWidgets)
 
     try:
         from PySide6 import QtSvg

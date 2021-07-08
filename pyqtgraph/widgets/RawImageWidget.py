@@ -18,6 +18,7 @@ except (ImportError, AttributeError):
     # AttributeError upon import
     HAVE_OPENGL = False
 
+__all__ = ['RawImageWidget']
 
 class RawImageWidget(QtGui.QWidget):
     """
@@ -78,6 +79,7 @@ class RawImageWidget(QtGui.QWidget):
 
 
 if HAVE_OPENGL:
+    __all__.append('RawImageGLWidget')
     class RawImageGLWidget(QOpenGLWidget):
         """
         Similar to RawImageWidget, but uses a GL widget to do all drawing.

@@ -54,9 +54,6 @@ class GLLinePlotItem(GLGraphicsItem):
                 #self.vbo.pop(arg, None)
         self.update()
 
-    def initializeGL(self):
-        pass
-        
     def paint(self):
         if self.pos is None:
             return
