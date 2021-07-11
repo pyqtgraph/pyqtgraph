@@ -35,22 +35,13 @@ Currently this means:
 
 * Python 3.7+
 * Qt 5.12-5.15, 6.1
-* Required
-  * [PyQt5](https://www.riverbankcomputing.com/software/pyqt/), [PyQt6](https://www.riverbankcomputing.com/software/pyqt/), [PySide2](https://wiki.qt.io/Qt_for_Python) or [PySide6](https://wiki.qt.io/Qt_for_Python)
-  * [`numpy`](https://github.com/numpy/numpy) 1.17+
-* Optional
-  * `scipy` for image processing
-  * `pyopengl` for 3D graphics
-    * `pyopengl` on macOS Big Sur only works with python 3.9.1+
-  * `hdf5` for large hdf5 binary format support
-  * `colorcet` for supplemental colormaps
-  * [`cupy`](https://docs.cupy.dev/en/stable/install.html) for CUDA-enhanced image processing
-    * On Windows, CUDA toolkit must be >= 11.1
-  * [`numba`] used to accelerate repeated image display for ImageItem
+* [PyQt5](https://www.riverbankcomputing.com/software/pyqt/),
+  [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
+  [PySide2](https://wiki.qt.io/Qt_for_Python), or
+  [PySide6](https://wiki.qt.io/Qt_for_Python)
+* [`numpy`](https://github.com/numpy/numpy) 1.17+
 
-
-Optional added functionalities
-------------------------------
+### Optional added functionalities
 
 Through 3rd part libraries, additional functionality may be added to PyQtGraph, see the table below for a summary.
 
@@ -100,7 +91,7 @@ Support
 Installation Methods
 --------------------
 
-* From PyPI:  
+* From PyPI:
   * Last released version: `pip install pyqtgraph`
   * Latest development version: `pip install git+https://github.com/pyqtgraph/pyqtgraph@master`
 * From conda
@@ -115,7 +106,7 @@ Documentation
 
 The official documentation lives at [pyqtgraph.readthedocs.io](https://pyqtgraph.readthedocs.io)
 
-The easiest way to learn PyQtGraph is to browse through the examples; run `python -m pyqtgraph.examples` to launch the examples application.  
+The easiest way to learn PyQtGraph is to browse through the examples; run `python -m pyqtgraph.examples` to launch the examples application.
 
 Used By
 -------
