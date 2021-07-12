@@ -2,15 +2,19 @@
 import sys, re, os, time, traceback, subprocess
 import pickle
 
-from ..Qt import QtCore, QtGui, QT_LIB
+from ..Qt import QtCore, QtGui, QT_LIB, QtWidgets
 from ..python2_3 import basestring
 from .. import exceptionHandling as exceptionHandling
 from .. import getConfigOption
 from ..functions import SignalBlock
+from .CmdInput import CmdInput
 import importlib
 ui_template = importlib.import_module(
     f'.template_{QT_LIB.lower()}', package=__package__)
 
+# Denotes new clause for completion context
+CLAUSE_MARKERS = r'(\(|\)|\.|\[|]|\s+)'
+NON_CLAUSE_MARKERS = r'[^\(\)\.\[\]\s+]+'
 
 class ConsoleWidget(QtGui.QWidget):
     """
@@ -54,43 +58,52 @@ class ConsoleWidget(QtGui.QWidget):
         self.multiline = None
         self.inCmd = False
         self.frames = []  # stack frames to access when an item in the stack list is selected
-        
+
         self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
         self.output = self.ui.output
         self.input = self.ui.input
         self.input.setFocus()
-        
+
         if text is not None:
             self.output.setPlainText(text)
 
         self.historyFile = historyFile
-        
+
         history = self.loadHistory()
         if history is not None:
             self.input.history = [""] + history
             self.ui.historyList.addItems(history[::-1])
         self.ui.historyList.hide()
         self.ui.exceptionGroup.hide()
-        
+
         self.input.sigExecuteCmd.connect(self.runCmd)
         self.ui.historyBtn.toggled.connect(self.ui.historyList.setVisible)
         self.ui.historyList.itemClicked.connect(self.cmdSelected)
         self.ui.historyList.itemDoubleClicked.connect(self.cmdDblClicked)
         self.ui.exceptionBtn.toggled.connect(self.ui.exceptionGroup.setVisible)
-        
+
         self.ui.catchAllExceptionsBtn.toggled.connect(self.catchAllExceptions)
         self.ui.catchNextExceptionBtn.toggled.connect(self.catchNextException)
         self.ui.clearExceptionBtn.clicked.connect(self.clearExceptionClicked)
         self.ui.exceptionStackList.itemClicked.connect(self.stackItemClicked)
         self.ui.exceptionStackList.itemDoubleClicked.connect(self.stackItemDblClicked)
         self.ui.onlyUncaughtCheck.toggled.connect(self.updateSysTrace)
-        
+
         self.currentTraceback = None
 
         # send exceptions raised in non-gui threads back to the main thread by signal.
         self._threadException.connect(self._threadExceptionHandler)
-        
+        self.input: CmdInput
+        self.completerModel = QtCore.QStringListModel()
+        self.input.setModel(self.completerModel)
+        try:
+            import jedi
+            self.completerUpdateFunc = self.updateCompleterFromJedi
+        except ImportError:
+            self.completerUpdateFunc = self.updateCompleterFromHistory
+        self.input.sigCompleteRequested.connect(self.handleCompleterRequest)
+
     def loadHistory(self):
         """Return the list of previously-invoked command strings (or None)."""
         if self.historyFile is not None:
@@ -493,3 +506,43 @@ class ConsoleWidget(QtGui.QWidget):
             
         return True
     
+    def updateCompleterFromJedi(self, newText):
+        """If jedi is available, use it to autocomplete"""
+        try:
+            import jedi
+        except ImportError:
+            return
+        script = jedi.Interpreter(newText, [self.globals(), self.locals()])
+        options = [c.name for c in script.complete(fuzzy=True)]
+        # Options are broken up by '.', '(', and other characters that start a new 'clause' in the expression
+        # So, it's not as easy as just concatenating with the reference string
+        prefix = re.sub(f'({CLAUSE_MARKERS}){NON_CLAUSE_MARKERS}', r'\1', newText)
+        self.completerModel.setStringList([prefix + o for o in options])
+
+    def handleCompleterRequest(self, newText):
+        self.completerUpdateFunc(newText)
+        completer = self.input.completer()
+        popup = completer.popup()
+        if not popup.isVisible():
+            completer.complete()
+
+    def updateCompleterFromHistory(self, newText):
+        """
+        When jedi isn't available, use a poor man's autocomplete from past history words
+        """
+        match = re.search(f'{CLAUSE_MARKERS}?({NON_CLAUSE_MARKERS})$', newText)
+        if not match:
+            # No sensible match
+            prefix = newText
+            suffix = ''
+        else:
+            # np.on -> "np.", "on"
+            splitIdx = match.start(0)+1
+            prefix = newText[:splitIdx]
+            suffix = newText[splitIdx:].lower()
+        sanitizedHist = []
+        for line in self.input.history:
+            for word in re.sub(CLAUSE_MARKERS, ' ', line).split():
+                if word not in sanitizedHist and suffix in word.lower():
+                    sanitizedHist.append(word)
+        self.completerModel.setStringList([prefix + word for word in sanitizedHist])

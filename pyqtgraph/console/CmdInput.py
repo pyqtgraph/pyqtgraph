@@ -1,16 +1,21 @@
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtWidgets
+from ..widgets.PopupLineEditor import PopupLineEditor
 from ..python2_3 import asUnicode
 
-class CmdInput(QtGui.QLineEdit):
+class CmdInput(PopupLineEditor):
     
     sigExecuteCmd = QtCore.Signal(object)
-    
-    def __init__(self, parent):
-        QtGui.QLineEdit.__init__(self, parent)
+    sigCompleteRequested = QtCore.Signal(object) # Current text
+
+    def __init__(self, parent, *args, **kwargs):
+        kwargs.setdefault('validatePrefix', False)
+        kwargs.setdefault('clearOnComplete', False)
+        super().__init__(parent, *args, **kwargs)
         self.history = [""]
         self.ptr = 0
     
     def keyPressEvent(self, ev):
+        ctrlPressed = (ev.modifiers() & QtCore.Qt.KeyboardModifier.ControlModifier)
         if ev.key() == QtCore.Qt.Key.Key_Up:
             if self.ptr < len(self.history) - 1:
                 self.setHistory(self.ptr+1)
@@ -21,8 +26,13 @@ class CmdInput(QtGui.QLineEdit):
                 self.setHistory(self.ptr-1)
                 ev.accept()
                 return
-        elif ev.key() == QtCore.Qt.Key.Key_Return:
+        elif ev.key() == QtCore.Qt.Key.Key_Return and not self.completer().popup().isVisible():
+            # Completer takes precedence if present
             self.execCmd()
+        elif (ctrlPressed and ev.key() == QtCore.Qt.Key.Key_Space):
+            self.sigCompleteRequested.emit(self.text())
+            ev.accept()
+            return
         else:
             super().keyPressEvent(ev)
             self.history[0] = asUnicode(self.text())
