@@ -2,7 +2,7 @@
 import sys, re, os, time, traceback, subprocess
 import pickle
 
-from ..Qt import QtCore, QtGui, QT_LIB, QtWidgets
+from ..Qt import QtCore, QtGui, QT_LIB
 from ..python2_3 import basestring
 from .. import exceptionHandling as exceptionHandling
 from .. import getConfigOption
@@ -513,7 +513,11 @@ class ConsoleWidget(QtGui.QWidget):
         except ImportError:
             return
         script = jedi.Interpreter(newText, [self.globals(), self.locals()])
-        options = [c.name for c in script.complete(fuzzy=True)]
+        try:
+            options = [c.name for c in script.complete(fuzzy=True)]
+        except:
+            # A variety of syntax errors can trip here
+            options = []
         # Options are broken up by '.', '(', and other characters that start a new 'clause' in the expression
         # So, it's not as easy as just concatenating with the reference string
         prefix = re.sub(f'({CLAUSE_MARKERS})?{NON_CLAUSE_MARKERS}$', r'\1', newText)

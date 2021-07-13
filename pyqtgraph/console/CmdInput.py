@@ -29,7 +29,7 @@ class CmdInput(PopupLineEditor):
         elif ev.key() == QtCore.Qt.Key.Key_Return and not self.completer().popup().isVisible():
             # Completer takes precedence if present
             self.execCmd()
-        elif (ctrlPressed and ev.key() == QtCore.Qt.Key.Key_Space):
+        elif ctrlPressed and ev.key() == QtCore.Qt.Key.Key_Space:
             self.sigCompleteRequested.emit(self.text())
             ev.accept()
             return
