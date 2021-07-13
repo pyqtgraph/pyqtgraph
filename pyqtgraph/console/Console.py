@@ -516,7 +516,7 @@ class ConsoleWidget(QtGui.QWidget):
         options = [c.name for c in script.complete(fuzzy=True)]
         # Options are broken up by '.', '(', and other characters that start a new 'clause' in the expression
         # So, it's not as easy as just concatenating with the reference string
-        prefix = re.sub(f'({CLAUSE_MARKERS}){NON_CLAUSE_MARKERS}', r'\1', newText)
+        prefix = re.sub(f'({CLAUSE_MARKERS})?{NON_CLAUSE_MARKERS}$', r'\1', newText)
         self.completerModel.setStringList([prefix + o for o in options])
 
     def handleCompleterRequest(self, newText):
