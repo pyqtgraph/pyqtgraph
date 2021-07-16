@@ -575,13 +575,11 @@ class PlotCurveItem(GraphicsObject):
             # https://code.woboq.org/qt6/qtbase/src/opengl/qopenglpaintengine.cpp.html
             # Technically, we could enable it for all platforms, but for now, just
             # enable it where it is required, i.e. Windows
-            tr = self.sceneTransform()
-            rect = widget.rect()
             gl.glMatrixMode(gl.GL_PROJECTION)
             gl.glLoadIdentity()
-            gl.glOrtho(rect.x(), rect.width(), rect.height(), rect.y(), -999999, 999999)
+            gl.glOrtho(0, widget.width(), widget.height(), 0, -999999, 999999)
             gl.glMatrixMode(gl.GL_MODELVIEW)
-            gl.glLoadTransposeMatrixf(QtGui.QMatrix4x4(tr).copyDataTo())
+            gl.glLoadMatrixf(QtGui.QMatrix4x4(self.sceneTransform()).data())
 
         ## set clipping viewport
         view = self.getViewBox()
