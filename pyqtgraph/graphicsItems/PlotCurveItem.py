@@ -568,6 +568,21 @@ class PlotCurveItem(GraphicsObject):
         p.beginNativePainting()
         import OpenGL.GL as gl
 
+        if sys.platform == 'win32':
+            # If Qt is built to dynamically load OpenGL, then the projection and
+            # modelview matrices are not setup.
+            # https://doc.qt.io/qt-6/windows-graphics.html
+            # https://code.woboq.org/qt6/qtbase/src/opengl/qopenglpaintengine.cpp.html
+            # Technically, we could enable it for all platforms, but for now, just
+            # enable it where it is required, i.e. Windows
+            tr = self.sceneTransform()
+            rect = widget.rect()
+            gl.glMatrixMode(gl.GL_PROJECTION)
+            gl.glLoadIdentity()
+            gl.glOrtho(rect.x(), rect.width(), rect.height(), rect.y(), -999999, 999999)
+            gl.glMatrixMode(gl.GL_MODELVIEW)
+            gl.glLoadTransposeMatrixf(QtGui.QMatrix4x4(tr).copyDataTo())
+
         ## set clipping viewport
         view = self.getViewBox()
         if view is not None:
