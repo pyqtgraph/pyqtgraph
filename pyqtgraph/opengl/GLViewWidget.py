@@ -230,6 +230,8 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         if viewport is None:
             glViewport(*self.getViewport())
         else:
+            # note: the following code means that we have defined "viewport"
+            #       to be in device pixels.
             glViewport(*viewport)
         self.setProjection(region=region)
         self.setModelview()
