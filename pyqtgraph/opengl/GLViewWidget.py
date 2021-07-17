@@ -284,21 +284,40 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
                     glPopMatrix()
             
     def setCameraPosition(self, pos=None, distance=None, elevation=None, azimuth=None, rotation=None):
+        if rotation is not None:
+            # Alternatively, we could define that rotation overrides elevation and azimuth
+            if elevation is not None:
+                raise ValueError("cannot set both rotation and elevation")
+            if azimuth is not None:
+                raise ValueError("cannot set both rotation and azimuth")
+
         if pos is not None:
             self.opts['center'] = pos
         if distance is not None:
             self.opts['distance'] = distance
-        if rotation is not None:
-            # set with quaternion
-            self.opts['rotation'] = rotation
+
+        if self.opts['rotationMethod'] == "quaternion":
+            # note that "quaternion" mode modifies only opts['rotation']
+            if elevation is not None or azimuth is not None:
+                eu = self.opts['rotation'].toEulerAngles()
+                if azimuth is not None:
+                    eu.setZ(-azimuth-90)
+                if elevation is not None:
+                    eu.setX(elevation-90)
+                self.opts['rotation'] = QtGui.QQuaternion.fromEulerAngles(eu)
+            if rotation is not None:
+                self.opts['rotation'] = rotation
         else:
-            # set with elevation-azimuth, restored for compatibility
-            eu = self.opts['rotation'].toEulerAngles()
-            if azimuth is not None:
-                eu.setZ(-azimuth-90)
+            # note that "euler" mode modifies only opts['elevation'] and opts['azimuth']
             if elevation is not None:
-                eu.setX(elevation-90)
-            self.opts['rotation'] = QtGui.QQuaternion.fromEulerAngles(eu)
+                self.opts['elevation'] = elevation
+            if azimuth is not None:
+                self.opts['azimuth'] = azimuth
+            if rotation is not None:
+                eu = rotation.toEulerAngles()
+                self.opts['elevation'] = eu.x() + 90
+                self.opts['azimuth'] = -eu.z() - 90
+
         self.update()
         
     def cameraPosition(self):
