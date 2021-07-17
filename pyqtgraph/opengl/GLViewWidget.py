@@ -382,7 +382,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             cVec = self.opts['center'] - cPos
             dist = cVec.length()  ## distance from camera to center
             xDist = dist * 2. * tan(0.5 * radians(self.opts['fov']))  ## approx. width of view at distance of center point
-            xScale = xDist / self.deviceWidth()
+            xScale = xDist / self.width()
             zVec = QtGui.QVector3D(0,0,1)
             xVec = QtGui.QVector3D.crossProduct(zVec, cVec).normalized()
             yVec = QtGui.QVector3D.crossProduct(xVec, zVec).normalized()
@@ -407,7 +407,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
                 fov = radians(self.opts['fov'])
                 dist = (self.opts['center'] - self.cameraPosition()).length()
                 fov_factor = tan(fov / 2) * 2
-                scale_factor = dist * fov_factor / self.deviceWidth()
+                scale_factor = dist * fov_factor / self.width()
                 z = scale_factor * cos(elev) * dy
                 x = scale_factor * (sin(azim) * dx - sin(elev) * cos(azim) * dy)
                 y = scale_factor * (cos(azim) * dx + sin(elev) * sin(azim) * dy)
@@ -429,7 +429,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         else:
             dist = (pos-cam).length()
         xDist = dist * 2. * tan(0.5 * radians(self.opts['fov']))
-        return xDist / self.deviceWidth()
+        return xDist / self.width()
         
     def mousePressEvent(self, ev):
         lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
