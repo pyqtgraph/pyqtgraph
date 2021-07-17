@@ -45,6 +45,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             'azimuth': 45,            ## camera's azimuthal angle in degrees 	
                                       ## (rotation around z-axis 0 points along x-axis)	
             'viewport': None,         ## glViewport params; None == whole widget
+                                      ## note that 'viewport' is in device pixels
             'rotationMethod': rotationMethod
         }
         self.reset()
@@ -146,10 +147,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         if vp is None:
             return (0, 0, self.deviceWidth(), self.deviceHeight())
         else:
-            # note: the following code means that we have defined opts['viewport']
-            #       to be in device independent pixels.
-            dpr = self.devicePixelRatio()
-            return tuple([int(x * dpr) for x in vp])
+            return vp
         
     def devicePixelRatio(self):
         return self.devicePixelRatioF()
@@ -232,8 +230,6 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         if viewport is None:
             glViewport(*self.getViewport())
         else:
-            # note: the following code means that we have defined "viewport"
-            #       to be in device pixels.
             glViewport(*viewport)
         self.setProjection(region=region)
         self.setModelview()
