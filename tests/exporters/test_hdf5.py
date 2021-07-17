@@ -4,7 +4,7 @@ import pyqtgraph as pg
 from pyqtgraph.exporters import HDF5Exporter
 import numpy as np
 from numpy.testing import assert_equal
-import h5py
+h5py = pytest.importorskip("h5py")
 
 
 @pytest.fixture
