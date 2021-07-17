@@ -65,12 +65,11 @@ class GLTextItem(GLGraphicsItem):
 
         modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
         projection = glGetDoublev(GL_PROJECTION_MATRIX)
-        viewport = glGetIntegerv(GL_VIEWPORT)
 
+        viewport = [0, 0, self.view().width(), self.view().height()]
         text_pos = self.__project(self.pos, modelview, projection, viewport)
 
         text_pos.setY(viewport[3] - text_pos.y())
-        text_pos /= self.view().devicePixelRatio()
 
         painter = QtGui.QPainter(self.view())
         painter.setPen(self.color)
