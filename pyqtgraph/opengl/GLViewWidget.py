@@ -72,11 +72,11 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         self._updateScreen(window.screen())
         
     def deviceWidth(self):
-        dpr = self.devicePixelRatio()
+        dpr = self.devicePixelRatioF()
         return int(self.width() * dpr)
 
     def deviceHeight(self):
-        dpr = self.devicePixelRatio()
+        dpr = self.devicePixelRatioF()
         return int(self.height() * dpr)
 
     def reset(self):
@@ -148,9 +148,6 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             return (0, 0, self.deviceWidth(), self.deviceHeight())
         else:
             return vp
-        
-    def devicePixelRatio(self):
-        return self.devicePixelRatioF()
         
     def setProjection(self, region=None):
         m = self.projectionMatrix(region)
