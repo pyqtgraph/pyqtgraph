@@ -4,6 +4,7 @@ import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
 from .. import Vector
 from .. import functions as fn
+from .. import getConfigOption
 import warnings
 from math import cos, sin, tan, radians
 ##Vector = QtGui.QVector3D
@@ -90,7 +91,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         self.opts['azimuth'] = 45            ## camera's azimuthal angle in degrees 
                                              ## (rotation around z-axis 0 points along x-axis)
         self.opts['viewport'] = None         ## glViewport params; None == whole widget
-        self.setBackgroundColor('k')        
+        self.setBackgroundColor(getConfigOption('background'))
 
     def addItem(self, item):
         self.items.append(item)
