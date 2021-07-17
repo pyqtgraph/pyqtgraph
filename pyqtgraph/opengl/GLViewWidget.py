@@ -550,7 +550,6 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, texwidth, texwidth)
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buf)
 
-            viewport_orig = self.opts['viewport']
             self.opts['viewport'] = (0, 0, w, h)  # viewport is the complete image; this ensures that paintGL(region=...)
                                                   # is interpreted correctly.
             p2 = 2 * padding
@@ -573,7 +572,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
                     output[x+padding:x2-padding, y+padding:y2-padding] = data[padding:w2-padding, -(h2-padding):-padding]
                     
         finally:
-            self.opts['viewport'] = viewport_orig
+            self.opts['viewport'] = None
             glfbo.glBindFramebuffer(glfbo.GL_FRAMEBUFFER, 0)
             glBindTexture(GL_TEXTURE_2D, 0)
             if tex is not None:
