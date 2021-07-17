@@ -1,8 +1,8 @@
 from OpenGL.GL import *
 import numpy as np
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
-import pyqtgraph.functions as fn
+from ...Qt import QtCore, QtGui
+from .. GLGraphicsItem import GLGraphicsItem
+from ... import functions as fn
 
 __all__ = ['GLTextItem']
 
