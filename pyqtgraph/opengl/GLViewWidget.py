@@ -21,10 +21,8 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         ================ ==============================================================
         **Arguments:**
         parent           (QObject, optional): Parent QObject. Defaults to None.
-        devicePixelRatio (float, optional):  High-DPI displays Qt5 should automatically
-                         detect the correct resolution. For Qt4, specify the 
-                         ``devicePixelRatio`` argument when initializing the widget 
-                         (usually this value is 1-2). Defaults to None.
+        devicePixelRatio No longer in use. High-DPI displays should automatically
+                         detect the correct resolution.
         rotationMethod   (str): Mechanimsm to drive the rotation method, options are 
                          'euler' and 'quaternion'. Defaults to 'euler'.
         ================ ==============================================================
@@ -46,7 +44,6 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             'azimuth': 45,            ## camera's azimuthal angle in degrees 	
                                       ## (rotation around z-axis 0 points along x-axis)	
             'viewport': None,         ## glViewport params; None == whole widget
-            'devicePixelRatio': devicePixelRatio,
             'rotationMethod': rotationMethod
         }
         self.reset()
@@ -152,10 +149,6 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             return tuple([int(x * dpr) for x in vp])
         
     def devicePixelRatio(self):
-        dpr = self.opts['devicePixelRatio']
-        if dpr is not None:
-            return dpr
-        
         return self.devicePixelRatioF()
         
     def resizeGL(self, w, h):
