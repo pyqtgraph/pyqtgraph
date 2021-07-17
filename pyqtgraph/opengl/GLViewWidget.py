@@ -535,20 +535,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         """
         Read the current buffer pixels out as a QImage.
         """
-        w = self.deviceWidth()
-        h = self.deviceHeight()
-        self.repaint()
-        pixels = np.empty((h, w, 4), dtype=np.ubyte)
-        pixels[:] = 128
-        pixels[...,0] = 50
-        pixels[...,3] = 255
-        
-        glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
-
-        pixels = pixels[::-1].copy() # flip vertical
-
-        qimg = fn.ndarray_to_qimage(pixels, QtGui.QImage.Format.Format_RGBA8888)
-        return qimg
+        return self.grabFramebuffer()
         
     def renderToArray(self, size, format=GL_BGRA, type=GL_UNSIGNED_BYTE, textureSize=1024, padding=256):
         w,h = map(int, size)
