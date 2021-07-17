@@ -165,18 +165,18 @@ class GraphicsScene(QtGui.QGraphicsScene):
             ## set focus on the topmost focusable item under this click
             items = self.items(ev.scenePos())
             for i in items:
-                if i.isEnabled() and i.isVisible() and (i.flags() & i.ItemIsFocusable):
+                if i.isEnabled() and i.isVisible() and (i.flags() & i.GraphicsItemFlag.ItemIsFocusable):
                     i.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)
                     break
 
     def _moveEventIsAllowed(self):
         # For ignoring events that are too close together
-        
+
         # Max number of events per second
         rateLimit = getConfigOption('mouseRateLimit')
         if rateLimit <= 0:
             return True
-        
+
         # Delay between events (in milliseconds)
         delay = 1000.0 / rateLimit
         if getMillis() - self._lastMoveEventTime >= delay:
@@ -344,7 +344,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                         if event.isAccepted():
                             #print "   --> accepted"
                             self.dragItem = item
-                            if item.flags() & item.ItemIsFocusable:
+                            if item.flags() & item.GraphicsItemFlag.ItemIsFocusable:
                                 item.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)
                             break
         elif self.dragItem is not None:
@@ -389,7 +389,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                             debug.printExc("Error sending click event:")
                             
                         if ev.isAccepted():
-                            if item.flags() & item.ItemIsFocusable:
+                            if item.flags() & item.GraphicsItemFlag.ItemIsFocusable:
                                 item.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)
                             break
         self.sigMouseClicked.emit(ev)

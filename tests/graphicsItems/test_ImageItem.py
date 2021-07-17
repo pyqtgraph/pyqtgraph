@@ -229,7 +229,7 @@ def test_setRect():
 
 
 def test_dividebyzero():
-    im = pg.image(pg.np.random.normal(size=(100,100)))
+    im = pg.image(np.random.normal(size=(100,100)))
     im.imageItem.setAutoDownsample(True)
     im.view.setRange(xRange=[-5+25, 5e+25],yRange=[-5e+25, 5e+25])
     app.processEvents()

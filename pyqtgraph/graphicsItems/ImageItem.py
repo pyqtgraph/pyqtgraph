@@ -603,16 +603,25 @@ class ImageItem(GraphicsObject):
             maxVal = xp.nextafter(maxVal, 2*maxVal)
         rng = maxVal - minVal
         rng = 1 if rng == 0 else rng
-        image = fn.rescaleData(image, scale/rng, offset=minVal, dtype=dtype, clip=(0, num_colors-1))
 
-        levels = None
+        fn_numba = fn.getNumbaFunctions()
+        if xp == numpy and image.flags.c_contiguous and dtype == xp.uint16 and fn_numba is not None:
+            lut, augmented_alpha = self._convert_2dlut_to_1dlut(lut)
+            image = fn_numba.rescale_and_lookup1d(image, scale/rng, minVal, lut)
+            if image.dtype == xp.uint32:
+                image = image[..., xp.newaxis].view(xp.uint8)
+            return image, None, None, augmented_alpha
+        else:
+            image = fn.rescaleData(image, scale/rng, offset=minVal, dtype=dtype, clip=(0, num_colors-1))
 
-        if image.dtype == xp.uint16 and image.ndim == 2:
-            image, augmented_alpha = self._apply_lut_for_uint16_mono(image, lut)
-            lut = None
+            levels = None
 
-        # image is now of type uint8
-        return image, levels, lut, augmented_alpha
+            if image.dtype == xp.uint16 and image.ndim == 2:
+                image, augmented_alpha = self._apply_lut_for_uint16_mono(image, lut)
+                lut = None
+
+            # image is now of type uint8
+            return image, levels, lut, augmented_alpha
 
     def _try_combine_lut(self, image, levels, lut):
         augmented_alpha = False
@@ -722,21 +731,39 @@ class ImageItem(GraphicsObject):
         # if we are contiguous, we can take a faster codepath where we
         # ensure that the lut is 1d
 
-        if lut.ndim == 2:
-            if lut.shape[1] == 3:   # rgb
-                # convert rgb lut to rgba so that it is 32-bits
-                lut = xp.column_stack([lut, xp.full(lut.shape[0], 255, dtype=xp.uint8)])
-                augmented_alpha = True
-            if lut.shape[1] == 4:   # rgba
-                lut = lut.view(xp.uint32)
+        lut, augmented_alpha = self._convert_2dlut_to_1dlut(lut)
 
-        image = lut.ravel()[image]
-        lut = None
-        # now both levels and lut are None
+        fn_numba = fn.getNumbaFunctions()
+        if xp == numpy and fn_numba is not None:
+            image = fn_numba.numba_take(lut, image)
+        else:
+            image = lut[image]
+
         if image.dtype == xp.uint32:
-            image = image.view(xp.uint8).reshape(image.shape + (4,))
+            image = image[..., xp.newaxis].view(xp.uint8)
 
         return image, augmented_alpha
+
+    def _convert_2dlut_to_1dlut(self, lut):
+        # converts:
+        #   - uint8 (N, 1) to uint8 (N,)
+        #   - uint8 (N, 3) or (N, 4) to uint32 (N,)
+        # this allows faster lookup as 1d lookup is faster
+        xp = self._xp
+        augmented_alpha = False
+
+        if lut.ndim == 1:
+            return lut, augmented_alpha
+
+        if lut.shape[1] == 3:   # rgb
+            # convert rgb lut to rgba so that it is 32-bits
+            lut = xp.column_stack([lut, xp.full(lut.shape[0], 255, dtype=xp.uint8)])
+            augmented_alpha = True
+        if lut.shape[1] == 4:   # rgba
+            lut = lut.view(xp.uint32)
+        lut = lut.ravel()
+
+        return lut, augmented_alpha
 
     def _try_make_qimage(self, image, levels, lut, augmented_alpha):
         xp = self._xp
@@ -873,7 +900,7 @@ class ImageItem(GraphicsObject):
                 step = int(self._xp.ceil((mx - mn) / 500.))
                 bins = []
                 if step > 0.0:
-                    bins = self._xp.arange(mn, mx + 1.01 * step, step, dtype=self._xp.int)
+                    bins = self._xp.arange(mn, mx + 1.01 * step, step, dtype=int)
             else:
                 # for float data, let numpy select the bins.
                 bins = self._xp.linspace(mn, mx, 500)

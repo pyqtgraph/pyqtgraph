@@ -85,7 +85,7 @@ class ColorBarItem(PlotItem):
         for key in ['left','right','top','bottom']:
             self.showAxis(key)
             axis = self.getAxis(key)
-            axis.setZValue(1)
+            axis.setZValue(0.5)
             # select main axis:
             if self.horizontal and key == 'bottom':
                 self.axis = axis
@@ -93,7 +93,8 @@ class ColorBarItem(PlotItem):
                 self.axis = axis
                 self.axis.setWidth(45)
             else: # show other axes to create frame
-                axis.setStyle( showValues=False, tickLength=0 )
+                axis.setTicks( [] )
+                axis.setStyle( showValues=False )
         self.axis.setStyle( showValues=True )
         self.axis.unlinkFromView()
         self.axis.setRange( self.values[0], self.values[1] )

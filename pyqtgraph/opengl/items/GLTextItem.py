@@ -68,15 +68,15 @@ class GLTextItem(GLGraphicsItem):
         viewport = glGetIntegerv(GL_VIEWPORT)
 
         text_pos = self.__project(self.pos, modelview, projection, viewport)
-        text_pos[1] = viewport[3] - text_pos[1]
 
+        text_pos.setY(viewport[3] - text_pos.y())
         text_pos /= self.view().devicePixelRatio()
 
         painter = QtGui.QPainter(self.view())
         painter.setPen(self.color)
         painter.setFont(self.font)
         painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
-        painter.drawText(text_pos[0], text_pos[1], self.text)
+        painter.drawText(text_pos, self.text)
         painter.end()
 
     def __project(self, obj_pos, modelview, projection, viewport):
@@ -86,12 +86,11 @@ class GLTextItem(GLGraphicsItem):
         proj_vec = np.matmul(projection.T, view_vec)
 
         if proj_vec[3] == 0.0:
-            return
+            return QtCore.QPointF(0, 0)
 
         proj_vec[0:3] /= proj_vec[3]
 
-        return np.array([
-            viewport[0] + (1.0 + proj_vec[0]) * viewport[2] / 2.0,
-            viewport[1] + (1.0 + proj_vec[1]) * viewport[3] / 2.0,
-            (1.0 + proj_vec[2]) / 2.0
-        ])
+        return QtCore.QPointF(
+            viewport[0] + (1.0 + proj_vec[0]) * viewport[2] / 2,
+            viewport[1] + (1.0 + proj_vec[1]) * viewport[3] / 2
+        )
