@@ -524,7 +524,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         fb = None
         depth_buf = None
         try:
-            output = np.empty((w, h, 4), dtype=np.ubyte)
+            output = np.empty((h, w, 4), dtype=np.ubyte)
             fb = glfbo.glGenFramebuffers(1)
             glfbo.glBindFramebuffer(glfbo.GL_FRAMEBUFFER, fb )
             
@@ -539,7 +539,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
                 raise RuntimeError("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % data.shape[:2])
             ## create texture
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.transpose((1,0,2)))
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, data)
 
             # Create depth buffer
             depth_buf = glGenRenderbuffers(1)
@@ -565,8 +565,8 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
                     
                     ## read texture back to array
                     data = glGetTexImage(GL_TEXTURE_2D, 0, format, type)
-                    data = np.fromstring(data, dtype=np.ubyte).reshape(texwidth,texwidth,4).transpose(1,0,2)[:, ::-1]
-                    output[x+padding:x2-padding, y+padding:y2-padding] = data[padding:w2-padding, -(h2-padding):-padding]
+                    data = np.frombuffer(data, dtype=np.ubyte).reshape(texwidth,texwidth,4)[::-1, ...]
+                    output[y+padding:y2-padding, x+padding:x2-padding] = data[-(h2-padding):-padding, padding:w2-padding]
                     
         finally:
             self.opts['viewport'] = None
