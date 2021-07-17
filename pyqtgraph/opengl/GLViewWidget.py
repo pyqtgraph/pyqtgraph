@@ -71,14 +71,13 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         window.screenChanged.connect(self._updateScreen)
         self._updateScreen(window.screen())
         
-    def width(self):
+    def deviceWidth(self):
         dpr = self.devicePixelRatio()
-        return int(super().width() * dpr)
-    
-    def height(self):
-        dpr = self.devicePixelRatio()
-        return int(super().height() * dpr)
+        return int(self.width() * dpr)
 
+    def deviceHeight(self):
+        dpr = self.devicePixelRatio()
+        return int(self.height() * dpr)
 
     def reset(self):
         """
@@ -143,8 +142,10 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
     def getViewport(self):
         vp = self.opts['viewport']
         if vp is None:
-            return (0, 0, self.width(), self.height())
+            return (0, 0, self.deviceWidth(), self.deviceHeight())
         else:
+            # note: the following code means that we have defined opts['viewport']
+            #       to be in device independent pixels.
             dpr = self.devicePixelRatio()
             return tuple([int(x * dpr) for x in vp])
         
@@ -165,7 +166,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
 
     def projectionMatrix(self, region=None):
         if region is None:
-            region = (0, 0, self.width(), self.height())
+            region = (0, 0, self.deviceWidth(), self.deviceHeight())
         
         x0, y0, w, h = self.getViewport()
         dist = self.opts['distance']
@@ -211,7 +212,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         Return a list of the items displayed in the region (x, y, w, h)
         relative to the widget.        
         """
-        region = (region[0], self.height()-(region[1]+region[3]), region[2], region[3])
+        region = (region[0], self.deviceHeight()-(region[1]+region[3]), region[2], region[3])
         
         #buf = np.zeros(100000, dtype=np.uint)
         buf = glSelectBuffer(100000)
@@ -378,7 +379,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             cVec = self.opts['center'] - cPos
             dist = cVec.length()  ## distance from camera to center
             xDist = dist * 2. * tan(0.5 * radians(self.opts['fov']))  ## approx. width of view at distance of center point
-            xScale = xDist / self.width()
+            xScale = xDist / self.deviceWidth()
             zVec = QtGui.QVector3D(0,0,1)
             xVec = QtGui.QVector3D.crossProduct(zVec, cVec).normalized()
             yVec = QtGui.QVector3D.crossProduct(xVec, zVec).normalized()
@@ -403,7 +404,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
                 fov = radians(self.opts['fov'])
                 dist = (self.opts['center'] - self.cameraPosition()).length()
                 fov_factor = tan(fov / 2) * 2
-                scale_factor = dist * fov_factor / self.width()
+                scale_factor = dist * fov_factor / self.deviceWidth()
                 z = scale_factor * cos(elev) * dy
                 x = scale_factor * (sin(azim) * dx - sin(elev) * cos(azim) * dy)
                 y = scale_factor * (cos(azim) * dx + sin(elev) * sin(azim) * dy)
@@ -425,7 +426,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         else:
             dist = (pos-cam).length()
         xDist = dist * 2. * tan(0.5 * radians(self.opts['fov']))
-        return xDist / self.width()
+        return xDist / self.deviceWidth()
         
     def mousePressEvent(self, ev):
         lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
@@ -543,8 +544,8 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         """
         Read the current buffer pixels out as a QImage.
         """
-        w = self.width()
-        h = self.height()
+        w = self.deviceWidth()
+        h = self.deviceHeight()
         self.repaint()
         pixels = np.empty((h, w, 4), dtype=np.ubyte)
         pixels[:] = 128
