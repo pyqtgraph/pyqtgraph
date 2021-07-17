@@ -540,8 +540,8 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             ## Test texture dimensions first
             glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
             if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
-                raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
-            ## create teture
+                raise RuntimeError("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % data.shape[:2])
+            ## create texture
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.transpose((1,0,2)))
 
             # Create depth buffer
