@@ -54,8 +54,6 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         self.keysPressed = {}
         self.keyTimer = QtCore.QTimer()
         self.keyTimer.timeout.connect(self.evalKeyState)
-        self.makeCurrent()
-
 
     def _updateScreen(self, screen):
         self._updatePixelRatio()
