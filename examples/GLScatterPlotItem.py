@@ -15,9 +15,9 @@ import numpy as np
 
 app = pg.mkQApp("GLScatterPlotItem Example")
 w = gl.GLViewWidget()
-w.opts['distance'] = 20
 w.show()
 w.setWindowTitle('pyqtgraph example: GLScatterPlotItem')
+w.setCameraPosition(distance=20)
 
 g = gl.GLGridItem()
 w.addItem(g)
