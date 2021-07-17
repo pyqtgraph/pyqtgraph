@@ -33,8 +33,8 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.ClickFocus)
 
-        if rotationMethod not in {"euler", "quaternion"}:
-            raise RuntimeError("Rotation method should be either 'euler' or 'quaternion'")
+        if rotationMethod not in ["euler", "quaternion"]:
+            raise ValueError("Rotation method should be either 'euler' or 'quaternion'")
         
         self.opts = {
             'center': Vector(0,0,0),  ## will always appear at the center of the widget
