@@ -258,14 +258,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
                 except:
                     from .. import debug
                     debug.printExc()
-                    msg = "Error while drawing item %s." % str(item)
-                    ver = glGetString(GL_VERSION)
-                    if ver is not None:
-                        ver = ver.split()[0]
-                        if int(ver.split(b'.')[0]) < 2:
-                            print(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
-                        else:
-                            print(msg)
+                    print("Error while drawing item %s." % str(item))
                     
                 finally:
                     glPopAttrib()
