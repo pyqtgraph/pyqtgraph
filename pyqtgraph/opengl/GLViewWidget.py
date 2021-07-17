@@ -152,11 +152,6 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
     def devicePixelRatio(self):
         return self.devicePixelRatioF()
         
-    def resizeGL(self, w, h):
-        pass
-        #glViewport(*self.getViewport())
-        #self.update()
-
     def setProjection(self, region=None):
         m = self.projectionMatrix(region)
         glMatrixMode(GL_PROJECTION)
