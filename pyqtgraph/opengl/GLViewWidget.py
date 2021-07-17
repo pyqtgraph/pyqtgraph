@@ -155,9 +155,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
     def setProjection(self, region=None):
         m = self.projectionMatrix(region)
         glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        a = np.array(m.copyDataTo()).reshape((4,4))
-        glMultMatrixf(a.transpose())
+        glLoadMatrixf(m.data())
 
     def projectionMatrix(self, region=None):
         if region is None:
@@ -183,11 +181,9 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         return tr
         
     def setModelview(self):
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
         m = self.viewMatrix()
-        a = np.array(m.copyDataTo()).reshape((4,4))
-        glMultMatrixf(a.transpose())
+        glMatrixMode(GL_MODELVIEW)
+        glLoadMatrixf(m.data())
         
     def viewMatrix(self):
         tr = QtGui.QMatrix4x4()
