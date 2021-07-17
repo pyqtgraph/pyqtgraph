@@ -97,14 +97,9 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         self.items.append(item)
 
         if self.isValid():
-            self.makeCurrent()
-            try:
-                item.initialize()
-            except:
-                self.checkOpenGLVersion('Error while adding item %s to GLViewWidget.' % str(item))
+            item.initialize()
                 
         item._setView(self)
-        #print "set view", item, self, item.view()
         self.update()
         
     def removeItem(self, item):
@@ -128,6 +123,14 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         """
         Initialize items that were not initialized during addItem().
         """
+        ctx = self.context()
+        fmt = ctx.format()
+        if ctx.isOpenGLES() or fmt.version() < (2, 0):
+            verString = glGetString(GL_VERSION)
+            raise RuntimeError(
+                "pyqtgraph.opengl: Requires >= OpenGL 2.0 (not ES); Found %s" % verString
+            )
+
         for item in self.items:
             if not item.isInitialized():
                 item.initialize()
@@ -523,36 +526,6 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         else:
             self.keyTimer.stop()
 
-    def checkOpenGLVersion(self, msg):
-        """
-        Give exception additional context about version support.
-
-        Only to be called from within exception handler.
-        As this check is only performed on error,
-        unsupported versions might still work!
-        """
-
-        # Check for unsupported version
-        verString = glGetString(GL_VERSION)
-        ver = verString.split()[0]
-        # If not OpenGL ES...
-        if str(ver.split(b'.')[0]).isdigit():
-            verNumber = int(ver.split(b'.')[0])
-            # ...and version is supported:
-            if verNumber >= 2:
-                # OpenGL version is fine, raise the original exception
-                raise
-
-        # Print original exception
-        from .. import debug
-        debug.printExc()
-
-        # Notify about unsupported version
-        raise Exception(
-            msg + "\n" + \
-            "pyqtgraph.opengl: Requires >= OpenGL 2.0 (not ES); Found %s" % verString
-        )
- 
     def readQImage(self):
         """
         Read the current buffer pixels out as a QImage.
