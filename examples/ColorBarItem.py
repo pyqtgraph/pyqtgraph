@@ -41,7 +41,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         cmap = pg.colormap.get('CET-L9')
         bar = pg.ColorBarItem(
-            interactive=False, values= (0, 30_000), cmap=cmap,
+            interactive=False, values= (0, 30_000), colorMap=cmap,
             label='vertical fixed color bar'
         )
         bar.setImageItem( i1, insert_in=p1 )
@@ -59,11 +59,11 @@ class MainWindow(QtWidgets.QMainWindow):
         cmap = pg.colormap.get('CET-L4')
         bar = pg.ColorBarItem(
             values = (0, 30_000),
-            cmap=cmap,
+            colorMap=cmap,
             label='horizontal color bar',
             limits = (0, None),
             rounding=1000,
-            orientation = 'horizontal',
+            orientation = 'h',
             pen='#8888FF', hoverPen='#EEEEFF', hoverBrush='#EEEEFF80'
         )
         bar.setImageItem( i2, insert_in=p2 )
@@ -83,7 +83,7 @@ class MainWindow(QtWidgets.QMainWindow):
             limits = (-30_000, 30_000), # start with full range...
             rounding=1000,
             width = 10,
-            cmap=cmap )
+            colorMap=cmap )
         bar.setImageItem( [i3, i4] )
         bar.setLevels( low=-5_000, high=15_000) # ... then adjust to retro sunset.
 
