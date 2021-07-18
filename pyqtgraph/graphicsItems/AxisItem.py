@@ -233,6 +233,10 @@ class AxisItem(GraphicsWidget):
 
         ## Set the position of the label
         nudge = 5
+        if self.label is None: # self.label is set to None on close, but resize events can still occur.
+            self.picture = None
+            return
+            
         br = self.label.boundingRect()
         p = QtCore.QPointF(0, 0)
         if self.orientation == 'left':
