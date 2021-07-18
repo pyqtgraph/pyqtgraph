@@ -1,8 +1,8 @@
 from OpenGL.GL import *
 import numpy as np
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
-import pyqtgraph.functions as fn
+from ...Qt import QtCore, QtGui
+from .. GLGraphicsItem import GLGraphicsItem
+from ... import functions as fn
 
 __all__ = ['GLTextItem']
 
@@ -39,7 +39,7 @@ class GLTextItem(GLGraphicsItem):
         args = ['pos', 'color', 'text', 'font']
         for k in kwds.keys():
             if k not in args:
-                raise ArgumentError('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
+                raise ValueError('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
         for arg in args:
             if arg in kwds:
                 value = kwds[arg]
@@ -65,12 +65,11 @@ class GLTextItem(GLGraphicsItem):
 
         modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
         projection = glGetDoublev(GL_PROJECTION_MATRIX)
-        viewport = glGetIntegerv(GL_VIEWPORT)
 
+        viewport = [0, 0, self.view().width(), self.view().height()]
         text_pos = self.__project(self.pos, modelview, projection, viewport)
 
         text_pos.setY(viewport[3] - text_pos.y())
-        text_pos /= self.view().devicePixelRatio()
 
         painter = QtGui.QPainter(self.view())
         painter.setPen(self.color)

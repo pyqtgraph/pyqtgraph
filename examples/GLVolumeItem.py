@@ -14,9 +14,9 @@ from pyqtgraph import functions as fn
 
 app = pg.mkQApp("GLVolumeItem Example")
 w = gl.GLViewWidget()
-w.opts['distance'] = 200
 w.show()
 w.setWindowTitle('pyqtgraph example: GLVolumeItem')
+w.setCameraPosition(distance=200)
 
 g = gl.GLGridItem()
 g.scale(10, 10, 1)

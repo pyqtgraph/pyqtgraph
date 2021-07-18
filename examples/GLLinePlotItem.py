@@ -13,9 +13,9 @@ import numpy as np
 
 app = pg.mkQApp("GLLinePlotItem Example")
 w = gl.GLViewWidget()
-w.opts['distance'] = 40
 w.show()
 w.setWindowTitle('pyqtgraph example: GLLinePlotItem')
+w.setCameraPosition(distance=40)
 
 gx = gl.GLGridItem()
 gx.rotate(90, 0, 1, 0)

@@ -15,9 +15,9 @@ import numpy as np
 
 app = pg.mkQApp("GLImageItem Example")
 w = gl.GLViewWidget()
-w.opts['distance'] = 200
 w.show()
 w.setWindowTitle('pyqtgraph example: GLImageItem')
+w.setCameraPosition(distance=200)
 
 ## create volume data set to slice three images from
 shape = (100,100,70)
