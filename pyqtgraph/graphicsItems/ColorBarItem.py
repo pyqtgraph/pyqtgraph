@@ -59,11 +59,11 @@ class ColorBarItem(PlotItem):
         """
         super().__init__()
         if cmap is not None: 
-            # warnings.warn(
-            #     "The parameter 'cmap' has been renamed to 'colorMap' for clarity."
-            #     "The old name will no longer be available in any version of PyQtGraph released after XXX 20xx.",
-            #     DeprecationWarning, stacklevel=2
-            # )
+            warnings.warn(
+                "The parameter 'cmap' has been renamed to 'colorMap' for clarity. "
+                "The old name will no longer be available in any version of PyQtGraph released after July 2022.",
+                DeprecationWarning, stacklevel=2
+            )
             colorMap = cmap
         self.img_list  = [] # list of controlled ImageItems
         self.values    = values
@@ -166,11 +166,11 @@ class ColorBarItem(PlotItem):
 
     # Maintain compatibility for old name of color bar setting method.
     def setCmap(self, cmap):
-        # warnings.warn(
-        #     "The method 'setCmap' has been renamed to 'setColorMap' for clarity."
-        #     "The old name will no longer be available in any version of PyQtGraph released after XXX 20xx.",
-        #     DeprecationWarning, stacklevel=2
-        # )
+        warnings.warn(
+            "The method 'setCmap' has been renamed to 'setColorMap' for clarity. "
+            "The old name will no longer be available in any version of PyQtGraph released after July 2022.",
+            DeprecationWarning, stacklevel=2
+        )
         self.setColorMap(cmap)
 
     def setColorMap(self, colorMap):
