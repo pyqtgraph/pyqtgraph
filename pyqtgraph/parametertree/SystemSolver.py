@@ -53,9 +53,10 @@ class SystemSolver(object):
     1) The *defaultState* class attribute: This is a dict containing a 
        description of the variables in the system--their default values,
        data types, and the ways they can be constrained. The format is::
-       ```
+
            { name: [value, type, constraint, allowed_constraints], ...}
-       ```
+
+       Where:
          * *value* is the default value. May be None if it has not been specified
            yet.
          * *type* may be float, int, bool, np.ndarray, ...
