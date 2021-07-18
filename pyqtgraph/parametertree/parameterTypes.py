@@ -770,7 +770,7 @@ def _enumToInt(enum):
         out = int(enum)
     return out
 
-def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, selectFile=None, **kwargs):
+def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, selectFile=None, relativeTo=None, **kwargs):
     """
     Thin wrapper around Qt file picker dialog. Used internally so all options are consistent
     among all requests for external file information
@@ -782,6 +782,9 @@ def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, sel
     nameFilter     File filter as required by the Qt dialog
     directory      Where in the file system to open this dialog
     selectFile     File to preselect
+    relativeTo     Parent directory that, if provided, will be removed from the prefix of all returned paths. So,
+                   if '/my/text/file.txt' was selected, and `relativeTo='/my/text/'`, the return value would be
+                   'file.txt'. This uses os.path.relpath under the hood, so expect that behavior.
     kwargs         Any enum value accepted by a QFileDialog and its value. Values can be a string or list of strings,
                    i.e. fileMode='AnyFile', options=['ShowDirsOnly', 'DontResolveSymlinks']
     ============== ========================================================
@@ -837,7 +840,8 @@ def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, sel
         fList = fileDlg.selectedFiles()
     else:
         fList = []
-
+    if relativeTo is not None:
+        fList = [os.path.relpath(file, relativeTo) for file in fList]
     if fileDlg.fileMode() == fileDlg.FileMode.ExistingFiles:
         return fList
     elif len(fList) > 0:
@@ -929,9 +933,10 @@ class FileParameter(Parameter):
     Interfaces with the myriad of file options available from a QFileDialog.
 
     Note that the output can either be a single file string or list of files, depending on whether
-    `fileMode='ExistingFiles` is specified.
+    `fileMode='ExistingFiles'` is specified.
 
-    Note that in all cases,
+    Note that in all cases, absolute file paths are returned unless `relativeTo` is specified as
+    elaborated below.
 
     ============== ========================================================
     **Options:**
@@ -940,6 +945,9 @@ class FileParameter(Parameter):
     nameFilter     File filter as required by the Qt dialog
     directory      Where in the file system to open this dialog
     selectFile     File to preselect
+    relativeTo     Parent directory that, if provided, will be removed from the prefix of all returned paths. So,
+                   if '/my/text/file.txt' was selected, and `relativeTo='my/text/'`, the return value would be
+                   'file.txt'. This uses os.path.relpath under the hood, so expect that behavior.
     kwargs         Any enum value accepted by a QFileDialog and its value. Values can be a string or list of strings,
                    i.e. fileMode='AnyFile', options=['ShowDirsOnly', 'DontResolveSymlinks']
     ============== ========================================================
