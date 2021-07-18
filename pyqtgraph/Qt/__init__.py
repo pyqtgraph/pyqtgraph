@@ -254,7 +254,7 @@ if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
     # recreate the Qt4 structure
 
     if QT_LIB in [PYQT5, PYSIDE2]:
-        __QGraphicsItem_scale = QtWidgets.QGraphicsItem.scale	
+        __QGraphicsItem_scale = QtWidgets.QGraphicsItem.scale
 
         def scale(self, *args):
             warnings.warn(
@@ -307,9 +307,21 @@ if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
         QtWidgets.QHeaderView.setResizeMode = setResizeMode	
     
     # Import all QtWidgets objects into QtGui
-    for o in dir(QtWidgets):
-        if o.startswith('Q'):
-            setattr(QtGui, o, getattr(QtWidgets,o) )
+    _fallbacks = dir(QtWidgets)
+    def lazyGetattr(obj):
+        if not (obj in _fallbacks and obj.startswith('Q')):
+            raise AttributeError(f"module 'QtGui' has no attribute '{obj}'")
+
+        warnings.warn(
+            "Accessing QtWidgets through QtGui is deprecated and will be removed after Jan 2022."
+            f" Use QtWidgets.{obj} instead.",
+            DeprecationWarning, stacklevel=2
+        )
+        attr = getattr(QtWidgets, obj)
+        setattr(QtGui, obj, attr)
+        return attr
+
+    QtGui.__getattr__ = lazyGetattr
     
     QtWidgets.QApplication.setGraphicsSystem = None
 
