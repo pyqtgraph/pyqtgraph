@@ -99,5 +99,5 @@ class GLImageItem(GLGraphicsItem):
         glTexCoord2f(0,1)
         glVertex3f(0, self.data.shape[1], 0)
         glEnd()
-        glDisable(GL_TEXTURE_3D)
+        glDisable(GL_TEXTURE_2D)
                 

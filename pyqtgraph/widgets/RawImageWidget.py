@@ -162,4 +162,4 @@ if HAVE_OPENGL:
             glTexCoord2f(0, 0)
             glVertex3f(-1, 1, 0)
             glEnd()
-            glDisable(GL_TEXTURE_3D)
+            glDisable(GL_TEXTURE_2D)
