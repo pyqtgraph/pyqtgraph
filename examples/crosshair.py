@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Demonstrates some customized mouse interaction by drawing a crosshair that follows 
 the mouse.
@@ -38,7 +39,9 @@ data2 = 15000 + 15000 * pg.gaussianFilter(np.random.random(size=10000), 10) + 30
 p1.plot(data1, pen="r")
 p1.plot(data2, pen="g")
 
-p2.plot(data1, pen="w")
+p2d = p2.plot(data1, pen="w")
+# bound the LinearRegionItem to the plotted data
+region.setClipItem(p2d)
 
 def update():
     region.setZValue(10)
