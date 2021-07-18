@@ -486,7 +486,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
                 return
             try:
                 del self.keysPressed[ev.key()]
-            except:
+            except KeyError:
                 self.keysPressed = {}
             self.evalKeyState()
         
