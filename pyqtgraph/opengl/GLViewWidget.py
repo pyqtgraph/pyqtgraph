@@ -308,6 +308,22 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
 
         self.update()
         
+    def getCameraPosition(self):
+        opts = { 'pos': self.opts['center'],
+                 'distance' : self.opts['distance'] }
+        if self.opts['rotationMethod'] == "quaternion":
+            opts['rotation'] = self.opts['rotation']
+        else:
+            opts['elevation'] = self.opts['elevation']
+            opts['azimuth'] = self.opts['azimuth']
+        return opts
+
+    def setFov(self, fov):
+        self.opts['fov'] = fov
+
+    def fov(self):
+        return self.opts['fov']
+
     def cameraPosition(self):
         """Return current position of camera based on center, dist, elevation, and azimuth"""
         center = self.opts['center']
