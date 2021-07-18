@@ -221,6 +221,8 @@ class LinearRegionItem(GraphicsObject):
         self._clipItemBoundsCache = None
         if item is None:
             self._setBounds((None, None))
+        if item is not None:
+            self._updateClipItemBounds()
 
     def _updateClipItemBounds(self):
         # set region bounds corresponding to clipItem
