@@ -759,17 +759,6 @@ class Emitter(QtCore.QObject):
     sigChanged = QtCore.Signal(object, object)
 
 
-def _enumToInt(enum):
-    """Resolve the differences between qt bindings for turning enums into ints for or-operations"""
-    if QT_LIB == 'PyQt5':
-        out = enum
-    elif QT_LIB == 'PyQt6':
-        out = enum.value
-    else:
-        # PySide is consistent
-        out = int(enum)
-    return out
-
 def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, selectFile=None, relativeTo=None, **kwargs):
     """
     Thin wrapper around Qt file picker dialog. Used internally so all options are consistent
@@ -806,15 +795,18 @@ def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, sel
         setFunc = getattr(fileDlg, f'set{formattedName}', NO_MATCH)
         if enumCls is NO_MATCH or setFunc is NO_MATCH:
             continue
-        outEnum = getattr(fileDlg, kk)()
-        # Ugh, enum composition is different in each lib too
-        builder = _enumToInt(outEnum)
+        builder = getattr(fileDlg, kk)()
         # if outEnum is a true enum, '|' isn't directly supported, so turn it into an int temporarily
         for flag in vv:
-            curVal = _enumToInt(getattr(enumCls, flag))
-            builder |= curVal
-        outEnum = enumCls(builder)
+            curVal = getattr(enumCls, flag)
+            try:
+                builder |= curVal
+            except TypeError:
+                # Some enums, like FileMode, are not allowed to take 'or' values and must be exactly one enum value.
+                # In these cases, prefer the overwrite
+                builder = curVal
         # Some Qt implementations turn into ints by this point
+        outEnum = enumCls(builder)
         setFunc(outEnum)
 
     fileDlg.setModal(True)
