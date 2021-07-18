@@ -7,6 +7,7 @@ import initExample ## Add path to library (just for examples; you do not need th
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
+from time import perf_counter
 
 win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: Scrolling Plots')
@@ -67,7 +68,7 @@ def update2():
 chunkSize = 100
 # Remove chunks after we have 10
 maxChunks = 10
-startTime = pg.ptime.time()
+startTime = perf_counter()
 win.nextRow()
 p5 = win.addPlot(colspan=2)
 p5.setLabel('bottom', 'Time', 's')
@@ -78,7 +79,7 @@ ptr5 = 0
 
 def update3():
     global p5, data5, ptr5, curves
-    now = pg.ptime.time()
+    now = perf_counter()
     for c in curves:
         c.setPos(-(now-startTime), 0)
     

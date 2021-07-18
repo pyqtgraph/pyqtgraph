@@ -9,7 +9,7 @@ import initExample
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 import pyqtgraph as pg
-import pyqtgraph.ptime as ptime
+from time import perf_counter
 
 app = pg.mkQApp("ImageItem Example")
 
@@ -33,7 +33,7 @@ view.setRange(QtCore.QRectF(0, 0, 600, 600))
 data = np.random.normal(size=(15, 600, 600), loc=1024, scale=64).astype(np.uint16)
 i = 0
 
-updateTime = ptime.time()
+updateTime = perf_counter()
 fps = 0
 
 timer = QtCore.QTimer()
@@ -48,7 +48,7 @@ def updateData():
     i = (i+1) % data.shape[0]
 
     timer.start(1)
-    now = ptime.time()
+    now = perf_counter()
     fps2 = 1.0 / (now-updateTime)
     updateTime = now
     fps = fps * 0.9 + fps2 * 0.1

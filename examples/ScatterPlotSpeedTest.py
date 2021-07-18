@@ -12,9 +12,9 @@ import initExample
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
-from pyqtgraph.ptime import time
 import pyqtgraph.parametertree as ptree
 import pyqtgraph.graphicsItems.ScatterPlotItem
+from time import perf_counter
 
 translate = QtCore.QCoreApplication.translate
 
@@ -43,7 +43,7 @@ data = {}
 item = pg.ScatterPlotItem()
 hoverBrush = pg.mkBrush('y')
 ptr = 0
-lastTime = time()
+lastTime = perf_counter()
 fps = None
 timer = QtCore.QTimer()
 
@@ -104,7 +104,7 @@ def update():
         new.setBrush(hoverBrush)
 
     ptr += 1
-    now = time()
+    now = perf_counter()
     dt = now - lastTime
     lastTime = now
     if fps is None:

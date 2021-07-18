@@ -1,5 +1,5 @@
+from time import perf_counter
 from ..Qt import QtCore, QtGui
-from ..ptime import time
 from .. import functions as fn
 
 __all__ = ['ValueLabel']
@@ -38,7 +38,7 @@ class ValueLabel(QtGui.QLabel):
         self.formatStr = formatStr
     
     def setValue(self, value):
-        now = time()
+        now = perf_counter()
         self.values.append((now, value))
         cutoff = now - self.averageTime
         while len(self.values) > 0 and self.values[0][0] < cutoff:

@@ -1,7 +1,7 @@
+from time import perf_counter
 from ..Point import Point
 from ..Qt import QtCore, QtGui
 import weakref
-from .. import ptime as ptime
 
 class MouseDragEvent(object):
     """
@@ -164,7 +164,7 @@ class MouseClickEvent(object):
         self._button = pressEvent.button()
         self._buttons = pressEvent.buttons()
         self._modifiers = pressEvent.modifiers()
-        self._time = ptime.time()
+        self._time = perf_counter()
         self.acceptedItem = None
         
     def accept(self):

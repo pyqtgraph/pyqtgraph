@@ -3,13 +3,15 @@
 """
 Update a simple plot as rapidly as possible to measure speed.
 """
-import initExample
+
 ## Add path to library (just for examples; you do not need this)
-from time import perf_counter
+import initExample
+
 from collections import deque
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
+from time import perf_counter
 
 app = pg.mkQApp("Plot Speed Test")
 

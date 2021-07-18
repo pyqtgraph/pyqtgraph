@@ -9,7 +9,6 @@ import initExample
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 import pyqtgraph as pg
-import pyqtgraph.ptime as ptime
 
 app = pg.mkQApp("PColorMesh Example")
 
