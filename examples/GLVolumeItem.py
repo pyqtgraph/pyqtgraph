@@ -46,8 +46,27 @@ with np.errstate(divide = 'ignore'):
     negative = np.log(fn.clip_array(-data, 0, -data.min())**2)
 
 d2 = np.empty(data.shape + (4,), dtype=np.ubyte)
-d2[..., 0] = positive * (255./positive.max())
-d2[..., 1] = negative * (255./negative.max())
+
+# Original Code
+# d2[..., 0] = positive * (255./positive.max())
+# d2[..., 1] = negative * (255./negative.max())
+
+# Reformulated Code
+# Both positive.max() and negative.max() are negative-valued.
+# Thus the next 2 lines are _not_ bounded to [0, 255]
+positive = positive * (255./positive.max())
+negative = negative * (255./negative.max())
+# When casting to ubyte, the original code relied on +Inf to be
+# converted to 0. On arm64, it gets converted to 255.
+# Thus the next 2 lines change +Inf explicitly to 0 instead.
+positive[np.isinf(positive)] = 0
+negative[np.isinf(negative)] = 0
+# When casting to ubyte, the original code relied on the conversion
+# to do modulo 256. The next 2 lines do it explicitly instead as
+# documentation.
+d2[..., 0] = positive.astype(int) % 256
+d2[..., 1] = negative.astype(int) % 256
+
 d2[..., 2] = d2[...,1]
 d2[..., 3] = d2[..., 0]*0.3 + d2[..., 1]*0.3
 d2[..., 3] = (d2[..., 3].astype(float) / 255.) **2 * 255
