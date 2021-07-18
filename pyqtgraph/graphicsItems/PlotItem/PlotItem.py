@@ -43,35 +43,35 @@ class PlotItem(GraphicsWidget):
 
     It's main functionality is:
 
-    - Manage placement of ViewBox, AxisItems, and LabelItems
-    - Create and manage a list of PlotDataItems displayed inside the ViewBox
-    - Implement a context menu with commonly used display and analysis options
+      - Manage placement of ViewBox, AxisItems, and LabelItems
+      - Create and manage a list of PlotDataItems displayed inside the ViewBox
+      - Implement a context menu with commonly used display and analysis options
 
     Use :func:`plot() <pyqtgraph.PlotItem.plot>` to create a new PlotDataItem and
     add it to the view. Use :func:`addItem() <pyqtgraph.PlotItem.addItem>` to
     add any QGraphicsItem to the view.
     
     This class wraps several methods from its internal ViewBox:
-    :func:`setXRange <pyqtgraph.ViewBox.setXRange>`,
-    :func:`setYRange <pyqtgraph.ViewBox.setYRange>`,
-    :func:`setRange <pyqtgraph.ViewBox.setRange>`,
-    :func:`autoRange <pyqtgraph.ViewBox.autoRange>`,
-    :func:`setDefaultPadding <pyqtgraph.ViewBox.setDefaultPadding>`,
-    :func:`setXLink <pyqtgraph.ViewBox.setXLink>`,
-    :func:`setYLink <pyqtgraph.ViewBox.setYLink>`,
-    :func:`setAutoPan <pyqtgraph.ViewBox.setAutoPan>`,
-    :func:`setAutoVisible <pyqtgraph.ViewBox.setAutoVisible>`,
-    :func:`setLimits <pyqtgraph.ViewBox.setLimits>`,
-    :func:`viewRect <pyqtgraph.ViewBox.viewRect>`,
-    :func:`viewRange <pyqtgraph.ViewBox.viewRange>`,
-    :func:`setMouseEnabled <pyqtgraph.ViewBox.setMouseEnabled>`,
-    :func:`enableAutoRange <pyqtgraph.ViewBox.enableAutoRange>`,
-    :func:`disableAutoRange <pyqtgraph.ViewBox.disableAutoRange>`,
-    :func:`setAspectLocked <pyqtgraph.ViewBox.setAspectLocked>`,
-    :func:`invertY <pyqtgraph.ViewBox.invertY>`,
-    :func:`invertX <pyqtgraph.ViewBox.invertX>`,
-    :func:`register <pyqtgraph.ViewBox.register>`,
-    :func:`unregister <pyqtgraph.ViewBox.unregister>`
+      - :func:`setXRange <pyqtgraph.ViewBox.setXRange>`
+      - :func:`setYRange <pyqtgraph.ViewBox.setYRange>`
+      - :func:`setRange <pyqtgraph.ViewBox.setRange>`
+      - :func:`autoRange <pyqtgraph.ViewBox.autoRange>`
+      - :func:`setDefaultPadding <pyqtgraph.ViewBox.setDefaultPadding>`
+      - :func:`setXLink <pyqtgraph.ViewBox.setXLink>`
+      - :func:`setYLink <pyqtgraph.ViewBox.setYLink>`
+      - :func:`setAutoPan <pyqtgraph.ViewBox.setAutoPan>`
+      - :func:`setAutoVisible <pyqtgraph.ViewBox.setAutoVisible>`
+      - :func:`setLimits <pyqtgraph.ViewBox.setLimits>`
+      - :func:`viewRect <pyqtgraph.ViewBox.viewRect>`
+      - :func:`viewRange <pyqtgraph.ViewBox.viewRange>`
+      - :func:`setMouseEnabled <pyqtgraph.ViewBox.setMouseEnabled>`
+      - :func:`enableAutoRange <pyqtgraph.ViewBox.enableAutoRange>`
+      - :func:`disableAutoRange <pyqtgraph.ViewBox.disableAutoRange>`
+      - :func:`setAspectLocked <pyqtgraph.ViewBox.setAspectLocked>`
+      - :func:`invertY <pyqtgraph.ViewBox.invertY>`
+      - :func:`invertX <pyqtgraph.ViewBox.invertX>`
+      - :func:`register <pyqtgraph.ViewBox.register>`
+      - :func:`unregister <pyqtgraph.ViewBox.unregister>`
     
     The ViewBox itself can be accessed by calling :func:`getViewBox() <pyqtgraph.PlotItem.getViewBox>` 
     

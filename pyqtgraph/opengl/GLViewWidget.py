@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui, QtWidgets
 from OpenGL.GL import *
 import OpenGL.GL.framebufferobjects as glfbo
@@ -15,9 +16,9 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
     def __init__(self, parent=None, devicePixelRatio=None, rotationMethod='euler'):
         """    
         Basic widget for displaying 3D data
-        - Rotation/scale controls
-        - Axis/grid display
-        - Export options
+          - Rotation/scale controls
+          - Axis/grid display
+          - Export options
 
         ================ ==============================================================
         **Arguments:**

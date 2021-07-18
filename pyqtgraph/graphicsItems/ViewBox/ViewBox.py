@@ -81,10 +81,10 @@ class ViewBox(GraphicsWidget):
 
     Features:
 
-    * Scaling contents by mouse or auto-scale when contents change
-    * View linking--multiple views display the same data ranges
-    * Configurable by context menu
-    * Item coordinate mapping methods
+      * Scaling contents by mouse or auto-scale when contents change
+      * View linking--multiple views display the same data ranges
+      * Configurable by context menu
+      * Item coordinate mapping methods
 
     """
 

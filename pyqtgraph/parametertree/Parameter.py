@@ -258,8 +258,8 @@ class Parameter(QtCore.QObject):
         Return True if this parameter type matches the name *typ*.
         This can occur either of two ways:
         
-        - If self.type() == *typ*
-        - If this parameter's class is registered with the name *typ*
+          - If self.type() == *typ*
+          - If this parameter's class is registered with the name *typ*
         """
         if self.type() == typ:
             return True

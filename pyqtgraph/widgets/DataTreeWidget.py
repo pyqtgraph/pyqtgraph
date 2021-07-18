@@ -74,10 +74,10 @@ class DataTreeWidget(QtGui.QTreeWidget):
     def parse(self, data):
         """
         Given any python object, return:
-        * type
-        * a short string representation
-        * a dict of sub-objects to be parsed
-        * optional widget to display as sub-node
+          * type
+          * a short string representation
+          * a dict of sub-objects to be parsed
+          * optional widget to display as sub-node
         """
         # defaults for all objects
         typeStr = type(data).__name__

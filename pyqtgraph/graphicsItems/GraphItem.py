@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .ScatterPlotItem import ScatterPlotItem
@@ -36,14 +37,14 @@ class GraphItem(GraphicsObject):
         pen             The pen to use when drawing lines between connected
                         nodes. May be one of:
                      
-                        * QPen
-                        * a single argument to pass to pg.mkPen
-                        * a record array of length M
-                          with fields (red, green, blue, alpha, width). Note
-                          that using this option may have a significant performance
-                          cost.
-                        * None (to disable connection drawing)
-                        * 'default' to use the default foreground color.
+                          * QPen
+                          * a single argument to pass to pg.mkPen
+                          * a record array of length M
+                            with fields (red, green, blue, alpha, width). Note
+                            that using this option may have a significant performance
+                            cost.
+                          * None (to disable connection drawing)
+                          * 'default' to use the default foreground color.
                      
         symbolPen       The pen(s) used for drawing nodes.
         symbolBrush     The brush(es) used for drawing nodes.
@@ -84,11 +85,11 @@ class GraphItem(GraphicsObject):
         Set the pen used to draw graph lines.
         May be: 
         
-        * None to disable line drawing
-        * Record array with fields (red, green, blue, alpha, width)
-        * Any set of arguments and keyword arguments accepted by 
-          :func:`mkPen <pyqtgraph.mkPen>`.
-        * 'default' to use the default foreground color.
+          * None to disable line drawing
+          * Record array with fields (red, green, blue, alpha, width)
+          * Any set of arguments and keyword arguments accepted by
+            :func:`mkPen <pyqtgraph.mkPen>`.
+          * 'default' to use the default foreground color.
         """
         if len(args) == 1 and len(kwargs) == 0:
             self.pen = args[0]

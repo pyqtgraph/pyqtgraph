@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from math import atan2, degrees
 from ..Qt import QtCore, QtGui
 from ..Point import Point
@@ -35,11 +36,11 @@ class TextItem(GraphicsObject):
 
         The effects of the `rotateAxis` and `angle` arguments are added independently. So for example:
 
-        * rotateAxis=None, angle=0 -> normal horizontal text
-        * rotateAxis=None, angle=90 -> normal vertical text
-        * rotateAxis=(1, 0), angle=0 -> text aligned with x axis of its parent
-        * rotateAxis=(0, 1), angle=0 -> text aligned with y axis of its parent
-        * rotateAxis=(1, 0), angle=90 -> text orthogonal to x axis of its parent        
+          * rotateAxis=None, angle=0 -> normal horizontal text
+          * rotateAxis=None, angle=90 -> normal vertical text
+          * rotateAxis=(1, 0), angle=0 -> text aligned with x axis of its parent
+          * rotateAxis=(0, 1), angle=0 -> text aligned with y axis of its parent
+          * rotateAxis=(1, 0), angle=90 -> text orthogonal to x axis of its parent
         """
                      
         self.anchor = Point(anchor)

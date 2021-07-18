@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 from ..Qt import QtCore, QtGui
 from ..python2_3 import asUnicode
@@ -15,9 +16,9 @@ class WidgetParameterItem(ParameterItem):
     """
     ParameterTree item with:
     
-    * label in second column for displaying value
-    * simple widget for editing value (displayed instead of label when item is selected)
-    * button that resets value to default
+      * label in second column for displaying value
+      * simple widget for editing value (displayed instead of label when item is selected)
+      * button that resets value to default
     
     ==========================  =============================================================
     **Registered Types:**
@@ -344,12 +345,12 @@ class SimpleParameter(Parameter):
     This parameter is backed by :class:`WidgetParameterItem` to represent the
     following parameter names:
 
-    - 'int'
-    - 'float'
-    - 'bool'
-    - 'str'
-    - 'color'
-    - 'colormap'
+      - 'int'
+      - 'float'
+      - 'bool'
+      - 'str'
+      - 'color'
+      - 'colormap'
     """
     itemClass = WidgetParameterItem
 

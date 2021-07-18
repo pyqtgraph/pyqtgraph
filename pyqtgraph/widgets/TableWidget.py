@@ -94,12 +94,12 @@ class TableWidget(QtGui.QTableWidget):
         """Set the data displayed in the table.
         Allowed formats are:
         
-        * numpy arrays
-        * numpy record arrays 
-        * metaarrays
-        * list-of-lists  [[1,2,3], [4,5,6]]
-        * dict-of-lists  {'x': [1,2,3], 'y': [4,5,6]}
-        * list-of-dicts  [{'x': 1, 'y': 4}, {'x': 2, 'y': 5}, ...]
+          * numpy arrays
+          * numpy record arrays
+          * metaarrays
+          * list-of-lists  [[1,2,3], [4,5,6]]
+          * dict-of-lists  {'x': [1,2,3], 'y': [4,5,6]}
+          * list-of-dicts  [{'x': 1, 'y': 4}, {'x': 2, 'y': 5}, ...]
         """
         self.clear()
         self.appendData(data)

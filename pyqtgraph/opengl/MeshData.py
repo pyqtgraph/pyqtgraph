@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 from ..Qt import QtGui
 from .. import functions as fn
@@ -8,11 +9,11 @@ class MeshData(object):
     """
     Class for storing and operating on 3D mesh data. May contain:
     
-    - list of vertex locations
-    - list of edges
-    - list of triangles
-    - colors per vertex, edge, or tri
-    - normals per vertex or tri
+      - list of vertex locations
+      - list of edges
+      - list of triangles
+      - colors per vertex, edge, or tri
+      - normals per vertex or tri
     
     This class handles conversion between the standard [list of vertexes, list of faces]
     format (suitable for use with glDrawElements) and 'indexed' [list of vertexes] format

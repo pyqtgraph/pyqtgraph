@@ -360,9 +360,9 @@ def exit():
     This function does the following in an attempt to 'safely' terminate
     the process:
     
-    * Invoke atexit callbacks
-    * Close all open file handles
-    * os._exit()
+      * Invoke atexit callbacks
+      * Close all open file handles
+      * os._exit()
     
     Note: there is some potential for causing damage with this function if you
     are using objects that _require_ their destructors to be called (for example,

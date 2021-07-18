@@ -50,12 +50,12 @@ class ROI(GraphicsObject):
 
     Default mouse interaction:
 
-    * Left drag moves the ROI
-    * Left drag + Ctrl moves the ROI with position snapping
-    * Left drag + Alt rotates the ROI
-    * Left drag + Alt + Ctrl rotates the ROI with angle snapping
-    * Left drag + Shift scales the ROI
-    * Left drag + Shift + Ctrl scales the ROI with size snapping
+      * Left drag moves the ROI
+      * Left drag + Ctrl moves the ROI with position snapping
+      * Left drag + Alt rotates the ROI
+      * Left drag + Alt + Ctrl rotates the ROI with angle snapping
+      * Left drag + Shift scales the ROI
+      * Left drag + Shift + Ctrl scales the ROI with size snapping
 
     In addition to the above interaction modes, it is possible to attach any
     number of handles to the ROI that can be dragged to change the ROI in

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys
 from ..Qt import QtGui, QtCore
 from ..SignalProxy import SignalProxy
@@ -9,12 +10,12 @@ __all__ = ['ComboBox']
 class ComboBox(QtGui.QComboBox):
     """Extends QComboBox to add extra functionality.
 
-    * Handles dict mappings -- user selects a text key, and the ComboBox indicates
-      the selected value.
-    * Requires item strings to be unique
-    * Remembers selected value if list is cleared and subsequently repopulated
-    * setItems() replaces the items in the ComboBox and blocks signals if the
-      value ultimately does not change.
+      * Handles dict mappings -- user selects a text key, and the ComboBox indicates
+        the selected value.
+      * Requires item strings to be unique
+      * Remembers selected value if list is cleared and subsequently repopulated
+      * setItems() replaces the items in the ComboBox and blocks signals if the
+        value ultimately does not change.
     """
     
     
