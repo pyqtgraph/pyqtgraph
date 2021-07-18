@@ -3,47 +3,45 @@
 """
 Update a simple plot as rapidly as possible to measure speed.
 """
-
-## Add path to library (just for examples; you do not need this)
 import initExample
-
-
+## Add path to library (just for examples; you do not need this)
+from time import perf_counter
+from collections import deque
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
-from pyqtgraph.ptime import time
+
 app = pg.mkQApp("Plot Speed Test")
 
 p = pg.plot()
 p.setWindowTitle('pyqtgraph example: PlotSpeedTest')
-p.setRange(QtCore.QRectF(0, -10, 5000, 20)) 
+p.setRange(QtCore.QRectF(0, -10, 5000, 20))
 p.setLabel('bottom', 'Index', units='B')
 curve = p.plot()
 
-#curve.setFillBrush((0, 0, 100, 100))
-#curve.setFillLevel(0)
-
-#lr = pg.LinearRegionItem([100, 4900])
-#p.addItem(lr)
-
-data = np.random.normal(size=(50,5000))
+data = np.random.normal(size=(50, 5000))
 ptr = 0
-lastTime = time()
-fps = None
+rollingAverageSize = 1000
+
+elapsed = deque(maxlen=rollingAverageSize)
+
 def update():
-    global curve, data, ptr, p, lastTime, fps
-    curve.setData(data[ptr%10])
+    global curve, data, ptr, elapsed, ptr
+
     ptr += 1
-    now = time()
-    dt = now - lastTime
-    lastTime = now
-    if fps is None:
-        fps = 1.0/dt
-    else:
-        s = np.clip(dt*3., 0, 1)
-        fps = fps * (1-s) + (1.0/dt) * s
-    p.setTitle('%0.2f fps' % fps)
-    app.processEvents()  ## force complete redraw for every plot
+    # Measure
+    t_start = perf_counter()
+    curve.setData(data[ptr % 10])
+    app.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents)
+    elapsed.append(perf_counter() - t_start)
+
+    # update display every 50-updates
+    if ptr % 50 == 0:
+        average = np.mean(elapsed)
+        fps = 1 / average
+        p.setTitle('%0.2f fps - %0.1f ms avg' % (fps, average * 1_000))
+
+
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)

@@ -279,20 +279,17 @@ class ViewBox(GraphicsWidget):
     def implements(self, interface):
         return interface == 'ViewBox'
 
-    # removed due to https://bugreports.qt-project.org/browse/PYSIDE-86
-    #def itemChange(self, change, value):
-        ## Note: Calling QWidget.itemChange causes segv in python 3 + PyQt
-        ##ret = QtGui.QGraphicsItem.itemChange(self, change, value)
-        #ret = GraphicsWidget.itemChange(self, change, value)
-        #if change == self.ItemSceneChange:
-            #scene = self.scene()
-            #if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
-                #scene.sigPrepareForPaint.disconnect(self.prepareForPaint)
-        #elif change == self.ItemSceneHasChanged:
-            #scene = self.scene()
-            #if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
-                #scene.sigPrepareForPaint.connect(self.prepareForPaint)
-        #return ret
+    def itemChange(self, change, value):
+        ret = super().itemChange(change, value)
+        if change == self.GraphicsItemChange.ItemSceneChange:
+            scene = self.scene()
+            if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
+                scene.sigPrepareForPaint.disconnect(self.prepareForPaint)
+        elif change == self.GraphicsItemChange.ItemSceneHasChanged:
+            scene = self.scene()
+            if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
+                scene.sigPrepareForPaint.connect(self.prepareForPaint)
+        return ret
 
     def prepareForPaint(self):
         #autoRangeEnabled = (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False)
@@ -426,7 +423,6 @@ class ViewBox(GraphicsWidget):
         if scene is not None:
             scene.removeItem(item)
         item.setParentItem(None)
-
         self.updateAutoRange()
 
     def clear(self):
@@ -452,7 +448,6 @@ class ViewBox(GraphicsWidget):
         
             self.sigStateChanged.emit(self)
             self.sigResized.emit(self)
-
 
     def viewRange(self):
         """Return a the view's visible range as a list: [[xmin, xmax], [ymin, ymax]]"""
@@ -627,7 +622,6 @@ class ViewBox(GraphicsWidget):
                 self._autoRangeNeedsUpdate = True
             elif changed[1] and self.state['autoVisibleOnly'][0] and (self.state['autoRange'][1] is not False):
                 self._autoRangeNeedsUpdate = True
-
             self.sigStateChanged.emit(self)
 
     def setYRange(self, min, max, padding=None, update=True):
@@ -1608,7 +1602,6 @@ class ViewBox(GraphicsWidget):
         self.sigTransformChanged.emit(self)  ## segfaults here: 1
 
     def paint(self, p, opt, widget):
-        self.prepareForPaint()
         if self.border is not None:
             bounds = self.shape()
             p.setPen(self.border)
