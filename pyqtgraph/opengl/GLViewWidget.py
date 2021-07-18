@@ -308,22 +308,6 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
 
         self.update()
         
-    def getCameraPosition(self):
-        opts = { 'pos': self.opts['center'],
-                 'distance' : self.opts['distance'] }
-        if self.opts['rotationMethod'] == "quaternion":
-            opts['rotation'] = self.opts['rotation']
-        else:
-            opts['elevation'] = self.opts['elevation']
-            opts['azimuth'] = self.opts['azimuth']
-        return opts
-
-    def setFov(self, fov):
-        self.opts['fov'] = fov
-
-    def fov(self):
-        return self.opts['fov']
-
     def cameraPosition(self):
         """Return current position of camera based on center, dist, elevation, and azimuth"""
         center = self.opts['center']
@@ -340,6 +324,21 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
                 center.z() + dist * sin(elev)
             )
         return pos
+
+    def setCameraParams(self, **kwds):
+        valid_keys = {'center', 'rotation', 'distance', 'fov', 'elevation', 'azimuth'}
+        if not set(kwds).issubset(valid_keys):
+            raise ValueError(f'valid keywords are {valid_keys}')
+
+        self.setCameraPosition(pos=kwds.get('center'), distance=kwds.get('distance'),
+                               elevation=kwds.get('elevation'), azimuth=kwds.get('azimuth'),
+                               rotation=kwds.get('rotation'))
+        if 'fov' in kwds:
+            self.opts['fov'] = kwds['fov']
+
+    def cameraParams(self):
+        valid_keys = {'center', 'rotation', 'distance', 'fov', 'elevation', 'azimuth'}
+        return { k : self.opts[k] for k in valid_keys }
 
     def orbit(self, azim, elev):
         """Orbits the camera around the center position. *azim* and *elev* are given in degrees."""

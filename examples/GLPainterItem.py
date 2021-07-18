@@ -48,10 +48,9 @@ class GLPainterItem(pg.opengl.GLGraphicsItem.GLGraphicsItem):
         painter.drawText(rect, af.AlignBottom | af.AlignLeft, 'BL')
         painter.drawText(rect, af.AlignBottom | af.AlignRight, 'BR')
 
-        opts = self.view().getCameraPosition()
-        opts['fov'] = self.view().fov()
+        opts = self.view().cameraParams()
         lines = []
-        center = opts['pos']
+        center = opts['center']
         lines.append(f"center : ({center.x():.1f}, {center.y():.1f}, {center.z():.1f})")
         for key in ['distance', 'fov', 'elevation', 'azimuth']:
             lines.append(f"{key} : {opts[key]:.1f}")
