@@ -70,11 +70,11 @@ class LinearRegionItem(GraphicsObject):
                           positions.
 
                         The default is "sort".
-        clipItem        An item whose bounds will be used to set the region bounds. This is
-                        useful when a LinearRegionItem is added on top of an
-                        :class:`~pyqtgraph.ImageItem` or :class:`~pyqtgraph.PlotDataItem`
-                        and the visual region should not extend beyond its range. This
-                        overrides ``bounds``.
+        clipItem        An item whose bounds will be used to limit the region bounds.
+                        This is useful when a LinearRegionItem is added on top of an
+                        :class:`~pyqtgraph.ImageItem` or
+                        :class:`~pyqtgraph.PlotDataItem` and the visual region should
+                        not extend beyond its range. This overrides ``bounds``.
         ==============  =====================================================================
         """
         
