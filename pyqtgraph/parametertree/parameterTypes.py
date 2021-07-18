@@ -925,6 +925,25 @@ class FileParameterItem(WidgetParameterItem):
         return super().updateDisplayLabel(value)
 
 class FileParameter(Parameter):
+    """
+    Interfaces with the myriad of file options available from a QFileDialog.
+
+    Note that the output can either be a single file string or list of files, depending on whether
+    `fileMode='ExistingFiles` is specified.
+
+    Note that in all cases,
+
+    ============== ========================================================
+    **Options:**
+    parent         Dialog parent
+    winTitle       Title of dialog window
+    nameFilter     File filter as required by the Qt dialog
+    directory      Where in the file system to open this dialog
+    selectFile     File to preselect
+    kwargs         Any enum value accepted by a QFileDialog and its value. Values can be a string or list of strings,
+                   i.e. fileMode='AnyFile', options=['ShowDirsOnly', 'DontResolveSymlinks']
+    ============== ========================================================
+    """
     itemClass = FileParameterItem
 
     def __init__(self, **opts):
@@ -942,6 +961,9 @@ class ProgressBarParameterItem(WidgetParameterItem):
         return w
 
 class ProgressBarParameter(Parameter):
+    """
+    Displays a progress bar whose value can be set between 0 and 100
+    """
     itemClass = ProgressBarParameterItem
 
 class SliderParameterItem(WidgetParameterItem):
@@ -1052,7 +1074,7 @@ class SliderParameterItem(WidgetParameterItem):
 class SliderParameter(Parameter):
     """
     ============== ========================================================
-    **Arguments:**
+    **Options**
     limits         [start, stop] numbers
     step:          Defaults to 1, the spacing between each slider tick
     span:          Instead of limits + step, span can be set to specify
@@ -1076,6 +1098,10 @@ class FontParameterItem(WidgetParameterItem):
         return w
 
 class FontParameter(Parameter):
+    """
+    Creates and controls a QFont value. Be careful when selecting options from the font dropdown. since not all
+    fonts are available on all systems
+    """
     itemClass = FontParameterItem
 
     def _interpretValue(self, v):
@@ -1105,6 +1131,16 @@ class CalendarParameterItem(WidgetParameterItem):
         return w
 
 class CalendarParameter(Parameter):
+    """
+    Displays a Qt calendar whose date is specified by a 'format' option.
+
+    ============== ========================================================
+    **Options:**
+    format         Format for displaying the date and converting from a string. Can be any value accepted by
+                   `QDate.toString` and `fromString`, or a stringified version of a QDateFormat enum (i.e. 'ISODate')
+    ============== ========================================================
+    """
+
     itemClass = CalendarParameterItem
 
     def __init__(self, **opts):
@@ -1259,8 +1295,20 @@ class PenParameterItem(WidgetParameterItem):
 
 class PenParameter(Parameter):
     """
-    Stores value in format (color, width, style, capStyle, joinStyle)
+    Controls the appearance of a QPen value.
+
+    When `saveState` is called, the value is encoded as (color, width, style, capStyle, joinStyle)
+
+    ============== ========================================================
+    **Options:**
+    color          pen color, can be any argument accepted by :func:`~pyqtgraph.mkColor`
+    width          integer width >= 0
+    style          String version of QPenStyle enum, i.e. 'SolidLine', 'DashLine', etc.
+    capStyle       String version of QPenCapStyle enum, i.e. 'RoundCap'
+    joinStyle      String version of QPenJoinStyle enum, i.e. 'BevelJoin'
+    ============== ========================================================
     """
+
     itemClass = PenParameterItem
     sigPenChanged = QtCore.Signal(object,object)
 
