@@ -788,7 +788,7 @@ def _set_filepicker_kwargs(fileDlg, **kwargs):
       outEnum = getattr(enumCls, vv)
     setFunc(outEnum)
 
-def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, selectFile=None, relativeTo=None, **kwargs):
+def popupFilePicker(parent=None, windowTitle='', nameFilter='', directory=None, selectFile=None, relativeTo=None, **kwargs):
     """
     Thin wrapper around Qt file picker dialog. Used internally so all options are consistent
     among all requests for external file information
@@ -796,7 +796,7 @@ def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, sel
     ============== ========================================================
     **Arguments:**
     parent         Dialog parent
-    winTitle       Title of dialog window
+    windowTitle    Title of dialog window
     nameFilter     File filter as required by the Qt dialog
     directory      Where in the file system to open this dialog
     selectFile     File to preselect
@@ -818,7 +818,7 @@ def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, sel
     if selectFile is not None:
         fileDlg.selectFile(selectFile)
 
-    fileDlg.setWindowTitle(winTitle)
+    fileDlg.setWindowTitle(windowTitle)
 
     if fileDlg.exec():
         # Append filter type
