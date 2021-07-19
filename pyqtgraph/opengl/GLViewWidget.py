@@ -327,7 +327,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
 
     def setCameraParams(self, **kwds):
         valid_keys = {'center', 'rotation', 'distance', 'fov', 'elevation', 'azimuth'}
-        if not set(kwds).issubset(valid_keys):
+        if not valid_keys.issuperset(kwds):
             raise ValueError(f'valid keywords are {valid_keys}')
 
         self.setCameraPosition(pos=kwds.get('center'), distance=kwds.get('distance'),
