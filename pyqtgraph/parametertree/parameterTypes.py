@@ -775,7 +775,7 @@ def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, sel
                    if '/my/text/file.txt' was selected, and `relativeTo='/my/text/'`, the return value would be
                    'file.txt'. This uses os.path.relpath under the hood, so expect that behavior.
     kwargs         Any enum value accepted by a QFileDialog and its value. Values can be a string or list of strings,
-                   i.e. fileMode='AnyFile', options=['ShowDirsOnly', 'DontResolveSymlinks']
+                   i.e. fileMode='AnyFile', options=['ShowDirsOnly', 'DontResolveSymlinks'], acceptMode='AcceptSave'
     ============== ========================================================
 
     """
@@ -833,7 +833,16 @@ def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, sel
     else:
         fList = []
     if relativeTo is not None:
-        fList = [os.path.relpath(file, relativeTo) for file in fList]
+        # Forward slashes are returned by qt, so preserve this convention regardless
+        # of the os. Since os.path will always prefer os-flavored separators, use pathlib to consistently
+        # return posix flavor
+        newFileList = []
+        for file in fList:
+            # pathlib and darwin have case sensitivity issues using relative_to, so use os.path for this
+            relative = os.path.relpath(file, relativeTo)
+            relativePosix = Path(relative).as_posix()
+            newFileList.append(relativePosix)
+        fList = newFileList
     if fileDlg.fileMode() == fileDlg.FileMode.ExistingFiles:
         return fList
     elif len(fList) > 0:
