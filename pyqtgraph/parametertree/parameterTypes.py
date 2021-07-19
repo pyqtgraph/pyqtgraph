@@ -835,16 +835,9 @@ def popupFilePicker(parent=None, windowTitle='', nameFilter='', directory=None, 
     else:
         fList = []
     if relativeTo is not None:
-        # Forward slashes are returned by qt, so preserve this convention regardless
-        # of the os. Since os.path will always prefer os-flavored separators, use pathlib to consistently
-        # return posix flavor
-        newFileList = []
-        for file in fList:
-            # pathlib and darwin have case sensitivity issues using relative_to, so use os.path for this
-            relative = os.path.relpath(file, relativeTo)
-            relativePosix = Path(relative).as_posix()
-            newFileList.append(relativePosix)
-        fList = newFileList
+        fList = [os.path.relpath(file, relativeTo) for file in fList]
+    # Make consistent to os flavor
+    fList = [os.path.normpath(file) for file in fList]
     if fileDlg.fileMode() == fileDlg.FileMode.ExistingFiles:
         return fList
     elif len(fList) > 0:
@@ -896,17 +889,17 @@ class FileParameterItem(WidgetParameterItem):
             # All files should be from the same directory, in principle
             # Since no mechanism exists for preselecting multiple, the most sensible
             # thing is to select nothing in the preview dialog
-            curVal = Path(curVal[0])
-            if curVal.is_file():
-                curVal = curVal.parent
-        useDir = curVal or str(os.getcwd())
+            curVal = curVal[0]
+            if os.path.isfile(curVal):
+                curVal = os.path.dirname(curVal)
+        useDir = curVal or os.getcwd()
         opts = self.param.opts
-        startDir = Path(useDir).absolute()
-        if startDir.is_file():
-            opts['selectFile'] = startDir.name
-            startDir = startDir.parent
-        if startDir.exists():
-            opts['directory'] = str(startDir)
+        startDir = os.path.abspath(useDir)
+        if os.path.isfile(startDir):
+            opts['selectFile'] = os.path.basename(startDir)
+            startDir = os.path.dirname(startDir)
+        if os.path.exists(startDir):
+            opts['directory'] = startDir
         fname = popupFilePicker(None, self.param.title(), **opts)
         if not fname:
             return
