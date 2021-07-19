@@ -67,7 +67,7 @@ class ColorBarItem(PlotItem):
             colorMap = cmap
         self.img_list  = [] # list of controlled ImageItems
         self.values    = values
-        self.cmap      = colorMap
+        self._colorMap = colorMap
         self.rounding  = rounding
         self.horizontal = bool( orientation in ('h', 'horizontal') )
 
@@ -178,8 +178,22 @@ class ColorBarItem(PlotItem):
         Sets a ColorMap object to determine the ColorBarItem's look-up table. The same
         look-up table is applied to any assigned ImageItem.
         """
-        self.cmap = colorMap
+        self._colorMap = colorMap
         self._update_items( update_cmap = True )
+        
+    def colorMap(self):
+        """
+        Returns the assigned ColorMap object.
+        """
+        return self._colorMap
+        
+    @property
+    def cmap(self):
+        warnings.warn(
+            "Direct access to ColorMap.cmap is deprecated and will no longer be available in any "
+            "version of PyQtGraph released after July 2022. Please use 'ColorMap.colorMap()' instead.",
+            DeprecationWarning, stacklevel=2)
+        return self._colorMap
 
     def setLevels(self, values=None, low=None, high=None ):
         """
@@ -216,15 +230,15 @@ class ColorBarItem(PlotItem):
         """ internal: update color maps for bar and assigned ImageItems """
         # update color bar:
         self.axis.setRange( self.values[0], self.values[1] )
-        if update_cmap and self.cmap is not None:
-            self.bar.setLookupTable( self.cmap.getLookupTable(nPts=256) )
+        if update_cmap and self._colorMap is not None:
+            self.bar.setLookupTable( self._colorMap.getLookupTable(nPts=256) )
         # update assigned ImageItems, too:
         for img_weakref in self.img_list:
             img = img_weakref()
             if img is None: continue # dereference weakref
             img.setLevels( self.values ) # (min,max) tuple
-            if update_cmap and self.cmap is not None:
-                img.setLookupTable( self.cmap.getLookupTable(nPts=256) )
+            if update_cmap and self._colorMap is not None:
+                img.setLookupTable( self._colorMap.getLookupTable(nPts=256) )
 
     def _regionChanged(self):
         """ internal: snap adjusters back to default positions on release """
