@@ -892,15 +892,17 @@ class FileParameterItem(WidgetParameterItem):
             curVal = curVal[0]
             if os.path.isfile(curVal):
                 curVal = os.path.dirname(curVal)
-        useDir = curVal or os.getcwd()
-        opts = self.param.opts
+        opts = self.param.opts.copy()
+        useDir = curVal or opts.get('directory') or os.getcwd()
         startDir = os.path.abspath(useDir)
         if os.path.isfile(startDir):
             opts['selectFile'] = os.path.basename(startDir)
             startDir = os.path.dirname(startDir)
         if os.path.exists(startDir):
             opts['directory'] = startDir
-        fname = popupFilePicker(None, self.param.title(), **opts)
+        opts.setdefault('windowTitle', self.param.title())
+
+        fname = popupFilePicker(None, **opts)
         if not fname:
             return
         self.param.setValue(fname)
