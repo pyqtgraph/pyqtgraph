@@ -759,6 +759,35 @@ class Emitter(QtCore.QObject):
     sigChanged = QtCore.Signal(object, object)
 
 
+def _set_filepicker_kwargs(fileDlg, **kwargs):
+  """Applies a dict of enum/flag kwarg opts to a file dialog"""
+  NO_MATCH = object()
+
+  for kk, vv in kwargs.items():
+    # Convert string or list representations into true flags
+    # 'fileMode' -> 'FileMode'
+    formattedName = kk[0].upper() + kk[1:]
+    # Edge case: "Options" has enum "Option"
+    if formattedName == 'Options':
+      enumCls = fileDlg.Option
+    else:
+      enumCls = getattr(fileDlg, formattedName, NO_MATCH)
+    setFunc = getattr(fileDlg, f'set{formattedName}', NO_MATCH)
+    if enumCls is NO_MATCH or setFunc is NO_MATCH:
+      continue
+    if enumCls is fileDlg.Option:
+      builder = fileDlg.Option(0)
+      # This is the only flag enum, all others can only take one value
+      if isinstance(vv, str): vv = [vv]
+      for flag in vv:
+        curVal = getattr(enumCls, flag)
+        builder |= curVal
+      # Some Qt implementations turn into ints by this point
+      outEnum = enumCls(builder)
+    else:
+      outEnum = getattr(enumCls, vv)
+    setFunc(outEnum)
+
 def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, selectFile=None, relativeTo=None, **kwargs):
     """
     Thin wrapper around Qt file picker dialog. Used internally so all options are consistent
@@ -780,34 +809,7 @@ def popupFilePicker(parent=None, winTitle='', nameFilter='', directory=None, sel
 
     """
     fileDlg = QtWidgets.QFileDialog(parent)
-    NO_MATCH = object()
-    for kk, vv in kwargs.items():
-        # Convert string or list representations into true flags
-        if isinstance(vv, str):
-            vv = [vv]
-        # 'fileMode' -> 'FileMode'
-        formattedName = kk[0].upper() + kk[1:]
-        # Edge case: "Options" has enum "Option"
-        if formattedName == 'Options':
-            enumCls = fileDlg.Option
-        else:
-            enumCls = getattr(fileDlg, formattedName, NO_MATCH)
-        setFunc = getattr(fileDlg, f'set{formattedName}', NO_MATCH)
-        if enumCls is NO_MATCH or setFunc is NO_MATCH:
-            continue
-        builder = getattr(fileDlg, kk)()
-        # if outEnum is a true enum, '|' isn't directly supported, so turn it into an int temporarily
-        for flag in vv:
-            curVal = getattr(enumCls, flag)
-            try:
-                builder |= curVal
-            except TypeError:
-                # Some enums, like FileMode, are not allowed to take 'or' values and must be exactly one enum value.
-                # In these cases, prefer the overwrite
-                builder = curVal
-        # Some Qt implementations turn into ints by this point
-        outEnum = enumCls(builder)
-        setFunc(outEnum)
+    _set_filepicker_kwargs(fileDlg, **kwargs)
 
     fileDlg.setModal(True)
     if directory is not None:

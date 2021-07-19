@@ -85,7 +85,7 @@ params = [
         {'name': 'Font', 'type': 'font', 'value':QtGui.QFont("Inter")},
         {'name': 'Calendar', 'type': 'calendar', 'value':QtCore.QDate.currentDate().addMonths(1)},
         {'name': 'Open python file', 'type': 'file', 'fileMode': 'ExistingFile', 'nameFilter': 'Python file (*.py);;',
-         'value': 'parametertree.py'}
+         'value': 'parametertree.py', 'options': ['DontResolveSymlinks']}
     ]},
     {'name': 'Numerical Parameter Options', 'type': 'group', 'children': [
         {'name': 'Units + SI prefix', 'type': 'float', 'value': 1.2e-6, 'step': 1e-6, 'siPrefix': True, 'suffix': 'V'},
