@@ -1143,7 +1143,8 @@ class CalendarParameter(Parameter):
     ============== ========================================================
     **Options:**
     format         Format for displaying the date and converting from a string. Can be any value accepted by
-                   `QDate.toString` and `fromString`, or a stringified version of a QDateFormat enum (i.e. 'ISODate')
+                   `QDate.toString` and `fromString`, or a stringified version of a QDateFormat enum, i.e. 'ISODate',
+                   'TextDate' (default), etc.
     ============== ========================================================
     """
 
@@ -1307,12 +1308,12 @@ class PenParameter(Parameter):
 
     ============== ========================================================
     **Options:**
-    color          pen color, can be any argument accepted by :func:`~pyqtgraph.mkColor`
-    width          integer width >= 0
-    style          String version of QPenStyle enum, i.e. 'SolidLine', 'DashLine', etc.
-    capStyle       String version of QPenCapStyle enum, i.e. 'RoundCap'
-    joinStyle      String version of QPenJoinStyle enum, i.e. 'BevelJoin'
-    cosmetic       Boolean, whether or not the pen is cosmetic
+    color          pen color, can be any argument accepted by :func:`~pyqtgraph.mkColor` (defaults to black)
+    width          integer width >= 0 (defaults to 1)
+    style          String version of QPenStyle enum, i.e. 'SolidLine' (default), 'DashLine', etc.
+    capStyle       String version of QPenCapStyle enum, i.e. 'SquareCap' (default), 'RoundCap', etc.
+    joinStyle      String version of QPenJoinStyle enum, i.e. 'BevelJoin' (default), 'RoundJoin', etc.
+    cosmetic       Boolean, whether or not the pen is cosmetic (defaults to True)
     ============== ========================================================
     """
 
