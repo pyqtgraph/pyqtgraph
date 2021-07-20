@@ -1303,7 +1303,7 @@ class PenParameter(Parameter):
     """
     Controls the appearance of a QPen value.
 
-    When `saveState` is called, the value is encoded as (color, width, style, capStyle, joinStyle)
+    When `saveState` is called, the value is encoded as (color, width, style, capStyle, joinStyle, cosmetic)
 
     ============== ========================================================
     **Options:**
@@ -1312,6 +1312,7 @@ class PenParameter(Parameter):
     style          String version of QPenStyle enum, i.e. 'SolidLine', 'DashLine', etc.
     capStyle       String version of QPenCapStyle enum, i.e. 'RoundCap'
     joinStyle      String version of QPenJoinStyle enum, i.e. 'BevelJoin'
+    cosmetic       Boolean, whether or not the pen is cosmetic
     ============== ========================================================
     """
 
@@ -1319,7 +1320,7 @@ class PenParameter(Parameter):
     sigPenChanged = QtCore.Signal(object,object)
 
     def __init__(self, **opts):
-        self.pen = QtGui.QPen()
+        self.pen = fn.mkPen()
         self.penOptsParam = PenSelectorDialog.mkParam(self.pen)
         super().__init__(**opts)
 

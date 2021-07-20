@@ -74,6 +74,7 @@ class PenSelectorDialog(QtWidgets.QDialog):
             QtEnumParameter(ps, name='style', value='SolidLine'),
             QtEnumParameter(cs, name='capStyle'),
             QtEnumParameter(js, name='joinStyle'),
+            dict(name='cosmetic', type='bool', value=True)
         ])
 
         for p in param:
@@ -138,7 +139,12 @@ class PenSelectorDialog(QtWidgets.QDialog):
         else:
             names = param
         for opt in names:
-            param[opt] = getattr(pen, opt)()
+            # Booleans have different naming convention
+            if isinstance(param[opt], bool):
+                attrName = f'is{opt.title()}'
+            else:
+                attrName = opt
+            param[opt] = getattr(pen, attrName)()
         stack.close()
 
     def setupUi(self):
@@ -162,8 +168,8 @@ class PenSelectorDialog(QtWidgets.QDialog):
         policy = QtGui.QSizePolicy.Policy
         infoLbl.setSizePolicy(policy.Expanding, policy.Fixed)
         self.labelPenPreview.setMinimumSize(10,30)
-        self.tree.setMinimumSize(240, 115)
-        self.tree.setMaximumHeight(115)
+        self.tree.setMinimumSize(240, 135)
+        self.tree.setMaximumHeight(135)
 
         layout.addWidget(infoLbl)
         layout.addWidget(self.labelPenPreview)
