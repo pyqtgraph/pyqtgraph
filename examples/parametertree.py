@@ -6,7 +6,7 @@ demonstrates a variety of different parameter types (int, float, list, etc.)
 as well as some customized parameter types
 
 """
-
+import os
 
 import initExample ## Add path to library (just for examples; you do not need this)
 
@@ -85,7 +85,7 @@ params = [
         {'name': 'Font', 'type': 'font', 'value':QtGui.QFont("Inter")},
         {'name': 'Calendar', 'type': 'calendar', 'value':QtCore.QDate.currentDate().addMonths(1)},
         {'name': 'Open python file', 'type': 'file', 'fileMode': 'ExistingFile', 'nameFilter': 'Python file (*.py);;',
-         'value': 'parametertree.py', 'options': ['DontResolveSymlinks']}
+         'value': 'parametertree.py', 'relativeTo': os.getcwd(), 'options': ['DontResolveSymlinks']}
     ]},
     {'name': 'Numerical Parameter Options', 'type': 'group', 'children': [
         {'name': 'Units + SI prefix', 'type': 'float', 'value': 1.2e-6, 'step': 1e-6, 'siPrefix': True, 'suffix': 'V'},
@@ -157,7 +157,6 @@ for child in p.children():
 def save():
     global state
     state = p.saveState()
-QtCore.QTimer.singleShot(0, save)
 
 def restore():
     global state
@@ -186,6 +185,8 @@ win.show()
 ## test save/restore
 state = p.saveState()
 p.restoreState(state)
+compareState = p.saveState()
+assert pg.eq(compareState, state)
 
 if __name__ == '__main__':
     pg.exec()
