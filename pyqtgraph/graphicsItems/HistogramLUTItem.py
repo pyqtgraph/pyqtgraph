@@ -32,9 +32,9 @@ class HistogramLUTItem(GraphicsWidget):
 
     Includes:
 
-    - Image histogram
-    - Movable region over the histogram to select black/white levels
-    - Gradient editor to define color lookup table for single-channel images
+      - Image histogram
+      - Movable region over the histogram to select black/white levels
+      - Gradient editor to define color lookup table for single-channel images
 
     Parameters
     ----------

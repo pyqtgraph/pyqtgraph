@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import subprocess, atexit, os, sys, time, random, socket, signal, inspect
 import multiprocessing.connection
 try:
@@ -234,21 +235,21 @@ class ForkedProcess(RemoteEventHandler):
     
     However, fork() comes with some caveats and limitations:
 
-    - fork() is not available on Windows.
-    - It is not possible to have a QApplication in both parent and child process
-      (unless both QApplications are created _after_ the call to fork())
-      Attempts by the forked process to access Qt GUI elements created by the parent
-      will most likely cause the child to crash.
-    - Likewise, database connections are unlikely to function correctly in a forked child.
-    - Threads are not copied by fork(); the new process 
-      will have only one thread that starts wherever fork() was called in the parent process.
-    - Forked processes are unceremoniously terminated when join() is called; they are not 
-      given any opportunity to clean up. (This prevents them calling any cleanup code that
-      was only intended to be used by the parent process)
-    - Normally when fork()ing, open file handles are shared with the parent process, 
-      which is potentially dangerous. ForkedProcess is careful to close all file handles 
-      that are not explicitly needed--stdout, stderr, and a single pipe to the parent 
-      process.
+      - fork() is not available on Windows.
+      - It is not possible to have a QApplication in both parent and child process
+        (unless both QApplications are created _after_ the call to fork())
+        Attempts by the forked process to access Qt GUI elements created by the parent
+        will most likely cause the child to crash.
+      - Likewise, database connections are unlikely to function correctly in a forked child.
+      - Threads are not copied by fork(); the new process
+        will have only one thread that starts wherever fork() was called in the parent process.
+      - Forked processes are unceremoniously terminated when join() is called; they are not
+        given any opportunity to clean up. (This prevents them calling any cleanup code that
+        was only intended to be used by the parent process)
+      - Normally when fork()ing, open file handles are shared with the parent process,
+        which is potentially dangerous. ForkedProcess is careful to close all file handles
+        that are not explicitly needed--stdout, stderr, and a single pipe to the parent
+        process.
       
     """
     
@@ -405,14 +406,14 @@ class QtProcess(Process):
     """
     QtProcess is essentially the same as Process, with two major differences:
     
-    - The remote process starts by running startQtEventLoop() which creates a 
-      QApplication in the remote process and uses a QTimer to trigger
-      remote event processing. This allows the remote process to have its own 
-      GUI.
-    - A QTimer is also started on the parent process which polls for requests
-      from the child process. This allows Qt signals emitted within the child 
-      process to invoke slots on the parent process and vice-versa. This can 
-      be disabled using processRequests=False in the constructor.
+      - The remote process starts by running startQtEventLoop() which creates a
+        QApplication in the remote process and uses a QTimer to trigger
+        remote event processing. This allows the remote process to have its own
+        GUI.
+      - A QTimer is also started on the parent process which polls for requests
+        from the child process. This allows Qt signals emitted within the child
+        process to invoke slots on the parent process and vice-versa. This can
+        be disabled using processRequests=False in the constructor.
       
     Example::
     

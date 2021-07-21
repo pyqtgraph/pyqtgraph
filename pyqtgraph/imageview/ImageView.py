@@ -53,15 +53,15 @@ class ImageView(QtGui.QWidget):
     Widget used for display and analysis of image data.
     Implements many features:
     
-    * Displays 2D and 3D image data. For 3D data, a z-axis
-      slider is displayed allowing the user to select which frame is displayed.
-    * Displays histogram of image data with movable region defining the dark/light levels
-    * Editable gradient provides a color lookup table 
-    * Frame slider may also be moved using left/right arrow keys as well as pgup, pgdn, home, and end.
-    * Basic analysis features including:
-    
-        * ROI and embedded plot for measuring image values across frames
-        * Image normalization / background subtraction 
+      * Displays 2D and 3D image data. For 3D data, a z-axis
+        slider is displayed allowing the user to select which frame is displayed.
+      * Displays histogram of image data with movable region defining the dark/light levels
+      * Editable gradient provides a color lookup table
+      * Frame slider may also be moved using left/right arrow keys as well as pgup, pgdn, home, and end.
+      * Basic analysis features including:
+
+          * ROI and embedded plot for measuring image values across frames
+          * Image normalization / background subtraction
     
     Basic Usage::
     
@@ -71,13 +71,13 @@ class ImageView(QtGui.QWidget):
         
     **Keyboard interaction**
     
-    * left/right arrows step forward/backward 1 frame when pressed,
-      seek at 20fps when held.
-    * up/down arrows seek at 100fps
-    * pgup/pgdn seek at 1000fps
-    * home/end seek immediately to the first/last frame
-    * space begins playing frames. If time values (in seconds) are given 
-      for each frame, then playback is in realtime.
+      * left/right arrows step forward/backward 1 frame when pressed,
+        seek at 20fps when held.
+      * up/down arrows seek at 100fps
+      * pgup/pgdn seek at 1000fps
+      * home/end seek immediately to the first/last frame
+      * space begins playing frames. If time values (in seconds) are given
+        for each frame, then playback is in realtime.
     """
     sigTimeChanged = QtCore.Signal(object, object)
     sigProcessingChanged = QtCore.Signal(object)

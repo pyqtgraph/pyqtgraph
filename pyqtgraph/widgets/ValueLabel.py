@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui
 from ..ptime import time
 from .. import functions as fn
@@ -9,8 +10,8 @@ class ValueLabel(QtGui.QLabel):
     QLabel specifically for displaying numerical values.
     Extends QLabel adding some extra functionality:
 
-    - displaying units with si prefix
-    - built-in exponential averaging 
+      - displaying units with si prefix
+      - built-in exponential averaging
     """
     
     def __init__(self, parent=None, suffix='', siPrefix=False, averageTime=0, formatStr=None):
