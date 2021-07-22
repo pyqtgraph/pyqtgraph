@@ -40,7 +40,7 @@ def plot():
             #plt.addItem(item)
             
     dt = perf_counter() - start
-    print("Create plots took: %0.3fms" % (dt*1000))
+    print(f"Create plots tooks {dt * 1000:.3f} ms")
 
 ## Plot and clear 5 times, printing the time it took
 for i in range(5):

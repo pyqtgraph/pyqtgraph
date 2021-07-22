@@ -6,7 +6,7 @@ Demonstrates very basic use of PColorMeshItem
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore
 import numpy as np
 import pyqtgraph as pg
 
