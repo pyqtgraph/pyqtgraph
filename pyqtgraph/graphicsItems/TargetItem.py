@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from math import atan2
 from ..Qt import QtGui, QtCore
 from ..Point import Point
@@ -363,8 +364,8 @@ class TargetLabel(TextItem):
     """A TextItem that attaches itself to a TargetItem.
 
     This class extends TextItem with the following features :
-    * Automatically positions adjacent to the symbol at a fixed position.
-    * Automatically reformats text when the symbol location has changed.
+      * Automatically positions adjacent to the symbol at a fixed position.
+      * Automatically reformats text when the symbol location has changed.
 
     Parameters
     ----------

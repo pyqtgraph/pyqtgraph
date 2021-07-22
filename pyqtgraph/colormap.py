@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 from .Qt import QtGui, QtCore
 from .functions import mkColor, eq, colorDistance
@@ -18,10 +19,10 @@ def listMaps(source=None):
     Parameters
     ----------
     source: str, optional
-        Color map source. If omitted, locally stored maps are listed. Otherwise
+        Color map source. If omitted, locally stored maps are listed. Otherwise:
 
-        - 'matplotlib' lists maps that can be imported from Matplotlib
-        - 'colorcet' lists maps that can be imported from ColorCET
+          - 'matplotlib' lists maps that can be imported from Matplotlib
+          - 'colorcet' lists maps that can be imported from ColorCET
 
     Returns
     -------
@@ -68,10 +69,10 @@ def get(name, source=None, skipCache=False):
         be a path to a file in the local folder. See the files in the
         ``pyqtgraph/colors/maps/`` folder for examples of the format.
     source: str, optional
-        If omitted, a locally stored map is returned. Otherwise
+        If omitted, a locally stored map is returned. Otherwise:
 
-        - 'matplotlib' imports a map defined by Matplotlib.
-        - 'colorcet' imports a map defined by ColorCET.
+          - 'matplotlib' imports a map defined by Matplotlib.
+          - 'colorcet' imports a map defined by ColorCET.
 
     skipCache: bool, optional
         If `skipCache=True`, the internal cache is skipped and a new
@@ -443,9 +444,9 @@ class ColorMap(object):
         mode: str or int, optional
             Determines return format:
 
-            - `ColorMap.BYTE` or 'byte': Colors are returned as 0-255 unsigned bytes. (default)
-            - `ColorMap.FLOAT` or 'float': Colors are returned as 0.0-1.0 floats.
-            - `ColorMap.QCOLOR` or 'qcolor': Colors are returned as QColor objects.
+              - `ColorMap.BYTE` or 'byte': Colors are returned as 0-255 unsigned bytes. (default)
+              - `ColorMap.FLOAT` or 'float': Colors are returned as 0.0-1.0 floats.
+              - `ColorMap.QCOLOR` or 'qcolor': Colors are returned as QColor objects.
 
         Returns
         -------
@@ -556,14 +557,14 @@ class ColorMap(object):
         span : tuple (min, max), default (0.0, 1.0)
             Span of data values covered by the gradient:
 
-            - Color map value 0.0 will appear at `min`,
-            - Color map value 1.0 will appear at `max`.
+              - Color map value 0.0 will appear at `min`,
+              - Color map value 1.0 will appear at `max`.
 
         orientation : str, default 'vertical'
             Orientiation of the gradient:
 
-            - 'vertical': `span` corresponds to the `y` coordinate.
-            - 'horizontal': `span` corresponds to the `x` coordinate.
+              - 'vertical': `span` corresponds to the `y` coordinate.
+              - 'horizontal': `span` corresponds to the `x` coordinate.
         """
         if orientation == 'vertical':
             grad = self.getGradient( p1=QtCore.QPointF(0.,span[0]), p2=QtCore.QPointF(0.,span[1]) )
@@ -582,14 +583,14 @@ class ColorMap(object):
         span : tuple (min, max), default (0.0, 1.0)
             Span of the data values covered by the gradient:
 
-            - Color map value 0.0 will appear at `min`.
-            - Color map value 1.0 will appear at `max`.
+              - Color map value 0.0 will appear at `min`.
+              - Color map value 1.0 will appear at `max`.
 
         orientation : str, default 'vertical'
             Orientiation of the gradient:
 
-            - 'vertical' creates a vertical gradient, where `span` corresponds to the `y` coordinate.
-            - 'horizontal' creates a horizontal gradient, where `span` correspnds to the `x` coordinate.
+              - 'vertical' creates a vertical gradient, where `span` corresponds to the `y` coordinate.
+              - 'horizontal' creates a horizontal gradient, where `span` correspnds to the `x` coordinate.
 
         width : int or float
             Width of the pen in pixels on screen.

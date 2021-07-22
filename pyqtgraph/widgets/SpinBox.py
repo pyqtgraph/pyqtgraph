@@ -21,11 +21,11 @@ class SpinBox(QtGui.QAbstractSpinBox):
     Extension of QSpinBox widget for selection of a numerical value.     
     Adds many extra features:
     
-    * SI prefix notation (eg, automatically display "300 mV" instead of "0.003 V")
-    * Float values with linear and decimal stepping (1-9, 10-90, 100-900, etc.)
-    * Option for unbounded values
-    * Delayed signals (allows multiple rapid changes with only one change signal)
-    * Customizable text formatting
+      * SI prefix notation (eg, automatically display "300 mV" instead of "0.003 V")
+      * Float values with linear and decimal stepping (1-9, 10-90, 100-900, etc.)
+      * Option for unbounded values
+      * Delayed signals (allows multiple rapid changes with only one change signal)
+      * Customizable text formatting
     
     =============================  ==============================================
     **Signals:**
@@ -150,13 +150,13 @@ class SpinBox(QtGui.QAbstractSpinBox):
         format         (str) Formatting string used to generate the text shown. Formatting is
                        done with ``str.format()`` and makes use of several arguments:
                        
-                       * *value* - the unscaled value of the spin box
-                       * *suffix* - the suffix string
-                       * *scaledValue* - the scaled value to use when an SI prefix is present
-                       * *siPrefix* - the SI prefix string (if any), or an empty string if
-                         this feature has been disabled
-                       * *suffixGap* - a single space if a suffix is present, or an empty
-                         string otherwise.
+                         * *value* - the unscaled value of the spin box
+                         * *suffix* - the suffix string
+                         * *scaledValue* - the scaled value to use when an SI prefix is present
+                         * *siPrefix* - the SI prefix string (if any), or an empty string if
+                           this feature has been disabled
+                         * *suffixGap* - a single space if a suffix is present, or an empty
+                           string otherwise.
         regex          (str or RegexObject) Regular expression used to parse the spinbox text.
                        May contain the following group names:
                        

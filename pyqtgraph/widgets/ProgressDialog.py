@@ -9,8 +9,8 @@ class ProgressDialog(QtGui.QProgressDialog):
     """
     Extends QProgressDialog:
     
-    * Adds context management so the dialog may be used in `with` statements
-    * Allows nesting multiple progress dialogs
+      * Adds context management so the dialog may be used in `with` statements
+      * Allows nesting multiple progress dialogs
 
     Example::
 

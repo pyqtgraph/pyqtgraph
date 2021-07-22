@@ -869,9 +869,9 @@ class ImageItem(GraphicsObject):
         ``self.xp.histogram()``. If `bins` is `auto`, a bin number is automatically
         chosen based on the image characteristics:
 
-        * Integer images will have approximately `targetHistogramSize` bins,
-          with each bin having an integer width.
-        * All other types will have `targetHistogramSize` bins.
+          * Integer images will have approximately `targetHistogramSize` bins,
+            with each bin having an integer width.
+          * All other types will have `targetHistogramSize` bins.
 
         If `perChannel` is `True`, then a histogram is computed for each channel, 
         and the output is a list of the results.

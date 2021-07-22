@@ -4,21 +4,21 @@ Magic Reload Library
 Luke Campagnola   2010
 
 Python reload function that actually works (the way you expect it to)
- - No re-importing necessary
- - Modules can be reloaded in any order
- - Replaces functions and methods with their updated code
- - Changes instances to use updated classes
- - Automatically decides which modules to update by comparing file modification times
+  - No re-importing necessary
+  - Modules can be reloaded in any order
+  - Replaces functions and methods with their updated code
+  - Changes instances to use updated classes
+  - Automatically decides which modules to update by comparing file modification times
  
 Does NOT:
- - re-initialize exting instances, even if __init__ changes
- - update references to any module-level objects
-   ie, this does not reload correctly:
-       from module import someObject
-       print someObject
-   ..but you can use this instead: (this works even for the builtin reload)
-       import module
-       print module.someObject
+  - re-initialize exting instances, even if __init__ changes
+  - update references to any module-level objects
+    ie, this does not reload correctly:
+        from module import someObject
+        print someObject
+    ..but you can use this instead: (this works even for the builtin reload)
+        import module
+        print module.someObject
 """
 
 from __future__ import print_function

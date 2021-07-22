@@ -20,9 +20,9 @@ class PlotCurveItem(GraphicsObject):
 
     Features:
 
-    - Fast data update
-    - Fill under curve
-    - Mouse interaction
+      - Fast data update
+      - Fill under curve
+      - Mouse interaction
 
     =====================  ===============================================
     **Signals:**

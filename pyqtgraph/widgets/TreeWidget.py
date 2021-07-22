@@ -242,10 +242,10 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
     """
     TreeWidgetItem that keeps track of its own widgets and expansion state.
     
-    * Widgets may be added to columns before the item is added to a tree.
-    * Expanded state may be set before item is added to a tree.
-    * Adds setCheked and isChecked methods.
-    * Adds addChildren, insertChildren, and takeChildren methods.
+      * Widgets may be added to columns before the item is added to a tree.
+      * Expanded state may be set before item is added to a tree.
+      * Adds setCheked and isChecked methods.
+      * Adds addChildren, insertChildren, and takeChildren methods.
     """
     def __init__(self, *args):
         QtGui.QTreeWidgetItem.__init__(self, *args)

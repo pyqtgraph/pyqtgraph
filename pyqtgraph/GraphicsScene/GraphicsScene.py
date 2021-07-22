@@ -29,15 +29,15 @@ class GraphicsScene(QtGui.QGraphicsScene):
     events, but this turned out to be impossible because the constructor for QGraphicsMouseEvent
     is private)
     
-    *  Generates MouseClicked events in addition to the usual press/move/release events. 
-       (This works around a problem where it is impossible to have one item respond to a 
-       drag if another is watching for a click.)
-    *  Adjustable radius around click that will catch objects so you don't have to click *exactly* over small/thin objects
-    *  Global context menu--if an item implements a context menu, then its parent(s) may also add items to the menu.
-    *  Allows items to decide _before_ a mouse click which item will be the recipient of mouse events.
-       This lets us indicate unambiguously to the user which item they are about to click/drag on
-    *  Eats mouseMove events that occur too soon after a mouse press.
-    *  Reimplements items() and itemAt() to circumvent PyQt bug
+      *  Generates MouseClicked events in addition to the usual press/move/release events.
+         (This works around a problem where it is impossible to have one item respond to a
+         drag if another is watching for a click.)
+      *  Adjustable radius around click that will catch objects so you don't have to click *exactly* over small/thin objects
+      *  Global context menu--if an item implements a context menu, then its parent(s) may also add items to the menu.
+      *  Allows items to decide _before_ a mouse click which item will be the recipient of mouse events.
+         This lets us indicate unambiguously to the user which item they are about to click/drag on
+      *  Eats mouseMove events that occur too soon after a mouse press.
+      *  Reimplements items() and itemAt() to circumvent PyQt bug
 
     ====================== ====================================================================
     **Signals**
