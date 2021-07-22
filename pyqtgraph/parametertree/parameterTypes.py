@@ -1176,8 +1176,15 @@ class CalendarParameter(Parameter):
 
 
 class QtEnumParameter(ListParameter):
-    def __init__(self, enum, **opts):
+    def __init__(self, enum, searchObj=QtCore.Qt, **opts):
+        """
+        Constructs a list of allowed enum values from the enum class provided
+        `searchObj` is only needed for PyQt5 compatibility, where it must be the module holding the enum.
+        For instance, if making a QtEnumParameter out of QtWidgets.QFileDialog.Option, `searchObj` would
+        be QtWidgets.QFileDialog
+        """
         self.enum = enum
+        self.searchObj = searchObj
         opts.setdefault('name', enum.__name__)
         self.enumMap = self._getAllowedEnums(enum)
 
@@ -1214,15 +1221,14 @@ class QtEnumParameter(ListParameter):
         state['value'] = reverseMap[state['value']]
         return state
 
-    @staticmethod
-    def _getAllowedEnums(enum):
+    def _getAllowedEnums(self, enum):
         """Pyside provides a dict for easy evaluation"""
         if 'PySide' in QT_LIB:
             vals = enum.values
         elif 'PyQt5' in QT_LIB:
             vals = {}
-            for key in dir(QtCore.Qt):
-                value = getattr(QtCore.Qt, key)
+            for key in dir(self.searchObj):
+                value = getattr(self.searchObj, key)
                 if isinstance(value, enum):
                     vals[key] = value
         elif 'PyQt6' in QT_LIB:
