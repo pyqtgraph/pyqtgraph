@@ -844,131 +844,131 @@ def popupFilePicker(parent=None, windowTitle='', nameFilter='', directory=None, 
     else:
         return None
 
-class FileParameterItem(WidgetParameterItem):
-    def __init__(self, param, depth):
-        self._value = None
-        # Temporarily consider string during construction
-        oldType = param.opts.get('type')
-        param.opts['type'] = 'str'
-        super().__init__(param, depth)
-        param.opts['type'] = oldType
+# class FileParameterItem(WidgetParameterItem):
+#     def __init__(self, param, depth):
+#         self._value = None
+#         # Temporarily consider string during construction
+#         oldType = param.opts.get('type')
+#         param.opts['type'] = 'str'
+#         super().__init__(param, depth)
+#         param.opts['type'] = oldType
+#
+#         button = QtWidgets.QPushButton('...')
+#         button.setFixedWidth(25)
+#         button.setContentsMargins(0, 0, 0, 0)
+#         button.clicked.connect(self._retrieveFileSelection_gui)
+#         self.layoutWidget.layout().insertWidget(2, button)
+#         self.displayLabel.resizeEvent = self._newResizeEvent
+#         # self.layoutWidget.layout().insertWidget(3, self.defaultBtn)
+#
+#     def makeWidget(self):
+#         w = super().makeWidget()
+#         w.setValue = self.setValue
+#         w.value = self.value
+#         # Doesn't make much sense to have a 'changing' signal since filepaths should be complete before value
+#         # is emitted
+#         delattr(w, 'sigChanging')
+#         return w
+#
+#     def _newResizeEvent(self, ev):
+#         ret = type(self.displayLabel).resizeEvent(self.displayLabel, ev)
+#         self.updateDisplayLabel()
+#         return ret
+#
+#     def setValue(self, value):
+#         self._value = value
+#         self.widget.setText(asUnicode(value))
+#
+#     def value(self):
+#         return self._value
+#
+#     def _retrieveFileSelection_gui(self):
+#         curVal = self.param.value()
+#         if isinstance(curVal, list) and len(curVal):
+#             # All files should be from the same directory, in principle
+#             # Since no mechanism exists for preselecting multiple, the most sensible
+#             # thing is to select nothing in the preview dialog
+#             curVal = curVal[0]
+#             if os.path.isfile(curVal):
+#                 curVal = os.path.dirname(curVal)
+#         opts = self.param.opts.copy()
+#         useDir = curVal or opts.get('directory') or os.getcwd()
+#         startDir = os.path.abspath(useDir)
+#         if os.path.isfile(startDir):
+#             opts['selectFile'] = os.path.basename(startDir)
+#             startDir = os.path.dirname(startDir)
+#         if os.path.exists(startDir):
+#             opts['directory'] = startDir
+#         opts.setdefault('windowTitle', self.param.title())
+#
+#         fname = popupFilePicker(None, **opts)
+#         if not fname:
+#             return
+#         self.param.setValue(fname)
+#
+#     def updateDefaultBtn(self):
+#         # Override since a readonly label should still allow reverting to default
+#         ## enable/disable default btn
+#         self.defaultBtn.setEnabled(
+#             not self.param.valueIsDefault() and self.param.opts['enabled'])
+#
+#         # hide / show
+#         self.defaultBtn.setVisible(self.param.hasDefault())
+#
+#     def updateDisplayLabel(self, value=None):
+#         lbl = self.displayLabel
+#         if value is None:
+#             value = self.param.value()
+#         value = asUnicode(value)
+#         font = lbl.font()
+#         metrics = QtGui.QFontMetricsF(font)
+#         value = metrics.elidedText(value, QtCore.Qt.TextElideMode.ElideLeft, lbl.width()-5)
+#         return super().updateDisplayLabel(value)
 
-        button = QtWidgets.QPushButton('...')
-        button.setFixedWidth(25)
-        button.setContentsMargins(0, 0, 0, 0)
-        button.clicked.connect(self._retrieveFileSelection_gui)
-        self.layoutWidget.layout().insertWidget(2, button)
-        self.displayLabel.resizeEvent = self._newResizeEvent
-        # self.layoutWidget.layout().insertWidget(3, self.defaultBtn)
-
-    def makeWidget(self):
-        w = super().makeWidget()
-        w.setValue = self.setValue
-        w.value = self.value
-        # Doesn't make much sense to have a 'changing' signal since filepaths should be complete before value
-        # is emitted
-        delattr(w, 'sigChanging')
-        return w
-
-    def _newResizeEvent(self, ev):
-        ret = type(self.displayLabel).resizeEvent(self.displayLabel, ev)
-        self.updateDisplayLabel()
-        return ret
-
-    def setValue(self, value):
-        self._value = value
-        self.widget.setText(asUnicode(value))
-
-    def value(self):
-        return self._value
-
-    def _retrieveFileSelection_gui(self):
-        curVal = self.param.value()
-        if isinstance(curVal, list) and len(curVal):
-            # All files should be from the same directory, in principle
-            # Since no mechanism exists for preselecting multiple, the most sensible
-            # thing is to select nothing in the preview dialog
-            curVal = curVal[0]
-            if os.path.isfile(curVal):
-                curVal = os.path.dirname(curVal)
-        opts = self.param.opts.copy()
-        useDir = curVal or opts.get('directory') or os.getcwd()
-        startDir = os.path.abspath(useDir)
-        if os.path.isfile(startDir):
-            opts['selectFile'] = os.path.basename(startDir)
-            startDir = os.path.dirname(startDir)
-        if os.path.exists(startDir):
-            opts['directory'] = startDir
-        opts.setdefault('windowTitle', self.param.title())
-
-        fname = popupFilePicker(None, **opts)
-        if not fname:
-            return
-        self.param.setValue(fname)
-
-    def updateDefaultBtn(self):
-        # Override since a readonly label should still allow reverting to default
-        ## enable/disable default btn
-        self.defaultBtn.setEnabled(
-            not self.param.valueIsDefault() and self.param.opts['enabled'])
-
-        # hide / show
-        self.defaultBtn.setVisible(self.param.hasDefault())
-
-    def updateDisplayLabel(self, value=None):
-        lbl = self.displayLabel
-        if value is None:
-            value = self.param.value()
-        value = asUnicode(value)
-        font = lbl.font()
-        metrics = QtGui.QFontMetricsF(font)
-        value = metrics.elidedText(value, QtCore.Qt.TextElideMode.ElideLeft, lbl.width()-5)
-        return super().updateDisplayLabel(value)
-
-class FileParameter(Parameter):
-    """
-    Interfaces with the myriad of file options available from a QFileDialog.
-
-    Note that the output can either be a single file string or list of files, depending on whether
-    `fileMode='ExistingFiles'` is specified.
-
-    Note that in all cases, absolute file paths are returned unless `relativeTo` is specified as
-    elaborated below.
-
-    ============== ========================================================
-    **Options:**
-    parent         Dialog parent
-    winTitle       Title of dialog window
-    nameFilter     File filter as required by the Qt dialog
-    directory      Where in the file system to open this dialog
-    selectFile     File to preselect
-    relativeTo     Parent directory that, if provided, will be removed from the prefix of all returned paths. So,
-                   if '/my/text/file.txt' was selected, and `relativeTo='my/text/'`, the return value would be
-                   'file.txt'. This uses os.path.relpath under the hood, so expect that behavior.
-    kwargs         Any enum value accepted by a QFileDialog and its value. Values can be a string or list of strings,
-                   i.e. fileMode='AnyFile', options=['ShowDirsOnly', 'DontResolveSymlinks']
-    ============== ========================================================
-    """
-    itemClass = FileParameterItem
-
-    def __init__(self, **opts):
-        opts.setdefault('readonly', True)
-        super().__init__(**opts)
+# class FileParameter(Parameter):
+#     """
+#     Interfaces with the myriad of file options available from a QFileDialog.
+#
+#     Note that the output can either be a single file string or list of files, depending on whether
+#     `fileMode='ExistingFiles'` is specified.
+#
+#     Note that in all cases, absolute file paths are returned unless `relativeTo` is specified as
+#     elaborated below.
+#
+#     ============== ========================================================
+#     **Options:**
+#     parent         Dialog parent
+#     winTitle       Title of dialog window
+#     nameFilter     File filter as required by the Qt dialog
+#     directory      Where in the file system to open this dialog
+#     selectFile     File to preselect
+#     relativeTo     Parent directory that, if provided, will be removed from the prefix of all returned paths. So,
+#                    if '/my/text/file.txt' was selected, and `relativeTo='my/text/'`, the return value would be
+#                    'file.txt'. This uses os.path.relpath under the hood, so expect that behavior.
+#     kwargs         Any enum value accepted by a QFileDialog and its value. Values can be a string or list of strings,
+#                    i.e. fileMode='AnyFile', options=['ShowDirsOnly', 'DontResolveSymlinks']
+#     ============== ========================================================
+#     """
+#     itemClass = FileParameterItem
+#
+#     def __init__(self, **opts):
+#         opts.setdefault('readonly', True)
+#         super().__init__(**opts)
 
 
-class ProgressBarParameterItem(WidgetParameterItem):
-    def makeWidget(self):
-        w = QtWidgets.QProgressBar()
-        w.setMaximumHeight(20)
-        w.sigChanged = w.valueChanged
-        self.hideWidget = False
-        return w
-
-class ProgressBarParameter(Parameter):
-    """
-    Displays a progress bar whose value can be set between 0 and 100
-    """
-    itemClass = ProgressBarParameterItem
+# class ProgressBarParameterItem(WidgetParameterItem):
+#     def makeWidget(self):
+#         w = QtWidgets.QProgressBar()
+#         w.setMaximumHeight(20)
+#         w.sigChanged = w.valueChanged
+#         self.hideWidget = False
+#         return w
+#
+# class ProgressBarParameter(Parameter):
+#     """
+#     Displays a progress bar whose value can be set between 0 and 100
+#     """
+#     itemClass = ProgressBarParameterItem
 
 class SliderParameterItem(WidgetParameterItem):
     slider: QtWidgets.QSlider
@@ -1376,8 +1376,8 @@ class SliderParameter(Parameter):
 #         return fn.mkPen(*args, **kwargs)
 
 # registerParameterType('pen', PenParameter, override=True)
-registerParameterType('progress', ProgressBarParameter, override=True)
-registerParameterType('file', FileParameter, override=True)
+# registerParameterType('progress', ProgressBarParameter, override=True)
+# registerParameterType('file', FileParameter, override=True)
 registerParameterType('slider', SliderParameter, override=True)
 # registerParameterType('calendar', CalendarParameter, override=True)
 # registerParameterType('font', FontParameter, override=True)
