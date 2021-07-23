@@ -483,8 +483,8 @@ class ImageView(QtGui.QWidget):
             if key == QtCore.Qt.Key.Key_Right:
                 self.play(20)
                 self.jumpFrames(1)
-                self.lastPlayTime = perf_counter() + 0.2  ## 2ms wait before start
-                                                        ## This happens *after* jumpFrames, since it might take longer than 2ms
+                # effectively pause playback for 0.2 s
+                self.lastPlayTime = perf_counter() + 0.2  
             elif key == QtCore.Qt.Key.Key_Left:
                 self.play(-20)
                 self.jumpFrames(-1)
