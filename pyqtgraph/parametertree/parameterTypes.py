@@ -12,7 +12,6 @@ from collections import OrderedDict
 import re
 import numpy as np
 import os
-from pathlib import Path
 
 
 class WidgetParameterItem(ParameterItem):
@@ -962,7 +961,6 @@ class ProgressBarParameterItem(WidgetParameterItem):
         w = QtWidgets.QProgressBar()
         w.setMaximumHeight(20)
         w.sigChanged = w.valueChanged
-        self.widget = w
         self.hideWidget = False
         return w
 
@@ -1099,7 +1097,6 @@ class FontParameterItem(WidgetParameterItem):
         w.sigChanged = w.currentFontChanged
         w.value = w.currentFont
         w.setValue = w.setCurrentFont
-        self.widget = w
         self.hideWidget = False
         return w
 
@@ -1131,7 +1128,6 @@ class CalendarParameterItem(WidgetParameterItem):
         w.sigChanged = w.selectionChanged
         w.value = w.selectedDate
         w.setValue = w.setSelectedDate
-        self.widget = w
         self.hideWidget = False
         self.param.opts.setdefault('default', QtCore.QDate.currentDate())
         return w
