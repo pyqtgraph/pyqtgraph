@@ -21,6 +21,24 @@ Parameters
 .. autoclass:: ActionParameter
    :members:
 
+.. autoclass:: FileParameter
+   :members:
+
+.. autoclass:: CalendarParameter
+   :members:
+
+.. autoclass:: ProgressBarParameter
+   :members:
+
+.. autoclass:: FontParameter
+   :members:
+
+.. autoclass:: PenParameter
+   :members:
+
+.. autoclass:: SliderParameter
+   :members:
+
 ParameterItems
 --------------
 
@@ -36,5 +54,20 @@ ParameterItems
 .. autoclass:: TextParameterItem
    :members:
 
-.. autoclass:: ActionParameterItem
+.. autoclass:: FileParameterItem
+   :members:
+
+.. autoclass:: CalendarParameterItem
+   :members:
+
+.. autoclass:: ProgressBarParameterItem
+   :members:
+
+.. autoclass:: FontParameterItem
+   :members:
+
+.. autoclass:: PenParameterItem
+   :members:
+
+.. autoclass:: SliderParameterItem
    :members:
