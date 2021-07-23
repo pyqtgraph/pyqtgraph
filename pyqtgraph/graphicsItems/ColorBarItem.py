@@ -7,6 +7,7 @@ from .LinearRegionItem import LinearRegionItem
 
 import weakref
 import math
+import warnings
 import numpy as np
 
 __all__ = ['ColorBarItem']
@@ -35,33 +36,40 @@ class ColorBarItem(PlotItem):
     sigLevelsChanged = QtCore.Signal(object)
     sigLevelsChangeFinished = QtCore.Signal(object)
 
-    def __init__(self, values=(0,1), width=25, cmap=None, label=None,
+    def __init__(self, values=(0,1), width=25, colorMap=None, label=None,
                  interactive=True, limits=None, rounding=1,
-                 orientation='vertical', pen='w', hoverPen='r', hoverBrush='#FF000080' ):
+                 orientation='vertical', pen='w', hoverPen='r', hoverBrush='#FF000080', cmap=None ):
         """
-        Create a new ColorBarItem.
+        Creates a new ColorBarItem.
 
         ==============  ===========================================================================
         **Arguments:**
         values          The range of values as tuple (min, max)
         width           (default=25) The width of the displayed color bar
-        cmap            ColorMap object, look-up table is also applied to assigned ImageItem(s)
+        colorMap        ColorMap object, look-up table is also applied to assigned ImageItem(s)
         label           (default=None) Label applied to color bar axis
         interactive     (default=True) Handles are displayed to interactively adjust level range
         limits          Limits to adjustment range as (low, high) tuple, None disables limit
         rounding        (default=1) Adjusted range values are rounded to multiples of this values
-        orientation     (default='vertical') 'horizontal' gives a horizontal color bar
+        orientation     (default='vertical') 'horizontal' or 'h' gives a horizontal color bar.
         pen             color of adjustement handles in interactive mode
         hoverPen        color of adjustement handles when hovered over
         hoverBrush      color of movable center region when hovered over
         ==============  ===========================================================================
         """
         super().__init__()
+        if cmap is not None: 
+            warnings.warn(
+                "The parameter 'cmap' has been renamed to 'colorMap' for clarity. "
+                "The old name will no longer be available in any version of PyQtGraph released after July 2022.",
+                DeprecationWarning, stacklevel=2
+            )
+            colorMap = cmap
         self.img_list  = [] # list of controlled ImageItems
         self.values    = values
-        self.cmap      = cmap
+        self._colorMap = colorMap
         self.rounding  = rounding
-        self.horizontal = bool(orientation == 'horizontal')
+        self.horizontal = bool( orientation in ('h', 'horizontal') )
 
         self.lo_prv, self.hi_prv = self.values # remember previous values while adjusting range
         if limits is None:
@@ -107,7 +115,7 @@ class ColorBarItem(PlotItem):
             self.bar.setImage( np.linspace(0, 1, 256).reshape( (1,-1) ) )
             if label is not None: self.getAxis('left').setLabel(label)
         self.addItem(self.bar)
-        if cmap is not None: self.setCmap(cmap)
+        if cmap is not None: self.setColorMap(cmap)
 
         if interactive:
             if self.horizontal:
@@ -156,13 +164,36 @@ class ColorBarItem(PlotItem):
                 insert_in.layout.setColumnFixedWidth(4, 5) # enforce some space to axis on the left
         self._update_items( update_cmap = True )
 
+    # Maintain compatibility for old name of color bar setting method.
     def setCmap(self, cmap):
+        warnings.warn(
+            "The method 'setCmap' has been renamed to 'setColorMap' for clarity. "
+            "The old name will no longer be available in any version of PyQtGraph released after July 2022.",
+            DeprecationWarning, stacklevel=2
+        )
+        self.setColorMap(cmap)
+
+    def setColorMap(self, colorMap):
         """
-        sets a ColorMap object to determine the ColorBarItem's look-up table. The same
+        Sets a ColorMap object to determine the ColorBarItem's look-up table. The same
         look-up table is applied to any assigned ImageItem.
         """
-        self.cmap = cmap
+        self._colorMap = colorMap
         self._update_items( update_cmap = True )
+        
+    def colorMap(self):
+        """
+        Returns the assigned ColorMap object.
+        """
+        return self._colorMap
+        
+    @property
+    def cmap(self):
+        warnings.warn(
+            "Direct access to ColorMap.cmap is deprecated and will no longer be available in any "
+            "version of PyQtGraph released after July 2022. Please use 'ColorMap.colorMap()' instead.",
+            DeprecationWarning, stacklevel=2)
+        return self._colorMap
 
     def setLevels(self, values=None, low=None, high=None ):
         """
@@ -170,7 +201,7 @@ class ColorBarItem(PlotItem):
 
         ==============  ===========================================================================
         **Arguments:**
-        values          Specify levels by tuple (low, high). Either value can be None to leave
+        values          specifies levels as tuple (low, high). Either value can be None to leave
                         to previous value unchanged. Takes precedence over low and high parameters.
         low             new low level to be applied to color bar and assigned images
         high            new high level to be applied to color bar and assigned images
@@ -199,15 +230,15 @@ class ColorBarItem(PlotItem):
         """ internal: update color maps for bar and assigned ImageItems """
         # update color bar:
         self.axis.setRange( self.values[0], self.values[1] )
-        if update_cmap and self.cmap is not None:
-            self.bar.setLookupTable( self.cmap.getLookupTable(nPts=256) )
+        if update_cmap and self._colorMap is not None:
+            self.bar.setLookupTable( self._colorMap.getLookupTable(nPts=256) )
         # update assigned ImageItems, too:
         for img_weakref in self.img_list:
             img = img_weakref()
             if img is None: continue # dereference weakref
             img.setLevels( self.values ) # (min,max) tuple
-            if update_cmap and self.cmap is not None:
-                img.setLookupTable( self.cmap.getLookupTable(nPts=256) )
+            if update_cmap and self._colorMap is not None:
+                img.setLookupTable( self._colorMap.getLookupTable(nPts=256) )
 
     def _regionChanged(self):
         """ internal: snap adjusters back to default positions on release """
