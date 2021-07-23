@@ -15,8 +15,9 @@ import sys
 import numpy as np
 
 import pyqtgraph as pg
-import pyqtgraph.ptime as ptime
 from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
+from time import perf_counter
+
 
 pg.setConfigOption('imageAxisOrder', 'row-major')
 
@@ -247,7 +248,7 @@ ui.numbaCheck.toggled.connect(noticeNumbaCheck)
 
 
 ptr = 0
-lastTime = ptime.time()
+lastTime = perf_counter()
 fps = None
 def update():
     global ui, ptr, lastTime, fps, LUT, img
@@ -281,7 +282,7 @@ def update():
         #img.setImage(data[ptr%data.shape[0]], autoRange=False)
 
     ptr += 1
-    now = ptime.time()
+    now = perf_counter()
     dt = now - lastTime
     lastTime = now
     if fps is None:

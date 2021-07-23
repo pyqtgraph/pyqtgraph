@@ -67,7 +67,7 @@ class ChainSim(pg.QtCore.QObject):
     def update(self):
         # approximate physics with verlet integration
         
-        now = pg.ptime.time()
+        now = time.perf_counter()
         if self.lasttime is None:
             dt = 0
         else:

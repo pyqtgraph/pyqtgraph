@@ -10,7 +10,7 @@ from __future__ import print_function
 
 import sys, traceback, time, gc, re, types, weakref, inspect, os, cProfile, threading
 import warnings
-from . import ptime
+from time import perf_counter
 from numpy import ndarray
 from .Qt import QtCore, QT_LIB
 from .util import cprint
@@ -529,7 +529,7 @@ class Profiler(object):
         obj._delayed = delayed
         obj._markCount = 0
         obj._finished = False
-        obj._firstTime = obj._lastTime = ptime.time()
+        obj._firstTime = obj._lastTime = perf_counter()
         obj._newMsg("> Entering " + obj._name)
         return obj
 
@@ -541,7 +541,7 @@ class Profiler(object):
         if msg is None:
             msg = str(self._markCount)
         self._markCount += 1
-        newTime = ptime.time()
+        newTime = perf_counter()
         self._newMsg("  %s: %0.4f ms", 
                      msg, (newTime - self._lastTime) * 1000)
         self._lastTime = newTime
@@ -569,7 +569,7 @@ class Profiler(object):
         if msg is not None:
             self(msg)
         self._newMsg("< Exiting %s, total time: %0.4f ms", 
-                     self._name, (ptime.time() - self._firstTime) * 1000)
+                     self._name, (perf_counter() - self._firstTime) * 1000)
         type(self)._depth -= 1
         if self._depth < 1:
             self.flush()

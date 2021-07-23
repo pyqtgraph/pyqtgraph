@@ -9,7 +9,7 @@ import initExample
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 import pyqtgraph as pg
-import pyqtgraph.ptime as ptime
+from time import perf_counter
 
 app = pg.mkQApp("ImageItem Example")
 
@@ -33,27 +33,27 @@ view.setRange(QtCore.QRectF(0, 0, 600, 600))
 data = np.random.normal(size=(15, 600, 600), loc=1024, scale=64).astype(np.uint16)
 i = 0
 
-updateTime = ptime.time()
-fps = 0
+updateTime = perf_counter()
+elapsed = 0
 
 timer = QtCore.QTimer()
 timer.setSingleShot(True)
 # not using QTimer.singleShot() because of persistence on PyQt. see PR #1605
 
 def updateData():
-    global img, data, i, updateTime, fps
+    global img, data, i, updateTime, elapsed
 
     ## Display the data
     img.setImage(data[i])
     i = (i+1) % data.shape[0]
 
     timer.start(1)
-    now = ptime.time()
-    fps2 = 1.0 / (now-updateTime)
+    now = perf_counter()
+    elapsed_now = now - updateTime
     updateTime = now
-    fps = fps * 0.9 + fps2 * 0.1
-    
-    #print "%0.1f fps" % fps
+    elapsed = elapsed * 0.9 + elapsed_now * 0.1
+
+    # print(f"{1 / elapsed:.1f} fps")
     
 timer.timeout.connect(updateData)
 updateData()

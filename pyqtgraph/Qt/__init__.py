@@ -207,7 +207,6 @@ elif QT_LIB == PYSIDE2:
     isQObjectAlive = shiboken2.isValid
     import PySide2
     VERSION_INFO = 'PySide2 ' + PySide2.__version__ + ' Qt ' + QtCore.__version__
-
 elif QT_LIB == PYSIDE6:
     import PySide6.QtCore, PySide6.QtGui, PySide6.QtWidgets
     _copy_attrs(PySide6.QtCore, QtCore)

@@ -8,6 +8,8 @@ from pyqtgraph.parametertree import types as pTypes
 import pyqtgraph.configfile
 from pyqtgraph.python2_3 import xrange
 
+from time import perf_counter
+
 
 class RelativityGUI(QtGui.QWidget):
     def __init__(self):
@@ -130,13 +132,13 @@ class RelativityGUI(QtGui.QWidget):
 
     def setAnimation(self, a):
         if a:
-            self.lastAnimTime = pg.ptime.time()
+            self.lastAnimTime = perf_counter()
             self.animTimer.start(int(self.animDt*1000))
         else:
             self.animTimer.stop()
             
     def stepAnimation(self):
-        now = pg.ptime.time()
+        now = perf_counter()
         dt = (now-self.lastAnimTime) * self.params['Animation Speed']
         self.lastAnimTime = now
         self.animTime += dt

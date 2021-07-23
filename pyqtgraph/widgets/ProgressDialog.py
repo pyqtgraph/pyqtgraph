@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
+from time import perf_counter
 from ..Qt import QtGui, QtCore
-from .. import ptime
 
 __all__ = ['ProgressDialog']
 
@@ -207,7 +207,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         # Qt docs say this should happen automatically, but that doesn't seem
         # to be the case.
         if self.windowModality() == QtCore.Qt.WindowModality.WindowModal:
-            now = ptime.time()
+            now = perf_counter()
             if self._lastProcessEvents is None or (now - self._lastProcessEvents) > 0.2:
                 QtGui.QApplication.processEvents()
                 self._lastProcessEvents = now

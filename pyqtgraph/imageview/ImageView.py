@@ -15,6 +15,7 @@ Widget used for displaying 2D or 3D data. Features:
 import os
 from math import log10
 import numpy as np
+from time import perf_counter
 
 from ..Qt import QtCore, QtGui, QT_LIB
 from .. import functions as fn
@@ -29,7 +30,6 @@ from ..graphicsItems.InfiniteLine import *
 from ..graphicsItems.ViewBox import *
 from ..graphicsItems.VTickGroup import VTickGroup
 from ..graphicsItems.GradientEditorItem import addGradientListToDocstring
-from .. import ptime as ptime
 from .. import debug as debug
 from ..SignalProxy import SignalProxy
 from .. import getConfigOption
@@ -390,7 +390,7 @@ class ImageView(QtGui.QWidget):
             self.playTimer.stop()
             return
             
-        self.lastPlayTime = ptime.time()
+        self.lastPlayTime = perf_counter()
         if not self.playTimer.isActive():
             self.playTimer.start(16)
             
@@ -483,12 +483,12 @@ class ImageView(QtGui.QWidget):
             if key == QtCore.Qt.Key.Key_Right:
                 self.play(20)
                 self.jumpFrames(1)
-                self.lastPlayTime = ptime.time() + 0.2  ## 2ms wait before start
-                                                        ## This happens *after* jumpFrames, since it might take longer than 2ms
+                # effectively pause playback for 0.2 s
+                self.lastPlayTime = perf_counter() + 0.2  
             elif key == QtCore.Qt.Key.Key_Left:
                 self.play(-20)
                 self.jumpFrames(-1)
-                self.lastPlayTime = ptime.time() + 0.2
+                self.lastPlayTime = perf_counter() + 0.2
             elif key == QtCore.Qt.Key.Key_Up:
                 self.play(-100)
             elif key == QtCore.Qt.Key.Key_Down:
@@ -501,7 +501,7 @@ class ImageView(QtGui.QWidget):
             self.play(0)
         
     def timeout(self):
-        now = ptime.time()
+        now = perf_counter()
         dt = now - self.lastPlayTime
         if dt < 0:
             return

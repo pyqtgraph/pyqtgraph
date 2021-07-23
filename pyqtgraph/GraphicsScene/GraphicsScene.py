@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
-import time
 import weakref
 import warnings
+from time import perf_counter, perf_counter_ns
 
 from ..Qt import QtCore, QtGui, QT_LIB, isQObjectAlive
 from ..Point import Point
 from .. import functions as fn
-from .. import ptime as ptime
 from .mouseEvents import *
 from .. import debug as debug
 from .. import getConfigOption
 
-getMillis = lambda: int(round(time.time() * 1000))
+getMillis = lambda: perf_counter_ns() // 10 ** 6
 
 
 if QT_LIB.startswith('PyQt'):
@@ -198,7 +197,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 # button is pressed' send mouseMoveEvents and mouseDragEvents
                 super().mouseMoveEvent(ev)
                 if self.mouseGrabberItem() is None:
-                    now = ptime.time()
+                    now = perf_counter()
                     init = False
                     ## keep track of which buttons are involved in dragging
                     for btn in [QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.MouseButton.MiddleButton, QtCore.Qt.MouseButton.RightButton]:
