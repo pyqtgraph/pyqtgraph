@@ -1,0 +1,13 @@
+; PyQtGraph's "relaxed" plot color palette
+; This is the darker variant for plotting on a light background ("light mode")
+;
+#f97f10 ; orange
+#e5bb00 ; yellow
+#94ab00 ; grass
+#12a12a ; green
+#007c8c ; sea
+#0e56c2 ; blue
+#813be3 ; indigo
+#c01188 ; purple
+#e23512 ; red
+#f97f10 ; orange
