@@ -7,7 +7,7 @@ from pyqtgraph.parametertree.Parameter import PARAM_TYPES, _PARAM_ITEM_TYPES
 def mkDocs(typeList):
     typDocs = [
     f"""\
-    .. autoclass:: {typ.__name__}
+    .. autoclass:: {typ.__module__}.{typ.__name__}
        :members:\
     """
     for typ in typeList]
