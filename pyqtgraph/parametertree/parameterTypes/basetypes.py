@@ -247,10 +247,12 @@ class EventProxy(QtCore.QObject):
 
 
 class SimpleParameter(Parameter):
-    """Parameter representing a single value.
+    """
+    Parameter representing a single value.
 
     This parameter is backed by :class:`WidgetParameterItem` to represent the
     following parameter names through various subclasses:
+
       - 'int'
       - 'float'
       - 'bool'
@@ -259,7 +261,8 @@ class SimpleParameter(Parameter):
       - 'colormap'
     """
     def __init__(self, *args, **kargs):
-        """Initialize the parameter.
+        """
+        Initialize the parameter.
 
         This is normally called implicitly through :meth:`Parameter.create`.
         The keyword arguments avaialble to :meth:`Parameter.__init__` are

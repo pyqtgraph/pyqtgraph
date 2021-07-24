@@ -4,6 +4,7 @@ from ...widgets.SpinBox import SpinBox
 class NumericParameterItem(WidgetParameterItem):
     """
     Subclasses `WidgetParameterItem` to provide the following types:
+
     ==========================  =============================================================
     **Registered Types:**
     int                         Displays a :class:`SpinBox <pyqtgraph.SpinBox>` in integer
