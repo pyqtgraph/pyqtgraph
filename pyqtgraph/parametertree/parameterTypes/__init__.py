@@ -9,10 +9,11 @@ from .progress import ProgressBarParameter
 from .qtenum import QtEnumParameter
 from .slider import SliderParameter
 from .text import TextParameter
+from .numeric import NumericParameter
 from ..Parameter import registerParameterType
 
-registerParameterType('int', SimpleParameter, override=True)
-registerParameterType('float', SimpleParameter, override=True)
+registerParameterType('int', NumericParameter, override=True)
+registerParameterType('float', NumericParameter, override=True)
 registerParameterType('bool', SimpleParameter, override=True)
 registerParameterType('str', SimpleParameter, override=True)
 registerParameterType('color', SimpleParameter, override=True)

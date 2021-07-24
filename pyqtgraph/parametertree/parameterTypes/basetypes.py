@@ -1,7 +1,6 @@
 from .. import ParameterItem, Parameter
 from ... import functions as fn
 from ...Qt import QtWidgets, QtCore, QtGui
-from ...widgets.SpinBox import SpinBox
 from ...widgets.GradientWidget import GradientWidget
 from ...widgets.ColorButton import ColorButton
 from ...colormap import ColorMap
@@ -111,25 +110,7 @@ class WidgetParameterItem(ParameterItem):
         """
         opts = self.param.opts
         t = opts['type']
-        if t in ('int', 'float'):
-            defs = {
-                'value': 0, 'min': None, 'max': None,
-                'step': 1.0, 'dec': False,
-                'siPrefix': False, 'suffix': '', 'decimals': 3,
-            }
-            if t == 'int':
-                defs['int'] = True
-                defs['minStep'] = 1.0
-            for k in defs:
-                if k in opts:
-                    defs[k] = opts[k]
-            if 'limits' in opts:
-                defs['min'], defs['max'] = opts['limits']
-            w = SpinBox()
-            w.setOpts(**defs)
-            w.sigChanged = w.sigValueChanged
-            w.sigChanging = w.sigValueChanging
-        elif t == 'bool':
+        if t == 'bool':
             w = QtWidgets.QCheckBox()
             w.sigChanged = w.toggled
             w.value = w.isChecked
@@ -222,9 +203,7 @@ class WidgetParameterItem(ParameterItem):
         if value is None:
             value = self.param.value()
         opts = self.param.opts
-        if isinstance(self.widget, QtWidgets.QAbstractSpinBox):
-            text = str(self.widget.lineEdit().text())
-        elif isinstance(self.widget, QtWidgets.QComboBox):
+        if isinstance(self.widget, QtWidgets.QComboBox):
             text = self.widget.currentText()
         else:
             text = str(value)
@@ -257,8 +236,6 @@ class WidgetParameterItem(ParameterItem):
         self.widget.show()
         self.displayLabel.hide()
         self.widget.setFocus(QtCore.Qt.FocusReason.OtherFocusReason)
-        if isinstance(self.widget, SpinBox):
-            self.widget.selectNumber()  # select the numerical portion of the text for quick editing
 
     def hideEditor(self):
         self.widget.hide()
@@ -267,12 +244,6 @@ class WidgetParameterItem(ParameterItem):
     def limitsChanged(self, param, limits):
         """Called when the parameter's limits have changed"""
         ParameterItem.limitsChanged(self, param, limits)
-
-        t = self.param.opts['type']
-        if t == 'int' or t == 'float':
-            self.widget.setOpts(bounds=limits)
-        else:
-            return  ## don't know what to do with any other types..
 
     def defaultChanged(self, param, value):
         self.updateDefaultBtn()
@@ -314,18 +285,6 @@ class WidgetParameterItem(ParameterItem):
 
         if 'tip' in opts:
             self.widget.setToolTip(opts['tip'])
-
-        ## If widget is a SpinBox, pass options straight through
-        if isinstance(self.widget, SpinBox):
-            # send only options supported by spinbox
-            sbOpts = {}
-            if 'units' in opts and 'suffix' not in opts:
-                sbOpts['suffix'] = opts['units']
-            for k,v in opts.items():
-                if k in self.widget.opts:
-                    sbOpts[k] = v
-            self.widget.setOpts(**sbOpts)
-            self.updateDisplayLabel()
 
 
 class EventProxy(QtCore.QObject):
