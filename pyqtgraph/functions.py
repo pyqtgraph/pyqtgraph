@@ -1936,7 +1936,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     isfinite = None
     if connect == 'finite':
         isfinite = np.isfinite(x) & np.isfinite(y)
-        if not finiteCheck:
+        if not finiteCheck or n == 0:
             # if user specified to skip finite check, then that forces use_qpolygonf
             use_qpolygonf = True
         else:
@@ -2047,7 +2047,8 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     else:
         raise ValueError('connect argument must be "all", "pairs", "finite", or array')
 
-    arr[0]['c'] = 0  # the first vertex has no previous vertex to connect
+    # Use 0:1 instead of 0 since it behaves when there are no points in the array
+    arr[0:1]['c'] = 0  # the first vertex has no previous vertex to connect
 
     # create QDataStream object and stream into QPainterPath
     path.strn = backstore
