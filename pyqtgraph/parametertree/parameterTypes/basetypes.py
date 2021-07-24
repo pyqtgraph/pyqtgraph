@@ -1,3 +1,5 @@
+import builtins
+
 from .. import ParameterItem, Parameter
 from ... import functions as fn
 from ...Qt import QtWidgets, QtCore, QtGui
@@ -303,8 +305,6 @@ class SimpleParameter(Parameter):
     This parameter is backed by :class:`WidgetParameterItem` to represent the
     following parameter names:
 
-      - 'int'
-      - 'float'
       - 'bool'
       - 'str'
       - 'color'
@@ -335,15 +335,21 @@ class SimpleParameter(Parameter):
         return state
 
     def _interpretValue(self, v):
-        fn = {
-            'int': int,
-            'float': float,
+        typ = self.opts['type']
+        def _missing_interp(v):
+            # Assume raw interpretation
+            return v
+            # Or:
+            # raise TypeError(f'No interpreter found for type {typ}')
+        fallback = getattr(builtins, typ, _missing_interp)
+        interpreter = {
+            # Wait to move these until also moving 'item' defs
             'bool': bool,
             'str': str,
             'color': self._interpColor,
             'colormap': self._interpColormap,
-        }[self.opts['type']]
-        return fn(v)
+        }.get(typ, fallback)
+        return interpreter(v)
 
     def _interpColor(self, v):
         return fn.mkColor(v)
