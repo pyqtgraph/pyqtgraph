@@ -15,8 +15,6 @@ class ListParameterItem(WidgetParameterItem):
         WidgetParameterItem.__init__(self, param, depth)
 
     def makeWidget(self):
-        opts = self.param.opts
-        t = opts['type']
         w = QtWidgets.QComboBox()
         w.setMaximumHeight(20)  ## set to match height of spin box and line edit
         w.sigChanged = w.currentIndexChanged
@@ -61,6 +59,11 @@ class ListParameterItem(WidgetParameterItem):
                     self.updateDisplayLabel()
         finally:
             self.widget.blockSignals(False)
+
+    def updateDisplayLabel(self, value=None):
+        if value is None:
+            value = self.widget.currentText()
+        super().updateDisplayLabel(value)
 
 
 class ListParameter(Parameter):
@@ -118,3 +121,4 @@ class ListParameter(Parameter):
                 reverse[0].append(v)
                 reverse[1].append(n)
         return forward, reverse
+

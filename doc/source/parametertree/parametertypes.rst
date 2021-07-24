@@ -6,68 +6,83 @@ Built-in Parameter Types
 Parameters
 ----------
 
-.. autoclass:: SimpleParameter
-   :members:
-
 .. autoclass:: GroupParameter
-   :members:
-
-.. autoclass:: ListParameter
-   :members:
-
-.. autoclass:: TextParameter
-   :members:
+   :members:    
 
 .. autoclass:: ActionParameter
-   :members:
+   :members:    
 
-.. autoclass:: FileParameter
-   :members:
+.. autoclass:: ListParameter
+   :members:    
 
-.. autoclass:: CalendarParameter
-   :members:
+.. autoclass:: ColorMapParameter
+   :members:    
 
-.. autoclass:: ProgressBarParameter
-   :members:
+.. autoclass:: TextParameter
+   :members:    
 
 .. autoclass:: FontParameter
-   :members:
+   :members:    
+
+.. autoclass:: FileParameter
+   :members:    
+
+.. autoclass:: CalendarParameter
+   :members:    
+
+.. autoclass:: ColorParameter
+   :members:    
 
 .. autoclass:: PenParameter
-   :members:
+   :members:    
 
 .. autoclass:: SliderParameter
-   :members:
+   :members:    
+
+.. autoclass:: ProgressBarParameter
+   :members:    
+
+.. autoclass:: SimpleParameter
+   :members:    
 
 ParameterItems
 --------------
 
-.. autoclass:: WidgetParameterItem
-   :members:
-
-.. autoclass:: GroupParameterItem
-   :members:
-
-.. autoclass:: ListParameterItem
-   :members:
-
 .. autoclass:: TextParameterItem
-   :members:
-
-.. autoclass:: FileParameterItem
-   :members:
+   :members:    
 
 .. autoclass:: CalendarParameterItem
-   :members:
+   :members:    
+
+.. autoclass:: NumericParameterItem
+   :members:    
+
+.. autoclass:: BoolParameterItem
+   :members:    
+
+.. autoclass:: GroupParameterItem
+   :members:    
+
+.. autoclass:: ActionParameterItem
+   :members:    
+
+.. autoclass:: ListParameterItem
+   :members:    
 
 .. autoclass:: ProgressBarParameterItem
-   :members:
+   :members:    
 
 .. autoclass:: FontParameterItem
-   :members:
+   :members:    
+
+.. autoclass:: FileParameterItem
+   :members:    
 
 .. autoclass:: PenParameterItem
-   :members:
+   :members:    
 
 .. autoclass:: SliderParameterItem
-   :members:
+   :members:    
+
+.. autoclass:: StrParameterItem
+   :members:    

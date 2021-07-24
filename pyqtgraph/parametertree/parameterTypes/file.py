@@ -1,7 +1,7 @@
 import os
 import re
 
-from .basetypes import WidgetParameterItem
+from .str import StrParameterItem
 from .. import Parameter
 from ...Qt import QtWidgets, QtGui, QtCore
 
@@ -94,14 +94,10 @@ def popupFilePicker(parent=None, windowTitle='', nameFilter='', directory=None, 
         return None
 
 
-class FileParameterItem(WidgetParameterItem):
+class FileParameterItem(StrParameterItem):
     def __init__(self, param, depth):
         self._value = None
-        # Temporarily consider string during construction
-        oldType = param.opts.get('type')
-        param.opts['type'] = 'str'
         super().__init__(param, depth)
-        param.opts['type'] = oldType
 
         button = QtWidgets.QPushButton('...')
         button.setFixedWidth(25)

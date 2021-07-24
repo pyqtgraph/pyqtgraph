@@ -13,6 +13,11 @@ class FontParameterItem(WidgetParameterItem):
         self.hideWidget = False
         return w
 
+    def updateDisplayLabel(self, value=None):
+        if value is None:
+            value = self.widget.currentText()
+        super().updateDisplayLabel(value)
+
 
 class FontParameter(Parameter):
     """

@@ -3,9 +3,6 @@ import builtins
 from .. import ParameterItem, Parameter
 from ... import functions as fn
 from ...Qt import QtWidgets, QtCore, QtGui
-from ...widgets.GradientWidget import GradientWidget
-from ...widgets.ColorButton import ColorButton
-from ...colormap import ColorMap
 from ... import icons
 
 class WidgetParameterItem(ParameterItem):
@@ -15,17 +12,6 @@ class WidgetParameterItem(ParameterItem):
       * label in second column for displaying value
       * simple widget for editing value (displayed instead of label when item is selected)
       * button that resets value to default
-
-    ==========================  =============================================================
-    **Registered Types:**
-    int                         Displays a :class:`SpinBox <pyqtgraph.SpinBox>` in integer
-                                mode.
-    float                       Displays a :class:`SpinBox <pyqtgraph.SpinBox>`.
-    bool                        Displays a QCheckBox
-    str                         Displays a QLineEdit
-    color                       Displays a :class:`ColorButton <pyqtgraph.ColorButton>`
-    colormap                    Displays a :class:`GradientWidget <pyqtgraph.GradientWidget>`
-    ==========================  =============================================================
 
     This class can be subclassed by overriding makeWidget() to provide a custom widget.
     """
@@ -108,43 +94,9 @@ class WidgetParameterItem(ParameterItem):
         setValue    a function that sets the value
         ==========  ============================================================
 
-        This is a good function to override in subclasses.
+        This function must be overridden by a subclass.
         """
-        opts = self.param.opts
-        t = opts['type']
-        if t == 'bool':
-            w = QtWidgets.QCheckBox()
-            w.sigChanged = w.toggled
-            w.value = w.isChecked
-            w.setValue = w.setChecked
-            self.hideWidget = False
-        elif t == 'str':
-            w = QtWidgets.QLineEdit()
-            w.setStyleSheet('border: 0px')
-            w.sigChanged = w.editingFinished
-            w.value = lambda: str(w.text())
-            w.setValue = lambda v: w.setText(str(v))
-            w.sigChanging = w.textChanged
-        elif t == 'color':
-            w = ColorButton()
-            w.sigChanged = w.sigColorChanged
-            w.sigChanging = w.sigColorChanging
-            w.value = w.color
-            w.setValue = w.setColor
-            self.hideWidget = False
-            w.setFlat(True)
-        elif t == 'colormap':
-            w = GradientWidget(orientation='bottom')
-            w.sizeHint = lambda: QtCore.QSize(300, 35)
-            w.sigChanged = w.sigGradientChangeFinished
-            w.sigChanging = w.sigGradientChanged
-            w.value = w.colorMap
-            w.setValue = w.setColorMap
-            self.hideWidget = False
-            self.asSubItem = True
-        else:
-            raise Exception("Unknown type '%s'" % str(t))
-        return w
+        raise NotImplementedError
 
     def widgetEventFilter(self, obj, ev):
         ## filter widget's events
@@ -204,12 +156,7 @@ class WidgetParameterItem(ParameterItem):
         """Update the display label to reflect the value of the parameter."""
         if value is None:
             value = self.param.value()
-        opts = self.param.opts
-        if isinstance(self.widget, QtWidgets.QComboBox):
-            text = self.widget.currentText()
-        else:
-            text = str(value)
-        self.displayLabel.setText(text)
+        self.displayLabel.setText(str(value))
 
     def widgetValueChanged(self):
         ## called when the widget's value has been changed by the user
@@ -303,15 +250,14 @@ class SimpleParameter(Parameter):
     """Parameter representing a single value.
 
     This parameter is backed by :class:`WidgetParameterItem` to represent the
-    following parameter names:
-
+    following parameter names through various subclasses:
+      - 'int'
+      - 'float'
       - 'bool'
       - 'str'
       - 'color'
       - 'colormap'
     """
-    itemClass = WidgetParameterItem
-
     def __init__(self, *args, **kargs):
         """Initialize the parameter.
 
@@ -321,19 +267,6 @@ class SimpleParameter(Parameter):
         """
         Parameter.__init__(self, *args, **kargs)
 
-        ## override a few methods for color parameters
-        if self.opts['type'] == 'color':
-            self.value = self.colorValue
-            self.saveState = self.saveColorState
-
-    def colorValue(self):
-        return fn.mkColor(Parameter.value(self))
-
-    def saveColorState(self, *args, **kwds):
-        state = Parameter.saveState(self, *args, **kwds)
-        state['value'] = fn.colorTuple(self.value())
-        return state
-
     def _interpretValue(self, v):
         typ = self.opts['type']
         def _missing_interp(v):
@@ -341,24 +274,8 @@ class SimpleParameter(Parameter):
             return v
             # Or:
             # raise TypeError(f'No interpreter found for type {typ}')
-        fallback = getattr(builtins, typ, _missing_interp)
-        interpreter = {
-            # Wait to move these until also moving 'item' defs
-            'bool': bool,
-            'str': str,
-            'color': self._interpColor,
-            'colormap': self._interpColormap,
-        }.get(typ, fallback)
+        interpreter = getattr(builtins, typ, _missing_interp)
         return interpreter(v)
-
-    def _interpColor(self, v):
-        return fn.mkColor(v)
-
-    def _interpColormap(self, v):
-        if not isinstance(v, ColorMap):
-            raise TypeError("Cannot set colormap parameter from object %r" % v)
-        return v
-
 
 class GroupParameterItem(ParameterItem):
     """

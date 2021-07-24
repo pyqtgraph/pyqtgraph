@@ -1,7 +1,16 @@
-from .basetypes import WidgetParameterItem, SimpleParameter
+from .basetypes import WidgetParameterItem
 from ...widgets.SpinBox import SpinBox
 
 class NumericParameterItem(WidgetParameterItem):
+    """
+    Subclasses `WidgetParameterItem` to provide the following types:
+    ==========================  =============================================================
+    **Registered Types:**
+    int                         Displays a :class:`SpinBox <pyqtgraph.SpinBox>` in integer
+                                mode.
+    float                       Displays a :class:`SpinBox <pyqtgraph.SpinBox>`.
+    ==========================  =============================================================
+    """
     def makeWidget(self):
         opts = self.param.opts
         t = opts['type']
@@ -46,6 +55,3 @@ class NumericParameterItem(WidgetParameterItem):
                 sbOpts[k] = v
         self.widget.setOpts(**sbOpts)
         self.updateDisplayLabel()
-
-class NumericParameter(SimpleParameter):
-    itemClass = NumericParameterItem
