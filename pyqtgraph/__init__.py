@@ -273,6 +273,8 @@ from .SRTTransform import SRTTransform
 from .Transform3D import Transform3D
 from .SRTTransform3D import SRTTransform3D
 from .functions import *
+from .palette import *
+from .styleRegistry import *
 from .graphicsWindows import *
 from .SignalProxy import *
 from .colormap import *

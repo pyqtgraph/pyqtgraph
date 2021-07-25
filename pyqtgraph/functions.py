@@ -26,6 +26,9 @@ from .metaarray import MetaArray
 from collections import OrderedDict
 from .python2_3 import asUnicode, basestring
 
+print('initializing functions')
+
+
 # in order of appearance in this file.
 # add new functions to this list only if they are to reside in pg namespace.
 __all__ = [
@@ -50,20 +53,28 @@ __all__ = [
     'invertQTransform',
     'pseudoScatter', 'toposort', 'disconnect', 'SignalBlock']
 
+# Colors = {
+#     'b': QtGui.QColor(0,0,255,255),
+#     'g': QtGui.QColor(0,255,0,255),
+#     'r': QtGui.QColor(255,0,0,255),
+#     'c': QtGui.QColor(0,255,255,255),
+#     'm': QtGui.QColor(255,0,255,255),
+#     'y': QtGui.QColor(255,255,0,255),
+#     'k': QtGui.QColor(0,0,0,255),
+#     'w': QtGui.QColor(255,255,255,255),
+#     'd': QtGui.QColor(150,150,150,255),
+#     'l': QtGui.QColor(200,200,200,255),
+#     's': QtGui.QColor(100,100,150,255),
+# }
 
-Colors = {
-    'b': QtGui.QColor(0,0,255,255),
-    'g': QtGui.QColor(0,255,0,255),
-    'r': QtGui.QColor(255,0,0,255),
-    'c': QtGui.QColor(0,255,255,255),
-    'm': QtGui.QColor(255,0,255,255),
-    'y': QtGui.QColor(255,255,0,255),
-    'k': QtGui.QColor(0,0,0,255),
-    'w': QtGui.QColor(255,255,255,255),
-    'd': QtGui.QColor(150,150,150,255),
-    'l': QtGui.QColor(200,200,200,255),
-    's': QtGui.QColor(100,100,150,255),
-}  
+# STYLE_REGISTRY = StyleRegistry('legacy')
+# STYLE_REGISTRY._palette = palette.Palette('legacy')
+
+@property
+def Colors(self):
+    import styleRegistry
+    return styleRegistry.STYLE_REGISTRY._palette._colors
+
 
 SI_PREFIXES = asUnicode('yzafpnµm kMGTPEZY')
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
@@ -233,92 +244,217 @@ class Color(QtGui.QColor):
         return (self.red, self.green, self.blue, self.alpha)[ind]()
         
     
-def mkColor(*args):
-    """
-    Convenience function for constructing QColor from a variety of argument 
-    types. Accepted arguments are:
+# def mkColor(*args):
+#     """
+#     Convenience function for constructing QColor from a variety of argument 
+#     types. Accepted arguments are:
     
-    ================ ================================================
-     'c'             one of: r, g, b, c, m, y, k, w
-     R, G, B, [A]    integers 0-255
-     (R, G, B, [A])  tuple of integers 0-255
-     float           greyscale, 0.0-1.0
-     int             see :func:`intColor() <pyqtgraph.intColor>`
-     (int, hues)     see :func:`intColor() <pyqtgraph.intColor>`
-     "#RGB"          hexadecimal strings prefixed with '#'
-     "#RGBA"         previously allowed use without prefix is deprecated and 
-     "#RRGGBB"       will be removed in 0.13
-     "#RRGGBBAA"     
-     QColor          QColor instance; makes a copy.
-    ================ ================================================
+#     ================ ================================================
+#      'c'             one of: r, g, b, c, m, y, k, w
+#      R, G, B, [A]    integers 0-255
+#      (R, G, B, [A])  tuple of integers 0-255
+#      float           greyscale, 0.0-1.0
+#      int             see :func:`intColor() <pyqtgraph.intColor>`
+#      (int, hues)     see :func:`intColor() <pyqtgraph.intColor>`
+#      "#RGB"          hexadecimal strings prefixed with '#'
+#      "#RGBA"         previously allowed use without prefix is deprecated and 
+#      "#RRGGBB"       will be removed in 0.13
+#      "#RRGGBBAA"     
+#      QColor          QColor instance; makes a copy.
+#     ================ ================================================
+#     """
+    
+def mkColor(*args ):
     """
-    err = 'Not sure how to make a color from "%s"' % str(args)
-    if len(args) == 1:
-        if isinstance(args[0], basestring):
-            c = args[0]
-            if len(c) == 1:
-                try:
-                    return Colors[c]
-                except KeyError:
-                    raise ValueError('No color named "%s"' % c)
-            if c[0] == '#':
-                c = c[1:]
-            else:
+    Convenience function for constructing QColor from a variety of argument types.
+    This function is used internally by all functions that need to convert arguments to QColors.
+    
+    Colors obtained by name from the current
+    palette will be registered for future updates.
+
+    **Obtained from the current palette:**    
+    =============== ===================================================================
+    from palette:
+    name            (str) any color name specifed in the palette
+    (name, alpha)   (tuple of str, float) color name from palette and opacity 0.0-1.0
+    value           (float) monochrome color according to palette, 0.0-1.0
+    idx             (int, 0-8) enumerated plot color 'idx' of 9 specified by palette 
+    (idx, num)      (tuple of int) plot color 'idx' of 'num' colors sampled from 
+                    the defining color map.
+    =============== ===================================================================
+
+    **Directly specified:**
+    =============== ===================================================================
+    hex             (str) a hexadecimal identifier '#RRGGBB' or '#RGB'.
+                    '#RRGGBBA' identifiers are deprecated and may be interpreted 
+                    as '#AARRGGBB' in future versions!
+    (hex, alpha)    (tuple of str, float) hexadecimal identifier and opacity 0.0-1.0
+    color           (QColor) returns unchanged QColor
+                    (Qt.GlobalColor) returns a newly generated QColor 
+    (color, alpha)  (tuple of QColor, float) returns a copy of the QColor with 
+                    opacity 0.0-1.0
+    (R, G, B, [A])  RGBA components specified by a tuple of integers 0-255
+    =============== ===========================================================
+    """
+    # Previous definitions that should be deprecated to simplify and speed up parameter identification:
+    # R, G, B, [A]    RGBA components specified by integers 0-255
+
+    alpha = None # keep track of alpha value, if requested.
+    print('arguments to mkColor:', args)
+    # wrap multiple arguments into a tuple:
+    if len(args) > 1: 
+        warnings.warn(
+            "Specifying RGBA components as separate parameters is deprecated and will no longer be supported in "
+            "versions of PyQtGraph relased after August 2022. Please specify components as as tuple (R,G,B[,A]).",
+            DeprecationWarning, stacklevel=2
+        )
+        identifier = tuple(args)
+    else:
+        identifier = args[0]
+
+    # Unwrap (identifier, alpha) tuple:
+    if hasattr(identifier, '__len__') and len(identifier) == 2 and isinstance( identifier[1], float ):
+        alpha = identifier[1]
+        identifier = identifier[0]
+    
+    # handle QColor input
+    if isinstance(identifier, QtGui.QColor):
+        if alpha is None: return identifier # return QColor directly if alpha is not specified
+        qcol = QtGui.QColor(identifier)     # or make a copy if alpha needs to be adjusted.
+        qcol.setAlphaF(alpha)
+        if hasattr(identifier, 'color_registration'): # if the source color was registered for updated, extract and return information
+            reg_idx, reg_name, reg_alpha = identifier.color_registration
+            return qcol
+        return qcol
+    
+    if isinstance(identifier, bool):
+        raise ValueError(f"Color identifier ('{identifier}') must not be Boolean.")
+
+    # handle plot color index:
+    if isinstance(identifier, (int, np.integer)):
+        idx = int(identifier) % 9 # map to 0-8
+        identifier = f"p{idx}"
+
+    # handle hexadecimal codes and named palette colors:
+    if isinstance(identifier, str):
+        length = len(identifier)
+        if length <= 0: raise ValueError('Color identifier cannot be empty.')
+        if identifier[0] == '#':
+            # --- this can be removed once RGBA format is no longer supported --------------------------
+            if length == 9 or length == 5: #  '#RRGGBBAA
                 warnings.warn(
-                    "Parsing of hex strings that do not start with '#' is"
-                    "deprecated and support will be removed in 0.13",
+                    "Hex strings in '#RRGGBBAA' or '#RGBA' format are deprecated and will be parsed "
+                    "as '#AARRGGBB' or '#ARGB' in versions of PyQtGraph relased after August 2022.",
                     DeprecationWarning, stacklevel=2
                 )
-            if len(c) == 3:
-                r = int(c[0]*2, 16)
-                g = int(c[1]*2, 16)
-                b = int(c[2]*2, 16)
-                a = 255
-            elif len(c) == 4:
-                r = int(c[0]*2, 16)
-                g = int(c[1]*2, 16)
-                b = int(c[2]*2, 16)
-                a = int(c[3]*2, 16)
-            elif len(c) == 6:
-                r = int(c[0:2], 16)
-                g = int(c[2:4], 16)
-                b = int(c[4:6], 16)
-                a = 255
-            elif len(c) == 8:
-                r = int(c[0:2], 16)
-                g = int(c[2:4], 16)
-                b = int(c[4:6], 16)
-                a = int(c[6:8], 16)
-            else:
-                raise ValueError(f"Unknown how to convert string {c} to color")
-        elif isinstance(args[0], QtGui.QColor):
-            return QtGui.QColor(args[0])
-        elif np.issubdtype(type(args[0]), np.floating):
-            r = g = b = int(args[0] * 255)
-            a = 255
-        elif hasattr(args[0], '__len__'):
-            if len(args[0]) == 3:
-                r, g, b = args[0]
-                a = 255
-            elif len(args[0]) == 4:
-                r, g, b, a = args[0]
-            elif len(args[0]) == 2:
-                return intColor(*args[0])
-            else:
-                raise TypeError(err)
-        elif np.issubdtype(type(args[0]), np.integer):
-            return intColor(args[0])
-        else:
-            raise TypeError(err)
-    elif len(args) == 3:
-        r, g, b = args
-        a = 255
-    elif len(args) == 4:
-        r, g, b, a = args
-    else:
-        raise TypeError(err)
-    args = [int(a) if np.isfinite(a) else 0 for a in (r, g, b, a)]
-    return QtGui.QColor(*args)
+                # convert #RGBA-order to #ARGB-order format handled by QColor
+                if   length == 9: identifier = identifier[0] + identifier[7:9] + identifier[1:7] 
+                elif length == 5: identifier = identifier[0] + identifier[ 4 ] + identifier[1:4]
+            # ------------------------------------------------------------------------------------------
+            qcol = QtGui.QColor(identifier)
+            if not qcol.isValid():
+                raise ValueError(f"Invalid QColor generated from identifier ('{identifier}').")
+            if alpha is not None: qcol.setAlphaF(alpha)
+            return qcol
+        # named palette color:
+        qcol = STYLE_REGISTRY.getPaletteColor(identifier, alpha=alpha)
+        return qcol
+        
+    # handle monochrome map samples:
+    if isinstance(identifier, float):
+        if not np.isfinite(identifier):
+            raise ValueError(f"Float color identifier ('{identifier}') needs to be finite.")
+        qcol = STYLE_REGISTRY.sampleMonoColor(value=identifier, alpha=alpha)
+        return qcol
+        
+    # handle integer tuples for plot color map samples and RGBA values:
+    if hasattr(identifier, '__len__'):
+        length = len(identifier)
+        # sampled plot color by index / number:
+        if length == 2: 
+            idx, num = identifier
+            qcol = STYLE_REGISTRY.samplePlotColor(idx, num=num, alpha=alpha)
+            return qcol
+        # (R,G,B) tuple:
+        if length == 3: # R,G,B
+            args = [int(a) if np.isfinite(a) else 0 for a in identifier]
+            qcol = QtGui.QColor(*args)
+            return qcol
+        # (R,G,B,A) tuple:
+        if length > 3: # R,G,B,A
+            args = [int(a) if np.isfinite(a) else 0 for a in identifier[:4]]
+            qcol = QtGui.QColor(*args)
+            return qcol 
+
+    raise ValueError(f"Unable to create QColor from {args}: {identifier} (type:{type(identifier)}")
+    
+    # err = 'Not sure how to make a color from "%s"' % str(args)
+    # if len(args) == 1:
+    #     if isinstance(args[0], basestring):
+    #         c = args[0]
+    #         if len(c) == 1:
+    #             try:
+    #                 return Colors[c]
+    #             except KeyError:
+    #                 raise ValueError('No color named "%s"' % c)
+    #         if c[0] == '#':
+    #             c = c[1:]
+    #         else:
+    #             warnings.warn(
+    #                 "Parsing of hex strings that do not start with '#' is"
+    #                 "deprecated and support will be removed in 0.13",
+    #                 DeprecationWarning, stacklevel=2
+    #             )
+    #         if len(c) == 3:
+    #             r = int(c[0]*2, 16)
+    #             g = int(c[1]*2, 16)
+    #             b = int(c[2]*2, 16)
+    #             a = 255
+    #         elif len(c) == 4:
+    #             r = int(c[0]*2, 16)
+    #             g = int(c[1]*2, 16)
+    #             b = int(c[2]*2, 16)
+    #             a = int(c[3]*2, 16)
+    #         elif len(c) == 6:
+    #             r = int(c[0:2], 16)
+    #             g = int(c[2:4], 16)
+    #             b = int(c[4:6], 16)
+    #             a = 255
+    #         elif len(c) == 8:
+    #             r = int(c[0:2], 16)
+    #             g = int(c[2:4], 16)
+    #             b = int(c[4:6], 16)
+    #             a = int(c[6:8], 16)
+    #         else:
+    #             raise ValueError(f"Unknown how to convert string {c} to color")
+    #     elif isinstance(args[0], QtGui.QColor):
+    #         return QtGui.QColor(args[0])
+    #     elif np.issubdtype(type(args[0]), np.floating):
+    #         r = g = b = int(args[0] * 255)
+    #         a = 255
+    #     elif hasattr(args[0], '__len__'):
+    #         if len(args[0]) == 3:
+    #             r, g, b = args[0]
+    #             a = 255
+    #         elif len(args[0]) == 4:
+    #             r, g, b, a = args[0]
+    #         elif len(args[0]) == 2:
+    #             return intColor(*args[0])
+    #         else:
+    #             raise TypeError(err)
+    #     elif np.issubdtype(type(args[0]), np.integer):
+    #         return intColor(args[0])
+    #     else:
+    #         raise TypeError(err)
+    # elif len(args) == 3:
+    #     r, g, b = args
+    #     a = 255
+    # elif len(args) == 4:
+    #     r, g, b, a = args
+    # else:
+    #     raise TypeError(err)
+    # args = [int(a) if np.isfinite(a) else 0 for a in (r, g, b, a)]
+    # return QtGui.QColor(*args)
 
 
 def mkBrush(*args, **kwds):
