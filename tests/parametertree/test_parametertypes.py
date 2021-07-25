@@ -70,7 +70,7 @@ def test_types():
     check_param_types(param.child('bool'), bool, bool, False, all_objs, types)
 
     # color
-    types = ['color', 'int0', 'int', 'float', 'npfloat', 'npint', 'list']
+    types = ['color', 'int0', 'int', 'float', 'bigfloat', 'npfloat', 'npint', 'list']
     init = QtGui.QColor(128, 128, 128, 255)
     check_param_types(param.child('color'), QtGui.QColor, pg.mkColor, init, all_objs, types)
 
