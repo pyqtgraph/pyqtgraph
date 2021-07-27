@@ -605,7 +605,7 @@ class ColorMap(object):
 
         # Convert to QColor if requested
         if mode == self.QCOLOR:
-            if np.isscalar(data):                
+            if np.isscalar(data):
                 return QtGui.QColor(*interp)
             else:
                 return [QtGui.QColor(*x.tolist()) for x in interp]
@@ -637,7 +637,7 @@ class ColorMap(object):
         `y` coordinates 0 to 1, unless the color map is defined for a more limited range.
         
         This is a somewhat expensive operation, and it is recommended to store and reuse the returned
-        gradient instead of repeatedely regenerating it.
+        gradient instead of repeatedly regenerating it.
 
         Parameters
         ----------
