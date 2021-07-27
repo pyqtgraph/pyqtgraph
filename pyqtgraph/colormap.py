@@ -605,10 +605,10 @@ class ColorMap(object):
 
         # Convert to QColor if requested
         if mode == self.QCOLOR:
-            if np.isscalar(data):
+            if np.isscalar(data):                
                 return QtGui.QColor(*interp)
             else:
-                return [QtGui.QColor(*x) for x in interp]
+                return [QtGui.QColor(*x.tolist()) for x in interp]
         else:
             return interp
 
@@ -635,6 +635,9 @@ class ColorMap(object):
 
         When no parameters are given for `p1` and `p2`, the gradient is mapped to the
         `y` coordinates 0 to 1, unless the color map is defined for a more limited range.
+        
+        This is a somewhat expensive operation, and it is recommended to store and reuse the returned
+        gradient instead of repeatedely regenerating it.
 
         Parameters
         ----------
@@ -650,8 +653,7 @@ class ColorMap(object):
             p2 = QtCore.QPointF(self.pos.max()-self.pos.min(),0)
         grad = QtGui.QLinearGradient(p1, p2)
 
-        pos, color = self.getStops(mode=self.BYTE)
-        color = [QtGui.QColor(*x) for x in color]
+        pos, color = self.getStops(mode=self.QCOLOR)
         if self.mapping_mode == self.MIRROR:
             pos_n = (1. - np.flip(pos)) / 2
             col_n = np.flip( color, axis=0 )
@@ -669,6 +671,8 @@ class ColorMap(object):
         Returns a QBrush painting with the color map applied over the selected span of plot values.
         When the mapping mode is set to `ColorMap.MIRROR`, the selected span includes the color map twice,
         first in reversed order and then normal.
+        
+        It is recommended to store and reuse this gradient brush instead of regenerating it repeatedly.
 
         Parameters
         ----------
@@ -695,6 +699,9 @@ class ColorMap(object):
     def getPen(self, span=(0.,1.), orientation='vertical', width=1.0):
         """
         Returns a QPen that draws according to the color map based on vertical or horizontal position.
+        
+        It is recommended to store and reuse this gradient pen instead of regenerating it repeatedly.
+
 
         Parameters
         ----------
@@ -756,7 +763,7 @@ class ColorMap(object):
             elif mode == self.QCOLOR:
                 if color.dtype.kind == 'f':
                     color = (color*255).astype(np.ubyte)
-                color = [QtGui.QColor(*x) for x in color]
+                color = [QtGui.QColor(*x.tolist()) for x in color]
             self.stopsCache[mode] = (self.pos, color)
         return self.stopsCache[mode]
 
