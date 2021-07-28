@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from math import atan2
 from ..Qt import QtGui, QtCore
 from ..Point import Point
@@ -155,7 +156,7 @@ class TargetItem(UIGraphicsItem):
         Raises
         ------
         TypeError
-            If *args cannot be used to instantiate a pg.Point
+            If args cannot be used to instantiate a pg.Point
         """
         try:
             newPos = Point(*args)
