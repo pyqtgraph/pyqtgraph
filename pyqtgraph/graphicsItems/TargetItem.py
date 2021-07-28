@@ -144,29 +144,27 @@ class TargetItem(UIGraphicsItem):
         )
         return self.sigPositionChangeFinished
 
-    def setPos(self, pos):
+    def setPos(self, *args):
         """Method to set the position to ``(x, y)`` within the plot view
 
         Parameters
         ----------
-        pos : tuple, list, QPointF, QPoint, or pg.Point
-            Container that consists of ``(x, y)`` representation of where the
+        args : tuple, list, QPointF, QPoint, pg.Point, or two floats
+            Two float values or a container that specifies ``(x, y)`` position where the
             TargetItem should be placed
 
         Raises
         ------
         TypeError
-            If the type of ``pos`` does not match the known types to extract
-            coordinate info from, a TypeError is raised
+            If args cannot be used to instantiate a pg.Point
         """
-        if isinstance(pos, Point):
-            newPos = pos
-        elif isinstance(pos, (tuple, list)):
-            newPos = Point(pos)
-        elif isinstance(pos, (QtCore.QPointF, QtCore.QPoint)):
-            newPos = Point(pos.x(), pos.y())
-        else:
-            raise TypeError
+        try:
+            newPos = Point(*args)
+        except TypeError:
+            raise
+        except Exception:
+            raise TypeError(f"Could not make Point from arguments: {args!r}")
+
         if self._pos != newPos:
             self._pos = newPos
             super().setPos(self._pos)
