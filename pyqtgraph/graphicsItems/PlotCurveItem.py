@@ -628,10 +628,18 @@ class PlotCurveItem(GraphicsObject):
                     width = 1
                 gl.glPointSize(width)
                 gl.glLineWidth(width)
-                gl.glEnable(gl.GL_LINE_SMOOTH)
-                gl.glEnable(gl.GL_BLEND)
-                gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-                gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST)
+
+                # enable antialiasing if requested
+                if self._exportOpts is not False:
+                    aa = self._exportOpts.get('antialias', True)
+                else:
+                    aa = self.opts['antialias']
+                if aa:
+                    gl.glEnable(gl.GL_LINE_SMOOTH)
+                    gl.glEnable(gl.GL_BLEND)
+                    gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+                    gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST)
+
                 gl.glDrawArrays(gl.GL_LINE_STRIP, 0, int(pos.size / pos.shape[-1]))
             finally:
                 gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
