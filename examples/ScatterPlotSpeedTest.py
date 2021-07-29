@@ -72,8 +72,7 @@ def mkDataAndItem(count=500, size=10):
 
 
 @param.interactDecorator(nest=False)
-def mkItem(pxMode=True, _USE_QRECT=pyqtgraph.graphicsItems.ScatterPlotItem._USE_QRECT,
-           useCache=True):
+def mkItem(pxMode=True, useCache=True):
     global item
     item = pg.ScatterPlotItem(pxMode=pxMode, **getData())
     item.opts['useCache'] = useCache
