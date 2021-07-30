@@ -129,10 +129,14 @@ def update(mode='reuseItem'):
     p.repaint()
     # app.processEvents()  # force complete redraw for every plot
 
-param.addChild(dict(name='paused', title=translate('ScatterPlot', 'Paused:    '), type='bool', value=False))
+@param.interactDecorator(nest=False, tilte=translate('ScatterPlot', 'Paused:    '))
+def pausePlot(paused=False):
+    if paused:
+        timer.stop()
+    else:
+        timer.start()
 
 mkDataAndItem()
-param.child('paused').sigValueChanged.connect(lambda _, v: timer.stop() if v else timer.start())
 timer.timeout.connect(update)
 timer.start(0)
 stack.close()
