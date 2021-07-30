@@ -568,6 +568,9 @@ class GroupParameter(Parameter):
     a callable of the form (name: str) -> str 
     """
 
+    UNSET = object()
+    """Sentinel value for detecting parameters with unset values"""
+
     def addNew(self, typ=None):
         """
         This method is called when the user has requested to add a new item to the group.
@@ -637,10 +640,13 @@ class GroupParameter(Parameter):
             arguments. Each override can be a value (e.g. 5) or a dict specification of a parameter
             (e.g. dict(type='list', limits=[0, 10, 20]))
         """
+        funcDict = cls._funcToParamDict(func, **overrides)
+        children = funcDict.pop('children')
+
         if runOpts is None:
             runOpts = cls.defaultRunOpts
         if parent is None or nest:
-            parentOpts = dict(type='group', name=func.__name__)
+            parentOpts = funcDict
             if cls.runTitleFormat is not None:
                 parentOpts['title'] = cls.runTitleFormat(parentOpts['name'])
             host = Parameter.create(**parentOpts)
@@ -648,9 +654,6 @@ class GroupParameter(Parameter):
                 # Parent was provided and nesting is enabled, so place created args inside the nested GroupParmeter
                 parent.addChild(host, existOk=existOk)
             parent = host
-
-        funcParams = inspect.signature(func).parameters
-        parsedDoc = cls.parseIniDocstring(func.__doc__)
 
         if deferred is None:
             deferred = {}
@@ -661,6 +664,7 @@ class GroupParameter(Parameter):
 
         toExec = runFunc or func
 
+        checkNames = [ch['name'] for ch in children if ch['name'] not in ignores]
         def runFunc(**extra):
             kwargs = {p.name(): p.value() for p in parent if p.name() in checkNames}
             for kk, vv in deferred.items():
@@ -671,29 +675,10 @@ class GroupParameter(Parameter):
         def runFunc_changing(_param, value):
             return runFunc(**{_param.name(): value})
 
-        # Possibly keep track of created children to determine run button characteristics after while loop
-        # createdChildren = []
-        # Make pyqtgraph parameters from each parameter
-        # Use list instead of funcParams.items() so kwargs can add to the iterable
-        checkNames = list(funcParams)
-        ii = 0
-        while ii < len(checkNames):
-            name = checkNames[ii]
-            ii += 1
-            # May be none if this is an override name after function accepted kwargs
-            param = funcParams.get(name)
-            # Kwargs will be the last item encountered, so the only extra terms to go through are what aren't already
-            # children
-            if param and param.kind is param.VAR_KEYWORD:
-                # Pretend any unhandled overrides should be used as if they were keyword arguments
-                # 'set' would work nicer than list comprehension, but doesn't preserve definition order
-                notInSignature = [n for n in overrides if n not in parent.names]
-                checkNames.extend(notInSignature)
-                continue
-
+        for chDict in children:
+            name = chDict['name']
             # Make sure args without defaults have overrides
-            required = param is not None and param.default is param.empty
-            if required and name not in overrides and name not in deferred:
+            if chDict['value'] is cls.UNSET and name not in deferred:
                 raise ValueError(f'Cannot interact with "{func} since it has required parameter "{name}"'
                                  f' with no default or deferred value provided.')
             if name in ignores:
@@ -704,9 +689,7 @@ class GroupParameter(Parameter):
                     deferred.setdefault(name, lambda _n=name: overrides[_n])
                 continue
 
-            pgDict = cls._createFuncParameter(name, param, parsedDoc, overrides)
-
-            child = parent.addChild(pgDict, existOk=existOk)
+            child = parent.addChild(chDict, existOk=existOk)
             if cls.RUN_CHANGED in runOpts:
                 child.sigValueChanged.connect(runFunc)
             if cls.RUN_CHANGING in runOpts:
@@ -723,7 +706,7 @@ class GroupParameter(Parameter):
             # Add an extra button child which can activate the function
             name = 'Run' if nest else func.__name__
             createOpts = dict(name=name, type='action')
-            tip = parsedDoc.get('func-description')
+            tip = funcDict.get('tip')
             if tip:
                 createOpts['tip'] = tip
             child = cls.create(**createOpts)
@@ -733,6 +716,36 @@ class GroupParameter(Parameter):
             parent.addChild(child, existOk=existOk)
             child.sigActivated.connect(runFunc)
         return ret
+
+    @classmethod
+    def _funcToParamDict(cls, func, **overrides):
+        """
+        Converts a function into a list of child parameter dicts
+        """
+        children = []
+        out = dict(name=func.__name__, type='group', children=children)
+
+        funcParams = inspect.signature(func).parameters
+        parsedDoc = cls.parseIniDocstring(func.__doc__)
+        out.setdefault('tip', parsedDoc.get('func-description'))
+
+        # Make pyqtgraph parameter dicts from each parameter
+        # Use list instead of funcParams.items() so kwargs can add to the iterable
+        checkNames = list(funcParams)
+        isKwarg = [p.kind is p.VAR_KEYWORD for p in funcParams.values()]
+        if any(isKwarg):
+            # Function accepts kwargs, so any overrides not already present as a function parameter should be accepted
+            # Remove the keyword parameter since it can't be parsed properly
+            # Only one kwarg can be in the signature, so there will be only one "True" index
+            del checkNames[isKwarg.index(True)]
+            notInSignature = [n for n in overrides if n not in checkNames]
+            checkNames.extend(notInSignature)
+        for name in checkNames:
+            # May be none if this is an override name after function accepted kwargs
+            param = funcParams.get(name)
+            pgDict = cls._createFuncParameter(name, param, parsedDoc, overrides)
+            children.append(pgDict)
+        return out
 
     @classmethod
     def _createFuncParameter(cls, name, signatureParam, docDict, overridesDict):
@@ -762,6 +775,9 @@ class GroupParameter(Parameter):
         pgDict.update(overrideInfo)
         # Name takes highest precedence since it must be bindable to a function argument
         pgDict['name'] = name
+        # Required function arguments with any override specifications can still be unfilled at this point
+        pgDict.setdefault('value', cls.UNSET)
+
         # Anywhere a title is specified should take precedence over the default factory
         if cls.runTitleFormat and 'title' not in pgDict:
             pgDict['title'] = cls.runTitleFormat(name)
