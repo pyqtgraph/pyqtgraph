@@ -596,41 +596,48 @@ class GroupParameter(Parameter):
         """
         Interacts with a function by making Parameters for each argument. if any non-defaults exist, a value must be
         provided for them in `descrs`. If this value should *not* be made into a parameter, include its name in `ignores`.
-        ==============  ========================================================================
-        **Arguments:**
-        func            function with which to interact
-        runOpts         How the function should be run. Can be one or more of InteractiveParameter.<RUN_BUTTON, CHANGED, or CHANGING>.
-                        If *None*, defaults to Parmeter.defaultRunOpts which can be set by the user.
-        ignores         Names of function arguments which shouldn't have parameters created
-        deferred        function arguments whose values should come from function evaluations rather than Parameters
-                        (must be a function that accepts no inputs and returns the desired value). This is helpful
-                        for providing external variables as function arguments, while making sure they are up
-                        to date.
-        parent          Parent in which to add arguemnt Parameters. If *None*, a new group parameter is created.
-        runFunc         Often, override or decorator functions will use a definition only accepting kwargs and pass them
-                        to a different function. When this is the case, pass the raw, undecorated version to `interact`
-                        and pass the function to run with the arguments here. I.e. use `runFunc` in the following
-                        scenario:
-                        ```
-                        def a(x=5, y=6):
-                            return x + y
 
-                        def aWithLog(**kwargs):
-                            print('Running A')
-                            return a(**kwargs)
+        Parameters
+        ----------
+        func: Callable
+            function with which to interact
+        runOpts: `GroupParameter.<RUN_BUTTON, CHANGED, or CHANGING>` value
+            How the function should be run. If *None*, defaults to Parmeter.defaultRunOpts which can be set by the
+            user.
+        ignores: bool
+            Names of function arguments which shouldn't have parameters created
+        deferred: dict
+            function arguments whose values should come from function evaluations rather than Parameters
+            (must be a function that accepts no inputs and returns the desired value). This is helpful for providing
+            external variables as function arguments, while making sure they are up to date.
+        parent: GroupParameter
+            Parent in which to add arguemnt Parameters. If *None*, a new group parameter is created.
+        runFunc: Callable
+            Often, override or decorator functions will use a definition only accepting kwargs and pass them to a
+            different function. When this is the case, pass the raw, undecorated version to `interact` and pass the
+            function to run with the arguments here. I.e. use `runFunc` in the following scenario:
+            ```
+            def a(x=5, y=6):
+                return x + y
 
-                        param = Parameter.interact(a, runFunc=aWithLog)
-                        ```
-        nest            If *True*, the interacted function is given its own GroupParameter, and arguments to that
-                        function are 'nested' inside as its children. If *False*, function arguments are directly
-                        added to this paremeter instead of being placed inside a child GroupParameter
-        existOk         Whether it is OK for existing paramter names to bind to this function. See behavior during
-                        'Parameter.insertChild'
-        overrides       Override descriptions to provide additional parameter options for each argument. Moreover,
-                        extra parameters can be defined here if the original function allowed **kwargs. Each override
-                        can be a value (e.g. 5) or a dict specification of a parameter
-                        (e.g. dict(type='list', limits=[0, 10, 20]))
-        ==============  ========================================================================
+            def aWithLog(**kwargs):
+                print('Running A')
+                return a(**kwargs)
+
+            param = Parameter.interact(a, runFunc=aWithLog)
+            ```
+        nest: bool
+            If *True*, the interacted function is given its own GroupParameter, and arguments to that function are
+            nested' inside as its children. If *False*, function arguments are directly added to this paremeter
+            instead of being placed inside a child GroupParameter
+        existOk: bool
+            Whether it is OK for existing paramter names to bind to this function. See behavior during
+            'Parameter.insertChild'
+        overrides: sequence
+            Override descriptions to provide additional parameter options for each argument. Moreover,
+            extra parameters can be defined here if the original function allowed **kwargs. Each override
+            can be a value (e.g. 5) or a dict specification of a parameter
+            (e.g. dict(type='list', limits=[0, 10, 20]))
         """
         if runOpts is None:
             runOpts = cls.defaultRunOpts
