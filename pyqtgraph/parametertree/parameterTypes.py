@@ -597,7 +597,13 @@ class GroupParameter(Parameter):
     def interact(cls, func, runOpts=None, ignores=None, deferred=None, parent=None, runFunc=None,
                  nest=True, existOk=True, **overrides):
         """
-        Interacts with a function by making Parameters for each argument. if any non-defaults exist, a value must be
+        Interacts with a function by making Parameters for each argument.
+
+        There are several potential use cases and argument handling possibilities depending on which values are
+        passed to this function, so a more detailed explanation of several use cases is provided in
+        the "Interactive Parameters" doc.
+
+        if any non-defaults exist, a value must be
         provided for them in `descrs`. If this value should *not* be made into a parameter, include its name in `ignores`.
 
         Parameters
@@ -607,7 +613,7 @@ class GroupParameter(Parameter):
         runOpts: `GroupParameter.<RUN_BUTTON, CHANGED, or CHANGING>` value
             How the function should be run. If *None*, defaults to Parmeter.defaultRunOpts which can be set by the
             user.
-        ignores: bool
+        ignores: Sequence
             Names of function arguments which shouldn't have parameters created
         deferred: dict
             function arguments whose values should come from function evaluations rather than Parameters
@@ -616,22 +622,11 @@ class GroupParameter(Parameter):
         parent: GroupParameter
             Parent in which to add arguemnt Parameters. If *None*, a new group parameter is created.
         runFunc: Callable
-            Often, override or decorator functions will use a definition only accepting kwargs and pass them to a
-            different function. When this is the case, pass the raw, undecorated version to `interact` and pass the
-            function to run with the arguments here. I.e. use `runFunc` in the following scenario:
-            ```
-            def a(x=5, y=6):
-                return x + y
-
-            def aWithLog(**kwargs):
-                print('Running A')
-                return a(**kwargs)
-
-            param = Parameter.interact(a, runFunc=aWithLog)
-            ```
+            Simplifies the process of interacting with a wrapped function without requiring `functools`. See the
+            linked documentation for an example.
         nest: bool
             If *True*, the interacted function is given its own GroupParameter, and arguments to that function are
-            nested' inside as its children. If *False*, function arguments are directly added to this paremeter
+            'nested' inside as its children. If *False*, function arguments are directly added to this paremeter
             instead of being placed inside a child GroupParameter
         existOk: bool
             Whether it is OK for existing paramter names to bind to this function. See behavior during
