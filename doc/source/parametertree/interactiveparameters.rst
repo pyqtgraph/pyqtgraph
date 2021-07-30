@@ -112,7 +112,7 @@ modify ``defaultRunOpts`` (but be warned – anyone who imports your
 module will have it modified for them, too. So use the context manager
 whenever possible)
 
-.. code:: pytho
+.. code:: python
 
    GP.defaultRunOpts = GP.RUN_BUTTON
 
@@ -184,19 +184,6 @@ version <#The%20Decorator%20Version>`__
    GP.interact(aFunc, parent=params)
    GP.interact(bFunc, parent=params)
    GP.interact(cFunc, parent=params)
-
-You can also use the ``interactiveOptsContext`` to achieve the same
-effect:
-
-.. code:: python
-
-   params = GP(name='Parameters')
-
-   with GP.interactiveOptsContext(parent=params):
-       # All interactions are in the same parent
-       GP.interact(aFunc)
-       GP.interact(bFunc)
-       GP.interact(cFunc)
 
 ``runFunc``
 -----------
@@ -297,6 +284,22 @@ just the value should be adjusted or when there is no default:
        print(string)
 
    params = GP.interact(printAString, string='anything')
+
+Functions with ``**kwargs``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Functions who allow ``**kwargs`` can accept additional specified overrides even if they don't
+match argument names:
+
+.. code:: python
+
+    def a(**canBeNamedAnything):
+        print(canBeNamedAnything)
+    # 'one' and 'two' will be int parameters that appear
+    params = GP.interact(a, one=1, two=2)
+
+If additional overrides are provided when the function *doesn't* accept keywords in this manner,
+they are ignored.
 
 The Decorator Version
 =====================
@@ -435,12 +438,24 @@ headers (``[arg.options]``, where ``arg`` is the argument name):
        
    # You get the idea
 
-Since ``ini`` parsing is used behind the scenes, standard rules apply
-(no duplicate section headers, etc.).
+Docstring Limitations / Considerations
+--------------------------------------
 
-If any ``[.options]`` section headers are present in the documentation,
-the non-\ ``docstring_parser`` evaluation will be used.
+* ``ast.literal_eval`` is used to convert option values, so they cannot refer to anything other than builtin objects.
+  If you want other defaults like ``np.linspace(-np.pi, np.pi)``, you must specify this as an ``override``. The details
+  for this are in the corresponding section above.
+
+* Since ``ini`` parsing is used behind the scenes, standard rules apply
+  (no duplicate section headers, etc.).
+
+* If any ``[*.options]`` section headers are present in the documentation,
+  the non-\ ``docstring_parser`` evaluation will be used regardless of whether ``docstring_parser`` is available.
+
+* If ``docstring_parser`` fails to parse the argument list, no output from the docstring will be
+  forwarded to `interact`. Therefore, make sure that the function documentation is well-formed and
+  that parsing works properly before rolling this out. Or, specify section headers manually.
 
 .. [1]
    Functions defined in C or whose definitions cannot be parsed by
-   ``inspect.signature`` cannot be used here.
+   ``inspect.signature`` cannot be used here. However, in these cases a dummy function
+   can be wrapped while the C function is passed to the ``runFunc`` argument.
