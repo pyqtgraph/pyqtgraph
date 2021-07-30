@@ -564,7 +564,7 @@ class GroupParameter(Parameter):
     """Default behavior for running"""
     runTitleFormat = None
     """
-    Formatter to create a parameter title from its name when using `Parameter.interact. If not *None*, must be
+    Formatter to create a parameter title from its name when using `Parameter.interact.` If not *None*, must be
     a callable of the form (name: str) -> str 
     """
 
@@ -633,8 +633,8 @@ class GroupParameter(Parameter):
             'Parameter.insertChild'
         overrides: sequence
             Override descriptions to provide additional parameter options for each argument. Moreover,
-            extra parameters can be defined here if the original function allowed **kwargs. Each override
-            can be a value (e.g. 5) or a dict specification of a parameter
+            extra parameters can be defined here if the original function uses ``**`` to consume additional keyword
+            arguments. Each override can be a value (e.g. 5) or a dict specification of a parameter
             (e.g. dict(type='list', limits=[0, 10, 20]))
         """
         if runOpts is None:
