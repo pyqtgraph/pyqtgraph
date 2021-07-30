@@ -641,9 +641,6 @@ class PlotCurveItem(GraphicsObject):
                     gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST)
                 else:
                     gl.glDisable(gl.GL_LINE_SMOOTH)
-                    gl.glDisable(gl.GL_BLEND)
-                    gl.glBlendFunc(gl.GL_ONE, gl.GL_ZERO)
-                    gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)
 
                 gl.glDrawArrays(gl.GL_LINE_STRIP, 0, int(pos.size / pos.shape[-1]))
             finally:
