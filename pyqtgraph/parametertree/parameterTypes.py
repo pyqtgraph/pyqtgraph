@@ -862,16 +862,25 @@ class GroupParameter(Parameter):
             # vv is a section with options for the parameter, but each option must be literal eval'd for non-string
             # values
             paramValues = dict(vv)
+            # Consolidate all non-valued key strings into a single tip since they likely belong to the argument
+            # documentation. Since dict preserves order, it should come back out in the right order.
+            backupTip = None
             for paramK, paramV in list(paramValues.items()):
                 if paramV is None:
                     # Considered a tip of the current option
-                    paramValues.setdefault('tip', paramK)
+                    if backupTip is None:
+                        backupTip = ''
+                    backupTip = f'{backupTip} {paramK}'
+                    # Remove this from the return value since it isn't really meaninful
+                    del paramValues[paramK]
                     continue
                 try:
                     paramValues[paramK] = ast.literal_eval(paramV)
                 except:
                     # There are many reasons this can fail, a safe fallback is the original string value
                     pass
+            if backupTip is not None:
+                paramValues.setdefault('tip', backupTip.strip())
             out[paramName] = paramValues
         # Since function documentation can be used as a description for whatever group parameter hosts these
         # parameters, store it in a name guaranteed not to collide with parameter names since it's invalid
