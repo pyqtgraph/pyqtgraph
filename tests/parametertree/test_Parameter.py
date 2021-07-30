@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import pytest
 from functools import wraps
 from pyqtgraph.parametertree import Parameter
@@ -152,3 +153,8 @@ def test_interact():
     assert 'x' in host.names
     host['x'] = 100
     assert value == 100
+
+def test_onlyRun():
+    def a():
+        return 5
+    assert not isinstance(GP.interact(a, runOpts=GP.RUN_BUTTON), GP)

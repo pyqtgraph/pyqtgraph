@@ -1,7 +1,10 @@
+import ast
+import configparser
 import contextlib
 import inspect
 import os
 import re
+import textwrap
 from collections import OrderedDict
 
 import numpy as np
@@ -652,6 +655,7 @@ class GroupParameter(Parameter):
             parent = host
 
         funcParams = inspect.signature(func).parameters
+        parsedDoc = cls.parseIniDocstring(func.__doc__)
 
         if deferred is None:
             deferred = {}
@@ -705,18 +709,7 @@ class GroupParameter(Parameter):
                     deferred.setdefault(name, lambda _n=name: overrides[_n])
                 continue
 
-            pgDict = overrides.get(name, {})
-            if not isinstance(pgDict, dict):
-                pgDict = {'value': pgDict}
-            pgDict['name'] = name
-            if cls.runTitleFormat and 'title' not in pgDict:
-                pgDict['title'] = cls.runTitleFormat(name)
-            if param and not required:
-                # Maybe the user never specified type and value, since they can come directly from the default
-                default = param.default
-                pgDict.setdefault('value', default)
-            # Maybe override was a value without a type, prefer this over signature value when it exists
-            pgDict.setdefault('type', type(pgDict['value']).__name__)
+            pgDict = cls._createFuncParameter(name, param, parsedDoc, overrides)
 
             child = parent.addChild(pgDict, existOk=existOk)
             if cls.RUN_CHANGED in runOpts:
@@ -734,13 +727,51 @@ class GroupParameter(Parameter):
         if cls.RUN_BUTTON in runOpts:
             # Add an extra button child which can activate the function
             name = 'Run' if nest else func.__name__
-            child = cls.create(name=name, type='action')
+            createOpts = dict(name=name, type='action')
+            tip = parsedDoc.get('func-description')
+            if tip:
+                createOpts['tip'] = tip
+            child = cls.create(**createOpts)
             # Return just the button if no other params were allowed
             if not parent.hasChildren():
                 ret = child
             parent.addChild(child, existOk=existOk)
             child.sigActivated.connect(runFunc)
         return ret
+
+    @classmethod
+    def _createFuncParameter(cls, name, signatureParam, docDict, overridesDict):
+        """
+        (Once organization PR is in place, this will be a regular function in the file instead of a class method).
+        Constructs a dict ready for insertion into a group parameter based on the provided information in the
+        `inspect.signature` parameter, user-specified overrides, function doc info, and true parameter name.
+
+        Parameter signature information is considered the most "overridable", followed by documentation specifications.
+        User overrides should be given the highest priority, i.e. not usurped by function doc values or parameter
+        default information.
+        """
+        if signatureParam is not None and signatureParam.default is not signatureParam.empty:
+            # Maybe the user never specified type and value, since they can come directly from the default
+            # Also, maybe override was a value without a type, so give a sensible default
+            default = signatureParam.default
+            signatureDict = {'value': default,
+                             'type': type(default).__name__}
+        else:
+            signatureDict = {}
+        # Doc takes precedence over signature for any value information
+        pgDict = {**signatureDict, **docDict.get(name, {})}
+        overrideInfo = overridesDict.get(name, {})
+        if not isinstance(overrideInfo, dict):
+            overrideInfo = {'value': overrideInfo}
+        # Overrides take precedence over doc and signature
+        pgDict.update(overrideInfo)
+        # Name takes highest precedence since it must be bindable to a function argument
+        pgDict['name'] = name
+        # Anywhere a title is specified should take precedence over the default factory
+        if cls.runTitleFormat and 'title' not in pgDict:
+            pgDict['title'] = cls.runTitleFormat(name)
+        pgDict.setdefault('type', type(pgDict['value']).__name__)
+        return pgDict
 
     @classmethod
     @contextlib.contextmanager
@@ -757,6 +788,101 @@ class GroupParameter(Parameter):
         for useOpt in useOpts:
             setattr(cls, useOpt, oldOpts[useOpt])
 
+    @classmethod
+    def _parseIniDocstring_docstringParser(cls, doc):
+        """
+        Use docstring_parser for a smarter version of the ini parser. Doesn't require [<arg>.options] headers
+        and can handle more dynamic parsing cases
+        """
+        # Revert to basic method if ini headers are already present
+        if not doc or '.options]\n' in doc:
+            return cls._parseIniDocstring_basic(doc)
+        import docstring_parser
+        out = {}
+        parsed = docstring_parser.parse(doc)
+        out['func-description'] = '\n'.join([desc for desc in [parsed.short_description, parsed.long_description]
+                                             if desc is not None])
+        for param in parsed.params:
+            # Construct mini ini file around each parameter
+            header = f'[{param.arg_name}.options]'
+            miniDoc = param.description
+            if header not in miniDoc:
+                miniDoc = f'{header}\n{miniDoc}'
+            # top-level parameter no longer represents whole function
+            update = GroupParameter._parseIniDocstring_basic(miniDoc)
+            update.pop('func-description', None)
+            out.update(update)
+        return out
+
+    @classmethod
+    def parseIniDocstring(cls, doc):
+        """
+        Parses function documentation for relevant parameter definitions.
+
+        `doc` must be formatted like an .ini file, where each option's parameters are preceded by a [<arg>.options]
+        header. See the examples in tests/parametertree/test_docparser for valid configurations. Note that if the
+        `docstring_parser` module is available in the python environment, section headers as described above are
+        *not required* since they can be inferred from the properly formatted docstring.
+
+        The return value is a dict where each entry contains the found specifications of a given argument, i.e
+        {"param1": {"limits": [0, 10], "title": "hi"}, "param2": {...}}, etc.
+
+        Note that currently only literal evaluation with builtin objects is supported, i.e. the return result of
+        ast.literal_eval on the value string of each option.
+
+        Parameters
+        ----------
+        doc: str
+            Documentation to parse
+        """
+        try:
+            import docstring_parser
+            return cls._parseIniDocstring_docstringParser(doc)
+        except ImportError:
+            return cls._parseIniDocstring_basic(doc)
+
+    @staticmethod
+    def _parseIniDocstring_basic(doc):
+        # Adding "[DEFAULT] to the beginning of the doc will consume non-parameter descriptions
+        out = {}
+        doc = doc or '[DEFAULT]'
+        # Account for several things in commonly supported docstring formats:
+        # Indentation nesting in numpy style
+        # :param: in rst
+        doc = '\n'.join(line.strip().strip(':') for line in doc.splitlines())
+        if not doc.startswith('[DEFAULT]'):
+            doc = '[DEFAULT]\n' + textwrap.dedent(doc)
+        parser = configparser.ConfigParser(allow_no_value=True)
+        # Save case sensitivity
+        parser.optionxform = str
+        try:
+            parser.read_string(doc)
+        except configparser.Error:
+            # Many things can go wrong reading a badly-formatted docstring, so failsafe by returning early
+            return out
+        for kk, vv in parser.items():
+            if not kk.endswith('.options'):
+                continue
+            paramName = kk.split('.')[0]
+            # vv is a section with options for the parameter, but each option must be literal eval'd for non-string
+            # values
+            paramValues = dict(vv)
+            for paramK, paramV in list(paramValues.items()):
+                if paramV is None:
+                    # Considered a tip of the current option
+                    paramValues.setdefault('tip', paramK)
+                    continue
+                try:
+                    paramValues[paramK] = ast.literal_eval(paramV)
+                except:
+                    # There are many reasons this can fail, a safe fallback is the original string value
+                    pass
+            out[paramName] = paramValues
+        # Since function documentation can be used as a description for whatever group parameter hosts these
+        # parameters, store it in a name guaranteed not to collide with parameter names since it's invalid
+        # variable syntax (contains '-')
+        out['func-description'] = '\n'.join(parser.defaults())
+        return out
 
 registerParameterType('group', GroupParameter, override=True)
 
