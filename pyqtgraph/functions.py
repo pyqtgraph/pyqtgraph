@@ -1685,21 +1685,25 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
 def qimage_to_ndarray(qimg):
     img_ptr = qimg.bits()
 
-    if hasattr(img_ptr, 'setsize'): # PyQt sip.voidptr
+    if img_ptr is None:
+        raise ValueError("Null QImage not supported")
+
+    h, w = qimg.height(), qimg.width()
+    bpl = qimg.bytesPerLine()
+    depth = qimg.depth()
+    logical_bpl = w * depth // 8
+
+    if QT_LIB.startswith('PyQt'):
         # sizeInBytes() was introduced in Qt 5.10
         # however PyQt5 5.12 will fail with:
         #   "TypeError: QImage.sizeInBytes() is a private method"
         # note that sizeInBytes() works fine with:
         #   PyQt5 5.15, PySide2 5.12, PySide2 5.15
-        try:
-            # 64-bits size
-            nbytes = qimg.sizeInBytes()
-        except (TypeError, AttributeError):
-            # 32-bits size
-            nbytes = qimg.byteCount()
-        img_ptr.setsize(nbytes)
+        img_ptr.setsize(h * bpl)
 
-    depth = qimg.depth()
+    memory = np.frombuffer(img_ptr, dtype=np.ubyte).reshape((h, bpl))
+    memory = memory[:, :logical_bpl]
+
     if depth in (8, 24, 32):
         dtype = np.uint8
         nchan = depth // 8
@@ -1708,10 +1712,12 @@ def qimage_to_ndarray(qimg):
         nchan = depth // 16
     else:
         raise ValueError("Unsupported Image Type")
-    shape = qimg.height(), qimg.width()
+
+    shape = h, w
     if nchan != 1:
         shape = shape + (nchan,)
-    return np.frombuffer(img_ptr, dtype=dtype).reshape(shape)
+    arr = memory.view(dtype).reshape(shape)
+    return arr
 
 
 def imageToArray(img, copy=False, transpose=True):
