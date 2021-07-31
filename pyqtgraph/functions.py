@@ -42,7 +42,7 @@ __all__ = [
     'makeRGBA', 'makeARGB',
     # 'try_fastpath_argb', 'ndarray_to_qimage',
     'makeQImage',
-    # 'qimage_to_ndarray',
+    # 'ndarray_from_qimage',
     'imageToArray', 'colorToAlpha',
     'gaussianFilter', 'downsample', 'arrayToQPath',
     # 'ndarray_from_qpolygonf', 'create_qpolygonf', 'arrayToQPolygonF',
@@ -1682,7 +1682,7 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     return ndarray_to_qimage(imgData, imgFormat)
 
 
-def qimage_to_ndarray(qimg):
+def ndarray_from_qimage(qimg):
     img_ptr = qimg.bits()
 
     if img_ptr is None:
@@ -1727,7 +1727,7 @@ def imageToArray(img, copy=False, transpose=True):
     the QImage is collected before the array, there may be trouble).
     The array will have shape (width, height, (b,g,r,a)).
     """
-    arr = qimage_to_ndarray(img)
+    arr = ndarray_from_qimage(img)
 
     fmt = img.format()
     if fmt == img.Format.Format_RGB32:

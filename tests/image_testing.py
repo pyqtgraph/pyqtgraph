@@ -77,7 +77,7 @@ def getImageFromWidget(widget):
     painter.end()
 
     qimg = qimg.convertToFormat(QtGui.QImage.Format.Format_RGBA8888)
-    return fn.qimage_to_ndarray(qimg).copy()
+    return fn.ndarray_from_qimage(qimg).copy()
 
 
 def assertImageApproved(image, standardFile, message=None, **kwargs):
@@ -126,7 +126,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
     else:
         qimg = QtGui.QImage(stdFileName)
         qimg = qimg.convertToFormat(QtGui.QImage.Format.Format_RGBA8888)
-        stdImage = fn.qimage_to_ndarray(qimg).copy()
+        stdImage = fn.ndarray_from_qimage(qimg).copy()
         del qimg
 
     # If the test image does not match, then we go to audit if requested.

@@ -343,7 +343,7 @@ def test_ndarray_from_qpolygonf():
     assert isinstance(arr, np.ndarray)
 
 
-def test_qimage_to_ndarray():
+def test_ndarray_from_qimage():
     # for QImages created w/o specifying bytesPerLine, Qt will pad
     # each line to a multiple of 4-bytes.
     # test that we can handle such QImages.
@@ -353,12 +353,12 @@ def test_qimage_to_ndarray():
     for w in [5, 6, 7, 8]:
         qimg = QtGui.QImage(w, h, fmt)
         qimg.fill(0)
-        arr = pg.functions.qimage_to_ndarray(qimg)
+        arr = pg.functions.ndarray_from_qimage(qimg)
         assert arr.shape == (h, w, 3)
 
     fmt = QtGui.QImage.Format.Format_Grayscale8
     for w in [5, 6, 7, 8]:
         qimg = QtGui.QImage(w, h, fmt)
         qimg.fill(0)
-        arr = pg.functions.qimage_to_ndarray(qimg)
+        arr = pg.functions.ndarray_from_qimage(qimg)
         assert arr.shape == (h, w)
