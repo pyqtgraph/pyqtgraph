@@ -326,6 +326,21 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             )
         return pos
 
+    def setCameraParams(self, **kwds):
+        valid_keys = {'center', 'rotation', 'distance', 'fov', 'elevation', 'azimuth'}
+        if not valid_keys.issuperset(kwds):
+            raise ValueError(f'valid keywords are {valid_keys}')
+
+        self.setCameraPosition(pos=kwds.get('center'), distance=kwds.get('distance'),
+                               elevation=kwds.get('elevation'), azimuth=kwds.get('azimuth'),
+                               rotation=kwds.get('rotation'))
+        if 'fov' in kwds:
+            self.opts['fov'] = kwds['fov']
+
+    def cameraParams(self):
+        valid_keys = {'center', 'rotation', 'distance', 'fov', 'elevation', 'azimuth'}
+        return { k : self.opts[k] for k in valid_keys }
+
     def orbit(self, azim, elev):
         """Orbits the camera around the center position. *azim* and *elev* are given in degrees."""
         if self.opts['rotationMethod'] == 'quaternion':
