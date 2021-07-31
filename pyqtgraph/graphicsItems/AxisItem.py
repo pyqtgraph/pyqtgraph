@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
-from ..python2_3 import asUnicode
 import numpy as np
 from ..Point import Point
 from .. import debug as debug
@@ -314,16 +313,16 @@ class AxisItem(GraphicsWidget):
             if not self.autoSIPrefix or self.autoSIPrefixScale == 1.0:
                 units = ''
             else:
-                units = asUnicode('(x%g)') % (1.0/self.autoSIPrefixScale)
+                units = str('(x%g)') % (1.0/self.autoSIPrefixScale)
         else:
             #print repr(self.labelUnitPrefix), repr(self.labelUnits)
-            units = asUnicode('(%s%s)') % (asUnicode(self.labelUnitPrefix), asUnicode(self.labelUnits))
+            units = str('(%s%s)') % (str(self.labelUnitPrefix), str(self.labelUnits))
 
-        s = asUnicode('%s %s') % (asUnicode(self.labelText), asUnicode(units))
+        s = str('%s %s') % (str(self.labelText), str(units))
 
         style = ';'.join(['%s: %s' % (k, self.labelStyle[k]) for k in self.labelStyle])
 
-        return asUnicode("<span style='%s'>%s</span>") % (style, asUnicode(s))
+        return str("<span style='%s'>%s</span>") % (style, str(s))
 
     def _updateMaxTextSize(self, x):
         ## Informs that the maximum tick size orthogonal to the axis has
@@ -1070,7 +1069,7 @@ class AxisItem(GraphicsWidget):
                 if s is None:
                     rects.append(None)
                 else:
-                    br = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignmentFlag.AlignCenter, asUnicode(s))
+                    br = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignmentFlag.AlignCenter, str(s))
                     ## boundingRect is usually just a bit too large
                     ## (but this probably depends on per-font metrics?)
                     br.setHeight(br.height() * 0.8)
@@ -1112,7 +1111,7 @@ class AxisItem(GraphicsWidget):
                 vstr = strings[j]
                 if vstr is None: ## this tick was ignored because it is out of bounds
                     continue
-                vstr = asUnicode(vstr)
+                vstr = str(vstr)
                 x = tickPositions[i][j]
                 #textRect = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignmentFlag.AlignCenter, vstr)
                 textRect = rects[j]

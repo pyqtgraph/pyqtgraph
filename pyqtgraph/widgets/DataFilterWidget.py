@@ -4,7 +4,6 @@ from .. import parametertree as ptree
 import numpy as np
 from collections import OrderedDict
 from .. import functions as fn
-from ..python2_3 import basestring
 
 __all__ = ['DataFilterWidget']
 
@@ -196,7 +195,7 @@ class EnumFilterItem(ptree.types.SimpleParameter):
             if isinstance(valopts, bool):
                 enabled = valopts
                 vname = str(val)
-            elif isinstance(valopts, basestring):
+            elif isinstance(valopts, str):
                 enabled = True
                 vname = valopts
             elif isinstance(valopts, tuple):

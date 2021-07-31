@@ -1,5 +1,5 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui
-from ..python2_3 import asUnicode
 
 class CmdInput(QtGui.QLineEdit):
     
@@ -25,10 +25,10 @@ class CmdInput(QtGui.QLineEdit):
             self.execCmd()
         else:
             super().keyPressEvent(ev)
-            self.history[0] = asUnicode(self.text())
+            self.history[0] = str(self.text())
         
     def execCmd(self):
-        cmd = asUnicode(self.text())
+        cmd = str(self.text())
         if len(self.history) == 1 or cmd != self.history[1]:
             self.history.insert(1, cmd)
         self.history[0] = ""

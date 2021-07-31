@@ -28,7 +28,6 @@ if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] 
     raise Exception("Pyqtgraph requires Python version 2.6 or greater (this is %d.%d)" % (sys.version_info[0], sys.version_info[1]))
 
 ## helpers for 2/3 compatibility
-from . import python2_3
 
 ## in general openGL is poorly supported with Qt+GraphicsView.
 ## we only enable it where the performance benefit is critical.
@@ -282,7 +281,6 @@ from .ThreadsafeTimer import *
 
 # indirect imports used within library
 from .GraphicsScene import GraphicsScene
-from .python2_3 import asUnicode
 from .util.cupy_helper import getCupy
 
 # indirect imports known to be used outside of the library

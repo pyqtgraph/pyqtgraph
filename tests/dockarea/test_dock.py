@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 import pyqtgraph as pg
 pg.mkQApp()
 
 import pyqtgraph.dockarea as da
 
 def test_dock():
-    name = pg.asUnicode("évènts_zàhéér")
+    name = str("évènts_zàhéér")
     dock = da.Dock(name=name)
     # make sure unicode names work correctly
     assert dock.name() == name

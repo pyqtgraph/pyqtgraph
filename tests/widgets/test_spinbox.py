@@ -30,7 +30,7 @@ def test_SpinBox_formatting(value, expected_text, opts):
     sb.setValue(value)
 
     assert sb.value() == value
-    assert pg.asUnicode(sb.text()) == expected_text
+    assert str(sb.text()) == expected_text
 
 
 @pytest.mark.parametrize("suffix", ["", "V"])

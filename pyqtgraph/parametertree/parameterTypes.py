@@ -1,5 +1,5 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
-from ..python2_3 import asUnicode
 from .Parameter import Parameter, registerParameterType
 from .ParameterItem import ParameterItem
 from ..widgets.SpinBox import SpinBox
@@ -146,8 +146,8 @@ class WidgetParameterItem(ParameterItem):
             w = QtWidgets.QLineEdit()
             w.setStyleSheet('border: 0px')
             w.sigChanged = w.editingFinished
-            w.value = lambda: asUnicode(w.text())
-            w.setValue = lambda v: w.setText(asUnicode(v))
+            w.value = lambda: str(w.text())
+            w.setValue = lambda v: w.setText(str(v))
             w.sigChanging = w.textChanged
         elif t == 'color':
             w = ColorButton()
@@ -168,7 +168,7 @@ class WidgetParameterItem(ParameterItem):
             self.hideWidget = False
             self.asSubItem = True
         else:
-            raise Exception("Unknown type '%s'" % asUnicode(t))
+            raise Exception("Unknown type '%s'" % str(t))
         return w
 
     def widgetEventFilter(self, obj, ev):
@@ -231,11 +231,11 @@ class WidgetParameterItem(ParameterItem):
             value = self.param.value()
         opts = self.param.opts
         if isinstance(self.widget, QtWidgets.QAbstractSpinBox):
-            text = asUnicode(self.widget.lineEdit().text())
+            text = str(self.widget.lineEdit().text())
         elif isinstance(self.widget, QtWidgets.QComboBox):
             text = self.widget.currentText()
         else:
-            text = asUnicode(value)
+            text = str(value)
         self.displayLabel.setText(text)
 
     def widgetValueChanged(self):
@@ -388,7 +388,7 @@ class SimpleParameter(Parameter):
             'int': int,
             'float': float,
             'bool': bool,
-            'str': asUnicode,
+            'str': str,
             'color': self._interpColor,
             'colormap': self._interpColormap,
         }[self.opts['type']]
@@ -480,7 +480,7 @@ class GroupParameterItem(ParameterItem):
         """
         if self.addWidget.currentIndex() == 0:
             return
-        typ = asUnicode(self.addWidget.currentText())
+        typ = str(self.addWidget.currentText())
         self.param.addNew(typ)
         self.addWidget.setCurrentIndex(0)
 
@@ -579,7 +579,7 @@ class ListParameterItem(WidgetParameterItem):
         return w
 
     def value(self):
-        key = asUnicode(self.widget.currentText())
+        key = str(self.widget.currentText())
 
         return self.forward.get(key, None)
 
@@ -601,7 +601,7 @@ class ListParameterItem(WidgetParameterItem):
         self.forward, self.reverse = ListParameter.mapping(limits)
         try:
             self.widget.blockSignals(True)
-            val = self.targetValue  #asUnicode(self.widget.currentText())
+            val = self.targetValue  #str(self.widget.currentText())
 
             self.widget.clear()
             for k in self.forward:
@@ -663,7 +663,7 @@ class ListParameter(Parameter):
                 reverse[1].append(k)
         else:
             for v in limits:
-                n = asUnicode(v)
+                n = str(v)
                 forward[n] = v
                 reverse[0].append(v)
                 reverse[1].append(n)
@@ -877,7 +877,7 @@ class FileParameterItem(WidgetParameterItem):
 
     def setValue(self, value):
         self._value = value
-        self.widget.setText(asUnicode(value))
+        self.widget.setText(str(value))
 
     def value(self):
         return self._value
@@ -919,7 +919,7 @@ class FileParameterItem(WidgetParameterItem):
         lbl = self.displayLabel
         if value is None:
             value = self.param.value()
-        value = asUnicode(value)
+        value = str(value)
         font = lbl.font()
         metrics = QtGui.QFontMetricsF(font)
         value = metrics.elidedText(value, QtCore.Qt.TextElideMode.ElideLeft, lbl.width()-5)
@@ -985,7 +985,7 @@ class SliderParameterItem(WidgetParameterItem):
     def updateDisplayLabel(self, value=None):
         if value is None:
             value = self.param.value()
-        value = asUnicode(value)
+        value = str(value)
         if self._suffix is None:
             suffixTxt = ''
         else:

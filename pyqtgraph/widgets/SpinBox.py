@@ -4,7 +4,6 @@ import decimal
 import re
 
 from ..Qt import QtGui, QtCore
-from ..python2_3 import asUnicode, basestring
 from ..SignalProxy import SignalProxy
 from .. import functions as fn
 
@@ -90,7 +89,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
             
             'decimals': 6,
             
-            'format': asUnicode("{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}"),
+            'format': str("{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}"),
             'regex': fn.FLOAT_REGEX,
             'evalFunc': decimal.Decimal,
             
@@ -99,7 +98,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
         self.decOpts = ['step', 'minStep']
         
-        self.val = decimal.Decimal(asUnicode(value))  ## Value is precise decimal. Ordinary math not allowed.
+        self.val = decimal.Decimal(str(value))  ## Value is precise decimal. Ordinary math not allowed.
         self.updateText()
         self.skipValidate = False
         self.setCorrectionMode(self.CorrectionMode.CorrectToPreviousValue)
@@ -181,12 +180,12 @@ class SpinBox(QtGui.QAbstractSpinBox):
             elif k == 'max':
                 self.setMaximum(v, update=False)
             elif k in ['step', 'minStep']:
-                self.opts[k] = decimal.Decimal(asUnicode(v))
+                self.opts[k] = decimal.Decimal(str(v))
             elif k == 'value':
                 pass   ## don't set value until bounds have been set
             elif k == 'format':
-                self.opts[k] = asUnicode(v)
-            elif k == 'regex' and isinstance(v, basestring):
+                self.opts[k] = str(v)
+            elif k == 'regex' and isinstance(v, str):
                 self.opts[k] = re.compile(v)
             elif k in self.opts:
                 self.opts[k] = v
@@ -220,7 +219,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
                 self.opts['minStep'] = ms
 
             if 'format' not in opts:
-                self.opts['format'] = asUnicode("{value:d}{suffixGap}{suffix}")
+                self.opts['format'] = str("{value:d}{suffixGap}{suffix}")
 
         if self.opts['dec']:
             if self.opts.get('minStep') is None:
@@ -234,7 +233,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
     def setMaximum(self, m, update=True):
         """Set the maximum allowed value (or None for no limit)"""
         if m is not None:
-            m = decimal.Decimal(asUnicode(m))
+            m = decimal.Decimal(str(m))
         self.opts['bounds'][1] = m
         if update:
             self.setValue()
@@ -242,7 +241,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
     def setMinimum(self, m, update=True):
         """Set the minimum allowed value (or None for no limit)"""
         if m is not None:
-            m = decimal.Decimal(asUnicode(m))
+            m = decimal.Decimal(str(m))
         self.opts['bounds'][0] = m
         if update:
             self.setValue()
@@ -298,7 +297,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         Select the numerical portion of the text to allow quick editing by the user.
         """
         le = self.lineEdit()
-        text = asUnicode(le.text())
+        text = str(le.text())
         m = self.opts['regex'].match(text)
         if m is None:
             return
@@ -358,7 +357,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
             value = int(value)
 
         if not isinstance(value, decimal.Decimal):
-            value = decimal.Decimal(asUnicode(value))
+            value = decimal.Decimal(str(value))
 
         prev, self.val = self.val, value
         changed = not fn.eq(value, prev)  # use fn.eq to handle nan
@@ -559,7 +558,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
     def editingFinishedEvent(self):
         """Edit has finished; set value."""
         #print "Edit finished."
-        if asUnicode(self.lineEdit().text()) == self.lastText:
+        if str(self.lineEdit().text()) == self.lastText:
             #print "no text change."
             return
         try:

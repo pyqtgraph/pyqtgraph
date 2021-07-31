@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from ..Qt import QtGui
-from ..python2_3 import xrange
 
 
 class MeshData(object):
@@ -209,7 +208,7 @@ class MeshData(object):
             faceNorms = self.faceNormals()
             vertFaces = self.vertexFaces()
             self._vertexNormals = np.empty(self._vertexes.shape, dtype=float)
-            for vindex in xrange(self._vertexes.shape[0]):
+            for vindex in range(self._vertexes.shape[0]):
                 faces = vertFaces[vindex]
                 if len(faces) == 0:
                     self._vertexNormals[vindex] = (0,0,0)
@@ -318,7 +317,7 @@ class MeshData(object):
         self._vertexFaces = []
         self._faceNormals = None
         self._vertexNormals = None
-        for i in xrange(faces.shape[0]):
+        for i in range(faces.shape[0]):
             face = faces[i]
             inds = []
             for j in range(face.shape[0]):
@@ -350,8 +349,8 @@ class MeshData(object):
         Return list mapping each vertex index to a list of face indexes that use the vertex.
         """
         if self._vertexFaces is None:
-            self._vertexFaces = [[] for i in xrange(len(self.vertexes()))]
-            for i in xrange(self._faces.shape[0]):
+            self._vertexFaces = [[] for i in range(len(self.vertexes()))]
+            for i in range(self._faces.shape[0]):
                 face = self._faces[i]
                 for ind in face:
                     self._vertexFaces[ind].append(i)

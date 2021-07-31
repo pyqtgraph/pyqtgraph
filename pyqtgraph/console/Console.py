@@ -3,7 +3,6 @@ import sys, re, traceback, subprocess
 import pickle
 
 from ..Qt import QtCore, QtGui, QT_LIB
-from ..python2_3 import basestring
 from .. import exceptionHandling as exceptionHandling
 from .. import getConfigOption
 from ..functions import SignalBlock
@@ -454,7 +453,7 @@ class ConsoleWidget(QtGui.QWidget):
         if filterStr != '':
             if isinstance(exc, Exception):
                 msg = traceback.format_exception_only(type(exc), exc)
-            elif isinstance(exc, basestring):
+            elif isinstance(exc, str):
                 msg = exc
             else:
                 msg = repr(exc)

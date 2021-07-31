@@ -21,7 +21,6 @@ from ... import functions as fn
 from ... import icons
 from ...Qt import QtGui, QtCore, QT_LIB
 from ...WidgetGroup import WidgetGroup
-from ...python2_3 import basestring
 from ...widgets.FileDialog import FileDialog
 
 translate = QtCore.QCoreApplication.translate
@@ -252,7 +251,7 @@ class PlotItem(GraphicsWidget):
                 labels[label] = kargs[label]
                 del kargs[label]
         for k in labels:
-            if isinstance(labels[k], basestring):
+            if isinstance(labels[k], str):
                 labels[k] = (labels[k],)
             self.setLabel(k, *labels[k])
                 
@@ -1133,7 +1132,7 @@ class PlotItem(GraphicsWidget):
             if k == 'title':
                 self.setTitle(v)
             else:
-                if isinstance(v, basestring):
+                if isinstance(v, str):
                     v = (v,)
                 self.setLabel(k, *v)
         
