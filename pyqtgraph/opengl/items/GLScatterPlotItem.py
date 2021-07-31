@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from OpenGL.GL import *
-from OpenGL.arrays import vbo
 from .. GLGraphicsItem import GLGraphicsItem
 from .. import shaders
 from ... import functions as fn
@@ -20,7 +19,6 @@ class GLScatterPlotItem(GLGraphicsItem):
         self.size = 10
         self.color = [1.0,1.0,1.0,0.5]
         self.pxMode = True
-        #self.vbo = {}      ## VBO does not appear to improve performance very much.
         self.setData(**kwds)
         self.shader = None
     
@@ -51,7 +49,6 @@ class GLScatterPlotItem(GLGraphicsItem):
         for arg in args:
             if arg in kwds:
                 setattr(self, arg, kwds[arg])
-                #self.vbo.pop(arg, None)
                 
         self.pxMode = kwds.get('pxMode', self.pxMode)
         self.update()
@@ -78,11 +75,6 @@ class GLScatterPlotItem(GLGraphicsItem):
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pData.shape[0], pData.shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, pData)
         
         self.shader = shaders.getShaderProgram('pointSprite')
-        
-    #def getVBO(self, name):
-        #if name not in self.vbo:
-            #self.vbo[name] = vbo.VBO(getattr(self, name).astype('f'))
-        #return self.vbo[name]
         
     #def setupGLState(self):
         #"""Prepare OpenGL state for drawing. This function is called immediately before painting."""

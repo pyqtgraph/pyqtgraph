@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 from ..widgets.FileDialog import FileDialog
-from ..Qt import QtGui, QtCore, QtSvg
+from ..Qt import QtGui, QtCore
 from ..python2_3 import asUnicode, basestring
 from ..GraphicsScene import GraphicsScene
 import os, re

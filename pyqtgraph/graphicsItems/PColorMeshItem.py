@@ -1,20 +1,14 @@
+# -*- coding: utf-8 -*-
 from __future__ import division
 
 from ..Qt import QtGui, QtCore
 import numpy as np
 from .. import functions as fn
-from .. import debug as debug
 from .GraphicsObject import GraphicsObject
-from ..Point import Point
 from .. import getConfigOption
 from .GradientEditorItem import Gradients # List of colormaps
 from ..colormap import ColorMap
 
-try:
-    from collections.abc import Callable
-except ImportError:
-    # fallback for python < 3.3
-    from collections import Callable
 
 __all__ = ['PColorMeshItem']
 

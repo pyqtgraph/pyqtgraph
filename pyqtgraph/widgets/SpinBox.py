@@ -2,7 +2,6 @@
 from math import isnan, isinf
 from decimal import Decimal as D  ## Use decimal to avoid accumulating floating-point errors
 import decimal
-import weakref
 import re
 
 from ..Qt import QtGui, QtCore

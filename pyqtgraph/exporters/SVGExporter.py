@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 from .Exporter import Exporter
 from ..python2_3 import asUnicode
 from ..parametertree import Parameter
-from ..Qt import QtGui, QtCore, QtSvg, QT_LIB
+from ..Qt import QtGui, QtCore, QtSvg
 from .. import debug
 from .. import functions as fn
 import re

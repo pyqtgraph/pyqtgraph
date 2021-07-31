@@ -5,7 +5,6 @@ from .. import functions as fn
 from .Terminal import *
 from collections import OrderedDict
 from ..debug import *
-import numpy as np
 import warnings
 
 translate = QtCore.QCoreApplication.translate

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from .. import functions as fn
-from ..Qt import QtGui, QtCore
-import os, weakref, re
+from ..Qt import QtCore
+import weakref, re
 from collections import OrderedDict
 from ..python2_3 import asUnicode, basestring
 from .ParameterItem import ParameterItem

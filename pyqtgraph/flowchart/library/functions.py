@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 from ...metaarray import MetaArray
-from ...python2_3 import basestring, xrange
+from ...python2_3 import xrange
 
 
 def downsample(data, n, axis=0, xvals='subsample'):

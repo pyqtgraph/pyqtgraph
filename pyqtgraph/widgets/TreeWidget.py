@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
-from weakref import *
 
 __all__ = ['TreeWidget', 'TreeWidgetItem']
 

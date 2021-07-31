@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import weakref
-from ..Qt import QtCore, QtGui
+from ..Qt import QtGui
 from .Container import *
 from .DockDrop import *
 from .Dock import Dock
-from .. import debug as debug
 from ..python2_3 import basestring
 
 

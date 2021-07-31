@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
+from ..Qt import QtCore
 from .Exporter import Exporter
 from ..parametertree import Parameter
 from .. import PlotItem

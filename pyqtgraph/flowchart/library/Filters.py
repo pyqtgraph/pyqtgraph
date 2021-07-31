@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from ...Qt import QtCore, QtGui
-from ..Node import Node
 from . import functions
 from ... import functions as pgfn
 from .common import *

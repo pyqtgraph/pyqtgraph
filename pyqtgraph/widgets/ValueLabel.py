@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 from time import perf_counter
-from ..Qt import QtCore, QtGui
+from ..Qt import QtGui
 from .. import functions as fn
 
 __all__ = ['ValueLabel']

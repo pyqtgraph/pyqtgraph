@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import sys, re, os, time, traceback, subprocess
+import sys, re, traceback, subprocess
 import pickle
 
 from ..Qt import QtCore, QtGui, QT_LIB

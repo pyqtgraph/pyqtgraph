@@ -7,7 +7,6 @@ Distributed under MIT/X11 license. See license.txt for more information.
 
 from __future__ import division
 
-import ctypes
 import decimal
 import re
 import struct
@@ -2397,11 +2396,6 @@ def traceImage(image, values, smooth=0.5):
     If image is RGB or RGBA, then the shape of values should be (nvals, 3/4)
     The parameter *smooth* is expressed in pixels.
     """
-    try:
-        import scipy.ndimage as ndi
-    except ImportError:
-        raise Exception("traceImage() requires the package scipy.ndimage, but it is not importable.")
-    
     if values.ndim == 2:
         values = values.T
     values = values[np.newaxis, np.newaxis, ...].astype(float)

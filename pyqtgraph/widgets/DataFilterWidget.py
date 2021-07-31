@@ -1,4 +1,5 @@
-from ..Qt import QtGui, QtCore
+# -*- coding: utf-8 -*-
+from ..Qt import QtCore
 from .. import parametertree as ptree
 import numpy as np
 from collections import OrderedDict

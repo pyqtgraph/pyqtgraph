@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 from time import perf_counter
 from ..Point import Point
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore
 import weakref
 
 class MouseDragEvent(object):

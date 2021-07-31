@@ -6,8 +6,7 @@ import warnings
 import numpy as np
 from .GraphicsObject import GraphicsObject
 from .. import functions as fn
-from ..Point import Point
-import struct, sys
+import sys
 from .. import getConfigOption
 from .. import debug
 

@@ -1,7 +1,7 @@
+# -*- coding: utf-8 -*-
 from math import hypot
-from ..Qt import QtGui, QtCore
+from ..Qt import QtGui
 from .. import functions as fn
-import numpy as np
 __all__ = ['ArrowItem']
 
 class ArrowItem(QtGui.QGraphicsPathItem):
