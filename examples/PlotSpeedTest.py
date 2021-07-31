@@ -17,12 +17,10 @@ import pyqtgraph.functions as fn
 import itertools
 import argparse
 
-if QT_LIB == 'PySide2':
-    wrapinstance = pg.Qt.shiboken2.wrapInstance
-elif QT_LIB == 'PySide6':
-    wrapinstance = pg.Qt.shiboken6.wrapInstance
-elif QT_LIB in ['PyQt5', 'PyQt6']:
+if QT_LIB.startswith('PyQt'):
     wrapinstance = pg.Qt.sip.wrapinstance
+else:
+    wrapinstance = pg.Qt.shiboken.wrapInstance
 
 # defaults here result in the same configuration as the original PlotSpeedTest
 parser = argparse.ArgumentParser()
