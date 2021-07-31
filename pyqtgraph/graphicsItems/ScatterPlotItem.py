@@ -4,6 +4,7 @@ import itertools
 import math
 import numpy as np
 import weakref
+from .. import Qt
 from ..Qt import QtGui, QtCore, QT_LIB
 from ..Point import Point
 from .. import functions as fn
@@ -12,13 +13,6 @@ from .GraphicsObject import GraphicsObject
 from .. import getConfigOption
 from collections import OrderedDict
 from .. import debug
-
-if QT_LIB == 'PySide2':
-    from shiboken2 import wrapInstance
-elif QT_LIB == 'PySide6':
-    from shiboken6 import wrapInstance
-elif QT_LIB in ['PyQt5', 'PyQt6']:
-    from ..Qt import sip
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
 
@@ -167,11 +161,11 @@ class PixmapFragments:
         #    instances into a contiguous array, in order to call the underlying C++ native API.
         self.arr = np.empty((size, 10), dtype=np.float64)
         if QT_LIB.startswith('PyQt'):
-            self.ptrs = list(map(sip.wrapinstance,
+            self.ptrs = list(map(Qt.sip.wrapinstance,
                 itertools.count(self.arr.ctypes.data, self.arr.strides[0]),
                 itertools.repeat(QtGui.QPainter.PixmapFragment, self.arr.shape[0])))
         else:
-            self.ptrs = wrapInstance(self.arr.ctypes.data, QtGui.QPainter.PixmapFragment)
+            self.ptrs = Qt.shiboken.wrapInstance(self.arr.ctypes.data, QtGui.QPainter.PixmapFragment)
 
     def array(self, size):
         if size > self.arr.shape[0]:

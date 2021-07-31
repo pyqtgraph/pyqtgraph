@@ -23,6 +23,6 @@ def test_ImageExporter_toBytes():
     exp = ImageExporter(p.getPlotItem())
     qimg = exp.export(toBytes=True)
     qimg = qimg.convertToFormat(QtGui.QImage.Format.Format_RGBA8888)
-    data = fn.qimage_to_ndarray(qimg)
+    data = fn.ndarray_from_qimage(qimg)
     black = (0, 0, 0, 255)
     assert np.all(data == black), "Exported image should be entirely black."

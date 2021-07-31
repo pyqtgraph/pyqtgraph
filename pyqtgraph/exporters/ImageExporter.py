@@ -98,7 +98,7 @@ class ImageExporter(Exporter):
         painter.end()
         
         if self.params['invertValue']:
-            bg = fn.qimage_to_ndarray(self.png)
+            bg = fn.ndarray_from_qimage(self.png)
             if sys.byteorder == 'little':
                 cv = slice(0, 3)
             else:
