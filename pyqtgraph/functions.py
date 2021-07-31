@@ -2060,25 +2060,25 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
 
 def ndarray_from_qpolygonf(polyline):
     nbytes = 2 * len(polyline) * 8
-    if QT_LIB == "PySide2":
-        buffer = Qt.shiboken2.VoidPtr(polyline.data(), nbytes, True)
-    elif QT_LIB == "PySide6":
-        buffer = Qt.shiboken6.VoidPtr(polyline.data(), nbytes, True)
-    else:
+    if QT_LIB.startswith('PyQt'):
         buffer = polyline.data()
+        if buffer is None:
+            buffer = Qt.sip.voidptr(0)
         buffer.setsize(nbytes)
+    else:
+        ptr = polyline.data()
+        if ptr is None:
+            ptr = 0
+        buffer = Qt.shiboken.VoidPtr(ptr, nbytes, True)
     memory = np.frombuffer(buffer, np.double).reshape((-1, 2))
     return memory
 
 def create_qpolygonf(size):
-    if QtVersion.startswith("5"):
-        polyline = QtGui.QPolygonF(size)
+    polyline = QtGui.QPolygonF()
+    if QT_LIB.startswith('PyQt'):
+        polyline.fill(QtCore.QPointF(), size)
     else:
-        polyline = QtGui.QPolygonF()
-        if QT_LIB == "PySide6":
-            polyline.resize(size)
-        else:
-            polyline.fill(QtCore.QPointF(), size)
+        polyline.resize(size)
     return polyline
 
 def arrayToQPolygonF(x, y):
