@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+__all__ = ["ParameterSystem", "SystemSolver"]
+
 from .parameterTypes import GroupParameter
 from .. import functions as fn
 from .SystemSolver import SystemSolver
@@ -124,4 +127,3 @@ class ParameterSystem(GroupParameter):
             
             
             
-

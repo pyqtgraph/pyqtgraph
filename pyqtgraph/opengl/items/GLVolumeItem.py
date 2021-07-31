@@ -1,8 +1,8 @@
+# -*- coding: utf-8 -*-
 from OpenGL.GL import *
 from .. GLGraphicsItem import GLGraphicsItem
 from ...Qt import QtGui
 import numpy as np
-from ... import debug
 
 __all__ = ['GLVolumeItem']
 
@@ -227,4 +227,3 @@ class GLVolumeItem(GLGraphicsItem):
         #glPopMatrix()
         
         
-

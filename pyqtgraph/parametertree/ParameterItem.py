@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 from ..python2_3 import asUnicode
-import os, weakref, re
 
 translate = QtCore.QCoreApplication.translate
 

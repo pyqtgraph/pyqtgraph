@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import subprocess, atexit, os, sys, time, random, socket, signal, inspect
+import subprocess, atexit, os, sys, time, signal, inspect
 import multiprocessing.connection
 try:
     import cPickle as pickle
@@ -388,7 +388,7 @@ class RemoteQtEventHandler(RemoteEventHandler):
         RemoteEventHandler.__init__(self, *args, **kwds)
         
     def startEventTimer(self):
-        from ..Qt import QtGui, QtCore
+        from ..Qt import QtCore
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.processRequests)
         self.timer.start(10)
@@ -397,7 +397,7 @@ class RemoteQtEventHandler(RemoteEventHandler):
         try:
             RemoteEventHandler.processRequests(self)
         except ClosedError:
-            from ..Qt import QtGui, QtCore
+            from ..Qt import QtGui
             QtGui.QApplication.instance().quit()
             self.timer.stop()
             #raise SystemExit
@@ -466,7 +466,7 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
     conn = multiprocessing.connection.Client(('localhost', int(port)), authkey=authkey)
     if debug:
         cprint.cout(debug, '[%d] connected; starting remote proxy.\n' % os.getpid(), -1)
-    from ..Qt import QtGui, QtCore
+    from ..Qt import QtGui
     app = QtGui.QApplication.instance()
     #print app
     if app is None:

@@ -9,8 +9,6 @@ import importlib
 ui_template = importlib.import_module(
     f'.CanvasTemplate_{QT_LIB.lower()}', package=__package__)
     
-import numpy as np
-from .. import debug
 import weakref
 import gc
 from .CanvasManager import CanvasManager

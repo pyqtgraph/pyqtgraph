@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from ..Qt import QtGui
-from .. import functions as fn
 from ..python2_3 import xrange
 
 

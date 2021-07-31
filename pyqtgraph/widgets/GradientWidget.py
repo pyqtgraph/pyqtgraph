@@ -2,8 +2,6 @@
 from ..Qt import QtGui, QtCore, QtWidgets
 from .GraphicsView import GraphicsView
 from ..graphicsItems.GradientEditorItem import GradientEditorItem
-import weakref
-import numpy as np
 
 __all__ = ['GradientWidget']
 
@@ -75,5 +73,3 @@ class GradientWidget(GraphicsView):
 
     def widgetGroupInterface(self):
         return (self.sigGradientChanged, self.saveState, self.restoreState)
-
-

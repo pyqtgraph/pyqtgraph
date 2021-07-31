@@ -2,7 +2,6 @@
 import warnings
 import math
 import numpy as np
-from .. import metaarray as metaarray
 from ..Qt import QtCore
 from .GraphicsObject import GraphicsObject
 from .PlotCurveItem import PlotCurveItem

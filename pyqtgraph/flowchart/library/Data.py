@@ -4,8 +4,6 @@ from ...Qt import QtGui, QtCore, QtWidgets
 import numpy as np
 import sys
 from .common import *
-from ...SRTTransform import SRTTransform
-from ...Point import Point
 from ...widgets.TreeWidget import TreeWidget
 from ...graphicsItems.LinearRegionItem import LinearRegionItem
 
@@ -481,4 +479,3 @@ class AsType(CtrlNode):
     def processData(self, data):
         s = self.stateGroup.state()
         return data.astype(s['dtype'])
-

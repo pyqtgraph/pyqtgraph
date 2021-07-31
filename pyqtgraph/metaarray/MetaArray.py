@@ -10,7 +10,7 @@ new methods for slicing and indexing the array based on this meta data.
 More info at http://www.scipy.org/Cookbook/MetaArray
 """
 
-import types, copy, threading, os, re
+import copy, os
 import pickle
 import numpy as np
 from ..python2_3 import basestring

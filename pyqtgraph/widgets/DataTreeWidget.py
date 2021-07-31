@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
+from ..Qt import QtGui
 from collections import OrderedDict
 from .TableWidget import TableWidget
 from ..python2_3 import asUnicode
@@ -7,7 +7,7 @@ import types, traceback
 import numpy as np
 
 try:
-    import metaarray
+    import metaarray  # noqa
     HAVE_METAARRAY = True
 except:
     HAVE_METAARRAY = False

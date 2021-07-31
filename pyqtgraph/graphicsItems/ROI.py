@@ -21,7 +21,6 @@ from math import atan2, cos, degrees, sin, hypot
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
-from .. import getConfigOption
 import warnings
 import sys
 

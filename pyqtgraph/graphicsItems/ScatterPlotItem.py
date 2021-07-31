@@ -8,7 +8,6 @@ from .. import Qt
 from ..Qt import QtGui, QtCore, QT_LIB
 from ..Point import Point
 from .. import functions as fn
-from .GraphicsItem import GraphicsItem
 from .GraphicsObject import GraphicsObject
 from .. import getConfigOption
 from collections import OrderedDict
