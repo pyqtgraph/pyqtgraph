@@ -74,6 +74,7 @@ examples_ = OrderedDict([
         ('Mesh', 'GLMeshItem.py'),
         ('Image', 'GLImageItem.py'),
         ('Text', 'GLTextItem.py'),
+        ('BarGraph', 'GLBarGraphItem.py'),
         ('Painter', 'GLPainterItem.py'),
     ])),
     ('Widgets', OrderedDict([
@@ -106,7 +107,6 @@ others = dict([
     ('ScaleBar', 'ScaleBar.py'),
     ('ViewBox', 'ViewBox.py'),
     ('GradientEditor', 'GradientEditor.py'),
-    ('GLBarGraphItem', 'GLBarGraphItem.py'),
     ('GLViewWidget', 'GLViewWidget.py'),
     ('DiffTreeWidget', 'DiffTreeWidget.py'),
     ('MultiPlotWidget', 'MultiPlotWidget.py'),

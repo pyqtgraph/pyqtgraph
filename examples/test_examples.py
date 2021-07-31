@@ -70,51 +70,15 @@ conditionalExamples = {
         False,
         reason="Test is being problematic on CI machines"
     ),
-    'GLVolumeItem.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLIsosurface.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLSurfacePlot.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLScatterPlotItem.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLshaders.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLTextItem.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLLinePlotItem.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLMeshItem.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLImageItem.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLBarGraphItem.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLViewWidget.py': exceptionCondition(
+}
+
+openglExamples = ['GLViewWidget.py']
+openglExamples.extend(utils.examples_['3D Graphics'].values())
+for key in openglExamples:
+    conditionalExamples[key] = exceptionCondition(
         not darwin_opengl_broken,
         reason=darwin_opengl_reason
     )
-}
 
 @pytest.mark.skipif(
     Qt.QT_LIB == "PySide2"
