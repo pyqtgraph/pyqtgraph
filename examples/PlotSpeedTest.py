@@ -34,7 +34,17 @@ parser.add_argument('--frames', default=50, type=int)
 parser.add_argument('--fsample', default=1000, type=float)
 parser.add_argument('--frequency', default=0, type=float)
 parser.add_argument('--amplitude', default=5, type=float)
+parser.add_argument('--opengl', dest='use_opengl', action='store_true')
+parser.add_argument('--no-opengl', dest='use_opengl', action='store_false')
+parser.set_defaults(use_opengl=None)
+parser.add_argument('--allow-opengl-toggle', action='store_true',
+    help="""Allow on-the-fly change of OpenGL setting. This may cause unwanted side effects.
+    """)
 args = parser.parse_args()
+
+if args.use_opengl is not None:
+    pg.setConfigOption('useOpenGL', args.use_opengl)
+    pg.setConfigOption('enableExperimental', args.use_opengl)
 
 # don't limit frame rate to vsync
 sfmt = QtGui.QSurfaceFormat()
@@ -102,7 +112,8 @@ children = [
         dict(name='frequency', type='float', value=args.frequency, units='Hz'),
         dict(name='amplitude', type='float', value=args.amplitude),
     ]),
-    dict(name='useOpenGL', type='bool', value=pg.getConfigOption('useOpenGL')),
+    dict(name='useOpenGL', type='bool', value=pg.getConfigOption('useOpenGL'),
+        readonly=not args.allow_opengl_toggle),
     dict(name='enableExperimental', type='bool', value=pg.getConfigOption('enableExperimental')),
     dict(name='pen', type='pen', value=default_pen),
     dict(name='antialias', type='bool', value=pg.getConfigOption('antialias')),
