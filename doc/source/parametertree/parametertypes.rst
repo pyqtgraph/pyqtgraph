@@ -1,3 +1,7 @@
+..
+  This file is auto-generated from pyqtgraph/tools/rebuildPtreeRst.py. Do not modify by hand! Instead, rerun the
+  generation script with `python pyqtgraph/tools/rebuildPtreeRst.py`.
+
 Built-in Parameter Types
 ========================
 
@@ -6,89 +10,89 @@ Built-in Parameter Types
 Parameters
 ----------
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.slider.SliderParameter
+.. autoclass:: ActionParameter
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.action.ActionParameter
+.. autoclass:: CalendarParameter
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.pen.PenParameter
+.. autoclass:: ColorMapParameter
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.text.TextParameter
+.. autoclass:: ColorParameter
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.font.FontParameter
+.. autoclass:: FileParameter
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.progress.ProgressBarParameter
+.. autoclass:: FontParameter
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.file.FileParameter
+.. autoclass:: GroupParameter
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.colormap.ColorMapParameter
+.. autoclass:: ListParameter
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.calendar.CalendarParameter
+.. autoclass:: PenParameter
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.basetypes.SimpleParameter
+.. autoclass:: ProgressBarParameter
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.basetypes.GroupParameter
+.. autoclass:: SimpleParameter
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.color.ColorParameter
+.. autoclass:: SliderParameter
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.list.ListParameter
+.. autoclass:: TextParameter
    :members:    
 
 ParameterItems
 --------------
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.progress.ProgressBarParameterItem
+.. autoclass:: ActionParameterItem
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.font.FontParameterItem
+.. autoclass:: BoolParameterItem
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.calendar.CalendarParameterItem
+.. autoclass:: CalendarParameterItem
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.basetypes.GroupParameterItem
+.. autoclass:: ColorMapParameterItem
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.pen.PenParameterItem
+.. autoclass:: ColorParameterItem
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.slider.SliderParameterItem
+.. autoclass:: FileParameterItem
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.numeric.NumericParameterItem
+.. autoclass:: FontParameterItem
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.list.ListParameterItem
+.. autoclass:: GroupParameterItem
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.file.FileParameterItem
+.. autoclass:: ListParameterItem
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.str.StrParameterItem
+.. autoclass:: NumericParameterItem
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.color.ColorParameterItem
+.. autoclass:: PenParameterItem
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.bool.BoolParameterItem
+.. autoclass:: ProgressBarParameterItem
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.action.ActionParameterItem
+.. autoclass:: SliderParameterItem
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.colormap.ColorMapParameterItem
+.. autoclass:: StrParameterItem
    :members:    
 
-.. autoclass:: pyqtgraph.parametertree.parameterTypes.text.TextParameterItem
+.. autoclass:: TextParameterItem
    :members:    

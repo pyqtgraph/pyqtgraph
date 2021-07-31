@@ -14,12 +14,12 @@ _PARAM_ITEM_TYPES = {}
 
 def registerParameterItemType(name, itemCls, parameterCls=None, override=False):
     """
-    Similar to `registerParameterType`, but works on ParameterItems. This is useful for Parameters where the
+    Similar to :func:`registerParameterType`, but works on ParameterItems. This is useful for Parameters where the
     `itemClass` does all the heavy lifting, and a redundant Parameter class must be defined just to house `itemClass`.
     Instead, use `registerParameterItemType`. If this should belong to a subclass of `Parameter`, specify which one
     in `parameterCls`.
     """
-    global _PARAM_ITEM_TYPES, PARAM_TYPES
+    global _PARAM_ITEM_TYPES
     if name in _PARAM_ITEM_TYPES and not override:
         raise Exception("Parameter item type '%s' already exists (use override=True to replace)" % name)
 

@@ -5,12 +5,13 @@ from pyqtgraph.parametertree.Parameter import PARAM_TYPES, _PARAM_ITEM_TYPES
 
 
 def mkDocs(typeList):
+    typeNames = sorted([typ.__name__ for typ in typeList])
     typDocs = [
     f"""\
-    .. autoclass:: {typ.__module__}.{typ.__name__}
+    .. autoclass:: {name}
        :members:\
     """
-    for typ in typeList]
+    for name in typeNames]
     indented = '\n\n'.join(typDocs)
     return textwrap.dedent(indented)
 
@@ -20,6 +21,10 @@ items = [typ.itemClass for typ in PARAM_TYPES.values() if typ.itemClass is not N
 items = set(items)
 
 doc = f"""\
+..
+  This file is auto-generated from pyqtgraph/tools/rebuildPtreeRst.py. Do not modify by hand! Instead, rerun the
+  generation script with `python pyqtgraph/tools/rebuildPtreeRst.py`.
+
 Built-in Parameter Types
 ========================
 
