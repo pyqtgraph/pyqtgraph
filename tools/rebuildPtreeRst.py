@@ -9,11 +9,12 @@ def mkDocs(typeList):
     typDocs = [
     f"""\
     .. autoclass:: {name}
-       :members:\
+       :members:
     """
     for name in typeNames]
-    indented = '\n\n'.join(typDocs)
-    return textwrap.dedent(indented)
+    indented = '\n'.join(typDocs)
+    # There will be two newlines at the end, so remove one
+    return textwrap.dedent(indented)[:-1]
 
 types = set(PARAM_TYPES.values())
 items = [typ.itemClass for typ in PARAM_TYPES.values() if typ.itemClass is not None] \

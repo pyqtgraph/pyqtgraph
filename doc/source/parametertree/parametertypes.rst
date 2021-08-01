@@ -11,88 +11,88 @@ Parameters
 ----------
 
 .. autoclass:: ActionParameter
-   :members:    
+   :members:
 
 .. autoclass:: CalendarParameter
-   :members:    
+   :members:
 
 .. autoclass:: ColorMapParameter
-   :members:    
+   :members:
 
 .. autoclass:: ColorParameter
-   :members:    
+   :members:
 
 .. autoclass:: FileParameter
-   :members:    
+   :members:
 
 .. autoclass:: FontParameter
-   :members:    
+   :members:
 
 .. autoclass:: GroupParameter
-   :members:    
+   :members:
 
 .. autoclass:: ListParameter
-   :members:    
+   :members:
 
 .. autoclass:: PenParameter
-   :members:    
+   :members:
 
 .. autoclass:: ProgressBarParameter
-   :members:    
+   :members:
 
 .. autoclass:: SimpleParameter
-   :members:    
+   :members:
 
 .. autoclass:: SliderParameter
-   :members:    
+   :members:
 
 .. autoclass:: TextParameter
-   :members:    
+   :members:
 
 ParameterItems
 --------------
 
 .. autoclass:: ActionParameterItem
-   :members:    
+   :members:
 
 .. autoclass:: BoolParameterItem
-   :members:    
+   :members:
 
 .. autoclass:: CalendarParameterItem
-   :members:    
+   :members:
 
 .. autoclass:: ColorMapParameterItem
-   :members:    
+   :members:
 
 .. autoclass:: ColorParameterItem
-   :members:    
+   :members:
 
 .. autoclass:: FileParameterItem
-   :members:    
+   :members:
 
 .. autoclass:: FontParameterItem
-   :members:    
+   :members:
 
 .. autoclass:: GroupParameterItem
-   :members:    
+   :members:
 
 .. autoclass:: ListParameterItem
-   :members:    
+   :members:
 
 .. autoclass:: NumericParameterItem
-   :members:    
+   :members:
 
 .. autoclass:: PenParameterItem
-   :members:    
+   :members:
 
 .. autoclass:: ProgressBarParameterItem
-   :members:    
+   :members:
 
 .. autoclass:: SliderParameterItem
-   :members:    
+   :members:
 
 .. autoclass:: StrParameterItem
-   :members:    
+   :members:
 
 .. autoclass:: TextParameterItem
-   :members:    
+   :members:
