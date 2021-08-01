@@ -63,7 +63,7 @@ Colors = {
     's': QtGui.QColor(100,100,150,255),
 }  
 
-SI_PREFIXES = str('yzafpnµm kMGTPEZY')
+SI_PREFIXES = 'yzafpnµm kMGTPEZY'
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
 SI_PREFIX_EXPONENTS['u'] = -6

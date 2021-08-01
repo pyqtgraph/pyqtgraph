@@ -25,7 +25,7 @@ class CmdInput(QtGui.QLineEdit):
             self.execCmd()
         else:
             super().keyPressEvent(ev)
-            self.history[0] = str(self.text())
+            self.history[0] = self.text()
         
     def execCmd(self):
         cmd = str(self.text())

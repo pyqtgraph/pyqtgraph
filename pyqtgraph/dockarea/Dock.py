@@ -124,7 +124,7 @@ class Dock(QtGui.QWidget, DockDrop):
         """
         Gets the text displayed in the title bar for this dock.
         """
-        return str(self.label.text())
+        return self.label.text()
 
     def setTitle(self, text):
         """
