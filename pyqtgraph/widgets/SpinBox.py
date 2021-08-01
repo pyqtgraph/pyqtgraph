@@ -89,7 +89,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
             
             'decimals': 6,
             
-            'format': str("{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}"),
+            'format': "{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}",
             'regex': fn.FLOAT_REGEX,
             'evalFunc': decimal.Decimal,
             
@@ -219,7 +219,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
                 self.opts['minStep'] = ms
 
             if 'format' not in opts:
-                self.opts['format'] = str("{value:d}{suffixGap}{suffix}")
+                self.opts['format'] = "{value:d}{suffixGap}{suffix}"
 
         if self.opts['dec']:
             if self.opts.get('minStep') is None:

@@ -310,7 +310,7 @@ class TableWidget(QtGui.QTableWidget):
         if self.horizontalHeadersSet:
             row = []
             if self.verticalHeadersSet:
-                row.append(str(''))
+                row.append('')
             
             for c in columns:
                 row.append(str(self.horizontalHeaderItem(c).text()))
@@ -325,7 +325,7 @@ class TableWidget(QtGui.QTableWidget):
                 if item is not None:
                     row.append(str(item.value))
                 else:
-                    row.append(str(''))
+                    row.append('')
             data.append(row)
             
         s = ''

@@ -116,7 +116,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
                 #(i, {'file': child[0], 'line': child[1], 'function': child[2], 'code': child[3]})
                 #for i, child in enumerate(frames)])
             #childs = OrderedDict([(i, ch) for i,ch in enumerate(frames)])
-            widget = QtGui.QPlainTextEdit(str('\n'.join(frames)))
+            widget = QtGui.QPlainTextEdit('\n'.join(frames))
             widget.setMaximumHeight(200)
             widget.setReadOnly(True)
         else:

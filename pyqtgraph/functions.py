@@ -130,7 +130,7 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
         return fmt % (x*p, pref, suffix)
     else:
         if allowUnicode:
-            plusminus = space + str("±") + space
+            plusminus = space + "±" + space
         else:
             plusminus = " +/- "
         fmt = "%." + str(precision) + "g%s%s%s%s"

@@ -313,16 +313,15 @@ class AxisItem(GraphicsWidget):
             if not self.autoSIPrefix or self.autoSIPrefixScale == 1.0:
                 units = ''
             else:
-                units = str('(x%g)') % (1.0/self.autoSIPrefixScale)
+                units = '(x%g)' % (1.0/self.autoSIPrefixScale)
         else:
-            #print repr(self.labelUnitPrefix), repr(self.labelUnits)
-            units = str('(%s%s)') % (str(self.labelUnitPrefix), str(self.labelUnits))
+            units = '(%s%s)' % (self.labelUnitPrefix, self.labelUnits)
 
-        s = str('%s %s') % (str(self.labelText), str(units))
+        s = '%s %s' % (self.labelText), units)
 
         style = ';'.join(['%s: %s' % (k, self.labelStyle[k]) for k in self.labelStyle])
 
-        return str("<span style='%s'>%s</span>") % (style, str(s))
+        return "<span style='%s'>%s</span>" % (style, s)
 
     def _updateMaxTextSize(self, x):
         ## Informs that the maximum tick size orthogonal to the axis has

@@ -729,7 +729,7 @@ class Parameter(QtCore.QObject):
         return self.child(*names)
 
     def __repr__(self):
-        return str("<%s '%s' at 0x%x>") % (self.__class__.__name__, self.name(), id(self))
+        return "<%s '%s' at 0x%x>" % (self.__class__.__name__, self.name(), id(self))
        
     def __getattr__(self, attr):
         ## Leaving this undocumented because I might like to remove it in the future..

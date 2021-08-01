@@ -28,7 +28,7 @@ class CmdInput(QtGui.QLineEdit):
             self.history[0] = self.text()
         
     def execCmd(self):
-        cmd = str(self.text())
+        cmd = self.text()
         if len(self.history) == 1 or cmd != self.history[1]:
             self.history.insert(1, cmd)
         self.history[0] = ""

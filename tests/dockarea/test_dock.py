@@ -5,7 +5,7 @@ pg.mkQApp()
 import pyqtgraph.dockarea as da
 
 def test_dock():
-    name = str("évènts_zàhéér")
+    name = "évènts_zàhéér"
     dock = da.Dock(name=name)
     # make sure unicode names work correctly
     assert dock.name() == name

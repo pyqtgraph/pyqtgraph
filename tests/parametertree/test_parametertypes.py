@@ -44,7 +44,7 @@ def test_types():
     all_objs = {
         'int0': 0, 'int':7, 'float': -0.35, 'bigfloat': 1e129, 'npfloat': np.float64(5), 
         'npint': np.int64(5),'npinf': np.inf, 'npnan': np.nan, 'bool': True, 
-        'complex': 5+3j, 'str': '#xxx', 'unicode': str('µ'), 
+        'complex': 5+3j, 'str': '#xxx', 'unicode': 'µ', 
         'list': [1,2,3], 'dict': {'1': 2}, 'color': pg.mkColor('k'), 
         'brush': pg.mkBrush('k'), 'pen': pg.mkPen('k'), 'none': None
     }
