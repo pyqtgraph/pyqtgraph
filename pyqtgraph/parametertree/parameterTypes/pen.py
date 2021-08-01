@@ -1,8 +1,5 @@
-import re
-from contextlib import ExitStack
-
 from .basetypes import WidgetParameterItem
-from .. import Parameter, ParameterTree
+from .. import Parameter
 from ... import functions as fn
 from ...Qt import QtWidgets, QtGui, QtCore
 from ...widgets.PenSelectorDialog import PenSelectorDialog

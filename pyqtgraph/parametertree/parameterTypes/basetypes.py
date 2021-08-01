@@ -161,7 +161,7 @@ class WidgetParameterItem(ParameterItem):
     def widgetValueChanged(self):
         ## called when the widget's value has been changed by the user
         val = self.widget.value()
-        newVal = self.param.setValue(val)
+        self.param.setValue(val)
 
     def widgetValueChanging(self, *args):
         """

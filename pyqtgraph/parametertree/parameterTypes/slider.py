@@ -79,9 +79,6 @@ class SliderParameterItem(WidgetParameterItem):
         self.optsChanged(param, opts)
         return w
 
-    # def updateDisplayLabel(self, value=None):
-    #   self.displayLabel.setText(self.prettyTextValue(value))
-
     def spanToSliderValue(self, v):
         return int(np.argmin(np.abs(self.span - v)))
 
@@ -99,7 +96,10 @@ class SliderParameterItem(WidgetParameterItem):
     def optsChanged(self, param, opts):
         try:
             super().optsChanged(param, opts)
-        except AttributeError as ex:
+        except AttributeError:
+            # This may trigger while building the parameter before the widget is fully constructed.
+            # This is fine, since errors are from the parent scope which will stabilize after the widget is
+            # constructed anyway
             pass
         span = opts.get('span', None)
         if span is None:
