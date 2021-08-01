@@ -317,7 +317,7 @@ class AxisItem(GraphicsWidget):
         else:
             units = '(%s%s)' % (self.labelUnitPrefix, self.labelUnits)
 
-        s = '%s %s' % (self.labelText), units)
+        s = '%s %s' % (self.labelText, units)
 
         style = ';'.join(['%s: %s' % (k, self.labelStyle[k]) for k in self.labelStyle])
 
