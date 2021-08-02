@@ -63,7 +63,7 @@ class ComboBox(QtGui.QComboBox):
         """
         if self.count() == 0:
             return None
-        text = str(self.currentText())
+        text = self.currentText()
         return self._items[text]
     
     def ignoreIndexChange(func):

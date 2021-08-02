@@ -297,7 +297,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         Select the numerical portion of the text to allow quick editing by the user.
         """
         le = self.lineEdit()
-        text = str(le.text())
+        text = le.text()
         m = self.opts['regex'].match(text)
         if m is None:
             return

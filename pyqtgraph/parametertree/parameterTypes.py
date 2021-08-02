@@ -231,7 +231,7 @@ class WidgetParameterItem(ParameterItem):
             value = self.param.value()
         opts = self.param.opts
         if isinstance(self.widget, QtWidgets.QAbstractSpinBox):
-            text = str(self.widget.lineEdit().text())
+            text = self.widget.lineEdit().text()
         elif isinstance(self.widget, QtWidgets.QComboBox):
             text = self.widget.currentText()
         else:

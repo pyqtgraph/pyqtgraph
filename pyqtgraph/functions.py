@@ -162,7 +162,6 @@ def siParse(s, regex=FLOAT_REGEX, suffix=None):
         contains a suffix, it is discarded. This enables interpreting
         characters following the numerical value as an SI prefix.
     """
-    s = str(s)
     s = s.strip()
     if suffix is not None and len(suffix) > 0:
         if s[-len(suffix):] != suffix:

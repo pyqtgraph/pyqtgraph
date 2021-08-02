@@ -237,7 +237,7 @@ class ViewBoxMenu(QtGui.QMenu):
             
         for i in [0,1]:
             c = self.ctrl[i].linkCombo
-            current = str(c.currentText())
+            current = c.currentText()
             c.blockSignals(True)
             changed = True
             try:

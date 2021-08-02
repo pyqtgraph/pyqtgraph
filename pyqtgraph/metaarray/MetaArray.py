@@ -468,7 +468,7 @@ class MetaArray(object):
         return tuple(nInd)
       
     def _interpretAxis(self, axis):
-        if isinstance(axis, str) or isinstance(axis, tuple):
+        if isinstance(axis, (str, tuple)):
             return self._getAxis(axis)
         else:
             return axis
