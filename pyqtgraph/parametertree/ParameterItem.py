@@ -137,7 +137,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             if self.ignoreNameColumnChange:
                 return
             try:
-                newName = self.param.setName(str(self.text(col)))
+                newName = self.param.setName(self.text(col))
             except Exception:
                 self.setText(0, self.param.name())
                 raise
