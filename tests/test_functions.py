@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from copy import deepcopy
-from contextlib import suppress
 from pyqtgraph.functions import arrayToQPath, eq
 
 import numpy as np
@@ -264,37 +263,66 @@ def test_CIELab_reconversion():
 
 MoveToElement = pg.QtGui.QPainterPath.ElementType.MoveToElement
 LineToElement = pg.QtGui.QPainterPath.ElementType.LineToElement
+_dtypes = []
+for bits in 32, 64:
+    for base in 'int', 'float', 'uint':
+        _dtypes.append(f'{base}{bits}')
+_dtypes.extend(['uint8', 'uint16'])
+
+def _handle_underflow(dtype, *elements):
+    """Wrapper around path description which converts underflow into proper points"""
+    out = []
+    for el in elements:
+        newElement = [el[0]]
+        for ii in range(1, 3):
+            coord = el[ii]
+            if coord < 0:
+                coord = np.array(coord, dtype=dtype)
+            newElement.append(float(coord))
+        out.append(tuple(newElement))
+    return out
+
 @pytest.mark.parametrize(
     "xs, ys, connect, expected", [
-        (
-            np.arange(6), np.arange(0, -6, step=-1), 'all', (
-                (MoveToElement, 0.0, 0.0),
-                (LineToElement, 1.0, -1.0),
-                (LineToElement, 2.0, -2.0),
-                (LineToElement, 3.0, -3.0),
-                (LineToElement, 4.0, -4.0),
-                (LineToElement, 5.0, -5.0),
-            )
-        ), 
-        (
-            np.arange(6), np.arange(0, -6, step=-1), 'pairs', (
-                (MoveToElement, 0.0, 0.0),
-                (LineToElement, 1.0, -1.0),
-                (MoveToElement, 2.0, -2.0),
-                (LineToElement, 3.0, -3.0),
-                (MoveToElement, 4.0, -4.0),
-                (LineToElement, 5.0, -5.0),
-            )
+        *(
+            (
+                np.arange(6, dtype=dtype), np.arange(0, -6, step=-1, dtype=dtype), 'all',
+                _handle_underflow(dtype,
+                                  (MoveToElement, 0.0, 0.0),
+                                  (LineToElement, 1.0, -1.0),
+                                  (LineToElement, 2.0, -2.0),
+                                  (LineToElement, 3.0, -3.0),
+                                  (LineToElement, 4.0, -4.0),
+                                  (LineToElement, 5.0, -5.0)
+                                  )
+            ) for dtype in _dtypes
         ),
-        (
-            np.arange(5), np.arange(0, -5, step=-1), 'pairs', (
-                (MoveToElement, 0.0, 0.0),
-                (LineToElement, 1.0, -1.0),
-                (MoveToElement, 2.0, -2.0),
-                (LineToElement, 3.0, -3.0),
-                (MoveToElement, 4.0, -4.0)
-            ) 
+        *(
+            (
+                np.arange(6, dtype=dtype), np.arange(0, -6, step=-1, dtype=dtype), 'pairs',
+                _handle_underflow(dtype,
+                                  (MoveToElement, 0.0, 0.0),
+                                  (LineToElement, 1.0, -1.0),
+                                  (MoveToElement, 2.0, -2.0),
+                                  (LineToElement, 3.0, -3.0),
+                                  (MoveToElement, 4.0, -4.0),
+                                  (LineToElement, 5.0, -5.0),
+                                  )
+            ) for dtype in _dtypes
         ),
+        *(
+            (
+                np.arange(5, dtype=dtype), np.arange(0, -5, step=-1, dtype=dtype), 'pairs',
+                _handle_underflow(dtype,
+                                  (MoveToElement, 0.0, 0.0),
+                                  (LineToElement, 1.0, -1.0),
+                                  (MoveToElement, 2.0, -2.0),
+                                  (LineToElement, 3.0, -3.0),
+                                  (MoveToElement, 4.0, -4.0)
+                                  )
+            ) for dtype in _dtypes
+        ),
+        # NaN types don't coerce to integers, don't test for all types since that doesn't make sense
         (
             np.arange(5), np.array([0, -1, np.NaN, -3, -4]), 'finite', (
                 (MoveToElement, 0.0, 0.0),
@@ -313,25 +341,34 @@ LineToElement = pg.QtGui.QPainterPath.ElementType.LineToElement
                 (LineToElement, 4.0, -4.0)
             )
         ),
-        (
-            np.arange(5), np.arange(0, -5, step=-1), np.array([0, 1, 0, 1, 0]), (
-                (MoveToElement, 0.0, 0.0),
-                (MoveToElement, 1.0, -1.0),
-                (LineToElement, 2.0, -2.0),
-                (MoveToElement, 3.0, -3.0),
-                (LineToElement, 4.0, -4.0)
-            )
-        )
+        *(
+            (
+                np.arange(5, dtype=dtype), np.arange(0, -5, step=-1, dtype=dtype), np.array([0, 1, 0, 1, 0]),
+                _handle_underflow(dtype,
+                                  (MoveToElement, 0.0, 0.0),
+                                  (MoveToElement, 1.0, -1.0),
+                                  (LineToElement, 2.0, -2.0),
+                                  (MoveToElement, 3.0, -3.0),
+                                  (LineToElement, 4.0, -4.0)
+                                  )
+            ) for dtype in _dtypes
+        ),
+        # Empty path with all types of connection
+        *(
+            (
+                np.arange(0), np.arange(0, dtype=dtype), conn, ()
+            ) for conn in ['all', 'pairs', 'finite', np.array([])] for dtype in _dtypes
+        ),
     ]
 )
 def test_arrayToQPath(xs, ys, connect, expected):
     path = arrayToQPath(xs, ys, connect=connect)
+    element = None
     for i in range(path.elementCount()):
-        with suppress(NameError):
-            # nan elements add two line-segments, for simplicity of test config
-            # we can ignore the second segment
-            if (eq(element.x, np.nan) or eq(element.y, np.nan)):
-                continue
+        # nan elements add two line-segments, for simplicity of test config
+        # we can ignore the second segment
+        if element is not None and (eq(element.x, np.nan) or eq(element.y, np.nan)):
+            continue
         element = path.elementAt(i)
         assert eq(expected[i], (element.type, element.x, element.y))
 

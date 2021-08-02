@@ -1925,6 +1925,8 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
 
     path = QtGui.QPainterPath()
     n = x.shape[0]
+    if n == 0:
+      return path
 
     connect_array = None
     if isinstance(connect, np.ndarray):
