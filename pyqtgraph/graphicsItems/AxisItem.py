@@ -433,7 +433,7 @@ class AxisItem(GraphicsWidget):
             self._pen = fn.mkPen(*args, **kwargs)
         else:
             self._pen = fn.mkPen(getConfigOption('foreground'))
-        self.labelStyle['color'] = '#' + fn.colorStr(self._pen.color())[:6]
+        self.labelStyle['color'] = self._pen.color().name() #   #RRGGBB
         self._updateLabel()
 
     def textPen(self):
@@ -451,7 +451,7 @@ class AxisItem(GraphicsWidget):
             self._textPen = fn.mkPen(*args, **kwargs)
         else:
             self._textPen = fn.mkPen(getConfigOption('foreground'))
-        self.labelStyle['color'] = '#' + fn.colorStr(self._textPen.color())[:6]
+        self.labelStyle['color'] = self._textPen.color().name() #   #RRGGBB
         self._updateLabel()
 
     def setScale(self, scale=None):

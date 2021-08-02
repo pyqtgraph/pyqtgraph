@@ -95,19 +95,19 @@ class MatplotlibExporter(Exporter):
                 linestyle = ''
             else:
                 linestyle = '-'
-            color = tuple([c/255. for c in fn.colorTuple(pen.color())])
+            color = pen.color().getRgbF()
             symbol = opts['symbol']
             if symbol == 't':
                 symbol = '^'
             symbolPen = fn.mkPen(opts['symbolPen'])
             symbolBrush = fn.mkBrush(opts['symbolBrush'])
-            markeredgecolor = tuple([c/255. for c in fn.colorTuple(symbolPen.color())])
-            markerfacecolor = tuple([c/255. for c in fn.colorTuple(symbolBrush.color())])
+            markeredgecolor = symbolPen.color().getRgbF()
+            markerfacecolor = symbolBrush.color().getRgbF()
             markersize = opts['symbolSize']
             
             if opts['fillLevel'] is not None and opts['fillBrush'] is not None:
                 fillBrush = fn.mkBrush(opts['fillBrush'])
-                fillcolor = tuple([c/255. for c in fn.colorTuple(fillBrush.color())])
+                fillcolor = fillBrush.color().getRgbF()
                 ax.fill_between(x=x, y1=y, y2=opts['fillLevel'], facecolor=fillcolor)
             
             pl = ax.plot(x, y, marker=symbol, color=color, linewidth=pen.width(), 

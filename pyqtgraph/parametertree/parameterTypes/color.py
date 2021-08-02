@@ -27,5 +27,5 @@ class ColorParameter(SimpleParameter):
 
     def saveState(self, filter=None):
         state = super().saveState(filter)
-        state['value'] = fn.colorTuple(self.value())
+        state['value'] = self.value().getRgb()
         return state

@@ -217,7 +217,7 @@ class RangeColorMapItem(ptree.types.SimpleParameter):
         
         mask = np.invert(np.isfinite(data))
         nanColor = self['NaN']
-        nanColor = (nanColor.red()/255., nanColor.green()/255., nanColor.blue()/255., nanColor.alpha()/255.)
+        nanColor = nanColor.getRgbF()
         colors[mask] = nanColor
         
         return colors        
@@ -254,12 +254,12 @@ class EnumColorMapItem(ptree.types.GroupParameter):
     def map(self, data):
         data = data[self.fieldName]
         colors = np.empty((len(data), 4))
-        default = np.array(fn.colorTuple(self['Default'])) / 255.
+        default = np.array(self['Default'].getRgbF())
         colors[:] = default
         
         for v in self.param('Values'):
             mask = data == v.maskValue
-            c = np.array(fn.colorTuple(v.value())) / 255.
+            c = np.array(v.value().getRgbF())
             colors[mask] = c
         #scaled = np.clip((data-self['Min']) / (self['Max']-self['Min']), 0, 1)
         #cmap = self.value()
@@ -267,7 +267,7 @@ class EnumColorMapItem(ptree.types.GroupParameter):
         
         #mask = np.isnan(data) | np.isinf(data)
         #nanColor = self['NaN']
-        #nanColor = (nanColor.red()/255., nanColor.green()/255., nanColor.blue()/255., nanColor.alpha()/255.)
+        #nanColor = nanColor.getRgbF()
         #colors[mask] = nanColor
         
         return colors

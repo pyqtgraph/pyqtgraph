@@ -66,10 +66,12 @@ class GLLinePlotItem(GLGraphicsItem):
                 glEnableClientState(GL_COLOR_ARRAY)
                 glColorPointerf(self.color)
             else:
-                if isinstance(self.color, (str, QtGui.QColor)):
-                    glColor4f(*fn.glColor(self.color))
-                else:
-                    glColor4f(*self.color)
+                color = self.color
+                if isinstance(color, str):
+                    color = fn.mkColor(color)
+                if isinstance(color, QtGui.QColor):
+                    color = color.getRgbF()
+                glColor4f(*color)
             glLineWidth(self.width)
             
             if self.antialias:

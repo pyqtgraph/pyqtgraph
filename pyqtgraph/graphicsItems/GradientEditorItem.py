@@ -581,7 +581,7 @@ class GradientEditorItem(TickSliderItem):
         for t,x in self.listTicks():
             pos.append(x)
             c = t.color
-            color.append([c.red(), c.green(), c.blue(), c.alpha()])
+            color.append(c.getRgb())
         return ColorMap(np.array(pos), np.array(color, dtype=np.ubyte))
         
     def updateGradient(self):
@@ -671,13 +671,13 @@ class GradientEditorItem(TickSliderItem):
             if toQColor:
                 return QtGui.QColor(c)  # always copy colors before handing them out
             else:
-                return (c.red(), c.green(), c.blue(), c.alpha())
+                return c.getRgb()
         if x >= ticks[-1][1]:
             c = ticks[-1][0].color
             if toQColor:
                 return QtGui.QColor(c)  # always copy colors before handing them out
             else:
-                return (c.red(), c.green(), c.blue(), c.alpha())
+                return c.getRgb()
             
         x2 = ticks[0][1]
         for i in range(1,len(ticks)):
@@ -708,12 +708,11 @@ class GradientEditorItem(TickSliderItem):
             h = h1 * (1.-f) + h2 * f
             s = s1 * (1.-f) + s2 * f
             v = v1 * (1.-f) + v2 * f
-            c = QtGui.QColor()
-            c.setHsv(*map(int, [h,s,v]))
+            c = QtGui.QColor.fromHsv(int(h), int(s), int(v))
             if toQColor:
                 return c
             else:
-                return (c.red(), c.green(), c.blue(), c.alpha())
+                return c.getRgb()
                     
     def getLookupTable(self, nPts, alpha=None):
         """
@@ -757,8 +756,8 @@ class GradientEditorItem(TickSliderItem):
             return False
         if ticks[0][1] != 0.0 or ticks[1][1] != 1.0:
             return False
-        c1 = fn.colorTuple(ticks[0][0].color)
-        c2 = fn.colorTuple(ticks[1][0].color)
+        c1 = ticks[0][0].color.getRgb()
+        c2 = ticks[1][0].color.getRgb()
         if c1 != (0,0,0,255) or c2 != (255,255,255,255):
             return False
         return True
@@ -794,7 +793,7 @@ class GradientEditorItem(TickSliderItem):
         ticks = []
         for t in self.ticks:
             c = t.color
-            ticks.append((self.ticks[t], (c.red(), c.green(), c.blue(), c.alpha())))
+            ticks.append((self.ticks[t], c.getRgb()))
         state = {'mode': self.colorMode, 
                  'ticks': ticks,
                  'ticksVisible': next(iter(self.ticks)).isVisible()}

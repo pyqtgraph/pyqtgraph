@@ -126,10 +126,10 @@ class GLScatterPlotItem(GLGraphicsItem):
                     glEnableClientState(GL_COLOR_ARRAY)
                     glColorPointerf(self.color)
                 else:
-                    if isinstance(self.color, QtGui.QColor):
-                        glColor4f(*fn.glColor(self.color))
-                    else:
-                        glColor4f(*self.color)
+                    color = self.color
+                    if isinstance(color, QtGui.QColor):
+                        color = color.getRgbF()
+                    glColor4f(*color)
                 
                 if not self.pxMode or isinstance(self.size, np.ndarray):
                     glEnableClientState(GL_NORMAL_ARRAY)
