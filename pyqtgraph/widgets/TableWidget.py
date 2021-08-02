@@ -313,13 +313,13 @@ class TableWidget(QtGui.QTableWidget):
                 row.append('')
             
             for c in columns:
-                row.append(str(self.horizontalHeaderItem(c).text()))
+                row.append(self.horizontalHeaderItem(c).text())
             data.append(row)
         
         for r in rows:
             row = []
             if self.verticalHeadersSet:
-                row.append(str(self.verticalHeaderItem(r).text()))
+                row.append(self.verticalHeaderItem(r).text())
             for c in columns:
                 item = self.item(r, c)
                 if item is not None:

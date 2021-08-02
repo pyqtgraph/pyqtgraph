@@ -146,8 +146,8 @@ class WidgetParameterItem(ParameterItem):
             w = QtWidgets.QLineEdit()
             w.setStyleSheet('border: 0px')
             w.sigChanged = w.editingFinished
-            w.value = lambda: str(w.text())
-            w.setValue = lambda v: w.setText(str(v))
+            w.value = w.text
+            w.setValue = w.setText
             w.sigChanging = w.textChanged
         elif t == 'color':
             w = ColorButton()
@@ -480,7 +480,7 @@ class GroupParameterItem(ParameterItem):
         """
         if self.addWidget.currentIndex() == 0:
             return
-        typ = str(self.addWidget.currentText())
+        typ = self.addWidget.currentText()
         self.param.addNew(typ)
         self.addWidget.setCurrentIndex(0)
 
@@ -579,7 +579,7 @@ class ListParameterItem(WidgetParameterItem):
         return w
 
     def value(self):
-        key = str(self.widget.currentText())
+        key = self.widget.currentText()
 
         return self.forward.get(key, None)
 
@@ -601,7 +601,7 @@ class ListParameterItem(WidgetParameterItem):
         self.forward, self.reverse = ListParameter.mapping(limits)
         try:
             self.widget.blockSignals(True)
-            val = self.targetValue  #str(self.widget.currentText())
+            val = self.targetValue
 
             self.widget.clear()
             for k in self.forward:

@@ -130,7 +130,7 @@ class ComboBox(QtGui.QComboBox):
         # current index has changed; need to remember new 'chosen text'
         if self._ignoreIndexChange:
             return
-        self._chosenText = str(self.currentText())
+        self._chosenText = self.currentText()
         
     def setCurrentIndex(self, index):
         QtGui.QComboBox.setCurrentIndex(self, index)
@@ -229,7 +229,7 @@ class ComboBox(QtGui.QComboBox):
             except AttributeError:
                 pass
         if data is None:
-            return str(self.itemText(ind))
+            return self.itemText(ind)
         else:
             return data
         

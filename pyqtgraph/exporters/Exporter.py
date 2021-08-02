@@ -62,7 +62,6 @@ class Exporter(object):
         return
         
     def fileSaveFinished(self, fileName):
-        fileName = str(fileName)
         global LastExportDirectory
         LastExportDirectory = os.path.split(fileName)[0]
         

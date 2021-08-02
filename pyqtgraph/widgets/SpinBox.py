@@ -557,9 +557,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
 
     def editingFinishedEvent(self):
         """Edit has finished; set value."""
-        #print "Edit finished."
-        if str(self.lineEdit().text()) == self.lastText:
-            #print "no text change."
+        if self.lineEdit().text() == self.lastText:
             return
         try:
             val = self.interpret()
@@ -567,10 +565,8 @@ class SpinBox(QtGui.QAbstractSpinBox):
             return
         
         if val is False:
-            #print "value invalid:", str(self.lineEdit().text())
             return
         if val == self.val:
-            #print "no value change:", val, self.val
             return
         self.setValue(val, delaySignal=False)  ## allow text update so that values are reformatted pretty-like
 
