@@ -9,6 +9,24 @@ import warnings
 PARAM_TYPES = {}
 PARAM_NAMES = {}
 
+_PARAM_ITEM_TYPES = {}
+
+def registerParameterItemType(name, itemCls, parameterCls=None, override=False):
+    """
+    Similar to :func:`registerParameterType`, but works on ParameterItems. This is useful for Parameters where the
+    `itemClass` does all the heavy lifting, and a redundant Parameter class must be defined just to house `itemClass`.
+    Instead, use `registerParameterItemType`. If this should belong to a subclass of `Parameter`, specify which one
+    in `parameterCls`.
+    """
+    global _PARAM_ITEM_TYPES
+    if name in _PARAM_ITEM_TYPES and not override:
+        raise Exception("Parameter item type '%s' already exists (use override=True to replace)" % name)
+
+    parameterCls = parameterCls or Parameter
+    _PARAM_ITEM_TYPES[name] = itemCls
+    registerParameterType(name, parameterCls, override)
+
+
 def registerParameterType(name, cls, override=False):
     """Register a parameter type in the parametertree system.
 
@@ -67,6 +85,8 @@ class Parameter(QtCore.QObject):
     """
     ## name, type, limits, etc.
     ## can also carry UI hints (slider vs spinbox, etc.)
+
+    itemClass = None
     
     sigValueChanged = QtCore.Signal(object, object)  ## self, value   emitted when value is finished being edited
     sigValueChanging = QtCore.Signal(object, object)  ## self, value  emitted as value is being edited
@@ -545,11 +565,10 @@ class Parameter(QtCore.QObject):
         to display this Parameter.
         Most subclasses will want to override this function.
         """
-        if hasattr(self, 'itemClass'):
-            #print "Param:", self, "Make item from itemClass:", self.itemClass
-            return self.itemClass(self, depth)
-        else:
-            return ParameterItem(self, depth=depth)
+        # Default to user-specified itemClass. If not present, check for a registered item class. Finally,
+        # revert to ParameterItem if both fail
+        itemClass = self.itemClass or _PARAM_ITEM_TYPES.get(self.opts['type'], ParameterItem)
+        return itemClass(self, depth)
 
 
     def addChild(self, child, autoIncrementName=None):
