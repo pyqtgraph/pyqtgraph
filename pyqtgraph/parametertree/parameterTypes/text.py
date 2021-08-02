@@ -11,7 +11,7 @@ class TextParameterItem(WidgetParameterItem):
         self.asSubItem = True
         self.textBox = w = QtWidgets.QTextEdit()
         w.sizeHint = lambda: QtCore.QSize(300, 100)
-        w.value = lambda: str(w.toPlainText())
+        w.value = w.toPlainText
         w.setValue = w.setPlainText
         w.sigChanged = w.textChanged
         return w
