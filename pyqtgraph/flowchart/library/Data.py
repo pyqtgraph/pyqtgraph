@@ -240,14 +240,11 @@ class EvalNode(Node):
             fn = "def fn(**args):\n"
             run = "\noutput=fn(**args)\n"
             text = fn + "\n".join(["    "+l for l in self.text.toPlainText().split('\n')]) + run
-            if sys.version_info.major == 2:
-                exec(text)
-            elif sys.version_info.major == 3:
-                ldict = locals()
-                exec(text, globals(), ldict)
-                output = ldict['output']
+            ldict = locals()
+            exec(text, globals(), ldict)
+            output = ldict['output']
         except:
-            print("Error processing node: %s" % self.name())
+            print(f"Error processing node: {self.name()}")
             raise
         return output
         
