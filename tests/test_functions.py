@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from copy import deepcopy
-from contextlib import suppress
 from pyqtgraph.functions import arrayToQPath, eq
 
 import numpy as np
@@ -272,8 +271,6 @@ _dtypes.extend(['uint8', 'uint16'])
 
 def _handle_underflow(dtype, *elements):
     """Wrapper around path description which converts underflow into proper points"""
-    if not dtype.startswith('uint'):
-        return elements
     out = []
     for el in elements:
         newElement = [el[0]]
@@ -283,7 +280,7 @@ def _handle_underflow(dtype, *elements):
                 coord = np.array(coord, dtype=dtype)
             newElement.append(float(coord))
         out.append(tuple(newElement))
-    return tuple(out)
+    return out
 
 @pytest.mark.parametrize(
     "xs, ys, connect, expected", [
