@@ -5,7 +5,6 @@ from time import perf_counter, perf_counter_ns
 
 from ..Qt import QtCore, QtGui, QT_LIB, isQObjectAlive
 from ..Point import Point
-from .. import functions as fn
 from .mouseEvents import *
 from .. import debug as debug
 from .. import getConfigOption

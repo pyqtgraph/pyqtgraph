@@ -27,7 +27,7 @@ class ListParameterItem(WidgetParameterItem):
         return w
 
     def value(self):
-        key = str(self.widget.currentText())
+        key = self.widget.currentText()
 
         return self.forward.get(key, None)
 
@@ -49,7 +49,7 @@ class ListParameterItem(WidgetParameterItem):
         self.forward, self.reverse = ListParameter.mapping(limits)
         try:
             self.widget.blockSignals(True)
-            val = self.targetValue  #str(self.widget.currentText())
+            val = self.targetValue
 
             self.widget.clear()
             for k in self.forward:

@@ -8,7 +8,6 @@ from .TextItem import TextItem
 from .ViewBox import ViewBox
 from .. import functions as fn
 import numpy as np
-import weakref
 
 
 __all__ = ['InfiniteLine', 'InfLineLabel']

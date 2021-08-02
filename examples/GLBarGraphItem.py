@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Demonstrate use of GLLinePlotItem to draw cross-sections of a surface.
+This example demonstrates the use of GLBarGraphItem.
 
 """
 ## Add path to library (just for examples; you do not need this)

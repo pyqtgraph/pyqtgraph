@@ -14,7 +14,6 @@ import numpy
 from collections import OrderedDict
 import tempfile
 from . import units
-from .python2_3 import asUnicode, basestring
 from .Qt import QtCore
 from .Point import Point
 from .colormap import ColorMap
@@ -40,7 +39,7 @@ class ParseError(Exception):
 
 def writeConfigFile(data, fname):
     s = genString(data)
-    with open(fname, 'w') as fd:
+    with open(fname, 'wt') as fd:
         fd.write(s)
 
 
@@ -56,8 +55,8 @@ def readConfigFile(fname):
         
     try:
         #os.chdir(newDir)  ## bad.
-        with open(fname) as fd:
-            s = asUnicode(fd.read())
+        with open(fname, "rt") as fd:
+            s = fd.read()
         s = s.replace("\r\n", "\n")
         s = s.replace("\r", "\n")
         data = parseString(s)[1]
@@ -73,7 +72,7 @@ def readConfigFile(fname):
 
 def appendConfigFile(data, fname):
     s = genString(data)
-    with open(fname, 'a') as fd:
+    with open(fname, 'at') as fd:
         fd.write(s)
 
 
@@ -97,7 +96,7 @@ def genString(data, indent=''):
 def parseString(lines, start=0):
     
     data = OrderedDict()
-    if isinstance(lines, basestring):
+    if isinstance(lines, str):
         lines = lines.replace("\\\n", "")
         lines = lines.split('\n')
         lines = [l for l in lines if re.search(r'\S', l) and not re.match(r'\s*#', l)]  ## remove empty lines

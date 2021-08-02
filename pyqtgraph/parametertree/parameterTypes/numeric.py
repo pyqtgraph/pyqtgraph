@@ -36,7 +36,7 @@ class NumericParameterItem(WidgetParameterItem):
 
     def updateDisplayLabel(self, value=None):
         if value is None:
-            value = str(self.widget.lineEdit().text())
+            value = self.widget.lineEdit().text()
         super().updateDisplayLabel(value)
 
     def showEditor(self):

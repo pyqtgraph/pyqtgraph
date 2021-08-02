@@ -1,4 +1,5 @@
-from ..Qt import QtGui, QtCore
+# -*- coding: utf-8 -*-
+from ..Qt import QtCore
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['ItemGroup']
@@ -19,4 +20,3 @@ class ItemGroup(GraphicsObject):
     
     def addItem(self, item):
         item.setParentItem(self)
-

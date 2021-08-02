@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
+from ..Qt import QtGui
 from .GraphicsObject import GraphicsObject
 from .. import getConfigOption
 from .. import functions as fn
-import numpy as np
 
 __all__ = ['ErrorBarItem']
 

@@ -7,7 +7,6 @@ Distributed under MIT/X11 license. See license.txt for more information.
 
 from __future__ import division
 
-import ctypes
 import decimal
 import re
 import struct
@@ -24,7 +23,6 @@ from .Qt import QtGui, QtCore, QT_LIB, QtVersion
 from . import Qt
 from .metaarray import MetaArray
 from collections import OrderedDict
-from .python2_3 import asUnicode, basestring
 
 # in order of appearance in this file.
 # add new functions to this list only if they are to reside in pg namespace.
@@ -42,7 +40,7 @@ __all__ = [
     'makeRGBA', 'makeARGB',
     # 'try_fastpath_argb', 'ndarray_to_qimage',
     'makeQImage',
-    # 'qimage_to_ndarray',
+    # 'ndarray_from_qimage',
     'imageToArray', 'colorToAlpha',
     'gaussianFilter', 'downsample', 'arrayToQPath',
     # 'ndarray_from_qpolygonf', 'create_qpolygonf', 'arrayToQPolygonF',
@@ -65,7 +63,7 @@ Colors = {
     's': QtGui.QColor(100,100,150,255),
 }  
 
-SI_PREFIXES = asUnicode('yzafpnµm kMGTPEZY')
+SI_PREFIXES = 'yzafpnµm kMGTPEZY'
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
 SI_PREFIX_EXPONENTS['u'] = -6
@@ -132,7 +130,7 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
         return fmt % (x*p, pref, suffix)
     else:
         if allowUnicode:
-            plusminus = space + asUnicode("±") + space
+            plusminus = space + "±" + space
         else:
             plusminus = " +/- "
         fmt = "%." + str(precision) + "g%s%s%s%s"
@@ -164,7 +162,6 @@ def siParse(s, regex=FLOAT_REGEX, suffix=None):
         contains a suffix, it is discarded. This enables interpreting
         characters following the numerical value as an SI prefix.
     """
-    s = asUnicode(s)
     s = s.strip()
     if suffix is not None and len(suffix) > 0:
         if s[-len(suffix):] != suffix:
@@ -254,7 +251,7 @@ def mkColor(*args):
     """
     err = 'Not sure how to make a color from "%s"' % str(args)
     if len(args) == 1:
-        if isinstance(args[0], basestring):
+        if isinstance(args[0], str):
             c = args[0]
             if len(c) == 1:
                 try:
@@ -1682,24 +1679,28 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     return ndarray_to_qimage(imgData, imgFormat)
 
 
-def qimage_to_ndarray(qimg):
+def ndarray_from_qimage(qimg):
     img_ptr = qimg.bits()
 
-    if hasattr(img_ptr, 'setsize'): # PyQt sip.voidptr
+    if img_ptr is None:
+        raise ValueError("Null QImage not supported")
+
+    h, w = qimg.height(), qimg.width()
+    bpl = qimg.bytesPerLine()
+    depth = qimg.depth()
+    logical_bpl = w * depth // 8
+
+    if QT_LIB.startswith('PyQt'):
         # sizeInBytes() was introduced in Qt 5.10
         # however PyQt5 5.12 will fail with:
         #   "TypeError: QImage.sizeInBytes() is a private method"
         # note that sizeInBytes() works fine with:
         #   PyQt5 5.15, PySide2 5.12, PySide2 5.15
-        try:
-            # 64-bits size
-            nbytes = qimg.sizeInBytes()
-        except (TypeError, AttributeError):
-            # 32-bits size
-            nbytes = qimg.byteCount()
-        img_ptr.setsize(nbytes)
+        img_ptr.setsize(h * bpl)
 
-    depth = qimg.depth()
+    memory = np.frombuffer(img_ptr, dtype=np.ubyte).reshape((h, bpl))
+    memory = memory[:, :logical_bpl]
+
     if depth in (8, 24, 32):
         dtype = np.uint8
         nchan = depth // 8
@@ -1708,10 +1709,12 @@ def qimage_to_ndarray(qimg):
         nchan = depth // 16
     else:
         raise ValueError("Unsupported Image Type")
-    shape = qimg.height(), qimg.width()
+
+    shape = h, w
     if nchan != 1:
         shape = shape + (nchan,)
-    return np.frombuffer(img_ptr, dtype=dtype).reshape(shape)
+    arr = memory.view(dtype).reshape(shape)
+    return arr
 
 
 def imageToArray(img, copy=False, transpose=True):
@@ -1721,7 +1724,7 @@ def imageToArray(img, copy=False, transpose=True):
     the QImage is collected before the array, there may be trouble).
     The array will have shape (width, height, (b,g,r,a)).
     """
-    arr = qimage_to_ndarray(img)
+    arr = ndarray_from_qimage(img)
 
     fmt = img.format()
     if fmt == img.Format.Format_RGB32:
@@ -2060,25 +2063,25 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
 
 def ndarray_from_qpolygonf(polyline):
     nbytes = 2 * len(polyline) * 8
-    if QT_LIB == "PySide2":
-        buffer = Qt.shiboken2.VoidPtr(polyline.data(), nbytes, True)
-    elif QT_LIB == "PySide6":
-        buffer = Qt.shiboken6.VoidPtr(polyline.data(), nbytes, True)
-    else:
+    if QT_LIB.startswith('PyQt'):
         buffer = polyline.data()
+        if buffer is None:
+            buffer = Qt.sip.voidptr(0)
         buffer.setsize(nbytes)
+    else:
+        ptr = polyline.data()
+        if ptr is None:
+            ptr = 0
+        buffer = Qt.shiboken.VoidPtr(ptr, nbytes, True)
     memory = np.frombuffer(buffer, np.double).reshape((-1, 2))
     return memory
 
 def create_qpolygonf(size):
-    if QtVersion.startswith("5"):
-        polyline = QtGui.QPolygonF(size)
+    polyline = QtGui.QPolygonF()
+    if QT_LIB.startswith('PyQt'):
+        polyline.fill(QtCore.QPointF(), size)
     else:
-        polyline = QtGui.QPolygonF()
-        if QT_LIB == "PySide6":
-            polyline.resize(size)
-        else:
-            polyline.fill(QtCore.QPointF(), size)
+        polyline.resize(size)
     return polyline
 
 def arrayToQPolygonF(x, y):
@@ -2192,9 +2195,9 @@ def arrayToQPolygonF(x, y):
         #index = tetFields[0] + tetFields[1]*2 + tetFields[2]*4 + tetFields[3]*8
         
         ### add facets
-        #for i in xrange(index.shape[0]):                 # data x-axis
-            #for j in xrange(index.shape[1]):             # data y-axis
-                #for k in xrange(index.shape[2]):         # data z-axis
+        #for i in range(index.shape[0]):                 # data x-axis
+            #for j in range(index.shape[1]):             # data y-axis
+                #for k in range(index.shape[2]):         # data z-axis
                     #for f in indexFacets[index[i,j,k]]:  # faces to generate for this tet
                         #pts = []
                         #for l in [0,1,2]:      # points in this face
@@ -2397,11 +2400,6 @@ def traceImage(image, values, smooth=0.5):
     If image is RGB or RGBA, then the shape of values should be (nvals, 3/4)
     The parameter *smooth* is expressed in pixels.
     """
-    try:
-        import scipy.ndimage as ndi
-    except ImportError:
-        raise Exception("traceImage() requires the package scipy.ndimage, but it is not importable.")
-    
     if values.ndim == 2:
         values = values.T
     values = values[np.newaxis, np.newaxis, ...].astype(float)

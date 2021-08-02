@@ -3,7 +3,6 @@ from ..Qt import QtCore, QtGui
 
 from .DockDrop import *
 from ..widgets.VerticalLabel import VerticalLabel
-from ..python2_3 import asUnicode
 
 
 class Dock(QtGui.QWidget, DockDrop):
@@ -125,7 +124,7 @@ class Dock(QtGui.QWidget, DockDrop):
         """
         Gets the text displayed in the title bar for this dock.
         """
-        return asUnicode(self.label.text())
+        return self.label.text()
 
     def setTitle(self, text):
         """

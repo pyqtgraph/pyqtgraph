@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 from .. import functions as fn
-from ..Qt import QtGui, QtCore
-import os, weakref, re
+from ..Qt import QtCore
+import weakref, re
 from collections import OrderedDict
-from ..python2_3 import asUnicode, basestring
 from .ParameterItem import ParameterItem
 import warnings
 
@@ -210,7 +209,7 @@ class Parameter(QtCore.QObject):
         self.blockTreeChangeEmit = 0
         #self.monitoringChildren = False  ## prevent calling monitorChildren more than once
         
-        if not isinstance(name, basestring):
+        if not isinstance(name, str):
             raise Exception("Parameter must have a string name specified in opts.")
         self.setName(name)
         
@@ -720,7 +719,7 @@ class Parameter(QtCore.QObject):
         
             param[('child', 'grandchild')] = value
         """
-        if isinstance(names, basestring):
+        if isinstance(names, str):
             names = (names,)
         return self.param(*names).setValue(value)
 
@@ -749,7 +748,7 @@ class Parameter(QtCore.QObject):
         return self.child(*names)
 
     def __repr__(self):
-        return asUnicode("<%s '%s' at 0x%x>") % (self.__class__.__name__, self.name(), id(self))
+        return "<%s '%s' at 0x%x>" % (self.__class__.__name__, self.name(), id(self))
        
     def __getattr__(self, attr):
         ## Leaving this undocumented because I might like to remove it in the future..

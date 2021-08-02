@@ -349,7 +349,7 @@ class GroupParameterItem(ParameterItem):
         """
         if self.addWidget.currentIndex() == 0:
             return
-        typ = str(self.addWidget.currentText())
+        typ = self.addWidget.currentText()
         self.param.addNew(typ)
         self.addWidget.setCurrentIndex(0)
 

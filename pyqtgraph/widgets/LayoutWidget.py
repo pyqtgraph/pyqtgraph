@@ -1,4 +1,5 @@
-from ..Qt import QtGui, QtCore
+# -*- coding: utf-8 -*-
+from ..Qt import QtGui
 
 __all__ = ['LayoutWidget']
 class LayoutWidget(QtGui.QWidget):
@@ -97,5 +98,3 @@ class LayoutWidget(QtGui.QWidget):
         #items = []
         #for i in list(self.items.keys()):
             #self.removeItem(i)
-
-

@@ -12,7 +12,6 @@ from .Qt import QtCore, QtGui, mkQApp
 from .widgets.PlotWidget import *
 from .imageview import *
 from .widgets.GraphicsLayoutWidget import GraphicsLayoutWidget
-from .widgets.GraphicsView import GraphicsView
 import warnings
 
 

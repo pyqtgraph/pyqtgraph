@@ -12,7 +12,6 @@ This module exists to smooth out some of the differences between PySide and PyQt
 
 import os, sys, re, time, subprocess, warnings
 
-from ..python2_3 import asUnicode
 
 PYSIDE = 'PySide'
 PYSIDE2 = 'PySide2'
@@ -73,7 +72,7 @@ class _StringIO(object):
         self.data.append(data)
         
     def getvalue(self):
-        return ''.join(map(asUnicode, self.data)).encode('utf8')
+        return ''.join(map(str, self.data)).encode('utf8')
 
     
 def _loadUiType(uiFile):
@@ -152,7 +151,12 @@ if QT_LIB == PYQT5:
     _copy_attrs(PyQt5.QtGui, QtGui)
     _copy_attrs(PyQt5.QtWidgets, QtWidgets)
 
-    from PyQt5 import sip, uic
+    try:
+        from PyQt5 import sip
+    except ImportError:
+        # some Linux distros package it this way (e.g. Ubuntu)
+        import sip
+    from PyQt5 import uic
 
     try:
         from PyQt5 import QtSvg
@@ -203,8 +207,7 @@ elif QT_LIB == PYSIDE2:
     except ImportError as err:
         QtTest = FailedImport(err)
 
-    import shiboken2
-    isQObjectAlive = shiboken2.isValid
+    import shiboken2 as shiboken
     import PySide2
     VERSION_INFO = 'PySide2 ' + PySide2.__version__ + ' Qt ' + QtCore.__version__
 elif QT_LIB == PYSIDE6:
@@ -226,8 +229,7 @@ elif QT_LIB == PYSIDE6:
     except ImportError as err:
         QtTest = FailedImport(err)
 
-    import shiboken6
-    isQObjectAlive = shiboken6.isValid
+    import shiboken6 as shiboken
     import PySide6
     VERSION_INFO = 'PySide6 ' + PySide6.__version__ + ' Qt ' + QtCore.__version__
 
@@ -313,6 +315,7 @@ if QT_LIB in [PYQT6, PYSIDE6]:
 if QT_LIB in [PYSIDE2, PYSIDE6]:
     QtVersion = QtCore.__version__
     loadUiType = _loadUiType
+    isQObjectAlive = shiboken.isValid
 
     # PySide does not implement qWait
     if not isinstance(QtTest, FailedImport):

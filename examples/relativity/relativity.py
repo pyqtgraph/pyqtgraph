@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 import collections
 import sys, os
@@ -6,7 +7,6 @@ from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph.parametertree import types as pTypes
 import pyqtgraph.configfile
-from pyqtgraph.python2_3 import xrange
 
 from time import perf_counter
 
@@ -520,7 +520,7 @@ class Simulation:
         dt = self.dt
         tVals = np.linspace(0, dt*(nPts-1), nPts)
         for cl in self.clocks.values():
-            for i in xrange(1,nPts):
+            for i in range(1,nPts):
                 nextT = tVals[i]
                 while True:
                     tau1, tau2 = cl.accelLimits()
@@ -566,7 +566,7 @@ class Simulation:
         ## These are the set of proper times (in the reference frame) that will be simulated
         ptVals = np.linspace(ref.pt, ref.pt + dt*(nPts-1), nPts)
         
-        for i in xrange(1,nPts):
+        for i in range(1,nPts):
                 
             ## step reference clock ahead one time step in its proper time
             nextPt = ptVals[i]  ## this is where (when) we want to end up

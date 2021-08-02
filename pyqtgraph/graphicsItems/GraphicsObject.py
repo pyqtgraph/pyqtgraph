@@ -1,4 +1,5 @@
-from ..Qt import QtGui, QtCore, QT_LIB
+# -*- coding: utf-8 -*-
+from ..Qt import QtGui, QT_LIB
 if QT_LIB.startswith('PyQt'):
     from ..Qt import sip
 from .GraphicsItem import GraphicsItem

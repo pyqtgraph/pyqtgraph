@@ -9,6 +9,7 @@ import pytest
 from numpy.testing import assert_array_almost_equal
 
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 
 np.random.seed(12345)
 
@@ -333,3 +334,31 @@ def test_arrayToQPath(xs, ys, connect, expected):
                 continue
         element = path.elementAt(i)
         assert eq(expected[i], (element.type, element.x, element.y))
+
+
+def test_ndarray_from_qpolygonf():
+    # test that we get an empty ndarray from an empty QPolygonF
+    poly = pg.functions.create_qpolygonf(0)
+    arr = pg.functions.ndarray_from_qpolygonf(poly)
+    assert isinstance(arr, np.ndarray)
+
+
+def test_ndarray_from_qimage():
+    # for QImages created w/o specifying bytesPerLine, Qt will pad
+    # each line to a multiple of 4-bytes.
+    # test that we can handle such QImages.
+    h = 10
+
+    fmt = QtGui.QImage.Format.Format_RGB888
+    for w in [5, 6, 7, 8]:
+        qimg = QtGui.QImage(w, h, fmt)
+        qimg.fill(0)
+        arr = pg.functions.ndarray_from_qimage(qimg)
+        assert arr.shape == (h, w, 3)
+
+    fmt = QtGui.QImage.Format.Format_Grayscale8
+    for w in [5, 6, 7, 8]:
+        qimg = QtGui.QImage(w, h, fmt)
+        qimg.fill(0)
+        arr = pg.functions.ndarray_from_qimage(qimg)
+        assert arr.shape == (h, w)
