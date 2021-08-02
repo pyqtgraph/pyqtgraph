@@ -504,7 +504,7 @@ class NodeGraphicsItem(GraphicsObject):
         #GraphicsObject.setZValue(self, z)
         
     def labelChanged(self):
-        newName = str(self.nameItem.toPlainText())
+        newName = self.nameItem.toPlainText()
         if newName != self.node.name():
             self.node.rename(newName)
             

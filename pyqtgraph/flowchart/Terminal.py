@@ -311,7 +311,7 @@ class TerminalGraphicsItem(GraphicsObject):
         self.menu = None
 
     def labelChanged(self):
-        newName = str(self.label.toPlainText())
+        newName = self.label.toPlainText()
         if newName != self.term.name():
             self.term.rename(newName)
 
