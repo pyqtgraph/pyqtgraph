@@ -30,9 +30,6 @@ except ImportError:
     orig_reload = reload
 
 
-py3 = sys.version_info >= (3,)
-
-
 def reloadAll(prefix=None, debug=False):
     """Automatically reload all modules whose __file__ begins with *prefix*.
 
@@ -239,7 +236,7 @@ def updateClass(old, new, debug):
     ## but it fixes a few specific cases (pyqt signals, for one)
     for attr in dir(old):
         oa = getattr(old, attr)
-        if (py3 and inspect.isfunction(oa)) or inspect.ismethod(oa):
+        if inspect.isfunction(oa) or inspect.ismethod(oa):
             # note python2 has unbound methods, whereas python3 just uses plain functions
             try:
                 na = getattr(new, attr)

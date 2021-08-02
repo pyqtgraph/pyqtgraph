@@ -129,9 +129,6 @@ def renamePyc(startDir):
                 os.rename(fileName, name2)
                 
 path = os.path.split(__file__)[0]
-if __version__ is None and not hasattr(sys, 'frozen') and sys.version_info[0] == 2: ## If we are frozen, there's a good chance we don't have the original .py files anymore.
-    renamePyc(path)
-
 
 ## Import almost everything to make it available from a single namespace
 ## don't import the more complex systems--canvas, parametertree, flowchart, dockarea
