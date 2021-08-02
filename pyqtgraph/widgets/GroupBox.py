@@ -1,6 +1,6 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 from .PathButton import PathButton
-from ..python2_3 import basestring
 
 __all__ = ['GroupBox']
 
@@ -41,7 +41,7 @@ class GroupBox(QtGui.QGroupBox):
         
         self.collapseBtn.clicked.connect(self.toggleCollapsed)
 
-        if len(args) > 0 and isinstance(args[0], basestring):
+        if len(args) > 0 and isinstance(args[0], str):
             self.setTitle(args[0])
         
     def toggleCollapsed(self):

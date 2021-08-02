@@ -2,7 +2,6 @@
 from ..Qt import QtGui
 from collections import OrderedDict
 from .TableWidget import TableWidget
-from ..python2_3 import asUnicode
 import types, traceback
 import numpy as np
 
@@ -55,7 +54,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
         if len(desc) > 100:
             desc = desc[:97] + '...'
             if widget is None:
-                widget = QtGui.QPlainTextEdit(asUnicode(data))
+                widget = QtGui.QPlainTextEdit(str(data))
                 widget.setMaximumHeight(200)
                 widget.setReadOnly(True)
         
@@ -69,7 +68,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
             
         # recurse to children
         for key, data in childs.items():
-            self.buildTree(data, node, asUnicode(key), path=path+(key,))
+            self.buildTree(data, node, str(key), path=path+(key,))
 
     def parse(self, data):
         """
@@ -117,11 +116,11 @@ class DataTreeWidget(QtGui.QTreeWidget):
                 #(i, {'file': child[0], 'line': child[1], 'function': child[2], 'code': child[3]})
                 #for i, child in enumerate(frames)])
             #childs = OrderedDict([(i, ch) for i,ch in enumerate(frames)])
-            widget = QtGui.QPlainTextEdit(asUnicode('\n'.join(frames)))
+            widget = QtGui.QPlainTextEdit('\n'.join(frames))
             widget.setMaximumHeight(200)
             widget.setReadOnly(True)
         else:
-            desc = asUnicode(data)
+            desc = str(data)
         
         return typeStr, desc, childs, widget
         

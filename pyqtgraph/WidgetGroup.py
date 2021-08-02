@@ -10,7 +10,6 @@ of a large group of widgets.
 
 from .Qt import QtCore, QtGui
 import weakref, inspect
-from .python2_3 import asUnicode
 
 
 __all__ = ['WidgetGroup']
@@ -45,7 +44,7 @@ def comboState(w):
         except AttributeError:
             pass
     if data is None:
-        return asUnicode(w.itemText(ind))
+        return str(w.itemText(ind))
     else:
         return data
     

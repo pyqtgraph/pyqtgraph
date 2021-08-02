@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
-from ..python2_3 import asUnicode
 
 translate = QtCore.QCoreApplication.translate
 
@@ -138,7 +137,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             if self.ignoreNameColumnChange:
                 return
             try:
-                newName = self.param.setName(asUnicode(self.text(col)))
+                newName = self.param.setName(str(self.text(col)))
             except Exception:
                 self.setText(0, self.param.name())
                 raise

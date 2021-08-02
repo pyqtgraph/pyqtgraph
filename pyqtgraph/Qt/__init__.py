@@ -12,7 +12,6 @@ This module exists to smooth out some of the differences between PySide and PyQt
 
 import os, sys, re, time, subprocess, warnings
 
-from ..python2_3 import asUnicode
 
 PYSIDE = 'PySide'
 PYSIDE2 = 'PySide2'
@@ -73,7 +72,7 @@ class _StringIO(object):
         self.data.append(data)
         
     def getvalue(self):
-        return ''.join(map(asUnicode, self.data)).encode('utf8')
+        return ''.join(map(str, self.data)).encode('utf8')
 
     
 def _loadUiType(uiFile):

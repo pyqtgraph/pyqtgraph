@@ -2,7 +2,6 @@
 import sys
 from ..Qt import QtGui
 from collections import OrderedDict
-from ..python2_3 import asUnicode, basestring
 
 __all__ = ['ComboBox']
 
@@ -64,7 +63,7 @@ class ComboBox(QtGui.QComboBox):
         """
         if self.count() == 0:
             return None
-        text = asUnicode(self.currentText())
+        text = self.currentText()
         return self._items[text]
     
     def ignoreIndexChange(func):
@@ -131,7 +130,7 @@ class ComboBox(QtGui.QComboBox):
         # current index has changed; need to remember new 'chosen text'
         if self._ignoreIndexChange:
             return
-        self._chosenText = asUnicode(self.currentText())
+        self._chosenText = self.currentText()
         
     def setCurrentIndex(self, index):
         QtGui.QComboBox.setCurrentIndex(self, index)
@@ -160,7 +159,7 @@ class ComboBox(QtGui.QComboBox):
     def addItem(self, *args, **kwds):
         # Need to handle two different function signatures for QComboBox.addItem
         try:
-            if isinstance(args[0], basestring):
+            if isinstance(args[0], str):
                 text = args[0]
                 if len(args) == 2:
                     value = args[1]
@@ -230,7 +229,7 @@ class ComboBox(QtGui.QComboBox):
             except AttributeError:
                 pass
         if data is None:
-            return asUnicode(self.itemText(ind))
+            return self.itemText(ind)
         else:
             return data
         

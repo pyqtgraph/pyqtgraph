@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from ..widgets.FileDialog import FileDialog
 from ..Qt import QtGui, QtCore
-from ..python2_3 import asUnicode, basestring
 from ..GraphicsScene import GraphicsScene
 import os, re
 LastExportDirectory = None
@@ -49,7 +48,7 @@ class Exporter(object):
         self.fileDialog.setFileMode(QtGui.QFileDialog.FileMode.AnyFile)
         self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptMode.AcceptSave)
         if filter is not None:
-            if isinstance(filter, basestring):
+            if isinstance(filter, str):
                 self.fileDialog.setNameFilter(filter)
             elif isinstance(filter, list):
                 self.fileDialog.setNameFilters(filter)
@@ -63,13 +62,12 @@ class Exporter(object):
         return
         
     def fileSaveFinished(self, fileName):
-        fileName = asUnicode(fileName)
         global LastExportDirectory
         LastExportDirectory = os.path.split(fileName)[0]
         
         ## If file name does not match selected extension, append it now
         ext = os.path.splitext(fileName)[1].lower().lstrip('.')
-        selectedExt = re.search(r'\*\.(\w+)\b', asUnicode(self.fileDialog.selectedNameFilter()))
+        selectedExt = re.search(r'\*\.(\w+)\b', self.fileDialog.selectedNameFilter())
         if selectedExt is not None:
             selectedExt = selectedExt.groups()[0].lower()
             if ext != selectedExt:

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from .Exporter import Exporter
-from ..python2_3 import asUnicode
 from ..parametertree import Parameter
 from ..Qt import QtGui, QtCore, QtSvg
 from .. import debug
@@ -79,7 +78,7 @@ class SVGExporter(Exporter):
             QtGui.QApplication.clipboard().setMimeData(md)
         else:
             with open(fileName, 'wb') as fh:
-                fh.write(asUnicode(xml).encode('utf-8'))
+                fh.write(str(xml).encode('utf-8'))
 
 # Includes space for extra attributes
 xmlHeader = """\

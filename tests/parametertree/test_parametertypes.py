@@ -1,8 +1,8 @@
+# -*- coding: utf-8 -*-
 import sys
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.parametertree as pt
 import pyqtgraph as pg
-from pyqtgraph.python2_3 import asUnicode
 from pyqtgraph.functions import eq
 import numpy as np
 
@@ -44,7 +44,7 @@ def test_types():
     all_objs = {
         'int0': 0, 'int':7, 'float': -0.35, 'bigfloat': 1e129, 'npfloat': np.float64(5), 
         'npint': np.int64(5),'npinf': np.inf, 'npnan': np.nan, 'bool': True, 
-        'complex': 5+3j, 'str': '#xxx', 'unicode': asUnicode('µ'), 
+        'complex': 5+3j, 'str': '#xxx', 'unicode': 'µ', 
         'list': [1,2,3], 'dict': {'1': 2}, 'color': pg.mkColor('k'), 
         'brush': pg.mkBrush('k'), 'pen': pg.mkPen('k'), 'none': None
     }
@@ -63,7 +63,7 @@ def test_types():
     # str  (should be able to make a string out of any type)
     types = all_objs.keys()
     strtyp = str if sys.version[0] >= '3' else unicode
-    check_param_types(param.child('str'), strtyp, asUnicode, '', all_objs, types)
+    check_param_types(param.child('str'), strtyp, str, '', all_objs, types)
     
     # bool  (should be able to make a boolean out of any type?)
     types = all_objs.keys()
