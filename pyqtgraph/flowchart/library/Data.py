@@ -177,7 +177,7 @@ class TextEdit(QtWidgets.QTextEdit):
         self.lastText = None
 
     def focusOutEvent(self, ev):
-        text = str(self.toPlainText())
+        text = self.toPlainText()
         if text != self.lastText:
             self.lastText = text
             self.on_update()
@@ -234,12 +234,12 @@ class EvalNode(Node):
         l.update(args)
         ## try eval first, then exec
         try:  
-            text = str(self.text.toPlainText()).replace('\n', ' ')
+            text = self.text.toPlainText().replace('\n', ' ')
             output = eval(text, globals(), l)
         except SyntaxError:
             fn = "def fn(**args):\n"
             run = "\noutput=fn(**args)\n"
-            text = fn + "\n".join(["    "+l for l in str(self.text.toPlainText()).split('\n')]) + run
+            text = fn + "\n".join(["    "+l for l in self.text.toPlainText().split('\n')]) + run
             if sys.version_info.major == 2:
                 exec(text)
             elif sys.version_info.major == 3:
@@ -253,7 +253,7 @@ class EvalNode(Node):
         
     def saveState(self):
         state = Node.saveState(self)
-        state['text'] = str(self.text.toPlainText())
+        state['text'] = self.text.toPlainText()
         #state['terminals'] = self.saveTerminals()
         return state
         
