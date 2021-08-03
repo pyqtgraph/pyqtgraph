@@ -1,8 +1,10 @@
 import ast
 import configparser
 import contextlib
+import functools
 import inspect
 import textwrap
+import weakref
 
 from . import Parameter
 
@@ -232,6 +234,73 @@ def _parseIniDocstring_basic(doc):
     return out
 
 
+class InteractiveFunction:
+    """
+    `interact` can be used with regular functions. However, when they are connected to changed or changing signals,
+    there is no way to access these connections later to i.e. disconnect them temporarily. This utility class
+    wraps a normal function but can provide an external scope for accessing the hooked up parameter signals.
+    """
+    def __init__(self, func, deferred=None, **extra):
+        """
+        For information on these parameters, see the signature of :func:`interact`. `extra` are extra kwargs that aren't
+        parameters, but are forwarded to `func`
+        """
+        super().__init__()
+        self.params = None
+        self.func = func
+        if deferred is None:
+            deferred = {}
+        self.deferred = deferred
+        self.__name__ = func.__name__
+        self.__doc__ = func.__doc__
+        functools.update_wrapper(self, func)
+        self._disconnected = False
+        self.extra = extra
+
+    def __call__(self, **kwargs):
+        """
+        Calls `self.func`. Extra, deferred, and parameter keywords as defined on init and through
+        :func:`InteractiveFunction.setParams` are forwarded during the call.
+        """
+        paramKwargs = self.extra.copy()
+        for p in self.params:
+            p = p()
+            if p is None:
+                raise RuntimeError('Calling interactive function with deleted parameter')
+            paramKwargs[p.name()] = p.value()
+        for kk, vv in self.deferred.items():
+            paramKwargs[kk] = vv()
+        paramKwargs.update(**kwargs)
+        return self.func(**paramKwargs)
+
+    def setParams(self, params=None):
+        """Creates weakrefs to each parameter to avoid extending their lives"""
+        if params is None:
+            params = []
+        self.params = [weakref.ref(p) for p in params]
+
+    def run_changing(self, _param, value):
+        if self._disconnected:
+            return
+        return self(**{_param.name(): value})
+
+    def run_changedOrButton(self, **kwargs):
+        if self._disconnected:
+            return
+        return self(**kwargs)
+
+    def disconnect(self):
+        """Simulates disconnecting the runnable by turning `run_*` functions into no-ops"""
+        self._disconnected = True
+
+    def reconnect(self):
+        """Simulates reconnecting the runnable by re-enabling `run_*` functions"""
+        self._disconnected = False
+
+    def __str__(self):
+        return self.func.__str__()
+
+
 def interact(func, runOpts=None, ignores=None, deferred=None, parent=None, runFunc=None,
              nest=True, existOk=True, **overrides):
     """
@@ -247,7 +316,8 @@ def interact(func, runOpts=None, ignores=None, deferred=None, parent=None, runFu
     Parameters
     ----------
     func: Callable
-        function with which to interact
+        function with which to interact. Can also be a :class:`InteractiveFunction`, if a reference to the bound
+        signals is required.
     runOpts: `GroupParameter.<RUN_BUTTON, CHANGED, or CHANGING>` value
         How the function should be run. If *None*, defaults to Parmeter.defaultRunOpts which can be set by the
         user.
@@ -277,18 +347,11 @@ def interact(func, runOpts=None, ignores=None, deferred=None, parent=None, runFu
     """
     funcDict = funcToParamDict(func, **overrides)
     children = funcDict.pop('children')
-
+    chNames = [ch['name'] for ch in children]
     if runOpts is None:
         runOpts = RunOpts.defaultRunOpts
-    if parent is None or nest:
-        parentOpts = funcDict
-        if RunOpts.titleFormat is not None:
-            parentOpts['title'] = RunOpts.titleFormat(parentOpts['name'])
-        host = Parameter.create(**parentOpts)
-        if parent is not None:
-            # Parent was provided and nesting is enabled, so place created args inside the nested GroupParmeter
-            parent.addChild(host, existOk=existOk)
-        parent = host
+
+    parent = _resolveParent(parent, nest, funcDict, existOk)
 
     if deferred is None:
         deferred = {}
@@ -297,57 +360,81 @@ def interact(func, runOpts=None, ignores=None, deferred=None, parent=None, runFu
         ignores = []
     ignores = list(ignores) + list(deferred)
 
+    # Recycle ignored content that is needed as a value
+    recycleNames = set(overrides) & set(ignores) & set(chNames)
+    extra = {key: overrides[key] for key in recycleNames}
+
+
     toExec = runFunc or func
+    if not isinstance(toExec, InteractiveFunction):
+        toExec = InteractiveFunction(toExec, deferred=deferred)
+    toExec.extra.update(extra)
 
-    checkNames = [ch['name'] for ch in children if ch['name'] not in ignores]
-    def runFunc(**extra):
-        kwargs = {p.name(): p.value() for p in parent if p.name() in checkNames}
-        for kk, vv in deferred.items():
-            kwargs[kk] = vv()
-        kwargs.update(**extra)
-        return toExec(**kwargs)
-
-    def runFunc_changing(_param, value):
-        return runFunc(**{_param.name(): value})
-
+    useParams = []
     for chDict in children:
         name = chDict['name']
+        if name in ignores:
+            continue
         # Make sure args without defaults have overrides
         if chDict['value'] is RunOpts.PARAM_UNSET and name not in deferred:
             raise ValueError(f'Cannot interact with "{func} since it has required parameter "{name}"'
                              f' with no default or deferred value provided.')
-        if name in ignores:
-            # Don't make a parameter for this child
-            # However, make sure to recycle their values if provided
-            if name in overrides:
-                # Use default arg to avoid loop binding issue
-                deferred.setdefault(name, lambda _n=name: overrides[_n])
-            continue
 
-        child = parent.addChild(chDict, existOk=existOk)
-        if RunOpts.ON_CHANGED in runOpts:
-            child.sigValueChanged.connect(runFunc)
-        if RunOpts.ON_CHANGING in runOpts:
-            child.sigValueChanging.connect(runFunc_changing)
-        # createdChildren.append(child)
+        child = _createFuncParamChild(parent, chDict, runOpts, existOk, toExec)
+        useParams.append(child)
 
+    toExec.setParams(useParams)
     ret = parent
-    # It doesn't make sense to register a parameter-less function without a button-run, since it will never
-    # run and didn't create any children... Should this be an error/warning?
-    # if not createdChildren and cls.RUN_BUTTON not in runOpts:
-    #     warnings.warn(f'Interacting with function "{parent.title()}", but it is not runnable'
-    #                   f' by button and possesses no parameters, so this is a no-op.', UserWarning)
     if RunOpts.ON_BUTTON in runOpts:
         # Add an extra button child which can activate the function
-        name = 'Run' if nest else func.__name__
-        createOpts = dict(name=name, type='action')
-        tip = funcDict.get('tip')
-        if tip:
-            createOpts['tip'] = tip
-        child = Parameter.create(**createOpts)
+        button = _makeRunButton(nest, funcDict.get('tip'), toExec)
         # Return just the button if no other params were allowed
         if not parent.hasChildren():
-            ret = child
-        parent.addChild(child, existOk=existOk)
-        child.sigActivated.connect(runFunc)
+            ret = button
+        parent.addChild(button, existOk=existOk)
+
+    # Keep reference to avoid `toExec` getting garbage collected and allow later access
     return ret
+
+def _resolveParent(parent, nest, parentOpts, existOk):
+    if parent is None or nest:
+        if RunOpts.titleFormat is not None:
+            parentOpts['title'] = RunOpts.titleFormat(parentOpts['name'])
+        host = Parameter.create(**parentOpts)
+        if parent is not None:
+            # Parent was provided and nesting is enabled, so place created args inside the nested GroupParmeter
+            parent.addChild(host, existOk=existOk)
+        parent = host
+    return parent
+
+def _createFuncParamChild(parent, chDict, runOpts, existOk, toExec):
+    name = chDict['name']
+    # Make sure args without defaults have overrides
+    if chDict['value'] is RunOpts.PARAM_UNSET and name not in toExec.deferred:
+        raise ValueError(f'Cannot interact with "{toExec} since it has required parameter "{name}"'
+                         f' with no default or deferred value provided.')
+    child = parent.addChild(chDict, existOk=existOk)
+    # I tried connecting directly to the runnables in `toExec`, but they result in early garbage collection. This
+    # doesn't happen with local functions
+    if RunOpts.ON_CHANGED in runOpts:
+        def run_change():
+            toExec.run_changedOrButton()
+        child.sigValueChanged.connect(run_change)
+    if RunOpts.ON_CHANGING in runOpts:
+        def run_changing(_param, _val):
+            toExec.run_changing(_param, _val)
+        child.sigValueChanging.connect(run_changing)
+    return child
+
+def _makeRunButton(nest, tip, interactiveFunc):
+    # Add an extra button child which can activate the function
+    name = 'Run' if nest else interactiveFunc.func.__name__
+    createOpts = dict(name=name, type='action')
+    if tip:
+        createOpts['tip'] = tip
+    child = Parameter.create(**createOpts)
+    # A local function will avoid garbage collection by holding a reference to `toExec`
+    def run():
+        interactiveFunc.run_changedOrButton()
+    child.sigActivated.connect(run)
+    return child

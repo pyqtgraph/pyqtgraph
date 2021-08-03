@@ -4,7 +4,7 @@ import pytest
 from functools import wraps
 from pyqtgraph.parametertree import Parameter
 from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
-from pyqtgraph.parametertree.interactive import interact, RunOpts
+from pyqtgraph.parametertree.interactive import interact, RunOpts, InteractiveFunction
 
 
 def test_parameter_hasdefault():
@@ -159,3 +159,23 @@ def test_onlyRun():
     def a():
         return 5
     assert not isinstance(interact(a, runOpts=RunOpts.ON_BUTTON), GP)
+
+def test_interactiveFunc():
+    value = 0
+    def myfunc(a=5):
+        nonlocal value
+        value = a
+        return a
+    interactive = InteractiveFunction(myfunc)
+    host = interact(interactive, runOpts=[])
+
+    host['a'] = 7
+    assert interactive.run_changedOrButton() == 7
+
+    interactive.disconnect()
+    interactive.run_changedOrButton(a=10)
+    assert value == 7
+
+    interactive.reconnect()
+    interactive.run_changedOrButton(a=10)
+    assert value == 10
