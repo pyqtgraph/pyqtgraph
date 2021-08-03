@@ -17,6 +17,8 @@ import pyqtgraph.functions as fn
 import itertools
 import argparse
 
+from pyqtgraph.parametertree import interact, InteractiveFunction
+
 if QT_LIB.startswith('PyQt'):
     wrapinstance = pg.Qt.sip.wrapinstance
 else:
@@ -73,8 +75,8 @@ class MonkeyCurveItem(pg.PlotCurveItem):
         self.monkey_mode = ''
         self._lineInstances = LineInstances()
 
-    def setMethod(self, param, value):
-        self.monkey_mode = value
+    def setMethod(self, method):
+        self.monkey_mode = method
 
     def paint(self, painter, opt, widget):
         if self.monkey_mode not in ['drawPolyline', 'drawLines']:
@@ -101,32 +103,14 @@ app = pg.mkQApp("Plot Speed Test")
 
 default_pen = pg.mkPen()
 
-children = [
-    dict(name='sigopts', title='Signal Options', type='group', children=[
-        dict(name='noise', type='bool', value=args.noise),
-        dict(name='nsamples', type='int', limits=[0, None], value=args.nsamples),
-        dict(name='frames', type='int', limits=[1, None], value=args.frames),
-        dict(name='fsample', title='sample rate', type='float', value=args.fsample, units='Hz'),
-        dict(name='frequency', type='float', value=args.frequency, units='Hz'),
-        dict(name='amplitude', type='float', value=args.amplitude),
-    ]),
-    dict(name='useOpenGL', type='bool', value=pg.getConfigOption('useOpenGL'),
-        readonly=not args.allow_opengl_toggle),
-    dict(name='enableExperimental', type='bool', value=pg.getConfigOption('enableExperimental')),
-    dict(name='pen', type='pen', value=default_pen),
-    dict(name='antialias', type='bool', value=pg.getConfigOption('antialias')),
-    dict(name='connect', type='list', values=['all', 'pairs', 'finite', 'array'], value='all'),
-    dict(name='skipFiniteCheck', type='bool', value=False),
-    dict(name='plotMethod', title='Plot Method', type='list', values=['pyqtgraph', 'drawPolyline', 'drawLines'])
-]
-
-params = ptree.Parameter.create(name='Parameters', type='group', children=children)
+params = ptree.Parameter.create(name='Parameters', type='group')
 pt = ptree.ParameterTree(showHeader=False)
 pt.setParameters(params)
 pw = pg.PlotWidget()
 splitter = QtWidgets.QSplitter()
 splitter.addWidget(pt)
 splitter.addWidget(pw)
+splitter.setSizes([375, pw.width()])
 splitter.show()
 
 pw.setWindowTitle('pyqtgraph example: PlotSpeedTest')
@@ -140,52 +124,66 @@ elapsed = deque(maxlen=rollingAverageSize)
 def resetTimings(*args):
     elapsed.clear()
 
-def makeData(*args):
+@params.interactDecorator(title='Signal Options')
+def makeData(nsamples=args.nsamples, frames=args.frames, fsample=args.fsample, amplitude=args.amplitude,
+             frequency=args.frequency, noise=args.noise):
+    """
+    [nsamples.options]
+    limits = [0, None]
+
+    [frames.options]
+    limits = [1, None]
+
+    [fsample.options]
+    title = 'sample rate'
+    units = 'Hz'
+
+    [frequency.options]
+    units = 'Hz'
+    """
     global data, connect_array, ptr
-    sigopts = params.child('sigopts')
-    nsamples = sigopts['nsamples']
-    frames = sigopts['frames']
-    Fs = sigopts['fsample']
-    A = sigopts['amplitude']
-    F = sigopts['frequency']
-    ttt = np.arange(frames * nsamples, dtype=np.float64) / Fs
-    data = A*np.sin(2*np.pi*F*ttt).reshape((frames, nsamples))
-    if sigopts['noise']:
+    ttt = np.arange(frames * nsamples, dtype=np.float64) / fsample
+    data = amplitude*np.sin(2*np.pi*frequency*ttt).reshape((frames, nsamples))
+    if noise:
         data += np.random.normal(size=data.shape)
     connect_array = np.ones(data.shape[-1], dtype=bool)
     ptr = 0
     pw.setRange(QtCore.QRectF(0, -10, nsamples, 20))
 
-def onUseOpenGLChanged(param, enable):
-    pw.useOpenGL(enable)
+# Use function with same name so interacted params are under the same menu
+def update(useOpenGL=pg.getConfigOption('useOpenGL'), enableExperimental=pg.getConfigOption('enableExperimental')):
+    pw.useOpenGL(useOpenGL)
+    pg.setConfigOption('enableExperimental', enableExperimental)
+interact(update, parent=params)
 
-def onEnableExperimentalChanged(param, enable):
-    pg.setConfigOption('enableExperimental', enable)
+@params.interactDecorator(title='Curve Options')
+def setCurveOpts(pen=default_pen, method='pyqtgraph'):
+    """
+    [pen.options]
+    type = pen
 
-def onPenChanged(param, pen):
+    [method.options]
+    limits = ['pyqtgraph', 'drawPolyline', 'drawLines']
+    type = 'list'
+    title = 'Plot Method'
+    """
     curve.setPen(pen)
+    curve.setMethod(method)
 
-params.child('sigopts').sigTreeStateChanged.connect(makeData)
-params.child('useOpenGL').sigValueChanged.connect(onUseOpenGLChanged)
-params.child('enableExperimental').sigValueChanged.connect(onEnableExperimentalChanged)
-params.child('pen').sigValueChanged.connect(onPenChanged)
-params.child('plotMethod').sigValueChanged.connect(curve.setMethod)
-params.sigTreeStateChanged.connect(resetTimings)
-
-makeData()
-
-fpsLastUpdate = perf_counter()
-def update():
+def update(antialias=pg.getConfigOption('antialias'), connect='all', skipfiniteCheck=False):
+    """
+    [connect.options]
+    type = list
+    limits = ['all', 'pairs', 'finite', 'array']
+    """
     global curve, data, ptr, elapsed, fpsLastUpdate
 
-    options = ['antialias', 'connect', 'skipFiniteCheck']
-    kwds = { k : params[k] for k in options }
-    if kwds['connect'] == 'array':
-        kwds['connect'] = connect_array
+    if connect == 'array':
+        connect = connect_array
 
     # Measure
     t_start = perf_counter()
-    curve.setData(data[ptr], **kwds)
+    curve.setData(data[ptr], antialias=antialias, connect=connect, skipfiniteCheck=skipfiniteCheck)
     app.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents)
     t_end = perf_counter()
     elapsed.append(t_end - t_start)
@@ -198,8 +196,15 @@ def update():
         fps = 1 / average
         pw.setTitle('%0.2f fps - %0.1f ms avg' % (fps, average * 1_000))
 
+params.sigTreeStateChanged.connect(resetTimings)
+makeData()
+fpsLastUpdate = perf_counter()
+
+# Wrap update as interactive to preserve values across calls
+update_interactive = InteractiveFunction(update)
+interact(update_interactive, parent=params, title='Display Options')
 timer = QtCore.QTimer()
-timer.timeout.connect(update)
+timer.timeout.connect(update_interactive)
 timer.start(0)
 
 if __name__ == '__main__':
