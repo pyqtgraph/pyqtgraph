@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import pytest
 
-from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
+from pyqtgraph.parametertree.interactive import RunOpts, interact
 
 # ------
 # Define various functions whose signatures all mean the same thing and who should be parsed without fault
@@ -151,7 +151,7 @@ def rstFmt_noHeaders(x=5.0, y=6.0):
 def test_docparsing(xyFunc):
     def argCollector(x, y):
         assert x, y == (5.0, 6.0)
-    param = GP.interact(xyFunc, runOpts=GP.RUN_BUTTON, runFunc=argCollector)
+    param = interact(xyFunc, runOpts=RunOpts.ON_BUTTON, runFunc=argCollector)
     param.child('Run').activate()
     for name in 'y', 'x':
         ch = param.child(name)
@@ -173,7 +173,7 @@ def test_docstringFailure():
         """
         # Should still parse, but won't set the value
         return x
-    param = GP.interact(a)
+    param = interact(a)
     assert param['x'] == 3
     assert 'tip' not in param.child('x').opts
 
@@ -186,7 +186,7 @@ def test_userOverride():
         """
         return x
     for extra in 9, {'value': 9}:
-        param = GP.interact(a, x=extra)
+        param = interact(a, x=extra)
         assert param['x'] == 9
 
 
@@ -196,14 +196,14 @@ def test_evalFallback():
         [x.options]
         value = [5badname]
         """
-    param = GP.interact(a)
+    param = interact(a)
     assert param['x'] == '[5badname]'
 
 
 def test_commonNumpyFuncs():
     for param in (
-            GP.interact(np.ones, shape=[1,2], dtype={'type': 'str'}, ignores=['like']),
-            GP.interact(np.linspace, start=1, stop=2, dtype={'type': 'str'})
+            interact(np.ones, shape=[1,2], dtype={'type': 'str'}, ignores=['like']),
+            interact(np.linspace, start=1, stop=2, dtype={'type': 'str'})
     ):
         for ch in param.children():
             assert ch.opts['tip']
@@ -211,5 +211,5 @@ def test_commonNumpyFuncs():
 
 def test_noDocstringParserFallback(monkeypatch):
     monkeypatch.setitem(sys.modules, 'docstring_parser', None)
-    for ch in GP.interact(rstFmt_noHeaders):
+    for ch in interact(rstFmt_noHeaders):
         assert 'tip' not in ch.opts

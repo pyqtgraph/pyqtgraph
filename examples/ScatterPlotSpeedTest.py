@@ -13,7 +13,7 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
 import pyqtgraph.parametertree as ptree
-from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP, Parameter
+from pyqtgraph.parametertree import Parameter, RunOpts
 import pyqtgraph.graphicsItems.ScatterPlotItem
 from time import perf_counter
 import re
@@ -48,7 +48,7 @@ def fmt(name):
 
 # Exit stack to avoid indentation for this entire file
 stack = ExitStack()
-stack.enter_context(GP.interactiveOptsContext(runTitleFormat=fmt))
+stack.enter_context(RunOpts.optsContext(runTitleFormat=fmt))
 
 @param.interactDecorator(nest=False,
                           count=dict(limits=[1, None], step=100),

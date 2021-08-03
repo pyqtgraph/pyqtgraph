@@ -56,13 +56,13 @@ code below is functionally equivalent to above):
 
    from pyqtgraph.Qt import QtWidgets
    import pyqtgraph as pg
-   from pyqtgraph.parametertree import Parameter, ParameterTree, parameterTypes as ptypes
+   from pyqtgraph.parametertree import Parameter, ParameterTree, interact
 
    def a(x=5, y=6):
        QtWidgets.QMessageBox.information(None, 'Hello World', f'X is {x}, Y is {y}')
 
    # One line of code, no name/value duplication
-   params = ptypes.GroupParameter.interact(a)
+   params = interact(a)
 
    app = pg.mkQApp()
    tree = ParameterTree()
@@ -83,14 +83,14 @@ a value is *changing*, not just changed. In these cases, modify the
 
 .. code:: python
 
-   from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
+   from pyqtgraph.parametertree import interact, RunOpts
 
    # Will add a button named "Run". When clicked, the function will run
-   params = GP.interact(a, runOpts=GP.RUN_BUTTON)
+   params = interact(a, runOpts=RunOpts.ON_BUTTON)
    # Will run on any `sigValueChanging` signal
-   params = GP.interact(a, runOpts=GP.RUN_CHANGING)
+   params = interact(a, runOpts=RunOpts.ON_CHANGING)
    # Runs on `sigValueChanged` or when "Run" is pressed
-   params = GP.interact(a, runOpts=[GP.RUN_CHANGED, GP.RUN_BUTTON])
+   params = interact(a, runOpts=[RunOpts.ON_CHANGED, RunOpts.ON_BUTTON])
    # Any combination of RUN_* options can be used
 
 The default run behavior can also be modified. If several functions are
@@ -100,11 +100,11 @@ use the provided context manager:
 .. code:: python
 
    # `runOpts` can be set to any combination of options as demonstrated above, too
-   with GP.interactiveOptsContext(defaultRunOpts=GP.RUN_BUTTON):
-       # All will have `runOpts` set to RUN_BUTTON
-       p1 = GP.interact(aFunc)
-       p2 = GP.interact(bFunc)
-       p3 = GP.interact(cFunc)
+   with RunOpts.optsContext(defaultRunOpts=RunOpts.ON_BUTTON):
+       # All will have `runOpts` set to ON_BUTTON
+       p1 = interact(aFunc)
+       p2 = interact(bFunc)
+       p3 = interact(cFunc)
    # After the context, `runOpts` is back to the previous default
 
 If the default for all interaction should be changed, you can directly
@@ -114,7 +114,7 @@ whenever possible)
 
 .. code:: python
 
-   GP.defaultRunOpts = GP.RUN_BUTTON
+   RunOpts.defaultRunOpts = RunOpts.ON_BUTTON
 
 ``ignores``
 -----------
@@ -124,19 +124,19 @@ parameters and others should be hidden, use ``ignores``:
 
 .. code:: python
 
-   from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
+   from pyqtgraph.parametertree import interact
 
    def a(x=5, y=6):
        print(x, y)
 
    # Only 'x' will show up in the parameter
-   params = GP.interact(a, ignores=['y'])
+   params = interact(a, ignores=['y'])
 
 ``deferred``
 ------------
 
 Sometimes, values that should be passed to the ``interact``-ed function
-should come from a different scope, i.e. a variable definition that
+should come from a different scope, i.e. a variable definition that
 should be propagated from somewhere else. In these cases, wrap that
 argument in a function and pass it into ``deferred`` like so:
 
@@ -144,7 +144,7 @@ argument in a function and pass it into ``deferred`` like so:
 
    from skimage import morphology as morph
    import numpy as np
-   from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
+   from pyqtgraph.parametertree import interact
    import pyqtgraph as pg
 
 
@@ -156,7 +156,7 @@ argument in a function and pass it into ``deferred`` like so:
    view = pg.ImageView()
    # Simulate a grayscale image
    image = np.random.randint(0, 256, size=(512, 512))
-   params = GP.interact(dilateImage, deferred={'image': lambda: image})
+   params = interact(dilateImage, deferred={'image': lambda: image})
    # As the 'image' variable changes, the new value will be used during parameter interaction
    view.show()
    pg.exec()
@@ -172,6 +172,7 @@ version <#The%20Decorator%20Version>`__
 
 .. code:: python
 
+   from pyqtgraph.parametertree import Parameter
    def aFunc(x=5, y=6):
        QtWidgets.QMessageBox.information(None, 'Hello World', f'X is {x}, Y is {y}')
    def bFunc(first=5, second=6):
@@ -179,11 +180,11 @@ version <#The%20Decorator%20Version>`__
    def cFunc(uno=5, dos=6):
        QtWidgets.QMessageBox.information(None, 'Hello World', f'uno is {uno}, dos is {dos}')
 
-   params = GP(name='Parameters')
+   params = Parameter.create(name='Parameters', type='group')
    # All interactions are in the same parent
-   GP.interact(aFunc, parent=params)
-   GP.interact(bFunc, parent=params)
-   GP.interact(cFunc, parent=params)
+   interact(aFunc, parent=params)
+   interact(bFunc, parent=params)
+   interact(cFunc, parent=params)
 
 ``runFunc``
 -----------
@@ -203,7 +204,7 @@ scenario:
        print('Running A')
        return a(**kwargs)
 
-   params = GP.interact(a, runFunc=aWithLog)
+   params = interact(a, runFunc=aWithLog)
 
 ``nest``
 --------
@@ -219,7 +220,7 @@ should be directly inside the parent, use ``nest=False``:
        return x + y
 
    # 'x' and 'y' will be direct descendants of 'params', not nested inside another GroupParameter
-   params = GP.interact(a, nest=False)
+   params = interact(a, nest=False)
 
 ``existOk``
 -----------
@@ -234,10 +235,10 @@ unless ``existOk=True`` (the default).
        return x + y
    def b(x=5, another=6):
        return x + another
-   params = GP.interact(a, nest=False)
+   params = interact(a, nest=False)
 
    # Will raise an error, since 'x' was already in the parameter from interacting with 'a'
-   GP.interact(b, nest=False, parent=params, existOk=False)
+   interact(b, nest=False, parent=params, existOk=False)
 
 ``overrides``
 -------------
@@ -258,7 +259,7 @@ parameter:
 
    # Cannot go lower than 0
    # These are bound to the 'radius' parameter
-   params = GP.interact(dilateImage, deferred={'image': lambda: image}, radius={'limits': [0, None]})
+   params = interact(dilateImage, deferred={'image': lambda: image}, radius={'limits': [0, None]})
 
 Now, the user is unable to set the spinbox to a value < 0.
 
@@ -270,7 +271,7 @@ the default value (``list`` is a common case):
    def chooseOne(which='a'):
        print(which)
 
-   params = GP.interact(chooseOne, which={'type': 'list', 'limits': list('abc')})
+   params = interact(chooseOne, which={'type': 'list', 'limits': list('abc')})
 
 Any value accepted in ``Parameter.create`` can be used in the override
 for a parameter.
@@ -283,7 +284,7 @@ just the value should be adjusted or when there is no default:
    def printAString(string):
        print(string)
 
-   params = GP.interact(printAString, string='anything')
+   params = interact(printAString, string='anything')
 
 Functions with ``**kwargs``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -296,7 +297,7 @@ match argument names:
     def a(**canBeNamedAnything):
         print(canBeNamedAnything)
     # 'one' and 'two' will be int parameters that appear
-    params = GP.interact(a, one=1, two=2)
+    params = interact(a, one=1, two=2)
 
 If additional overrides are provided when the function *doesn't* accept keywords in this manner,
 they are ignored.
@@ -309,7 +310,7 @@ same parameter, a decorator is provided:
 
 .. code:: python
 
-   params = GP(name='Parameters')
+   params = Parameter.create(name='Parameters', type='group')
 
    @params.interactDecorator()
    def aFunc(x=5, y=6):
@@ -341,9 +342,9 @@ If functions should have formatted titles, specify this in the
    def titleFormat(name):
        return name.replace('_', ' ').title()
 
-   with GP.interactiveOptsContext(runTitleFormat=titleFormat):
+   with RunOpts.optsContext(runTitleFormat=titleFormat):
        # The title in the parameter tree will be "My Snake Case Function"
-       params = GP.interact(my_snake_case_function)
+       params = interact(my_snake_case_function)
 
 Extra Options in the Docstring
 ==============================

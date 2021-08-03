@@ -5,8 +5,7 @@ from functools import wraps
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
-from pyqtgraph.parametertree import Parameter, ParameterTree
-from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
+from pyqtgraph.parametertree import Parameter, ParameterTree, RunOpts
 
 app = pg.mkQApp()
 
@@ -44,7 +43,7 @@ def requiredParam(a, b=10):
 def ignoredAParam(a=10, b=20):
     return a*b
 
-@host.interactDecorator(runOpts=GP.RUN_BUTTON)
+@host.interactDecorator(runOpts=RunOpts.ON_BUTTON)
 @printResult
 def runOnButton(a=10, b=20):
     return a + b
@@ -55,13 +54,13 @@ x = 5
 def accessVarInDifferentScope(x, y=10):
     return x + y
 
-with GP.interactiveOptsContext(runTitleFormat=str.upper):
+with RunOpts.optsContext(runTitleFormat=str.upper):
     @host.interactDecorator()
     @printResult
     def capslocknames(a=5):
         return a
 
-@host.interactDecorator(runOpts=(GP.RUN_CHANGED, GP.RUN_BUTTON),
+@host.interactDecorator(runOpts=(RunOpts.ON_CHANGED, RunOpts.ON_BUTTON),
                          a={'type': 'list', 'limits': [5, 10, 20]}
                          )
 @printResult
