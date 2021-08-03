@@ -1,10 +1,10 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore, QT_LIB
 if QT_LIB.startswith('PyQt'):
     from ..Qt import sip
 from .. import multiprocess as mp
 from .GraphicsView import GraphicsView
 from .. import CONFIG_OPTIONS
-import numpy as np
 import mmap, tempfile, os, atexit, sys, random
 
 __all__ = ['RemoteGraphicsView']
@@ -292,4 +292,3 @@ class Renderer(GraphicsView):
         typ = QtCore.QEvent.Type(typ)
         ev = QtCore.QEvent(typ)
         return super().leaveEvent(ev)
-

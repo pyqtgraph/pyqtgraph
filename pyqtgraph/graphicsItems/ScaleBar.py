@@ -1,8 +1,8 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 from .GraphicsObject import *
 from .GraphicsWidgetAnchor import *
 from .TextItem import TextItem
-import numpy as np
 from .. import functions as fn
 from .. import getConfigOption
 from ..Point import Point
@@ -67,5 +67,3 @@ class ScaleBar(GraphicsObject, GraphicsWidgetAnchor):
             anchor = (anchorx, anchory)
             self.anchor(itemPos=anchor, parentPos=anchor, offset=offset)
         return ret
-
-

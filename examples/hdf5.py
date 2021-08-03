@@ -51,9 +51,9 @@ class HDF5Plot(pg.PlotCurveItem):
             return  # no ViewBox yet
         
         # Determine what data range must be read from HDF5
-        xrange = vb.viewRange()[0]
-        start = max(0,int(xrange[0])-1)
-        stop = min(len(self.hdf5), int(xrange[1]+2))
+        range_ = vb.viewRange()[0]
+        start = max(0,int(range_[0])-1)
+        stop = min(len(self.hdf5), int(range_[1]+2))
         
         # Decide by how much we should downsample 
         ds = int((stop-start) / self.limit) + 1

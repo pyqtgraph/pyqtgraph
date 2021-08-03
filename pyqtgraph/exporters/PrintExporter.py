@@ -1,7 +1,7 @@
+# -*- coding: utf-8 -*-
 from .Exporter import Exporter
 from ..parametertree import Parameter
-from ..Qt import QtGui, QtCore, QtSvg
-import re
+from ..Qt import QtGui, QtCore
 
 translate = QtCore.QCoreApplication.translate
 

@@ -1,10 +1,8 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtWidgets
 from ..widgets.TreeWidget import TreeWidget
-import os, weakref, re
 from .ParameterItem import ParameterItem
-#import functions as fn
-        
-            
+
 
 class ParameterTree(TreeWidget):
     """Widget used to display or control data from a hierarchy of Parameters"""

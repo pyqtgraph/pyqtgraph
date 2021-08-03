@@ -4,8 +4,6 @@ from ...Qt import QtGui, QtCore, QtWidgets
 import numpy as np
 import sys
 from .common import *
-from ...SRTTransform import SRTTransform
-from ...Point import Point
 from ...widgets.TreeWidget import TreeWidget
 from ...graphicsItems.LinearRegionItem import LinearRegionItem
 
@@ -179,7 +177,7 @@ class TextEdit(QtWidgets.QTextEdit):
         self.lastText = None
 
     def focusOutEvent(self, ev):
-        text = str(self.toPlainText())
+        text = self.toPlainText()
         if text != self.lastText:
             self.lastText = text
             self.on_update()
@@ -236,26 +234,23 @@ class EvalNode(Node):
         l.update(args)
         ## try eval first, then exec
         try:  
-            text = str(self.text.toPlainText()).replace('\n', ' ')
+            text = self.text.toPlainText().replace('\n', ' ')
             output = eval(text, globals(), l)
         except SyntaxError:
             fn = "def fn(**args):\n"
             run = "\noutput=fn(**args)\n"
-            text = fn + "\n".join(["    "+l for l in str(self.text.toPlainText()).split('\n')]) + run
-            if sys.version_info.major == 2:
-                exec(text)
-            elif sys.version_info.major == 3:
-                ldict = locals()
-                exec(text, globals(), ldict)
-                output = ldict['output']
+            text = fn + "\n".join(["    "+l for l in self.text.toPlainText().split('\n')]) + run
+            ldict = locals()
+            exec(text, globals(), ldict)
+            output = ldict['output']
         except:
-            print("Error processing node: %s" % self.name())
+            print(f"Error processing node: {self.name()}")
             raise
         return output
         
     def saveState(self):
         state = Node.saveState(self)
-        state['text'] = str(self.text.toPlainText())
+        state['text'] = self.text.toPlainText()
         #state['terminals'] = self.saveTerminals()
         return state
         
@@ -481,4 +476,3 @@ class AsType(CtrlNode):
     def processData(self, data):
         s = self.stateGroup.state()
         return data.astype(s['dtype'])
-

@@ -1,7 +1,6 @@
+# -*- coding: utf-8 -*-
 from OpenGL.GL import *
-from OpenGL.arrays import vbo
 from .. GLGraphicsItem import GLGraphicsItem
-from .. import shaders
 from ... import QtGui
 from ... import functions as fn
 import numpy as np
@@ -51,7 +50,6 @@ class GLLinePlotItem(GLGraphicsItem):
         for arg in args:
             if arg in kwds:
                 setattr(self, arg, kwds[arg])
-                #self.vbo.pop(arg, None)
         self.update()
 
     def paint(self):

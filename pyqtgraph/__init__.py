@@ -9,7 +9,7 @@ __version__ = '0.12.2'
 ### import all the goodies and add some helper functions for easy CLI use
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
-## between PyQt4 and PySide.
+## between PyQt and PySide.
 from .Qt import QtCore, QtGui, mkQApp
 from .Qt import exec_ as exec
 
@@ -21,14 +21,6 @@ import numpy  ## pyqtgraph requires numpy
               ## (import here to avoid massive error dump later on if numpy is not available)
 
 import os, sys
-
-## check python version
-## Allow anything >= 2.7
-if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] < 6):
-    raise Exception("Pyqtgraph requires Python version 2.6 or greater (this is %d.%d)" % (sys.version_info[0], sys.version_info[1]))
-
-## helpers for 2/3 compatibility
-from . import python2_3
 
 ## in general openGL is poorly supported with Qt+GraphicsView.
 ## we only enable it where the performance benefit is critical.
@@ -137,9 +129,6 @@ def renamePyc(startDir):
                 os.rename(fileName, name2)
                 
 path = os.path.split(__file__)[0]
-if __version__ is None and not hasattr(sys, 'frozen') and sys.version_info[0] == 2: ## If we are frozen, there's a good chance we don't have the original .py files anymore.
-    renamePyc(path)
-
 
 ## Import almost everything to make it available from a single namespace
 ## don't import the more complex systems--canvas, parametertree, flowchart, dockarea
@@ -282,7 +271,6 @@ from .ThreadsafeTimer import *
 
 # indirect imports used within library
 from .GraphicsScene import GraphicsScene
-from .python2_3 import asUnicode
 from .util.cupy_helper import getCupy
 
 # indirect imports known to be used outside of the library

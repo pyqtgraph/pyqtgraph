@@ -5,7 +5,6 @@ from .. import functions as fn
 from .Terminal import *
 from collections import OrderedDict
 from ..debug import *
-import numpy as np
 import warnings
 
 translate = QtCore.QCoreApplication.translate
@@ -505,7 +504,7 @@ class NodeGraphicsItem(GraphicsObject):
         #GraphicsObject.setZValue(self, z)
         
     def labelChanged(self):
-        newName = str(self.nameItem.toPlainText())
+        newName = self.nameItem.toPlainText()
         if newName != self.node.name():
             self.node.rename(newName)
             

@@ -10,10 +10,9 @@ new methods for slicing and indexing the array based on this meta data.
 More info at http://www.scipy.org/Cookbook/MetaArray
 """
 
-import types, copy, threading, os, re
+import copy, os
 import pickle
 import numpy as np
-from ..python2_3 import basestring
 import warnings
 
 
@@ -121,7 +120,7 @@ class MetaArray(object):
     defaultCompression = None
     
     ## Types allowed as axis or column names
-    nameTypes = [basestring, tuple]
+    nameTypes = [str, tuple]
     @staticmethod
     def isNameType(var):
         return any(isinstance(var, t) for t in MetaArray.nameTypes)
@@ -412,7 +411,7 @@ class MetaArray(object):
         if type(axis) == int:
             ind = [slice(None)]*axis
             ind.append(order)
-        elif isinstance(axis, basestring):
+        elif isinstance(axis, str):
             ind = (slice(axis, order),)
         return self[tuple(ind)]
   
@@ -469,7 +468,7 @@ class MetaArray(object):
         return tuple(nInd)
       
     def _interpretAxis(self, axis):
-        if isinstance(axis, basestring) or isinstance(axis, tuple):
+        if isinstance(axis, (str, tuple)):
             return self._getAxis(axis)
         else:
             return axis
@@ -937,7 +936,7 @@ class MetaArray(object):
             val = root.attrs[k]
             if isinstance(val, bytes):
                 val = val.decode()
-            if isinstance(val, basestring):  ## strings need to be re-evaluated to their original types
+            if isinstance(val, str):  ## strings need to be re-evaluated to their original types
                 try:
                     val = eval(val)
                 except:

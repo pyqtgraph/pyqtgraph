@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 from math import isnan, isinf
-from decimal import Decimal as D  ## Use decimal to avoid accumulating floating-point errors
 import decimal
-import weakref
 import re
 
 from ..Qt import QtGui, QtCore
-from ..python2_3 import asUnicode, basestring
 from ..SignalProxy import SignalProxy
 from .. import functions as fn
 
@@ -74,7 +71,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
             'wrapping': False,
            
             ## normal arithmetic step
-            'step': D('0.01'),  ## if 'dec' is false, the spinBox steps by 'step' every time
+            'step': decimal.Decimal('0.01'),  ## if 'dec' is false, the spinBox steps by 'step' every time
                                 ## if 'dec' is True, the step size is relative to the value
                                 ## 'step' needs to be an integral divisor of ten, ie 'step'*n=10 for some integer value of n (but only if dec is True)
             'dec': False,   ## if true, does decimal stepping. ie from 1-10 it steps by 'step', from 10 to 100 it steps by 10*'step', etc. 
@@ -92,16 +89,16 @@ class SpinBox(QtGui.QAbstractSpinBox):
             
             'decimals': 6,
             
-            'format': asUnicode("{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}"),
+            'format': "{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}",
             'regex': fn.FLOAT_REGEX,
-            'evalFunc': D,
+            'evalFunc': decimal.Decimal,
             
             'compactHeight': True,  # manually remove extra margin outside of text
         }
         
         self.decOpts = ['step', 'minStep']
         
-        self.val = D(asUnicode(value))  ## Value is precise decimal. Ordinary math not allowed.
+        self.val = decimal.Decimal(str(value))  ## Value is precise decimal. Ordinary math not allowed.
         self.updateText()
         self.skipValidate = False
         self.setCorrectionMode(self.CorrectionMode.CorrectToPreviousValue)
@@ -183,12 +180,12 @@ class SpinBox(QtGui.QAbstractSpinBox):
             elif k == 'max':
                 self.setMaximum(v, update=False)
             elif k in ['step', 'minStep']:
-                self.opts[k] = D(asUnicode(v))
+                self.opts[k] = decimal.Decimal(str(v))
             elif k == 'value':
                 pass   ## don't set value until bounds have been set
             elif k == 'format':
-                self.opts[k] = asUnicode(v)
-            elif k == 'regex' and isinstance(v, basestring):
+                self.opts[k] = str(v)
+            elif k == 'regex' and isinstance(v, str):
                 self.opts[k] = re.compile(v)
             elif k in self.opts:
                 self.opts[k] = v
@@ -222,7 +219,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
                 self.opts['minStep'] = ms
 
             if 'format' not in opts:
-                self.opts['format'] = asUnicode("{value:d}{suffixGap}{suffix}")
+                self.opts['format'] = "{value:d}{suffixGap}{suffix}"
 
         if self.opts['dec']:
             if self.opts.get('minStep') is None:
@@ -236,7 +233,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
     def setMaximum(self, m, update=True):
         """Set the maximum allowed value (or None for no limit)"""
         if m is not None:
-            m = D(asUnicode(m))
+            m = decimal.Decimal(str(m))
         self.opts['bounds'][1] = m
         if update:
             self.setValue()
@@ -244,7 +241,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
     def setMinimum(self, m, update=True):
         """Set the minimum allowed value (or None for no limit)"""
         if m is not None:
-            m = D(asUnicode(m))
+            m = decimal.Decimal(str(m))
         self.opts['bounds'][0] = m
         if update:
             self.setValue()
@@ -300,7 +297,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         Select the numerical portion of the text to allow quick editing by the user.
         """
         le = self.lineEdit()
-        text = asUnicode(le.text())
+        text = le.text()
         m = self.opts['regex'].match(text)
         if m is None:
             return
@@ -359,8 +356,8 @@ class SpinBox(QtGui.QAbstractSpinBox):
         if self.opts['int']:
             value = int(value)
 
-        if not isinstance(value, D):
-            value = D(asUnicode(value))
+        if not isinstance(value, decimal.Decimal):
+            value = decimal.Decimal(str(value))
 
         prev, self.val = self.val, value
         changed = not fn.eq(value, prev)  # use fn.eq to handle nan
@@ -400,8 +397,8 @@ class SpinBox(QtGui.QAbstractSpinBox):
         if isinf(self.val) or isnan(self.val):
             return
 
-        n = D(int(n))   ## n must be integral number of steps.
-        s = [D(-1), D(1)][n >= 0]  ## determine sign of step
+        n = decimal.Decimal(int(n))   ## n must be integral number of steps.
+        s = [decimal.Decimal(-1), decimal.Decimal(1)][n >= 0]  ## determine sign of step
         val = self.val
         
         for i in range(int(abs(n))):
@@ -410,11 +407,11 @@ class SpinBox(QtGui.QAbstractSpinBox):
                     step = self.opts['minStep']
                     exp = None
                 else:
-                    vs = [D(-1), D(1)][val >= 0]
-                    #exp = D(int(abs(val*(D('1.01')**(s*vs))).log10()))
-                    fudge = D('1.01')**(s*vs) ## fudge factor. at some places, the step size depends on the step sign.
+                    vs = [decimal.Decimal(-1), decimal.Decimal(1)][val >= 0]
+                    #exp = decimal.Decimal(int(abs(val*(decimal.Decimal('1.01')**(s*vs))).log10()))
+                    fudge = decimal.Decimal('1.01')**(s*vs) ## fudge factor. at some places, the step size depends on the step sign.
                     exp = abs(val * fudge).log10().quantize(1, decimal.ROUND_FLOOR)
-                    step = self.opts['step'] * D(10)**exp
+                    step = self.opts['step'] * decimal.Decimal(10)**exp
                 if 'minStep' in self.opts:
                     step = max(step, self.opts['minStep'])
                 val += s * step
@@ -423,7 +420,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
                 val += s*self.opts['step']
                 
             if 'minStep' in self.opts and abs(val) < self.opts['minStep']:
-                val = D(0)
+                val = decimal.Decimal(0)
         self.setValue(val, delaySignal=True)  ## note all steps (arrow buttons, wheel, up/down keys..) emit delayed signals only.
 
     def valueInRange(self, value):
@@ -560,9 +557,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
 
     def editingFinishedEvent(self):
         """Edit has finished; set value."""
-        #print "Edit finished."
-        if asUnicode(self.lineEdit().text()) == self.lastText:
-            #print "no text change."
+        if self.lineEdit().text() == self.lastText:
             return
         try:
             val = self.interpret()
@@ -570,10 +565,8 @@ class SpinBox(QtGui.QAbstractSpinBox):
             return
         
         if val is False:
-            #print "value invalid:", str(self.lineEdit().text())
             return
         if val == self.val:
-            #print "no value change:", val, self.val
             return
         self.setValue(val, delaySignal=False)  ## allow text update so that values are reformatted pretty-like
 
