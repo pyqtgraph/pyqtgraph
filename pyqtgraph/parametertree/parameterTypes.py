@@ -857,12 +857,11 @@ class GroupParameter(Parameter):
         # Adding "[DEFAULT] to the beginning of the doc will consume non-parameter descriptions
         out = {}
         doc = doc or '[DEFAULT]'
-        # Account for several things in commonly supported docstring formats:
-        # Indentation nesting in numpy style
-        # :param: in rst
-        doc = '\n'.join(line.strip().strip(':') for line in doc.splitlines())
+        # :param: style documentation violates ini standards
+        lines = [l[1:] if l.startswith(':') else l for l in doc.splitlines()]
+        doc = textwrap.dedent('\n'.join(lines))
         if not doc.startswith('[DEFAULT]'):
-            doc = '[DEFAULT]\n' + textwrap.dedent(doc)
+            doc = '[DEFAULT]\n' + doc
         parser = configparser.ConfigParser(allow_no_value=True)
         # Save case sensitivity
         parser.optionxform = str
