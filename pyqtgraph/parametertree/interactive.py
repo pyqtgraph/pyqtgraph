@@ -409,7 +409,7 @@ def _resolveParent(parent, nest, parentOpts, existOk):
         host = Parameter.create(**parentOpts)
         if parent is not None:
             # Parent was provided and nesting is enabled, so place created args inside the nested GroupParmeter
-            parent.addChild(host, existOk=existOk)
+            host = parent.addChild(host, existOk=existOk)
         parent = host
     return parent
 
