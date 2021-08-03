@@ -54,7 +54,7 @@ x = 5
 def accessVarInDifferentScope(x, y=10):
     return x + y
 
-with RunOpts.optsContext(runTitleFormat=str.upper):
+with RunOpts.optsContext(titleFormat=str.upper):
     @host.interactDecorator()
     @printResult
     def capslocknames(a=5):

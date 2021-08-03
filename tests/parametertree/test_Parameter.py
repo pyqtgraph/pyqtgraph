@@ -179,3 +179,8 @@ def test_interactiveFunc():
     interactive.reconnect()
     interactive.run_changedOrButton(a=10)
     assert value == 10
+
+def test_badOptsContext():
+    with pytest.raises(KeyError):
+        with RunOpts.optsContext(bad=4):
+            pass

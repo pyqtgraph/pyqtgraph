@@ -41,7 +41,10 @@ class RunOpts:
         """
         attrs = {'titleFormat', 'defaultRunOpts'}
         oldOpts = {opt: getattr(cls, opt) for opt in attrs}
-        useOpts = set(opts) & attrs
+        optsSet = set(opts)
+        useOpts = optsSet & attrs
+        if any(optsSet.difference(attrs)):
+            raise KeyError(f'Unrecognized option(s) "{optsSet.difference(attrs)}"')
         for useOpt in useOpts:
             setattr(cls, useOpt, opts[useOpt])
         yield
