@@ -30,6 +30,7 @@ p = pg.PlotWidget()
 splitter = QtWidgets.QSplitter()
 splitter.addWidget(pt)
 splitter.addWidget(p)
+splitter.setSizes([300, p.width()])
 splitter.show()
 
 data = {}
@@ -48,13 +49,18 @@ def fmt(name):
 
 # Exit stack to avoid indentation for this entire file
 stack = ExitStack()
-stack.enter_context(RunOpts.optsContext(runTitleFormat=fmt))
+stack.enter_context(RunOpts.optsContext(titleFormat=fmt))
 
-@param.interactDecorator(nest=False,
-                          count=dict(limits=[1, None], step=100),
-                          size=dict(limits=[1, None])
-                          )
+@param.interactDecorator(nest=False)
 def mkDataAndItem(count=500, size=10):
+    """
+    [count.options]
+    limits = [1, None]
+    step=100
+
+    [size.options]
+    limits = [1, None]
+    """
     global data, fps
     scale = 100
     data = {
@@ -91,24 +97,22 @@ def getData(randomize=False):
         brush = brush[0]
     return dict(x=pos[ptr % 50], y=pos[(ptr + 1) % 50], pen=pen, brush=brush, size=size)
 
-modeOpts = dict(name='mode',
-                type='list',
-                values={translate('ScatterPlot', 'New Item'): 'newItem',
-                        translate('ScatterPlot', 'Reuse Item'): 'reuseItem',
-                        translate('ScatterPlot', 'Simulate Pan/Zoom'): 'panZoom',
-                        translate('ScatterPlot', 'Simulate Hover'): 'hover'},
-                )
-@param.interactDecorator(nest=False, mode=modeOpts)
-def update(mode='reuseItem'):
+@param.interactDecorator(nest=False)
+def update(mode='Reuse Item'):
+    """
+    [mode.options]
+    type = list
+    limits = ['New Item', 'Reuse Item', 'Simulate Pan/Zoom', 'Simulate Hover']
+    """
     global ptr, lastTime, fps
-    if mode == 'newItem':
+    if mode == 'New Item':
         mkItem()
-    elif mode == 'reuseItem':
+    elif mode == 'Reuse Item':
         item.setData(**getData())
-    elif mode == 'panZoom':
+    elif mode == 'Simulate Pan/Zoom':
         item.viewTransformChanged()
         item.update()
-    elif mode == 'hover':
+    elif mode == 'Simulate Hover':
         pts = item.points()
         old = pts[(ptr - 1) % len(pts)]
         new = pts[ptr % len(pts)]
@@ -129,7 +133,7 @@ def update(mode='reuseItem'):
     p.repaint()
     # app.processEvents()  # force complete redraw for every plot
 
-@param.interactDecorator(nest=False, tilte=translate('ScatterPlot', 'Paused:    '))
+@param.interactDecorator(nest=False)
 def pausePlot(paused=False):
     if paused:
         timer.stop()
