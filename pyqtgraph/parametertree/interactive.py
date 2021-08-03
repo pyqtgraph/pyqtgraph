@@ -304,7 +304,7 @@ class InteractiveFunction:
         return self.func.__str__()
 
 
-def interact(func, runOpts=None, ignores=None, deferred=None, parent=None, runFunc=None,
+def interact(func, runOpts=None, *, ignores=None, deferred=None, parent=None, title=None, runFunc=None,
              nest=True, existOk=True, **overrides):
     """
     Interacts with a function by making Parameters for each argument.
@@ -332,6 +332,8 @@ def interact(func, runOpts=None, ignores=None, deferred=None, parent=None, runFu
         external variables as function arguments, while making sure they are up to date.
     parent: GroupParameter
         Parent in which to add arguemnt Parameters. If *None*, a new group parameter is created.
+    title: str
+        Title of the group sub-parameter if one must be created (see `nest` behavior)
     runFunc: Callable
         Simplifies the process of interacting with a wrapped function without requiring `functools`. See the
         linked documentation for an example.
@@ -353,7 +355,8 @@ def interact(func, runOpts=None, ignores=None, deferred=None, parent=None, runFu
     chNames = [ch['name'] for ch in children]
     if runOpts is None:
         runOpts = RunOpts.defaultRunOpts
-
+    if title is not None:
+        funcDict['title'] = title
     parent = _resolveParent(parent, nest, funcDict, existOk)
 
     if deferred is None:
@@ -402,7 +405,7 @@ def interact(func, runOpts=None, ignores=None, deferred=None, parent=None, runFu
 def _resolveParent(parent, nest, parentOpts, existOk):
     if parent is None or nest:
         if RunOpts.titleFormat is not None:
-            parentOpts['title'] = RunOpts.titleFormat(parentOpts['name'])
+            parentOpts.setdefault('title', RunOpts.titleFormat(parentOpts['name']))
         host = Parameter.create(**parentOpts)
         if parent is not None:
             # Parent was provided and nesting is enabled, so place created args inside the nested GroupParmeter
