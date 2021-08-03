@@ -74,7 +74,7 @@ There are several caveats, but this is one of the most common scenarios
 for function interaction.
 
 ``runOpts``
------------
+^^^^^^^^^^^
 
 Often, an ``interact``-ed function shouldn’t run until multiple
 parameter values are changed. Or, the function should be run every time
@@ -117,7 +117,7 @@ whenever possible)
    RunOpts.defaultRunOpts = RunOpts.ON_BUTTON
 
 ``ignores``
------------
+^^^^^^^^^^^
 
 When interacting with a function where some arguments should appear as
 parameters and others should be hidden, use ``ignores``:
@@ -133,7 +133,7 @@ parameters and others should be hidden, use ``ignores``:
    params = interact(a, ignores=['y'])
 
 ``deferred``
-------------
+^^^^^^^^^^^^
 
 Sometimes, values that should be passed to the ``interact``-ed function
 should come from a different scope, i.e. a variable definition that
@@ -162,7 +162,7 @@ argument in a function and pass it into ``deferred`` like so:
    pg.exec()
 
 ``parent``
-----------
+^^^^^^^^^^
 
 Often, one parameter tree is used to represent several different
 interactive functions. When this is the case, specify the existing
@@ -187,7 +187,7 @@ version <#The%20Decorator%20Version>`__
    interact(cFunc, parent=params)
 
 ``runFunc``
------------
+^^^^^^^^^^^
 
 Often, override or decorator functions will use a definition only
 accepting kwargs and pass them to a different function. When this is the
@@ -207,7 +207,7 @@ scenario:
    params = interact(a, runFunc=aWithLog)
 
 ``nest``
---------
+^^^^^^^^
 
 In all examples so far, ``interact`` makes a ``GroupParameter`` which
 houses another ``GroupParameter`` inside. The inner group contains the
@@ -223,7 +223,7 @@ should be directly inside the parent, use ``nest=False``:
    params = interact(a, nest=False)
 
 ``existOk``
------------
+^^^^^^^^^^^
 
 When ``nest=False``, there can be overlap when several function
 arguments share the same name. In these cases, the result is an error
@@ -241,7 +241,7 @@ unless ``existOk=True`` (the default).
    interact(b, nest=False, parent=params, existOk=False)
 
 ``overrides``
--------------
+^^^^^^^^^^^^^
 
 In all examples so far, additional parameter arguments such as
 ``limits`` were ignored. Return to the `deferred <#>`__ example and
@@ -287,7 +287,7 @@ just the value should be adjusted or when there is no default:
    params = interact(printAString, string='anything')
 
 Functions with ``**kwargs``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""""""
 
 Functions who allow ``**kwargs`` can accept additional specified overrides even if they don't
 match argument names:
@@ -303,7 +303,7 @@ If additional overrides are provided when the function *doesn't* accept keywords
 they are ignored.
 
 The Decorator Version
-=====================
+---------------------
 
 To simplify the process of interacting with multiple functions using the
 same parameter, a decorator is provided:
@@ -332,7 +332,7 @@ Title Formatting
 ----------------
 
 If functions should have formatted titles, specify this in the
-``runTitleFormat`` parameter:
+``titleFormat`` parameter:
 
 .. code:: python
 
@@ -342,15 +342,15 @@ If functions should have formatted titles, specify this in the
    def titleFormat(name):
        return name.replace('_', ' ').title()
 
-   with RunOpts.optsContext(runTitleFormat=titleFormat):
+   with RunOpts.optsContext(titleFormat=titleFormat):
        # The title in the parameter tree will be "My Snake Case Function"
        params = interact(my_snake_case_function)
 
 Extra Options in the Docstring
-==============================
+------------------------------
 
 With ``docstring_parser``
--------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the ``docstring_parser`` python package is available on your system,
 you can add additional parameter options directly to your argument
@@ -395,7 +395,7 @@ strings as a tooltip text, which is a helpful method of exposing
 function documentation to the user.
 
 Without ``docstring_parser``
-----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If ``docstring_parser`` is not available on your system, or your
 documentation does not conform to a supported style, you can also
@@ -440,7 +440,7 @@ headers (``[arg.options]``, where ``arg`` is the argument name):
    # You get the idea
 
 Docstring Limitations / Considerations
---------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * ``ast.literal_eval`` is used to convert option values, so they cannot refer to anything other than builtin objects.
   If you want other defaults like ``np.linspace(-np.pi, np.pi)``, you must specify this as an ``override``. The details
@@ -453,8 +453,31 @@ Docstring Limitations / Considerations
   the non-\ ``docstring_parser`` evaluation will be used regardless of whether ``docstring_parser`` is available.
 
 * If ``docstring_parser`` fails to parse the argument list, no output from the docstring will be
-  forwarded to `interact`. Therefore, make sure that the function documentation is well-formed and
+  forwarded to ``interact``. Therefore, make sure that the function documentation is well-formed and
   that parsing works properly before rolling this out. Or, specify section headers manually.
+
+Using ``InteractiveFunction``
+-----------------------------
+In all versions of ``interact`` described so far, it is not possible to temporarily stop an interacted function from triggering on parameter changes. Normally, one can ``disconnect`` the hooked-up signals, but since the actually connected functions are out of scope, this is not possible when using ``interact``. Additionally, it is not possible to change overrides or ``deferred`` arguments after the fact. If any of these needs arise, use an ``InteractiveFunction`` instead during registration. This provides ``disconnect()`` and ``reconnect()`` methods, and object accessors to ``deferred`` arguments.
+
+.. code:: python
+
+    from pyqtgraph.parametertree import InteractiveFunction, interact, Parameter, RunOpts
+
+    def myfunc(a=5):
+        print(a)
+
+    useFunc = InteractiveFunction(myfunc)
+    param = interact(useFunc, RunOpts.ON_CHANGED)
+    param['a'] = 6
+    # Will print 6
+    useFunc.disconnect()
+    param['a'] = 5
+    # Won't print anything
+    useFunc.reconnect()
+    param['a'] = 10
+    # Will print 10
+
 
 .. [1]
    Functions defined in C or whose definitions cannot be parsed by
