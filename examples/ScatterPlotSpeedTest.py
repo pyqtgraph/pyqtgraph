@@ -47,11 +47,9 @@ def fmt(name):
     name = name.replace('_', ' ')
     return translate('ScatterPlot', name.title().strip() + ':    ')
 
-# Exit stack to avoid indentation for this entire file
-stack = ExitStack()
-stack.enter_context(RunOpts.optsContext(titleFormat=fmt))
+RunOpts.setOpts(title=fmt, nest=False)
 
-@param.interactDecorator(nest=False)
+@param.interactDecorator()
 def mkDataAndItem(count=500, size=10):
     """
     [count.options]
@@ -77,7 +75,7 @@ def mkDataAndItem(count=500, size=10):
     mkItem()
 
 
-@param.interactDecorator(nest=False)
+@param.interactDecorator()
 def mkItem(pxMode=True, useCache=True):
     global item
     item = pg.ScatterPlotItem(pxMode=pxMode, **getData())
@@ -85,7 +83,7 @@ def mkItem(pxMode=True, useCache=True):
     p.clear()
     p.addItem(item)
 
-@param.interactDecorator(nest=False)
+@param.interactDecorator()
 def getData(randomize=False):
     pos = data['pos']
     pen = data['pen']
@@ -97,7 +95,7 @@ def getData(randomize=False):
         brush = brush[0]
     return dict(x=pos[ptr % 50], y=pos[(ptr + 1) % 50], pen=pen, brush=brush, size=size)
 
-@param.interactDecorator(nest=False)
+@param.interactDecorator()
 def update(mode='Reuse Item'):
     """
     [mode.options]
@@ -133,7 +131,7 @@ def update(mode='Reuse Item'):
     p.repaint()
     # app.processEvents()  # force complete redraw for every plot
 
-@param.interactDecorator(nest=False)
+@param.interactDecorator()
 def pausePlot(paused=False):
     if paused:
         timer.stop()
@@ -143,7 +141,6 @@ def pausePlot(paused=False):
 mkDataAndItem()
 timer.timeout.connect(update)
 timer.start(0)
-stack.close()
-
+RunOpts.setOpts(title=None, nest=None)
 if __name__ == '__main__':
     pg.exec()

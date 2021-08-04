@@ -5,7 +5,7 @@ from functools import wraps
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
-from pyqtgraph.parametertree import Parameter, ParameterTree, RunOpts
+from pyqtgraph.parametertree import Parameter, ParameterTree, RunOpts, InteractiveFunction, interact
 
 app = pg.mkQApp()
 
@@ -49,12 +49,16 @@ def runOnButton(a=10, b=20):
     return a + b
 
 x = 5
-@host.interactDecorator(deferred={'x': lambda: x})
 @printResult
 def accessVarInDifferentScope(x, y=10):
     return x + y
+func_interactive = InteractiveFunction(accessVarInDifferentScope, deferred={'x': lambda: x})
+# Value is redeclared, but still bound
+x = 10
+interact(func_interactive, parent=host)
 
-with RunOpts.optsContext(titleFormat=str.upper):
+
+with RunOpts.optsContext(title=str.upper):
     @host.interactDecorator()
     @printResult
     def capslocknames(a=5):

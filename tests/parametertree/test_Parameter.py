@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from contextlib import ExitStack
 
 import pytest
 from functools import wraps
@@ -60,7 +61,7 @@ def test_unpack_parameter():
     assert result['c'] == 3.0
 
 def test_interact():
-    RunOpts.defaultRunOpts = RunOpts.ON_BUTTON
+    RunOpts.setOpts(runOpts=RunOpts.ON_BUTTON)
     value = None
     def retain(func):
         """Retain result for post-call analysis"""
@@ -88,7 +89,8 @@ def test_interact():
     assert testParam.opts['limits'] == [5,10]
 
     myval = 5
-    host = interact(a, deferred=dict(x=lambda: myval))
+    a_interact = InteractiveFunction(a, deferred=dict(x=lambda: myval))
+    host = interact(a_interact)
     assert 'x' not in host.names
     host.child('Run').activate()
     assert value == (5, 5)
@@ -105,13 +107,13 @@ def test_interact():
     host.child('y').sigValueChanging.emit(host.child('y'), 100)
     assert value == (10, 100)
 
-    with RunOpts.optsContext(titleFormat=str.upper):
+    with RunOpts.optsContext(title=str.upper):
         host = interact(a, x={'title': 'different', 'value': 5})
         titles = [p.title() for p in host]
         for ch in 'different', 'Y':
             assert ch in titles
 
-    with RunOpts.optsContext(defaultRunOpts=RunOpts.ON_CHANGED):
+    with RunOpts.optsContext(runOpts=RunOpts.ON_CHANGED):
         host = interact(a, x=5)
         host['y'] = 20
         assert value == (5, 20)
@@ -154,6 +156,8 @@ def test_interact():
     assert 'x' in host.names
     host['x'] = 100
     assert value == 100
+
+    RunOpts.setOpts(runOpts=None)
 
 def test_onlyRun():
     def a():

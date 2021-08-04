@@ -5,18 +5,13 @@ import functools
 import inspect
 import textwrap
 import weakref
+from functools import wraps
 
 from . import Parameter
 
 class RunOpts:
     class PARAM_UNSET: pass
     """Sentinel value for detecting parameters with unset values"""
-
-    titleFormat = None
-    """
-    Formatter to create a parameter title from its name when using `Parameter.interact.` If not *None*, must be
-    a callable of the form (name: str) -> str 
-    """
 
     ON_BUTTON = 'button'
     """Indicator for `interactive` parameter which runs the function on pressing a button parameter"""
@@ -31,7 +26,8 @@ class RunOpts:
     any of the parameters
     """
 
-    defaultRunOpts = ON_CHANGED
+    defaultCfg = {}
+    """Populated with any values that should override the default signature values in :func:`interact`."""
 
     @classmethod
     @contextlib.contextmanager
@@ -39,27 +35,34 @@ class RunOpts:
         """
         Sets default title format and default run format temporarily, within the scope of the context manager
         """
-        attrs = {'titleFormat', 'defaultRunOpts'}
-        oldOpts = {opt: getattr(cls, opt) for opt in attrs}
+        oldOpts = RunOpts.defaultCfg.copy()
+        cls.setOpts(**opts)
+        yield
+        RunOpts.defaultCfg = oldOpts
+
+    @classmethod
+    def setOpts(cls, **opts):
+        """Overrides the default behavior of function interaction"""
+        attrs = set(inspect.signature(interact).parameters)
         optsSet = set(opts)
         useOpts = optsSet & attrs
         if any(optsSet.difference(attrs)):
             raise KeyError(f'Unrecognized option(s) "{optsSet.difference(attrs)}"')
         for useOpt in useOpts:
-            setattr(cls, useOpt, opts[useOpt])
-        yield
-        for useOpt in useOpts:
-            setattr(cls, useOpt, oldOpts[useOpt])
+            if opts[useOpt] is None:
+                cls.defaultCfg.pop(useOpt, None)
+            else:
+                cls.defaultCfg[useOpt] = opts[useOpt]
 
 
-def funcToParamDict(func, **overrides):
+def funcToParamDict(func, title=None, **overrides):
     """
     Converts a function into a list of child parameter dicts
     """
     children = []
     out = dict(name=func.__name__, type='group', children=children)
-    if RunOpts.titleFormat:
-        out['title'] = RunOpts.titleFormat(func.__name__)
+    if title is not None:
+        out['title'] = _resolveTitle(func.__name__, title)
 
     funcParams = inspect.signature(func).parameters
     parsedDoc = parseIniDocstring(func.__doc__)
@@ -79,12 +82,12 @@ def funcToParamDict(func, **overrides):
     for name in checkNames:
         # May be none if this is an override name after function accepted kwargs
         param = funcParams.get(name)
-        pgDict = createFuncParameter(name, param, parsedDoc, overrides)
+        pgDict = createFuncParameter(name, param, parsedDoc, overrides, title)
         children.append(pgDict)
     return out
 
 
-def createFuncParameter(name, signatureParam, docDict, overridesDict):
+def createFuncParameter(name, signatureParam, docDict, overridesDict, title=None):
     """
     (Once organization PR is in place, this will be a regular function in the file instead of a class method).
     Constructs a dict ready for insertion into a group parameter based on the provided information in the
@@ -115,8 +118,8 @@ def createFuncParameter(name, signatureParam, docDict, overridesDict):
     pgDict.setdefault('value', RunOpts.PARAM_UNSET)
 
     # Anywhere a title is specified should take precedence over the default factory
-    if RunOpts.titleFormat and 'title' not in pgDict:
-        pgDict['title'] = RunOpts.titleFormat(name)
+    if title is not None:
+        pgDict.setdefault('title', _resolveTitle(name, title))
     pgDict.setdefault('type', type(pgDict['value']).__name__)
     # Handle helpText, pType from PrjParam style
     if 'pType' in pgDict:
@@ -303,8 +306,24 @@ class InteractiveFunction:
     def __str__(self):
         return self.func.__str__()
 
+def _resolveTitle(name, titleFormat):
+    if titleFormat is None:
+        return name
+    if isinstance(titleFormat, str):
+        return titleFormat
+    # else: titleFormat should be callable
+    return titleFormat(name)
 
-def interact(func, runOpts=None, *, ignores=None, deferred=None, parent=None, title=None, runFunc=None,
+def _suppyCfgOpts(func):
+    """Makes sure that config options can be supplied during normal function runs"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        newKwargs = {**RunOpts.defaultCfg, **kwargs}
+        return func(*args, **newKwargs)
+    return wrapper
+
+@_suppyCfgOpts
+def interact(func, *, runOpts=RunOpts.ON_CHANGED, ignores=None, parent=None, title=None, runFunc=None,
              nest=True, existOk=True, **overrides):
     """
     Interacts with a function by making Parameters for each argument.
@@ -322,18 +341,14 @@ def interact(func, runOpts=None, *, ignores=None, deferred=None, parent=None, ti
         function with which to interact. Can also be a :class:`InteractiveFunction`, if a reference to the bound
         signals is required.
     runOpts: `GroupParameter.<RUN_BUTTON, CHANGED, or CHANGING>` value
-        How the function should be run. If *None*, defaults to Parmeter.defaultRunOpts which can be set by the
-        user.
+        How the function should be run, i.e. when pressing a button, on sigValueChanged, and/or on sigValueChanging
     ignores: Sequence
         Names of function arguments which shouldn't have parameters created
-    deferred: dict
-        function arguments whose values should come from function evaluations rather than Parameters
-        (must be a function that accepts no inputs and returns the desired value). This is helpful for providing
-        external variables as function arguments, while making sure they are up to date.
     parent: GroupParameter
         Parent in which to add arguemnt Parameters. If *None*, a new group parameter is created.
-    title: str
-        Title of the group sub-parameter if one must be created (see `nest` behavior)
+    title: str or Callable
+        Title of the group sub-parameter if one must be created (see `nest` behavior). If a function is supplied, it
+        must be of the form (str) -> str and will be passed the function name as an input
     runFunc: Callable
         Simplifies the process of interacting with a wrapped function without requiring `functools`. See the
         linked documentation for an example.
@@ -350,30 +365,23 @@ def interact(func, runOpts=None, *, ignores=None, deferred=None, parent=None, ti
         arguments. Each override can be a value (e.g. 5) or a dict specification of a parameter
         (e.g. dict(type='list', limits=[0, 10, 20]))
     """
-    funcDict = funcToParamDict(func, **overrides)
-    children = funcDict.pop('children')
+    funcDict = funcToParamDict(func, title=title, **overrides)
+    children = funcDict.pop('children', []) # type: list[dict]
     chNames = [ch['name'] for ch in children]
-    if runOpts is None:
-        runOpts = RunOpts.defaultRunOpts
-    if title is not None:
-        funcDict['title'] = title
     parent = _resolveParent(parent, nest, funcDict, existOk)
 
-    if deferred is None:
-        deferred = {}
+    toExec = runFunc or func
+    if not isinstance(toExec, InteractiveFunction):
+        toExec = InteractiveFunction(toExec)
+
     # Values can't come both from deferred and overrides/params, so ensure they don't get created
     if ignores is None:
         ignores = []
-    ignores = list(ignores) + list(deferred)
+    ignores = list(ignores) + list(toExec.deferred)
 
     # Recycle ignored content that is needed as a value
     recycleNames = set(overrides) & set(ignores) & set(chNames)
     extra = {key: overrides[key] for key in recycleNames}
-
-
-    toExec = runFunc or func
-    if not isinstance(toExec, InteractiveFunction):
-        toExec = InteractiveFunction(toExec, deferred=deferred)
     toExec.extra.update(extra)
 
     useParams = []
@@ -382,7 +390,7 @@ def interact(func, runOpts=None, *, ignores=None, deferred=None, parent=None, ti
         if name in ignores:
             continue
         # Make sure args without defaults have overrides
-        if chDict['value'] is RunOpts.PARAM_UNSET and name not in deferred:
+        if chDict['value'] is RunOpts.PARAM_UNSET and name not in toExec.deferred:
             raise ValueError(f'Cannot interact with "{func} since it has required parameter "{name}"'
                              f' with no default or deferred value provided.')
 
@@ -404,8 +412,6 @@ def interact(func, runOpts=None, *, ignores=None, deferred=None, parent=None, ti
 
 def _resolveParent(parent, nest, parentOpts, existOk):
     if parent is None or nest:
-        if RunOpts.titleFormat is not None:
-            parentOpts.setdefault('title', RunOpts.titleFormat(parentOpts['name']))
         host = Parameter.create(**parentOpts)
         if parent is not None:
             # Parent was provided and nesting is enabled, so place created args inside the nested GroupParmeter

@@ -100,7 +100,7 @@ use the provided context manager:
 .. code:: python
 
    # `runOpts` can be set to any combination of options as demonstrated above, too
-   with RunOpts.optsContext(defaultRunOpts=RunOpts.ON_BUTTON):
+   with RunOpts.optsContext(runOpts=RunOpts.ON_BUTTON):
        # All will have `runOpts` set to ON_BUTTON
        p1 = interact(aFunc)
        p2 = interact(bFunc)
@@ -108,13 +108,13 @@ use the provided context manager:
    # After the context, `runOpts` is back to the previous default
 
 If the default for all interaction should be changed, you can directly
-modify ``defaultRunOpts`` (but be warned – anyone who imports your
+modify ``RunOpts.defaultCfg`` (but be warned – anyone who imports your
 module will have it modified for them, too. So use the context manager
 whenever possible)
 
 .. code:: python
 
-   RunOpts.defaultRunOpts = RunOpts.ON_BUTTON
+   RunOpts.defaultCfg['runOpts'] = RunOpts.ON_BUTTON
 
 ``ignores``
 ^^^^^^^^^^^
@@ -138,13 +138,14 @@ parameters and others should be hidden, use ``ignores``:
 Sometimes, values that should be passed to the ``interact``-ed function
 should come from a different scope, i.e. a variable definition that
 should be propagated from somewhere else. In these cases, wrap that
-argument in a function and pass it into ``deferred`` like so:
+argument in a function and pass it into ``deferred`` like so. Note that
+an ``InteractiveFunction`` object is needed as descibed in a later section.
 
 .. code:: python
 
    from skimage import morphology as morph
    import numpy as np
-   from pyqtgraph.parametertree import interact
+   from pyqtgraph.parametertree import interact, InteractiveFunction, ParameterTree
    import pyqtgraph as pg
 
 
@@ -156,9 +157,14 @@ argument in a function and pass it into ``deferred`` like so:
    view = pg.ImageView()
    # Simulate a grayscale image
    image = np.random.randint(0, 256, size=(512, 512))
-   params = interact(dilateImage, deferred={'image': lambda: image})
+   dilate_interact = InteractiveFunction(dilateImage, deferred={'image': lambda: image})
+   params = interact(dilate_interact)
    # As the 'image' variable changes, the new value will be used during parameter interaction
    view.show()
+   tree = ParameterTree()
+   tree.setParameters(params)
+   tree.show()
+   image = 255 - image # Even though 'image' is reassigned, it will be used by the parameter
    pg.exec()
 
 ``parent``
@@ -332,7 +338,7 @@ Title Formatting
 ----------------
 
 If functions should have formatted titles, specify this in the
-``titleFormat`` parameter:
+``title`` parameter:
 
 .. code:: python
 
@@ -342,7 +348,7 @@ If functions should have formatted titles, specify this in the
    def titleFormat(name):
        return name.replace('_', ' ').title()
 
-   with RunOpts.optsContext(titleFormat=titleFormat):
+   with RunOpts.optsContext(title=titleFormat):
        # The title in the parameter tree will be "My Snake Case Function"
        params = interact(my_snake_case_function)
 

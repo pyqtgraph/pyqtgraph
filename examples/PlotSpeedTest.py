@@ -16,8 +16,9 @@ import pyqtgraph.parametertree as ptree
 import pyqtgraph.functions as fn
 import itertools
 import argparse
+from contextlib import ExitStack
 
-from pyqtgraph.parametertree import interact, InteractiveFunction
+from pyqtgraph.parametertree import interact, InteractiveFunction, RunOpts
 
 if QT_LIB.startswith('PyQt'):
     wrapinstance = pg.Qt.sip.wrapinstance
@@ -104,6 +105,9 @@ app = pg.mkQApp("Plot Speed Test")
 default_pen = pg.mkPen()
 
 params = ptree.Parameter.create(name='Parameters', type='group')
+stack = ExitStack()
+stack.enter_context(RunOpts.optsContext(parent=params))
+
 pt = ptree.ParameterTree(showHeader=False)
 pt.setParameters(params)
 pw = pg.PlotWidget()
@@ -150,12 +154,6 @@ def makeData(nsamples=args.nsamples, frames=args.frames, fsample=args.fsample, a
     ptr = 0
     pw.setRange(QtCore.QRectF(0, -10, nsamples, 20))
 
-# Use function with same name so interacted params are under the same menu
-def update(useOpenGL=pg.getConfigOption('useOpenGL'), enableExperimental=pg.getConfigOption('enableExperimental')):
-    pw.useOpenGL(useOpenGL)
-    pg.setConfigOption('enableExperimental', enableExperimental)
-interact(update, parent=params)
-
 @params.interactDecorator(title='Curve Options')
 def setCurveOpts(pen=default_pen, method='pyqtgraph'):
     """
@@ -170,14 +168,21 @@ def setCurveOpts(pen=default_pen, method='pyqtgraph'):
     curve.setPen(pen)
     curve.setMethod(method)
 
-def update(antialias=pg.getConfigOption('antialias'), connect='all', skipfiniteCheck=False):
+@params.interactDecorator(title='Display Options    ')
+def update(useOpenGL=pg.getConfigOption('useOpenGL'),
+           enableExperimental=pg.getConfigOption('enableExperimental'),
+           antialias=pg.getConfigOption('antialias'),
+           connect='all',
+           skipfiniteCheck=False
+           ):
     """
     [connect.options]
     type = list
     limits = ['all', 'pairs', 'finite', 'array']
     """
     global curve, data, ptr, elapsed, fpsLastUpdate
-
+    pw.useOpenGL(useOpenGL)
+    pg.setConfigOption('enableExperimental', enableExperimental)
     if connect == 'array':
         connect = connect_array
 
@@ -202,7 +207,7 @@ fpsLastUpdate = perf_counter()
 
 # Wrap update as interactive to preserve values across calls
 update_interactive = InteractiveFunction(update)
-interact(update_interactive, parent=params, title='Display Options')
+interact(update_interactive, title='Display Options')
 timer = QtCore.QTimer()
 timer.timeout.connect(update_interactive)
 timer.start(0)
