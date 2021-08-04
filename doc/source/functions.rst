@@ -34,12 +34,6 @@ Qt uses the classes QColor, QPen, and QBrush to determine how to draw lines and 
 
 .. autofunction:: pyqtgraph.colorCIELab
 
-.. autofunction:: pyqtgraph.colorTuple
-
-.. autofunction:: pyqtgraph.colorStr
-
-.. autofunction:: pyqtgraph.glColor
-
 .. autofunction:: pyqtgraph.colorDistance
 
 
@@ -108,3 +102,16 @@ Miscellaneous Functions
 .. autofunction:: pyqtgraph.systemInfo
 
 .. autofunction:: pyqtgraph.exit
+
+
+Legacy Color Helper Functions
+-------------------------------
+
+The following helper functions should no longer be used. The functionality that they implement is trivial and it is suggested that the user use the equivalent QColor methods directly.
+
+
+.. autofunction:: pyqtgraph.colorTuple
+
+.. autofunction:: pyqtgraph.colorStr
+
+.. autofunction:: pyqtgraph.glColor

@@ -56,7 +56,7 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
         if color is None:
             color = getConfigOption('foreground')
         color = fn.mkColor(color)
-        optlist.append('color: #' + fn.colorStr(color)[:6])
+        optlist.append('color: ' + color.name())
         if 'size' in opts:
             optlist.append('font-size: ' + opts['size'])
         if 'bold' in opts and opts['bold'] in [True, False]:

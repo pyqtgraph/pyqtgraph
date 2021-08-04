@@ -224,7 +224,7 @@ class Color(QtGui.QColor):
         
     def glColor(self):
         """Return (r,g,b,a) normalized for use in opengl"""
-        return (self.red()/255., self.green()/255., self.blue()/255., self.alpha()/255.)
+        return self.getRgbF()
         
     def __getitem__(self, ind):
         return (self.red, self.green, self.blue, self.alpha)[ind]()
@@ -258,6 +258,16 @@ def mkColor(*args):
                     return Colors[c]
                 except KeyError:
                     raise ValueError('No color named "%s"' % c)
+            have_alpha = len(c) in [5, 9] and c[0] == '#'  # "#RGBA" and "#RRGGBBAA"
+            if not have_alpha:
+                # try parsing SVG named colors, including "#RGB" and "#RRGGBB".
+                # note that QColor.setNamedColor() treats a 9-char hex string as "#AARRGGBB".
+                qcol = QtGui.QColor()
+                qcol.setNamedColor(c)
+                if qcol.isValid():
+                    return qcol
+                # on failure, fallback to pyqtgraph parsing
+                # this includes the deprecated case of non-#-prefixed hex strings
             if c[0] == '#':
                 c = c[1:]
             else:
@@ -390,9 +400,7 @@ def mkPen(*args, **kargs):
 
 def hsvColor(hue, sat=1.0, val=1.0, alpha=1.0):
     """Generate a QColor from HSVa values. (all arguments are float 0.0-1.0)"""
-    c = QtGui.QColor()
-    c.setHsvF(hue, sat, val, alpha)
-    return c
+    return QtGui.QColor.fromHsvF(hue, sat, val, alpha)
     
 # Matrices and math taken from "CIELab Color Space" by Gernot Hoffmann
 # http://docs-hoffmann.de/cielab03022003.pdf
@@ -475,10 +483,7 @@ def CIELabColor(L, a, b, alpha=1.0):
         else:
             arr_sRGB[idx] = 12.92 * val # (s)
     arr_sRGB = clip_array( arr_sRGB, 0.0, 1.0 ) # avoid QColor errors
-    qcol = QtGui.QColor()
-    qcol.setRgbF( *arr_sRGB )
-    if alpha < 1.0: qcol.setAlpha(alpha)
-    return qcol
+    return QtGui.QColor.fromRgbF( *arr_sRGB, alpha )
 
 def colorCIELab(qcol):
     """
@@ -555,7 +560,7 @@ def colorDistance(colors, metric='CIE76'):
 
 def colorTuple(c):
     """Return a tuple (R,G,B,A) from a QColor"""
-    return (c.red(), c.green(), c.blue(), c.alpha())
+    return c.getRgb()
 
 def colorStr(c):
     """Generate a hex string code from a QColor"""
@@ -581,10 +586,7 @@ def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, mi
         v = maxValue
     h = minHue + (indh * (maxHue-minHue)) // hues
     
-    c = QtGui.QColor()
-    c.setHsv(h, sat, v)
-    c.setAlpha(alpha)
-    return c
+    return QtGui.QColor.fromHsv(h, sat, v, alpha)
 
 
 def glColor(*args, **kargs):
@@ -593,7 +595,7 @@ def glColor(*args, **kargs):
     Accepts same arguments as :func:`mkColor <pyqtgraph.mkColor>`.
     """
     c = mkColor(*args, **kargs)
-    return (c.red()/255., c.green()/255., c.blue()/255., c.alpha()/255.)
+    return c.getRgbF()
 
     
 

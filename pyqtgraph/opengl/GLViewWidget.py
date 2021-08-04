@@ -138,9 +138,9 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
     def setBackgroundColor(self, *args, **kwds):
         """
         Set the background color of the widget. Accepts the same arguments as
-        pg.mkColor() and pg.glColor().
+        :func:`~pyqtgraph.mkColor`.
         """
-        self.opts['bgcolor'] = fn.glColor(*args, **kwds)
+        self.opts['bgcolor'] = fn.mkColor(*args, **kwds).getRgbF()
         self.update()
         
     def getViewport(self):

@@ -38,7 +38,7 @@ class GLBoxItem(GLGraphicsItem):
     
     def setColor(self, *args):
         """Set the color of the box. Arguments are the same as those accepted by functions.mkColor()"""
-        self.__color = fn.Color(*args)
+        self.__color = fn.mkColor(*args)
         
     def color(self):
         return self.__color
@@ -54,7 +54,7 @@ class GLBoxItem(GLGraphicsItem):
         
         glBegin( GL_LINES )
         
-        glColor4f(*self.color().glColor())
+        glColor4f(*self.color().getRgbF())
         x,y,z = self.size()
         glVertex3f(0, 0, 0)
         glVertex3f(0, 0, z)

@@ -620,8 +620,7 @@ class PlotCurveItem(GraphicsObject):
             try:
                 gl.glVertexPointerf(pos)
                 pen = fn.mkPen(self.opts['pen'])
-                color = pen.color()
-                gl.glColor4f(color.red()/255., color.green()/255., color.blue()/255., color.alpha()/255.)
+                gl.glColor4f(*pen.color().getRgbF())
                 width = pen.width()
                 if pen.isCosmetic() and width < 1:
                     width = 1

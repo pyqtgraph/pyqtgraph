@@ -763,9 +763,8 @@ class PlotItem(GraphicsWidget):
 
             for item in self.curves:
                 if isinstance(item, PlotCurveItem):
-                    color = fn.colorStr(item.pen.color())
-                    opacity = item.pen.color().alpha() / 255.
-                    color = color[:6]
+                    color = item.pen.color()
+                    hrrggbb, opacity = color.name(), color.alphaF()
                     x, y = item.getData()
                     mask = (x > xRange[0]) * (x < xRange[1])
                     mask[:-1] += mask[1:]
@@ -780,9 +779,9 @@ class PlotItem(GraphicsWidget):
                     # fh.write('<g fill="none" stroke="#%s" '
                     #          'stroke-opacity="1" stroke-width="1">\n' % (
                     #           color, ))
-                    fh.write('<path fill="none" stroke="#%s" '
+                    fh.write('<path fill="none" stroke="%s" '
                              'stroke-opacity="%f" stroke-width="1" '
-                             'd="M%f,%f ' % (color, opacity, x[0], y[0]))
+                             'd="M%f,%f ' % (hrrggbb, opacity, x[0], y[0]))
                     for i in range(1, len(x)):
                         fh.write('L%f,%f ' % (x[i], y[i]))
 
@@ -798,15 +797,14 @@ class PlotItem(GraphicsWidget):
                         pos = point.pos()
                         if not rect.contains(pos):
                             continue
-                        color = fn.colorStr(point.brush.color())
-                        opacity = point.brush.color().alpha() / 255.
-                        color = color[:6]
+                        color = point.brush.color()
+                        hrrggbb, opacity = color.name(), color.alphaF()
                         x = pos.x() * sx
                         y = pos.y() * sy
 
-                        fh.write('<circle cx="%f" cy="%f" r="1" fill="#%s" '
+                        fh.write('<circle cx="%f" cy="%f" r="1" fill="%s" '
                                  'stroke="none" fill-opacity="%f"/>\n' % (
-                                    x, y, color, opacity))
+                                    x, y, hrrggbb, opacity))
 
             fh.write("</svg>\n")
 
