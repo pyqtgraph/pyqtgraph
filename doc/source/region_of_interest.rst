@@ -16,7 +16,7 @@ To select a 2D region from an image, pyqtgraph uses the :class:`ROI <pyqtgraph.R
 
 To automatically extract a region of image data using an ROI and an ImageItem, use :func:`ROI.getArrayRegion <pyqtgraph.ROI.getArrayRegion>`. ROI classes use the :func:`affineSlice <pyqtgraph.affineSlice>` function to perform this extraction.
 
-ROI can also be used as a control for moving/rotating/scaling items in a scene similar to most vetctor graphics editing applications.
+ROI can also be used as a control for moving/rotating/scaling items in a scene similar to most vector graphics editing applications.
 
 See the ROITypes example for more information.
 
