@@ -258,6 +258,16 @@ def mkColor(*args):
                     return Colors[c]
                 except KeyError:
                     raise ValueError('No color named "%s"' % c)
+            have_alpha = len(c) in [5, 9] and c[0] == '#'  # "#RGBA" and "#RRGGBBAA"
+            if not have_alpha:
+                # try parsing SVG named colors, including "#RGB" and "#RRGGBB".
+                # note that QColor.setNamedColor() treats a 9-char hex string as "#AARRGGBB".
+                qcol = QtGui.QColor()
+                qcol.setNamedColor(c)
+                if qcol.isValid():
+                    return qcol
+                # on failure, fallback to pyqtgraph parsing
+                # this includes the deprecated case of non-#-prefixed hex strings
             if c[0] == '#':
                 c = c[1:]
             else:
