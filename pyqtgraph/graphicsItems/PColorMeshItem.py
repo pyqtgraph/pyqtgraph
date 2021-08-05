@@ -35,7 +35,7 @@ class PColorMeshItem(GraphicsObject):
         x, y : np.ndarray, optional, default None
             2D array containing the coordinates of the polygons
         z : np.ndarray
-            2D array containing the value which will be maped into the polygons
+            2D array containing the value which will be mapped into the polygons
             colors.
             If x and y is None, the polygons will be displaced on a grid
             otherwise x and y will be used as polygons vertices coordinates as::
@@ -140,7 +140,7 @@ class PColorMeshItem(GraphicsObject):
         x, y : np.ndarray, optional, default None
             2D array containing the coordinates of the polygons
         z : np.ndarray
-            2D array containing the value which will be maped into the polygons
+            2D array containing the value which will be mapped into the polygons
             colors.
             If x and y is None, the polygons will be displaced on a grid
             otherwise x and y will be used as polygons vertices coordinates as::

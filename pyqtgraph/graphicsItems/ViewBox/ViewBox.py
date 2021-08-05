@@ -50,7 +50,7 @@ class ChildGroup(ItemGroup):
         #         mechanism, but this causes a different PySide crash.
         self.itemsChangedListeners = WeakList()
 
-        # excempt from telling view when transform changes
+        # exempt from telling view when transform changes
         self._GraphicsObject__inform_view_on_change = False
 
     def itemChange(self, change, value):
