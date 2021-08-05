@@ -33,6 +33,7 @@ class SliderParameterItem(WidgetParameterItem):
     def makeWidget(self):
         param = self.param
         opts = param.opts
+        opts.setdefault('limits', [0, 0])
         self._suffix = opts.get('suffix')
 
         self.slider = QtWidgets.QSlider()
@@ -94,7 +95,7 @@ class SliderParameterItem(WidgetParameterItem):
         span = opts.get('span', None)
         if span is None:
             step = opts.get('step', 1)
-            start, stop = opts['limits']
+            start, stop = opts.get('limits', param.opts['limits'])
             # Add a bit to 'stop' since python slicing excludes the last value
             span = np.arange(start, stop + step, step)
         precision = opts.get('precision', 2)
