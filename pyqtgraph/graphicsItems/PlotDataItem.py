@@ -319,7 +319,7 @@ class PlotDataItem(GraphicsObject):
     def setShadowPen(self, *args, **kargs):
         """
         | Sets the shadow pen used to draw lines between points (this is for enhancing contrast or
-          emphacizing data).
+          emphasizing data).
         | This line is drawn behind the primary pen (see :func:`setPen() <pyqtgraph.PlotDataItem.setPen>`)
           and should generally be assigned greater width than the primary pen.
         | *pen* can be a QPen or any argument accepted by :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`

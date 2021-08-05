@@ -157,7 +157,7 @@ class AxisItem(GraphicsWidget):
         tickAlpha           (float or int or None) If None, pyqtgraph will draw the
                             ticks with the alpha it deems appropriate.  Otherwise, 
                             the alpha will be fixed at the value passed.  With int, 
-                            accepted values are [0..255].  With vaule of type
+                            accepted values are [0..255].  With value of type
                             float, accepted values are from [0..1].
         =================== =======================================================
 

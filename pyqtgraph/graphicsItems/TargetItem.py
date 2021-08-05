@@ -379,7 +379,7 @@ class TargetLabel(TextItem):
         the target in pixels, by default it is (20, 0).
     anchor : tuple, list, QPointF or QPoint
         Position to rotate the TargetLabel about, and position to set the
-        offset value to see :class:`~pyqtgraph.TextItem` for more inforation.
+        offset value to see :class:`~pyqtgraph.TextItem` for more information.
     kwargs : dict of arguments that are passed on to
         :class:`~pyqtgraph.TextItem` constructor, excluding text parameter
     """
