@@ -2,6 +2,7 @@ from .action import ActionParameter, ActionParameterItem
 from .basetypes import WidgetParameterItem, SimpleParameter, GroupParameter, GroupParameterItem
 from .bool import BoolParameterItem
 from .calendar import CalendarParameter, CalendarParameterItem
+from .checklist import ChecklistParameter, ChecklistParameterItem
 from .color import ColorParameter, ColorParameterItem
 from .colormap import ColorMapParameter, ColorMapParameterItem
 from .file import FileParameter, FileParameterItem
@@ -25,6 +26,7 @@ registerParameterType('group', GroupParameter, override=True)
 
 registerParameterType('action',    ActionParameter,      override=True)
 registerParameterType('calendar',  CalendarParameter,    override=True)
+registerParameterType('checklist', ChecklistParameter,   override=True)
 registerParameterType('color',     ColorParameter,       override=True)
 registerParameterType('colormap',  ColorMapParameter,    override=True)
 registerParameterType('file',      FileParameter,        override=True)
