@@ -194,10 +194,10 @@ class RangeColorMapItem(ptree.types.SimpleParameter):
         ptree.types.SimpleParameter.__init__(self, 
             name=name, autoIncrementName=True, type='colormap', removable=True, renamable=True, 
             children=[
-                #dict(name="Field", type='list', value=name, values=fields),
+                #dict(name="Field", type='list', value=name, limits=fields),
                 dict(name='Min', type='float', value=0.0, suffix=units, siPrefix=True),
                 dict(name='Max', type='float', value=1.0, suffix=units, siPrefix=True),
-                dict(name='Operation', type='list', value='Overlay', values=['Overlay', 'Add', 'Multiply', 'Set']),
+                dict(name='Operation', type='list', value='Overlay', limits=['Overlay', 'Add', 'Multiply', 'Set']),
                 dict(name='Channels..', type='group', expanded=False, children=[
                     dict(name='Red', type='bool', value=True),
                     dict(name='Green', type='bool', value=True),
@@ -240,7 +240,7 @@ class EnumColorMapItem(ptree.types.GroupParameter):
             name=name, autoIncrementName=True, removable=True, renamable=True, 
             children=[
                 dict(name='Values', type='group', children=childs),
-                dict(name='Operation', type='list', value='Overlay', values=['Overlay', 'Add', 'Multiply', 'Set']),
+                dict(name='Operation', type='list', value='Overlay', limits=['Overlay', 'Add', 'Multiply', 'Set']),
                 dict(name='Channels..', type='group', expanded=False, children=[
                     dict(name='Red', type='bool', value=True),
                     dict(name='Green', type='bool', value=True),

@@ -26,7 +26,7 @@ param = ptree.Parameter.create(name=translate('ScatterPlot', 'Parameters'), type
     dict(name='randomize', title=translate('ScatterPlot', 'Randomize:    '), type='bool', value=False),
     dict(name='pxMode', title='pxMode:    ', type='bool', value=True),
     dict(name='useCache', title='useCache:    ', type='bool', value=True),
-    dict(name='mode', title=translate('ScatterPlot', 'Mode:    '), type='list', values={translate('ScatterPlot', 'New Item'): 'newItem', translate('ScatterPlot', 'Reuse Item'): 'reuseItem', translate('ScatterPlot', 'Simulate Pan/Zoom'): 'panZoom', translate('ScatterPlot', 'Simulate Hover'): 'hover'}, value='reuseItem'),
+    dict(name='mode', title=translate('ScatterPlot', 'Mode:    '), type='list', limits={translate('ScatterPlot', 'New Item'): 'newItem', translate('ScatterPlot', 'Reuse Item'): 'reuseItem', translate('ScatterPlot', 'Simulate Pan/Zoom'): 'panZoom', translate('ScatterPlot', 'Simulate Hover'): 'hover'}, value='reuseItem'),
 ])
 for c in param.children():
     c.setDefault(c.value())
