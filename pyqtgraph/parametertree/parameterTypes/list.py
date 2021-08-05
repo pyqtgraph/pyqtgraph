@@ -4,6 +4,7 @@ from collections import OrderedDict
 from .basetypes import WidgetParameterItem
 from .. import Parameter
 from ...Qt import QtWidgets
+from ... import functions as fn
 
 
 class ListParameterItem(WidgetParameterItem):
@@ -104,7 +105,9 @@ class ListParameter(Parameter):
         self.forward, self.reverse = self.mapping(limits)
 
         Parameter.setLimits(self, limits)
-        if len(self.reverse[0]) > 0 and self.value() not in self.reverse[0]:
+        # 'value in limits' expression will break when reverse contains numpy array
+        curVal = self.value()
+        if len(self.reverse[0]) > 0 and not any(fn.eq(curVal, limVal) for limVal in self.reverse[0]):
             self.setValue(self.reverse[0][0])
 
     @staticmethod
@@ -112,16 +115,11 @@ class ListParameter(Parameter):
         # Return forward and reverse mapping objects given a limit specification
         forward = OrderedDict()  ## {name: value, ...}
         reverse = ([], [])       ## ([value, ...], [name, ...])
-        if isinstance(limits, dict):
-            for k, v in limits.items():
-                forward[k] = v
-                reverse[0].append(v)
-                reverse[1].append(k)
-        else:
-            for v in limits:
-                n = str(v)
-                forward[n] = v
-                reverse[0].append(v)
-                reverse[1].append(n)
+        if not isinstance(limits, dict):
+            limits = {str(l): l for l in limits}
+        for k, v in limits.items():
+            forward[k] = v
+            reverse[0].append(v)
+            reverse[1].append(k)
         return forward, reverse
 
