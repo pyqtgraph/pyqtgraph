@@ -5,6 +5,10 @@ from ...Qt import QtWidgets
 from ... import functions as fn
 
 class ChecklistParameterItem(GroupParameterItem):
+    """
+    Wraps a :class:`GroupParameterItem` to manage ``bool`` parameter children. Also provides convenience buttons to
+    select or clear all values at once. Note these conveniences are disabled when ``exclusive`` is *True*.
+    """
     def __init__(self, param, depth):
         self.btnGrp = QtWidgets.QButtonGroup()
         self.btnGrp.setExclusive(False)
@@ -67,6 +71,17 @@ class ChecklistParameterItem(GroupParameterItem):
             btn.setVisible(expanded)
 
 class ChecklistParameter(GroupParameter):
+    """
+    Can be set just like a :class:`ListParameter`, but allows for multiple values to be selected simultaneously.
+
+    ============== ========================================================
+    **Options**
+    exclusive      When *False*, any number of options can be selected. The resulting ``value()`` is a list of
+                   all checked values. When *True*, it behaves like a ``list`` type -- only one value can be selected.
+                   If no values are selected and ``exclusive`` is set to *True*, the first available limit is selected.
+                   The return value of an ``exclusive`` checklist is a single value rather than a list with one element.
+    ============== ========================================================
+    """
     itemClass = ChecklistParameterItem
 
     # Sentinel for forcing updates by guaranteeing non-existence
