@@ -84,9 +84,6 @@ class ChecklistParameter(GroupParameter):
     """
     itemClass = ChecklistParameterItem
 
-    # Sentinel for forcing updates by guaranteeing non-existence
-    _VALUE_UNSET = object()
-
     def __init__(self, **opts):
         # Value setting before init causes problems since limits aren't set by that point.
         # Avoid by taking value out of consideration until later
