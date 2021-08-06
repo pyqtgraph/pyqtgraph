@@ -1,4 +1,5 @@
-from ..Qt import QtGui, QtCore
+# -*- coding: utf-8 -*-
+from ..Qt import QtGui
 from .. import functions as fn
 from .GraphicsWidget import GraphicsWidget
 ## Must be imported at the end to avoid cyclic-dependency hell:
@@ -13,11 +14,12 @@ class GraphicsLayout(GraphicsWidget):
     This is usually created automatically as part of a :class:`GraphicsWindow <pyqtgraph.GraphicsWindow>` or :class:`GraphicsLayoutWidget <pyqtgraph.GraphicsLayoutWidget>`.
     """
 
-
     def __init__(self, parent=None, border=None):
         GraphicsWidget.__init__(self, parent)
         if border is True:
             border = (100,100,100)
+        elif border is False:
+            border = None  
         self.border = border
         self.layout = QtGui.QGraphicsGridLayout()
         self.setLayout(self.layout)
@@ -26,7 +28,7 @@ class GraphicsLayout(GraphicsWidget):
         self.itemBorders = {}  ## {item1: QtGui.QGraphicsRectItem, ...} border rects
         self.currentRow = 0
         self.currentCol = 0
-        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Expanding))
     
     #def resizeEvent(self, ev):
         #ret = GraphicsWidget.resizeEvent(self, ev)

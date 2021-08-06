@@ -12,8 +12,8 @@ as it can be converted to/from a string using repr and eval.
 import re, os, sys, datetime
 import numpy
 from collections import OrderedDict
+import tempfile
 from . import units
-from .python2_3 import asUnicode, basestring
 from .Qt import QtCore
 from .Point import Point
 from .colormap import ColorMap
@@ -39,7 +39,7 @@ class ParseError(Exception):
 
 def writeConfigFile(data, fname):
     s = genString(data)
-    with open(fname, 'w') as fd:
+    with open(fname, 'wt') as fd:
         fd.write(s)
 
 
@@ -55,8 +55,8 @@ def readConfigFile(fname):
         
     try:
         #os.chdir(newDir)  ## bad.
-        with open(fname) as fd:
-            s = asUnicode(fd.read())
+        with open(fname, "rt") as fd:
+            s = fd.read()
         s = s.replace("\r\n", "\n")
         s = s.replace("\r", "\n")
         data = parseString(s)[1]
@@ -72,7 +72,7 @@ def readConfigFile(fname):
 
 def appendConfigFile(data, fname):
     s = genString(data)
-    with open(fname, 'a') as fd:
+    with open(fname, 'at') as fd:
         fd.write(s)
 
 
@@ -96,7 +96,7 @@ def genString(data, indent=''):
 def parseString(lines, start=0):
     
     data = OrderedDict()
-    if isinstance(lines, basestring):
+    if isinstance(lines, str):
         lines = lines.replace("\\\n", "")
         lines = lines.split('\n')
         lines = [l for l in lines if re.search(r'\S', l) and not re.match(r'\s*#', l)]  ## remove empty lines
@@ -187,11 +187,8 @@ def measureIndent(s):
     while n < len(s) and s[n] == ' ':
         n += 1
     return n
-    
-    
-    
+
 if __name__ == '__main__':
-    import tempfile
     cf = """
 key: 'value'
 key2:              ##comment
@@ -201,16 +198,13 @@ key2:              ##comment
     key22: [1,2,3]
     key23: 234  #comment
     """
-    fn = tempfile.mktemp()
-    with open(fn, 'w') as tf:
-        tf.write(cf)
-    print("=== Test:===")
-    num = 1
-    for line in cf.split('\n'):
-        print("%02d   %s" % (num, line))
-        num += 1
-    print(cf)
-    print("============")
-    data = readConfigFile(fn)
+    with tempfile.NamedTemporaryFile(encoding="utf-8") as tf:
+        tf.write(cf.encode("utf-8"))
+        print("=== Test:===")
+        for num, line in enumerate(cf.split('\n'), start=1):
+            print("%02d   %s" % (num, line))
+        print(cf)
+        print("============")
+        data = readConfigFile(tf.name)
     print(data)
-    os.remove(fn)
+    

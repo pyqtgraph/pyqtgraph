@@ -1,5 +1,5 @@
 pyside2
 numpy
 pyopengl
-sphinx==3.4.3
-sphinx_rtd_theme==0.5.1
+sphinx==4.1.1
+sphinx_rtd_theme==0.5.2

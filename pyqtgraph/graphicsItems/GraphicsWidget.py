@@ -1,5 +1,5 @@
-from ..Qt import QtGui, QtCore  
-from ..GraphicsScene import GraphicsScene
+# -*- coding: utf-8 -*-
+from ..Qt import QtGui
 from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsWidget']
@@ -55,5 +55,3 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
         p.addRect(self.boundingRect())
         #print "shape:", p.boundingRect()
         return p
-
-

@@ -6,8 +6,7 @@ import warnings
 import numpy as np
 from .GraphicsObject import GraphicsObject
 from .. import functions as fn
-from ..Point import Point
-import struct, sys
+import sys
 from .. import getConfigOption
 from .. import debug
 
@@ -20,9 +19,9 @@ class PlotCurveItem(GraphicsObject):
 
     Features:
 
-    - Fast data update
-    - Fill under curve
-    - Mouse interaction
+      - Fast data update
+      - Fill under curve
+      - Mouse interaction
 
     =====================  ===============================================
     **Signals:**
@@ -51,7 +50,7 @@ class PlotCurveItem(GraphicsObject):
         self.clear()
 
         ## this is disastrous for performance.
-        #self.setCacheMode(QtGui.QGraphicsItem.DeviceCoordinateCache)
+        #self.setCacheMode(QtGui.QGraphicsItem.CacheMode.DeviceCoordinateCache)
 
         self.metaData = {}
         self.opts = {
@@ -65,6 +64,7 @@ class PlotCurveItem(GraphicsObject):
             'connect': 'all',
             'mouseWidth': 8, # width of shape responding to mouse click
             'compositionMode': None,
+            'skipFiniteCheck': True
         }
         if 'pen' not in kargs:
             self.opts['pen'] = fn.mkPen('w')
@@ -93,20 +93,32 @@ class PlotCurveItem(GraphicsObject):
             self._boundingRect = None
 
     def setCompositionMode(self, mode):
-        """Change the composition mode of the item (see QPainter::CompositionMode
-        in the Qt documentation). This is useful when overlaying multiple items.
+        """
+        Change the composition mode of the item. This is useful when overlaying
+        multiple items.
+        
+        Parameters
+        ----------
+        mode : ``QtGui.QPainter.CompositionMode``
+            Composition of the item, often used when overlaying items.  Common
+            options include:
 
-        ============================================  ============================================================
-        **Most common arguments:**
-        QtGui.QPainter.CompositionMode_SourceOver     Default; image replaces the background if it
-                                                      is opaque. Otherwise, it uses the alpha channel to blend
-                                                      the image with the background.
-        QtGui.QPainter.CompositionMode_Overlay        The image color is mixed with the background color to
-                                                      reflect the lightness or darkness of the background.
-        QtGui.QPainter.CompositionMode_Plus           Both the alpha and color of the image and background pixels
-                                                      are added together.
-        QtGui.QPainter.CompositionMode_Multiply       The output is the image color multiplied by the background.
-        ============================================  ============================================================
+            ``QPainter.CompositionMode.CompositionMode_SourceOver`` (Default)
+            Image replaces the background if it is opaque. Otherwise, it uses
+            the alpha channel to blend the image with the background.
+
+            ``QPainter.CompositionMode.CompositionMode_Overlay`` Image color is
+            mixed with the background color to reflect the lightness or
+            darkness of the background
+
+            ``QPainter.CompositionMode.CompositionMode_Plus`` Both the alpha
+            and color of the image and background pixels are added together.
+
+            ``QPainter.CompositionMode.CompositionMode_Plus`` The output is the
+            image color multiplied by the background.
+
+            See ``QPainter::CompositionMode`` in the Qt Documentation for more
+            options and details
         """
         self.opts['compositionMode'] = mode
         self.update()
@@ -177,7 +189,7 @@ class PlotCurveItem(GraphicsObject):
         spen = self.opts['shadowPen']
         if not pen.isCosmetic():
             b = (b[0] - pen.widthF()*0.7072, b[1] + pen.widthF()*0.7072)
-        if spen is not None and not spen.isCosmetic() and spen.style() != QtCore.Qt.NoPen:
+        if spen is not None and not spen.isCosmetic() and spen.style() != QtCore.Qt.PenStyle.NoPen:
             b = (b[0] - spen.widthF()*0.7072, b[1] + spen.widthF()*0.7072)
 
         self._boundsCache[ax] = [(frac, orthoRange), b]
@@ -189,7 +201,7 @@ class PlotCurveItem(GraphicsObject):
         w = 0
         if pen.isCosmetic():
             w += pen.widthF()*0.7072
-        if spen is not None and spen.isCosmetic() and spen.style() != QtCore.Qt.NoPen:
+        if spen is not None and spen.isCosmetic() and spen.style() != QtCore.Qt.PenStyle.NoPen:
             w = max(w, spen.widthF()*0.7072)
         if self.clickable:
             w = max(w, self.opts['mouseWidth']//2 + 1)
@@ -336,6 +348,11 @@ class PlotCurveItem(GraphicsObject):
                         connectivity, specify an array of boolean values.
         compositionMode See :func:`setCompositionMode
                         <pyqtgraph.PlotCurveItem.setCompositionMode>`.
+        skipFiniteCheck Optimization parameter that can speed up plot time by
+                        telling the painter to not check and compensate for NaN
+                        values.  If set to True, and NaN values exist, the data
+                        may not be displayed or your plot will take a
+                        significant performance hit.  Defaults to False.
         =============== ========================================================
 
         If non-keyword arguments are used, they will be interpreted as
@@ -373,9 +390,10 @@ class PlotCurveItem(GraphicsObject):
             if data.dtype.kind == 'c':
                 raise Exception("Can not plot complex data types.")
 
+
         profiler("data checks")
 
-        #self.setCacheMode(QtGui.QGraphicsItem.NoCache)  ## Disabling and re-enabling the cache works around a bug in Qt 4.6 causing the cached results to display incorrectly
+        #self.setCacheMode(QtGui.QGraphicsItem.CacheMode.NoCache)  ## Disabling and re-enabling the cache works around a bug in Qt 4.6 causing the cached results to display incorrectly
                                                         ##    Test this bug with test_PlotWidget and zoom in on the animated plot
         self.yData = kargs['y'].view(np.ndarray)
         self.xData = kargs['x'].view(np.ndarray)
@@ -421,6 +439,8 @@ class PlotCurveItem(GraphicsObject):
         if 'antialias' in kargs:
             self.opts['antialias'] = kargs['antialias']
 
+        self.opts['skipFiniteCheck'] = kargs.get('skipFiniteCheck', False)
+
         profiler('set')
         self.update()
         profiler('update')
@@ -458,10 +478,12 @@ class PlotCurveItem(GraphicsObject):
                 y[0] = self.opts['fillLevel']
                 y[-1] = self.opts['fillLevel']
 
-        path = fn.arrayToQPath(x, y, connect=self.opts['connect'])
-
-        return path
-
+        return fn.arrayToQPath(
+            x,
+            y,
+            connect=self.opts['connect'],
+            finiteCheck=not self.opts['skipFiniteCheck']
+        )
 
     def getPath(self):
         if self.path is None:
@@ -496,7 +518,7 @@ class PlotCurveItem(GraphicsObject):
         else:
             aa = self.opts['antialias']
 
-        p.setRenderHint(p.Antialiasing, aa)
+        p.setRenderHint(p.RenderHint.Antialiasing, aa)
 
         cmode = self.opts['compositionMode']
         if cmode is not None:
@@ -525,7 +547,7 @@ class PlotCurveItem(GraphicsObject):
             else:
                 sp = fn.mkPen(self.opts['shadowPen'])
 
-            if sp.style() != QtCore.Qt.NoPen:
+            if sp.style() != QtCore.Qt.PenStyle.NoPen:
                 p.setPen(sp)
                 p.drawPath(path)
 
@@ -544,6 +566,19 @@ class PlotCurveItem(GraphicsObject):
     def paintGL(self, p, opt, widget):
         p.beginNativePainting()
         import OpenGL.GL as gl
+
+        if sys.platform == 'win32':
+            # If Qt is built to dynamically load OpenGL, then the projection and
+            # modelview matrices are not setup.
+            # https://doc.qt.io/qt-6/windows-graphics.html
+            # https://code.woboq.org/qt6/qtbase/src/opengl/qopenglpaintengine.cpp.html
+            # Technically, we could enable it for all platforms, but for now, just
+            # enable it where it is required, i.e. Windows
+            gl.glMatrixMode(gl.GL_PROJECTION)
+            gl.glLoadIdentity()
+            gl.glOrtho(0, widget.width(), widget.height(), 0, -999999, 999999)
+            gl.glMatrixMode(gl.GL_MODELVIEW)
+            gl.glLoadMatrixf(QtGui.QMatrix4x4(self.sceneTransform()).data())
 
         ## set clipping viewport
         view = self.getViewBox()
@@ -585,17 +620,26 @@ class PlotCurveItem(GraphicsObject):
             try:
                 gl.glVertexPointerf(pos)
                 pen = fn.mkPen(self.opts['pen'])
-                color = pen.color()
-                gl.glColor4f(color.red()/255., color.green()/255., color.blue()/255., color.alpha()/255.)
+                gl.glColor4f(*pen.color().getRgbF())
                 width = pen.width()
                 if pen.isCosmetic() and width < 1:
                     width = 1
                 gl.glPointSize(width)
                 gl.glLineWidth(width)
-                gl.glEnable(gl.GL_LINE_SMOOTH)
-                gl.glEnable(gl.GL_BLEND)
-                gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-                gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST)
+
+                # enable antialiasing if requested
+                if self._exportOpts is not False:
+                    aa = self._exportOpts.get('antialias', True)
+                else:
+                    aa = self.opts['antialias']
+                if aa:
+                    gl.glEnable(gl.GL_LINE_SMOOTH)
+                    gl.glEnable(gl.GL_BLEND)
+                    gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+                    gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST)
+                else:
+                    gl.glDisable(gl.GL_LINE_SMOOTH)
+
                 gl.glDrawArrays(gl.GL_LINE_STRIP, 0, int(pos.size / pos.shape[-1]))
             finally:
                 gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
@@ -632,7 +676,7 @@ class PlotCurveItem(GraphicsObject):
         return self._mouseShape
 
     def mouseClickEvent(self, ev):
-        if not self.clickable or ev.button() != QtCore.Qt.LeftButton:
+        if not self.clickable or ev.button() != QtCore.Qt.MouseButton.LeftButton:
             return
         if self.mouseShape().contains(ev.pos()):
             ev.accept()

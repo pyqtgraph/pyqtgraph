@@ -36,7 +36,7 @@ class LinearRegionItem(GraphicsObject):
     
     def __init__(self, values=(0, 1), orientation='vertical', brush=None, pen=None,
                  hoverBrush=None, hoverPen=None, movable=True, bounds=None, 
-                 span=(0, 1), swapMode='sort'):
+                 span=(0, 1), swapMode='sort', clipItem=None):
         """Create a new LinearRegionItem.
         
         ==============  =====================================================================
@@ -60,25 +60,35 @@ class LinearRegionItem(GraphicsObject):
                         ``span=(0.5, 1)`` to draw only on the top half of the
                         view.
         swapMode        Sets the behavior of the region when the lines are moved such that
-                        their order reverses. "block" means the user cannot drag
-                        one line past the other. "push" causes both lines to be
-                        moved if one would cross the other. "sort" means that
-                        lines may trade places, but the output of getRegion
-                        always gives the line positions in ascending order. None
-                        means that no attempt is made to handle swapped line
-                        positions. The default is "sort".
+                        their order reverses:
+
+                          * "block" means the user cannot drag one line past the other
+                          * "push" causes both lines to be moved if one would cross the other
+                          * "sort" means that lines may trade places, but the output of
+                            getRegion always gives the line positions in ascending order.
+                          * None means that no attempt is made to handle swapped line
+                            positions.
+
+                        The default is "sort".
+        clipItem        An item whose bounds will be used to limit the region bounds.
+                        This is useful when a LinearRegionItem is added on top of an
+                        :class:`~pyqtgraph.ImageItem` or
+                        :class:`~pyqtgraph.PlotDataItem` and the visual region should
+                        not extend beyond its range. This overrides ``bounds``.
         ==============  =====================================================================
         """
         
         GraphicsObject.__init__(self)
         self.orientation = orientation
-        self.bounds = QtCore.QRectF()
         self.blockLineSignal = False
         self.moving = False
         self.mouseHovering = False
         self.span = span
         self.swapMode = swapMode
-        self._bounds = None
+        self.clipItem = clipItem
+
+        self._boundingRectCache = None
+        self._clipItemBoundsCache = None
         
         # note LinearRegionItem.Horizontal and LinearRegionItem.Vertical
         # are kept for backward compatibility.
@@ -88,7 +98,7 @@ class LinearRegionItem(GraphicsObject):
             span=span,
             pen=pen,
             hoverPen=hoverPen,
-            )
+        )
             
         if orientation in ('horizontal', LinearRegionItem.Horizontal):
             self.lines = [
@@ -125,9 +135,10 @@ class LinearRegionItem(GraphicsObject):
         self.setHoverBrush(hoverBrush)
         
         self.setMovable(movable)
-        
+
     def getRegion(self):
         """Return the values at the edges of the region."""
+
         r = (self.lines[0].value(), self.lines[1].value())
         if self.swapMode == 'sort':
             return (min(r), max(r))
@@ -168,19 +179,28 @@ class LinearRegionItem(GraphicsObject):
         self.hoverBrush = fn.mkBrush(*br, **kargs)
 
     def setBounds(self, bounds):
-        """Optional [min, max] bounding values for the region. To have no bounds on the
-        region use [None, None].
-        Does not affect the current position of the region unless it is outside the new bounds. 
-        See :func:`setRegion <pyqtgraph.LinearRegionItem.setRegion>` to set the position 
-        of the region."""
-        for l in self.lines:
-            l.setBounds(bounds)
-        
-    def setMovable(self, m):
+        """Set ``(min, max)`` bounding values for the region.
+
+        The current position is only affected it is outside the new bounds. See
+        :func:`~pyqtgraph.LinearRegionItem.setRegion` to set the position of the region.
+
+        Use ``(None, None)`` to disable bounds.
+        """
+        if self.clipItem is not None:
+            self.setClipItem(None)
+        self._setBounds(bounds)
+
+    def _setBounds(self, bounds):
+        # internal impl so user-facing setBounds can clear clipItem and clipItem can
+        # set bounds without clearing itself
+        for line in self.lines:
+            line.setBounds(bounds)
+
+    def setMovable(self, m=True):
         """Set lines to be movable by the user, or not. If lines are movable, they will 
         also accept HoverEvents."""
-        for l in self.lines:
-            l.setMovable(m)
+        for line in self.lines:
+            line.setMovable(m)
         self.movable = m
         self.setAcceptHoverEvents(m)
 
@@ -188,12 +208,44 @@ class LinearRegionItem(GraphicsObject):
         if self.span == (mn, mx):
             return
         self.span = (mn, mx)
-        self.lines[0].setSpan(mn, mx)
-        self.lines[1].setSpan(mn, mx)
+        for line in self.lines:
+            line.setSpan(mn, mx)
         self.update()
+
+    def setClipItem(self, item=None):
+        """Set an item to which the region is bounded.
+
+        If ``None``, bounds are disabled.
+        """
+        self.clipItem = item
+        self._clipItemBoundsCache = None
+        if item is None:
+            self._setBounds((None, None))
+        if item is not None:
+            self._updateClipItemBounds()
+
+    def _updateClipItemBounds(self):
+        # set region bounds corresponding to clipItem
+        item_vb = self.clipItem.getViewBox()
+        if item_vb is None:
+            return
+
+        item_bounds = item_vb.childrenBounds(items=(self.clipItem,))
+        if item_bounds == self._clipItemBoundsCache or None in item_bounds:
+            return
+
+        self._clipItemBoundsCache = item_bounds
+
+        if self.orientation in ('horizontal', LinearRegionItem.Horizontal):
+            self._setBounds(item_bounds[1])
+        else:
+            self._setBounds(item_bounds[0])
 
     def boundingRect(self):
         br = QtCore.QRectF(self.viewRect())  # bounds of containing ViewBox mapped to local coords.
+
+        if self.clipItem is not None:
+            self._updateClipItemBounds()
 
         rng = self.getRegion()
         if self.orientation in ('vertical', LinearRegionItem.Vertical):
@@ -211,8 +263,8 @@ class LinearRegionItem(GraphicsObject):
 
         br = br.normalized()
         
-        if self._bounds != br:
-            self._bounds = br
+        if self._boundingRectCache != br:
+            self._boundingRectCache = br
             self.prepareGeometryChange()
         
         return br
@@ -253,7 +305,7 @@ class LinearRegionItem(GraphicsObject):
         self.sigRegionChangeFinished.emit(self)
 
     def mouseDragEvent(self, ev):
-        if not self.movable or ev.button() != QtCore.Qt.LeftButton:
+        if not self.movable or ev.button() != QtCore.Qt.MouseButton.LeftButton:
             return
         ev.accept()
         
@@ -279,7 +331,7 @@ class LinearRegionItem(GraphicsObject):
             self.sigRegionChanged.emit(self)
             
     def mouseClickEvent(self, ev):
-        if self.moving and ev.button() == QtCore.Qt.RightButton:
+        if self.moving and ev.button() == QtCore.Qt.MouseButton.RightButton:
             ev.accept()
             for i, l in enumerate(self.lines):
                 l.setPos(self.startPositions[i])
@@ -288,7 +340,7 @@ class LinearRegionItem(GraphicsObject):
             self.sigRegionChangeFinished.emit(self)
 
     def hoverEvent(self, ev):
-        if self.movable and (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
+        if self.movable and (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
             self.setMouseHover(True)
         else:
             self.setMouseHover(False)

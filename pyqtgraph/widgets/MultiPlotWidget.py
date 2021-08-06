@@ -21,8 +21,8 @@ class MultiPlotWidget(GraphicsView):
         ## Explicitly wrap methods from mPlotItem
         #for m in ['setData']:
             #setattr(self, m, getattr(self.mPlotItem, m))
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
                 
     def __getattr__(self, attr):  ## implicitly wrap methods from plotItem
         if hasattr(self.mPlotItem, attr):

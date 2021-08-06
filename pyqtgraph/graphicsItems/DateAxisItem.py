@@ -306,7 +306,8 @@ class DateAxisItem(AxisItem):
         self.minSpacing = density*size
         
     def linkToView(self, view):
-        super(DateAxisItem, self).linkToView(view)
+        """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
+        self._linkToView_internal(view) # calls original linkToView code
         
         # Set default limits
         _min = MIN_REGULAR_TIMESTAMP

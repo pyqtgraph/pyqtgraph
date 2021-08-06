@@ -4,7 +4,7 @@
 ViewBox is the general-purpose graphical container that allows the user to 
 zoom / pan to inspect any area of a 2D coordinate system. 
 
-This unimaginative example demonstrates the constrution of a ViewBox-based
+This unimaginative example demonstrates the construction of a ViewBox-based
 plot area with axes, very similar to the way PlotItem is built.
 """
 
@@ -48,7 +48,7 @@ class movableRect(QtGui.QGraphicsRectItem):
         self.setPen(self.savedPen)
         ev.ignore()
     def mousePressEvent(self, ev):
-        if ev.button() == QtCore.Qt.LeftButton:
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
             self.pressDelta = self.mapToParent(ev.pos()) - self.pos()
         else:

@@ -1,6 +1,6 @@
+# -*- coding: utf-8 -*-
 from ..widgets.FileDialog import FileDialog
-from ..Qt import QtGui, QtCore, QtSvg
-from ..python2_3 import asUnicode, basestring
+from ..Qt import QtGui, QtCore
 from ..GraphicsScene import GraphicsScene
 import os, re
 LastExportDirectory = None
@@ -45,10 +45,10 @@ class Exporter(object):
         if opts is None:
             opts = {}
         self.fileDialog = FileDialog()
-        self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
-        self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
+        self.fileDialog.setFileMode(QtGui.QFileDialog.FileMode.AnyFile)
+        self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptMode.AcceptSave)
         if filter is not None:
-            if isinstance(filter, basestring):
+            if isinstance(filter, str):
                 self.fileDialog.setNameFilter(filter)
             elif isinstance(filter, list):
                 self.fileDialog.setNameFilters(filter)
@@ -62,13 +62,12 @@ class Exporter(object):
         return
         
     def fileSaveFinished(self, fileName):
-        fileName = asUnicode(fileName)
         global LastExportDirectory
         LastExportDirectory = os.path.split(fileName)[0]
         
         ## If file name does not match selected extension, append it now
         ext = os.path.splitext(fileName)[1].lower().lstrip('.')
-        selectedExt = re.search(r'\*\.(\w+)\b', asUnicode(self.fileDialog.selectedNameFilter()))
+        selectedExt = re.search(r'\*\.(\w+)\b', self.fileDialog.selectedNameFilter())
         if selectedExt is not None:
             selectedExt = selectedExt.groups()[0].lower()
             if ext != selectedExt:
@@ -128,8 +127,8 @@ class Exporter(object):
         while len(childs) > 0:
             ch = childs.pop(0)
             tree = self.getPaintItems(ch)
-            if (ch.flags() & ch.ItemStacksBehindParent) or \
-               (ch.zValue() < 0 and (ch.flags() & ch.ItemNegativeZStacksBehindParent)):
+            if (ch.flags() & ch.GraphicsItemFlag.ItemStacksBehindParent) or \
+               (ch.zValue() < 0 and (ch.flags() & ch.GraphicsItemFlag.ItemNegativeZStacksBehindParent)):
                 preItems.extend(tree)
             else:
                 postItems.extend(tree)

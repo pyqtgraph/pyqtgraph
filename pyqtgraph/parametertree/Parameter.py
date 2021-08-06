@@ -1,14 +1,31 @@
 # -*- coding: utf-8 -*-
 from .. import functions as fn
-from ..Qt import QtGui, QtCore
-import os, weakref, re
+from ..Qt import QtCore
+import weakref, re
 from collections import OrderedDict
-from ..python2_3 import asUnicode, basestring
 from .ParameterItem import ParameterItem
 import warnings
 
 PARAM_TYPES = {}
 PARAM_NAMES = {}
+
+_PARAM_ITEM_TYPES = {}
+
+def registerParameterItemType(name, itemCls, parameterCls=None, override=False):
+    """
+    Similar to :func:`registerParameterType`, but works on ParameterItems. This is useful for Parameters where the
+    `itemClass` does all the heavy lifting, and a redundant Parameter class must be defined just to house `itemClass`.
+    Instead, use `registerParameterItemType`. If this should belong to a subclass of `Parameter`, specify which one
+    in `parameterCls`.
+    """
+    global _PARAM_ITEM_TYPES
+    if name in _PARAM_ITEM_TYPES and not override:
+        raise Exception("Parameter item type '%s' already exists (use override=True to replace)" % name)
+
+    parameterCls = parameterCls or Parameter
+    _PARAM_ITEM_TYPES[name] = itemCls
+    registerParameterType(name, parameterCls, override)
+
 
 def registerParameterType(name, cls, override=False):
     """Register a parameter type in the parametertree system.
@@ -68,6 +85,8 @@ class Parameter(QtCore.QObject):
     """
     ## name, type, limits, etc.
     ## can also carry UI hints (slider vs spinbox, etc.)
+
+    itemClass = None
     
     sigValueChanged = QtCore.Signal(object, object)  ## self, value   emitted when value is finished being edited
     sigValueChanging = QtCore.Signal(object, object)  ## self, value  emitted as value is being edited
@@ -190,7 +209,7 @@ class Parameter(QtCore.QObject):
         self.blockTreeChangeEmit = 0
         #self.monitoringChildren = False  ## prevent calling monitorChildren more than once
         
-        if not isinstance(name, basestring):
+        if not isinstance(name, str):
             raise Exception("Parameter must have a string name specified in opts.")
         self.setName(name)
         
@@ -258,8 +277,8 @@ class Parameter(QtCore.QObject):
         Return True if this parameter type matches the name *typ*.
         This can occur either of two ways:
         
-        - If self.type() == *typ*
-        - If this parameter's class is registered with the name *typ*
+          - If self.type() == *typ*
+          - If this parameter's class is registered with the name *typ*
         """
         if self.type() == typ:
             return True
@@ -441,13 +460,13 @@ class Parameter(QtCore.QObject):
         
     def valueIsDefault(self):
         """Returns True if this parameter's value is equal to the default value."""
-        return self.value() == self.defaultValue()
+        return fn.eq(self.value(), self.defaultValue())
         
     def setLimits(self, limits):
         """Set limits on the acceptable values for this parameter. 
         The format of limits depends on the type of the parameter and
         some parameters do not make use of limits at all."""
-        if 'limits' in self.opts and self.opts['limits'] == limits:
+        if 'limits' in self.opts and fn.eq(self.opts['limits'], limits):
             return
         self.opts['limits'] = limits
         self.sigLimitsChanged.emit(self, limits)
@@ -546,11 +565,10 @@ class Parameter(QtCore.QObject):
         to display this Parameter.
         Most subclasses will want to override this function.
         """
-        if hasattr(self, 'itemClass'):
-            #print "Param:", self, "Make item from itemClass:", self.itemClass
-            return self.itemClass(self, depth)
-        else:
-            return ParameterItem(self, depth=depth)
+        # Default to user-specified itemClass. If not present, check for a registered item class. Finally,
+        # revert to ParameterItem if both fail
+        itemClass = self.itemClass or _PARAM_ITEM_TYPES.get(self.opts['type'], ParameterItem)
+        return itemClass(self, depth)
 
 
     def addChild(self, child, autoIncrementName=None):
@@ -701,7 +719,7 @@ class Parameter(QtCore.QObject):
         
             param[('child', 'grandchild')] = value
         """
-        if isinstance(names, basestring):
+        if isinstance(names, str):
             names = (names,)
         return self.param(*names).setValue(value)
 
@@ -730,7 +748,7 @@ class Parameter(QtCore.QObject):
         return self.child(*names)
 
     def __repr__(self):
-        return asUnicode("<%s '%s' at 0x%x>") % (self.__class__.__name__, self.name(), id(self))
+        return "<%s '%s' at 0x%x>" % (self.__class__.__name__, self.name(), id(self))
        
     def __getattr__(self, attr):
         ## Leaving this undocumented because I might like to remove it in the future..

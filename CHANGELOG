@@ -1,3 +1,67 @@
+pyqtgraph-0.12.2
+
+  Highlights
+    - Qt6 6.0 support has been removed in favor of Qt6 6.1+
+    - More numba utilization, specifically for makeARGB 
+    - Substantial ImageItem performance improvements have been made thanks to @pijyoi and @outofculture
+    - Significant performance improvements made to ScatterPlotItem and LinePlots
+    - More ColorMap features/support (more are coming!)
+  
+  New Features
+    - #1318 Added TargetItem
+    - #1707 Added Qt 6.1 support
+    - #1729 Allow gradient position to be configured on a histogram
+    - #1742 Better support for plotting with gradients
+    - #1776 Add GLTextItem
+    - #1797 Add ColorMap linearization (using CIELab calculations), colorDistance functionality
+    - #1865 Include viridis, magma, plasma, inferno, and cividis colormaps
+    - #1868/#1873 Example app now has a filter text box to search for relevant examples
+
+  Performance enhancement:
+    - #1738, #1695, 1786, #1768, 1794 - ImageItem/makeARGB performance improvements
+    - #1724 Use math module for scalar values math instead of numpy functions
+    - #1796 Greatly speed up line plots with use-case of connect='all'
+    - #1817 Speed up some cases of connect='finite' (few discontinuities)
+    - #1829 Use QPainter.drawPixmapFragments for ScatterPlotItem
+
+  Bug Fixes:
+    - #1700 Fixed ROI getArrayRegion
+    - #1748 Fixed bug when plotting boolean arrays in PlotDataItem
+    - #1791 Callable LUTs being used on the ImageItem substrates
+    - #1783 Fix memory leak in GLMeshItem
+    - #1802 Updated cx_freeze example and added workaround for template files
+    - #1804 Fix mouseClick handling for Qt6 on ROIs
+    - #1799 Force cameraPosition() to return a Vector in GLViewWidget
+    - #1809 Sanitize ShowGrid Alpha Input PlotItem
+    - #1816 Fix bug with Parameter value failing with numpy array-like values
+    - #1827 Fix BusyCursor to use internal stack provided by setOverrideCursor/restoreOverrideCursor
+    - #1833 Fix ScatterPlot render issues for PyQt6 6.1.0
+    - #1843 Fix zoom only applied to y-axis with show grid
+    - #1860 Fix pyqtgraph multiprocessing on Windows inside a venv environment
+    - #1869 Fix color bar ticks not being drawn correctly during export
+    - #1865 Fix matplotlib colormap import code
+    - #1876 Fix LineROI handle positions being way off-base in some circumstances
+    - #1871 Allow adding items to GLViewWidget before calling GLViewWidget.show()
+    - #1864 Draw GradientLegend in ViewBox coordinate system with correct orientation
+    - #1875 Fixed mouse events in GLViewWidget for PyQt6 bindings
+
+  API/Behavior Changes:
+    - #519 Expose clickable property in PlotDataItem
+    - #1772 Keep ColorMap values for RGBA as uint8
+    - #1736 RemoteGraphicsView is now hidpi aware
+    - #1779 Have SpinBox use fallback minStep in dec mode
+    - #1706 Colors defined with hex string values must start with a #
+    - #1819 Added method to disable autoscaling for HistogramLUTItem
+    - #1638 Expose number of subsamples in ImageItem auto-level determination
+    - #1824 Remove little-endian assumption for image export
+  
+  Other
+    - #1807 Merge pyqtgraph/test-data repo into main repo, move test files to tests directory
+    - #1862 Scheduled deprecation for MetaArray module
+    - #1846 Cleaned up pg namespace
+
+
+
 pyqtgraph-0.12.1
 
   New Features

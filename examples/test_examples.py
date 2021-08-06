@@ -1,16 +1,13 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function, division, absolute_import
 from collections import namedtuple
 from pyqtgraph import Qt
-
 import errno
+import time
 import importlib
 import itertools
 import pytest
 import os, sys
 import platform
 import subprocess
-import time
 from argparse import Namespace
 if __name__ == "__main__" and (__package__ is None or __package__==''):
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -34,8 +31,8 @@ def buildFileList(examples, files=None):
 
 
 path = os.path.abspath(os.path.dirname(__file__))
-files = [("Example App", "test_ExampleApp.py")]
-for ex in [utils.examples, utils.others]:
+files = [("Example App", "RunExampleApp.py")]
+for ex in [utils.examples_, utils.others]:
     files = buildFileList(ex, files)
 files = sorted(set(files))
 frontends = {
@@ -73,47 +70,15 @@ conditionalExamples = {
         False,
         reason="Test is being problematic on CI machines"
     ),
-    'GLVolumeItem.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLIsosurface.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLSurfacePlot.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLScatterPlotItem.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLshaders.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLLinePlotItem.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLMeshItem.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLImageItem.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLBarGraphItem.py': exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    ),
-    'GLViewWidget.py': exceptionCondition(
+}
+
+openglExamples = ['GLViewWidget.py']
+openglExamples.extend(utils.examples_['3D Graphics'].values())
+for key in openglExamples:
+    conditionalExamples[key] = exceptionCondition(
         not darwin_opengl_broken,
         reason=darwin_opengl_reason
     )
-}
 
 @pytest.mark.skipif(
     Qt.QT_LIB == "PySide2"
@@ -143,13 +108,11 @@ conditionalExamples = {
     ]
 )
 def testExamples(frontend, f):
-    # runExampleFile(f[0], f[1], sys.executable, frontend)
-
     name, file = f
     global path
     fn = os.path.join(path, file)
     os.chdir(path)
-    sys.stdout.write("{} ".format(name))
+    sys.stdout.write(f"{name}")
     sys.stdout.flush()
     import1 = "import %s" % frontend if frontend != '' else ''
     import2 = os.path.splitext(os.path.split(fn)[1])[0]
@@ -172,24 +135,19 @@ except:
     raise
 
 """.format(import1, import2)
-    if sys.platform.startswith('win'):
-        process = subprocess.Popen([sys.executable],
-                                    stdin=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    stdout=subprocess.PIPE)
-    else:
-        process = subprocess.Popen(['exec %s -i' % (sys.executable)],
-                                   shell=True,
-                                   stdin=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   stdout=subprocess.PIPE)
-    process.stdin.write(code.encode('UTF-8'))
+    process = subprocess.Popen([sys.executable],
+                                stdin=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                stdout=subprocess.PIPE,
+                                text=True)
+    process.stdin.write(code)
     process.stdin.close()
+
     output = ''
     fail = False
     while True:
         try:
-            c = process.stdout.read(1).decode()
+            c = process.stdout.read(1)
         except IOError as err:
             if err.errno == errno.EINTR:
                 # Interrupted system call; just try again.
@@ -197,7 +155,6 @@ except:
             else:
                 raise
         output += c
-
         if output.endswith('test complete'):
             break
         if output.endswith('test failed'):
@@ -210,16 +167,25 @@ except:
         if time.time() - start > 2.0 and not killed:
             process.kill()
             killed = True
-    #res = process.communicate()
-    res = (process.stdout.read(), process.stderr.read())
+
+    stdout, stderr = (process.stdout.read(), process.stderr.read())
+    process.stdout.close()
+    process.stderr.close()
+
     if (fail or
-        'exception' in res[1].decode().lower() or
-        'error' in res[1].decode().lower()):
-        print(res[0].decode())
-        print(res[1].decode())
-        pytest.fail("{}\n{}\nFailed {} Example Test Located in {} "
-            .format(res[0].decode(), res[1].decode(), name, file),
-            pytrace=False)
+        'Exception:' in stderr or
+        'Error:' in stderr):
+        if (not fail 
+            and name == "RemoteGraphicsView" 
+            and "pyqtgraph.multiprocess.remoteproxy.ClosedError" in stderr):
+            # This test can intermittently fail when the subprocess is killed
+            return None
+        print(stdout)
+        print(stderr)
+        pytest.fail(
+            f"{stdout}\n{stderr}\nFailed {name} Example Test Located in {file}",
+            pytrace=False
+        )
 
 if __name__ == "__main__":
     pytest.cmdline.main()

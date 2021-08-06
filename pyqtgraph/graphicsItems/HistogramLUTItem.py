@@ -12,6 +12,7 @@ from .ViewBox import *
 from .GradientEditorItem import *
 from .LinearRegionItem import *
 from .PlotDataItem import *
+from .PlotCurveItem import *
 from .AxisItem import *
 from .GridItem import *
 from ..Point import Point
@@ -31,9 +32,9 @@ class HistogramLUTItem(GraphicsWidget):
 
     Includes:
 
-    - Image histogram
-    - Movable region over the histogram to select black/white levels
-    - Gradient editor to define color lookup table for single-channel images
+      - Image histogram
+      - Movable region over the histogram to select black/white levels
+      - Gradient editor to define color lookup table for single-channel images
 
     Parameters
     ----------
@@ -159,13 +160,13 @@ class HistogramLUTItem(GraphicsWidget):
             self.layout.addItem(self.vb, avg[1], 0)
             self.layout.addItem(self.gradient, avg[2], 0)
 
-        self.gradient.setFlag(self.gradient.ItemStacksBehindParent)
-        self.vb.setFlag(self.gradient.ItemStacksBehindParent)
+        self.gradient.setFlag(self.gradient.GraphicsItemFlag.ItemStacksBehindParent)
+        self.vb.setFlag(self.gradient.GraphicsItemFlag.ItemStacksBehindParent)
 
         self.gradient.sigGradientChanged.connect(self.gradientChanged)
         self.vb.sigRangeChanged.connect(self.viewRangeChanged)
 
-        comp = QtGui.QPainter.CompositionMode_Plus
+        comp = QtGui.QPainter.CompositionMode.CompositionMode_Plus
         self.plots = [
             PlotCurveItem(pen=(200, 200, 200, 100)),  # mono
             PlotCurveItem(pen=(255, 0, 0, 100), compositionMode=comp),  # r
@@ -239,7 +240,7 @@ class HistogramLUTItem(GraphicsWidget):
                 p2mn = gradRect.bottomLeft()
                 p2mx = gradRect.bottomRight()
 
-        p.setRenderHint(QtGui.QPainter.Antialiasing)
+        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         for pen in [fn.mkPen((0, 0, 0, 100), width=3), pen]:
             p.setPen(pen)
 
@@ -267,6 +268,10 @@ class HistogramLUTItem(GraphicsWidget):
     def autoHistogramRange(self):
         """Enable auto-scaling on the histogram plot."""
         self.vb.enableAutoRange(self.vb.XYAxes)
+
+    def disableAutoHistogramRange(self):
+        """Disable auto-scaling on the histogram plot."""
+        self.vb.disableAutoRange(self.vb.XYAxes)
 
     def setImageItem(self, img):
         """Set an ImageItem to have its levels and LUT automatically controlled by this

@@ -12,9 +12,9 @@ import initExample
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
-from pyqtgraph.ptime import time
 import pyqtgraph.parametertree as ptree
 import pyqtgraph.graphicsItems.ScatterPlotItem
+from time import perf_counter
 
 translate = QtCore.QCoreApplication.translate
 
@@ -24,7 +24,6 @@ param = ptree.Parameter.create(name=translate('ScatterPlot', 'Parameters'), type
     dict(name='count', title=translate('ScatterPlot', 'Count:    '), type='int', limits=[1, None], value=500, step=100),
     dict(name='size', title=translate('ScatterPlot', 'Size:    '), type='int', limits=[1, None], value=10),
     dict(name='randomize', title=translate('ScatterPlot', 'Randomize:    '), type='bool', value=False),
-    dict(name='_USE_QRECT', title='_USE_QRECT:    ', type='bool', value=pyqtgraph.graphicsItems.ScatterPlotItem._USE_QRECT),
     dict(name='pxMode', title='pxMode:    ', type='bool', value=True),
     dict(name='useCache', title='useCache:    ', type='bool', value=True),
     dict(name='mode', title=translate('ScatterPlot', 'Mode:    '), type='list', values={translate('ScatterPlot', 'New Item'): 'newItem', translate('ScatterPlot', 'Reuse Item'): 'reuseItem', translate('ScatterPlot', 'Simulate Pan/Zoom'): 'panZoom', translate('ScatterPlot', 'Simulate Hover'): 'hover'}, value='reuseItem'),
@@ -44,7 +43,7 @@ data = {}
 item = pg.ScatterPlotItem()
 hoverBrush = pg.mkBrush('y')
 ptr = 0
-lastTime = time()
+lastTime = perf_counter()
 fps = None
 timer = QtCore.QTimer()
 
@@ -68,7 +67,6 @@ def mkDataAndItem():
 
 def mkItem():
     global item
-    pyqtgraph.graphicsItems.ScatterPlotItem._USE_QRECT = param['_USE_QRECT']
     item = pg.ScatterPlotItem(pxMode=param['pxMode'], **getData())
     item.opts['useCache'] = param['useCache']
     p.clear()
@@ -106,7 +104,7 @@ def update():
         new.setBrush(hoverBrush)
 
     ptr += 1
-    now = time()
+    now = perf_counter()
     dt = now - lastTime
     lastTime = now
     if fps is None:
@@ -122,7 +120,7 @@ def update():
 mkDataAndItem()
 for name in ['count', 'size']:
     param.child(name).sigValueChanged.connect(mkDataAndItem)
-for name in ['_USE_QRECT', 'useCache', 'pxMode', 'randomize']:
+for name in ['useCache', 'pxMode', 'randomize']:
     param.child(name).sigValueChanged.connect(mkItem)
 param.child('paused').sigValueChanged.connect(lambda _, v: timer.stop() if v else timer.start())
 timer.timeout.connect(update)

@@ -86,6 +86,13 @@ class RemoteEventHandler(object):
         # Mutexes to help prevent issues when multiple threads access the same RemoteEventHandler
         self.processLock = threading.RLock()
         self.sendLock = threading.RLock()
+
+        # parent sent us None as its pid, wants us to exchange pids
+        # corresponding code is in:
+        #   processes.py::Process.__init__()
+        if pid is None:
+            connection.send(os.getpid())
+            pid = connection.recv()
         
         RemoteEventHandler.handlers[pid] = self  ## register this handler as the one communicating with pid
     

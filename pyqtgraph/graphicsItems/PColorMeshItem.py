@@ -1,20 +1,14 @@
+# -*- coding: utf-8 -*-
 from __future__ import division
 
 from ..Qt import QtGui, QtCore
 import numpy as np
 from .. import functions as fn
-from .. import debug as debug
 from .GraphicsObject import GraphicsObject
-from ..Point import Point
 from .. import getConfigOption
 from .GradientEditorItem import Gradients # List of colormaps
 from ..colormap import ColorMap
 
-try:
-    from collections.abc import Callable
-except ImportError:
-    # fallback for python < 3.3
-    from collections import Callable
 
 __all__ = ['PColorMeshItem']
 
@@ -41,7 +35,7 @@ class PColorMeshItem(GraphicsObject):
         x, y : np.ndarray, optional, default None
             2D array containing the coordinates of the polygons
         z : np.ndarray
-            2D array containing the value which will be maped into the polygons
+            2D array containing the value which will be mapped into the polygons
             colors.
             If x and y is None, the polygons will be displaced on a grid
             otherwise x and y will be used as polygons vertices coordinates as::
@@ -146,7 +140,7 @@ class PColorMeshItem(GraphicsObject):
         x, y : np.ndarray, optional, default None
             2D array containing the coordinates of the polygons
         z : np.ndarray
-            2D array containing the value which will be maped into the polygons
+            2D array containing the value which will be mapped into the polygons
             colors.
             If x and y is None, the polygons will be displaced on a grid
             otherwise x and y will be used as polygons vertices coordinates as::
@@ -183,7 +177,7 @@ class PColorMeshItem(GraphicsObject):
         else:
             p.setPen(fn.mkPen(self.edgecolors))
             if self.antialiasing:
-                p.setRenderHint(QtGui.QPainter.Antialiasing)
+                p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
                 
 
         ## Prepare colormap

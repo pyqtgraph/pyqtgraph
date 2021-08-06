@@ -14,17 +14,25 @@ class GradientLegend(UIGraphicsItem):
         self.size = size
         self.offset = offset
         UIGraphicsItem.__init__(self)
-        self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
-        self.brush = QtGui.QBrush(QtGui.QColor(200,0,0))
+        self.setAcceptedMouseButtons(QtCore.Qt.MouseButton.NoButton)
+        self.brush = QtGui.QBrush(QtGui.QColor(255,255,255,100)) # background color
         self.pen = QtGui.QPen(QtGui.QColor(0,0,0))
+        self.textPen = QtGui.QPen(QtGui.QColor(0,0,0))
         self.labels = {'max': 1, 'min': 0}
         self.gradient = QtGui.QLinearGradient()
         self.gradient.setColorAt(0, QtGui.QColor(0,0,0))
         self.gradient.setColorAt(1, QtGui.QColor(255,0,0))
+        self.setZValue(100) # draw on top of ordinary plots
         
     def setGradient(self, g):
         self.gradient = g
         self.update()
+        
+    def setColorMap(self, colormap):
+        """
+        Set displayed gradient from a :class:`~pyqtgraph.ColorMap` object.
+        """
+        self.gradient = colormap.getGradient()
         
     def setIntColorScale(self, minVal, maxVal, *args, **kargs):
         colors = [fn.intColor(i, maxVal-minVal, *args, **kargs) for i in range(minVal, maxVal)]
@@ -45,28 +53,29 @@ class GradientLegend(UIGraphicsItem):
         
     def paint(self, p, opt, widget):
         UIGraphicsItem.paint(self, p, opt, widget)
-        rect = self.boundingRect()   ## Boundaries of visible area in scene coords.
-        unit = self.pixelSize()       ## Size of one view pixel in scene coords.
-        if unit[0] is None:  
-            return
-        
-        ## Have to scale painter so that text and gradients are correct size and not upside down
-        p.scale(unit[0], -unit[1])
 
+        view = self.getViewBox()
+        if view is None:
+            return
+        p.save() # save painter state before we change transformation
+        trans = view.sceneTransform()
+        p.setTransform( trans ) # draw in ViewBox pixel coordinates
+        rect = view.rect()
+        
         ## determine max width of all labels
         labelWidth = 0
         labelHeight = 0
         for k in self.labels:
-            b = p.boundingRect(QtCore.QRectF(0, 0, 0, 0), QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter, str(k))
+            b = p.boundingRect(QtCore.QRectF(0, 0, 0, 0), QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter, str(k))
             labelWidth = max(labelWidth, b.width())
             labelHeight = max(labelHeight, b.height())
             
         textPadding = 2  # in px
         
-        xR = rect.right()  / unit[0]
-        xL = rect.left()   / unit[0]
-        yB = -(rect.top()    / unit[1])
-        yT = -(rect.bottom() / unit[1])
+        xR = rect.right()
+        xL = rect.left()
+        yT = rect.top()
+        yB = rect.bottom()
         
         # coordinates describe edges of text and bar, additional margins will be added for background
         if self.offset[0] < 0:
@@ -87,7 +96,7 @@ class GradientLegend(UIGraphicsItem):
 
         ## Draw background
         p.setPen(self.pen)
-        p.setBrush(QtGui.QBrush(QtGui.QColor(255,255,255,100)))
+        p.setBrush(self.brush) # background color        
         rect = QtCore.QRectF(
             QtCore.QPointF(x1 - textPadding, y1-labelHeight/2 - textPadding), # extra left/top padding 
             QtCore.QPointF(x3 + textPadding, y2+labelHeight/2 + textPadding)  # extra bottom/right padding
@@ -95,20 +104,22 @@ class GradientLegend(UIGraphicsItem):
         p.drawRect(rect)
 
         ## Draw color bar
-        self.gradient.setStart(0, y1)
-        self.gradient.setFinalStop(0, y2)
+        self.gradient.setStart(0, y2) 
+        self.gradient.setFinalStop(0, y1)
         p.setBrush(self.gradient)
         rect = QtCore.QRectF(
-            QtCore.QPointF(x1, y1), 
+            QtCore.QPointF(x1, y1),
             QtCore.QPointF(x2, y2)
         )
         p.drawRect(rect)
 
         ## draw labels
-        p.setPen(QtGui.QPen(QtGui.QColor(0,0,0)))
+        p.setPen(self.textPen)
         tx = x2 + 2 * textPadding # margin between bar and text
         lh = labelHeight
         lw = labelWidth
         for k in self.labels:
-            y = y1 + self.labels[k] * (y2-y1)
-            p.drawText(QtCore.QRectF(tx, y - lh/2, lw, lh), QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter, str(k))
+            y = y2 - self.labels[k] * (y2-y1)
+            p.drawText(QtCore.QRectF(tx, y - lh/2, lw, lh), QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter, str(k))
+
+        p.restore() # restore QPainter transform to original state

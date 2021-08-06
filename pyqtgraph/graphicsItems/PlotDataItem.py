@@ -2,7 +2,6 @@
 import warnings
 import math
 import numpy as np
-from .. import metaarray as metaarray
 from ..Qt import QtCore
 from .GraphicsObject import GraphicsObject
 from .PlotCurveItem import PlotCurveItem
@@ -11,6 +10,7 @@ from .. import functions as fn
 from .. import debug as debug
 from .. import getConfigOption
 
+__all__ = ['PlotDataItem']
 
 class PlotDataItem(GraphicsObject):
     """
@@ -140,6 +140,11 @@ class PlotDataItem(GraphicsObject):
                               at any time.
             dynamicRangeLimit (float or None) Limit off-screen positions of data points at large
                               magnification to avoids display errors. Disabled if None.
+            skipFiniteCheck   (bool) Optimization parameter that can speed up plot time by
+                              telling the painter to not check and compensate for NaN
+                              values.  If set to True, and NaN values exist, the data
+                              may not be displayed or your plot will take a
+                              significant performance hit.  Defaults to False.
             identical         *deprecated*
             ================= =====================================================================
 
@@ -150,7 +155,7 @@ class PlotDataItem(GraphicsObject):
             ==========   ================================================
         """
         GraphicsObject.__init__(self)
-        self.setFlag(self.ItemHasNoContents)
+        self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
         self.xData = None
         self.yData = None
         self.xDisp = None
@@ -210,7 +215,7 @@ class PlotDataItem(GraphicsObject):
             'clipToView': False,
             'dynamicRangeLimit': 1e6,
             'dynamicRangeHyst': 3.0,
-
+            'skipFiniteCheck': False,
             'data': None,
         }
         self.setCurveClickable(kargs.get('clickable', False))
@@ -314,7 +319,7 @@ class PlotDataItem(GraphicsObject):
     def setShadowPen(self, *args, **kargs):
         """
         | Sets the shadow pen used to draw lines between points (this is for enhancing contrast or
-          emphacizing data).
+          emphasizing data).
         | This line is drawn behind the primary pen (see :func:`setPen() <pyqtgraph.PlotDataItem.setPen>`)
           and should generally be assigned greater width than the primary pen.
         | *pen* can be a QPen or any argument accepted by :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`
@@ -605,11 +610,29 @@ class PlotDataItem(GraphicsObject):
         scatterArgs = {}
 
         if styleUpdate: # repeat style arguments only when changed
-            for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillOutline', 'fillOutline'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
+            for k, v in [
+                ('pen','pen'),
+                ('shadowPen','shadowPen'),
+                ('fillLevel','fillLevel'),
+                ('fillOutline', 'fillOutline'),
+                ('fillBrush', 'brush'),
+                ('antialias', 'antialias'),
+                ('connect', 'connect'),
+                ('stepMode', 'stepMode'),
+                ('skipFiniteCheck', 'skipFiniteCheck')
+            ]:
                 if k in self.opts:
                     curveArgs[v] = self.opts[k]
 
-            for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol'), ('symbolSize', 'size'), ('data', 'data'), ('pxMode', 'pxMode'), ('antialias', 'antialias')]:
+            for k, v in [
+                ('symbolPen','pen'),
+                ('symbolBrush','brush'),
+                ('symbol','symbol'),
+                ('symbolSize', 'size'),
+                ('data', 'data'),
+                ('pxMode', 'pxMode'),
+                ('antialias', 'antialias')
+            ]:
                 if k in self.opts:
                     scatterArgs[v] = self.opts[k]
 
@@ -678,7 +701,7 @@ class PlotDataItem(GraphicsObject):
                     eps = np.finfo(y.dtype).eps
                 else:
                     eps = 1
-                y = np.copysign(np.log10(np.abs(y)+eps), y)
+                y = np.sign(y) * np.log10(np.abs(y)+eps)
 
         ds = self.opts['downsample']
         if not isinstance(ds, int):
@@ -1018,7 +1041,7 @@ def isSequence(obj):
         ##print rec1, dtype
         #arr = np.empty(len(self), dtype=dtype)
         #arr[0] = tuple(rec1.values())
-        #for i in xrange(1, len(self)):
+        #for i in range(1, len(self)):
             #arr[i] = tuple(self[i].values())
         #return arr
 
@@ -1029,7 +1052,7 @@ def isSequence(obj):
             #return self.data[arg]
 
     #def __getitem__list(self, arg):
-        #if isinstance(arg, basestring):
+        #if isinstance(arg, str):
             #return [d.get(arg, None) for d in self.data]
         #elif isinstance(arg, int):
             #return self.data[arg]
@@ -1040,7 +1063,7 @@ def isSequence(obj):
             #raise TypeError(type(arg))
 
     #def __getitem__dict(self, arg):
-        #if isinstance(arg, basestring):
+        #if isinstance(arg, str):
             #return self.data[arg]
         #elif isinstance(arg, int):
             #return dict([(k, v[arg]) for k, v in self.data.items()])
@@ -1057,7 +1080,7 @@ def isSequence(obj):
             #self.data[arg] = val
 
     #def __setitem__list(self, arg, val):
-        #if isinstance(arg, basestring):
+        #if isinstance(arg, str):
             #if len(val) != len(self.data):
                 #raise Exception("Values (%d) and data set (%d) are not the same length." % (len(val), len(self.data)))
             #for i, rec in enumerate(self.data):
@@ -1071,7 +1094,7 @@ def isSequence(obj):
             #raise TypeError(type(arg))
 
     #def __setitem__dict(self, arg, val):
-        #if isinstance(arg, basestring):
+        #if isinstance(arg, str):
             #if len(val) != len(self.data[arg]):
                 #raise Exception("Values (%d) and data set (%d) are not the same length." % (len(val), len(self.data[arg])))
             #self.data[arg] = val
@@ -1086,13 +1109,13 @@ def isSequence(obj):
 
     #def _orderArgs(self, args):
         ### return args in (int, str) order
-        #if isinstance(args[0], basestring):
+        #if isinstance(args[0], str):
             #return (args[1], args[0])
         #else:
             #return args
 
     #def __iter__(self):
-        #for i in xrange(len(self)):
+        #for i in range(len(self)):
             #yield self[i]
 
     #def __len__(self):

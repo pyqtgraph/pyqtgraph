@@ -66,7 +66,7 @@ class CanvasItem(QtCore.QObject):
         self.alphaLabel = QtGui.QLabel(translate("CanvasItem", "Alpha"))
         self.alphaSlider = QtGui.QSlider()
         self.alphaSlider.setMaximum(1023)
-        self.alphaSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.alphaSlider.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.alphaSlider.setValue(1023)
         self.layout.addWidget(self.alphaLabel, 0, 0)
         self.layout.addWidget(self.alphaSlider, 0, 1)

@@ -9,8 +9,6 @@ import sys
 import itertools
 
 
-_IS_PY3 = sys.version_info[0] == 3
-
 class LRUCache(object):
     '''
     This LRU cache should be reasonable for short collections (until around 100 items), as it does a
@@ -37,10 +35,7 @@ class LRUCache(object):
         self.resizeTo = resizeTo
         self._counter = 0
         self._dict = {}
-        if _IS_PY3:
-            self._nextTime = itertools.count(0).__next__
-        else:
-            self._nextTime = itertools.count(0).next
+        self._nextTime = itertools.count(0).__next__
 
     def __getitem__(self, key):
         item = self._dict[key]
@@ -74,54 +69,25 @@ class LRUCache(object):
     def clear(self):
         self._dict.clear()
  
-    if _IS_PY3:
-        def values(self):
-            return [i[1] for i in self._dict.values()]
-        
-        def keys(self):
-            return [x[0] for x in self._dict.values()]
-        
-        def _resizeTo(self):
-            ordered = sorted(self._dict.values(), key=operator.itemgetter(2))[:self.resizeTo]
-            for i in ordered:
-                del self._dict[i[0]]
-                
-        def items(self, accessTime=False):
-            '''
-            :param bool accessTime:
-                If True sorts the returned items by the internal access time.
-            '''
-            if accessTime:
-                for x in sorted(self._dict.values(), key=operator.itemgetter(2)):
-                    yield x[0], x[1]
-            else:
-                for x in self._dict.items():
-                    yield x[0], x[1]
-                    
-    else:
-        def values(self):
-            return [i[1] for i in self._dict.values()]
-        
-        def keys(self):
-            return [x[0] for x in self._dict.values()]
-            
-        
-        def _resizeTo(self):
-            ordered = sorted(self._dict.values(), key=operator.itemgetter(2))[:self.resizeTo]
-            for i in ordered:
-                del self._dict[i[0]]
-                
-        def items(self, accessTime=False):
-            '''
-            ============= ======================================================
-            **Arguments**
-            accessTime    (bool) If True sorts the returned items by the 
-                          internal access time.
-            ============= ======================================================
-            '''
-            if accessTime:
-                for x in sorted(self._dict.values(), key=operator.itemgetter(2)):
-                    yield x[0], x[1]
-            else:
-                for x in self._dict.items():
-                    yield x[0], x[1]
+    def values(self):
+        return [i[1] for i in self._dict.values()]
+
+    def keys(self):
+        return [x[0] for x in self._dict.values()]
+
+    def _resizeTo(self):
+        ordered = sorted(self._dict.values(), key=operator.itemgetter(2))[:self.resizeTo]
+        for i in ordered:
+            del self._dict[i[0]]
+
+    def items(self, accessTime=False):
+        '''
+        :param bool accessTime:
+            If True sorts the returned items by the internal access time.
+        '''
+        if accessTime:
+            for x in sorted(self._dict.values(), key=operator.itemgetter(2)):
+                yield x[0], x[1]
+        else:
+            for x in self._dict.items():
+                yield x[0], x[1]

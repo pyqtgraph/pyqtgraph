@@ -65,7 +65,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         """
         GraphicsWidget.__init__(self)
         GraphicsWidgetAnchor.__init__(self)
-        self.setFlag(self.ItemIgnoresTransformations)
+        self.setFlag(self.GraphicsItemFlag.ItemIgnoresTransformations)
         self.layout = QtGui.QGraphicsGridLayout()
         self.layout.setVerticalSpacing(verSpacing)
         self.layout.setHorizontalSpacing(horSpacing)
@@ -326,10 +326,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             p.drawRect(self.boundingRect())
 
     def hoverEvent(self, ev):
-        ev.acceptDrags(QtCore.Qt.LeftButton)
+        ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton)
 
     def mouseDragEvent(self, ev):
-        if ev.button() == QtCore.Qt.LeftButton:
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
             dpos = ev.pos() - ev.lastPos()
             self.autoAnchor(self.pos() + dpos)
@@ -349,7 +349,7 @@ class ItemSample(GraphicsWidget):
     def paint(self, p, *args):
         opts = self.item.opts
         if opts.get('antialias'):
-            p.setRenderHint(p.Antialiasing)
+            p.setRenderHint(p.RenderHint.Antialiasing)
 
         visible = self.item.isVisible()
         if not visible:
@@ -384,7 +384,7 @@ class ItemSample(GraphicsWidget):
     def mouseClickEvent(self, event):
         """Use the mouseClick event to toggle the visibility of the plotItem
         """
-        if event.button() == QtCore.Qt.LeftButton:
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
             visible = self.item.isVisible()
             self.item.setVisible(not visible)
 

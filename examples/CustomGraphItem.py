@@ -51,7 +51,7 @@ class Graph(pg.GraphItem):
         
         
     def mouseDragEvent(self, ev):
-        if ev.button() != QtCore.Qt.LeftButton:
+        if ev.button() != QtCore.Qt.MouseButton.LeftButton:
             ev.ignore()
             return
         

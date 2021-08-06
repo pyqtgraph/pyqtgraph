@@ -1,10 +1,12 @@
-from ..Qt import QtGui, QtCore, QT_LIB
-import matplotlib
+# -*- coding: utf-8 -*-
+from ..Qt import QtGui
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 from matplotlib.figure import Figure
+
+__all__ = ['MatplotlibWidget']
 
 class MatplotlibWidget(QtGui.QWidget):
     """

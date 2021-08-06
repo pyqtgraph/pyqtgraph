@@ -17,7 +17,6 @@ warnings.warn(
 )
 
 import threading
-import sys
 import copy
 
 from collections import OrderedDict

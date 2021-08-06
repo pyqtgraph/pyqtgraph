@@ -344,7 +344,7 @@ class CircularSolid(pg.GraphicsObject, ParamObj):
         return self.path
     
     def paint(self, p, *args):
-        p.setRenderHints(p.renderHints() | p.Antialiasing)
+        p.setRenderHints(p.renderHints() | p.RenderHint.Antialiasing)
         p.setPen(self.pen)
         p.fillPath(self.path, self.brush)
         p.drawPath(self.path)
@@ -512,8 +512,8 @@ class Ray(pg.GraphicsObject, ParamObj):
         
     def paint(self, p, *args):
         #p.setPen(pg.mkPen((255,0,0, 150)))
-        p.setRenderHints(p.renderHints() | p.Antialiasing)
-        p.setCompositionMode(p.CompositionMode_Plus)
+        p.setRenderHints(p.renderHints() | p.RenderHint.Antialiasing)
+        p.setCompositionMode(p.CompositionMode.CompositionMode_Plus)
         p.setPen(wlPen(self['wl']))
         p.drawPath(self.path)
         

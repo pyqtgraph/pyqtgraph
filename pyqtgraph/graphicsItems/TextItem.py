@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 from math import atan2, degrees
 from ..Qt import QtCore, QtGui
 from ..Point import Point
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 
+__all__ = ['TextItem']
 
 class TextItem(GraphicsObject):
     """
@@ -34,11 +36,11 @@ class TextItem(GraphicsObject):
 
         The effects of the `rotateAxis` and `angle` arguments are added independently. So for example:
 
-        * rotateAxis=None, angle=0 -> normal horizontal text
-        * rotateAxis=None, angle=90 -> normal vertical text
-        * rotateAxis=(1, 0), angle=0 -> text aligned with x axis of its parent
-        * rotateAxis=(0, 1), angle=0 -> text aligned with y axis of its parent
-        * rotateAxis=(1, 0), angle=90 -> text orthogonal to x axis of its parent        
+          * rotateAxis=None, angle=0 -> normal horizontal text
+          * rotateAxis=None, angle=90 -> normal vertical text
+          * rotateAxis=(1, 0), angle=0 -> text aligned with x axis of its parent
+          * rotateAxis=(0, 1), angle=0 -> text aligned with y axis of its parent
+          * rotateAxis=(1, 0), angle=90 -> text orthogonal to x axis of its parent
         """
                      
         self.anchor = Point(anchor)
@@ -171,10 +173,10 @@ class TextItem(GraphicsObject):
             self.updateTransform()
             p.setTransform(self.sceneTransform())
         
-        if self.border.style() != QtCore.Qt.NoPen or self.fill.style() != QtCore.Qt.NoBrush:
+        if self.border.style() != QtCore.Qt.PenStyle.NoPen or self.fill.style() != QtCore.Qt.BrushStyle.NoBrush:
             p.setPen(self.border)
             p.setBrush(self.fill)
-            p.setRenderHint(p.Antialiasing, True)
+            p.setRenderHint(p.RenderHint.Antialiasing, True)
             p.drawPolygon(self.textItem.mapToParent(self.textItem.boundingRect()))
         
     def setVisible(self, v):

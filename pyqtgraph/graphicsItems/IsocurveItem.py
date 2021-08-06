@@ -3,6 +3,7 @@ from .GraphicsObject import *
 from .. import functions as fn
 from ..Qt import QtGui, QtCore
 
+__all__ = ['IsocurveItem']
 
 class IsocurveItem(GraphicsObject):
     """

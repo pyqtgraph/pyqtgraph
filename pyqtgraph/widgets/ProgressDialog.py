@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
+from time import perf_counter
 from ..Qt import QtGui, QtCore
-from .. import ptime
 
 __all__ = ['ProgressDialog']
 
@@ -9,8 +9,8 @@ class ProgressDialog(QtGui.QProgressDialog):
     """
     Extends QProgressDialog:
     
-    * Adds context management so the dialog may be used in `with` statements
-    * Allows nesting multiple progress dialogs
+      * Adds context management so the dialog may be used in `with` statements
+      * Allows nesting multiple progress dialogs
 
     Example::
 
@@ -73,7 +73,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         else:
             self.setMinimumDuration(wait)
             
-        self.setWindowModality(QtCore.Qt.WindowModal)
+        self.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         self.setValue(self.minimum())
         if noCancel:
             self.setCancelButton(None)
@@ -82,7 +82,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         if self.disabled:
             return self
         if self.busyCursor:
-            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.CursorShape.WaitCursor))
         
         if self.nested and len(ProgressDialog.allDialogs) > 0:
             topDialog = ProgressDialog.allDialogs[0]
@@ -206,8 +206,8 @@ class ProgressDialog(QtGui.QProgressDialog):
         
         # Qt docs say this should happen automatically, but that doesn't seem
         # to be the case.
-        if self.windowModality() == QtCore.Qt.WindowModal:
-            now = ptime.time()
+        if self.windowModality() == QtCore.Qt.WindowModality.WindowModal:
+            now = perf_counter()
             if self._lastProcessEvents is None or (now - self._lastProcessEvents) > 0.2:
                 QtGui.QApplication.processEvents()
                 self._lastProcessEvents = now
@@ -259,7 +259,7 @@ class ProgressWidget(QtGui.QWidget):
         self.layout.addWidget(bar)
         
     def eventFilter(self, obj, ev):
-        return ev.type() == QtCore.QEvent.Paint
+        return ev.type() == QtCore.QEvent.Type.Paint
     
     def hide(self):
         # hide label and bar, but continue occupying the same space in the layout

@@ -425,10 +425,10 @@ def getVersionStrings(pkg):
     """
     Returns 4 version strings:
 
-    * the version string to use for this build,
-    * version string requested with --force-version (or None)
-    * version string that describes the current git checkout (or None).
-    * version string in the pkg/__init__.py,
+      * the version string to use for this build,
+      * version string requested with --force-version (or None)
+      * version string that describes the current git checkout (or None).
+      * version string in the pkg/__init__.py,
 
     The first return value is (forceVersion or gitVersion or initVersion).
     """

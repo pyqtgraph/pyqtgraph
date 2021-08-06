@@ -101,7 +101,7 @@ class MainWindow(pg.GraphicsLayoutWidget):
             {'crv': curve2, 'buf': np.zeros( length ), 'ptr':0, 'ds': DataSource( signal_period=0.65 ) },
             {'crv': curve3, 'buf': np.zeros( length ), 'ptr':0, 'ds': DataSource( signal_period=0.52 ) },
         )
-        self.timer = QtCore.QTimer(timerType=QtCore.Qt.PreciseTimer)
+        self.timer = QtCore.QTimer(timerType=QtCore.Qt.TimerType.PreciseTimer)
         self.timer.timeout.connect(self.update)
         timestamp = time.perf_counter()
         for dic in self.traces:
