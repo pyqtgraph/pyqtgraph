@@ -91,8 +91,8 @@ class ListParameter(Parameter):
 
         # Parameter uses 'limits' option to define the set of allowed values
         if 'values' in opts:
-            warnings.warn('Using "values" to set limits is deprecated and will be removed in 0.13. Use "limits"'
-                          ' instead.', DeprecationWarning, stacklevel=2)
+            warnings.warn('Using "values" to set limits is deprecated. Use "limits" instead.',
+                          DeprecationWarning, stacklevel=2)
             opts['limits'] = opts['values']
         if opts.get('limits', None) is None:
             opts['limits'] = []
