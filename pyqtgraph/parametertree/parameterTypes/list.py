@@ -35,10 +35,12 @@ class ListParameterItem(WidgetParameterItem):
 
     def setValue(self, val):
         self.targetValue = val
-        if val not in self.reverse[0]:
+        match = [fn.eq(val, limVal) for limVal in self.reverse[0]]
+        if not any(match):
             self.widget.setCurrentIndex(0)
         else:
-            key = self.reverse[1][self.reverse[0].index(val)]
+            idx = match.index(True)
+            key = self.reverse[1][idx]
             ind = self.widget.findText(key)
             self.widget.setCurrentIndex(ind)
 
