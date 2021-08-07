@@ -1957,12 +1957,13 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         backstore = create_qpolygonf(n)
         arr = np.frombuffer(ndarray_from_qpolygonf(backstore), dtype=[('x', 'f8'), ('y', 'f8')])
     else:
-        backstore = bytearray(4 + n*20 + 8)
+        backstore = QtCore.QByteArray()
+        backstore.resize(4 + n*20 + 8)      # contents uninitialized
+        backstore.replace(0, 4, struct.pack('>i', n))
+        # cStart, fillRule (Qt.FillRule.OddEvenFill)
+        backstore.replace(4+n*20, 8, struct.pack('>ii', 0, 0))
         arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
             count=n, offset=4)
-        struct.pack_into('>i', backstore, 0, n)
-        # cStart, fillRule (Qt.FillRule.OddEvenFill)
-        struct.pack_into('>ii', backstore, 4+n*20, 0, 0)
 
     # Fill array with vertex values
     arr['x'] = x
@@ -1992,7 +1993,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         path.addPolygon(backstore)
         return path
     elif connect == 'pairs':
-        arr['c'][::2] = 0
+        arr['c'][0::2] = 0
         arr['c'][1::2] = 1  # connect every 2nd point to every 1st one
     elif connect == 'finite':
         # Let's call a point with either x or y being nan is an invalid point.
@@ -2000,7 +2001,8 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
         # the next point of an invalid point.
         if not use_qpolygonf:
-            arr[1:]['c'] = isfinite[:-1]
+            arr['c'][:1] = 0  # the first vertex has no previous vertex to connect
+            arr['c'][1:] = isfinite[:-1]
         else:
             sidx = np.nonzero(~isfinite)[0] + 1
             chunks = np.split(arr, sidx)    # note: the chunks are views
@@ -2047,21 +2049,12 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
 
             return path
     elif connect == 'array':
-        arr[1:]['c'] = connect_array[:-1]
+        arr['c'][:1] = 0  # the first vertex has no previous vertex to connect
+        arr['c'][1:] = connect_array[:-1]
     else:
         raise ValueError('connect argument must be "all", "pairs", "finite", or array')
 
-    arr[0]['c'] = 0  # the first vertex has no previous vertex to connect
-
-    # create QDataStream object and stream into QPainterPath
-    path.strn = backstore
-    if QT_LIB == "PyQt6" and QtCore.PYQT_VERSION < 0x60101:
-        # due to issue detailed here:
-        # https://www.riverbankcomputing.com/pipermail/pyqt/2021-May/043942.html
-        buf = QtCore.QByteArray(path.strn, len(path.strn))
-    else:
-        buf = QtCore.QByteArray(path.strn)
-    ds = QtCore.QDataStream(buf)
+    ds = QtCore.QDataStream(backstore)
     ds >> path
     return path
 
