@@ -1935,11 +1935,14 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         # make connect argument contain only str type
         connect_array, connect = connect, 'array'
 
+    isfinite = None
+    all_isfinite = None
+    if finiteCheck or connect == 'finite':
+        isfinite = np.isfinite(x) & np.isfinite(y)
+
     use_qpolygonf = connect == 'all'
 
-    isfinite = None
     if connect == 'finite':
-        isfinite = np.isfinite(x) & np.isfinite(y)
         if not finiteCheck:
             # if user specified to skip finite check, then that forces use_qpolygonf
             use_qpolygonf = True
@@ -1950,8 +1953,48 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
             if nonfinite_cnt / n < 2 / 100:
                 use_qpolygonf = True
                 finiteCheck = False
-            if nonfinite_cnt == 0:
+            all_isfinite = nonfinite_cnt == 0
+            if all_isfinite:
                 connect = 'all'
+
+    if hasattr(path, 'reserve'):    # Qt 5.13
+        path.reserve(n)
+
+    while connect == 'all':
+        if finiteCheck:
+            # non-finite value patching operates on the whole array
+            # so if there are any non-finite values, we bail out
+            if all_isfinite is None:
+                all_isfinite = np.all(isfinite)
+            if not all_isfinite:
+                break
+        chunksize = 10000
+        numchunks = (n + chunksize - 1) // chunksize
+        if numchunks <= 2:
+            break
+        subpoly = QtGui.QPolygonF()
+        subpath = None
+        for idx in range(numchunks):
+            xchunk = x[idx*chunksize:(idx+1)*chunksize]
+            ychunk = y[idx*chunksize:(idx+1)*chunksize]
+            currsize = xchunk.size
+            if currsize != subpoly.size():
+                if hasattr(subpoly, 'resize'):
+                    subpoly.resize(currsize)
+                else:
+                    subpoly.fill(QtCore.QPointF(), currsize)
+            subarr = ndarray_from_qpolygonf(subpoly)
+            subarr[:, 0] = xchunk
+            subarr[:, 1] = ychunk
+            if subpath is None:
+                subpath = QtGui.QPainterPath()
+            subpath.addPolygon(subpoly)
+            path.connectPath(subpath)
+            if hasattr(subpath, 'clear'):   # Qt 5.13
+                subpath.clear()
+            else:
+                subpath = None
+        return path
 
     if use_qpolygonf:
         backstore = create_qpolygonf(n)
@@ -1974,9 +2017,9 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     # https://github.com/qt/qtbase/commit/c04bd30de072793faee5166cff866a4c4e0a9dd7
     # We therefore replace non-finite values 
     if finiteCheck:
-        if isfinite is None:
-            isfinite = np.isfinite(x) & np.isfinite(y)
-        if not np.all(isfinite):
+        if all_isfinite is None:
+            all_isfinite = np.all(isfinite)
+        if not all_isfinite:
             # credit: Divakar https://stackoverflow.com/a/41191127/643629
             mask = ~isfinite
             idx = np.arange(len(x))
