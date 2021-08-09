@@ -1,8 +1,10 @@
+from . import BoolParameterItem, SimpleParameter
 from .basetypes import GroupParameterItem, GroupParameter, WidgetParameterItem
 from .list import ListParameter
+from .slider import Emitter
 from .. import ParameterItem
-from ...Qt import QtWidgets
 from ... import functions as fn
+from ...Qt import QtWidgets
 
 class ChecklistParameterItem(GroupParameterItem):
     """
@@ -52,10 +54,14 @@ class ChecklistParameterItem(GroupParameterItem):
         self.btnGrp.addButton(item.widget)
         return ret
 
+    def addChild(self, item):
+        ret = super().addChild(item)
+        self.btnGrp.addButton(item.widget)
+        return ret
+
     def takeChild(self, i):
         child = super().takeChild(i)
         self.btnGrp.removeButton(child.widget)
-        return child
 
     def optsChanged(self, param, opts):
         if 'expanded' in opts:
@@ -65,10 +71,51 @@ class ChecklistParameterItem(GroupParameterItem):
         enabled = opts.get('enabled', param.opts['enabled'])
         for btn in self.metaBtns.values():
             btn.setDisabled(exclusive or (not enabled))
+        self.btnGrp.setExclusive(exclusive)
 
     def expandedChangedEvent(self, expanded):
         for btn in self.metaBtns.values():
             btn.setVisible(expanded)
+
+class RadioParameterItem(BoolParameterItem):
+    """
+    Allows radio buttons to function as booleans when `exclusive` is *True*
+    """
+
+    def __init__(self, param, depth):
+        self.emitter = Emitter()
+        super().__init__(param, depth)
+
+    def makeWidget(self):
+        w = QtWidgets.QRadioButton()
+        w.value = w.isChecked
+        # Since these are only used during exclusive operations, only fire a signal when "True"
+        # to avoid a double-fire
+        w.setValue = w.setChecked
+        w.sigChanged = self.emitter.sigChanged
+        w.toggled.connect(self.maybeSigChanged)
+        self.hideWidget = False
+        return w
+
+    def maybeSigChanged(self, val):
+        """
+        Make sure to only activate on a "true" value, since an exclusive button group fires once to deactivate
+        the old option and once to activate the new selection
+        """
+        if not val:
+            return
+        self.emitter.sigChanged.emit(self, val)
+
+
+# Proxy around radio/bool type so the correct item class gets instantiated
+class BoolOrRadioParameter(SimpleParameter):
+
+    def __init__(self, **kargs):
+        if kargs.get('type') == 'bool':
+            self.itemClass = BoolParameterItem
+        else:
+            self.itemClass = RadioParameterItem
+        super().__init__(**kargs)
 
 class ChecklistParameter(GroupParameter):
     """
@@ -85,8 +132,7 @@ class ChecklistParameter(GroupParameter):
     itemClass = ChecklistParameterItem
 
     def __init__(self, **opts):
-        # Value setting before init causes problems since limits aren't set by that point.
-        # Avoid by taking value out of consideration until later
+        self.dontPropagateChanges = False
         self.targetValue = None
         limits = opts.setdefault('limits', [])
         self.forward, self.reverse = ListParameter.mapping(limits)
@@ -107,10 +153,14 @@ class ChecklistParameter(GroupParameter):
         self.blockTreeChangeSignal()
         self.clearChildren()
         self.forward, self.reverse = ListParameter.mapping(limits)
+        if self.opts.get('exclusive'):
+            typ = 'radio'
+        else:
+            typ = 'bool'
         for chName in self.forward:
             # Recycle old values if they match the new limits
             newVal = bool(oldOpts.get(chName, False))
-            child = self.create(type='bool', name=chName, value=newVal, default=None)
+            child = BoolOrRadioParameter(type=typ, name=chName, value=newVal, default=None)
             self.addChild(child)
             # Prevent child from broadcasting tree state changes, since this is handled by self
             child.blockTreeChangeSignal()
@@ -118,14 +168,19 @@ class ChecklistParameter(GroupParameter):
         # Purge child changes before unblocking
         self.treeStateChanges.clear()
         self.unblockTreeChangeSignal()
+        # See note on "_onSubParamChange()"
+        self.dontPropagateChanges = True
         self.setValue(val)
+        self.dontPropagateChanges = False
 
     def _onSubParamChange(self, param, value):
-        # Old value will become false, new value becomes true. Only fire on new value = true for exclusive
-        if not value and self.opts['exclusive']:
-            # Re-allow selection
+        """
+        Sometimes a change will occur after a previous param went out of scope, so a regular use of blockSignals
+        will fail. To get around this, use a primitive 'locking' scheme. Occurs during setvalue in `updateLimits`
+        """
+        if self.dontPropagateChanges:
             return
-        elif self.opts['exclusive']:
+        if self.opts['exclusive']:
             val = self.reverse[0][self.reverse[1].index(param.name())]
             return self.setValue(val)
         # Interpret value, fire sigValueChanged
@@ -135,7 +190,7 @@ class ChecklistParameter(GroupParameter):
         if 'exclusive' in opts:
             # Force set value to ensure updates
             # self.opts['value'] = self._VALUE_UNSET
-            self.setValue(self.opts['value'])
+            self.updateLimits(None, self.opts.get('limits', []))
 
     def value(self):
         vals = [self.forward[p.name()] for p in self.children() if p.value()]
@@ -165,5 +220,4 @@ class ChecklistParameter(GroupParameter):
         for chParam in self:
             checked = chParam.name() in names
             chParam.setValue(checked, self._onSubParamChange)
-            chParam.setOpts(enabled=not (exclusive and checked))
         super().setValue(value, blockSignal)

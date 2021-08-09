@@ -419,3 +419,10 @@ class GroupParameter(Parameter):
     def setAddList(self, vals):
         """Change the list of options available for the user to add to the group."""
         self.setOpts(addList=vals)
+
+class Emitter(QtCore.QObject):
+    """
+    WidgetParameterItem is not a QObject, so create a QObject wrapper that items can use for emitting
+    """
+    sigChanging = QtCore.Signal(object, object)
+    sigChanged = QtCore.Signal(object, object)
