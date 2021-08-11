@@ -1870,7 +1870,7 @@ def downsample(data, n, axis=0, xvals='subsample'):
         return MetaArray(d2, info=info)
 
 
-def _fill_nonfinite(arr, isfinite):
+def _compute_backfill_indices(isfinite):
     # the presence of inf/nans result in an empty QPainterPath being generated
     # this behavior started in Qt 5.12.3 and was introduced in this commit
     # https://github.com/qt/qtbase/commit/c04bd30de072793faee5166cff866a4c4e0a9dd7
@@ -1878,14 +1878,16 @@ def _fill_nonfinite(arr, isfinite):
 
     # credit: Divakar https://stackoverflow.com/a/41191127/643629
     mask = ~isfinite
-    idx = np.arange(len(arr))
+    idx = np.arange(len(isfinite))
     idx[mask] = -1
     np.maximum.accumulate(idx, out=idx)
     first = np.searchsorted(idx, 0)
-    if first < len(arr):
+    if first < len(isfinite):
         # Replace all non-finite entries from beginning of arr with the first finite one
         idx[:first] = first
-        arr[:] = arr[:][idx]
+        return idx
+    else:
+        return None
 
 
 def _arrayToQPath_all(x, y, finiteCheck):
@@ -1905,26 +1907,29 @@ def _arrayToQPath_all(x, y, finiteCheck):
         # too few chunks, batching would be a pessimization
         poly = create_qpolygonf(n)
         arr = ndarray_from_qpolygonf(poly)
-        arr[:, 0] = x
-        arr[:, 1] = y
 
+        backfill_idx = None
         if finiteCheck and not all_isfinite:
-            _fill_nonfinite(arr, isfinite)
+            backfill_idx = _compute_backfill_indices(isfinite)
+
+        if backfill_idx is None:
+            arr[:, 0] = x
+            arr[:, 1] = y
+        else:
+            arr[:, 0] = x[backfill_idx]
+            arr[:, 1] = y[backfill_idx]
 
         path = QtGui.QPainterPath()
+        if hasattr(path, 'reserve'):    # Qt 5.13
+            path.reserve(n)
         path.addPolygon(poly)
         return path
 
+    backfill_idx = None
     if finiteCheck and not all_isfinite:
-        # this section here is inefficient as a full copy of the input data is made.
-        arr = np.column_stack((x, y))
-        _fill_nonfinite(arr, isfinite)
-        x = arr[:, 0]
-        y = arr[:, 1]
+        backfill_idx = _compute_backfill_indices(isfinite)
 
-    # at this point, we have:
-    # 1) numchunks >= minchunks
-    # 2) x, y filled with finite only
+    # at this point, we have numchunks >= minchunks
 
     path = QtGui.QPainterPath()
     if hasattr(path, 'reserve'):    # Qt 5.13
@@ -1932,17 +1937,21 @@ def _arrayToQPath_all(x, y, finiteCheck):
     subpoly = QtGui.QPolygonF()
     subpath = None
     for idx in range(numchunks):
-        xchunk = x[idx*chunksize:(idx+1)*chunksize]
-        ychunk = y[idx*chunksize:(idx+1)*chunksize]
-        currsize = xchunk.size
+        sl = slice(idx*chunksize, min((idx+1)*chunksize, n))
+        currsize = sl.stop - sl.start
         if currsize != subpoly.size():
             if hasattr(subpoly, 'resize'):
                 subpoly.resize(currsize)
             else:
                 subpoly.fill(QtCore.QPointF(), currsize)
         subarr = ndarray_from_qpolygonf(subpoly)
-        subarr[:, 0] = xchunk
-        subarr[:, 1] = ychunk
+        if backfill_idx is None:
+            subarr[:, 0] = x[sl]
+            subarr[:, 1] = y[sl]
+        else:
+            bfv = backfill_idx[sl]  # view
+            subarr[:, 0] = x[bfv]
+            subarr[:, 1] = y[bfv]
         if subpath is None:
             subpath = QtGui.QPainterPath()
         subpath.addPolygon(subpoly)
@@ -2116,16 +2125,20 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
         count=n, offset=4)
 
-    # Fill array with vertex values
-    arr['x'] = x
-    arr['y'] = y
-
+    backfill_idx = None
     if finiteCheck:
         if isfinite is None:
             isfinite = np.isfinite(x) & np.isfinite(y)
             all_isfinite = np.all(isfinite)
         if not all_isfinite:
-            _fill_nonfinite(arr, isfinite)
+            backfill_idx = _compute_backfill_indices(isfinite)
+
+    if backfill_idx is None:
+        arr['x'] = x
+        arr['y'] = y
+    else:
+        arr['x'] = x[backfill_idx]
+        arr['y'] = y[backfill_idx]
 
     # decide which points are connected by lines
     if connect == 'pairs':
