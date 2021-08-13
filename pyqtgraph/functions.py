@@ -1903,14 +1903,14 @@ def _arrayToQPath_all(x, y, finiteCheck):
     numchunks = (n + chunksize - 1) // chunksize
     minchunks = 3
 
+    backfill_idx = None
+    if finiteCheck and not all_isfinite:
+        backfill_idx = _compute_backfill_indices(isfinite)
+
     if numchunks < minchunks:
         # too few chunks, batching would be a pessimization
         poly = create_qpolygonf(n)
         arr = ndarray_from_qpolygonf(poly)
-
-        backfill_idx = None
-        if finiteCheck and not all_isfinite:
-            backfill_idx = _compute_backfill_indices(isfinite)
 
         if backfill_idx is None:
             arr[:, 0] = x
@@ -1924,10 +1924,6 @@ def _arrayToQPath_all(x, y, finiteCheck):
             path.reserve(n)
         path.addPolygon(poly)
         return path
-
-    backfill_idx = None
-    if finiteCheck and not all_isfinite:
-        backfill_idx = _compute_backfill_indices(isfinite)
 
     # at this point, we have numchunks >= minchunks
 
