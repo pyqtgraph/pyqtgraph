@@ -1895,17 +1895,15 @@ def _arrayToQPath_all(x, y, finiteCheck):
     if n == 0:
         return QtGui.QPainterPath()
 
+    backfill_idx = None
     if finiteCheck:
         isfinite = np.isfinite(x) & np.isfinite(y)
-        all_isfinite = np.all(isfinite)
+        if not np.all(isfinite):
+            backfill_idx = _compute_backfill_indices(isfinite)
 
     chunksize = 10000
     numchunks = (n + chunksize - 1) // chunksize
     minchunks = 3
-
-    backfill_idx = None
-    if finiteCheck and not all_isfinite:
-        backfill_idx = _compute_backfill_indices(isfinite)
 
     if numchunks < minchunks:
         # too few chunks, batching would be a pessimization
