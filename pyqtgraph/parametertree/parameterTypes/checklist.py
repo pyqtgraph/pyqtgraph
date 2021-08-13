@@ -132,11 +132,10 @@ class ChecklistParameter(GroupParameter):
     itemClass = ChecklistParameterItem
 
     def __init__(self, **opts):
-        self.dontPropagateChanges = False
         self.targetValue = None
         limits = opts.setdefault('limits', [])
         self.forward, self.reverse = ListParameter.mapping(limits)
-        opts.setdefault('value', limits)
+        value = opts.setdefault('value', limits)
         opts.setdefault('exclusive', False)
         super().__init__(**opts)
         # Force 'exclusive' to trigger by making sure value is not the same
@@ -145,6 +144,8 @@ class ChecklistParameter(GroupParameter):
         if len(limits):
             # Since update signal wasn't hooked up until after parameter construction, need to fire manually
             self.updateLimits(self, limits)
+            # Also, value calculation will be incorrect until children are added, so make sure to recompute
+            self.setValue(value)
 
     def updateLimits(self, _param, limits):
         oldOpts = self.names
@@ -168,18 +169,9 @@ class ChecklistParameter(GroupParameter):
         # Purge child changes before unblocking
         self.treeStateChanges.clear()
         self.unblockTreeChangeSignal()
-        # See note on "_onSubParamChange()"
-        self.dontPropagateChanges = True
         self.setValue(val)
-        self.dontPropagateChanges = False
 
     def _onSubParamChange(self, param, value):
-        """
-        Sometimes a change will occur after a previous param went out of scope, so a regular use of blockSignals
-        will fail. To get around this, use a primitive 'locking' scheme. Occurs during setvalue in `updateLimits`
-        """
-        if self.dontPropagateChanges:
-            return
         if self.opts['exclusive']:
             val = self.reverse[0][self.reverse[1].index(param.name())]
             return self.setValue(val)
@@ -191,7 +183,7 @@ class ChecklistParameter(GroupParameter):
             # Force set value to ensure updates
             # self.opts['value'] = self._VALUE_UNSET
             self.updateLimits(None, self.opts.get('limits', []))
-
+    
     def value(self):
         vals = [self.forward[p.name()] for p in self.children() if p.value()]
         exclusive = self.opts['exclusive']
@@ -220,4 +212,4 @@ class ChecklistParameter(GroupParameter):
         for chParam in self:
             checked = chParam.name() in names
             chParam.setValue(checked, self._onSubParamChange)
-        super().setValue(value, blockSignal)
+        super().setValue(self.value(), blockSignal)
