@@ -246,7 +246,7 @@ class PlotItem(GraphicsWidget):
         
         if labels is None:
             labels = {}
-        for label in list(self.axes.keys()):b
+        for label in list(self.axes.keys()):
             if label in kargs:
                 labels[label] = kargs[label]
                 del kargs[label]
