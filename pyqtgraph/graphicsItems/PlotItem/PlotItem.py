@@ -240,13 +240,13 @@ class PlotItem(GraphicsWidget):
         self.ctrl.avgParamList.itemClicked.connect(self.avgParamListClicked)
         self.ctrl.averageGroup.toggled.connect(self.avgToggled)
         
-        self.ctrl.maxTracesCheck.toggled.connect(self.updateDecimation)
+        self.ctrl.maxTracesCheck.toggled.connect(self._max_trace_wrapper_slot)
         self.ctrl.forgetTracesCheck.toggled.connect(self.updateDecimation)
         self.ctrl.maxTracesSpin.valueChanged.connect(self.updateDecimation)
         
         if labels is None:
             labels = {}
-        for label in list(self.axes.keys()):
+        for label in list(self.axes.keys()):b
             if label in kargs:
                 labels[label] = kargs[label]
                 del kargs[label]
@@ -1002,10 +1002,18 @@ class PlotItem(GraphicsWidget):
         
     def clipToViewMode(self):
         return self.ctrl.clipToViewCheck.isChecked()
-
+    
+    
+    def _max_trace_wrapper_slot(self, check_state):
+        if check_state:
+            self.updateDecimation(self)
+        else:
+            for curve in self.curves:
+                curve.show()
+    
     def updateDecimation(self):
         if not self.ctrl.maxTracesCheck.isChecked():
-            numCurves = len(self.curves)
+            return
         else:
             numCurves = self.ctrl.maxTracesSpin.value()
 
