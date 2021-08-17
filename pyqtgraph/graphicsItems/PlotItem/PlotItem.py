@@ -1005,7 +1005,7 @@ class PlotItem(GraphicsWidget):
 
     def updateDecimation(self):
         if not self.ctrl.maxTracesCheck.isChecked():
-            numCurves = len(self.curves)
+            return
         else:
             numCurves = self.ctrl.maxTracesSpin.value()
 
