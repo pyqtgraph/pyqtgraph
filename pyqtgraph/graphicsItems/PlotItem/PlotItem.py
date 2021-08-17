@@ -1006,7 +1006,7 @@ class PlotItem(GraphicsWidget):
     
     def _max_trace_wrapper_slot(self, check_state):
         if check_state:
-            self.updateDecimation(self)
+            self.updateDecimation()
         else:
             for curve in self.curves:
                 curve.show()
