@@ -6,6 +6,7 @@ Demonstrates very basic use of PColorMeshItem
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
+import time
 from pyqtgraph.Qt import QtCore
 import numpy as np
 import pyqtgraph as pg
@@ -49,6 +50,8 @@ antialiasing = False
 # antialiasing = True # May be uncommened to see antialiasing effect
 pcmi = pg.PColorMeshItem(edgecolors=edgecolors, antialiasing=antialiasing)
 view.addItem(pcmi)
+textitem = pg.TextItem(anchor=(1, 0))
+view.addItem(textitem)
 
 
 ## Set the animation
@@ -64,20 +67,34 @@ timer = QtCore.QTimer()
 timer.setSingleShot(True)
 # not using QTimer.singleShot() because of persistence on PyQt. see PR #1605
 
+textpos = None
 i=0
 def updateData():
     global i
+    global textpos
     
     ## Display the new data set
+    t0 = time.perf_counter()
     new_x = x
     new_y = y+wave_amplitude*np.cos(x/wave_length+i)
     new_z = np.exp(-(x-np.cos(i*color_speed)*xn)**2/1000)[:-1,:-1]
+    t1 = time.perf_counter()
     pcmi.setData(new_x,
                  new_y,
                  new_z)
+    t2 = time.perf_counter()
 
     i += wave_speed
-    timer.start(1000//fps)
+
+    # display info in top-right corner
+    textitem.setText(f'{(t2 - t1)*1000:.1f} ms')
+    if textpos is None:
+        textpos = pcmi.width(), pcmi.height()
+        textitem.setPos(*textpos)
+
+    # cap update rate at fps
+    delay = max(1000/fps - (t2 - t0), 0)
+    timer.start(int(delay))
 
 timer.timeout.connect(updateData)
 updateData()
