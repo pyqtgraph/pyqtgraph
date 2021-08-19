@@ -127,7 +127,6 @@ class ImageView(QtGui.QWidget):
         self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
         self.scene = self.ui.graphicsView.scene()
-        self.ui.histogram.setLevelMode(levelMode)
         
         self.ignorePlaying = False
         
@@ -147,6 +146,7 @@ class ImageView(QtGui.QWidget):
         self.currentIndex = 0
         
         self.ui.histogram.setImageItem(self.imageItem)
+        self.ui.histogram.setLevelMode(levelMode)
         
         self.menu = None
         
