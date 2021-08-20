@@ -1,16 +1,54 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
-
+import itertools
 from ..Qt import QtGui, QtCore
+from .. import Qt
 import numpy as np
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
-from .. import getConfigOption
 from .GradientEditorItem import Gradients # List of colormaps
-from ..colormap import ColorMap
+from .. import colormap
 
 
 __all__ = ['PColorMeshItem']
+
+
+if Qt.QT_LIB.startswith('PyQt'):
+    wrapinstance = Qt.sip.wrapinstance
+else:
+    wrapinstance = Qt.shiboken.wrapInstance
+
+
+class QuadInstances:
+    def __init__(self):
+        self.polys = []
+
+    def alloc(self, size):
+        self.polys.clear()
+
+        # 2 * (size + 1) vertices, (x, y)
+        arr = np.empty((2 * (size + 1), 2), dtype=np.float64)
+        ptrs = list(map(wrapinstance,
+            itertools.count(arr.ctypes.data, arr.strides[0]),
+            itertools.repeat(QtCore.QPointF, arr.shape[0])))
+
+        # arrange into 2 rows, (size + 1) vertices
+        points = [ptrs[:len(ptrs)//2], ptrs[len(ptrs)//2:]]
+        self.arr = arr.reshape((2, -1, 2))
+
+        # pre-create quads from those 2 rows of QPointF(s)
+        for j in range(size):
+            bl, tl = points[0][j:j+2]
+            br, tr = points[1][j:j+2]
+            poly = (bl, br, tr, tl)
+            self.polys.append(poly)
+
+    def array(self, size):
+        if size != len(self.polys):
+            self.alloc(size)
+        return self.arr
+
+    def instances(self):
+        return self.polys
 
 
 class PColorMeshItem(GraphicsObject):
@@ -48,7 +86,7 @@ class PColorMeshItem(GraphicsObject):
 
             "ASCII from: <https://matplotlib.org/3.2.1/api/_as_gen/
                          matplotlib.pyplot.pcolormesh.html>".
-        cmap : str, default 'viridis
+        cmap : pg.ColorMap, default 'viridis'
             Colormap used to map the z value to colors.
         edgecolors : dict, default None
             The color of the edges of the polygons.
@@ -67,26 +105,27 @@ class PColorMeshItem(GraphicsObject):
 
         self.qpicture = None  ## rendered picture for display
         
-        self.axisOrder = getConfigOption('imageAxisOrder')
-
-        if 'edgecolors' in kwargs.keys():
-            self.edgecolors = kwargs['edgecolors']
-        else:
-            self.edgecolors = None
-
-        if 'antialiasing' in kwargs.keys():
-            self.antialiasing = kwargs['antialiasing']
-        else:
-            self.antialiasing = False
+        self.edgecolors = kwargs.get('edgecolors', None)
+        self.antialiasing = kwargs.get('antialiasing', False)
         
-        if 'cmap' in kwargs.keys():
-            if kwargs['cmap'] in Gradients.keys():
-                self.cmap = kwargs['cmap']
+        self.cmap = kwargs.get('cmap', None)
+        if self.cmap is None:
+            self.cmap = colormap.get('viridis')
+
+        # Allow specifying str for backwards compatibility
+        # but this will only use colormaps from Gradients.
+        # Note that the colors will be wrong for the hsv colormaps.
+        if isinstance(self.cmap, str):
+            if self.cmap in Gradients:
+                pos, color = zip(*Gradients[self.cmap]['ticks'])
+                self.cmap  = colormap.ColorMap(pos, color)
             else:
                 raise NameError('Undefined colormap, should be one of the following: '+', '.join(['"'+i+'"' for i in Gradients.keys()])+'.')
-        else:
-            self.cmap = 'viridis'
-        
+
+        self.lut = self.cmap.getLookupTable(nPts=256, mode=self.cmap.QCOLOR)
+
+        self.quads = QuadInstances()
+
         # If some data have been sent we directly display it
         if len(args)>0:
             self.setData(*args)
@@ -156,7 +195,7 @@ class PColorMeshItem(GraphicsObject):
         """
 
         # Prepare data
-        cd = self._prepareData(args)
+        self._prepareData(args)
 
         # Has the view bounds changed
         shapeChanged = False
@@ -173,7 +212,7 @@ class PColorMeshItem(GraphicsObject):
         p = QtGui.QPainter(self.qpicture)
         # We set the pen of all polygons once
         if self.edgecolors is None:
-            p.setPen(fn.mkPen(QtGui.QColor(0, 0, 0, 0)))
+            p.setPen(QtCore.Qt.PenStyle.NoPen)
         else:
             p.setPen(fn.mkPen(self.edgecolors))
             if self.antialiasing:
@@ -182,33 +221,37 @@ class PColorMeshItem(GraphicsObject):
 
         ## Prepare colormap
         # First we get the LookupTable
-        pos   = [i[0] for i in Gradients[self.cmap]['ticks']]
-        color = [i[1] for i in Gradients[self.cmap]['ticks']]
-        cmap  = ColorMap(pos, color)
-        lut   = cmap.getLookupTable(0.0, 1.0, 256)
+        lut = self.lut
         # Second we associate each z value, that we normalize, to the lut
-        norm  = self.z - self.z.min()
-        norm = norm/norm.max()
-        norm  = (norm*(len(lut)-1)).astype(int)
-        
+        scale = len(lut) - 1
+        rng = self.z.ptp()
+        if rng == 0:
+            rng = 1
+        norm = fn.rescaleData(self.z, scale / rng, self.z.min(),
+            dtype=int, clip=(0, len(lut)-1))
+
+        brush = QtGui.QBrush(QtCore.Qt.BrushStyle.SolidPattern)
+
+        if Qt.QT_LIB.startswith('PyQt'):
+            drawConvexPolygon = lambda x : p.drawConvexPolygon(*x)
+        else:
+            drawConvexPolygon = p.drawConvexPolygon
+
+        memory = self.quads.array(self.z.shape[1])
+        polys = self.quads.instances()
+
         # Go through all the data and draw the polygons accordingly
-        for xi in range(self.z.shape[0]):
-            for yi in range(self.z.shape[1]):
-                
-                # Set the color of the polygon first
-                c = lut[norm[xi][yi]]
-                p.setBrush(fn.mkBrush(QtGui.QColor(c[0], c[1], c[2])))
+        for i in range(self.z.shape[0]):
+            # populate 2 rows of values into points
+            memory[..., 0] = self.x[i:i+2, :]
+            memory[..., 1] = self.y[i:i+2, :]
 
-                polygon = QtGui.QPolygonF(
-                    [QtCore.QPointF(self.x[xi][yi],     self.y[xi][yi]),
-                     QtCore.QPointF(self.x[xi+1][yi],   self.y[xi+1][yi]),
-                     QtCore.QPointF(self.x[xi+1][yi+1], self.y[xi+1][yi+1]),
-                     QtCore.QPointF(self.x[xi][yi+1],   self.y[xi][yi+1])]
-                )
+            colors = [lut[z] for z in norm[i].tolist()]
 
-                # DrawConvexPlygon is faster
-                p.drawConvexPolygon(polygon)
-
+            for color, poly in zip(colors, polys):
+                brush.setColor(color)
+                p.setBrush(brush)
+                drawConvexPolygon(poly)
 
         p.end()
         self.update()
