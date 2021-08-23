@@ -138,16 +138,6 @@ class ImageView(QtGui.QWidget):
         self.view.setAspectLocked(True)
         self.view.invertY()
         
-        if imageItem is None:
-            self.imageItem = ImageItem()
-        else:
-            self.imageItem = imageItem
-        self.view.addItem(self.imageItem)
-        self.currentIndex = 0
-        
-        self.ui.histogram.setImageItem(self.imageItem)
-        self.ui.histogram.setLevelMode(levelMode)
-        
         self.menu = None
         
         self.ui.normGroup.hide()
@@ -171,6 +161,18 @@ class ImageView(QtGui.QWidget):
         self.timeLine.setZValue(1)
         self.ui.roiPlot.addItem(self.timeLine)
         self.ui.splitter.setSizes([self.height()-35, 35])
+
+        # init imageItem and histogram
+        if imageItem is None:
+            self.imageItem = ImageItem()
+        else:
+            self.imageItem = imageItem
+            self.setImage(imageItem.image, autoRange=False, autoLevels=False, transform=imageItem.transform())
+        self.view.addItem(self.imageItem)
+        self.currentIndex = 0
+        
+        self.ui.histogram.setImageItem(self.imageItem)
+        self.ui.histogram.setLevelMode(levelMode)
         
         # make splitter an unchangeable small grey line:
         s = self.ui.splitter
