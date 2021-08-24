@@ -104,6 +104,9 @@ class PColorMeshItem(GraphicsObject):
         GraphicsObject.__init__(self)
 
         self.qpicture = None  ## rendered picture for display
+        self.x = None
+        self.y = None
+        self.z = None
         
         self.edgecolors = kwargs.get('edgecolors', None)
         self.antialiasing = kwargs.get('antialiasing', False)
