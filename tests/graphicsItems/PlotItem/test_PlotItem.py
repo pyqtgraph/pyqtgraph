@@ -54,6 +54,18 @@ def test_PlotItem_maxTraces():
     assert curve1 not in item.curves, "curve1 should not be in the item's curves"
 
 
+def test_PlotItem_preserve_external_visibility_control():
+    item = pg.PlotItem()
+    curve1 = pg.PlotDataItem(np.random.normal(size=10))
+    curve2 = pg.PlotDataItem(np.random.normal(size=10))
+    item.addItem(curve1)
+    curve1.hide()
+    item.addItem(curve2)
+    assert not curve1.isVisible()
+    item.removeItem(curve2)
+    assert not curve1.isVisible()
+
+
 def test_plotitem_menu_initialize():
     """Test the menu initialization of the plotitem"""
     item = pg.PlotItem()
