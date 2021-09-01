@@ -240,7 +240,7 @@ class PlotItem(GraphicsWidget):
         self.ctrl.avgParamList.itemClicked.connect(self.avgParamListClicked)
         self.ctrl.averageGroup.toggled.connect(self.avgToggled)
         
-        self.ctrl.maxTracesCheck.toggled.connect(self._max_trace_wrapper_slot)
+        self.ctrl.maxTracesCheck.toggled.connect(self._handle_max_traces_toggle)
         self.ctrl.forgetTracesCheck.toggled.connect(self.updateDecimation)
         self.ctrl.maxTracesSpin.valueChanged.connect(self.updateDecimation)
         
@@ -1004,7 +1004,7 @@ class PlotItem(GraphicsWidget):
         return self.ctrl.clipToViewCheck.isChecked()
     
     
-    def _max_trace_wrapper_slot(self, check_state):
+    def _handle_max_traces_toggle(self, check_state):
         if check_state:
             self.updateDecimation()
         else:
