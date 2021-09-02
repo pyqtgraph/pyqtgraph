@@ -1003,7 +1003,6 @@ class PlotItem(GraphicsWidget):
     def clipToViewMode(self):
         return self.ctrl.clipToViewCheck.isChecked()
     
-    
     def _handle_max_traces_toggle(self, check_state):
         if check_state:
             self.updateDecimation()
