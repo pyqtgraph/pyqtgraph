@@ -535,7 +535,15 @@ class ImageItem(GraphicsObject):
         levels = self.levels
         augmented_alpha = False
 
-        if image.dtype.kind == 'f':
+        if lut is not None and lut.dtype != self._xp.uint8:
+            # Both _try_rescale_float() and _try_combine_lut() assume that
+            # lut is of type uint8. It is considered a usage error if that
+            # is not the case.
+            # However, the makeARGB() codepath has previously allowed such
+            # a usage to work. Rather than fail outright, we delegate this
+            # case to makeARGB().
+            pass
+        elif image.dtype.kind == 'f':
             image, levels, lut, augmented_alpha = self._try_rescale_float(image, levels, lut)
             # if we succeeded, we will have an uint8 image with levels None.
             # lut if not None will have <= 256 entries
