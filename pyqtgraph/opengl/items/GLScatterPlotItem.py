@@ -12,7 +12,7 @@ class GLScatterPlotItem(GLGraphicsItem):
     """Draws points at a list of 3D positions."""
     
     def __init__(self, **kwds):
-        GLGraphicsItem.__init__(self)
+        super().__init__()
         glopts = kwds.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
         self.pos = None
@@ -138,9 +138,12 @@ class GLScatterPlotItem(GLGraphicsItem):
                         norm[...,0] = self.size
                     else:
                         gpos = self.mapToView(pos.transpose()).transpose()
-                        pxSize = self.view().pixelSize(gpos)
+                        if self.view():
+                            pxSize = self.view().pixelSize(gpos)
+                        else:
+                            pxSize = self.parentItem().view().pixelSize(gpos)
                         norm[...,0] = self.size / pxSize
-                    
+        
                     glNormalPointerf(norm)
                 else:
                     glNormal3f(self.size, 0, 0)  ## vertex shader uses norm.x to determine point size
