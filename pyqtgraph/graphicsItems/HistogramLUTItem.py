@@ -443,7 +443,7 @@ class HistogramLUTItem(GraphicsWidget):
             self.regions[i].setVisible(False)
 
         if self.levelMode == 'rgba':
-            imax = 4
+            nch = 4
             if self.imageItem() is not None:
                 # Only show rgb channels if connected image lacks alpha.
                 nch = self.imageItem().channels()
