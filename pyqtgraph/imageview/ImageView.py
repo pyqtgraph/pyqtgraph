@@ -358,13 +358,15 @@ class ImageView(QtGui.QWidget):
         
         profiler()
 
-        self.imageItem.resetTransform()
-        if scale is not None:
-            self.imageItem.scale(*scale)
-        if pos is not None:
-            self.imageItem.setPos(*pos)
-        if transform is not None:
-            self.imageItem.setTransform(transform)
+        if transform is None:
+            transform = QtGui.QTransform()
+            # note that the order of transform is
+            #   scale followed by translate
+            if pos is not None:
+                transform.translate(*pos)
+            if scale is not None:
+                transform.scale(*scale)
+        self.imageItem.setTransform(transform)
 
         profiler()
 

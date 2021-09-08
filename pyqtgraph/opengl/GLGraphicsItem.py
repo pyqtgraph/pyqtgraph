@@ -32,7 +32,7 @@ class GLGraphicsItem(QtCore.QObject):
     _nextId = 0
     
     def __init__(self, parentItem=None):
-        QtCore.QObject.__init__(self)
+        super().__init__()
         self._id = GLGraphicsItem._nextId
         GLGraphicsItem._nextId += 1
         

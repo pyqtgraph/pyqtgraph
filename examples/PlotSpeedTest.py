@@ -115,9 +115,9 @@ children = [
     dict(name='enableExperimental', type='bool', value=pg.getConfigOption('enableExperimental')),
     dict(name='pen', type='pen', value=default_pen),
     dict(name='antialias', type='bool', value=pg.getConfigOption('antialias')),
-    dict(name='connect', type='list', values=['all', 'pairs', 'finite', 'array'], value='all'),
+    dict(name='connect', type='list', limits=['all', 'pairs', 'finite', 'array'], value='all'),
     dict(name='skipFiniteCheck', type='bool', value=False),
-    dict(name='plotMethod', title='Plot Method', type='list', values=['pyqtgraph', 'drawPolyline', 'drawLines'])
+    dict(name='plotMethod', title='Plot Method', type='list', limits=['pyqtgraph', 'drawPolyline', 'drawLines'])
 ]
 
 params = ptree.Parameter.create(name='Parameters', type='group', children=children)

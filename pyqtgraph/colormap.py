@@ -331,7 +331,7 @@ def modulatedBarData(length=768, width=32):
     data = np.zeros( (length, width) )
     for idx in range(width):
         data[:,idx] = gradient + (idx/(width-1)) * modulation
-    clip_array(data, 0.0, 1.0)
+    clip_array(data, 0.0, 1.0, out=data)
     return data
 
 class ColorMap(object):
