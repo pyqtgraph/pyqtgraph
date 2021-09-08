@@ -66,6 +66,7 @@ params = [
         {'name': 'Integer', 'type': 'int', 'value': 10},
         {'name': 'Float', 'type': 'float', 'value': 10.5, 'step': 0.1, 'finite': False},
         {'name': 'String', 'type': 'str', 'value': "hi", 'tip': 'Well hello'},
+        {'name': 'Checklist', 'type': 'checklist', 'limits': [1,2,3], 'value': 2},
         {'name': 'List', 'type': 'list', 'limits': [1,2,3], 'value': 2},
         {'name': 'Named List', 'type': 'list', 'limits': {"one": 1, "two": "twosies", "three": [3,3,3]}, 'value': 2},
         {'name': 'Boolean', 'type': 'bool', 'value': True, 'tip': "This is a checkbox"},

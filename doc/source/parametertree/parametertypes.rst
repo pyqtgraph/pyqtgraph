@@ -16,6 +16,9 @@ Parameters
 .. autoclass:: CalendarParameter
    :members:
 
+.. autoclass:: ChecklistParameter
+   :members:
+
 .. autoclass:: ColorMapParameter
    :members:
 
@@ -59,6 +62,9 @@ ParameterItems
    :members:
 
 .. autoclass:: CalendarParameterItem
+   :members:
+
+.. autoclass:: ChecklistParameterItem
    :members:
 
 .. autoclass:: ColorMapParameterItem

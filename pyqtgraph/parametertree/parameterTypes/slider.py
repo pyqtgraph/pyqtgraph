@@ -1,18 +1,8 @@
 import numpy as np
 
-from .basetypes import WidgetParameterItem
+from .basetypes import WidgetParameterItem, Emitter
 from .. import Parameter
 from ...Qt import QtCore, QtWidgets
-
-
-class Emitter(QtCore.QObject):
-    """
-    WidgetParameterItem is not a QObject, and the slider's value needs to be converted before
-    emitting. So, create an emitter class here that can be used instead
-    """
-    sigChanging = QtCore.Signal(object, object)
-    sigChanged = QtCore.Signal(object, object)
-
 
 class SliderParameterItem(WidgetParameterItem):
     slider: QtWidgets.QSlider
