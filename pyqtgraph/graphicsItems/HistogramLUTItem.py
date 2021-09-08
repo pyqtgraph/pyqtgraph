@@ -363,7 +363,7 @@ class HistogramLUTItem(GraphicsWidget):
                     if autoLevel:
                         mn = h[0][0]
                         mx = h[0][-1]
-                        self.region[i].setRegion([mn, mx])
+                        self.regions[i].setRegion([mn, mx])
                 else:
                     # hide channels not present in image data
                     self.plots[i].setVisible(False)
