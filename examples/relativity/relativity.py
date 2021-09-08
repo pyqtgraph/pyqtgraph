@@ -27,10 +27,10 @@ class RelativityGUI(QtGui.QWidget):
         self.objectGroup = ObjectGroupParam()
         
         self.params = Parameter.create(name='params', type='group', children=[
-            dict(name='Load Preset..', type='list', values=[]),
-            #dict(name='Unit System', type='list', values=['', 'MKS']),
+            dict(name='Load Preset..', type='list', limits=[]),
+            #dict(name='Unit System', type='list', limits=['', 'MKS']),
             dict(name='Duration', type='float', value=10.0, step=0.1, limits=[0.1, None]),
-            dict(name='Reference Frame', type='list', values=[]),
+            dict(name='Reference Frame', type='list', limits=[]),
             dict(name='Animate', type='bool', value=True),
             dict(name='Animation Speed', type='float', value=1.0, dec=True, step=0.1, limits=[0.0001, None]),
             dict(name='Recalculate Worldlines', type='action'),

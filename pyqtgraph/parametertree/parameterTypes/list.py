@@ -1,3 +1,4 @@
+import warnings
 from collections import OrderedDict
 
 from .basetypes import WidgetParameterItem
@@ -74,7 +75,7 @@ class ListParameter(Parameter):
 
     In addition to the generic :class:`~pyqtgraph.parametertree.Parameter`
     options, this parameter type accepts a ``limits`` argument specifying the
-    list of allowed values.  ``values`` is an alias and may be used instead.
+    list of allowed values.
 
     The values may generally be of any data type, as long as they can be
     represented as a string. If the string representation provided is
@@ -90,6 +91,8 @@ class ListParameter(Parameter):
 
         # Parameter uses 'limits' option to define the set of allowed values
         if 'values' in opts:
+            warnings.warn('Using "values" to set limits is deprecated. Use "limits" instead.',
+                          DeprecationWarning, stacklevel=2)
             opts['limits'] = opts['values']
         if opts.get('limits', None) is None:
             opts['limits'] = []
