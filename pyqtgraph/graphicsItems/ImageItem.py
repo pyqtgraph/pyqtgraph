@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
-
 import numpy
 
 from .GraphicsObject import GraphicsObject
@@ -11,11 +9,8 @@ from ..Point import Point
 from ..Qt import QtGui, QtCore
 from ..util.cupy_helper import getCupy
 
-try:
-    from collections.abc import Callable
-except ImportError:
-    # fallback for python < 3.3
-    from collections import Callable
+import warnings
+from collections.abc import Callable
 
 translate = QtCore.QCoreApplication.translate
 
@@ -542,7 +537,11 @@ class ImageItem(GraphicsObject):
             # However, the makeARGB() codepath has previously allowed such
             # a usage to work. Rather than fail outright, we delegate this
             # case to makeARGB().
-            pass
+            warnings.warn(
+                "Using non-uint8 LUTs is an undocumented accidental feature and may "
+                "be removed at some point in the future. Please open an issue if you "
+                "instead believe this to be worthy of protected inclusion in pyqtgraph.",
+                DeprecationWarning, stacklevel=2)
         elif image.dtype.kind == 'f':
             image, levels, lut, augmented_alpha = self._try_rescale_float(image, levels, lut)
             # if we succeeded, we will have an uint8 image with levels None.
