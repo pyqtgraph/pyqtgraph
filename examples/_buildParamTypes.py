@@ -11,6 +11,9 @@ def makeChild(chType, cfgDict):
     param.setDefault(param.value())
 
     def setOpt(_param, _val):
+        # Treat blank strings as "None" to allow 'unsetting' that option
+        if isinstance(_val, str) and _val == '':
+            _val = None
         param.setOpts(**{_param.name(): _val})
 
     optsChildren = []
@@ -23,8 +26,8 @@ def makeChild(chType, cfgDict):
             optsChildren.append(child)
             child.sigValueChanged.connect(setOpt)
     # Poplate initial options
-    initialOpts = {p.name(): p.value() for p in optsChildren}
-    param.setOpts(**initialOpts)
+    for p in optsChildren:
+        setOpt(p, p.value())
 
     grp = Parameter.create(name=f'Sample {chType.title()}', type='group', children=metaChildren + [param] + optsChildren)
     grp.setOpts(expanded=False)
