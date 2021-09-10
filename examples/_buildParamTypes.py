@@ -1,11 +1,11 @@
 import os
 
-from pyqtgraph import configfile
-from pyqtgraph.parametertree import Parameter, parameterTypes as t, ParameterTree, registerParameterType
-from pyqtgraph.Qt import QtWidgets, QtCore, QtGui
-import pyqtgraph as pg
 import numpy as np
 
+import pyqtgraph as pg
+from pyqtgraph import configfile
+from pyqtgraph.Qt import QtWidgets
+from pyqtgraph.parametertree import Parameter
 from pyqtgraph.parametertree.Parameter import PARAM_TYPES
 from pyqtgraph.parametertree.parameterTypes import QtEnumParameter, GroupParameter
 

@@ -158,6 +158,7 @@ def parseString(lines, start=0, **scope):
                     if type(k1) is tuple:
                         k = k1
                 except:
+                    # If tuple conversion fails, keep the string
                     pass
             if re.search(r'\S', v) and v[0] != '#':  ## eval the value
                 try:
