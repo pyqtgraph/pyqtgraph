@@ -8,6 +8,10 @@ as well as some customized parameter types
 import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
+# `makeAllParamTypes` creates several parameters from a dictionary of config specs.
+# This contains information about the options for each parameter so they can be directly
+# inserted into the example parameter tree. To create your own parameters, simply follow
+# the guidelines demonstrated by other parameters created here.
 from examples._buildParamTypes import makeAllParamTypes
 from pyqtgraph.Qt import QtGui
 
