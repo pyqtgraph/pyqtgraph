@@ -145,7 +145,8 @@ class FileParameterItem(StrParameterItem):
             startDir = os.path.dirname(startDir)
         if os.path.exists(startDir):
             opts['directory'] = startDir
-        opts.setdefault('windowTitle', self.param.title())
+        if opts.get('windowTitle') is None:
+            opts['windowTitle'] = self.param.title()
 
         fname = popupFilePicker(None, **opts)
         if not fname:
