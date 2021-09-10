@@ -1,7 +1,7 @@
 from pyqtgraph.parametertree import Parameter
 from pyqtgraph.parametertree.Parameter import PARAM_TYPES
 from pyqtgraph.parametertree.parameterTypes import GroupParameter
-from ._paramtreecfg import cfg as cfgDict
+from ._paramtreecfg import cfg
 
 _encounteredTypes = {'group'}
 
@@ -45,7 +45,7 @@ def makeMetaChild(name, cfgDict):
 
 def makeAllParamTypes():
     children = []
-    for name, paramCfg in cfgDict.items():
+    for name, paramCfg in cfg.items():
         if ' ' in name:
             children.append(makeMetaChild(name, paramCfg))
         else:
@@ -61,8 +61,8 @@ def makeAllParamTypes():
     # Also minor tweak to meta opts
     meta = params.child('Applies to All Types')
     infoChild = meta.child('Extra Information')
-    for ch in meta.children()[1:]:
-        ch.sigValueChanged.connect(lambda _param, _val: infoChild.setOpts(**{_param.name(): _val}))
+    for child in meta.children()[1:]:
+        child.sigValueChanged.connect(lambda _param, _val: infoChild.setOpts(**{_param.name(): _val}))
 
     def onChange(_param, _val):
         if _val == 'Use span':
