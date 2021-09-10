@@ -1,16 +1,8 @@
-import os
-
-import numpy as np
-
-import pyqtgraph as pg
-from pyqtgraph import configfile
-from pyqtgraph.Qt import QtWidgets
 from pyqtgraph.parametertree import Parameter
 from pyqtgraph.parametertree.Parameter import PARAM_TYPES
-from pyqtgraph.parametertree.parameterTypes import QtEnumParameter, GroupParameter
+from pyqtgraph.parametertree.parameterTypes import GroupParameter
+from ._paramtreecfg import cfg as cfgDict
 
-cfgName = os.path.join(os.path.dirname(__file__), '_paramtree.cfg')
-cfgDict = configfile.readConfigFile(cfgName, pg=pg, np=np, QtWidgets=QtWidgets, dlg=QtWidgets.QFileDialog, enum=QtEnumParameter)
 _encounteredTypes = {'group'}
 
 def makeChild(chType, cfgDict):
