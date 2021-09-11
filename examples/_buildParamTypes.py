@@ -62,10 +62,12 @@ def makeAllParamTypes():
     slider.setOpts(limits=[0, 100])
 
     # Also minor tweak to meta opts
+    def setOpt(_param, _val):
+        infoChild.setOpts(**{_param.name(): _val})
     meta = params.child('Applies to All Types')
     infoChild = meta.child('Extra Information')
     for child in meta.children()[1:]:
-        child.sigValueChanged.connect(lambda _param, _val: infoChild.setOpts(**{_param.name(): _val}))
+        child.sigValueChanged.connect(setOpt)
 
     def onChange(_param, _val):
         if _val == 'Use span':
