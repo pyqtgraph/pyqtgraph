@@ -1,8 +1,9 @@
 import numpy as np
-import pyqtgraph as pg
+
 from pyqtgraph.Qt import QtWidgets
-dlg = QtWidgets.QFileDialog
 from pyqtgraph.parametertree.parameterTypes import QtEnumParameter as enum
+
+dlg = QtWidgets.QFileDialog
 
 cfg = {
     'list': {
