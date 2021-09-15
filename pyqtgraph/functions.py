@@ -1123,7 +1123,10 @@ def transformCoordinates(tr, coords, transpose=False):
     m = m[:, :-1]
     
     ## map coordinates and return
-    mapped = (m*coords).sum(axis=1)  ## apply scale/rotate
+    # nan or inf points will not plot, but should not generate warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        mapped = (m*coords).sum(axis=1)  ## apply scale/rotate
     mapped += translate
     
     if transpose:

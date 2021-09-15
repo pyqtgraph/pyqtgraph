@@ -156,9 +156,11 @@ class PlotDataItem(GraphicsObject):
         """
         GraphicsObject.__init__(self)
         self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
-        self.xData = None
+        self.xData = None # original data
         self.yData = None
-        self.xDisp = None
+        self.xMapped = None # data after applying a possible mapping, e.g. log-scale.
+        self.yMapped = None
+        self.xDisp = None # data in the form to be displayed
         self.yDisp = None
         self.curve = PlotCurveItem()
         self.scatter = ScatterPlotItem()
@@ -168,7 +170,7 @@ class PlotDataItem(GraphicsObject):
         self.curve.sigClicked.connect(self.curveClicked)
         self.scatter.sigClicked.connect(self.scatterClicked)
         self.scatter.sigHovered.connect(self.scatterHovered)
-
+        
         # self._xViewRangeWasChanged = False
         # self._yViewRangeWasChanged = False
         # self._styleWasChanged = True # force initial update
@@ -180,6 +182,7 @@ class PlotDataItem(GraphicsObject):
         self.setProperty('styleWasChanged', True) # force initial update
 
         self._dataRect = None
+        self._dataRectMapped = None
         self._drlLastClip = (0.0, 0.0) # holds last clipping points of dynamic range limiter
         #self.clear()
         self.opts = {
@@ -258,7 +261,8 @@ class PlotDataItem(GraphicsObject):
         if self.opts['fftMode'] == mode:
             return
         self.opts['fftMode'] = mode
-        self.xDisp = self.yDisp = None
+        self.xDisp   = self.yDisp   = None
+        self.xMapped = self.yMapped = None
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
@@ -276,7 +280,8 @@ class PlotDataItem(GraphicsObject):
         if self.opts['logMode'] == [xMode, yMode]:
             return
         self.opts['logMode'] = [xMode, yMode]
-        self.xDisp = self.yDisp = None
+        self.xMapped = self.yMapped = None # invalidata mapped data
+        self.xDisp   = self.yDisp   = None # invalidate display data
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
@@ -586,9 +591,10 @@ class PlotDataItem(GraphicsObject):
             if not isinstance(x, np.ndarray):
                 x = np.array(x)
             self.xData = x.view(np.ndarray)  # one last check to make sure there are no MetaArrays getting by
-        self._dataRect = None
-        self.xDisp = None
-        self.yDisp = None
+        self._dataRect = None # invalidate bounds for original data
+        self._dataRectMapped = None # invalidate bounds for mapped (e.g. log-scale) data
+        self.xDisp   = self.yDisp   = None
+        self.xMapped = self.yMapped = None
         profiler('set data')
 
         self.updateItems( styleUpdate = self.property('styleWasChanged') )
@@ -654,6 +660,19 @@ class PlotDataItem(GraphicsObject):
         else: # ...hide if not.
             self.scatter.hide()
 
+    def _applyLogMapping(self, x, y):
+        ### Updates the mapped (e.g. log-scale) data if needed ###
+        if self.xMapped is None:
+            self.xMapped = x
+            if self.opts['logMode'][0]:
+                with np.errstate(divide='ignore'):
+                    self.xMapped = np.log10(x)
+        if self.yMapped is None:
+            self.yMapped = y
+            if self.opts['logMode'][1]:
+                with np.errstate(divide='ignore'):
+                    self.yMapped = np.log10(y)
+        return (self.xMapped, self.yMapped)
 
     def getData(self):
         if self.xData is None:
@@ -692,16 +711,24 @@ class PlotDataItem(GraphicsObject):
         if self.opts['phasemapMode']:  # plot dV/dt vs V
             x = self.yData[:-1]
             y = np.diff(self.yData)/np.diff(self.xData)
-                
-        with np.errstate(divide='ignore'):
-            if self.opts['logMode'][0]:
-                x = np.log10(x)
-            if self.opts['logMode'][1]:
-                if np.issubdtype(y.dtype, np.floating):
-                    eps = np.finfo(y.dtype).eps
-                else:
-                    eps = 1
-                y = np.sign(y) * np.log10(np.abs(y)+eps)
+        old_y = y
+        x,y = self._applyLogMapping(x,y)
+        # print('yMapped:', self.yMapped)  
+        # with np.errstate(divide='ignore'):
+        #     if self.opts['logMode'][0]:
+        #         self.xMapped = np.log10(x)
+        #     else:
+        #         self.xMapped = x
+        #     if self.opts['logMode'][1]:
+        #         if np.issubdtype(y.dtype, np.floating):
+        #             eps = np.finfo(y.dtype).eps
+        #         else:
+        #             eps = 1
+        #         # testing:
+        #         # y = np.sign(y) * np.log10(np.abs(y)+eps)
+        #         y = np.log10(y)
+            # if self._dataRectMapped is None:
+            #     _update_dataRectMapped(x,y)
 
         ds = self.opts['downsample']
         if not isinstance(ds, int):
@@ -762,15 +789,19 @@ class PlotDataItem(GraphicsObject):
                 y = y1.reshape(n*2)
 
         if self.opts['dynamicRangeLimit'] is not None:
+            # print('mapped:', self.yMapped )
             if view_range is not None:
-                data_range = self.dataRect()
+                data_range = self.dataRectMapped()
                 if data_range is not None:
+                    # print('drange:', data_range)
+                    # print('vrange:', view_range)
                     view_height = view_range.height()
                     limit = self.opts['dynamicRangeLimit']
                     hyst  = self.opts['dynamicRangeHyst']
                     # never clip data if it fits into +/- (extended) limit * view height
                     if ( # note that "bottom" is the larger number, and "top" is the smaller one.
-                        not data_range.bottom() < view_range.top()     # never clip if all data is too small to see
+                        view_height > 0                                # never clip if the view does not show anything and would cause division by zero
+                        and not data_range.bottom() < view_range.top() # never clip if all data is too small to see
                         and not data_range.top() > view_range.bottom() # never clip if all data is too large to see
                         and data_range.height() > 2 * hyst * limit * view_height
                     ):
@@ -790,58 +821,97 @@ class PlotDataItem(GraphicsObject):
                         if not cache_is_good:
                             min_val = view_range.bottom() - limit * view_height
                             max_val = view_range.top()    + limit * view_height
-                            if( self.yDisp is not None              # Do we have an existing cache? 
-                                and min_val >= self._drlLastClip[0] # Are we reducing it further?
-                                and max_val <= self._drlLastClip[1] ):
-                                # if we need to clip further, we can work in-place on the output buffer
-                                # print('in-place:', end='')
-                                # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
-                                # np.clip(self.yDisp, out=self.yDisp, a_min=min_val, a_max=max_val)
-                                fn.clip_array(self.yDisp, min_val, max_val, out=self.yDisp)
-                                self._drlLastClip = (min_val, max_val)
-                                # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
-                                x = self.xDisp
-                                y = self.yDisp
-                            else:
-                                # if none of the shortcuts worked, we need to recopy from the full data
-                                # print('alloc:', end='')
-                                # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
-                                # y = np.clip(y, a_min=min_val, a_max=max_val)
-                                y = fn.clip_array(y, min_val, max_val)
-                                self._drlLastClip = (min_val, max_val)
-                                # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
+                            # print('alloc:', end='')
+                            # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
+                            # y = np.clip(y, a_min=min_val, a_max=max_val)
+                            y = fn.clip_array(y, min_val, max_val)
+                            self._drlLastClip = (min_val, max_val)
+                            # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
         self.xDisp = x
         self.yDisp = y
         self.setProperty('xViewRangeWasChanged', False)
         self.setProperty('yViewRangeWasChanged', False)
+        # print('xDisp:', self.xDisp )
+        # print('xData:', self.xData )
+        # print('xMap.:', self.xMapped )
         return self.xDisp, self.yDisp
+
+    def _prepare_dataRect(self, x, y):
+        ### find bounds of plotable data ###
+        if y is None or x is None:
+            return None
+        selection = np.isfinite(y) # We are looking for the bounds of the plottable data set. Infinite and Nan are ignored. 
+        try:
+            ymin = np.min( y[selection] ) # find minimum of all finite values
+            ymax = np.max( y[selection] ) # find maximum of all finite values
+        except ValueError: # is raised then there are no finite values
+            ymin = np.nan
+            ymax = np.nan
+        selection = np.isfinite(x) # We are looking for the bounds of the plottable data set. Infinite and Nan are ignored. 
+        try:
+            xmin = np.min( x[selection] ) # find minimum of all finite values
+            xmax = np.max( x[selection] ) # find maximum of all finite values
+        except ValueError: # is reaised then there are no finite values
+            xmin = np.nan
+            xmax = np.nan
+        return QtCore.QRectF(
+            QtCore.QPointF(xmin,ymin),
+            QtCore.QPointF(xmax,ymax) )
+
+    def _update_dataRectMapped(self):
+        ### Determines bounds of the plotable mapped (e.g. log-scale) dataset represented by x and y values ###
+        # At this time, dataRectMapped is only used in getData, which ensures xMapped and yMapped are updated in time.
+        self._dataRectMapped = self._prepare_dataRect(self.xMapped, self.yMapped)
+
+    def _update_dataRect(self):
+        ### Determines bounds of the original plotable dataset represented by x and y values ###
+        self._dataRect = self._prepare_dataRect(self.xData, self.yData)
+
+
+    def dataRectMapped(self):
+        """
+        Returns a bounding rectangle (as QRectF) for the plottable data.
+        If there is an active mapping function, such as logarithmic scaling, then bounds represent the mapped data. 
+        Will return None if there is no data or if all values (x or y) are NaN.
+        """
+        if not (self.opts['logMode'][0] or self.opts['logMode'][1]): # no log scaling is active.
+            return self.dataRect() # return bounds of unmmapped data
+        if self._dataRectMapped is None:
+            self._dataRectMapped = self._prepare_dataRect(self.xMapped, self.yMapped)
+        return self._dataRectMapped
 
     def dataRect(self):
         """
         Returns a bounding rectangle (as QRectF) for the full set of data.
         Will return None if there is no data or if all values (x or y) are NaN.
         """
-        if self._dataRect is not None:
-            return self._dataRect
-        if self.xData is None or self.yData is None:
-            return None
-        if len(self.xData) == 0: # avoid crash if empty data is represented by [] instead of None
-            return None
-        with warnings.catch_warnings(): 
-            # All-NaN data is handled by returning None; Explicit numpy warning is not needed.
-            warnings.simplefilter("ignore")
-            ymin = np.nanmin(self.yData)
-            if math.isnan( ymin ):
-                return None # most likely case for all-NaN data
-            xmin = np.nanmin(self.xData)
-            if math.isnan( xmin ):
-                return None # less likely case for all-NaN data
-            ymax = np.nanmax(self.yData)
-            xmax = np.nanmax(self.xData)
-        self._dataRect = QtCore.QRectF(
-            QtCore.QPointF(xmin,ymin),
-            QtCore.QPointF(xmax,ymax) )
+        if self._dataRect is None:
+            self._dataRect = self._prepare_dataRect(self.xData, self.yData)
+        # print('dataRect is ', self._dataRect)
         return self._dataRect
+        
+        # if self._dataRect is not None:
+        #     return self._dataRect
+        # if self.xData is None or self.yData is None:
+        #     return None
+        # # This is now handled when adding data:
+        # # if len(self.xData) == 0: # avoid crash if empty data is represented by [] instead of None
+        # #     return None
+        # with warnings.catch_warnings(): 
+        #     # All-NaN data is handled by returning None; Explicit numpy warning is not needed.
+        #     warnings.simplefilter("ignore")
+        #     ymin = np.nanmin(self.yData)
+        #     if math.isnan( ymin ):
+        #         return None # most likely case for all-NaN data
+        #     xmin = np.nanmin(self.xData)
+        #     if math.isnan( xmin ):
+        #         return None # less likely case for all-NaN data
+        #     ymax = np.nanmax(self.yData)
+        #     xmax = np.nanmax(self.xData)
+        # self._dataRect = QtCore.QRectF(
+        #     QtCore.QPointF(xmin,ymin),
+        #     QtCore.QPointF(xmax,ymax) )
+        # return self._dataRect
 
     def dataBounds(self, ax, frac=1.0, orthoRange=None):
         """
@@ -890,9 +960,12 @@ class PlotDataItem(GraphicsObject):
     def clear(self):
         self.xData = None
         self.yData = None
+        self.xMapped = None
+        self.yMapped = None
         self.xDisp = None
         self.yDisp = None
         self._dataRect = None
+        self._dataRectMapped = None
         self.curve.clear()
         self.scatter.clear()
 
@@ -926,7 +999,7 @@ class PlotDataItem(GraphicsObject):
             if( self.opts['clipToView']
                 or self.opts['autoDownsample']
             ):
-                self.xDisp = self.yDisp = None
+                self.xDisp = self.yDisp = None # only the display data needs to be invalidated, not the mapped data
                 update_needed = True
         if changed is None or changed[1]:
             # if ranges is not None:
