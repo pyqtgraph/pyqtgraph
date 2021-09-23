@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+import warnings
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 
@@ -71,6 +72,35 @@ def test_setData():
     pdi.setData([],[])
     assert pdi.xData is None
     assert pdi.yData is None
+    
+def test_nonfinite():
+    def _assert_equal_arrays(a1, a2):
+        assert a1.shape == a2.shape
+        for ( xtest, xgood ) in zip( a1, a2 ):
+            assert( (xtest == xgood) or (np.isnan(xtest) and np.isnan(xgood) ) ) 
+        
+    x = np.array([-np.inf, 0.0, 1.0,  2.0  , np.nan,   4.0 , np.inf])
+    y = np.array([    1.0, 0.0,-1.0, np.inf,   2.0 , np.nan,   0.0 ])
+    pdi = pg.PlotDataItem(x, y)
+    dataset = pdi.getDisplayDataset()
+    _assert_equal_arrays( dataset.x, x )
+    _assert_equal_arrays( dataset.y, y )
+   
+    with warnings.catch_warnings(): 
+        warnings.simplefilter("ignore")
+        x_log = np.log10(x)
+        y_log = np.log10(y)
+    x_log[ ~np.isfinite(x_log) ] = np.nan
+    y_log[ ~np.isfinite(y_log) ] = np.nan
+
+    pdi.setLogMode(True, True)
+    dataset = pdi.getDisplayDataset()
+    print( 'good x', x_log)
+    print( 'data x', dataset.x)
+    print( 'good y', y_log)
+    print( 'data y', dataset.y)
+    _assert_equal_arrays( dataset.x, x_log )
+    _assert_equal_arrays( dataset.y, y_log )
 
 def test_opts():
     # test that curve and scatter plot properties get updated from PlotDataItem methods

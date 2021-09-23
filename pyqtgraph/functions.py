@@ -2045,7 +2045,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         only values with 1 will connect to the previous point.  Def
     finiteCheck : bool, default Ture
         When false, the check for finite values will be skipped, which can
-        improve performance. If finite values are present in `x` or `y`,
+        improve performance. If nonfinite values are present in `x` or `y`,
         an empty QPainterPath will be generated.
     
     Returns
