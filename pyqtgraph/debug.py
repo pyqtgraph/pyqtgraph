@@ -1132,10 +1132,11 @@ class ThreadTrace(object):
     Used to debug freezing by starting a new thread that reports on the 
     location of other threads periodically.
     """
-    def __init__(self, interval=10.0):
+    def __init__(self, interval=10.0, logFile=None):
         self.interval = interval
         self.lock = Mutex()
         self._stop = False
+        self.logFile = logFile
         self.start()
 
     def stop(self):
@@ -1151,12 +1152,21 @@ class ThreadTrace(object):
         self.thread.start()
 
     def run(self):
+        iter = 0
+        if self.logFile is None:
+            printFile = sys.stdout
+        else:
+            printFile = open(self.logFile, 'w', encoding='utf8')
+
         while True:
             with self.lock:
                 if self._stop is True:
                     return
-                    
-            print("\n=============  THREAD FRAMES:  ================")
+
+            if self.logFile is not None:
+                print(f"\n=============  THREAD FRAMES {iter}:  ================")
+
+            printFile.write(f"\n=============  THREAD FRAMES {iter}:  ================\n")
             for id, frame in sys._current_frames().items():
                 if id == threading.current_thread().ident:
                     continue
@@ -1175,10 +1185,13 @@ class ThreadTrace(object):
                 if name is None:
                     name = "???"
 
-                print("<< thread %d \"%s\" >>" % (id, name))
-                traceback.print_stack(frame)
-            print("===============================================\n")
-            
+                printFile.write("<< thread %d \"%s\" >>\n" % (id, name))
+                tb = str(''.join(traceback.format_stack(frame)))
+                printFile.write(tb)
+                printFile.write("\n")
+            printFile.write("===============================================\n\n")
+
+            iter += 1
             time.sleep(self.interval)
 
 
