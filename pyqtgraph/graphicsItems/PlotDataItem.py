@@ -9,7 +9,7 @@ from .. import functions as fn
 from .. import debug as debug
 from .. import getConfigOption
 
-__all__ = ['PlotDataItem', 'PlotDataset']
+__all__ = ['PlotDataItem']
 
 class PlotDataset(object):
     """
