@@ -10,7 +10,6 @@ Contents:
     :maxdepth: 2
 
     plotdataitem
-    plotdataset
     plotitem
     imageitem
     colorbaritem

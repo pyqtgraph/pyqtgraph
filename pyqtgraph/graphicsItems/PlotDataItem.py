@@ -13,6 +13,7 @@ __all__ = ['PlotDataItem', 'PlotDataset']
 
 class PlotDataset(object):
     """
+    :orphan:
     .. warning:: This class is intended for internal use. The interface may change without warning.
 
     Holds collected information for a plotable dataset. 
