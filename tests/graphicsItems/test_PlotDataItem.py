@@ -95,10 +95,6 @@ def test_nonfinite():
 
     pdi.setLogMode(True, True)
     dataset = pdi.getDisplayDataset()
-    print( 'good x', x_log)
-    print( 'data x', dataset.x)
-    print( 'good y', y_log)
-    print( 'data y', dataset.y)
     _assert_equal_arrays( dataset.x, x_log )
     _assert_equal_arrays( dataset.y, y_log )
 
