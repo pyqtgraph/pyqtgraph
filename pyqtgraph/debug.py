@@ -1158,41 +1158,45 @@ class ThreadTrace(object):
         else:
             printFile = open(self.logFile, 'w', encoding='utf8')
 
-        while True:
-            with self.lock:
-                if self._stop is True:
-                    return
+        try:
+            while True:
+                with self.lock:
+                    if self._stop is True:
+                        return
 
-            if self.logFile is not None:
-                print(f"\n=============  THREAD FRAMES {iter}:  ================")
+                if self.logFile is not None:
+                    print(f"\n=============  THREAD FRAMES {iter}:  ================")
 
-            printFile.write(f"\n=============  THREAD FRAMES {iter}:  ================\n")
-            for id, frame in sys._current_frames().items():
-                if id == threading.current_thread().ident:
-                    continue
+                printFile.write(f"\n=============  THREAD FRAMES {iter}:  ================\n")
+                for id, frame in sys._current_frames().items():
+                    if id == threading.current_thread().ident:
+                        continue
 
-                # try to determine a thread name
-                try:
-                    name = threading._active.get(id, None)
-                except:
-                    name = None
-                if name is None:
+                    # try to determine a thread name
                     try:
-                        # QThread._names must be manually set by thread creators.
-                        name = QtCore.QThread._names.get(id)
+                        name = threading._active.get(id, None)
                     except:
                         name = None
-                if name is None:
-                    name = "???"
+                    if name is None:
+                        try:
+                            # QThread._names must be manually set by thread creators.
+                            name = QtCore.QThread._names.get(id)
+                        except:
+                            name = None
+                    if name is None:
+                        name = "???"
 
-                printFile.write("<< thread %d \"%s\" >>\n" % (id, name))
-                tb = str(''.join(traceback.format_stack(frame)))
-                printFile.write(tb)
-                printFile.write("\n")
-            printFile.write("===============================================\n\n")
+                    printFile.write("<< thread %d \"%s\" >>\n" % (id, name))
+                    tb = str(''.join(traceback.format_stack(frame)))
+                    printFile.write(tb)
+                    printFile.write("\n")
+                printFile.write("===============================================\n\n")
 
-            iter += 1
-            time.sleep(self.interval)
+                iter += 1
+                time.sleep(self.interval)
+        finally:
+            if self.logFile is not None:
+                printFile.close()
 
 
 class ThreadColor(object):
@@ -1242,4 +1246,3 @@ def enableFaulthandler():
         return True
     except ImportError:
         return False
-
