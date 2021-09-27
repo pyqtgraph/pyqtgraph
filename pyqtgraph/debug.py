@@ -167,13 +167,15 @@ def listObjs(regex='Q', typ=None):
         
 
     
-def findRefPath(startObj, endObj, maxLen=8, restart=True, seen={}, path=None, ignore=None):
+def findRefPath(startObj, endObj, maxLen=8, restart=True, seen=None, path=None, ignore=None):
     """Determine all paths of object references from startObj to endObj"""
     refs = []
     if path is None:
         path = [endObj]
     if ignore is None:
         ignore = {}
+    if seen is None:
+        seen = {}
     ignore[id(sys._getframe())] = None
     ignore[id(path)] = None
     ignore[id(seen)] = None
@@ -582,6 +584,7 @@ class Profiler(object):
 
 def profile(code, name='profile_run', sort='cumulative', num=30):
     """Common-use for cProfile"""
+    import pstats
     cProfile.run(code, name)
     stats = pstats.Stats(name)
     stats.sort_stats(sort)
@@ -800,7 +803,7 @@ class ObjTracker(object):
                 continue
             
             try:
-                ref = weakref.ref(obj)
+                ref = weakref.ref(o)
             except:
                 ref = None
             refs[oid] = ref
