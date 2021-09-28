@@ -9,6 +9,7 @@ Distributed under MIT/X11 license. See license.txt for more information.
 from __future__ import print_function
 
 import sys, traceback, time, gc, re, types, weakref, inspect, os, cProfile, threading
+import contextlib
 import warnings
 from time import perf_counter
 from numpy import ndarray
@@ -19,6 +20,17 @@ if sys.version.startswith("3.8") and QT_LIB == "PySide2":
     if tuple(map(int, PySide2.__version__.split("."))) < (5, 14):
         warnings.warn("Due to PYSIDE-1140, ThreadChase and ThreadColor won't work")
 from .util.mutex import Mutex
+
+
+# credit to Wolph: https://stackoverflow.com/a/17603000
+@contextlib.contextmanager
+def open_maybe_console(filename=None):
+    fh = sys.stdout if filename is None else open(filename, "w", encoding='utf-8')
+    try:
+        yield fh
+    finally:
+        if fh is not sys.stdout:
+            fh.close()
 
 
 __ftraceDepth = 0
@@ -1156,19 +1168,20 @@ class ThreadTrace(object):
 
     def run(self):
         iter = 0
-        if self.logFile is None:
-            printFile = sys.stdout
-        else:
-            printFile = open(self.logFile, 'w', encoding='utf8')
+        # if self.logFile is None:
+        #     printFile = sys.stdout
+        # else:
+        #     printFile = open(self.logFile, 'w', encoding='utf8')
 
-        try:
+        # try:
+        with open_maybe_console(self.logFile) as printFile:
             while True:
                 with self.lock:
                     if self._stop is True:
                         return
 
-                if self.logFile is not None:
-                    print(f"\n=============  THREAD FRAMES {iter}:  ================")
+                # if self.logFile is not None:
+                #     print(f"\n=============  THREAD FRAMES {iter}:  ================")
 
                 printFile.write(f"\n=============  THREAD FRAMES {iter}:  ================\n")
                 for id, frame in sys._current_frames().items():
@@ -1197,9 +1210,9 @@ class ThreadTrace(object):
 
                 iter += 1
                 time.sleep(self.interval)
-        finally:
-            if self.logFile is not None:
-                printFile.close()
+        # finally:
+        #     if self.logFile is not None:
+        #         printFile.close()
 
 
 class ThreadColor(object):
