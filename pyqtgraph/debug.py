@@ -1168,20 +1168,11 @@ class ThreadTrace(object):
 
     def run(self):
         iter = 0
-        # if self.logFile is None:
-        #     printFile = sys.stdout
-        # else:
-        #     printFile = open(self.logFile, 'w', encoding='utf8')
-
-        # try:
         with open_maybe_console(self.logFile) as printFile:
             while True:
                 with self.lock:
                     if self._stop is True:
                         return
-
-                # if self.logFile is not None:
-                #     print(f"\n=============  THREAD FRAMES {iter}:  ================")
 
                 printFile.write(f"\n=============  THREAD FRAMES {iter}:  ================\n")
                 for id, frame in sys._current_frames().items():
@@ -1207,12 +1198,10 @@ class ThreadTrace(object):
                     printFile.write(tb)
                     printFile.write("\n")
                 printFile.write("===============================================\n\n")
+                printFile.flush()
 
                 iter += 1
                 time.sleep(self.interval)
-        # finally:
-        #     if self.logFile is not None:
-        #         printFile.close()
 
 
 class ThreadColor(object):
