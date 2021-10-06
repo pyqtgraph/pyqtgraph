@@ -78,6 +78,6 @@ class GLGradientLegendItem(GLGraphicsItem):
             x = 1.1 * self.size[0] + self.pos[0]
             y = self.size[1] - labelPosition * self.size[1] + self.pos[1] + 8
             ##todo: fonts
-            painter.drawText(x, y, labelText)
+            painter.drawText(QtCore.QPointF(x, y), labelText)
         painter.end()
 
