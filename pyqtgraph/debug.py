@@ -29,7 +29,8 @@ def open_maybe_console(filename=None):
     try:
         yield fh
     finally:
-        fh.close()
+        if fh is not sys.stdout:
+            fh.close()
 
 
 __ftraceDepth = 0
