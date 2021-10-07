@@ -26,8 +26,10 @@ from .util.mutex import Mutex
 @contextlib.contextmanager
 def open_maybe_console(filename=None):
     fh = sys.stdout if filename is None else open(filename, "w", encoding='utf-8')
-    yield fh
-    fh.close()
+    try:
+        yield fh
+    finally:
+        fh.close()
 
 
 __ftraceDepth = 0
