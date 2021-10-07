@@ -1123,7 +1123,10 @@ def transformCoordinates(tr, coords, transpose=False):
     m = m[:, :-1]
     
     ## map coordinates and return
-    mapped = (m*coords).sum(axis=1)  ## apply scale/rotate
+    # nan or inf points will not plot, but should not generate warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        mapped = (m*coords).sum(axis=1)  ## apply scale/rotate
     mapped += translate
     
     if transpose:
@@ -2042,7 +2045,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         only values with 1 will connect to the previous point.  Def
     finiteCheck : bool, default Ture
         When false, the check for finite values will be skipped, which can
-        improve performance. If finite values are present in `x` or `y`,
+        improve performance. If nonfinite values are present in `x` or `y`,
         an empty QPainterPath will be generated.
     
     Returns
