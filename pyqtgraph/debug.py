@@ -9,6 +9,7 @@ Distributed under MIT/X11 license. See license.txt for more information.
 from __future__ import print_function
 
 import sys, traceback, time, gc, re, types, weakref, inspect, os, cProfile, threading
+import contextlib
 import warnings
 from time import perf_counter
 from numpy import ndarray
@@ -19,6 +20,17 @@ if sys.version.startswith("3.8") and QT_LIB == "PySide2":
     if tuple(map(int, PySide2.__version__.split("."))) < (5, 14):
         warnings.warn("Due to PYSIDE-1140, ThreadChase and ThreadColor won't work")
 from .util.mutex import Mutex
+
+
+# credit to Wolph: https://stackoverflow.com/a/17603000
+@contextlib.contextmanager
+def open_maybe_console(filename=None):
+    fh = sys.stdout if filename is None else open(filename, "w", encoding='utf-8')
+    try:
+        yield fh
+    finally:
+        if fh is not sys.stdout:
+            fh.close()
 
 
 __ftraceDepth = 0
@@ -167,13 +179,15 @@ def listObjs(regex='Q', typ=None):
         
 
     
-def findRefPath(startObj, endObj, maxLen=8, restart=True, seen={}, path=None, ignore=None):
+def findRefPath(startObj, endObj, maxLen=8, restart=True, seen=None, path=None, ignore=None):
     """Determine all paths of object references from startObj to endObj"""
     refs = []
     if path is None:
         path = [endObj]
     if ignore is None:
         ignore = {}
+    if seen is None:
+        seen = {}
     ignore[id(sys._getframe())] = None
     ignore[id(path)] = None
     ignore[id(seen)] = None
@@ -582,6 +596,7 @@ class Profiler(object):
 
 def profile(code, name='profile_run', sort='cumulative', num=30):
     """Common-use for cProfile"""
+    import pstats
     cProfile.run(code, name)
     stats = pstats.Stats(name)
     stats.sort_stats(sort)
@@ -800,7 +815,7 @@ class ObjTracker(object):
                 continue
             
             try:
-                ref = weakref.ref(obj)
+                ref = weakref.ref(o)
             except:
                 ref = None
             refs[oid] = ref
@@ -1132,10 +1147,11 @@ class ThreadTrace(object):
     Used to debug freezing by starting a new thread that reports on the 
     location of other threads periodically.
     """
-    def __init__(self, interval=10.0):
+    def __init__(self, interval=10.0, logFile=None):
         self.interval = interval
         self.lock = Mutex()
         self._stop = False
+        self.logFile = logFile
         self.start()
 
     def stop(self):
@@ -1151,35 +1167,41 @@ class ThreadTrace(object):
         self.thread.start()
 
     def run(self):
-        while True:
-            with self.lock:
-                if self._stop is True:
-                    return
-                    
-            print("\n=============  THREAD FRAMES:  ================")
-            for id, frame in sys._current_frames().items():
-                if id == threading.current_thread().ident:
-                    continue
+        iter = 0
+        with open_maybe_console(self.logFile) as printFile:
+            while True:
+                with self.lock:
+                    if self._stop is True:
+                        return
 
-                # try to determine a thread name
-                try:
-                    name = threading._active.get(id, None)
-                except:
-                    name = None
-                if name is None:
+                printFile.write(f"\n=============  THREAD FRAMES {iter}:  ================\n")
+                for id, frame in sys._current_frames().items():
+                    if id == threading.current_thread().ident:
+                        continue
+
+                    # try to determine a thread name
                     try:
-                        # QThread._names must be manually set by thread creators.
-                        name = QtCore.QThread._names.get(id)
+                        name = threading._active.get(id, None)
                     except:
                         name = None
-                if name is None:
-                    name = "???"
+                    if name is None:
+                        try:
+                            # QThread._names must be manually set by thread creators.
+                            name = QtCore.QThread._names.get(id)
+                        except:
+                            name = None
+                    if name is None:
+                        name = "???"
 
-                print("<< thread %d \"%s\" >>" % (id, name))
-                traceback.print_stack(frame)
-            print("===============================================\n")
-            
-            time.sleep(self.interval)
+                    printFile.write("<< thread %d \"%s\" >>\n" % (id, name))
+                    tb = str(''.join(traceback.format_stack(frame)))
+                    printFile.write(tb)
+                    printFile.write("\n")
+                printFile.write("===============================================\n\n")
+                printFile.flush()
+
+                iter += 1
+                time.sleep(self.interval)
 
 
 class ThreadColor(object):
@@ -1229,4 +1251,3 @@ def enableFaulthandler():
         return True
     except ImportError:
         return False
-
