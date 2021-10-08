@@ -152,7 +152,6 @@ class ImageView(QtGui.QWidget):
         self.view.addItem(self.normRoi)
         self.normRoi.hide()
         self.roiCurves = []
-        self.roiCurve = self.ui.roiPlot.plot()
         self.timeLine = InfiniteLine(0, movable=True)
         if getConfigOption('background')=='w':
             self.timeLine.setPen((20, 80,80, 200))
@@ -567,12 +566,12 @@ class ImageView(QtGui.QWidget):
         if self.ui.roiBtn.isChecked():
             showRoiPlot = True
             self.roi.show()
-            #self.ui.roiPlot.show()
             self.ui.roiPlot.setMouseEnabled(True, True)
             self.ui.splitter.setSizes([int(self.height()*0.6), int(self.height()*0.4)])
             self.ui.splitter.handle(1).setEnabled(True)
-            self.roiCurve.show()
             self.roiChanged()
+            for c in self.roiCurves:
+                c.show()
             self.ui.roiPlot.showAxis('left')
         else:
             self.roi.hide()
@@ -588,13 +587,11 @@ class ImageView(QtGui.QWidget):
             self.ui.roiPlot.setXRange(mn, mx, padding=0.01)
             self.timeLine.show()
             self.timeLine.setBounds([mn, mx])
-            self.ui.roiPlot.show()
             if not self.ui.roiBtn.isChecked():
                 self.ui.splitter.setSizes([self.height()-35, 35])
                 self.ui.splitter.handle(1).setEnabled(False)
         else:
             self.timeLine.hide()
-            #self.ui.roiPlot.hide()
             
         self.ui.roiPlot.setVisible(showRoiPlot)
 
