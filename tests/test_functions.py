@@ -39,6 +39,8 @@ def test_interpolateArray_order1():
 
 
 def check_interpolateArray(order):
+    pytest.importorskip("scipy")
+
     def interpolateArray(data, x):
         result = pg.interpolateArray(data, x, order=order)
         assert result.shape == x.shape[:-1] + data.shape[x.shape[-1]:]
