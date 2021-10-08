@@ -94,6 +94,9 @@ class ViewBox(GraphicsWidget):
     sigStateChanged = QtCore.Signal(object)
     sigTransformChanged = QtCore.Signal(object)
     sigResized = QtCore.Signal(object)
+    sigMouseDragZoomed = QtCore.Signal(object, object)
+    sigMouseWheelZoomed = QtCore.Signal(object, object)
+    sigHistoryChanged = QtCore.Signal(object)
 
     ## mouse modes
     PanMode = 3
@@ -1219,6 +1222,7 @@ class ViewBox(GraphicsWidget):
         self.scaleBy(s, center)
         ev.accept()
         self.sigRangeChangedManually.emit(mask)
+        self.sigMouseWheelZoomed.emit(ev, axis)
 
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.MouseButton.RightButton and self.menuEnabled():
@@ -1260,6 +1264,7 @@ class ViewBox(GraphicsWidget):
                     self.rbScaleBox.hide()
                     ax = QtCore.QRectF(Point(ev.buttonDownPos(ev.button())), Point(pos))
                     ax = self.childGroup.mapRectFromParent(ax)
+                    self.sigMouseDragZoomed.emit(ev, axis)
                     self.showAxRect(ax)
                     self.axHistoryPointer += 1
                     self.axHistory = self.axHistory[:self.axHistoryPointer] + [ax]
@@ -1325,6 +1330,7 @@ class ViewBox(GraphicsWidget):
         ptr = max(0, min(len(self.axHistory)-1, self.axHistoryPointer+d))
         if ptr != self.axHistoryPointer:
             self.axHistoryPointer = ptr
+            self.sigHistoryChanged.emit(d)
             self.showAxRect(self.axHistory[ptr])
 
     def updateScaleBox(self, p1, p2):
@@ -1468,7 +1474,7 @@ class ViewBox(GraphicsWidget):
 
         bounds = QtCore.QRectF(range[0][0], range[1][0], range[0][1]-range[0][0], range[1][1]-range[1][0])
         return bounds
-        
+
     def update(self, *args, **kwargs):
         self.prepareForPaint()
         GraphicsWidget.update(self, *args, **kwargs)
@@ -1736,3 +1742,4 @@ class ViewBox(GraphicsWidget):
 
 
 from .ViewBoxMenu import ViewBoxMenu
+

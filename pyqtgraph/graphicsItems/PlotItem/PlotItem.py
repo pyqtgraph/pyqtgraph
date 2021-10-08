@@ -135,6 +135,10 @@ class PlotItem(GraphicsWidget):
         self.vb = viewBox
         self.vb.sigStateChanged.connect(self.viewStateChanged)
 
+        # A set containing view boxes which are stacked underneath the top level view. These views will be needed
+        # in order to support multiple axes on the same plot. This set will remain empty if the plot has only one set of axes
+        self.stackedViews = weakref.WeakSet()
+
         # Enable or disable plotItem menu
         self.setMenuEnabled(enableMenu, None)
         
@@ -143,6 +147,7 @@ class PlotItem(GraphicsWidget):
         self.vb.sigRangeChanged.connect(self.sigRangeChanged)
         self.vb.sigXRangeChanged.connect(self.sigXRangeChanged)
         self.vb.sigYRangeChanged.connect(self.sigYRangeChanged)
+        self.vb.sigResized.connect(self.updateStackedViews)
         
         self.layout.addItem(self.vb, 2, 1)
         self.alpha = 1.0
@@ -306,7 +311,7 @@ class PlotItem(GraphicsWidget):
         visibleAxes = ['left', 'bottom']
         visibleAxes.extend(axisItems.keys()) # Note that it does not matter that this adds
                                              # some values to visibleAxes a second time
-        
+
         for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
             if k in self.axes:
                 if k not in axisItems:
@@ -339,7 +344,90 @@ class PlotItem(GraphicsWidget):
             axis.setFlag(axis.GraphicsItemFlag.ItemNegativeZStacksBehindParent)           
             axisVisible = k in visibleAxes
             self.showAxis(k, axisVisible)
-        
+
+    def addAxis(self, axis, name, plotDataItem=None):
+        """
+        Add an axis to this plot by creating a new view box to link it with. Links the PlotDataItem with this axis if provided
+
+        Parameters
+        ----------
+        axis: AxisItem
+              The axis to be added to this PlotItem. A new view box will be created and linked with this axis
+        name: str
+              The names associated with this axis item. Will be used by this PlotItem to refer to this axis
+        plotDataItem: PlotDataItem
+                      The plot data that will be linked with the created axis. If None, then no plot data will be linked
+                      with this axis to start with
+        """
+
+        # Create a new view box to link this axis with
+        self.axes[str(name)] = {'item': axis, 'pos': None}  # The None will become an actual position in rebuildLayout() below
+        view = ViewBox()
+        view.setXLink(self)  # Link this view to the shared x-axis of this plot item  TODO: Allow for multiple x axes
+        view.setMouseMode(self.vb.state['mouseMode'])  # Ensure that mouse behavior is consistent between stacked views
+        axis.linkToView(view)
+        if plotDataItem is not None:
+            view.addItem(plotDataItem)
+
+        self.scene().addItem(view)
+        self.addStackedView(view)
+
+        # Rebuilding the layout of the plot item will put the new axis in the correct place
+        self.rebuildLayout()
+
+        self.updateStackedViews()
+
+    def addStackedView(self, view):
+        """
+        Add a view that will be stacked underneath the top level view box. Any mouse or key events handles by the top
+        level view will be propagated through all the stacked views added here
+
+        Parameters
+        ----------
+        view: ViewBox
+              The view to be added. Events handled by the top level view box will be passed through to this one as well
+        """
+
+        self.stackedViews.add(view)
+        # These signals will be emitted by the top level view when it handles these events
+        self.vb.sigMouseDragZoomed.connect(view.mouseDragEvent)
+        self.vb.sigMouseWheelZoomed.connect(view.wheelEvent)
+        self.vb.sigHistoryChanged.connect(view.scaleHistory)
+
+    def updateStackedViews(self):
+        """
+        Callback for resizing stacked views when the geometry of their top level view changes
+        """
+        for view in self.stackedViews:
+            view.setGeometry(self.vb.sceneBoundingRect())
+            view.linkedViewChanged(self.vb, view.XAxis)
+
+    def linkDataToAxis(self, plotDataItem, axisName):
+        """
+        Links the input PlotDataItem to the axis with the given name. Raises an exception if that axis does not exist.
+        Unlinks the data from any view it was previously linked to.
+
+        Parameters
+        ----------
+        plotDataIem: PlotDataItem
+              The data to link with the input axis
+        axisName: str
+              The name of the axis to link the data with
+        """
+
+        if axisName not in self.axes.keys():
+            # Fail noisily if the user asked for a non-existent axis
+            raise Exception(f'Could not find axis: {axisName} to link data with')
+
+        # If this data is being moved from an existing view box, unlink that view box first
+        currentView = plotDataItem.getViewBox()
+        if currentView is not None:
+            currentView.removeItem(plotDataItem)
+            plotDataItem.forgetViewBox()
+
+        axisToLink = self.axes.get(axisName)['item']
+        axisToLink.linkedView().addItem(plotDataItem)
+
     def setLogMode(self, x=None, y=None):
         """
         Set log scaling for x and/or y axes.
@@ -663,6 +751,43 @@ class PlotItem(GraphicsWidget):
         self.addItem(item, params=params)
         
         return item
+
+    def clearLayout(self):
+        """
+        Remove all items from the layout, but leave them intact in the scene so that we can replace them in a new
+        layout. See removeItem(), clearPlots(), or clear() if removing the items themselves is required.
+        """
+        while self.layout.count() > 0:
+            item = self.layout.itemAt(0)
+            self.layout.removeAt(0)
+
+    def rebuildLayout(self):
+        """
+        Rebuilds the layout for this PlotItem. This allows users to dynamically add additional axes to existing
+        plots and have the plot automatically rebuild its layout, without the user having to create a new plot from scratch
+        """
+        self.clearLayout()
+
+        lo = {
+            "left": [],
+            "right": [],
+            "top": [],
+            "bottom": [],
+        }
+        allAxes = [val['item'] for val in self.axes.values()]
+        for a in allAxes:
+            lo[a.orientation].append(a)
+        vx = len(lo["left"])
+        vy = 1 + len(lo["top"])
+
+        self.layout.addItem(self.vb, vy, vx)
+
+        for x, a in enumerate(lo["left"] + [None] + lo["right"]):
+            if a is not None:
+                self.layout.addItem(a, vy, x)
+        for y, a in enumerate([None] + lo["top"] + [None] + lo["bottom"]):
+            if a is not None:
+                self.layout.addItem(a, y, vx)
 
     def addLegend(self, offset=(30, 30), **kwargs):
         """
