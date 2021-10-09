@@ -2,7 +2,7 @@ from . import BoolParameterItem, SimpleParameter
 from .basetypes import GroupParameterItem, GroupParameter, WidgetParameterItem
 from .list import ListParameter
 from .slider import Emitter
-from .. import ParameterItem
+from ..ParameterItem import ParameterItem
 from ... import functions as fn
 from ...Qt import QtWidgets
 

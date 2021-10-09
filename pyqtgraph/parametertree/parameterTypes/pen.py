@@ -1,5 +1,5 @@
 from .basetypes import WidgetParameterItem
-from .. import Parameter
+from ..Parameter import Parameter
 from ... import functions as fn
 from ...Qt import QtWidgets, QtGui, QtCore
 from ...widgets.PenSelectorDialog import PenSelectorDialog
