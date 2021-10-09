@@ -71,6 +71,7 @@ pyqtgraph-0.12.3
     - #1957 Bump minimum numpy version to 1.18
     - #1968 Fix ImageView calling deprecated QGraphicsItem.scale()
     - #1985 delegate float LUTs to makeARGB with warning
+    - #2014 Replace couple absolute imports with relative imports
 
 pyqtgraph-0.12.2
 
