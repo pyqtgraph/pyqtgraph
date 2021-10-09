@@ -2,7 +2,7 @@
 """
 Demonstrates a way to put multiple axes around a single plot.
 """
-import initExample  ## Add path to library (just for examples; you do not need this)
+import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
 

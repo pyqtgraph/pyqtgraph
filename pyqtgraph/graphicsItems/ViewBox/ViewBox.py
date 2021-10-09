@@ -94,7 +94,7 @@ class ViewBox(GraphicsWidget):
     sigStateChanged = QtCore.Signal(object)
     sigTransformChanged = QtCore.Signal(object)
     sigResized = QtCore.Signal(object)
-    sigMouseDragZoomed = QtCore.Signal(object, object)
+    sigMouseDragged = QtCore.Signal(object, object)
     sigMouseWheelZoomed = QtCore.Signal(object, object)
     sigHistoryChanged = QtCore.Signal(object)
 
@@ -1264,7 +1264,7 @@ class ViewBox(GraphicsWidget):
                     self.rbScaleBox.hide()
                     ax = QtCore.QRectF(Point(ev.buttonDownPos(ev.button())), Point(pos))
                     ax = self.childGroup.mapRectFromParent(ax)
-                    self.sigMouseDragZoomed.emit(ev, axis)
+                    self.sigMouseDragged.emit(ev, axis)
                     self.showAxRect(ax)
                     self.axHistoryPointer += 1
                     self.axHistory = self.axHistory[:self.axHistoryPointer] + [ax]
@@ -1283,6 +1283,9 @@ class ViewBox(GraphicsWidget):
                 if x is not None or y is not None:
                     self.translateBy(x=x, y=y)
                 self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+                if axis is None:
+                    # This event happened directly in the view box, so propagate to any stacked views
+                    self.sigMouseDragged.emit(ev, axis)
         elif ev.button() & QtCore.Qt.MouseButton.RightButton:
             #print "vb.rightDrag"
             if self.state['aspectLocked'] is not False:

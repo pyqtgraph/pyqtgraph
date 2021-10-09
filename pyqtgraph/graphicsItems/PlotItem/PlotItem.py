@@ -390,7 +390,7 @@ class PlotItem(GraphicsWidget):
 
         self.stackedViews.add(view)
         # These signals will be emitted by the top level view when it handles these events
-        self.vb.sigMouseDragZoomed.connect(view.mouseDragEvent)
+        self.vb.sigMouseDragged.connect(view.mouseDragEvent)
         self.vb.sigMouseWheelZoomed.connect(view.wheelEvent)
         self.vb.sigHistoryChanged.connect(view.scaleHistory)
 
@@ -758,7 +758,6 @@ class PlotItem(GraphicsWidget):
         layout. See removeItem(), clearPlots(), or clear() if removing the items themselves is required.
         """
         while self.layout.count() > 0:
-            item = self.layout.itemAt(0)
             self.layout.removeAt(0)
 
     def rebuildLayout(self):
