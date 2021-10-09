@@ -1,6 +1,8 @@
 import builtins
 
-from .. import ParameterItem, Parameter
+from ..ParameterItem import ParameterItem
+from ..Parameter import Parameter
+
 from ... import functions as fn
 from ...Qt import QtWidgets, QtCore, QtGui
 from ... import icons

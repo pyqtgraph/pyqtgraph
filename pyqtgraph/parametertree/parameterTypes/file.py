@@ -2,7 +2,7 @@ import os
 import re
 
 from .str import StrParameterItem
-from .. import Parameter
+from ..Parameter import Parameter
 from ...Qt import QtWidgets, QtGui, QtCore
 
 

@@ -1,5 +1,5 @@
 from ...Qt import QtWidgets, QtCore
-from .. import Parameter
+from ..Parameter import Parameter
 from .basetypes import WidgetParameterItem
 
 
