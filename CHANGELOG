@@ -1,3 +1,77 @@
+pyqtgraph-0.12.3
+
+  Highlights:
+    - PlotCurveItem render speed is now substantially faster
+    - #1868/#1873 Example app now has filter text input
+    - #1910 PlotSpeedTest now has parameter tree control panel
+
+  New Features:
+    - #1844 More parameter item types (File, Calendar, ProgressBar, Font, Pen, Slider)
+    - #1865 Matplotlib colormaps viridis, plasma, magma and inferno are now included in pyqtgraph
+    - #1911 Extend Colormap with HSL cycles and subset generation
+    - #1932 Make anti-aliasing optional for paintGL in PlotCurveItem
+    - #1944 Expand use of QColor functions/methods, including setNamedColor
+    - #1952 Add checklist parameter item
+    - #1998 ThreadTrace can now save to a file
+
+  Performance Enhancement:
+    - #1927 Reduce ColorMap inefficiencies
+    - #1956 use QByteArray as backing store in arrayToQPath
+    - #1965 perform arrayToQPath in chunks
+
+  Bug Fixes:
+    - #1845 Fix zoom behavior with showGrid by separating mouse events stolen by AxisItem
+    - #1860 RemoteGraphicsView and RemoteSpeedTest now work under windows venv environments
+    - #1865 Fixed matplotlib colormap importer code
+    - #1869 Fix ColorBarItem tick position on export
+    - #1871 Allow adding items to GLViewWidget before showing plot
+    - #1875 Fix calls in mouse methods in GLViewWidgets due to missing event.localPos() in PyQt6
+    - #1876 Fix for improper placement of ROI handle positions in some cases
+    - #1889/#2003 Fix call to drawText in GLTextItem and GLGradientLegendItem on Python 3.10
+    - #1897/#1902 Re-enable "experimental" feature with fix for PlotCurveItem with OpenGL on Windows
+    - #1907 Fix GLVolumeItem example for arm64 platforms
+    - #1909 Check if AxisItem.label is None before and exit early in resizeEvent
+    - #1920 arrayToQPath can handle empty paths
+    - #1936 QPolygonF creation can now handle empty arrays
+    - #1968 Fix output of clip_array in colormap.modulatedBarData not being assigned
+    - #1973 Fix PlotItem.updateDecimate unhiding intentionally hidden curves
+    - #1974 Fix ImageView levelMode with levelMode == 'rgba'
+    - #1987 Fix HistogramLUTItem itemChanged with use of autoLevel
+    - #2009 Fix ROI curves hidding in ImageView
+
+  API/Behavior Changes:
+    - #1992 Reverted to traditional log10 mode for PlotDataItem 
+    - #1840 Allow border=False in GraphicsLayout
+    - #1846 Reduced pollution to pg.namespace
+    - #1853 ColorMap.getColors and getStops behavior changes
+    - #1864 Draw GradientLegend in ViewBox coordinates
+    - #1885 Raise TypeError instead of general Exception if functions.eq is unable to determine equality
+    - #1903 Cleanup GLViewWidget
+    - #1908 More readable parameters for ColorBarItem
+    - #1914 Emit deprecation warning for use of pyqtgraph.ptime
+    - #1928 Restore previous signature of TargetItem.setPos
+    - #1940 fix log mode by reverting to previous formulation
+    - #1954 Deprecate use of values opt for list parameter type
+    - #1995 ColorButton now takes optional padding argument instead of hardcoded value of 6
+
+  Other:
+    - #1862/#1901 MetaArray now under deprecation warning, to be removed in a future version
+    - #1892 Add GLPainterItem Example
+    - #1844 Debugged elusive intermitted CI segfault
+    - #1870/#1891 Updated README.md
+    - #1895 Update CONTRIBUTING.md 
+    - #1913 Bump sphinx and theme versions
+    - #1919 Re-organize paramtypes
+    - #1935 Remove some unused imports
+    - #1939 Remove usage of python2_3.py
+    - #1941 Remove str casting of QTextEdit.toPlainText output
+    - #1942 Add EOF newline to files missing it
+    - #1943 Remove python2 code paths
+    - #1951 Fix typos in docs
+    - #1957 Bump minimum numpy version to 1.18
+    - #1968 Fix ImageView calling deprecated QGraphicsItem.scale()
+    - #1985 delegate float LUTs to makeARGB with warning
+
 pyqtgraph-0.12.2
 
   Highlights
