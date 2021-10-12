@@ -219,9 +219,15 @@ class ViewBoxMenu(QtGui.QMenu):
 
     def set3ButtonMode(self):
         self.view().setLeftButtonAction('pan')
+        if len(self.view().stackedViews) > 0:
+            for view in self.view().stackedViews:
+                view.setLeftButtonAction('pan')
         
     def set1ButtonMode(self):
         self.view().setLeftButtonAction('rect')
+        if len(self.view().stackedViews) > 0:
+            for view in self.view().stackedViews:
+                view.setLeftButtonAction('rect')
         
     def setViewList(self, views):
         names = ['']

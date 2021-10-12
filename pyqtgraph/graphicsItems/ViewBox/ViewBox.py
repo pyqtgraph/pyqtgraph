@@ -191,6 +191,12 @@ class ViewBox(GraphicsWidget):
         self.childGroup = ChildGroup(self)
         self.childGroup.itemsChangedListeners.append(self)
 
+        # A set containing view boxes which are stacked underneath the top level view. These views will be needed
+        # in order to support multiple axes on the same plot. This set will remain empty if the plot has only one set of axes
+        self.stackedViews = weakref.WeakSet()
+        self.isTopLevel = True  # True if this view box is the top of any stacked view, false otherwise
+        self.sigResized.connect(self.updateStackedViews)
+
         self.background = QtGui.QGraphicsRectItem(self.rect())
         self.background.setParentItem(self)
         self.background.setZValue(-1e6)
@@ -1050,6 +1056,14 @@ class ViewBox(GraphicsWidget):
         finally:
             view.blockLink(False)
 
+    def updateStackedViews(self):
+        """
+        Callback for resizing stacked views when the geometry of their top level view changes
+        """
+        for view in self.stackedViews:
+            view.setGeometry(self.sceneBoundingRect())
+            view.linkedViewChanged(self, view.XAxis)
+
     def screenGeometry(self):
         """return the screen geometry of the viewbox"""
         v = self.getViewWidget()
@@ -1281,6 +1295,10 @@ class ViewBox(GraphicsWidget):
 
                 self._resetTarget()
                 if x is not None or y is not None:
+                    if not self.isTopLevel:
+                        # Prevent each view in the stack from scrolling the same x axis at the same time
+                        # TODO: Something better in the case of multiple x axes
+                        x = None
                     self.translateBy(x=x, y=y)
                 self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
                 if axis is None:
@@ -1302,10 +1320,15 @@ class ViewBox(GraphicsWidget):
             x = s[0] if mouseEnabled[0] == 1 else None
             y = s[1] if mouseEnabled[1] == 1 else None
 
+            if not self.isTopLevel:  # TODO: Like above, also something better than this
+                x = None
+
             center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.MouseButton.RightButton)))
             self._resetTarget()
             self.scaleBy(x=x, y=y, center=center)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+            if axis is None:
+                self.sigMouseDragged.emit(ev, axis)
 
     def keyPressEvent(self, ev):
         """

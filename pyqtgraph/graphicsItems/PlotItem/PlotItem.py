@@ -135,10 +135,6 @@ class PlotItem(GraphicsWidget):
         self.vb = viewBox
         self.vb.sigStateChanged.connect(self.viewStateChanged)
 
-        # A set containing view boxes which are stacked underneath the top level view. These views will be needed
-        # in order to support multiple axes on the same plot. This set will remain empty if the plot has only one set of axes
-        self.stackedViews = weakref.WeakSet()
-
         # Enable or disable plotItem menu
         self.setMenuEnabled(enableMenu, None)
         
@@ -147,7 +143,6 @@ class PlotItem(GraphicsWidget):
         self.vb.sigRangeChanged.connect(self.sigRangeChanged)
         self.vb.sigXRangeChanged.connect(self.sigXRangeChanged)
         self.vb.sigYRangeChanged.connect(self.sigYRangeChanged)
-        self.vb.sigResized.connect(self.updateStackedViews)
         
         self.layout.addItem(self.vb, 2, 1)
         self.alpha = 1.0
@@ -365,6 +360,7 @@ class PlotItem(GraphicsWidget):
         view = ViewBox()
         view.setXLink(self)  # Link this view to the shared x-axis of this plot item  TODO: Allow for multiple x axes
         view.setMouseMode(self.vb.state['mouseMode'])  # Ensure that mouse behavior is consistent between stacked views
+        view.isTopLevel = False
         axis.linkToView(view)
         if plotDataItem is not None:
             view.addItem(plotDataItem)
@@ -375,7 +371,7 @@ class PlotItem(GraphicsWidget):
         # Rebuilding the layout of the plot item will put the new axis in the correct place
         self.rebuildLayout()
 
-        self.updateStackedViews()
+        self.vb.updateStackedViews()
 
     def addStackedView(self, view):
         """
@@ -388,19 +384,11 @@ class PlotItem(GraphicsWidget):
               The view to be added. Events handled by the top level view box will be passed through to this one as well
         """
 
-        self.stackedViews.add(view)
+        self.vb.stackedViews.add(view)
         # These signals will be emitted by the top level view when it handles these events
         self.vb.sigMouseDragged.connect(view.mouseDragEvent)
         self.vb.sigMouseWheelZoomed.connect(view.wheelEvent)
         self.vb.sigHistoryChanged.connect(view.scaleHistory)
-
-    def updateStackedViews(self):
-        """
-        Callback for resizing stacked views when the geometry of their top level view changes
-        """
-        for view in self.stackedViews:
-            view.setGeometry(self.vb.sceneBoundingRect())
-            view.linkedViewChanged(self.vb, view.XAxis)
 
     def linkDataToAxis(self, plotDataItem, axisName):
         """
