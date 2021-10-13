@@ -1242,7 +1242,7 @@ class ViewBox(GraphicsWidget):
         ev.accept()  ## we accept all buttons
 
         pos = ev.scenePos()
-        dif = pos - ev.lastPos()
+        dif = pos - ev.lastScenePos()
         dif = dif * -1
 
         ## Ignore axes if mouse is disabled
