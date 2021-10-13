@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui, QtWidgets
 HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
+from .. import Qt
 import math
+import itertools
 import warnings
 import numpy as np
 from .GraphicsObject import GraphicsObject
@@ -11,6 +13,33 @@ from .. import getConfigOption
 from .. import debug
 
 __all__ = ['PlotCurveItem']
+
+
+if Qt.QT_LIB.startswith('PyQt'):
+    wrapinstance = Qt.sip.wrapinstance
+else:
+    wrapinstance = Qt.shiboken.wrapInstance
+
+
+class LineInstances:
+    def __init__(self):
+        self.alloc(0)
+
+    def alloc(self, size):
+        self.arr = np.empty((size, 4), dtype=np.float64)
+        self.ptrs = list(map(wrapinstance,
+            itertools.count(self.arr.ctypes.data, self.arr.strides[0]),
+            itertools.repeat(QtCore.QLineF, self.arr.shape[0])))
+
+    def array(self, size):
+        if size > self.arr.shape[0]:
+            self.alloc(size + 16)
+        return self.arr[:size]
+
+    def instances(self, size):
+        return self.ptrs[:size]
+
+
 class PlotCurveItem(GraphicsObject):
     """
     Class representing a single plot curve. Instances of this class are created
@@ -447,7 +476,7 @@ class PlotCurveItem(GraphicsObject):
         self.sigPlotChanged.emit(self)
         profiler('emit')
 
-    def generatePath(self, x, y):
+    def _generatePlotData(self, x, y):
         stepMode = self.opts['stepMode']
         if stepMode:
             ## each value in the x/y arrays generates 2 points.
@@ -477,7 +506,10 @@ class PlotCurveItem(GraphicsObject):
                 y = y2.reshape(y2.size)[1:-1]
                 y[0] = self.opts['fillLevel']
                 y[-1] = self.opts['fillLevel']
+        return x, y
 
+    def generatePath(self, x, y):
+        x, y = self._generatePlotData(x, y)
         return fn.arrayToQPath(
             x,
             y,
@@ -497,6 +529,82 @@ class PlotCurveItem(GraphicsObject):
 
         return self.path
 
+    def _shouldUseDrawLineSegments(self, pen):
+        return (
+            pen.widthF() > 1.0
+            # non-solid pen styles need single polyline to be effective
+            and pen.style() == QtCore.Qt.PenStyle.SolidLine
+            # segmenting the curve slows gradient brushes, and is expected
+            # to do the same for other patterns
+            and pen.isSolid()   # pen.brush().style() == Qt.BrushStyle.SolidPattern
+            # ends of adjacent line segments overlapping is visible when not opaque
+            and pen.color().alphaF() == 1.0
+        )
+
+    def _doDrawLineSegments(self, painter):
+        x, y = self._generatePlotData(*self.getData())
+        npts = len(x)
+        if npts < 2:
+            return
+
+        if not hasattr(self, '_lineSegments'):
+            self._lineSegments = LineInstances()
+        segments = self._lineSegments
+
+        connect_array = None
+        connect = self.opts['connect']
+        if isinstance(connect, np.ndarray):
+            connect_array, connect = connect, 'array'
+
+        if connect == 'all' and not self.opts['skipFiniteCheck']:
+            # remove non-finite points, if any
+            mask = np.isfinite(x) & np.isfinite(y)
+            if not np.all(mask):
+                x = x[mask]
+                y = y[mask]
+                npts = len(x)
+                if npts < 2:
+                    return
+
+        elif connect == 'finite':
+            mask = np.isfinite(x) & np.isfinite(y)
+            # each non-finite point affects the segment before and after
+            connect_array = mask[:-1] & mask[1:]
+
+        elif connect == 'array' and not self.opts['skipFiniteCheck']:
+            # replicate the behavior of arrayToQPath
+            isfinite = np.isfinite(x) & np.isfinite(y)
+            if not np.all(isfinite):
+                backfill_idx = fn._compute_backfill_indices(isfinite)
+                x = x[backfill_idx]
+                y = y[backfill_idx]
+
+        if connect in ['all', 'finite', 'array']:
+            memory = segments.array(npts - 1)
+            memory[:, 0] = x[:-1]
+            memory[:, 1] = y[:-1]
+            memory[:, 2] = x[1:]
+            memory[:, 3] = y[1:]
+            segs = segments.instances(npts - 1)
+            if connect_array is not None:
+                segs = list(itertools.compress(segs, connect_array.tolist()))
+            painter.drawLines(segs)
+
+        elif connect in ['pairs']:
+            npairs = npts // 2
+            x = x[:npairs * 2]  # ensure even number of points
+            y = y[:npairs * 2]
+            memory = segments.array(npairs).reshape((-1, 2))
+            memory[:, 0] = x
+            memory[:, 1] = y
+            segs = segments.instances(npairs)
+            if not self.opts['skipFiniteCheck']:
+                mask = np.isfinite(x) & np.isfinite(y)
+                mask = mask[0::2] & mask[1::2]
+                if not np.all(mask):
+                    segs = list(itertools.compress(segs, mask))
+            painter.drawLines(segs)
+
     @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, opt, widget):
         profiler = debug.Profiler()
@@ -510,8 +618,6 @@ class PlotCurveItem(GraphicsObject):
 
         x = None
         y = None
-        path = self.getPath()
-        profiler('generate path')
 
         if self._exportOpts is not False:
             aa = self._exportOpts.get('antialias', True)
@@ -528,7 +634,7 @@ class PlotCurveItem(GraphicsObject):
             if self.fillPath is None:
                 if x is None:
                     x,y = self.getData()
-                p2 = QtGui.QPainterPath(self.path)
+                p2 = QtGui.QPainterPath(self.getPath())
                 if self.opts['fillLevel'] != 'enclosed':
                     p2.lineTo(x[-1], self.opts['fillLevel'])
                     p2.lineTo(x[0], self.opts['fillLevel'])
@@ -549,7 +655,10 @@ class PlotCurveItem(GraphicsObject):
 
             if sp.style() != QtCore.Qt.PenStyle.NoPen:
                 p.setPen(sp)
-                p.drawPath(path)
+                if self._shouldUseDrawLineSegments(sp):
+                    self._doDrawLineSegments(p)
+                else:
+                    p.drawPath(self.getPath())
 
         if isinstance(self.opts.get('pen'), QtGui.QPen):
             cp = self.opts['pen']
@@ -559,8 +668,10 @@ class PlotCurveItem(GraphicsObject):
         p.setPen(cp)
         if self.opts['fillOutline'] and self.fillPath is not None:
             p.drawPath(self.fillPath)
+        elif self._shouldUseDrawLineSegments(cp):
+            self._doDrawLineSegments(p)
         else:
-            p.drawPath(path)
+            p.drawPath(self.getPath())
         profiler('drawPath')
 
     def paintGL(self, p, opt, widget):
