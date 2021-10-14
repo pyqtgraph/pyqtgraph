@@ -556,10 +556,14 @@ class PlotCurveItem(GraphicsObject):
         if isinstance(connect, np.ndarray):
             connect_array, connect = connect, 'array'
 
-        if connect == 'all' and not self.opts['skipFiniteCheck']:
-            # remove non-finite points, if any
+        all_finite = True
+        if (not self.opts['skipFiniteCheck']) or connect == 'finite':
             mask = np.isfinite(x) & np.isfinite(y)
-            if not np.all(mask):
+            all_finite = np.all(mask)
+
+        if connect == 'all':
+            if not all_finite:
+                # remove non-finite points, if any
                 x = x[mask]
                 y = y[mask]
                 npts = len(x)
@@ -567,15 +571,14 @@ class PlotCurveItem(GraphicsObject):
                     return
 
         elif connect == 'finite':
-            mask = np.isfinite(x) & np.isfinite(y)
-            # each non-finite point affects the segment before and after
-            connect_array = mask[:-1] & mask[1:]
+            if not all_finite:
+                # each non-finite point affects the segment before and after
+                connect_array = mask[:-1] & mask[1:]
 
-        elif connect == 'array' and not self.opts['skipFiniteCheck']:
-            # replicate the behavior of arrayToQPath
-            isfinite = np.isfinite(x) & np.isfinite(y)
-            if not np.all(isfinite):
-                backfill_idx = fn._compute_backfill_indices(isfinite)
+        elif connect in ['pairs', 'array']:
+            if not all_finite:
+                # replicate the behavior of arrayToQPath
+                backfill_idx = fn._compute_backfill_indices(mask)
                 x = x[backfill_idx]
                 y = y[backfill_idx]
 
@@ -592,17 +595,10 @@ class PlotCurveItem(GraphicsObject):
 
         elif connect in ['pairs']:
             npairs = npts // 2
-            x = x[:npairs * 2]  # ensure even number of points
-            y = y[:npairs * 2]
             memory = segments.array(npairs).reshape((-1, 2))
-            memory[:, 0] = x
-            memory[:, 1] = y
+            memory[:, 0] = x[:npairs * 2]
+            memory[:, 1] = y[:npairs * 2]
             segs = segments.instances(npairs)
-            if not self.opts['skipFiniteCheck']:
-                mask = np.isfinite(x) & np.isfinite(y)
-                mask = mask[0::2] & mask[1::2]
-                if not np.all(mask):
-                    segs = list(itertools.compress(segs, mask))
             painter.drawLines(segs)
 
     @debug.warnOnException  ## raising an exception here causes crash
