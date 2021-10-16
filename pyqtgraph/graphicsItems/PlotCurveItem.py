@@ -21,7 +21,7 @@ else:
     wrapinstance = Qt.shiboken.wrapInstance
 
 
-class LineInstances:
+class LineSegments:
     def __init__(self):
         self.alloc(0)
 
@@ -38,6 +38,63 @@ class LineInstances:
 
     def instances(self, size):
         return self.ptrs[:size]
+
+    def arrayToLineSegments(self, x, y, connect, finiteCheck):
+        # analogue of arrayToQPath taking the same parameters
+        if len(x) < 2:
+            return []
+
+        connect_array = None
+        if isinstance(connect, np.ndarray):
+            connect_array, connect = connect, 'array'
+
+        all_finite = True
+        if finiteCheck or connect == 'finite':
+            mask = np.isfinite(x) & np.isfinite(y)
+            all_finite = np.all(mask)
+
+        if connect == 'all':
+            if not all_finite:
+                # remove non-finite points, if any
+                x = x[mask]
+                y = y[mask]
+
+        elif connect == 'finite':
+            if not all_finite:
+                # each non-finite point affects the segment before and after
+                connect_array = mask[:-1] & mask[1:]
+
+        elif connect in ['pairs', 'array']:
+            if not all_finite:
+                # replicate the behavior of arrayToQPath
+                backfill_idx = fn._compute_backfill_indices(mask)
+                x = x[backfill_idx]
+                y = y[backfill_idx]
+
+        npts = len(x)
+        if npts < 2:
+            return []
+
+        segs = []
+
+        if connect in ['all', 'finite', 'array']:
+            memory = self.array(npts - 1)
+            memory[:, 0] = x[:-1]
+            memory[:, 1] = y[:-1]
+            memory[:, 2] = x[1:]
+            memory[:, 3] = y[1:]
+            segs = self.instances(npts - 1)
+            if connect_array is not None:
+                segs = list(itertools.compress(segs, connect_array.tolist()))
+
+        elif connect in ['pairs']:
+            npairs = npts // 2
+            memory = self.array(npairs).reshape((-1, 2))
+            memory[:, 0] = x[:npairs * 2]
+            memory[:, 1] = y[:npairs * 2]
+            segs = self.instances(npairs)
+
+        return segs
 
 
 class PlotCurveItem(GraphicsObject):
@@ -542,72 +599,19 @@ class PlotCurveItem(GraphicsObject):
         )
 
     def _getLineSegments(self):
-        if self._renderSegmentList is not None:
-            return self._renderSegmentList
-
-        x, y = self._generatePlotData(*self.getData())
-        npts = len(x)
-        if npts < 2:
-            self._renderSegmentList = []
-            return self._renderSegmentList
-
         if not hasattr(self, '_lineSegments'):
-            self._lineSegments = LineInstances()
-        segments = self._lineSegments
+            self._lineSegments = LineSegments()
 
-        connect_array = None
-        connect = self.opts['connect']
-        if isinstance(connect, np.ndarray):
-            connect_array, connect = connect, 'array'
+        if self._renderSegmentList is None:
+            x, y = self._generatePlotData(*self.getData())
 
-        all_finite = True
-        if (not self.opts['skipFiniteCheck']) or connect == 'finite':
-            mask = np.isfinite(x) & np.isfinite(y)
-            all_finite = np.all(mask)
+            self._renderSegmentList = self._lineSegments.arrayToLineSegments(
+                x,
+                y,
+                connect=self.opts['connect'],
+                finiteCheck=not self.opts['skipFiniteCheck']
+            )
 
-        if connect == 'all':
-            if not all_finite:
-                # remove non-finite points, if any
-                x = x[mask]
-                y = y[mask]
-
-        elif connect == 'finite':
-            if not all_finite:
-                # each non-finite point affects the segment before and after
-                connect_array = mask[:-1] & mask[1:]
-
-        elif connect in ['pairs', 'array']:
-            if not all_finite:
-                # replicate the behavior of arrayToQPath
-                backfill_idx = fn._compute_backfill_indices(mask)
-                x = x[backfill_idx]
-                y = y[backfill_idx]
-
-        npts = len(x)
-        if npts < 2:
-            self._renderSegmentList = []
-            return self._renderSegmentList
-
-        segs = []
-
-        if connect in ['all', 'finite', 'array']:
-            memory = segments.array(npts - 1)
-            memory[:, 0] = x[:-1]
-            memory[:, 1] = y[:-1]
-            memory[:, 2] = x[1:]
-            memory[:, 3] = y[1:]
-            segs = segments.instances(npts - 1)
-            if connect_array is not None:
-                segs = list(itertools.compress(segs, connect_array.tolist()))
-
-        elif connect in ['pairs']:
-            npairs = npts // 2
-            memory = segments.array(npairs).reshape((-1, 2))
-            memory[:, 0] = x[:npairs * 2]
-            memory[:, 1] = y[:npairs * 2]
-            segs = segments.instances(npairs)
-
-        self._renderSegmentList = segs
         return self._renderSegmentList
 
     @debug.warnOnException  ## raising an exception here causes crash
