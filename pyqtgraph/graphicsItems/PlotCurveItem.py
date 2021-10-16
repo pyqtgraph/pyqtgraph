@@ -449,7 +449,7 @@ class PlotCurveItem(GraphicsObject):
         self.path = None
         self.fillPath = None
         self._mouseShape = None
-        #self.xDisp = self.yDisp = None
+        self._renderSegmentList = None
 
         if 'name' in kargs:
             self.opts['name'] = kargs['name']
@@ -541,11 +541,15 @@ class PlotCurveItem(GraphicsObject):
             and pen.color().alphaF() == 1.0
         )
 
-    def _doDrawLineSegments(self, painter):
+    def _getLineSegments(self):
+        if self._renderSegmentList is not None:
+            return self._renderSegmentList
+
         x, y = self._generatePlotData(*self.getData())
         npts = len(x)
         if npts < 2:
-            return
+            self._renderSegmentList = []
+            return self._renderSegmentList
 
         if not hasattr(self, '_lineSegments'):
             self._lineSegments = LineInstances()
@@ -566,9 +570,6 @@ class PlotCurveItem(GraphicsObject):
                 # remove non-finite points, if any
                 x = x[mask]
                 y = y[mask]
-                npts = len(x)
-                if npts < 2:
-                    return
 
         elif connect == 'finite':
             if not all_finite:
@@ -582,6 +583,13 @@ class PlotCurveItem(GraphicsObject):
                 x = x[backfill_idx]
                 y = y[backfill_idx]
 
+        npts = len(x)
+        if npts < 2:
+            self._renderSegmentList = []
+            return self._renderSegmentList
+
+        segs = []
+
         if connect in ['all', 'finite', 'array']:
             memory = segments.array(npts - 1)
             memory[:, 0] = x[:-1]
@@ -591,7 +599,6 @@ class PlotCurveItem(GraphicsObject):
             segs = segments.instances(npts - 1)
             if connect_array is not None:
                 segs = list(itertools.compress(segs, connect_array.tolist()))
-            painter.drawLines(segs)
 
         elif connect in ['pairs']:
             npairs = npts // 2
@@ -599,7 +606,9 @@ class PlotCurveItem(GraphicsObject):
             memory[:, 0] = x[:npairs * 2]
             memory[:, 1] = y[:npairs * 2]
             segs = segments.instances(npairs)
-            painter.drawLines(segs)
+
+        self._renderSegmentList = segs
+        return self._renderSegmentList
 
     @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, opt, widget):
@@ -652,7 +661,7 @@ class PlotCurveItem(GraphicsObject):
             if sp.style() != QtCore.Qt.PenStyle.NoPen:
                 p.setPen(sp)
                 if self._shouldUseDrawLineSegments(sp):
-                    self._doDrawLineSegments(p)
+                    p.drawLines(self._getLineSegments())
                 else:
                     p.drawPath(self.getPath())
 
@@ -665,7 +674,7 @@ class PlotCurveItem(GraphicsObject):
         if self.opts['fillOutline'] and self.fillPath is not None:
             p.drawPath(self.fillPath)
         elif self._shouldUseDrawLineSegments(cp):
-            self._doDrawLineSegments(p)
+            p.drawLines(self._getLineSegments())
         else:
             p.drawPath(self.getPath())
         profiler('drawPath')
@@ -756,8 +765,7 @@ class PlotCurveItem(GraphicsObject):
     def clear(self):
         self.xData = None  ## raw values
         self.yData = None
-        self.xDisp = None  ## display values (after log / fft)
-        self.yDisp = None
+        self._renderSegmentList = None
         self.path = None
         self.fillPath = None
         self._mouseShape = None
