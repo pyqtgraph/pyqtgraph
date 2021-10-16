@@ -533,40 +533,46 @@ class PlotCurveItem(GraphicsObject):
         self.sigPlotChanged.emit(self)
         profiler('emit')
 
-    def _generatePlotData(self, x, y):
-        stepMode = self.opts['stepMode']
-        if stepMode:
-            ## each value in the x/y arrays generates 2 points.
-            if stepMode == "right":
-                x2 = np.empty((len(x) + 1, 2), dtype=x.dtype)
-                x2[:-1] = x[:, np.newaxis]
-                x2[-1] = x2[-2]
-            elif stepMode == "left":
-                x2 = np.empty((len(x) + 1, 2), dtype=x.dtype)
-                x2[1:] = x[:, np.newaxis]
-                x2[0] = x2[1]
-            elif stepMode in ("center", True):  ## support True for back-compat
-                x2 = np.empty((len(x),2), dtype=x.dtype)
-                x2[:] = x[:, np.newaxis]
-            else:
-                raise ValueError("Unsupported stepMode %s" % stepMode)
-            if self.opts['fillLevel'] is None:
-                x = x2.reshape(x2.size)[1:-1]
-                y2 = np.empty((len(y),2), dtype=y.dtype)
-                y2[:] = y[:,np.newaxis]
-                y = y2.reshape(y2.size)
-            else:
-                ## If we have a fill level, add two extra points at either end
-                x = x2.reshape(x2.size)
-                y2 = np.empty((len(y)+2,2), dtype=y.dtype)
-                y2[1:-1] = y[:,np.newaxis]
-                y = y2.reshape(y2.size)[1:-1]
-                y[0] = self.opts['fillLevel']
-                y[-1] = self.opts['fillLevel']
+    @staticmethod
+    def _generateStepModeData(stepMode, x, y, fillLevel):
+        ## each value in the x/y arrays generates 2 points.
+        if stepMode == "right":
+            x2 = np.empty((len(x) + 1, 2), dtype=x.dtype)
+            x2[:-1] = x[:, np.newaxis]
+            x2[-1] = x2[-2]
+        elif stepMode == "left":
+            x2 = np.empty((len(x) + 1, 2), dtype=x.dtype)
+            x2[1:] = x[:, np.newaxis]
+            x2[0] = x2[1]
+        elif stepMode in ("center", True):  ## support True for back-compat
+            x2 = np.empty((len(x),2), dtype=x.dtype)
+            x2[:] = x[:, np.newaxis]
+        else:
+            raise ValueError("Unsupported stepMode %s" % stepMode)
+        if fillLevel is None:
+            x = x2.reshape(x2.size)[1:-1]
+            y2 = np.empty((len(y),2), dtype=y.dtype)
+            y2[:] = y[:,np.newaxis]
+            y = y2.reshape(y2.size)
+        else:
+            ## If we have a fill level, add two extra points at either end
+            x = x2.reshape(x2.size)
+            y2 = np.empty((len(y)+2,2), dtype=y.dtype)
+            y2[1:-1] = y[:,np.newaxis]
+            y = y2.reshape(y2.size)[1:-1]
+            y[0] = fillLevel
+            y[-1] = fillLevel
         return x, y
 
     def generatePath(self, x, y):
-        x, y = self._generatePlotData(x, y)
+        if self.opts['stepMode']:
+            x, y = self._generateStepModeData(
+                self.opts['stepMode'],
+                x,
+                y,
+                self.opts['fillLevel']
+            )
+
         return fn.arrayToQPath(
             x,
             y,
@@ -603,7 +609,14 @@ class PlotCurveItem(GraphicsObject):
             self._lineSegments = LineSegments()
 
         if self._renderSegmentList is None:
-            x, y = self._generatePlotData(*self.getData())
+            x, y = self.getData()
+            if self.opts['stepMode']:
+                x, y = self._generateStepModeData(
+                    self.opts['stepMode'],
+                    x,
+                    y,
+                    self.opts['fillLevel']
+                )
 
             self._renderSegmentList = self._lineSegments.arrayToLineSegments(
                 x,
