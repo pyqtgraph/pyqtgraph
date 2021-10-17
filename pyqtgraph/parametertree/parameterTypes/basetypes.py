@@ -295,6 +295,10 @@ class GroupParameterItem(ParameterItem):
         self.addItem = None
         if 'addText' in param.opts:
             addText = param.opts['addText']
+            w = QtWidgets.QWidget()
+            l = QtWidgets.QHBoxLayout()
+            l.setContentsMargins(0,0,0,0)
+            w.setLayout(l)
             if 'addList' in param.opts:
                 self.addWidget = QtWidgets.QComboBox()
                 self.addWidget.setSizeAdjustPolicy(QtWidgets.QComboBox.SizeAdjustPolicy.AdjustToContents)
@@ -303,10 +307,6 @@ class GroupParameterItem(ParameterItem):
             else:
                 self.addWidget = QtWidgets.QPushButton(addText)
                 self.addWidget.clicked.connect(self.addClicked)
-            w = QtWidgets.QWidget()
-            l = QtWidgets.QHBoxLayout()
-            l.setContentsMargins(0,0,0,0)
-            w.setLayout(l)
             l.addWidget(self.addWidget)
             l.addStretch()
             self.addWidgetBox = w
@@ -316,6 +316,18 @@ class GroupParameterItem(ParameterItem):
             ParameterItem.addChild(self, self.addItem)
             self.addItem.setSizeHint(0, self.addWidgetBox.sizeHint())
 
+            if 'remText' in param.opts:
+                remText = param.opts['remText']
+                self.addWidget = QtWidgets.QPushButton(remText)
+                self.addWidget.clicked.connect(self.remClicked) 
+                l.addWidget(self.addWidget)
+                l.addStretch()
+                self.addWidgetBox = w
+                self.addItem.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
+                self.addItem.depth = self.depth + 1
+                ParameterItem.addChild(self, self.addItem) 
+                self.addItem.setSizeHint(0, self.addWidgetBox.sizeHint())
+        
         self.optsChanged(self.param, self.param.opts)
 
     def updateDepth(self, depth):
@@ -344,6 +356,14 @@ class GroupParameterItem(ParameterItem):
         The parameter MUST have an 'addNew' method defined.
         """
         self.param.addNew()
+
+    def remClicked(self):
+        """Called when the "remove" button is clicked.
+        Removes the latest parameter added to the group.
+        """
+        children = self.param.children() 
+        if len(children) > 0:
+            self.param.removeChild(children[0])
 
     def addChanged(self):
         """Called when "add new" combo is changed
