@@ -116,6 +116,7 @@ children = [
     dict(name='pen', type='pen', value=default_pen),
     dict(name='antialias', type='bool', value=pg.getConfigOption('antialias')),
     dict(name='connect', type='list', limits=['all', 'pairs', 'finite', 'array'], value='all'),
+    dict(name='fill', type='bool', value=False),
     dict(name='skipFiniteCheck', type='bool', value=False),
     dict(name='plotMethod', title='Plot Method', type='list', limits=['pyqtgraph', 'drawPolyline', 'drawLines'])
 ]
@@ -131,7 +132,7 @@ splitter.show()
 
 pw.setWindowTitle('pyqtgraph example: PlotSpeedTest')
 pw.setLabel('bottom', 'Index', units='B')
-curve = MonkeyCurveItem(pen=default_pen)
+curve = MonkeyCurveItem(pen=default_pen, brush='b')
 pw.addItem(curve)
 
 rollingAverageSize = 1000
@@ -165,10 +166,14 @@ def onEnableExperimentalChanged(param, enable):
 def onPenChanged(param, pen):
     curve.setPen(pen)
 
+def onFillChanged(param, enable):
+    curve.setFillLevel(0.0 if enable else None)
+
 params.child('sigopts').sigTreeStateChanged.connect(makeData)
 params.child('useOpenGL').sigValueChanged.connect(onUseOpenGLChanged)
 params.child('enableExperimental').sigValueChanged.connect(onEnableExperimentalChanged)
 params.child('pen').sigValueChanged.connect(onPenChanged)
+params.child('fill').sigValueChanged.connect(onFillChanged)
 params.child('plotMethod').sigValueChanged.connect(curve.setMethod)
 params.sigTreeStateChanged.connect(resetTimings)
 
