@@ -8,19 +8,13 @@ Update a simple plot as rapidly as possible to measure speed.
 import initExample
 
 from collections import deque
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets, QT_LIB
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 import numpy as np
 import pyqtgraph as pg
 from time import perf_counter
 import pyqtgraph.parametertree as ptree
 import pyqtgraph.functions as fn
-import itertools
 import argparse
-
-if QT_LIB.startswith('PyQt'):
-    wrapinstance = pg.Qt.sip.wrapinstance
-else:
-    wrapinstance = pg.Qt.shiboken.wrapInstance
 
 # defaults here result in the same configuration as the original PlotSpeedTest
 parser = argparse.ArgumentParser()
@@ -49,35 +43,16 @@ sfmt = QtGui.QSurfaceFormat()
 sfmt.setSwapInterval(0)
 QtGui.QSurfaceFormat.setDefaultFormat(sfmt)
 
-class LineInstances:
-    def __init__(self):
-        self.alloc(0)
-
-    def alloc(self, size):
-        self.arr = np.empty((size, 4), dtype=np.float64)
-        self.ptrs = list(map(wrapinstance,
-            itertools.count(self.arr.ctypes.data, self.arr.strides[0]),
-            itertools.repeat(QtCore.QLineF, self.arr.shape[0])))
-
-    def array(self, size):
-        if size > self.arr.shape[0]:
-            self.alloc(size + 16)
-        return self.arr[:size]
-
-    def instances(self, size):
-        return self.ptrs[:size]
-
 class MonkeyCurveItem(pg.PlotCurveItem):
     def __init__(self, *args, **kwds):
         super().__init__(*args, **kwds)
         self.monkey_mode = ''
-        self._lineInstances = LineInstances()
 
     def setMethod(self, param, value):
         self.monkey_mode = value
 
     def paint(self, painter, opt, widget):
-        if self.monkey_mode not in ['drawPolyline', 'drawLines']:
+        if self.monkey_mode not in ['drawPolyline']:
             return super().paint(painter, opt, widget)
 
         painter.setRenderHint(painter.RenderHint.Antialiasing, self.opts['antialias'])
@@ -85,17 +60,6 @@ class MonkeyCurveItem(pg.PlotCurveItem):
 
         if self.monkey_mode == 'drawPolyline':
             painter.drawPolyline(fn.arrayToQPolygonF(self.xData, self.yData))
-        elif self.monkey_mode == 'drawLines':
-            lines = self._lineInstances
-            npts = len(self.xData)
-            even_slice = slice(0, 0+(npts-0)//2*2)
-            odd_slice = slice(1, 1+(npts-1)//2*2)
-            for sl in [even_slice, odd_slice]:
-                npairs = (sl.stop - sl.start) // 2
-                memory = lines.array(npairs).reshape((-1, 2))
-                memory[:, 0] = self.xData[sl]
-                memory[:, 1] = self.yData[sl]
-                painter.drawLines(lines.instances(npairs))
 
 app = pg.mkQApp("Plot Speed Test")
 
@@ -118,7 +82,7 @@ children = [
     dict(name='connect', type='list', limits=['all', 'pairs', 'finite', 'array'], value='all'),
     dict(name='fill', type='bool', value=False),
     dict(name='skipFiniteCheck', type='bool', value=False),
-    dict(name='plotMethod', title='Plot Method', type='list', limits=['pyqtgraph', 'drawPolyline', 'drawLines'])
+    dict(name='plotMethod', title='Plot Method', type='list', limits=['pyqtgraph', 'drawPolyline'])
 ]
 
 params = ptree.Parameter.create(name='Parameters', type='group', children=children)
