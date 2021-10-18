@@ -377,7 +377,7 @@ def test_arrayToQPath(xs, ys, connect, expected):
 
 def test_ndarray_from_qpolygonf():
     # test that we get an empty ndarray from an empty QPolygonF
-    poly = pg.functions.create_qpolygonf(0)
+    poly = QtGui.QPolygonF(0)
     arr = pg.functions.ndarray_from_qpolygonf(poly)
     assert isinstance(arr, np.ndarray)
 

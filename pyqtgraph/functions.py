@@ -43,7 +43,7 @@ __all__ = [
     # 'ndarray_from_qimage',
     'imageToArray', 'colorToAlpha',
     'gaussianFilter', 'downsample', 'arrayToQPath',
-    # 'ndarray_from_qpolygonf', 'create_qpolygonf', 'arrayToQPolygonF',
+    # 'ndarray_from_qpolygonf', 'arrayToQPolygonF',
     'isocurve', 'traceImage', 'isosurface',
     'invertQTransform',
     'pseudoScatter', 'toposort', 'disconnect', 'SignalBlock']
@@ -1919,7 +1919,7 @@ def _arrayToQPath_all(x, y, finiteCheck):
 
     if numchunks < minchunks:
         # too few chunks, batching would be a pessimization
-        poly = create_qpolygonf(n)
+        poly = QtGui.QPolygonF(n)
         arr = ndarray_from_qpolygonf(poly)
 
         if backfill_idx is None:
@@ -1989,7 +1989,7 @@ def _arrayToQPath_finite(x, y, isfinite=None):
 
     # create a single polygon able to hold the largest chunk
     maxlen = max(len(chunk) for chunk in xchunks)
-    subpoly = create_qpolygonf(maxlen)
+    subpoly = QtGui.QPolygonF(maxlen)
     subarr = ndarray_from_qpolygonf(subpoly)
 
     # resize and fill do not change the capacity
@@ -2183,14 +2183,6 @@ def ndarray_from_qpolygonf(polyline):
     memory = np.frombuffer(buffer, np.double).reshape((-1, 2))
     return memory
 
-def create_qpolygonf(size):
-    polyline = QtGui.QPolygonF()
-    if QT_LIB.startswith('PyQt'):
-        polyline.fill(QtCore.QPointF(), size)
-    else:
-        polyline.resize(size)
-    return polyline
-
 def arrayToQPolygonF(x, y):
     """
     Utility function to convert two 1D-NumPy arrays representing curve data
@@ -2223,7 +2215,7 @@ def arrayToQPolygonF(x, y):
     ):
         raise ValueError("Arguments must be 1D and the same size")
     size = x.size
-    polyline = create_qpolygonf(size)
+    polyline = QtGui.QPolygonF(size)
     memory = ndarray_from_qpolygonf(polyline)
     memory[:, 0] = x
     memory[:, 1] = y
