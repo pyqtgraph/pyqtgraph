@@ -122,7 +122,7 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [argos](https://github.com/titusjan/argos)
 * [PySpectra](http://hasyweb.desy.de/services/computing/Spock/node138.html)
 * [Semi-Supervised Semantic Annotator](https://gitlab.com/ficsresearch/s3ah)
-* [PyMeasure](https://gitub.com/pymeasure/pymeasure)
+* [PyMeasure](https://github.com/pymeasure/pymeasure)
 
 
 Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!
