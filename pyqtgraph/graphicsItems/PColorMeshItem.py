@@ -86,7 +86,7 @@ class PColorMeshItem(GraphicsObject):
 
             "ASCII from: <https://matplotlib.org/3.2.1/api/_as_gen/
                          matplotlib.pyplot.pcolormesh.html>".
-        cmap : pg.ColorMap, default 'viridis'
+        colorMap : pg.ColorMap, default pg.colormap.get('viridis')
             Colormap used to map the z value to colors.
         edgecolors : dict, default None
             The color of the edges of the polygons.
@@ -111,19 +111,22 @@ class PColorMeshItem(GraphicsObject):
         self.edgecolors = kwargs.get('edgecolors', None)
         self.antialiasing = kwargs.get('antialiasing', False)
         
-        self.cmap = kwargs.get('cmap', None)
-        if self.cmap is None:
-            self.cmap = colormap.get('viridis')
-
-        # Allow specifying str for backwards compatibility
-        # but this will only use colormaps from Gradients.
-        # Note that the colors will be wrong for the hsv colormaps.
-        if isinstance(self.cmap, str):
-            if self.cmap in Gradients:
-                pos, color = zip(*Gradients[self.cmap]['ticks'])
-                self.cmap  = colormap.ColorMap(pos, color)
-            else:
+        if 'colorMap' in kwargs:
+            cmap = kwargs.get('colorMap')
+            if not isinstance(cmap, colormap.ColorMap):
+                raise ValueError('colorMap argument must be a ColorMap instance')
+            self.cmap = cmap
+        elif 'cmap' in kwargs:
+            # legacy unadvertised argument for backwards compatibility.
+            # this will only use colormaps from Gradients.
+            # Note that the colors will be wrong for the hsv colormaps.
+            cmap = kwargs.get('cmap')
+            if not isinstance(cmap, str) or cmap not in Gradients:
                 raise NameError('Undefined colormap, should be one of the following: '+', '.join(['"'+i+'"' for i in Gradients.keys()])+'.')
+            pos, color = zip(*Gradients[cmap]['ticks'])
+            self.cmap = colormap.ColorMap(pos, color)
+        else:
+            self.cmap = colormap.get('viridis')
 
         self.lut = self.cmap.getLookupTable(nPts=256, mode=self.cmap.QCOLOR)
 
