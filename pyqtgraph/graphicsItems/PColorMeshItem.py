@@ -230,10 +230,12 @@ class PColorMeshItem(GraphicsObject):
         lut = self.lut
         # Second we associate each z value, that we normalize, to the lut
         scale = len(lut) - 1
-        rng = self.z.ptp()
+        z_min = self.z.min()
+        z_max = self.z.max()
+        rng = z_max - z_min
         if rng == 0:
             rng = 1
-        norm = fn.rescaleData(self.z, scale / rng, self.z.min(),
+        norm = fn.rescaleData(self.z, scale / rng, z_min,
             dtype=int, clip=(0, len(lut)-1))
 
         brush = QtGui.QBrush(QtCore.Qt.BrushStyle.SolidPattern)
