@@ -2186,7 +2186,7 @@ def ndarray_from_qpolygonf(polyline):
 def create_qpolygonf(size):
     if QT_LIB == 'PyQt6':
         polyline = QtGui.QPolygonF()
-        polyline.fill(QtGui.QPointF(), size)
+        polyline.fill(QtCore.QPointF(), size)
     else:
         polyline = QtGui.QPolygonF(size)
     return polyline
