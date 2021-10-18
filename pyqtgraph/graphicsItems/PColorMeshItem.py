@@ -128,7 +128,8 @@ class PColorMeshItem(GraphicsObject):
         else:
             self.cmap = colormap.get('viridis')
 
-        self.lut = self.cmap.getLookupTable(nPts=256, mode=self.cmap.QCOLOR)
+        lut_qcolor = self.cmap.getLookupTable(nPts=256, mode=self.cmap.QCOLOR)
+        self.lut_qbrush = [QtGui.QBrush(x) for x in lut_qcolor]
 
         self.quads = QuadInstances()
 
@@ -215,19 +216,19 @@ class PColorMeshItem(GraphicsObject):
                 shapeChanged = True
 
         self.qpicture = QtGui.QPicture()
-        p = QtGui.QPainter(self.qpicture)
+        painter = QtGui.QPainter(self.qpicture)
         # We set the pen of all polygons once
         if self.edgecolors is None:
-            p.setPen(QtCore.Qt.PenStyle.NoPen)
+            painter.setPen(QtCore.Qt.PenStyle.NoPen)
         else:
-            p.setPen(fn.mkPen(self.edgecolors))
+            painter.setPen(fn.mkPen(self.edgecolors))
             if self.antialiasing:
-                p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+                painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
                 
 
         ## Prepare colormap
         # First we get the LookupTable
-        lut = self.lut
+        lut = self.lut_qbrush
         # Second we associate each z value, that we normalize, to the lut
         scale = len(lut) - 1
         z_min = self.z.min()
@@ -238,12 +239,10 @@ class PColorMeshItem(GraphicsObject):
         norm = fn.rescaleData(self.z, scale / rng, z_min,
             dtype=int, clip=(0, len(lut)-1))
 
-        brush = QtGui.QBrush(QtCore.Qt.BrushStyle.SolidPattern)
-
         if Qt.QT_LIB.startswith('PyQt'):
-            drawConvexPolygon = lambda x : p.drawConvexPolygon(*x)
+            drawConvexPolygon = lambda x : painter.drawConvexPolygon(*x)
         else:
-            drawConvexPolygon = p.drawConvexPolygon
+            drawConvexPolygon = painter.drawConvexPolygon
 
         memory = self.quads.array(self.z.shape[1])
         polys = self.quads.instances()
@@ -254,14 +253,13 @@ class PColorMeshItem(GraphicsObject):
             memory[..., 0] = self.x[i:i+2, :]
             memory[..., 1] = self.y[i:i+2, :]
 
-            colors = [lut[z] for z in norm[i].tolist()]
+            brushes = [lut[z] for z in norm[i].tolist()]
 
-            for color, poly in zip(colors, polys):
-                brush.setColor(color)
-                p.setBrush(brush)
+            for brush, poly in zip(brushes, polys):
+                painter.setBrush(brush)
                 drawConvexPolygon(poly)
 
-        p.end()
+        painter.end()
         self.update()
 
         self.prepareGeometryChange()
