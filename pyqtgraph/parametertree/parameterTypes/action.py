@@ -1,4 +1,5 @@
-from .. import ParameterItem, Parameter
+from ..ParameterItem import ParameterItem
+from ..Parameter import Parameter
 from ...Qt import QtWidgets, QtCore
 
 

@@ -19,8 +19,9 @@ class ColorButton(QtGui.QPushButton):
     sigColorChanging = QtCore.Signal(object)  ## emitted whenever a new color is picked in the color dialog
     sigColorChanged = QtCore.Signal(object)   ## emitted when the selected color is accepted (user clicks OK)
     
-    def __init__(self, parent=None, color=(128,128,128)):
+    def __init__(self, parent=None, color=(128,128,128), padding=6):
         QtGui.QPushButton.__init__(self, parent)
+        self.padding = (padding, padding, -padding, -padding) if isinstance(padding, (int, float)) else padding
         self.setColor(color)
         self.colorDialog = QtGui.QColorDialog()
         self.colorDialog.setOption(QtGui.QColorDialog.ColorDialogOption.ShowAlphaChannel, True)
@@ -37,7 +38,7 @@ class ColorButton(QtGui.QPushButton):
     def paintEvent(self, ev):
         super().paintEvent(ev)
         p = QtGui.QPainter(self)
-        rect = self.rect().adjusted(6, 6, -6, -6)
+        rect = self.rect().adjusted(*self.padding)
         ## draw white base, then texture for indicating transparency, then actual color
         p.setBrush(functions.mkBrush('w'))
         p.drawRect(rect)

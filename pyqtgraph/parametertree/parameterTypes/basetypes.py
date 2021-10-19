@@ -1,6 +1,8 @@
 import builtins
 
-from .. import ParameterItem, Parameter
+from ..ParameterItem import ParameterItem
+from ..Parameter import Parameter
+
 from ... import functions as fn
 from ...Qt import QtWidgets, QtCore, QtGui
 from ... import icons
@@ -419,3 +421,10 @@ class GroupParameter(Parameter):
     def setAddList(self, vals):
         """Change the list of options available for the user to add to the group."""
         self.setOpts(addList=vals)
+
+class Emitter(QtCore.QObject):
+    """
+    WidgetParameterItem is not a QObject, so create a QObject wrapper that items can use for emitting
+    """
+    sigChanging = QtCore.Signal(object, object)
+    sigChanged = QtCore.Signal(object, object)

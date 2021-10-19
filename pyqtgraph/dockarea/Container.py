@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui, QtWidgets
 import weakref
+from .Dock import Dock
+
 
 class Container(object):
     #sigStretchChanged = QtCore.Signal()  ## can't do this here; not a QObject.
@@ -245,7 +247,7 @@ class TContainer(Container, QtGui.QWidget):
 
 
     def _insertItem(self, item, index):
-        if not isinstance(item, Dock.Dock):
+        if not isinstance(item, Dock):
             raise Exception("Tab containers may hold only docks, not other containers.")
         self.stack.insertWidget(index, item)
         self.hTabLayout.insertWidget(index, item.label)
@@ -288,5 +290,3 @@ class TContainer(Container, QtGui.QWidget):
             x = max(x, wx)
             y = max(y, wy)
         self.setStretch(x, y)
-        
-from . import Dock

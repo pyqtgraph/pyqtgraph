@@ -3,13 +3,15 @@ import pytest
 import pyqtgraph as pg
 from pyqtgraph.exporters import MatplotlibExporter
 pytest.importorskip("matplotlib")
+import matplotlib
 
 app = pg.mkQApp()
 
 skip_qt6 = pytest.mark.skipif(
-    pg.Qt.QT_LIB in ["PySide6", "PyQt6"],
+    # availability of QtAgg signifies Qt6 support
+    pg.Qt.QT_LIB in ["PySide6", "PyQt6"] and "QtAgg" not in matplotlib.rcsetup.interactive_bk,
     reason= (
-        "Matplotlib has no Qt6 support yet, "
+        "installed version of Matplotlib does not support Qt6, "
         "see https://github.com/matplotlib/matplotlib/pull/19255"
     )
 )

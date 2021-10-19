@@ -30,8 +30,7 @@ def remove_cache(mod):
     (
         (pg.Qt.QT_LIB == "PySide2" and pg.Qt.QtVersion.startswith("5.15"))
         or (pg.Qt.QT_LIB == "PySide6")
-    ) and (sys.version_info > (3, 9))
-    or (sys.version_info >= (3, 10)),
+    ) and (sys.version_info >= (3, 9)),
     reason="Unknown Issue"
 )
 @pytest.mark.usefixtures("tmp_module")

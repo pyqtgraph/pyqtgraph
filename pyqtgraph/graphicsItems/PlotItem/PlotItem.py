@@ -240,7 +240,7 @@ class PlotItem(GraphicsWidget):
         self.ctrl.avgParamList.itemClicked.connect(self.avgParamListClicked)
         self.ctrl.averageGroup.toggled.connect(self.avgToggled)
         
-        self.ctrl.maxTracesCheck.toggled.connect(self.updateDecimation)
+        self.ctrl.maxTracesCheck.toggled.connect(self._handle_max_traces_toggle)
         self.ctrl.forgetTracesCheck.toggled.connect(self.updateDecimation)
         self.ctrl.maxTracesSpin.valueChanged.connect(self.updateDecimation)
         
@@ -1002,10 +1002,27 @@ class PlotItem(GraphicsWidget):
         
     def clipToViewMode(self):
         return self.ctrl.clipToViewCheck.isChecked()
-
+    
+    def _handle_max_traces_toggle(self, check_state):
+        if check_state:
+            self.updateDecimation()
+        else:
+            for curve in self.curves:
+                curve.show()
+    
     def updateDecimation(self):
+        """Reduce or increase number of visible curves depending from Max Traces spinner value
+        if Max Traces is checked in the context menu. Destroy not visible curves if forget traces
+        is checked. This function is called in most cases automaticaly when Max Traces GUI elements
+        are triggered. Also it is auto-called when state of PlotItem is updated, state restored
+        or new items being added/removed.
+        
+        This can cause unexpected/conflicting state of curve visibility (or destruction) if curve
+        visibilities are controlled externaly. In case of external control it is adviced to disable
+        the Max Traces checkbox (or context menu) to prevent user from the unexpected
+        curve state change."""
         if not self.ctrl.maxTracesCheck.isChecked():
-            numCurves = len(self.curves)
+            return
         else:
             numCurves = self.ctrl.maxTracesSpin.value()
 

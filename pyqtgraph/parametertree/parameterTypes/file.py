@@ -2,7 +2,7 @@ import os
 import re
 
 from .str import StrParameterItem
-from .. import Parameter
+from ..Parameter import Parameter
 from ...Qt import QtWidgets, QtGui, QtCore
 
 
@@ -145,7 +145,8 @@ class FileParameterItem(StrParameterItem):
             startDir = os.path.dirname(startDir)
         if os.path.exists(startDir):
             opts['directory'] = startDir
-        opts.setdefault('windowTitle', self.param.title())
+        if opts.get('windowTitle') is None:
+            opts['windowTitle'] = self.param.title()
 
         fname = popupFilePicker(None, **opts)
         if not fname:

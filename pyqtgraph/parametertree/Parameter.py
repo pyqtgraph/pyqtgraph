@@ -516,7 +516,7 @@ class Parameter(QtCore.QObject):
                 self.setLimits(opts[k])
             elif k == 'default':
                 self.setDefault(opts[k])
-            elif k not in self.opts or self.opts[k] != opts[k]:
+            elif k not in self.opts or not fn.eq(self.opts[k], opts[k]):
                 self.opts[k] = opts[k]
                 changed[k] = opts[k]
                 

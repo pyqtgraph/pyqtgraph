@@ -127,7 +127,6 @@ class ImageView(QtGui.QWidget):
         self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
         self.scene = self.ui.graphicsView.scene()
-        self.ui.histogram.setLevelMode(levelMode)
         
         self.ignorePlaying = False
         
@@ -138,15 +137,6 @@ class ImageView(QtGui.QWidget):
         self.ui.graphicsView.setCentralItem(self.view)
         self.view.setAspectLocked(True)
         self.view.invertY()
-        
-        if imageItem is None:
-            self.imageItem = ImageItem()
-        else:
-            self.imageItem = imageItem
-        self.view.addItem(self.imageItem)
-        self.currentIndex = 0
-        
-        self.ui.histogram.setImageItem(self.imageItem)
         
         self.menu = None
         
@@ -162,7 +152,6 @@ class ImageView(QtGui.QWidget):
         self.view.addItem(self.normRoi)
         self.normRoi.hide()
         self.roiCurves = []
-        self.roiCurve = self.ui.roiPlot.plot()
         self.timeLine = InfiniteLine(0, movable=True)
         if getConfigOption('background')=='w':
             self.timeLine.setPen((20, 80,80, 200))
@@ -171,6 +160,18 @@ class ImageView(QtGui.QWidget):
         self.timeLine.setZValue(1)
         self.ui.roiPlot.addItem(self.timeLine)
         self.ui.splitter.setSizes([self.height()-35, 35])
+
+        # init imageItem and histogram
+        if imageItem is None:
+            self.imageItem = ImageItem()
+        else:
+            self.imageItem = imageItem
+            self.setImage(imageItem.image, autoRange=False, autoLevels=False, transform=imageItem.transform())
+        self.view.addItem(self.imageItem)
+        self.currentIndex = 0
+        
+        self.ui.histogram.setImageItem(self.imageItem)
+        self.ui.histogram.setLevelMode(levelMode)
         
         # make splitter an unchangeable small grey line:
         s = self.ui.splitter
@@ -358,13 +359,15 @@ class ImageView(QtGui.QWidget):
         
         profiler()
 
-        self.imageItem.resetTransform()
-        if scale is not None:
-            self.imageItem.scale(*scale)
-        if pos is not None:
-            self.imageItem.setPos(*pos)
-        if transform is not None:
-            self.imageItem.setTransform(transform)
+        if transform is None:
+            transform = QtGui.QTransform()
+            # note that the order of transform is
+            #   scale followed by translate
+            if pos is not None:
+                transform.translate(*pos)
+            if scale is not None:
+                transform.scale(*scale)
+        self.imageItem.setTransform(transform)
 
         profiler()
 
@@ -563,12 +566,12 @@ class ImageView(QtGui.QWidget):
         if self.ui.roiBtn.isChecked():
             showRoiPlot = True
             self.roi.show()
-            #self.ui.roiPlot.show()
             self.ui.roiPlot.setMouseEnabled(True, True)
             self.ui.splitter.setSizes([int(self.height()*0.6), int(self.height()*0.4)])
             self.ui.splitter.handle(1).setEnabled(True)
-            self.roiCurve.show()
             self.roiChanged()
+            for c in self.roiCurves:
+                c.show()
             self.ui.roiPlot.showAxis('left')
         else:
             self.roi.hide()
@@ -584,13 +587,11 @@ class ImageView(QtGui.QWidget):
             self.ui.roiPlot.setXRange(mn, mx, padding=0.01)
             self.timeLine.show()
             self.timeLine.setBounds([mn, mx])
-            self.ui.roiPlot.show()
             if not self.ui.roiBtn.isChecked():
                 self.ui.splitter.setSizes([self.height()-35, 35])
                 self.ui.splitter.handle(1).setEnabled(False)
         else:
             self.timeLine.hide()
-            #self.ui.roiPlot.hide()
             
         self.ui.roiPlot.setVisible(showRoiPlot)
 
