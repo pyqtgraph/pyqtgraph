@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import itertools
+import warnings
 from ..Qt import QtGui, QtCore
 from .. import Qt
 import numpy as np
@@ -120,6 +121,10 @@ class PColorMeshItem(GraphicsObject):
             # legacy unadvertised argument for backwards compatibility.
             # this will only use colormaps from Gradients.
             # Note that the colors will be wrong for the hsv colormaps.
+            warnings.warn(
+                "The parameter 'cmap' will be removed in a version of PyQtGraph released after Nov 2022.",
+                DeprecationWarning, stacklevel=2
+            )
             cmap = kwargs.get('cmap')
             if not isinstance(cmap, str) or cmap not in Gradients:
                 raise NameError('Undefined colormap, should be one of the following: '+', '.join(['"'+i+'"' for i in Gradients.keys()])+'.')
