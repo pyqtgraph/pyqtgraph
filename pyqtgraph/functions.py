@@ -395,6 +395,15 @@ def mkPen(*args, **kargs):
         pen.setStyle(style)
     if dash is not None:
         pen.setDashPattern(dash)
+
+    # for width > 1.0, we are drawing many short segments to emulate a
+    # single polyline. the default SquareCap style causes artifacts.
+    # these artifacts can be avoided by using RoundCap.
+    # this does have a performance penalty, so enable it only
+    # for thicker line widths where the artifacts are visible.
+    if width > 4.0:
+        pen.setCapStyle(QtCore.Qt.PenCapStyle.RoundCap)
+
     return pen
 
 
