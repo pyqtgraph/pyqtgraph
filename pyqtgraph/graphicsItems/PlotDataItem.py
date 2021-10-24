@@ -90,6 +90,7 @@ class PlotDataset(object):
         if x is None: # try to continue existing enumberation
             start_x = self.x[-1] + 1.0
             x = np.arange(start_x, start_x + append_length)
+
         if self._append_buffer_y is None or new_length > len(self._append_buffer_y):
             new_buffer_length = int( (3 * new_length) // 2 + 50 ) # over-allocate by 50% plus 50 additional elements 
             self._append_buffer_x = np.resize(self.x, new_buffer_length)
@@ -670,6 +671,7 @@ class PlotDataItem(GraphicsObject):
                        The default is to replace all existing data.
         ============== ===================================================================
         """
+        append = kargs.get("append", False)
         if kargs.get("stepMode", None) is True:
             warnings.warn(
                 'stepMode=True is deprecated, use stepMode="center" instead',
@@ -798,8 +800,8 @@ class PlotDataItem(GraphicsObject):
             if not isinstance(x, np.ndarray):
                 x = np.array(x)
             xData = x.view(np.ndarray)  # one last check to make sure there are no MetaArrays getting by
-
-        if not append: # replace existing data
+            
+        if not append or self._dataset is None: # Assign new data if not in append mode, or if no data is available yet
             if yData is None: # PlotDataset fills in missing x data by enumerating the y data
                 self._dataset = None
             else:
@@ -870,8 +872,8 @@ class PlotDataItem(GraphicsObject):
             self.opts['pen'] is not None 
             or (self.opts['fillBrush'] is not None and self.opts['fillLevel'] is not None)
             ): # draw if visible...
-            # print('connect is', curveArgs['connect'], 'expect nonfinites:', dataset.containsNonfinite)
-            if curveArgs['connect'] == 'auto': # auto-switch to indicate non-finite values as interruptions in the curve
+            # auto-switch to indicate non-finite values as interruptions in the curve:
+            if isinstance(curveArgs['connect'], str) and curveArgs['connect'] == 'auto': # connect can also take a boolean array
                 if dataset.containsNonfinite is None:
                     curveArgs['connect'] = 'all' # this is faster, but silently connects the curve across any non-finite values
                 else:
