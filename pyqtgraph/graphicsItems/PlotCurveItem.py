@@ -370,7 +370,10 @@ class PlotCurveItem(GraphicsObject):
 
     def setPen(self, *args, **kargs):
         """Set the pen used to draw the curve."""
-        self.opts['pen'] = fn.mkPen(*args, **kargs)
+        if args[0] is None:
+            self.opts['pen'] = None
+        else:
+            self.opts['pen'] = fn.mkPen(*args, **kargs)
         self.invalidateBounds()
         self.update()
 
@@ -379,13 +382,19 @@ class PlotCurveItem(GraphicsObject):
         This pen must have a larger width than the primary
         pen to be visible.
         """
-        self.opts['shadowPen'] = fn.mkPen(*args, **kargs)
+        if args[0] is None:
+            self.opts['shadowPen'] = None
+        else:
+            self.opts['shadowPen'] = fn.mkPen(*args, **kargs)
         self.invalidateBounds()
         self.update()
 
     def setBrush(self, *args, **kargs):
         """Set the brush used when filling the area under the curve"""
-        self.opts['brush'] = fn.mkBrush(*args, **kargs)
+        if args[0] is None:
+            self.opts['brush'] = None
+        else:
+            self.opts['brush'] = fn.mkBrush(*args, **kargs)
         self.invalidateBounds()
         self.update()
 
@@ -514,13 +523,13 @@ class PlotCurveItem(GraphicsObject):
             self.opts['connect'] = kargs['connect']
         if 'pen' in kargs:
             self.setPen(kargs['pen'])
-        if 'shadowPen' in kargs and kargs['shadowPen'] is not None:
+        if 'shadowPen' in kargs:
             self.setShadowPen(kargs['shadowPen'])
-        if 'fillLevel' in kargs and kargs['fillLevel'] is not None:
+        if 'fillLevel' in kargs:
             self.setFillLevel(kargs['fillLevel'])
         if 'fillOutline' in kargs:
             self.opts['fillOutline'] = kargs['fillOutline']
-        if 'brush' in kargs and kargs['brush'] is not None:
+        if 'brush' in kargs:
             self.setBrush(kargs['brush'])
         if 'antialias' in kargs:
             self.opts['antialias'] = kargs['antialias']
