@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
-from weakref import *
 
 __all__ = ['TreeWidget', 'TreeWidgetItem']
 
@@ -24,7 +23,7 @@ class TreeWidget(QtGui.QTreeWidget):
         
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
-        self.setEditTriggers(QtGui.QAbstractItemView.EditKeyPressed|QtGui.QAbstractItemView.SelectedClicked)
+        self.setEditTriggers(QtGui.QAbstractItemView.EditTrigger.EditKeyPressed|QtGui.QAbstractItemView.EditTrigger.SelectedClicked)
         self.placeholders = []
         self.childNestingLimit = None
         self.itemClicked.connect(self._itemClicked)
@@ -162,9 +161,9 @@ class TreeWidget(QtGui.QTreeWidget):
                     parentCount += 1
                     p = p.parent()
                 if parentCount >= self.childNestingLimit:
-                    item.setFlags(item.flags() & (~QtCore.Qt.ItemIsDropEnabled))
+                    item.setFlags(item.flags() & (~QtCore.Qt.ItemFlag.ItemIsDropEnabled))
                 else:
-                    item.setFlags(item.flags() | QtCore.Qt.ItemIsDropEnabled)
+                    item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsDropEnabled)
 
     @staticmethod
     def informTreeWidgetChange(item):
@@ -242,10 +241,10 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
     """
     TreeWidgetItem that keeps track of its own widgets and expansion state.
     
-    * Widgets may be added to columns before the item is added to a tree.
-    * Expanded state may be set before item is added to a tree.
-    * Adds setCheked and isChecked methods.
-    * Adds addChildren, insertChildren, and takeChildren methods.
+      * Widgets may be added to columns before the item is added to a tree.
+      * Expanded state may be set before item is added to a tree.
+      * Adds setCheked and isChecked methods.
+      * Adds addChildren, insertChildren, and takeChildren methods.
     """
     def __init__(self, *args):
         QtGui.QTreeWidgetItem.__init__(self, *args)
@@ -254,10 +253,10 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
         self._expanded = False
         
     def setChecked(self, column, checked):
-        self.setCheckState(column, QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked)
+        self.setCheckState(column, QtCore.Qt.CheckState.Checked if checked else QtCore.Qt.CheckState.Unchecked)
 
     def isChecked(self, col):
-        return self.checkState(col) == QtCore.Qt.Checked
+        return self.checkState(col) == QtCore.Qt.CheckState.Checked
         
     def setExpanded(self, exp):
         self._expanded = exp
@@ -340,9 +339,9 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
         treewidget = self.treeWidget()
         if treewidget is None:
             return
-        if (role == QtCore.Qt.CheckStateRole and checkstate != self.checkState(column)):
+        if (role == QtCore.Qt.ItemDataRole.CheckStateRole and checkstate != self.checkState(column)):
             treewidget.sigItemCheckStateChanged.emit(self, column)
-        elif (role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole) and text != self.text(column)):
+        elif (role in (QtCore.Qt.ItemDataRole.DisplayRole, QtCore.Qt.ItemDataRole.EditRole) and text != self.text(column)):
             treewidget.sigItemTextChanged.emit(self, column)
 
     def itemClicked(self, col):

@@ -11,7 +11,9 @@ import initExample
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
-from pyqtgraph.ptime import time
+
+from time import perf_counter
+# pg.setConfigOptions(useOpenGL=True)
 app = pg.mkQApp("MultiPlot Speed Test")
 
 plot = pg.plot()
@@ -22,7 +24,7 @@ nPlots = 100
 nSamples = 500
 curves = []
 for idx in range(nPlots):
-    curve = pg.PlotCurveItem(pen=(idx,nPlots*1.3))
+    curve = pg.PlotCurveItem(pen=({'color': (idx, nPlots*1.3), 'width': 1}), skipFiniteCheck=True)
     plot.addItem(curve)
     curve.setPos(0,idx*6)
     curves.append(curve)
@@ -37,7 +39,7 @@ plot.addItem(rgn)
 
 data = np.random.normal(size=(nPlots*23,nSamples))
 ptr = 0
-lastTime = time()
+lastTime = perf_counter()
 fps = None
 count = 0
 def update():
@@ -48,7 +50,7 @@ def update():
         curves[i].setData(data[(ptr+i)%data.shape[0]])
 
     ptr += nPlots
-    now = time()
+    now = perf_counter()
     dt = now - lastTime
     lastTime = now
     if fps is None:
@@ -62,8 +64,5 @@ timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
 
-## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

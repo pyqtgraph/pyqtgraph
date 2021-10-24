@@ -4,10 +4,12 @@ import re
 import sys
 import subprocess
 from argparse import Namespace
+
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
-from pyqtgraph.pgcollections import OrderedDict
-from .utils import examples
+from pyqtgraph.Qt import QtWidgets, QtGui, QtCore, QT_LIB
+from collections import OrderedDict
+from .utils import examples_
+from functools import lru_cache
 
 path = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, path)
@@ -28,7 +30,7 @@ QTextCharFormat = QtGui.QTextCharFormat
 QSyntaxHighlighter = QtGui.QSyntaxHighlighter
 
 
-def format(color, style=''):
+def charFormat(color, style='', background=None):
     """
     Return a QTextCharFormat with the given attributes.
     """
@@ -41,9 +43,11 @@ def format(color, style=''):
     _format = QTextCharFormat()
     _format.setForeground(_color)
     if 'bold' in style:
-        _format.setFontWeight(QFont.Bold)
+        _format.setFontWeight(QFont.Weight.Bold)
     if 'italic' in style:
         _format.setFontItalic(True)
+    if background is not None:
+        _format.setBackground(pg.mkColor(background))
 
     return _format
 
@@ -95,28 +99,28 @@ class DarkThemeColors:
 
 
 LIGHT_STYLES = {
-    'keyword': format(LightThemeColors.Blue, 'bold'),
-    'operator': format(LightThemeColors.Red, 'bold'),
-    'brace': format(LightThemeColors.Purple),
-    'defclass': format(LightThemeColors.Indigo, 'bold'),
-    'string': format(LightThemeColors.Amber),
-    'string2': format(LightThemeColors.DeepPurple),
-    'comment': format(LightThemeColors.Green, 'italic'),
-    'self': format(LightThemeColors.Blue, 'bold'),
-    'numbers': format(LightThemeColors.Teal),
+    'keyword': charFormat(LightThemeColors.Blue, 'bold'),
+    'operator': charFormat(LightThemeColors.Red, 'bold'),
+    'brace': charFormat(LightThemeColors.Purple),
+    'defclass': charFormat(LightThemeColors.Indigo, 'bold'),
+    'string': charFormat(LightThemeColors.Amber),
+    'string2': charFormat(LightThemeColors.DeepPurple),
+    'comment': charFormat(LightThemeColors.Green, 'italic'),
+    'self': charFormat(LightThemeColors.Blue, 'bold'),
+    'numbers': charFormat(LightThemeColors.Teal),
 }
 
 
 DARK_STYLES = {
-    'keyword': format(DarkThemeColors.Blue, 'bold'),
-    'operator': format(DarkThemeColors.Red, 'bold'),
-    'brace': format(DarkThemeColors.Purple),
-    'defclass': format(DarkThemeColors.Indigo, 'bold'),
-    'string': format(DarkThemeColors.Amber),
-    'string2': format(DarkThemeColors.DeepPurple),
-    'comment': format(DarkThemeColors.Green, 'italic'),
-    'self': format(DarkThemeColors.Blue, 'bold'),
-    'numbers': format(DarkThemeColors.Teal),
+    'keyword': charFormat(DarkThemeColors.Blue, 'bold'),
+    'operator': charFormat(DarkThemeColors.Red, 'bold'),
+    'brace': charFormat(DarkThemeColors.Purple),
+    'defclass': charFormat(DarkThemeColors.Indigo, 'bold'),
+    'string': charFormat(DarkThemeColors.Amber),
+    'string2': charFormat(DarkThemeColors.DeepPurple),
+    'comment': charFormat(DarkThemeColors.Green, 'italic'),
+    'self': charFormat(DarkThemeColors.Blue, 'bold'),
+    'numbers': charFormat(DarkThemeColors.Teal),
 }
 
 
@@ -145,7 +149,7 @@ class PythonHighlighter(QSyntaxHighlighter):
     ]
 
     def __init__(self, document):
-        QSyntaxHighlighter.__init__(self, document)
+        super().__init__(document)
 
         # Multi-line strings (expression, flag, style)
         self.tri_single = (QRegularExpression("'''"), 1, 'string2')
@@ -185,17 +189,19 @@ class PythonHighlighter(QSyntaxHighlighter):
             (r'#[^\n]*', 0, 'comment'),
         ]
         self.rules = rules
+        self.searchText = None
 
     @property
     def styles(self):
-        app = QtGui.QApplication.instance()
-        return DARK_STYLES if app.dark_mode else LIGHT_STYLES
+        app = QtWidgets.QApplication.instance()
+        return DARK_STYLES if app.property('darkMode') else LIGHT_STYLES
 
     def highlightBlock(self, text):
         """Apply syntax highlighting to the given block of text.
         """
         # Do other syntax formatting
-        for expression, nth, format in self.rules:
+        rules = self.rules.copy()
+        for expression, nth, format in rules:
             format = self.styles[format]
 
             for n, match in enumerate(re.finditer(expression, text)):
@@ -204,6 +210,8 @@ class PythonHighlighter(QSyntaxHighlighter):
                 start = match.start()
                 length = match.end() - start
                 self.setFormat(start, length, format)
+
+        self.applySearchHighlight(text)
         self.setCurrentBlockState(0)
 
         # Do multi-line strings
@@ -249,9 +257,12 @@ class PythonHighlighter(QSyntaxHighlighter):
                 length = len(text) - start + add
             # Apply formatting
             self.setFormat(start, length, self.styles[style])
+            # Highlighting sits on top of this formatting
             # Look for the next match
             match = delimiter.match(text, start + length)
             start = match.capturedStart()
+
+        self.applySearchHighlight(text)
 
         # Return True if still inside a multi-line string, False otherwise
         if self.currentBlockState() == in_state:
@@ -259,29 +270,73 @@ class PythonHighlighter(QSyntaxHighlighter):
         else:
             return False
 
+    def applySearchHighlight(self, text):
+        if not self.searchText:
+            return
+        expr = f'(?i){self.searchText}'
+        palette: QtGui.QPalette = app.palette()
+        color = palette.highlight().color()
+        fgndColor = palette.color(palette.ColorGroup.Current,
+                                  palette.ColorRole.Text).name()
+        style = charFormat(fgndColor, background=color.name())
+        for match in re.finditer(expr, text):
+            start = match.start()
+            length = match.end() - start
+            self.setFormat(start, length, style)
 
 
-class ExampleLoader(QtGui.QMainWindow):
+def unnestedDict(exDict):
+    """Converts a dict-of-dicts to a singly nested dict for non-recursive parsing"""
+    out = {}
+    for kk, vv in exDict.items():
+        if isinstance(vv, dict):
+            out.update(unnestedDict(vv))
+        else:
+            out[kk] = vv
+    return out
+
+
+
+class ExampleLoader(QtWidgets.QMainWindow):
     def __init__(self):
-        QtGui.QMainWindow.__init__(self)
+        QtWidgets.QMainWindow.__init__(self)
         self.ui = ui_template.Ui_Form()
-        self.cw = QtGui.QWidget()
+        self.cw = QtWidgets.QWidget()
         self.setCentralWidget(self.cw)
         self.ui.setupUi(self.cw)
         self.setWindowTitle("PyQtGraph Examples")
-        self.codeBtn = QtGui.QPushButton('Run Edited Code')
-        self.codeLayout = QtGui.QGridLayout()
+        self.codeBtn = QtWidgets.QPushButton('Run Edited Code')
+        self.codeLayout = QtWidgets.QGridLayout()
         self.ui.codeView.setLayout(self.codeLayout)
         self.hl = PythonHighlighter(self.ui.codeView.document())
-        app = QtGui.QApplication.instance()
+        app = QtWidgets.QApplication.instance()
         app.paletteChanged.connect(self.updateTheme)
-        self.codeLayout.addItem(QtGui.QSpacerItem(100,100,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding), 0, 0)
+        policy = QtWidgets.QSizePolicy.Policy.Expanding
+        self.codeLayout.addItem(QtWidgets.QSpacerItem(100,100, policy, policy), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
         self.codeBtn.hide()
 
-        global examples
+        textFil = self.ui.exampleFilter
+        self.curListener = None
+        self.ui.exampleFilter.setFocus()
+
+        def onComboChanged(searchType):
+            if self.curListener is not None:
+                self.curListener.disconnect()
+            self.curListener = textFil.textChanged
+            if searchType == 'Content Search':
+                self.curListener.connect(self.filterByContent)
+            else:
+                self.hl.searchText = None
+                self.curListener.connect(self.filterByTitle)
+            # Fire on current text, too
+            self.curListener.emit(textFil.text())
+
+        self.ui.searchFiles.currentTextChanged.connect(onComboChanged)
+        onComboChanged(self.ui.searchFiles.currentText())
+
         self.itemCache = []
-        self.populateTree(self.ui.exampleTree.invisibleRootItem(), examples)
+        self.populateTree(self.ui.exampleTree.invisibleRootItem(), examples_)
         self.ui.exampleTree.expandAll()
 
         self.resize(1000,500)
@@ -290,8 +345,75 @@ class ExampleLoader(QtGui.QMainWindow):
         self.ui.loadBtn.clicked.connect(self.loadFile)
         self.ui.exampleTree.currentItemChanged.connect(self.showFile)
         self.ui.exampleTree.itemDoubleClicked.connect(self.loadFile)
-        self.ui.codeView.textChanged.connect(self.codeEdited)
+
+        # textChanged fires when the highlighter is reassigned the same document. Prevent this
+        # from showing "run edited code" by checking for actual content change
+        oldText = self.ui.codeView.toPlainText()
+        def onTextChange():
+            nonlocal oldText
+            newText = self.ui.codeView.toPlainText()
+            if newText != oldText:
+                oldText = newText
+                self.codeEdited()
+
+        self.ui.codeView.textChanged.connect(onTextChange)
         self.codeBtn.clicked.connect(self.runEditedCode)
+
+    def filterByTitle(self, text):
+        self.showExamplesByTitle(self.getMatchingTitles(text))
+        self.hl.setDocument(self.ui.codeView.document())
+
+    def filterByContent(self, text=None):
+        # Don't filter very short strings
+        checkDict = unnestedDict(examples_)
+        self.hl.searchText = text
+        # Need to reapply to current document
+        self.hl.setDocument(self.ui.codeView.document())
+        titles = []
+        text = text.lower()
+        for kk, vv in checkDict.items():
+            if isinstance(vv, Namespace):
+                vv = vv.filename
+            filename = os.path.join(path, vv)
+            contents = self.getExampleContent(filename).lower()
+            if text in contents:
+                titles.append(kk)
+        self.showExamplesByTitle(titles)
+
+    def getMatchingTitles(self, text, exDict=None, acceptAll=False):
+        if exDict is None:
+            exDict = examples_
+        text = text.lower()
+        titles = []
+        for kk, vv in exDict.items():
+            matched = acceptAll or text in kk.lower()
+            if isinstance(vv, dict):
+                titles.extend(self.getMatchingTitles(text, vv, acceptAll=matched))
+            elif matched:
+                titles.append(kk)
+        return titles
+
+    def showExamplesByTitle(self, titles):
+        QTWI = QtWidgets.QTreeWidgetItemIterator
+        flag = QTWI.IteratorFlag.NoChildren
+        treeIter = QTWI(self.ui.exampleTree, flag)
+        item = treeIter.value()
+        while item is not None:
+            parent = item.parent()
+            show = (item.childCount() or item.text(0) in titles)
+            item.setHidden(not show)
+
+            # If all children of a parent are gone, hide it
+            if parent:
+                hideParent = True
+                for ii in range(parent.childCount()):
+                    if not parent.child(ii).isHidden():
+                        hideParent = False
+                        break
+                parent.setHidden(hideParent)
+
+            treeIter += 1
+            item = treeIter.value()
 
     def simulate_black_mode(self):
         """
@@ -301,16 +423,16 @@ class ExampleLoader(QtGui.QMainWindow):
         # first, a dark background
         c = QtGui.QColor('#171717')
         p = self.ui.codeView.palette()
-        p.setColor(QtGui.QPalette.Active, QtGui.QPalette.Base, c)
-        p.setColor(QtGui.QPalette.Inactive, QtGui.QPalette.Base, c)
+        p.setColor(QtGui.QPalette.ColorGroup.Active, QtGui.QPalette.ColorRole.Base, c)
+        p.setColor(QtGui.QPalette.ColorGroup.Inactive, QtGui.QPalette.ColorRole.Base, c)
         self.ui.codeView.setPalette(p)
         # then, a light font
         f = QtGui.QTextCharFormat()
         f.setForeground(QtGui.QColor('white'))
         self.ui.codeView.setCurrentCharFormat(f)
         # finally, override application automatic detection
-        app = QtGui.QApplication.instance()
-        app.dark_mode = True
+        app = QtWidgets.QApplication.instance()
+        app.setProperty('darkMode', True)
 
     def updateTheme(self):
         self.hl = PythonHighlighter(self.ui.codeView.document())
@@ -318,7 +440,7 @@ class ExampleLoader(QtGui.QMainWindow):
     def populateTree(self, root, examples):
         bold_font = None
         for key, val in examples.items():
-            item = QtGui.QTreeWidgetItem([key])
+            item = QtWidgets.QTreeWidgetItem([key])
             self.itemCache.append(item) # PyQt 4.9.6 no longer keeps references to these wrappers,
                                         # so we need to make an explicit reference or else the .file
                                         # attribute will disappear.
@@ -338,24 +460,20 @@ class ExampleLoader(QtGui.QMainWindow):
     def currentFile(self):
         item = self.ui.exampleTree.currentItem()
         if hasattr(item, 'file'):
-            global path
             return os.path.join(path, item.file)
         return None
 
     def loadFile(self, edited=False):
 
-        extra = []
         qtLib = str(self.ui.qtLibCombo.currentText())
-        gfxSys = str(self.ui.graphicsSystemCombo.currentText())
 
+        env = None
         if qtLib != 'default':
-            extra.append(qtLib.lower())
-        elif gfxSys != 'default':
-            extra.append(gfxSys)
+            env = dict(os.environ, PYQTGRAPH_QT_LIB=qtLib)
 
         if edited:
             path = os.path.abspath(os.path.dirname(__file__))
-            proc = subprocess.Popen([sys.executable, '-'] + extra, stdin=subprocess.PIPE, cwd=path)
+            proc = subprocess.Popen([sys.executable, '-'], stdin=subprocess.PIPE, cwd=path, env=env)
             code = str(self.ui.codeView.toPlainText()).encode('UTF-8')
             proc.stdin.write(code)
             proc.stdin.close()
@@ -363,22 +481,25 @@ class ExampleLoader(QtGui.QMainWindow):
             fn = self.currentFile()
             if fn is None:
                 return
-            if sys.platform.startswith('win'):
-                os.spawnl(os.P_NOWAIT, sys.executable, '"'+sys.executable+'"', '"' + fn + '"', *extra)
-            else:
-                os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, fn, *extra)
+            subprocess.Popen([sys.executable, fn], env=env)
 
     def showFile(self):
         fn = self.currentFile()
-        if fn is None:
-            self.ui.codeView.clear()
-            return
-        if os.path.isdir(fn):
-            fn = os.path.join(fn, '__main__.py')
-        text = open(fn).read()
+        text = self.getExampleContent(fn)
         self.ui.codeView.setPlainText(text)
         self.ui.loadedFileLabel.setText(fn)
         self.codeBtn.hide()
+
+    @lru_cache(100)
+    def getExampleContent(self, filename):
+        if filename is None:
+            self.ui.codeView.clear()
+            return
+        if os.path.isdir(filename):
+            filename = os.path.join(filename, '__main__.py')
+        with open(filename, "r") as currentFile:
+            text = currentFile.read()
+        return text
 
     def codeEdited(self):
         self.codeBtn.show()
@@ -386,12 +507,41 @@ class ExampleLoader(QtGui.QMainWindow):
     def runEditedCode(self):
         self.loadFile(edited=True)
 
+    def keyPressEvent(self, event):
+        ret = super().keyPressEvent(event)
+        if not QtCore.Qt.KeyboardModifier.ControlModifier & event.modifiers():
+            return ret
+        key = event.key()
+        Key = QtCore.Qt.Key
+
+        # Allow quick navigate to search
+        if key == Key.Key_F:
+            self.ui.exampleFilter.setFocus()
+            event.accept()
+            return
+
+        if key not in [Key.Key_Plus, Key.Key_Minus, Key.Key_Underscore, Key.Key_Equal, Key.Key_0]:
+            return ret
+        font = self.ui.codeView.font()
+        oldSize = font.pointSize()
+        if key == Key.Key_Plus or key == Key.Key_Equal:
+            font.setPointSize(oldSize + max(oldSize*.15, 1))
+        elif key == Key.Key_Minus or key == Key.Key_Underscore:
+            newSize = oldSize - max(oldSize*.15, 1)
+            font.setPointSize(max(newSize, 1))
+        elif key == Key.Key_0:
+            # Reset to original size
+            font.setPointSize(10)
+        self.ui.codeView.setFont(font)
+        event.accept()
 
 def main():
     app = pg.mkQApp()
     loader = ExampleLoader()
-    app.exec_()
-# or condition so pytest runs ExampleApp as part of test suite
+    loader.ui.exampleTree.setCurrentIndex(
+        loader.ui.exampleTree.model().index(0,0)
+    )
+    pg.exec()
+
 if __name__ == '__main__':
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        main()
+    main()

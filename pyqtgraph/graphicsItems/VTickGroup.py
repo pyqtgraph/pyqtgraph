@@ -1,11 +1,11 @@
+# -*- coding: utf-8 -*-
 if __name__ == '__main__':
     import os, sys
     path = os.path.abspath(os.path.dirname(__file__))
     sys.path.insert(0, os.path.join(path, '..', '..'))
 
-from ..Qt import QtGui, QtCore
+from ..Qt import QtGui
 from .. import functions as fn
-import weakref
 from .UIGraphicsItem import UIGraphicsItem
 
 __all__ = ['VTickGroup']

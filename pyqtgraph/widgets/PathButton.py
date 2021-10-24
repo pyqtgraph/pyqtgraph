@@ -39,7 +39,7 @@ class PathButton(QtGui.QPushButton):
         scale = min(geom.width() / float(rect.width()), geom.height() / float(rect.height()))
         
         p = QtGui.QPainter(self)
-        p.setRenderHint(p.Antialiasing)
+        p.setRenderHint(p.RenderHint.Antialiasing)
         p.translate(geom.center())
         p.scale(scale, scale)
         p.translate(-rect.center())

@@ -1,9 +1,9 @@
-from ..Qt import QtGui, QtCore
+# -*- coding: utf-8 -*-
+from ..Qt import QtCore
 from .. import parametertree as ptree
 import numpy as np
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from .. import functions as fn
-from ..python2_3 import basestring
 
 __all__ = ['DataFilterWidget']
 
@@ -130,7 +130,7 @@ class RangeFilterItem(ptree.types.SimpleParameter):
         ptree.types.SimpleParameter.__init__(self, 
             name=name, autoIncrementName=True, type='bool', value=True, removable=True, renamable=True, 
             children=[
-                #dict(name="Field", type='list', value=name, values=fields),
+                #dict(name="Field", type='list', value=name, limits=fields),
                 dict(name='Min', type='float', value=0.0, suffix=units, siPrefix=True),
                 dict(name='Max', type='float', value=1.0, suffix=units, siPrefix=True),
             ])
@@ -195,7 +195,7 @@ class EnumFilterItem(ptree.types.SimpleParameter):
             if isinstance(valopts, bool):
                 enabled = valopts
                 vname = str(val)
-            elif isinstance(valopts, basestring):
+            elif isinstance(valopts, str):
                 enabled = True
                 vname = valopts
             elif isinstance(valopts, tuple):

@@ -19,6 +19,7 @@ Contents:
     glviewwidget
 
     glgriditem
+    glgraphitem
     glsurfaceplotitem
     glvolumeitem
     glimageitem

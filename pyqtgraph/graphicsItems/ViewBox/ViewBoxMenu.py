@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from ...Qt import QtCore, QtGui, QT_LIB
-from ...python2_3 import asUnicode
 from ...WidgetGroup import WidgetGroup
 
 import importlib
@@ -238,7 +237,7 @@ class ViewBoxMenu(QtGui.QMenu):
             
         for i in [0,1]:
             c = self.ctrl[i].linkCombo
-            current = asUnicode(c.currentText())
+            current = c.currentText()
             c.blockSignals(True)
             changed = True
             try:

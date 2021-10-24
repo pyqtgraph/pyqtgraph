@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 import collections
 import sys, os
@@ -6,7 +7,8 @@ from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph.parametertree import types as pTypes
 import pyqtgraph.configfile
-from pyqtgraph.python2_3 import xrange
+
+from time import perf_counter
 
 
 class RelativityGUI(QtGui.QWidget):
@@ -25,10 +27,10 @@ class RelativityGUI(QtGui.QWidget):
         self.objectGroup = ObjectGroupParam()
         
         self.params = Parameter.create(name='params', type='group', children=[
-            dict(name='Load Preset..', type='list', values=[]),
-            #dict(name='Unit System', type='list', values=['', 'MKS']),
+            dict(name='Load Preset..', type='list', limits=[]),
+            #dict(name='Unit System', type='list', limits=['', 'MKS']),
             dict(name='Duration', type='float', value=10.0, step=0.1, limits=[0.1, None]),
-            dict(name='Reference Frame', type='list', values=[]),
+            dict(name='Reference Frame', type='list', limits=[]),
             dict(name='Animate', type='bool', value=True),
             dict(name='Animation Speed', type='float', value=1.0, dec=True, step=0.1, limits=[0.0001, None]),
             dict(name='Recalculate Worldlines', type='action'),
@@ -57,14 +59,14 @@ class RelativityGUI(QtGui.QWidget):
         self.layout.setContentsMargins(0,0,0,0)
         self.setLayout(self.layout)
         self.splitter = QtGui.QSplitter()
-        self.splitter.setOrientation(QtCore.Qt.Horizontal)
+        self.splitter.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.layout.addWidget(self.splitter)
         
         self.tree = ParameterTree(showHeader=False)
         self.splitter.addWidget(self.tree)
         
         self.splitter2 = QtGui.QSplitter()
-        self.splitter2.setOrientation(QtCore.Qt.Vertical)
+        self.splitter2.setOrientation(QtCore.Qt.Orientation.Vertical)
         self.splitter.addWidget(self.splitter2)
         
         self.worldlinePlots = pg.GraphicsLayoutWidget()
@@ -130,13 +132,13 @@ class RelativityGUI(QtGui.QWidget):
 
     def setAnimation(self, a):
         if a:
-            self.lastAnimTime = pg.ptime.time()
-            self.animTimer.start(self.animDt*1000)
+            self.lastAnimTime = perf_counter()
+            self.animTimer.start(int(self.animDt*1000))
         else:
             self.animTimer.stop()
             
     def stepAnimation(self):
-        now = pg.ptime.time()
+        now = perf_counter()
         dt = (now-self.lastAnimTime) * self.params['Animation Speed']
         self.lastAnimTime = now
         self.animTime += dt
@@ -518,7 +520,7 @@ class Simulation:
         dt = self.dt
         tVals = np.linspace(0, dt*(nPts-1), nPts)
         for cl in self.clocks.values():
-            for i in xrange(1,nPts):
+            for i in range(1,nPts):
                 nextT = tVals[i]
                 while True:
                     tau1, tau2 = cl.accelLimits()
@@ -564,7 +566,7 @@ class Simulation:
         ## These are the set of proper times (in the reference frame) that will be simulated
         ptVals = np.linspace(ref.pt, ref.pt + dt*(nPts-1), nPts)
         
-        for i in xrange(1,nPts):
+        for i in range(1,nPts):
                 
             ## step reference clock ahead one time step in its proper time
             nextPt = ptVals[i]  ## this is where (when) we want to end up
@@ -654,15 +656,6 @@ class Animation(pg.ItemGroup):
             item = ClockItem(cl)
             self.addItem(item)
             self.items[name] = item
-            
-        #self.timer = timer
-        #self.timer.timeout.connect(self.step)
-        
-    #def run(self, run):
-        #if not run:
-            #self.timer.stop()
-        #else:
-            #self.timer.start(self.dt)
         
     def restart(self):
         for cl in self.items.values():
@@ -759,7 +752,7 @@ class ClockItem(pg.ItemGroup):
         #pass
 
 if __name__ == '__main__':
-    pg.mkQApp()
+    app = pg.mkQApp()
     #import pyqtgraph.console
     #cw = pyqtgraph.console.ConsoleWidget()
     #cw.show()
@@ -768,10 +761,5 @@ if __name__ == '__main__':
     win.setWindowTitle("Relativity!")
     win.show()
     win.resize(1100,700)
-    
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
-    
-    
-    #win.params.param('Objects').restoreState(state, removeChildren=False)
 
+    pg.exec()

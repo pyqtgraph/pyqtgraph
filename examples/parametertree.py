@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates the use of pyqtgraph's parametertree system. This provides
 a simple way to generate user interfaces that control sets of parameters. The example
@@ -6,17 +5,20 @@ demonstrates a variety of different parameter types (int, float, list, etc.)
 as well as some customized parameter types
 
 """
-
-
 import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+# `makeAllParamTypes` creates several parameters from a dictionary of config specs.
+# This contains information about the options for each parameter so they can be directly
+# inserted into the example parameter tree. To create your own parameters, simply follow
+# the guidelines demonstrated by other parameters created here.
+from examples._buildParamTypes import makeAllParamTypes
+from pyqtgraph.Qt import QtGui
 
 
 app = pg.mkQApp("Parameter Tree Example")
 import pyqtgraph.parametertree.parameterTypes as pTypes
-from pyqtgraph.parametertree import Parameter, ParameterTree, ParameterItem, registerParameterType
+from pyqtgraph.parametertree import Parameter, ParameterTree
 
 
 ## test subclassing parameters
@@ -62,41 +64,13 @@ class ScalableGroup(pTypes.GroupParameter):
 
 
 params = [
-    {'name': 'Basic parameter data types', 'type': 'group', 'children': [
-        {'name': 'Integer', 'type': 'int', 'value': 10},
-        {'name': 'Float', 'type': 'float', 'value': 10.5, 'step': 0.1, 'finite': False},
-        {'name': 'String', 'type': 'str', 'value': "hi", 'tip': 'Well hello'},
-        {'name': 'List', 'type': 'list', 'values': [1,2,3], 'value': 2},
-        {'name': 'Named List', 'type': 'list', 'values': {"one": 1, "two": "twosies", "three": [3,3,3]}, 'value': 2},
-        {'name': 'Boolean', 'type': 'bool', 'value': True, 'tip': "This is a checkbox"},
-        {'name': 'Color', 'type': 'color', 'value': "FF0", 'tip': "This is a color button"},
-        {'name': 'Gradient', 'type': 'colormap'},
-        {'name': 'Subgroup', 'type': 'group', 'children': [
-            {'name': 'Sub-param 1', 'type': 'int', 'value': 10},
-            {'name': 'Sub-param 2', 'type': 'float', 'value': 1.2e6},
-        ]},
-        {'name': 'Text Parameter', 'type': 'text', 'value': 'Some text...'},
-        {'name': 'Action Parameter', 'type': 'action', 'tip': 'Click me'},
-    ]},
-    {'name': 'Numerical Parameter Options', 'type': 'group', 'children': [
-        {'name': 'Units + SI prefix', 'type': 'float', 'value': 1.2e-6, 'step': 1e-6, 'siPrefix': True, 'suffix': 'V'},
-        {'name': 'Limits (min=7;max=15)', 'type': 'int', 'value': 11, 'limits': (7, 15), 'default': -6},
-        {'name': 'Int suffix', 'type': 'int', 'value': 9, 'suffix': 'V'},
-        {'name': 'DEC stepping', 'type': 'float', 'value': 1.2e6, 'dec': True, 'step': 1, 'siPrefix': True, 'suffix': 'Hz'},
-        
-    ]},
+    makeAllParamTypes(),
     {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
         {'name': 'Save State', 'type': 'action'},
         {'name': 'Restore State', 'type': 'action', 'children': [
             {'name': 'Add missing items', 'type': 'bool', 'value': True},
             {'name': 'Remove extra items', 'type': 'bool', 'value': True},
         ]},
-    ]},
-    {'name': 'Extra Parameter Options', 'type': 'group', 'children': [
-        {'name': 'Read-only', 'type': 'float', 'value': 1.2e6, 'siPrefix': True, 'suffix': 'Hz', 'readonly': True},
-        {'name': 'Disabled',  'type': 'float', 'value': 1.2e6, 'siPrefix': True, 'suffix': 'Hz', 'enabled': False},
-        {'name': 'Renamable', 'type': 'float', 'value': 1.2e6, 'siPrefix': True, 'suffix': 'Hz', 'renamable': True},
-        {'name': 'Removable', 'type': 'float', 'value': 1.2e6, 'siPrefix': True, 'suffix': 'Hz', 'removable': True},
     ]},
     {'name': 'Custom context menu', 'type': 'group', 'children': [
         {'name': 'List contextMenu', 'type': 'float', 'value': 0, 'context': [
@@ -145,11 +119,10 @@ for child in p.children():
         ch2.sigValueChanging.connect(valueChanging)
         
 
-
 def save():
     global state
     state = p.saveState()
-    
+
 def restore():
     global state
     add = p['Save/Restore functionality', 'Restore State', 'Add missing items']
@@ -175,12 +148,10 @@ layout.addWidget(t2, 1, 1, 1, 1)
 win.show()
 
 ## test save/restore
-s = p.saveState()
-p.restoreState(s)
+state = p.saveState()
+p.restoreState(state)
+compareState = p.saveState()
+assert pg.eq(compareState, state)
 
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

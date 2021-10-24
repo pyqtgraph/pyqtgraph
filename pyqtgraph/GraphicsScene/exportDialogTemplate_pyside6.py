@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'exportDialogTemplate.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.0
+## Created by: Qt User Interface Compiler version 6.1.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -62,6 +62,7 @@ class Ui_Form(object):
         __qtreewidgetitem1.setText(0, u"1");
         self.paramTree.setHeaderItem(__qtreewidgetitem1)
         self.paramTree.setObjectName(u"paramTree")
+        self.paramTree.setColumnCount(2)
         self.paramTree.header().setVisible(False)
 
         self.gridLayout.addWidget(self.paramTree, 5, 0, 1, 3)

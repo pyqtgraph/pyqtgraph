@@ -1,4 +1,5 @@
-from ..Qt import QtGui, QtCore
+# -*- coding: utf-8 -*-
+from ..Qt import QtCore
 from .Exporter import Exporter
 from ..parametertree import Parameter
 from .. import PlotItem
@@ -25,7 +26,7 @@ class HDF5Exporter(Exporter):
         self.params = Parameter(name='params', type='group', children=[
             {'name': 'Name', 'title': translate("Exporter", 'Name'), 'type': 'str', 'value': 'Export', },
             {'name': 'columnMode', 'title': translate("Exporter", 'columnMode'), 'type': 'list',
-             'values': ['(x,y) per plot', '(x,y,y,y) for all plots']},
+             'limits': ['(x,y) per plot', '(x,y,y,y) for all plots']},
         ])
         
     def parameters(self):

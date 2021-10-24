@@ -24,7 +24,7 @@ def format(color, style=''):
     _format = QTextCharFormat()
     _format.setForeground(_color)
     if 'bold' in style:
-        _format.setFontWeight(QFont.Bold)
+        _format.setFontWeight(QFont.Weight.Bold)
     if 'italic' in style:
         _format.setFontItalic(True)
 
@@ -186,7 +186,7 @@ class PythonHighlighter(QSyntaxHighlighter):
     @property
     def styles(self):
         app = QtGui.QApplication.instance()
-        return DARK_STYLES if app.dark_mode else LIGHT_STYLES
+        return DARK_STYLES if app.property('darkMode') else LIGHT_STYLES
 
     def highlightBlock(self, text):
         """Apply syntax highlighting to the given block of text.

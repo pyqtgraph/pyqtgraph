@@ -5,7 +5,6 @@ import time
 import numpy as np
 import pyqtgraph.multiprocess as mp
 import pyqtgraph as pg
-from pyqtgraph.python2_3 import xrange
 
 print( "\n=================\nParallelize")
 
@@ -32,7 +31,7 @@ start = time.time()
 with pg.ProgressDialog('processing serially..', maximum=len(tasks)) as dlg:
     for i, x in enumerate(tasks):
         tot = 0
-        for j in xrange(size):
+        for j in range(size):
             tot += j * x
         results[i] = tot
         dlg += 1
@@ -46,7 +45,7 @@ start = time.time()
 with mp.Parallelize(enumerate(tasks), results=results2, workers=1, progressDialog='processing serially (using Parallelizer)..') as tasker:
     for i, x in tasker:
         tot = 0
-        for j in xrange(size):
+        for j in range(size):
             tot += j * x
         tasker.results[i] = tot
 print( "\nParallel time, 1 worker: %0.2f" % (time.time() - start))
@@ -57,9 +56,8 @@ start = time.time()
 with mp.Parallelize(enumerate(tasks), results=results3, progressDialog='processing in parallel..') as tasker:
     for i, x in tasker:
         tot = 0
-        for j in xrange(size):
+        for j in range(size):
             tot += j * x
         tasker.results[i] = tot
 print( "\nParallel time, %d workers: %0.2f" % (mp.Parallelize.suggestedWorkerCount(), time.time() - start))
 print( "Results match serial:      %s" % str(results3 == results))
-

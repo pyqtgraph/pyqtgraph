@@ -1,10 +1,8 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtWidgets
 from ..widgets.TreeWidget import TreeWidget
-import os, weakref, re
 from .ParameterItem import ParameterItem
-#import functions as fn
-        
-            
+
 
 class ParameterTree(TreeWidget):
     """Widget used to display or control data from a hierarchy of Parameters"""
@@ -18,8 +16,8 @@ class ParameterTree(TreeWidget):
         ============== ========================================================
         """
         TreeWidget.__init__(self, parent)
-        self.setVerticalScrollMode(self.ScrollPerPixel)
-        self.setHorizontalScrollMode(self.ScrollPerPixel)
+        self.setVerticalScrollMode(self.ScrollMode.ScrollPerPixel)
+        self.setHorizontalScrollMode(self.ScrollMode.ScrollPerPixel)
         self.setAnimated(False)
         self.setColumnCount(2)
         self.setHeaderLabels(["Parameter", "Value"])

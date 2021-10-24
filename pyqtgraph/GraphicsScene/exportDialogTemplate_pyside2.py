@@ -1,63 +1,95 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'exportDialogTemplate.ui'
-#
-# Created: Sun Sep 18 19:19:58 2016
-#      by: pyside2-uic  running on PySide2 2.0.0~alpha0
-#
-# WARNING! All changes made in this file will be lost!
+################################################################################
+## Form generated from reading UI file 'exportDialogTemplate.ui'
+##
+## Created by: Qt User Interface Compiler version 5.15.2
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
+
+from ..parametertree import ParameterTree
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
-        Form.setObjectName("Form")
+        if not Form.objectName():
+            Form.setObjectName(u"Form")
         Form.resize(241, 367)
-        self.gridLayout = QtWidgets.QGridLayout(Form)
+        self.gridLayout = QGridLayout(Form)
         self.gridLayout.setSpacing(0)
-        self.gridLayout.setObjectName("gridLayout")
-        self.label = QtWidgets.QLabel(Form)
-        self.label.setObjectName("label")
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.label = QLabel(Form)
+        self.label.setObjectName(u"label")
+
         self.gridLayout.addWidget(self.label, 0, 0, 1, 3)
-        self.itemTree = QtWidgets.QTreeWidget(Form)
-        self.itemTree.setObjectName("itemTree")
-        self.itemTree.headerItem().setText(0, "1")
+
+        self.itemTree = QTreeWidget(Form)
+        __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setText(0, u"1");
+        self.itemTree.setHeaderItem(__qtreewidgetitem)
+        self.itemTree.setObjectName(u"itemTree")
         self.itemTree.header().setVisible(False)
+
         self.gridLayout.addWidget(self.itemTree, 1, 0, 1, 3)
-        self.label_2 = QtWidgets.QLabel(Form)
-        self.label_2.setObjectName("label_2")
+
+        self.label_2 = QLabel(Form)
+        self.label_2.setObjectName(u"label_2")
+
         self.gridLayout.addWidget(self.label_2, 2, 0, 1, 3)
-        self.formatList = QtWidgets.QListWidget(Form)
-        self.formatList.setObjectName("formatList")
+
+        self.formatList = QListWidget(Form)
+        self.formatList.setObjectName(u"formatList")
+
         self.gridLayout.addWidget(self.formatList, 3, 0, 1, 3)
-        self.exportBtn = QtWidgets.QPushButton(Form)
-        self.exportBtn.setObjectName("exportBtn")
+
+        self.exportBtn = QPushButton(Form)
+        self.exportBtn.setObjectName(u"exportBtn")
+
         self.gridLayout.addWidget(self.exportBtn, 6, 1, 1, 1)
-        self.closeBtn = QtWidgets.QPushButton(Form)
-        self.closeBtn.setObjectName("closeBtn")
+
+        self.closeBtn = QPushButton(Form)
+        self.closeBtn.setObjectName(u"closeBtn")
+
         self.gridLayout.addWidget(self.closeBtn, 6, 2, 1, 1)
+
         self.paramTree = ParameterTree(Form)
-        self.paramTree.setObjectName("paramTree")
-        self.paramTree.headerItem().setText(0, "1")
+        __qtreewidgetitem1 = QTreeWidgetItem()
+        __qtreewidgetitem1.setText(0, u"1");
+        self.paramTree.setHeaderItem(__qtreewidgetitem1)
+        self.paramTree.setObjectName(u"paramTree")
+        self.paramTree.setColumnCount(2)
         self.paramTree.header().setVisible(False)
+
         self.gridLayout.addWidget(self.paramTree, 5, 0, 1, 3)
-        self.label_3 = QtWidgets.QLabel(Form)
-        self.label_3.setObjectName("label_3")
+
+        self.label_3 = QLabel(Form)
+        self.label_3.setObjectName(u"label_3")
+
         self.gridLayout.addWidget(self.label_3, 4, 0, 1, 3)
-        self.copyBtn = QtWidgets.QPushButton(Form)
-        self.copyBtn.setObjectName("copyBtn")
+
+        self.copyBtn = QPushButton(Form)
+        self.copyBtn.setObjectName(u"copyBtn")
+
         self.gridLayout.addWidget(self.copyBtn, 6, 0, 1, 1)
 
+
         self.retranslateUi(Form)
-        QtCore.QMetaObject.connectSlotsByName(Form)
+
+        QMetaObject.connectSlotsByName(Form)
+    # setupUi
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Export", None, -1))
-        self.label.setText(QtWidgets.QApplication.translate("Form", "Item to export:", None, -1))
-        self.label_2.setText(QtWidgets.QApplication.translate("Form", "Export format", None, -1))
-        self.exportBtn.setText(QtWidgets.QApplication.translate("Form", "Export", None, -1))
-        self.closeBtn.setText(QtWidgets.QApplication.translate("Form", "Close", None, -1))
-        self.label_3.setText(QtWidgets.QApplication.translate("Form", "Export options", None, -1))
-        self.copyBtn.setText(QtWidgets.QApplication.translate("Form", "Copy", None, -1))
+        Form.setWindowTitle(QCoreApplication.translate("Form", u"Export", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Item to export:", None))
+        self.label_2.setText(QCoreApplication.translate("Form", u"Export format", None))
+        self.exportBtn.setText(QCoreApplication.translate("Form", u"Export", None))
+        self.closeBtn.setText(QCoreApplication.translate("Form", u"Close", None))
+        self.label_3.setText(QCoreApplication.translate("Form", u"Export options", None))
+        self.copyBtn.setText(QCoreApplication.translate("Form", u"Copy", None))
+    # retranslateUi
 
-from ..parametertree import ParameterTree

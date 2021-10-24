@@ -4,6 +4,7 @@ from .GLViewWidget import GLViewWidget
 #from .. import importAll
 #importAll('items', globals(), locals())
 
+from .items.GLGraphItem import *
 from .items.GLGridItem import * 
 from .items.GLBarGraphItem import * 
 from .items.GLScatterPlotItem import *                                                                                                                      
@@ -14,6 +15,8 @@ from .items.GLImageItem import *
 from .items.GLSurfacePlotItem import *                                                                                                                      
 from .items.GLBoxItem import *                                                                                                                              
 from .items.GLVolumeItem import *                                                                                                                           
+from .items.GLTextItem import *
+from .items.GLGradientLegendItem import *
 
 from .MeshData import MeshData
 ## for backward compatibility:

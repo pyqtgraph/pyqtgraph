@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
-from ..pgcollections import OrderedDict
+from ..Qt import QtGui
 from .DataTreeWidget import DataTreeWidget
 from .. import functions as fn
-import types, traceback
 import numpy as np
 
 __all__ = ['DiffTreeWidget']

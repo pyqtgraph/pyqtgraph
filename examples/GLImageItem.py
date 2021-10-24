@@ -15,9 +15,9 @@ import numpy as np
 
 app = pg.mkQApp("GLImageItem Example")
 w = gl.GLViewWidget()
-w.opts['distance'] = 200
 w.show()
 w.setWindowTitle('pyqtgraph example: GLImageItem')
+w.setCameraPosition(distance=200)
 
 ## create volume data set to slice three images from
 shape = (100,100,70)
@@ -50,8 +50,5 @@ w.addItem(v3)
 ax = gl.GLAxisItem()
 w.addItem(ax)
 
-## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

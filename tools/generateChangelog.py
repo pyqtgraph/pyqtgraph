@@ -28,17 +28,18 @@ def generateDebianChangelog(package, logFile, version, maintainer):
     current_version = None
     current_log = None
     current_date = None
-    for line in open(logFile).readlines():
-        match = re.match(package+r'-(\d+\.\d+\.\d+(\.\d+)?)\s*(\d+-\d+-\d+)\s*$', line)
-        if match is None:
-            if current_log is not None:
-                current_log.append(line)
-        else:
-            if current_log is not None:
-                releases.append((current_version, current_log, current_date))
-            current_version, current_date = match.groups()[0], match.groups()[2]
-            #sys.stderr.write("Found release %s\n" % current_version)
-            current_log = []
+    with open(logFile) as file_:
+        for line in file_.readlines():
+            match = re.match(package+r'-(\d+\.\d+\.\d+(\.\d+)?)\s*(\d+-\d+-\d+)\s*$', line)
+            if match is None:
+                if current_log is not None:
+                    current_log.append(line)
+            else:
+                if current_log is not None:
+                    releases.append((current_version, current_log, current_date))
+                current_version, current_date = match.groups()[0], match.groups()[2]
+                #sys.stderr.write("Found release %s\n" % current_version)
+                current_log = []
 
     if releases[0][0] != version:
         raise Exception("Latest release in changelog (%s) does not match current release (%s)\n" % (releases[0][0],  version))

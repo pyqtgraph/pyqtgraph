@@ -32,6 +32,11 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.cudaCheck, 9, 0, 1, 2)
 
+        self.numbaCheck = QCheckBox(self.centralwidget)
+        self.numbaCheck.setObjectName(u"numbaCheck")
+
+        self.gridLayout_2.addWidget(self.numbaCheck, 9, 2, 1, 2)
+
         self.downsampleCheck = QCheckBox(self.centralwidget)
         self.downsampleCheck.setObjectName(u"downsampleCheck")
 
@@ -264,6 +269,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
         self.cudaCheck.setText(QCoreApplication.translate("MainWindow", u"Use CUDA (GPU) if available", None))
+        self.numbaCheck.setText(QCoreApplication.translate("MainWindow", u"Use Numba if available", None))
         self.downsampleCheck.setText(QCoreApplication.translate("MainWindow", u"Auto downsample", None))
         self.scaleCheck.setText(QCoreApplication.translate("MainWindow", u"Scale Data", None))
         self.rawRadio.setText(QCoreApplication.translate("MainWindow", u"RawImageWidget", None))

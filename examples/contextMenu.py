@@ -67,7 +67,7 @@ class MenuBox(pg.GraphicsObject):
     
     # On right-click, raise the context menu
     def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.RightButton:
+        if ev.button() == QtCore.Qt.MouseButton.RightButton:
             if self.raiseContextMenu(ev):
                 ev.accept()
 
@@ -101,7 +101,7 @@ class MenuBox(pg.GraphicsObject):
             
             alpha = QtGui.QWidgetAction(self.menu)
             alphaSlider = QtGui.QSlider()
-            alphaSlider.setOrientation(QtCore.Qt.Horizontal)
+            alphaSlider.setOrientation(QtCore.Qt.Orientation.Horizontal)
             alphaSlider.setMaximum(255)
             alphaSlider.setValue(255)
             alphaSlider.valueChanged.connect(self.setAlpha)
@@ -135,8 +135,5 @@ box2.setParentItem(box1)
 box2.setPos(5, 5)
 box2.setScale(0.2)
 
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

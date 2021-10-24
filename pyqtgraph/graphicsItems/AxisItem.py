@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore, QT_LIB
-from ..python2_3 import asUnicode
+from ..Qt import QtGui, QtCore
 import numpy as np
 from ..Point import Point
 from .. import debug as debug
+from math import ceil, floor, log, log10, isfinite
 import sys
 import weakref
 from .. import functions as fn
 from .. import getConfigOption
 from .GraphicsWidget import GraphicsWidget
+import warnings
 
 __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):
@@ -109,9 +110,10 @@ class AxisItem(GraphicsWidget):
 
         self._linkedView = None
         if linkView is not None:
-            self.linkToView(linkView)
+            self._linkToView_internal(linkView)
 
         self.grid = False
+        
         #self.setCacheMode(self.DeviceCoordinateCache)
 
     def setStyle(self, **kwds):
@@ -155,7 +157,7 @@ class AxisItem(GraphicsWidget):
         tickAlpha           (float or int or None) If None, pyqtgraph will draw the
                             ticks with the alpha it deems appropriate.  Otherwise, 
                             the alpha will be fixed at the value passed.  With int, 
-                            accepted values are [0..255].  With vaule of type
+                            accepted values are [0..255].  With value of type
                             float, accepted values are from [0..1].
         =================== =======================================================
 
@@ -230,6 +232,10 @@ class AxisItem(GraphicsWidget):
 
         ## Set the position of the label
         nudge = 5
+        if self.label is None: # self.label is set to None on close, but resize events can still occur.
+            self.picture = None
+            return
+            
         br = self.label.boundingRect()
         p = QtCore.QPointF(0, 0)
         if self.orientation == 'left':
@@ -307,16 +313,15 @@ class AxisItem(GraphicsWidget):
             if not self.autoSIPrefix or self.autoSIPrefixScale == 1.0:
                 units = ''
             else:
-                units = asUnicode('(x%g)') % (1.0/self.autoSIPrefixScale)
+                units = '(x%g)' % (1.0/self.autoSIPrefixScale)
         else:
-            #print repr(self.labelUnitPrefix), repr(self.labelUnits)
-            units = asUnicode('(%s%s)') % (asUnicode(self.labelUnitPrefix), asUnicode(self.labelUnits))
+            units = '(%s%s)' % (self.labelUnitPrefix, self.labelUnits)
 
-        s = asUnicode('%s %s') % (asUnicode(self.labelText), asUnicode(units))
+        s = '%s %s' % (self.labelText, units)
 
         style = ';'.join(['%s: %s' % (k, self.labelStyle[k]) for k in self.labelStyle])
 
-        return asUnicode("<span style='%s'>%s</span>") % (style, asUnicode(s))
+        return "<span style='%s'>%s</span>" % (style, s)
 
     def _updateMaxTextSize(self, x):
         ## Informs that the maximum tick size orthogonal to the axis has
@@ -428,7 +433,7 @@ class AxisItem(GraphicsWidget):
             self._pen = fn.mkPen(*args, **kwargs)
         else:
             self._pen = fn.mkPen(getConfigOption('foreground'))
-        self.labelStyle['color'] = '#' + fn.colorStr(self._pen.color())[:6]
+        self.labelStyle['color'] = self._pen.color().name() #   #RRGGBB
         self._updateLabel()
 
     def textPen(self):
@@ -446,7 +451,7 @@ class AxisItem(GraphicsWidget):
             self._textPen = fn.mkPen(*args, **kwargs)
         else:
             self._textPen = fn.mkPen(getConfigOption('foreground'))
-        self.labelStyle['color'] = '#' + fn.colorStr(self._textPen.color())[:6]
+        self.labelStyle['color'] = self._textPen.color().name() #   #RRGGBB
         self._updateLabel()
 
     def setScale(self, scale=None):
@@ -459,6 +464,12 @@ class AxisItem(GraphicsWidget):
         """
         # Deprecated usage, kept for backward compatibility
         if scale is None:
+            warnings.warn(
+                'AxisItem.setScale(None) is deprecated, will be removed in 0.13.0'
+                'instead use AxisItem.enableAutoSIPrefix(bool) to enable/disable'
+                'SI prefix scaling',                
+                DeprecationWarning, stacklevel=2
+            )
             scale = 1.0
             self.enableAutoSIPrefix(True)
 
@@ -504,7 +515,7 @@ class AxisItem(GraphicsWidget):
     def setRange(self, mn, mx):
         """Set the range of values displayed by the axis.
         Usually this is handled automatically by linking the axis to a ViewBox with :func:`linkToView <pyqtgraph.AxisItem.linkToView>`"""
-        if any(np.isinf((mn, mx))) or any(np.isnan((mn, mx))):
+        if not isfinite(mn) or not isfinite(mx):
             raise Exception("Not setting range to [%s, %s]" % (str(mn), str(mx)))
         self.range = [mn, mx]
         if self.autoSIPrefix:
@@ -521,8 +532,9 @@ class AxisItem(GraphicsWidget):
         else:
             return self._linkedView()
 
-    def linkToView(self, view):
-        """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
+    def _linkToView_internal(self, view):
+        # We need this code to be available without override,
+        # even though DateAxisItem overrides the user-side linkToView method
         self.unlinkFromView()
 
         self._linkedView = weakref.ref(view)
@@ -530,8 +542,11 @@ class AxisItem(GraphicsWidget):
             view.sigYRangeChanged.connect(self.linkedViewChanged)
         else:
             view.sigXRangeChanged.connect(self.linkedViewChanged)
-        
         view.sigResized.connect(self.linkedViewChanged)
+
+    def linkToView(self, view):
+        """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
+        self._linkToView_internal(view)
         
     def unlinkFromView(self):
         """Unlink this axis from a ViewBox."""
@@ -598,8 +613,8 @@ class AxisItem(GraphicsWidget):
             finally:
                 painter.end()
             self.picture = picture
-        #p.setRenderHint(p.Antialiasing, False)   ## Sometimes we get a segfault here ???
-        #p.setRenderHint(p.TextAntialiasing, True)
+        #p.setRenderHint(p.RenderHint.Antialiasing, False)   ## Sometimes we get a segfault here ???
+        #p.setRenderHint(p.RenderHint.TextAntialiasing, True)
         self.picture.play(p)
 
     def setTicks(self, ticks):
@@ -673,13 +688,13 @@ class AxisItem(GraphicsWidget):
             return []
 
         ## decide optimal minor tick spacing in pixels (this is just aesthetics)
-        optimalTickCount = max(2., np.log(size))
+        optimalTickCount = max(2., log(size))
 
         ## optimal minor tick spacing
         optimalSpacing = dif / optimalTickCount
 
         ## the largest power-of-10 spacing which is smaller than optimal
-        p10unit = 10 ** np.floor(np.log10(optimalSpacing))
+        p10unit = 10 ** floor(log10(optimalSpacing))
 
         ## Determine major/minor tick spacings which flank the optimal spacing.
         intervals = np.array([1., 2., 10., 20., 100.]) * p10unit
@@ -751,7 +766,7 @@ class AxisItem(GraphicsWidget):
             spacing, offset = tickLevels[i]
 
             ## determine starting tick
-            start = (np.ceil((minVal-offset) / spacing) * spacing) + offset
+            start = (ceil((minVal-offset) / spacing) * spacing) + offset
 
             ## determine number of ticks
             num = int((maxVal-start) / spacing) + 1
@@ -759,7 +774,7 @@ class AxisItem(GraphicsWidget):
             ## remove any ticks that were present in higher levels
             ## we assume here that if the difference between a tick value and a previously seen tick value
             ## is less than spacing/100, then they are 'equal' and we can ignore the new tick.
-            values = list(filter(lambda x: all(np.abs(allValues-x) > spacing/self.scale*0.01), values))
+            values = list(filter(lambda x: np.all(np.abs(allValues-x) > spacing/self.scale*0.01), values))
             allValues = np.concatenate([allValues, values])
             ticks.append((spacing/self.scale, values))
 
@@ -788,8 +803,8 @@ class AxisItem(GraphicsWidget):
                 ticks.append((spacing, t))
 
         if len(ticks) < 3:
-            v1 = int(np.floor(minVal))
-            v2 = int(np.ceil(maxVal))
+            v1 = int(floor(minVal))
+            v2 = int(ceil(maxVal))
             #major = list(range(v1+1, v2))
 
             minor = []
@@ -815,7 +830,7 @@ class AxisItem(GraphicsWidget):
         if self.logMode:
             return self.logTickStrings(values, scale, spacing)
 
-        places = max(0, np.ceil(-np.log10(spacing*scale)))
+        places = max(0, ceil(-log10(spacing*scale)))
         strings = []
         for v in values:
             vs = v * scale
@@ -828,36 +843,31 @@ class AxisItem(GraphicsWidget):
 
     def logTickStrings(self, values, scale, spacing):
         estrings = ["%0.1g"%x for x in 10 ** np.array(values).astype(float) * np.array(scale)]
-
-        if sys.version_info < (3, 0):
-            # python 2 does not support unicode strings like that
-            return estrings
-        else:  # python 3+
-            convdict = {"0": "⁰",
-                        "1": "¹",
-                        "2": "²",
-                        "3": "³",
-                        "4": "⁴",
-                        "5": "⁵",
-                        "6": "⁶",
-                        "7": "⁷",
-                        "8": "⁸",
-                        "9": "⁹",
-                        }
-            dstrings = []
-            for e in estrings:
-                if e.count("e"):
-                    v, p = e.split("e")
-                    sign = "⁻" if p[0] == "-" else ""
-                    pot = "".join([convdict[pp] for pp in p[1:].lstrip("0")])
-                    if v == "1":
-                        v = ""
-                    else:
-                        v = v + "·"
-                    dstrings.append(v + "10" + sign + pot)
+        convdict = {"0": "⁰",
+                    "1": "¹",
+                    "2": "²",
+                    "3": "³",
+                    "4": "⁴",
+                    "5": "⁵",
+                    "6": "⁶",
+                    "7": "⁷",
+                    "8": "⁸",
+                    "9": "⁹",
+                    }
+        dstrings = []
+        for e in estrings:
+            if e.count("e"):
+                v, p = e.split("e")
+                sign = "⁻" if p[0] == "-" else ""
+                pot = "".join([convdict[pp] for pp in p[1:].lstrip("0")])
+                if v == "1":
+                    v = ""
                 else:
-                    dstrings.append(e)
-            return dstrings
+                    v = v + "·"
+                dstrings.append(v + "10" + sign + pot)
+            else:
+                dstrings.append(e)
+        return dstrings
 
     def generateDrawSpecs(self, p):
         """
@@ -962,7 +972,7 @@ class AxisItem(GraphicsWidget):
             if lineAlpha is None:
                 lineAlpha = 255 / (i+1)
                 if self.grid is not False:
-                    lineAlpha *= self.grid/255. * np.clip((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
+                    lineAlpha *= self.grid/255. * fn.clip_scalar((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
             elif isinstance(lineAlpha, float):
                 lineAlpha *= 255
                 lineAlpha = max(0, int(round(lineAlpha)))
@@ -1053,7 +1063,7 @@ class AxisItem(GraphicsWidget):
                 if s is None:
                     rects.append(None)
                 else:
-                    br = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, asUnicode(s))
+                    br = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignmentFlag.AlignCenter, s)
                     ## boundingRect is usually just a bit too large
                     ## (but this probably depends on per-font metrics?)
                     br.setHeight(br.height() * 0.8)
@@ -1095,9 +1105,8 @@ class AxisItem(GraphicsWidget):
                 vstr = strings[j]
                 if vstr is None: ## this tick was ignored because it is out of bounds
                     continue
-                vstr = asUnicode(vstr)
                 x = tickPositions[i][j]
-                #textRect = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, vstr)
+                #textRect = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignmentFlag.AlignCenter, vstr)
                 textRect = rects[j]
                 height = textRect.height()
                 width = textRect.width()
@@ -1105,26 +1114,19 @@ class AxisItem(GraphicsWidget):
                 offset = max(0,self.style['tickLength']) + textOffset
 
                 if self.orientation == 'left':
-                    alignFlags = QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter
+                    alignFlags = QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignVCenter
                     rect = QtCore.QRectF(tickStop-offset-width, x-(height/2), width, height)
                 elif self.orientation == 'right':
-                    alignFlags = QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter
+                    alignFlags = QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter
                     rect = QtCore.QRectF(tickStop+offset, x-(height/2), width, height)
                 elif self.orientation == 'top':
-                    alignFlags = QtCore.Qt.AlignHCenter|QtCore.Qt.AlignBottom
+                    alignFlags = QtCore.Qt.AlignmentFlag.AlignHCenter|QtCore.Qt.AlignmentFlag.AlignBottom
                     rect = QtCore.QRectF(x-width/2., tickStop-offset-height, width, height)
                 elif self.orientation == 'bottom':
-                    alignFlags = QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop
+                    alignFlags = QtCore.Qt.AlignmentFlag.AlignHCenter|QtCore.Qt.AlignmentFlag.AlignTop
                     rect = QtCore.QRectF(x-width/2., tickStop+offset, width, height)
 
-                if QT_LIB == 'PyQt6':
-                    # PyQt6 doesn't allow or-ing of different enum types
-                    # so we need to take its value property
-                    textFlags = alignFlags.value | QtCore.Qt.TextDontClip.value
-                else:
-                    # for PyQt5, the following expression is not commutative!
-                    textFlags = alignFlags | QtCore.Qt.TextDontClip
-
+                textFlags = alignFlags | QtCore.Qt.TextFlag.TextDontClip    
                 #p.setPen(self.pen())
                 #p.drawText(rect, textFlags, vstr)
                 textSpecs.append((rect, textFlags, vstr))
@@ -1138,14 +1140,14 @@ class AxisItem(GraphicsWidget):
     def drawPicture(self, p, axisSpec, tickSpecs, textSpecs):
         profiler = debug.Profiler()
 
-        p.setRenderHint(p.Antialiasing, False)
-        p.setRenderHint(p.TextAntialiasing, True)
+        p.setRenderHint(p.RenderHint.Antialiasing, False)
+        p.setRenderHint(p.RenderHint.TextAntialiasing, True)
 
         ## draw long line along axis
         pen, p1, p2 = axisSpec
         p.setPen(pen)
         p.drawLine(p1, p2)
-        p.translate(0.5,0)  ## resolves some damn pixel ambiguity
+        # p.translate(0.5,0)  ## resolves some damn pixel ambiguity
 
         ## draw ticks
         for pen, p1, p2 in tickSpecs:
@@ -1178,20 +1180,31 @@ class AxisItem(GraphicsWidget):
         else:
             self._updateHeight()
 
-    def wheelEvent(self, ev):
+    def wheelEvent(self, event):
         lv = self.linkedView()
         if lv is None:
             return
-        if self.orientation in ['left', 'right']:
-            lv.wheelEvent(ev, axis=1)
+        # Did the event occur inside the linked ViewBox (and not over the axis iteself)?
+        if lv.sceneBoundingRect().contains(event.scenePos()):
+            # pass event to linked ViewBox without marking it as single axis zoom
+            lv.wheelEvent(event)
         else:
-            lv.wheelEvent(ev, axis=0)
-        ev.accept()
+            # pass event to linked viewbox with appropriate single axis zoom parameter
+            if self.orientation in ['left', 'right']:
+                lv.wheelEvent(event, axis=1)
+            else:
+                lv.wheelEvent(event, axis=0)
+        event.accept()
 
     def mouseDragEvent(self, event):
         lv = self.linkedView()
         if lv is None:
             return
+        # Did the mouse down event occur inside the linked ViewBox (and not the axis)?
+        if lv.sceneBoundingRect().contains(event.buttonDownScenePos()):
+            # pass event to linked ViewBox without marking it as single axis pan
+            return lv.mouseDragEvent(event)
+        # otherwise pass event to linked viewbox with appropriate single axis parameter
         if self.orientation in ['left', 'right']:
             return lv.mouseDragEvent(event, axis=1)
         else:

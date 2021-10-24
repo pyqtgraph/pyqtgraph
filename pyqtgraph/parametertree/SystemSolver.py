@@ -1,6 +1,9 @@
-from ..pgcollections import OrderedDict
+# -*- coding: utf-8 -*-
+from collections import OrderedDict
 import numpy as np
 import copy
+from math import log2
+from .. import functions as fn
 
 
 class SystemSolver(object):
@@ -50,16 +53,17 @@ class SystemSolver(object):
     1) The *defaultState* class attribute: This is a dict containing a 
        description of the variables in the system--their default values,
        data types, and the ways they can be constrained. The format is::
-       
+
            { name: [value, type, constraint, allowed_constraints], ...}
-       
-       * *value* is the default value. May be None if it has not been specified
-         yet.
-       * *type* may be float, int, bool, np.ndarray, ...
-       * *constraint* may be None, single value, or (min, max)
-            * None indicates that the value is not constrained--it may be 
-              automatically generated if the value is requested.
-       * *allowed_constraints* is a string composed of (n)one, (f)ixed, and (r)ange. 
+
+       Where:
+         * *value* is the default value. May be None if it has not been specified
+           yet.
+         * *type* may be float, int, bool, np.ndarray, ...
+         * *constraint* may be None, single value, or (min, max)
+              * None indicates that the value is not constrained--it may be
+                automatically generated if the value is requested.
+         * *allowed_constraints* is a string composed of (n)one, (f)ixed, and (r)ange.
        
        Note: do not put mutable objects inside defaultState!
        
@@ -390,15 +394,12 @@ if __name__ == '__main__':
                 sh = self.shutter   # this raises RuntimeError if shutter has not
                                    # been specified
                 ap = 4.0 * (sh / (1./60.)) * (iso / 100.) * (2 ** exp) * (2 ** light)
-                ap = np.clip(ap, 2.0, 16.0)
+                ap = fn.clip_scalar(ap, 2.0, 16.0)
             except RuntimeError:
                 # program mode; we can select a suitable shutter
                 # value at the same time.
                 sh = (1./60.)
                 raise
-            
-            
-            
             return ap
 
         def _balance(self):
@@ -406,10 +407,8 @@ if __name__ == '__main__':
             light = self.lightMeter
             sh = self.shutter
             ap = self.aperture
-            fl = self.flash
-            
             bal = (4.0 / ap) * (sh / (1./60.)) * (iso / 100.) * (2 ** light)
-            return np.log2(bal)
+            return log2(bal)
     
     camera = Camera()
     

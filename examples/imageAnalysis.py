@@ -106,16 +106,12 @@ def imageHoverEvent(event):
     val = data[i, j]
     ppos = img.mapToParent(pos)
     x, y = ppos.x(), ppos.y()
-    p1.setTitle("pos: (%0.1f, %0.1f)  pixel: (%d, %d)  value: %g" % (x, y, i, j, val))
+    p1.setTitle("pos: (%0.1f, %0.1f)  pixel: (%d, %d)  value: %.3g" % (x, y, i, j, val))
 
 # Monkey-patch the image to use our custom hover function. 
 # This is generally discouraged (you should subclass ImageItem instead),
 # but it works for a very simple use like this. 
 img.hoverEvent = imageHoverEvent
 
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.exec()

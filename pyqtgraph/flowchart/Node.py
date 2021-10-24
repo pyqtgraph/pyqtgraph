@@ -3,10 +3,9 @@ from ..Qt import QtCore, QtGui, QtWidgets
 from ..graphicsItems.GraphicsObject import GraphicsObject
 from .. import functions as fn
 from .Terminal import *
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from ..debug import *
-import numpy as np
-
+import warnings
 
 translate = QtCore.QCoreApplication.translate
 
@@ -18,7 +17,7 @@ class Node(QtCore.QObject):
     Node represents the basic processing unit of a flowchart. 
     A Node subclass implements at least:
     
-    1) A list of input / ouptut terminals and their properties
+    1) A list of input / output terminals and their properties
     2) a process() function which takes the names of input terminals as keyword arguments and returns a dict with the names of output terminals as keys.
 
     A flowchart thus consists of multiple instances of Node subclasses, each of which is connected
@@ -191,6 +190,12 @@ class Node(QtCore.QObject):
     ## this is just bad planning. Causes too many bugs.
     def __getattr__(self, attr):
         """Return the terminal with the given name"""
+        warnings.warn(
+            "Use of note.terminalName is deprecated, use node['terminalName'] instead"
+            "Will be removed from 0.13.0",
+            DeprecationWarning, stacklevel=2
+        )
+        
         if attr not in self.terminals:
             raise AttributeError(attr)
         else:
@@ -449,7 +454,7 @@ class TextItem(QtWidgets.QGraphicsTextItem):
             self.on_update()
 
     def keyPressEvent(self, ev):
-        if ev.key() == QtCore.Qt.Key_Enter or ev.key() == QtCore.Qt.Key_Return:
+        if ev.key() == QtCore.Qt.Key.Key_Enter or ev.key() == QtCore.Qt.Key.Key_Return:
             if self.on_update is not None:
                 self.on_update()
                 return
@@ -476,7 +481,7 @@ class NodeGraphicsItem(GraphicsObject):
         self.hovered = False
         
         self.node = node
-        flags = self.ItemIsMovable | self.ItemIsSelectable | self.ItemIsFocusable |self.ItemSendsGeometryChanges
+        flags = self.GraphicsItemFlag.ItemIsMovable | self.GraphicsItemFlag.ItemIsSelectable | self.GraphicsItemFlag.ItemIsFocusable | self.GraphicsItemFlag.ItemSendsGeometryChanges
         #flags =  self.ItemIsFocusable |self.ItemSendsGeometryChanges
 
         self.setFlags(flags)
@@ -484,7 +489,7 @@ class NodeGraphicsItem(GraphicsObject):
         self.nameItem = TextItem(self.node.name(), self, self.labelChanged)
         self.nameItem.setDefaultTextColor(QtGui.QColor(50, 50, 50))
         self.nameItem.moveBy(self.bounds.width()/2. - self.nameItem.boundingRect().width()/2., 0)
-        self.nameItem.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
+        self.nameItem.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextEditorInteraction)
         self.updateTerminals()
         #self.setZValue(10)
 
@@ -499,7 +504,7 @@ class NodeGraphicsItem(GraphicsObject):
         #GraphicsObject.setZValue(self, z)
         
     def labelChanged(self):
-        newName = str(self.nameItem.toPlainText())
+        newName = self.nameItem.toPlainText()
         if newName != self.node.name():
             self.node.rename(newName)
             
@@ -581,7 +586,7 @@ class NodeGraphicsItem(GraphicsObject):
 
     def mouseClickEvent(self, ev):
         #print "Node.mouseClickEvent called."
-        if ev.button() == QtCore.Qt.LeftButton:
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
             #print "    ev.button: left"
             sel = self.isSelected()
@@ -594,7 +599,7 @@ class NodeGraphicsItem(GraphicsObject):
                 self.update()
             #return ret
         
-        elif ev.button() == QtCore.Qt.RightButton:
+        elif ev.button() == QtCore.Qt.MouseButton.RightButton:
             #print "    ev.button: right"
             ev.accept()
             #pos = ev.screenPos()
@@ -603,20 +608,20 @@ class NodeGraphicsItem(GraphicsObject):
             
     def mouseDragEvent(self, ev):
         #print "Node.mouseDrag"
-        if ev.button() == QtCore.Qt.LeftButton:
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
             self.setPos(self.pos()+self.mapToParent(ev.pos())-self.mapToParent(ev.lastPos()))
         
     def hoverEvent(self, ev):
-        if not ev.isExit() and ev.acceptClicks(QtCore.Qt.LeftButton):
-            ev.acceptDrags(QtCore.Qt.LeftButton)
+        if not ev.isExit() and ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton):
+            ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton)
             self.hovered = True
         else:
             self.hovered = False
         self.update()
             
     def keyPressEvent(self, ev):
-        if ev.key() == QtCore.Qt.Key_Delete or ev.key() == QtCore.Qt.Key_Backspace:
+        if ev.key() == QtCore.Qt.Key.Key_Delete or ev.key() == QtCore.Qt.Key.Key_Backspace:
             ev.accept()
             if not self.node._allowRemove:
                 return
@@ -625,7 +630,7 @@ class NodeGraphicsItem(GraphicsObject):
             ev.ignore()
 
     def itemChange(self, change, val):
-        if change == self.ItemPositionHasChanged:
+        if change == self.GraphicsItemChange.ItemPositionHasChanged:
             for k, t in self.terminals.items():
                 t[1].nodeMoved()
         return GraphicsObject.itemChange(self, change, val)

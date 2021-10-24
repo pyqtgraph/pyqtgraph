@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui, QtWidgets
 import weakref
+from .Dock import Dock
+
 
 class Container(object):
     #sigStretchChanged = QtCore.Signal()  ## can't do this here; not a QObject.
@@ -126,7 +128,7 @@ class SplitContainer(Container, QtGui.QSplitter):
         
     def saveState(self):
         sizes = self.sizes()
-        if all([x == 0 for x in sizes]):
+        if all(x == 0 for x in sizes):
             sizes = [10] * len(sizes)
         return {'sizes': sizes}
         
@@ -149,7 +151,7 @@ class SplitContainer(Container, QtGui.QSplitter):
 
 class HContainer(SplitContainer):
     def __init__(self, area):
-        SplitContainer.__init__(self, area, QtCore.Qt.Horizontal)
+        SplitContainer.__init__(self, area, QtCore.Qt.Orientation.Horizontal)
         
     def type(self):
         return 'horizontal'
@@ -180,7 +182,7 @@ class HContainer(SplitContainer):
 
 class VContainer(SplitContainer):
     def __init__(self, area):
-        SplitContainer.__init__(self, area, QtCore.Qt.Vertical)
+        SplitContainer.__init__(self, area, QtCore.Qt.Orientation.Vertical)
         
     def type(self):
         return 'vertical'
@@ -245,7 +247,7 @@ class TContainer(Container, QtGui.QWidget):
 
 
     def _insertItem(self, item, index):
-        if not isinstance(item, Dock.Dock):
+        if not isinstance(item, Dock):
             raise Exception("Tab containers may hold only docks, not other containers.")
         self.stack.insertWidget(index, item)
         self.hTabLayout.insertWidget(index, item.label)
@@ -254,7 +256,7 @@ class TContainer(Container, QtGui.QWidget):
         self.tabClicked(item.label)
         
     def tabClicked(self, tab, ev=None):
-        if ev is None or ev.button() == QtCore.Qt.LeftButton:
+        if ev is None or ev.button() == QtCore.Qt.MouseButton.LeftButton:
             for i in range(self.count()):
                 w = self.widget(i)
                 if w is tab.dock:
@@ -288,5 +290,3 @@ class TContainer(Container, QtGui.QWidget):
             x = max(x, wx)
             y = max(y, wy)
         self.setStretch(x, y)
-        
-from . import Dock

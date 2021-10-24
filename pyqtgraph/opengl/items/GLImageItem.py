@@ -1,7 +1,6 @@
+# -*- coding: utf-8 -*-
 from OpenGL.GL import *
 from .. GLGraphicsItem import GLGraphicsItem
-from ...Qt import QtGui
-import numpy as np
 
 __all__ = ['GLImageItem']
 
@@ -99,5 +98,5 @@ class GLImageItem(GLGraphicsItem):
         glTexCoord2f(0,1)
         glVertex3f(0, self.data.shape[1], 0)
         glEnd()
-        glDisable(GL_TEXTURE_3D)
+        glDisable(GL_TEXTURE_2D)
                 

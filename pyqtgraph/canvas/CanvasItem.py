@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import numpy as np
-from ..Qt import QtGui, QtCore, QtSvg, QT_LIB
+from ..Qt import QtGui, QtCore, QT_LIB
+from .. import functions as fn
 from ..graphicsItems.ROI import ROI
 from .. import SRTTransform, ItemGroup
 import importlib
@@ -66,7 +66,7 @@ class CanvasItem(QtCore.QObject):
         self.alphaLabel = QtGui.QLabel(translate("CanvasItem", "Alpha"))
         self.alphaSlider = QtGui.QSlider()
         self.alphaSlider.setMaximum(1023)
-        self.alphaSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.alphaSlider.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.alphaSlider.setValue(1023)
         self.layout.addWidget(self.alphaLabel, 0, 0)
         self.layout.addWidget(self.alphaSlider, 0, 1)
@@ -240,7 +240,7 @@ class CanvasItem(QtCore.QObject):
         self._graphicsItem.setOpacity(alpha)
         
     def setAlpha(self, alpha):
-        self.alphaSlider.setValue(int(np.clip(alpha * 1023, 0, 1023)))
+        self.alphaSlider.setValue(int(fn.clip_scalar(alpha * 1023, 0, 1023)))
         
     def alpha(self):
         return self.alphaSlider.value() / 1023.

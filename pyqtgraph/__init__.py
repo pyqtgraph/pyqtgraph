@@ -4,13 +4,14 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.11.1.dev0'
+__version__ = '0.12.3'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
-## between PyQt4 and PySide.
-from .Qt import QtGui, mkQApp
+## between PyQt and PySide.
+from .Qt import QtCore, QtGui, mkQApp
+from .Qt import exec_ as exec
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
 #if QtGui.QApplication.instance() is None:
@@ -21,14 +22,6 @@ import numpy  ## pyqtgraph requires numpy
 
 import os, sys
 
-## check python version
-## Allow anything >= 2.7
-if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] < 6):
-    raise Exception("Pyqtgraph requires Python version 2.6 or greater (this is %d.%d)" % (sys.version_info[0], sys.version_info[1]))
-
-## helpers for 2/3 compatibility
-from . import python2_3
-
 ## in general openGL is poorly supported with Qt+GraphicsView.
 ## we only enable it where the performance benefit is critical.
 ## Note this only applies to 2D graphics; 3D graphics always use OpenGL.
@@ -36,10 +29,6 @@ if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
     useOpenGL = False
 elif 'darwin' in sys.platform: ## openGL can have a major impact on mac, but also has serious bugs
     useOpenGL = False
-    if QtGui.QApplication.instance() is not None:
-        print('Warning: QApplication was created before pyqtgraph was imported; there may be problems (to avoid bugs, call QApplication.setGraphicsSystem("raster") before the QApplication is created).')
-    if QtGui.QApplication.setGraphicsSystem:
-        QtGui.QApplication.setGraphicsSystem('raster')  ## work around a variety of bugs in the native graphics system 
 else:
     useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
                 
@@ -51,8 +40,6 @@ CONFIG_OPTIONS = {
     'background': 'k',        ## default background for GraphicsWidget
     'antialias': False,
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
-    'useWeave': False,       ## Use weave to speed up some operations, if it is available
-    'weaveDebug': False,    ## Print full error message if weave compile fails
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
     'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
     'crashWarning': False,  # If True, print warnings about situations that may result in a crash
@@ -62,6 +49,7 @@ CONFIG_OPTIONS = {
                                  # The default is 'col-major' for backward compatibility, but this may
                                  # change in the future.
     'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
+    'useNumba': False, # When True, use numba
 } 
 
 
@@ -141,9 +129,6 @@ def renamePyc(startDir):
                 os.rename(fileName, name2)
                 
 path = os.path.split(__file__)[0]
-if __version__ is None and not hasattr(sys, 'frozen') and sys.version_info[0] == 2: ## If we are frozen, there's a good chance we don't have the original .py files anymore.
-    renamePyc(path)
-
 
 ## Import almost everything to make it available from a single namespace
 ## don't import the more complex systems--canvas, parametertree, flowchart, dockarea
@@ -229,6 +214,7 @@ from .graphicsItems.GraphicsWidgetAnchor import *
 from .graphicsItems.PlotCurveItem import * 
 from .graphicsItems.ButtonItem import * 
 from .graphicsItems.GradientEditorItem import * 
+from .graphicsItems.ColorBarItem import * 
 from .graphicsItems.MultiPlotItem import * 
 from .graphicsItems.ErrorBarItem import * 
 from .graphicsItems.IsocurveItem import * 
@@ -236,7 +222,8 @@ from .graphicsItems.LinearRegionItem import *
 from .graphicsItems.FillBetweenItem import * 
 from .graphicsItems.LegendItem import * 
 from .graphicsItems.ScatterPlotItem import * 
-from .graphicsItems.ItemGroup import * 
+from .graphicsItems.ItemGroup import *
+from .graphicsItems.TargetItem import * 
 
 from .widgets.MultiPlotWidget import * 
 from .widgets.ScatterPlotWidget import * 
@@ -281,6 +268,14 @@ from .colormap import *
 from .ptime import time
 from .Qt import isQObjectAlive
 from .ThreadsafeTimer import *
+
+# indirect imports used within library
+from .GraphicsScene import GraphicsScene
+from .util.cupy_helper import getCupy
+
+# indirect imports known to be used outside of the library
+from .metaarray import MetaArray
+from .ordereddict import OrderedDict
 
 
 ##############################################################
@@ -353,9 +348,9 @@ def exit():
     This function does the following in an attempt to 'safely' terminate
     the process:
     
-    * Invoke atexit callbacks
-    * Close all open file handles
-    * os._exit()
+      * Invoke atexit callbacks
+      * Close all open file handles
+      * os._exit()
     
     Note: there is some potential for causing damage with this function if you
     are using objects that _require_ their destructors to be called (for example,
@@ -384,29 +379,18 @@ def exit():
     os._exit(0)
     
 
-
 ## Convenience functions for command-line use
-
 plots = []
 images = []
 QAPP = None
 
 def plot(*args, **kargs):
     """
-    Create and return a :class:`PlotWindow <pyqtgraph.PlotWindow>` 
-    (this is just a window with :class:`PlotWidget <pyqtgraph.PlotWidget>` inside), plot data in it.
+    Create and return a :class:`PlotWidget <pyqtgraph.PlotWinPlotWidgetdow>` 
     Accepts a *title* argument to set the title of the window.
     All other arguments are used to plot data. (see :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`)
     """
     mkQApp()
-    #if 'title' in kargs:
-        #w = PlotWindow(title=kargs['title'])
-        #del kargs['title']
-    #else:
-        #w = PlotWindow()
-    #if len(args)+len(kargs) > 0:
-        #w.plot(*args, **kargs)
-        
     pwArgList = ['title', 'labels', 'name', 'left', 'right', 'top', 'bottom', 'background']
     pwArgs = {}
     dataArgs = {}
@@ -415,44 +399,32 @@ def plot(*args, **kargs):
             pwArgs[k] = kargs[k]
         else:
             dataArgs[k] = kargs[k]
-        
-    w = PlotWindow(**pwArgs)
-    w.sigClosed.connect(_plotWindowClosed)
+    windowTitle = pwArgs.pop("title", "PlotWidget")
+    w = PlotWidget(**pwArgs)
+    w.setWindowTitle(windowTitle)
     if len(args) > 0 or len(dataArgs) > 0:
         w.plot(*args, **dataArgs)
     plots.append(w)
     w.show()
     return w
 
-def _plotWindowClosed(w):
-    w.close()
-    try:
-        plots.remove(w)
-    except ValueError:
-        pass
-
 def image(*args, **kargs):
     """
-    Create and return an :class:`ImageWindow <pyqtgraph.ImageWindow>` 
-    (this is just a window with :class:`ImageView <pyqtgraph.ImageView>` widget inside), show image data inside.
+    Create and return an :class:`ImageView <pyqtgraph.ImageView>` 
     Will show 2D or 3D image data.
     Accepts a *title* argument to set the title of the window.
     All other arguments are used to show data. (see :func:`ImageView.setImage() <pyqtgraph.ImageView.setImage>`)
     """
     mkQApp()
-    w = ImageWindow(*args, **kargs)
-    w.sigClosed.connect(_imageWindowClosed)
+    w = ImageView()
+    windowTitle = kargs.pop("title", "ImageView")
+    w.setWindowTitle(windowTitle)
+    w.setImage(*args, **kargs)
     images.append(w)
     w.show()
     return w
 show = image  ## for backward compatibility
 
-def _imageWindowClosed(w):
-    w.close()
-    try:
-        images.remove(w)
-    except ValueError:
-        pass
 
 def dbg(*args, **kwds):
     """
