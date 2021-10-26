@@ -123,6 +123,6 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [PySpectra](http://hasyweb.desy.de/services/computing/Spock/node138.html)
 * [Semi-Supervised Semantic Annotator](https://gitlab.com/ficsresearch/s3ah)
 * [PyMeasure](https://github.com/pymeasure/pymeasure)
-
+* [Exo-Striker](https://github.com/3fon3fonov/exostriker)
 
 Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!
