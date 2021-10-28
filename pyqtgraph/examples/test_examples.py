@@ -1,5 +1,6 @@
 from collections import namedtuple
 from pyqtgraph import Qt
+import contextlib
 import errno
 import time
 import importlib
@@ -43,11 +44,9 @@ frontends = {
 }
 # sort out which of the front ends are available
 for frontend in frontends.keys():
-    try:
+    with contextlib.suppress(ImportError):
         importlib.import_module(frontend)
         frontends[frontend] = True
-    except ImportError:
-        pass
 
 installedFrontends = sorted([
     frontend for frontend, isPresent in frontends.items() if isPresent
@@ -119,7 +118,8 @@ def testExamples(frontend, f):
     code = """
 try:
     {0}
-    import initExample
+    import faulthandler
+    faulthandler.enable()
     import pyqtgraph as pg
     import {1}
     import sys
@@ -135,11 +135,16 @@ except:
     raise
 
 """.format(import1, import2)
+    env = dict(os.environ)
+    example_dir = os.path.abspath(os.path.dirname(__file__))
+    path = os.path.dirname(os.path.dirname(example_dir))
+    env['PYTHONPATH'] = f'{path}{os.pathsep}{example_dir}'
     process = subprocess.Popen([sys.executable],
                                 stdin=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 stdout=subprocess.PIPE,
-                                text=True)
+                                text=True,
+                                env=env)
     process.stdin.write(code)
     process.stdin.close()
 

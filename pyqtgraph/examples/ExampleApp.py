@@ -344,22 +344,24 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.resize(1000,500)
         self.show()
         self.ui.splitter.setSizes([250,750])
+
+        self.oldText = self.ui.codeView.toPlainText()
         self.ui.loadBtn.clicked.connect(self.loadFile)
         self.ui.exampleTree.currentItemChanged.connect(self.showFile)
         self.ui.exampleTree.itemDoubleClicked.connect(self.loadFile)
-
-        # textChanged fires when the highlighter is reassigned the same document. Prevent this
-        # from showing "run edited code" by checking for actual content change
-        oldText = self.ui.codeView.toPlainText()
-        def onTextChange():
-            nonlocal oldText
-            newText = self.ui.codeView.toPlainText()
-            if newText != oldText:
-                oldText = newText
-                self.codeEdited()
-
-        self.ui.codeView.textChanged.connect(onTextChange)
+        self.ui.codeView.textChanged.connect(self.onTextChange)
         self.codeBtn.clicked.connect(self.runEditedCode)
+
+    def onTextChange(self):
+        """
+        textChanged fires when the highlighter is reassigned the same document.
+        Prevent this from showing "run edited code" by checking for actual
+        content change
+        """
+        newText = self.ui.codeView.toPlainText()
+        if newText != self.oldText:
+            self.oldText = newText
+            self.codeEdited() 
 
     def filterByTitle(self, text):
         self.showExamplesByTitle(self.getMatchingTitles(text))
@@ -472,18 +474,21 @@ class ExampleLoader(QtWidgets.QMainWindow):
         env = None
         if qtLib != 'default':
             env = dict(os.environ, PYQTGRAPH_QT_LIB=qtLib)
-
+        else:
+            env = dict(os.environ)
+        example_path = os.path.abspath(os.path.dirname(__file__))
+        path = os.path.dirname(os.path.dirname(example_path))
+        env['PYTHONPATH'] = f'{path}'
         if edited:
-            path = os.path.abspath(os.path.dirname(__file__))
             proc = subprocess.Popen([sys.executable, '-'], stdin=subprocess.PIPE, cwd=path, env=env)
-            code = str(self.ui.codeView.toPlainText()).encode('UTF-8')
+            code = self.ui.codeView.toPlainText()
             proc.stdin.write(code)
             proc.stdin.close()
         else:
             fn = self.currentFile()
             if fn is None:
                 return
-            subprocess.Popen([sys.executable, fn], env=env)
+            subprocess.Popen([sys.executable, fn], cwd=path, env=env)
 
     def showFile(self):
         fn = self.currentFile()
