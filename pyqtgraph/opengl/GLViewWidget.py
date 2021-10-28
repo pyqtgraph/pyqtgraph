@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+from OpenGL.GL import * # noqa
+import OpenGL.GL.framebufferobjects as glfbo # noqa
 from ..Qt import QtCore, QtGui, QtWidgets
-from OpenGL.GL import *
-import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
 from .. import Vector
 from .. import functions as fn
