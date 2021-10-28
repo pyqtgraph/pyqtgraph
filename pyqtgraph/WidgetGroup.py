@@ -15,7 +15,7 @@ import weakref, inspect
 __all__ = ['WidgetGroup']
 
 def splitterState(w):
-    s = bytes(w.saveState().toPercentEncoding()).decode()
+    s = w.saveState().toPercentEncoding().data().decode()
     return s
     
 def restoreSplitter(w, s):
