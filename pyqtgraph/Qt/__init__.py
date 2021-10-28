@@ -1,12 +1,9 @@
 """
-This module exists to smooth out some of the differences between PySide and PyQt4:
+This module exists to smooth out some of the differences between Qt versions.
 
-* Automatically import either PyQt4 or PySide depending on availability
-* Allow to import QtCore/QtGui pyqtgraph.Qt without specifying which Qt wrapper
+* Automatically import Qt lib depending on availability
+* Allow you to import QtCore/QtGui from pyqtgraph.Qt without specifying which Qt wrapper
   you want to use.
-* Declare QtCore.Signal, .Slot in PyQt4
-* Declare loadUiType function for Pyside
-
 """
 
 import os
