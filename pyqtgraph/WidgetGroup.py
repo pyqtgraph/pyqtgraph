@@ -15,7 +15,7 @@ import weakref, inspect
 __all__ = ['WidgetGroup']
 
 def splitterState(w):
-    s = str(w.saveState().toPercentEncoding())
+    s = bytes(w.saveState().toPercentEncoding()).decode()
     return s
     
 def restoreSplitter(w, s):
@@ -25,7 +25,7 @@ def restoreSplitter(w, s):
         w.restoreState(QtCore.QByteArray.fromPercentEncoding(s.encode()))
     else:
         print("Can't configure QSplitter using object of type", type(s))
-    if w.count() > 0:   ## make sure at least one item is not collapsed
+    if w.count() > 0:   # make sure at least one item is not collapsed
         for i in w.sizes():
             if i > 0:
                 return
@@ -34,7 +34,6 @@ def restoreSplitter(w, s):
 def comboState(w):
     ind = w.currentIndex()
     data = w.itemData(ind)
-    #if not data.isValid():
     if data is not None:
         try:
             if not data.isValid():
@@ -50,7 +49,6 @@ def comboState(w):
     
 def setComboState(w, v):
     if type(v) is int:
-        #ind = w.findData(QtCore.QVariant(v))
         ind = w.findData(v)
         if ind > -1:
             w.setCurrentIndex(ind)
@@ -59,58 +57,69 @@ def setComboState(w, v):
         
 
 class WidgetGroup(QtCore.QObject):
-    """This class takes a list of widgets and keeps an internal record of their
-    state that is always up to date. 
-    
-    Allows reading and writing from groups of widgets simultaneously.
+    """State manager for groups of widgets.
+
+    WidgetGroup handles common problems that arise when dealing with groups of widgets like a control
+    panel:
+    - Provide a single place for saving / restoring the state of all widgets in the group
+    - Provide a single signal for detecting when any of the widgets have changed
     """
     
-    ## List of widget types that can be handled by WidgetGroup.
-    ## The value for each type is a tuple (change signal function, get function, set function, [auto-add children])
-    ## The change signal function that takes an object and returns a signal that is emitted any time the state of the widget changes, not just 
-    ##   when it is changed by user interaction. (for example, 'clicked' is not a valid signal here)
-    ## If the change signal is None, the value of the widget is not cached.
-    ## Custom widgets not in this list can be made to work with WidgetGroup by giving them a 'widgetGroupInterface' method
-    ##   which returns the tuple.
+    # List of widget types that can be handled by WidgetGroup.
+    # The value for each type is a tuple (change signal function, get function, set function, [auto-add children])
+    # The change signal function that takes an object and returns a signal that is emitted any time the state of the widget changes, not just
+    #   when it is changed by user interaction. (for example, 'clicked' is not a valid signal here)
+    # If the change signal is None, the value of the widget is not cached.
+    # Custom widgets not in this list can be made to work with WidgetGroup by giving them a 'widgetGroupInterface' method
+    #   which returns the tuple.
     classes = {
-        QtGui.QSpinBox: 
-            (lambda w: w.valueChanged, 
+        QtGui.QSpinBox: (
+            lambda w: w.valueChanged,
             QtGui.QSpinBox.value, 
-            QtGui.QSpinBox.setValue),
-        QtGui.QDoubleSpinBox: 
-            (lambda w: w.valueChanged, 
+            QtGui.QSpinBox.setValue
+        ),
+        QtGui.QDoubleSpinBox: (
+            lambda w: w.valueChanged,
             QtGui.QDoubleSpinBox.value, 
-            QtGui.QDoubleSpinBox.setValue),
-        QtGui.QSplitter: 
-            (None, 
+            QtGui.QDoubleSpinBox.setValue
+        ),
+        QtGui.QSplitter: (
+            None,
             splitterState,
             restoreSplitter,
-            True),
-        QtGui.QCheckBox: 
-            (lambda w: w.stateChanged,
+            True
+        ),
+        QtGui.QCheckBox: (
+            lambda w: w.stateChanged,
             QtGui.QCheckBox.isChecked,
-            QtGui.QCheckBox.setChecked),
-        QtGui.QComboBox:
-            (lambda w: w.currentIndexChanged,
+            QtGui.QCheckBox.setChecked
+        ),
+        QtGui.QComboBox: (
+            lambda w: w.currentIndexChanged,
             comboState,
-            setComboState),
-        QtGui.QGroupBox:
-            (lambda w: w.toggled,
+            setComboState
+        ),
+        QtGui.QGroupBox: (
+            lambda w: w.toggled,
             QtGui.QGroupBox.isChecked,
             QtGui.QGroupBox.setChecked,
-            True),
-        QtGui.QLineEdit:
-            (lambda w: w.editingFinished,
+            True
+        ),
+        QtGui.QLineEdit: (
+            lambda w: w.editingFinished,
             lambda w: str(w.text()),
-            QtGui.QLineEdit.setText),
-        QtGui.QRadioButton:
-            (lambda w: w.toggled,
+            QtGui.QLineEdit.setText
+        ),
+        QtGui.QRadioButton: (
+            lambda w: w.toggled,
             QtGui.QRadioButton.isChecked,
-            QtGui.QRadioButton.setChecked),
-        QtGui.QSlider:
-            (lambda w: w.valueChanged,
+            QtGui.QRadioButton.setChecked
+        ),
+        QtGui.QSlider: (
+            lambda w: w.valueChanged,
             QtGui.QSlider.value,
-            QtGui.QSlider.setValue),
+            QtGui.QSlider.setValue
+        ),
     }
     
     sigChanged = QtCore.Signal(str, object)
@@ -127,9 +136,9 @@ class WidgetGroup(QtCore.QObject):
         in the group state (for example, the program may set a spin box value to 100e-6 and have it displayed as 100 to the user)
         """
         QtCore.QObject.__init__(self)
-        self.widgetList = weakref.WeakKeyDictionary() # Make sure widgets don't stick around just because they are listed here
+        self.widgetList = weakref.WeakKeyDictionary()  # Make sure widgets don't stick around just because they are listed here
         self.scales = weakref.WeakKeyDictionary()
-        self.cache = {}  ## name:value pairs
+        self.cache = {}  # name:value pairs
         self.uncachedWidgets = weakref.WeakKeyDictionary()
         if isinstance(widgetList, QtCore.QObject):
             self.autoAdd(widgetList)
@@ -186,10 +195,9 @@ class WidgetGroup(QtCore.QObject):
         return (len(iface) > 3 and iface[3])
        
     def autoAdd(self, obj):
-        ## Find all children of this object and add them if possible.
+        # Find all children of this object and add them if possible.
         accepted = self.acceptsType(obj)
         if accepted:
-            #print "%s  auto add %s" % (self.objectName(), obj.objectName())
             self.addWidget(obj)
             
         if not accepted or self.checkForChildren(obj):
@@ -240,9 +248,9 @@ class WidgetGroup(QtCore.QObject):
         if getFunc is None:
             return None
             
-        ## if the getter function provided in the interface is a bound method,
-        ## then just call the method directly. Otherwise, pass in the widget as the first arg
-        ## to the function.
+        # if the getter function provided in the interface is a bound method,
+        # then just call the method directly. Otherwise, pass in the widget as the first arg
+        # to the function.
         if inspect.ismethod(getFunc) and getFunc.__self__ is not None:  
             val = getFunc()
         else:
@@ -250,8 +258,6 @@ class WidgetGroup(QtCore.QObject):
             
         if self.scales[w] is not None:
             val /= self.scales[w]
-        #if isinstance(val, QtCore.QString):
-            #val = str(val)
         n = self.widgetList[w]
         self.cache[n] = val
         return val
@@ -266,17 +272,10 @@ class WidgetGroup(QtCore.QObject):
         else:
             setFunc = w.widgetGroupInterface()[2]
             
-        ## if the setter function provided in the interface is a bound method,
-        ## then just call the method directly. Otherwise, pass in the widget as the first arg
-        ## to the function.
-        if inspect.ismethod(setFunc) and setFunc.__self__ is not None:  
+        # if the setter function provided in the interface is a bound method,
+        # then just call the method directly. Otherwise, pass in the widget as the first arg
+        # to the function.
+        if inspect.ismethod(setFunc) and setFunc.__self__ is not None:
             setFunc(v)
         else:
             setFunc(w, v)
-            
-        #name = self.widgetList[w]
-        #if name in self.cache and (self.cache[name] != v1):
-            #print "%s: Cached value %s != set value %s" % (name, str(self.cache[name]), str(v1))
-
-        
-        
