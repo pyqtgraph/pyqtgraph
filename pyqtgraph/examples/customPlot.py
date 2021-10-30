@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates the creation of a plot with 
 DateAxisItem and a customized ViewBox. 

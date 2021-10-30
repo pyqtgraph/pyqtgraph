@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 MultiPlotItem.py -  Graphics item used for displaying an array of PlotItems
 Copyright 2010  Luke Campagnola

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Point.py -  Extension of QPointF which adds a few missing methods.
 Copyright 2010  Luke Campagnola

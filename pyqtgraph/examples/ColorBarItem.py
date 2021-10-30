@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates the use of ColorBarItem, which displays a simple interactive color bar.
 """

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from collections import OrderedDict
 import os, types
 from ...debug import printExc
@@ -23,6 +22,3 @@ for mod in [Data, Display, Filters, Operators]:
     for node in nodes:
         LIBRARY.addNodeType(node, [(mod.__name__.split('.')[-1],)])
     
-
-
-

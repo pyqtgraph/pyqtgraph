@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from math import atan2, degrees
 from ..Qt import QtGui, QtCore
 from . import ArrowItem

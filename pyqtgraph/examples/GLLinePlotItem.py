@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrate use of GLLinePlotItem to draw cross-sections of a surface.
 """

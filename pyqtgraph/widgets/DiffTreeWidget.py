@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtGui
 from .DataTreeWidget import DataTreeWidget
 from .. import functions as fn

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 import pyqtgraph as pg
 from pyqtgraph.exporters import HDF5Exporter

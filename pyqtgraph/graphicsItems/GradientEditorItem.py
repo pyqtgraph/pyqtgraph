@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import operator
 import weakref
 import numpy as np

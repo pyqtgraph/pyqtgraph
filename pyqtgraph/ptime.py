@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ptime.py -  Precision time function made os-independent (should have been taken care of by python)
 Copyright 2010  Luke Campagnola
@@ -39,4 +38,3 @@ if sys.platform.startswith('win'):
     time = winTime
 else:
     time = unixTime
-

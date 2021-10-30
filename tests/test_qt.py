@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pyqtgraph as pg
 import os
 import pytest

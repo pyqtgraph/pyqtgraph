@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import sys
 from ..Qt import QtGui
 from collections import OrderedDict

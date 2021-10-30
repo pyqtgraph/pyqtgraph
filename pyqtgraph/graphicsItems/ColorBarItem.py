@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtCore
 from .. import functions as fn
 from .PlotItem import PlotItem

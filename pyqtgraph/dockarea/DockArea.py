@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import weakref
 from ..Qt import QtGui
 from .Container import *

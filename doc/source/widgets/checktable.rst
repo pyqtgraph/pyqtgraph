@@ -5,4 +5,3 @@ CheckTable
     :members:
 
     .. automethod:: pyqtgraph.CheckTable.__init__
-

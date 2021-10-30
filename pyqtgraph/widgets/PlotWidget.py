@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 PlotWidget.py -  Convenience class--GraphicsView widget displaying a single PlotItem
 Copyright 2010  Luke Campagnola

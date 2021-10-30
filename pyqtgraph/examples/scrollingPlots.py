@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Various methods of drawing scrolling plots.
 """

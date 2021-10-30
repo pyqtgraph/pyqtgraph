@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates a way to put multiple axes around a single plot. 
 

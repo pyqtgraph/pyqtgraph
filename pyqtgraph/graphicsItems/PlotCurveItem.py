@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui, QtWidgets
 HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
 from .. import Qt

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Simple example of loading UI template created with Qt Designer.
 

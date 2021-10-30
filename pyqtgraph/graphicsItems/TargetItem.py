@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from math import atan2
 from ..Qt import QtGui, QtCore
 from ..Point import Point

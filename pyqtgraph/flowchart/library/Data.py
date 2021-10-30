@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Node import Node
 from ...Qt import QtGui, QtCore, QtWidgets
 import numpy as np

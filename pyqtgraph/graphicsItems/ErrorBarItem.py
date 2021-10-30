@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtGui
 from .GraphicsObject import GraphicsObject
 from .. import getConfigOption

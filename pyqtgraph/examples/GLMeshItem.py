@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Simple examples demonstrating the use of GLMeshItem.
 """

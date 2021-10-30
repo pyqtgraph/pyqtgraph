@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 """
 Update a simple plot as rapidly as possible to measure speed.
 """

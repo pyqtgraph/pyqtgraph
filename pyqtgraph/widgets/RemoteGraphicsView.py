@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore, QT_LIB
 if QT_LIB.startswith('PyQt'):
     from ..Qt import sip

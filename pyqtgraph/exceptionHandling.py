@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module installs a wrapper around sys.excepthook which allows multiple
 new exception handlers to be registered. 
 
@@ -101,6 +100,3 @@ class ExceptionHandler(object):
 if not (hasattr(sys.excepthook, 'implements') and sys.excepthook.implements('ExceptionHandler')):
     original_excepthook = sys.excepthook
     sys.excepthook = ExceptionHandler()
-
-
-

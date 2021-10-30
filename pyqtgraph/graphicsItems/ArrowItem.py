@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from math import hypot
 from ..Qt import QtGui
 from .. import functions as fn

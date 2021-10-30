@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates GLVolumeItem for displaying volumetric data.
 """

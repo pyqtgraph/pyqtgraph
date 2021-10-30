@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Simple example of subclassing GraphItem.
 """

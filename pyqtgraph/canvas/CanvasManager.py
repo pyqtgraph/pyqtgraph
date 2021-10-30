@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui
 if not hasattr(QtCore, 'Signal'):
     QtCore.Signal = QtCore.pyqtSignal
@@ -73,4 +72,3 @@ class CanvasCombo(QtGui.QComboBox):
     def setHostName(self, name):
         self.hostName = name
         self.updateCanvasList()
-

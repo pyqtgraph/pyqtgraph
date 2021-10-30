@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 ################################################################################
 ## Form generated from reading UI file 'VideoTemplate.ui'
@@ -291,4 +290,3 @@ class Ui_MainWindow(object):
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"Image size", None))
         self.sizeLabel.setText("")
     # retranslateUi
-

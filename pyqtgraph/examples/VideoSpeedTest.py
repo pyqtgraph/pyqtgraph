@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Tests the speed of image updates for an ImageItem and RawImageWidget.
 The speed will generally depend on the type of data being shown, whether

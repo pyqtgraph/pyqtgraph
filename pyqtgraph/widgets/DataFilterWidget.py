@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtCore
 from .. import parametertree as ptree
 import numpy as np

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 GraphicsView.py -   Extension of QGraphicsView
 Copyright 2010  Luke Campagnola

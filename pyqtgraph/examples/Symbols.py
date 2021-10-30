@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example shows all the scatter plot symbols available in pyqtgraph.
 

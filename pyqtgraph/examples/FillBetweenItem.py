@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates use of FillBetweenItem to fill the space between two plot curves.
 """

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates the appearance / interactivity of GradientWidget
 (without actually doing anything useful with it)
@@ -47,6 +46,3 @@ l.addWidget(label, 1, 1)
 
 if __name__ == '__main__':
     pg.exec()
-
-
-

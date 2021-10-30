@@ -80,4 +80,3 @@ class GLGradientLegendItem(GLGraphicsItem):
             ##todo: fonts
             painter.drawText(QtCore.QPointF(x, y), labelText)
         painter.end()
-

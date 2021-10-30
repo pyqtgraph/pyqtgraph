@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrate programmatic setting of log transformation modes.
 """

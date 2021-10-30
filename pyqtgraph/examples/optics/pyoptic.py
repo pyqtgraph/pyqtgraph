@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from math import atan2, asin, sin, cos, degrees, sqrt, hypot
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
@@ -555,4 +554,3 @@ class Tracer(QtCore.QObject):
             
     def trace(self):
         trace(self.rays, self.optics)
-

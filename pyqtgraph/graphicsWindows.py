@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 DEPRECATED:  The classes below are convenience classes that create a new window
 containting a single, specific widget. These classes are now unnecessary because

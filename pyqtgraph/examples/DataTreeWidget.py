@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 """
 Simple use of DataTreeWidget to display a structure of nested dicts, lists, and arrays

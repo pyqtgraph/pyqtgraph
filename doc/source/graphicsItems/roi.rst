@@ -24,5 +24,3 @@ ROI
 
 .. autoclass:: pyqtgraph.MultiRectROI
     :members:
-
-

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates a variety of uses for ROI. This class provides a user-adjustable
 region of interest marker. It is possible to customize the layout and 

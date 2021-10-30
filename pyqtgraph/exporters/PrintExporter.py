@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .Exporter import Exporter
 from ..parametertree import Parameter
 from ..Qt import QtGui, QtCore

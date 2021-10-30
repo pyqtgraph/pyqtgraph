@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example uses the isosurface function to convert a scalar field
 (a hydrogen orbital) into a mesh for 3D display.

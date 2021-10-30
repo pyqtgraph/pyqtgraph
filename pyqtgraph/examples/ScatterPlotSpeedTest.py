@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 """
 For testing rapid updates of ScatterPlotItem under various conditions.
 """

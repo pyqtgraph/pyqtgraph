@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import weakref
 import warnings
 from time import perf_counter, perf_counter_ns

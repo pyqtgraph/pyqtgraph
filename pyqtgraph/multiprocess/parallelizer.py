@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os, sys, time, multiprocessing, re
 from .processes import ForkedProcess
 from .remoteproxy import ClosedError

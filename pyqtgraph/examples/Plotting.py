@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates many of the 2D plotting capabilities
 in pyqtgraph. All of the plots may be panned/scaled by dragging with 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from collections import OrderedDict
 from copy import deepcopy
 from pyqtgraph.functions import arrayToQPath, eq

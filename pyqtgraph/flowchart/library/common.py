@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ...Qt import QtCore, QtGui
 from ...widgets.SpinBox import SpinBox
 #from ...SignalProxy import SignalProxy
@@ -188,4 +187,3 @@ def metaArrayWrapper(fn):
         else:
             return fn(self, data, *args, **kargs)
     return newFn
-

@@ -82,4 +82,3 @@ def test_reload(tmp_module):
     assert cfn2.__self__ is c
 
     pg.functions.disconnect(c.sig, c.fn)
-

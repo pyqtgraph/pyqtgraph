@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ConsoleWidget is used to allow execution of user-supplied python commands
 in an application. It also includes a command history and functionality for trapping

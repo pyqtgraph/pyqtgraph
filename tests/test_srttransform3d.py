@@ -35,5 +35,3 @@ def testMatrix():
     assert_array_almost_equal(tr3.getRotation()[1], tr.getRotation()[1])
     assert_array_almost_equal(tr3.getScale(), tr.getScale())
     assert_array_almost_equal(tr3.getTranslation(), tr.getTranslation())
-
-

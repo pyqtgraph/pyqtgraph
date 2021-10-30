@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Displays an interactive Koch fractal
 """

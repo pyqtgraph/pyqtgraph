@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Use a HistogramLUTWidget to control the contrast / coloration of an image.
 """

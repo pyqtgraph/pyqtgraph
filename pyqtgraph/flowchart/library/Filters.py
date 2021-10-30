@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 from . import functions
 from ... import functions as pgfn

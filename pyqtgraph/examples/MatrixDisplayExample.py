@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates ViewBox and AxisItem configuration to plot a correlation matrix.
 """

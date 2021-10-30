@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ...Qt import QtCore, QtGui, QT_LIB
 from ...WidgetGroup import WidgetGroup
 

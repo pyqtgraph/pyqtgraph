@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 """
 ViewBox is the general-purpose graphical container that allows the user to 
 zoom / pan to inspect any area of a 2D coordinate system. 

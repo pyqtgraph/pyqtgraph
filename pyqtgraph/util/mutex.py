@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import traceback
 from ..Qt import QtCore
 
@@ -111,4 +110,3 @@ class RecursiveMutex(Mutex):
     def __init__(self, **kwds):
         kwds['recursive'] = True
         Mutex.__init__(self, **kwds)
-

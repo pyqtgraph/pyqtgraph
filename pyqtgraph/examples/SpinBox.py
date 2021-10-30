@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates the SpinBox widget, which is an extension of 
 QDoubleSpinBox providing some advanced features:

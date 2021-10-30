@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates the use of RemoteGraphicsView to improve performance in
 applications with heavy load. It works by starting a second process to handle 

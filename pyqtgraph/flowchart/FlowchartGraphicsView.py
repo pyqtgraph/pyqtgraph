@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 from ..widgets.GraphicsView import GraphicsView
 from ..graphicsItems.ViewBox import ViewBox

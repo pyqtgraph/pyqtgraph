@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import sys
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.parametertree as pt

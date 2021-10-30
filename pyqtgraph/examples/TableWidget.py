@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Simple demonstration of TableWidget, which is an extension of QTableWidget
 that automatically displays a variety of tabluar data formats.

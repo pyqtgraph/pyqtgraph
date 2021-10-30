@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates basic use of ErrorBarItem
 """

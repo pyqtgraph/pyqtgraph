@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Magic Reload Library
 Luke Campagnola   2010

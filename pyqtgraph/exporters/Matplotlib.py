@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 from .Exporter import Exporter
 from .. import PlotItem

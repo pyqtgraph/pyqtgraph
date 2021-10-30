@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 RawImageWidget.py
 Copyright 2010-2016 Luke Campagnola

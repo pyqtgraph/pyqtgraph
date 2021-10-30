@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 GraphicsWidget displaying an image histogram along with gradient editor. Can be used to
 adjust the appearance of images.

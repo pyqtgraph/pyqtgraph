@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates writing a custom Node subclass for use with flowcharts.
 

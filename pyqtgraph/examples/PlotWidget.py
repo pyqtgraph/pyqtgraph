@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates use of PlotWidget class. This is little more than a 
 GraphicsView with a PlotItem placed in its center.

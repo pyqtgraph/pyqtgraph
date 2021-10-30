@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates selecting plot curves by mouse click
 """

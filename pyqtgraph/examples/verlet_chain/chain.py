@@ -110,4 +110,3 @@ class ChainSim(pg.QtCore.QObject):
         self.relaxed.emit()
         
         
-

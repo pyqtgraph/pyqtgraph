@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Display an animated arrowhead following a curve.
 This example uses the CurveArrow class, which is a combination

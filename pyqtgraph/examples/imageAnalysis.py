@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates common image analysis tools.
 

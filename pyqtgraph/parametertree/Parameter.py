@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .. import functions as fn
 from ..Qt import QtCore
 import weakref, re

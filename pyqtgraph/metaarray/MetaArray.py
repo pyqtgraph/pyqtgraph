@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 MetaArray.py -  Class encapsulating ndarray with meta data
 Copyright 2010  Luke Campagnola

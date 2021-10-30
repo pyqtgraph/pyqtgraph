@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 import pyqtgraph.multiprocess as mp
 import pyqtgraph as pg

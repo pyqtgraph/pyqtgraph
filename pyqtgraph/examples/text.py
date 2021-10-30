@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example shows how to insert text into a scene using TextItem. This class 
 is for displaying text that is anchored to a particular location in the data

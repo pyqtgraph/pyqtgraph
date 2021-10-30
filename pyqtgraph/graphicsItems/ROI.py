@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ROI.py -  Interactive graphics items for GraphicsView (ROI widgets)
 Copyright 2010  Luke Campagnola

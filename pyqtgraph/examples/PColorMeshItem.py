@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates very basic use of PColorMeshItem
 """

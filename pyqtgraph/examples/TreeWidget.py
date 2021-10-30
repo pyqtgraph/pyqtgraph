@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Simple demonstration of TreeWidget, which is an extension of QTreeWidget
 that allows widgets to be added and dragged within the tree more easily.

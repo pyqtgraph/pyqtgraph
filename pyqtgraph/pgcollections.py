@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 advancedTypes.py - Basic data structures not included with python 
 Copyright 2010  Luke Campagnola

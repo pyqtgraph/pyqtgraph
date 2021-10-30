@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 DESCRIPTION = """\
 PyQtGraph is a pure-python graphics and GUI library built on PyQt5/PySide2 and
 numpy. 

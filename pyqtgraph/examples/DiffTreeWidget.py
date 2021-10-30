@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 """
 Simple use of DiffTreeWidget to display differences between structures of 

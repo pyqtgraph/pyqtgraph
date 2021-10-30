@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore, QT_LIB
 from .GraphicsObject import GraphicsObject
 if QT_LIB.startswith('PyQt'):

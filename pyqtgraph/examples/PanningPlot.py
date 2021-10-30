@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Shows use of PlotWidget to display panning data
 """

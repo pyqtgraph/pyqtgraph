@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore, QtTest
 from tests.ui_testing import mouseDrag, mouseMove

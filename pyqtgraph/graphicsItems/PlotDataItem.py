@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import warnings
 import numpy as np
 from ..Qt import QtCore

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Simple logarithmic plotting test
 """

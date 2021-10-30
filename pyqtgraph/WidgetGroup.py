@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 WidgetGroup.py -  WidgetGroup class for easily managing lots of Qt widgets
 Copyright 2010  Luke Campagnola

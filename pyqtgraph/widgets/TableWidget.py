@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 from ..Qt import QtGui, QtCore
 from .. import metaarray

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Vector.py -  Extension of QVector3D which adds a few missing methods.
 Copyright 2010  Luke Campagnola

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui
 
 __all__ = ['FeedbackButton']

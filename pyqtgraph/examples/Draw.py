@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrate ability of ImageItem to be used as a canvas for painting with
 the mouse.

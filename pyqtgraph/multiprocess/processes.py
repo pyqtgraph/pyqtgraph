@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import subprocess, atexit, os, sys, time, signal, inspect
 import multiprocessing.connection
 try:

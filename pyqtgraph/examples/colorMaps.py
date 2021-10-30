@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example displays all color maps currently available, either as local data
 or imported from Matplotlib of ColorCET.

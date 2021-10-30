@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import weakref
 import sys
 import math

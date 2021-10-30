@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..widgets.FileDialog import FileDialog
 from ..Qt import QtGui, QtCore
 from ..GraphicsScene import GraphicsScene

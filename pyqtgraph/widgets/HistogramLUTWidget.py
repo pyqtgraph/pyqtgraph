@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Widget displaying an image histogram along with gradient editor. Can be used to adjust
 the appearance of images. This is a wrapper around HistogramLUTItem

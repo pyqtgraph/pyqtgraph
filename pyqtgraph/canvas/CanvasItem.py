@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore, QT_LIB
 from .. import functions as fn
 from ..graphicsItems.ROI import ROI

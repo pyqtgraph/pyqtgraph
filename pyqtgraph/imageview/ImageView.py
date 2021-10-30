@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ImageView.py -  Widget for basic image dispay and analysis
 Copyright 2010  Luke Campagnola

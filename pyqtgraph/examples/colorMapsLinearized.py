@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates linearized ColorMap objects using colormap.makeMonochrome()
 or using the `ColorMap`'s `linearize()` method.

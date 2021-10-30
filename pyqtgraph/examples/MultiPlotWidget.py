@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 
 import numpy as np
 from numpy import linspace
@@ -32,4 +31,3 @@ pw.plot(ma, pen='y')
 
 if __name__ == '__main__':
     pg.exec()
-

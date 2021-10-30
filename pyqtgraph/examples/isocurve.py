@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Tests use of IsoCurve item displayed with image
 """

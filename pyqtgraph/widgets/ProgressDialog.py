@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from time import perf_counter
 from ..Qt import QtGui, QtCore
 

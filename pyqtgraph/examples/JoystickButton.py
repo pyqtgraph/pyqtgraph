@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 JoystickButton is a button with x/y values. When the button is depressed and the
 mouse dragged, the x/y values change to follow the mouse.

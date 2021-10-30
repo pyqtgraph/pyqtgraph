@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 debug.py - Functions to aid in debugging 
 Copyright 2010  Luke Campagnola

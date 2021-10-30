@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates plotting with color gradients.
 It also shows multiple plots with timed rolling updates

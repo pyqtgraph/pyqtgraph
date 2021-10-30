@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates some customized mouse interaction by drawing a crosshair that follows 
 the mouse.

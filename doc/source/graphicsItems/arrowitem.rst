@@ -5,4 +5,3 @@ ArrowItem
     :members:
 
     .. automethod:: pyqtgraph.ArrowItem.__init__
-

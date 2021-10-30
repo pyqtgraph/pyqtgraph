@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import sys, re, traceback, subprocess
 import pickle
 

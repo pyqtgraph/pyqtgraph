@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import mkQApp
 from ..graphicsItems.GraphicsLayout import GraphicsLayout
 from .GraphicsView import GraphicsView

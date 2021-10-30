@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui, QtWidgets
 import weakref
 from ..graphicsItems.GraphicsObject import GraphicsObject

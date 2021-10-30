@@ -5,4 +5,3 @@ CurvePoint
     :members:
 
     .. automethod:: pyqtgraph.CurvePoint.__init__
-

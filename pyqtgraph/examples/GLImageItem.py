@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Use GLImageItem to display image data on rectangular planes.
 

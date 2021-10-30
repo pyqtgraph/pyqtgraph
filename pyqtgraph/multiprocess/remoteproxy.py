@@ -1139,4 +1139,3 @@ class DeferredObjectProxy(ObjectProxy):
         Return a non-deferred ObjectProxy referencing the same object
         """
         return self._parent.__getattr__(self._attributes[-1], _deferGetattr=False)
-

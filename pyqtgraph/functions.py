@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 functions.py -  Miscellaneous functions with no other home
 Copyright 2010  Luke Campagnola

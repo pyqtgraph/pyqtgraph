@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates the ability to link the axes of views together
 Views can be linked manually using the context menu, but only if they are given 
@@ -39,4 +38,3 @@ p3.setLabel('left', "Label to test offset")
 
 if __name__ == '__main__':
     pg.exec()
-

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module exists to smooth out some of the differences between PySide and PyQt4:
 

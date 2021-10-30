@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 In this example we draw two different kinds of histogram.
 """

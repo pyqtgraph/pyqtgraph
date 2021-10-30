@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from OpenGL.GL import *  # noqa
 from .. GLGraphicsItem import GLGraphicsItem
 from ... import QtGui

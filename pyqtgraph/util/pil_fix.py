@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Importing this module installs support for 16-bit images in PIL.
 This works by patching objects in the PIL namespace; no files are

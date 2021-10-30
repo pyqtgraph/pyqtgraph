@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 In this example we create a subclass of PlotCurveItem for displaying a very large 
 data set from an HDF5 file that does not fit in memory. 

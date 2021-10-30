@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 """
 Test the speed of rapidly updating multiple plot curves
 """

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 configfile.py - Human-readable text configuration file library 
 Copyright 2010  Luke Campagnola
