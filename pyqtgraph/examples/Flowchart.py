@@ -10,11 +10,12 @@ Basic steps are:
   - add a gaussian filter to lowpass the data, then display it in the second plot.
 """
 
-from pyqtgraph.flowchart import Flowchart
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph as pg
 import numpy as np
+
+import pyqtgraph as pg
 import pyqtgraph.metaarray as metaarray
+from pyqtgraph.flowchart import Flowchart
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Flowchart Example")
 

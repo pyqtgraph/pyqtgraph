@@ -9,8 +9,12 @@ This module exists to smooth out some of the differences between PySide and PyQt
 
 """
 
-import os, sys, re, time, subprocess, warnings
-
+import os
+import re
+import subprocess
+import sys
+import time
+import warnings
 
 PYSIDE = 'PySide'
 PYSIDE2 = 'PySide2'
@@ -145,7 +149,9 @@ from . import QtCore, QtGui, QtWidgets
 if QT_LIB == PYQT5:
     # We're using PyQt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure for Qt5
-    import PyQt5.QtCore, PyQt5.QtGui, PyQt5.QtWidgets
+    import PyQt5.QtCore
+    import PyQt5.QtGui
+    import PyQt5.QtWidgets
     _copy_attrs(PyQt5.QtCore, QtCore)
     _copy_attrs(PyQt5.QtGui, QtGui)
     _copy_attrs(PyQt5.QtWidgets, QtWidgets)
@@ -169,7 +175,9 @@ if QT_LIB == PYQT5:
     VERSION_INFO = 'PyQt5 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 elif QT_LIB == PYQT6:
-    import PyQt6.QtCore, PyQt6.QtGui, PyQt6.QtWidgets
+    import PyQt6.QtCore
+    import PyQt6.QtGui
+    import PyQt6.QtWidgets
     _copy_attrs(PyQt6.QtCore, QtCore)
     _copy_attrs(PyQt6.QtGui, QtGui)
     _copy_attrs(PyQt6.QtWidgets, QtWidgets)
@@ -192,7 +200,9 @@ elif QT_LIB == PYQT6:
     VERSION_INFO = 'PyQt6 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 elif QT_LIB == PYSIDE2:
-    import PySide2.QtCore, PySide2.QtGui, PySide2.QtWidgets
+    import PySide2.QtCore
+    import PySide2.QtGui
+    import PySide2.QtWidgets
     _copy_attrs(PySide2.QtCore, QtCore)
     _copy_attrs(PySide2.QtGui, QtGui)
     _copy_attrs(PySide2.QtWidgets, QtWidgets)
@@ -206,11 +216,13 @@ elif QT_LIB == PYSIDE2:
     except ImportError as err:
         QtTest = FailedImport(err)
 
-    import shiboken2 as shiboken
     import PySide2
+    import shiboken2 as shiboken
     VERSION_INFO = 'PySide2 ' + PySide2.__version__ + ' Qt ' + QtCore.__version__
 elif QT_LIB == PYSIDE6:
-    import PySide6.QtCore, PySide6.QtGui, PySide6.QtWidgets
+    import PySide6.QtCore
+    import PySide6.QtGui
+    import PySide6.QtWidgets
     _copy_attrs(PySide6.QtCore, QtCore)
     _copy_attrs(PySide6.QtGui, QtGui)
     _copy_attrs(PySide6.QtWidgets, QtWidgets)
@@ -228,8 +240,8 @@ elif QT_LIB == PYSIDE6:
     except ImportError as err:
         QtTest = FailedImport(err)
 
-    import shiboken6 as shiboken
     import PySide6
+    import shiboken6 as shiboken
     VERSION_INFO = 'PySide6 ' + PySide6.__version__ + ' Qt ' + QtCore.__version__
 
 else:

@@ -4,8 +4,9 @@ or using the `ColorMap`'s `linearize()` method.
 """
 
 import numpy as np
-from pyqtgraph.Qt import QtCore, QtGui
+
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 name_list = (
     'warm','neutral','cool',

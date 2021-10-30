@@ -1,7 +1,10 @@
-from ..widgets.FileDialog import FileDialog
-from ..Qt import QtGui, QtCore
+import os
+import re
+
 from ..GraphicsScene import GraphicsScene
-import os, re
+from ..Qt import QtCore, QtGui
+from ..widgets.FileDialog import FileDialog
+
 LastExportDirectory = None
 
 

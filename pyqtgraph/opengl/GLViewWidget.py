@@ -1,12 +1,15 @@
 from OpenGL.GL import *  # noqa
 import OpenGL.GL.framebufferobjects as glfbo  # noqa
-from ..Qt import QtCore, QtGui, QtWidgets
+import warnings
+from math import cos, radians, sin, tan
+
 import numpy as np
+
 from .. import Vector
 from .. import functions as fn
 from .. import getConfigOption
-import warnings
-from math import cos, sin, tan, radians
+from ..Qt import QtCore, QtGui, QtWidgets
+
 ##Vector = QtGui.QVector3D
 
 

@@ -3,9 +3,10 @@ Simple demonstration of TableWidget, which is an extension of QTableWidget
 that automatically displays a variety of tabluar data formats.
 """
 
+import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
 
 app = pg.mkQApp("Table Widget Example")
 

@@ -4,7 +4,8 @@ Copyright 2010-2016 Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-from .. import getConfigOption, functions as fn, getCupy
+from .. import functions as fn
+from .. import getConfigOption, getCupy
 from ..Qt import QtCore, QtGui, QtWidgets
 
 try:

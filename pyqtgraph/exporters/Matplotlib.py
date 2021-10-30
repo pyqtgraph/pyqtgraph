@@ -1,7 +1,7 @@
-from ..Qt import QtGui, QtCore
-from .Exporter import Exporter
 from .. import PlotItem
 from .. import functions as fn
+from ..Qt import QtCore, QtGui
+from .Exporter import Exporter
 
 __all__ = ['MatplotlibExporter']
 

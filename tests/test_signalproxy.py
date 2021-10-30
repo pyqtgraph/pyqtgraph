@@ -1,7 +1,7 @@
 import pytest
 
-from pyqtgraph.Qt import QtCore, mkQApp
 from pyqtgraph import SignalProxy
+from pyqtgraph.Qt import QtCore, mkQApp
 
 
 class Sender(QtCore.QObject):

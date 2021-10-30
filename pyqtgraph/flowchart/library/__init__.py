@@ -1,9 +1,10 @@
+import os
+import types
 from collections import OrderedDict
-import os, types
+
+from ... import reload as reload
 from ...debug import printExc
 from ..NodeLibrary import NodeLibrary, isNodeClass
-from ... import reload as reload
-
 
 # Build default library
 LIBRARY = NodeLibrary()
@@ -17,6 +18,7 @@ getNodeType = LIBRARY.getNodeType
 
 # Add all nodes to the default library
 from . import Data, Display, Filters, Operators
+
 for mod in [Data, Display, Filters, Operators]:
     nodes = [getattr(mod, name) for name in dir(mod) if isNodeClass(getattr(mod, name))]
     for node in nodes:

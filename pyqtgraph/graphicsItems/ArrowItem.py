@@ -1,6 +1,8 @@
 from math import hypot
-from ..Qt import QtGui
+
 from .. import functions as fn
+from ..Qt import QtGui
+
 __all__ = ['ArrowItem']
 
 class ArrowItem(QtGui.QGraphicsPathItem):

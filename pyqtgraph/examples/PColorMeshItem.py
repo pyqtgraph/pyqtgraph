@@ -3,9 +3,11 @@ Demonstrates very basic use of PColorMeshItem
 """
 
 import time
-from pyqtgraph.Qt import QtCore
+
 import numpy as np
+
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore
 
 app = pg.mkQApp("PColorMesh Example")
 

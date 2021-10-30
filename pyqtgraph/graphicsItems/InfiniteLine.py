@@ -1,13 +1,14 @@
 from math import atan2, degrees
-from ..Qt import QtGui, QtCore
-from ..Point import Point
-from .GraphicsObject import GraphicsObject
-from .GraphicsItem import GraphicsItem
-from .TextItem import TextItem
-from .ViewBox import ViewBox
-from .. import functions as fn
+
 import numpy as np
 
+from .. import functions as fn
+from ..Point import Point
+from ..Qt import QtCore, QtGui
+from .GraphicsItem import GraphicsItem
+from .GraphicsObject import GraphicsObject
+from .TextItem import TextItem
+from .ViewBox import ViewBox
 
 __all__ = ['InfiniteLine', 'InfLineLabel']
 

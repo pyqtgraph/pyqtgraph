@@ -2,10 +2,12 @@
 Demonstrates very basic use of ImageItem to display image data inside a ViewBox.
 """
 
-from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
-import pyqtgraph as pg
 from time import perf_counter
+
+import numpy as np
+
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("ImageItem Example")
 

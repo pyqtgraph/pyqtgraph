@@ -1,7 +1,7 @@
 import numpy as np
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph as pg
 
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Gradiant Editor Example")
 mw = pg.GraphicsView()

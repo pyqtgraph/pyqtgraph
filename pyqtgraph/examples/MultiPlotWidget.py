@@ -2,9 +2,11 @@
 
 import numpy as np
 from numpy import linspace
-from pyqtgraph.Qt import QtGui, QtCore
+
 import pyqtgraph as pg
 from pyqtgraph import MultiPlotWidget
+from pyqtgraph.Qt import QtCore, QtGui
+
 try:
     from pyqtgraph.metaarray import *
 except:

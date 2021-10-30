@@ -5,8 +5,8 @@ These symbols are used to mark point locations for scatter plots and some line
 plots, similar to "markers" in matplotlib and vispy.
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Symbols Examples")
 win = pg.GraphicsLayoutWidget(show=True, title="Scatter Plot Symbols")

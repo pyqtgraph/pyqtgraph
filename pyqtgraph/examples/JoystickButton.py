@@ -5,8 +5,8 @@ When the mouse button is released, the x/y values change to 0,0 (rather like
 letting go of the joystick).
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Joystick Button Example")
 mw = QtGui.QMainWindow()

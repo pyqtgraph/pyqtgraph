@@ -2,12 +2,10 @@
 Demonstrates basic use of ErrorBarItem
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 
 import pyqtgraph as pg
-import numpy as np
+from pyqtgraph.Qt import QtCore, QtGui
 
 pg.setConfigOptions(antialias=True)
 

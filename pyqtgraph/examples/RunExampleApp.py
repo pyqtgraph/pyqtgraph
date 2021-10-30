@@ -4,11 +4,10 @@ It is not named test_ExampleApp.py as that way the Example application is
 not run twice.
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtTest
-
 from ExampleApp import ExampleLoader
 
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtTest
 
 pg.mkQApp()
 

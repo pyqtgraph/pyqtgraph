@@ -1,9 +1,10 @@
 # Build with `python setup.py build_exe`
-from cx_Freeze import setup, Executable
-from pathlib import Path
-
 import shutil
 from glob import glob
+from pathlib import Path
+
+from cx_Freeze import Executable, setup
+
 # Remove the build folder
 shutil.rmtree("build", ignore_errors=True)
 shutil.rmtree("dist", ignore_errors=True)
@@ -18,6 +19,7 @@ excludes = ['cvxopt','_gtkagg', '_tkagg', 'bsddb', 'curses', 'email', 'pywin.deb
 # Workaround for making sure the templates are included in the frozen app package
 include_files = []
 import pyqtgraph
+
 pg_folder = Path(pyqtgraph.__file__).parent
 templates = pg_folder.rglob('*template*.py')
 sources = [str(w) for w in templates]

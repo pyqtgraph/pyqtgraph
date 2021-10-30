@@ -3,6 +3,7 @@ Demonstrates GLVolumeItem for displaying volumetric data.
 """
 
 import numpy as np
+
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 from pyqtgraph import functions as fn

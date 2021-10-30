@@ -7,10 +7,12 @@ ScatterPlotSpeedTest examples; these .ui files have been compiled with the
 tools/rebuildUi.py script).
 """
 
+import os
+
+import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
-import os
 
 pg.mkQApp()
 

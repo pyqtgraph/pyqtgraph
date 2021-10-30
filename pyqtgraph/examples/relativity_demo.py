@@ -2,8 +2,9 @@
 Special relativity simulation 
 """
 
-import pyqtgraph as pg
 from relativity import RelativityGUI
+
+import pyqtgraph as pg
 
 pg.mkQApp()
 win = RelativityGUI()

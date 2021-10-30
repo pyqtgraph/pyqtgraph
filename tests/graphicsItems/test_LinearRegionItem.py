@@ -1,8 +1,9 @@
+import math
+
+import numpy as np
 import pytest
 
 import pyqtgraph as pg
-import numpy as np
-import math
 
 app = pg.mkQApp()
 

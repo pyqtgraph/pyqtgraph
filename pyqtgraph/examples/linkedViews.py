@@ -4,9 +4,10 @@ Views can be linked manually using the context menu, but only if they are given
 names.
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
+
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Linked Views Example")
 #mw = QtGui.QMainWindow()

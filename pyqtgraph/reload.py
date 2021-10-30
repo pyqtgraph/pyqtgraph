@@ -21,8 +21,16 @@ Does NOT:
 """
 
 from __future__ import print_function
-import inspect, os, sys, gc, traceback, types
+
+import gc
+import inspect
+import os
+import sys
+import traceback
+import types
+
 from .debug import printExc
+
 try:
     from importlib import reload as orig_reload
 except ImportError:

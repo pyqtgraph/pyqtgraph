@@ -1,16 +1,17 @@
-import warnings
 import itertools
 import math
-import numpy as np
+import warnings
 import weakref
-from .. import Qt
-from ..Qt import QtGui, QtCore, QT_LIB
-from ..Point import Point
-from .. import functions as fn
-from .GraphicsObject import GraphicsObject
-from .. import getConfigOption
 from collections import OrderedDict
-from .. import debug
+
+import numpy as np
+
+from .. import Qt, debug
+from .. import functions as fn
+from .. import getConfigOption
+from ..Point import Point
+from ..Qt import QT_LIB, QtCore, QtGui
+from .GraphicsObject import GraphicsObject
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
 

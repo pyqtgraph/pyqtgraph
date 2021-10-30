@@ -4,6 +4,7 @@ Using ProgressDialog to show progress updates in a nested process.
 """
 
 import time
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 

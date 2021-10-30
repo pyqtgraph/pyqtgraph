@@ -4,9 +4,10 @@ Demonstrates a way to put multiple axes around a single plot.
 (This will eventually become a built-in feature of PlotItem)
 """
 
+import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
 
 pg.mkQApp()
 

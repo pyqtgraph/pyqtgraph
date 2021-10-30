@@ -2,10 +2,11 @@
 This example demonstrates the use of GLSurfacePlotItem.
 """
 
-from pyqtgraph.Qt import QtCore, QtGui
+import numpy as np
+
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-import numpy as np
+from pyqtgraph.Qt import QtCore, QtGui
 
 ## Create a GL View widget to display data
 app = pg.mkQApp("GLSurfacePlot Example")

@@ -1,5 +1,5 @@
-from ..Qt import mkQApp
 from ..graphicsItems.GraphicsLayout import GraphicsLayout
+from ..Qt import mkQApp
 from .GraphicsView import GraphicsView
 
 __all__ = ['GraphicsLayoutWidget']

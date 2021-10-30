@@ -1,13 +1,15 @@
-import numpy as np
 import collections
-import sys, os
+import os
+import sys
+from time import perf_counter
+
+import numpy as np
+
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
+import pyqtgraph.configfile
 from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph.parametertree import types as pTypes
-import pyqtgraph.configfile
-
-from time import perf_counter
+from pyqtgraph.Qt import QtCore, QtGui
 
 
 class RelativityGUI(QtGui.QWidget):

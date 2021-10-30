@@ -1,9 +1,9 @@
-from time import perf_counter
 import weakref
+from time import perf_counter
 
-from .Qt import QtCore
 from . import ThreadsafeTimer
 from .functions import SignalBlock
+from .Qt import QtCore
 
 __all__ = ['SignalProxy']
 

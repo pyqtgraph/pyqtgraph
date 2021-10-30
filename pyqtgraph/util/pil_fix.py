@@ -5,6 +5,7 @@ modified.
 """
 
 import warnings
+
 warnings.warn(
     "Not used in pyqtgraph. Will be removed in 0.13",
     DeprecationWarning, stacklevel=2

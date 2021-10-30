@@ -1,5 +1,6 @@
-from ..Qt import QtGui, QtCore, QT_LIB
+from ..Qt import QT_LIB, QtCore, QtGui
 from .GraphicsObject import GraphicsObject
+
 if QT_LIB.startswith('PyQt'):
     from ..Qt import sip
 

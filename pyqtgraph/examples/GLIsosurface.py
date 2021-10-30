@@ -4,6 +4,7 @@ This example uses the isosurface function to convert a scalar field
 """
 
 import numpy as np
+
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 

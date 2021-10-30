@@ -1,6 +1,8 @@
-import pyqtgraph as pg
-import numpy as np
 from collections import OrderedDict
+
+import numpy as np
+
+import pyqtgraph as pg
 
 app = pg.mkQApp()
 

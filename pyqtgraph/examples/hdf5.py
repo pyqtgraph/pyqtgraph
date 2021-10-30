@@ -11,9 +11,12 @@ A more clever implementation of this class would employ some kind of caching
 to avoid re-reading the entire visible waveform at every update.
 """
 
-import sys, os
-import numpy as np
+import os
+import sys
+
 import h5py
+import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 

@@ -8,6 +8,7 @@ it is necessary to call QApplication.exec_() to make the windows appear).
 """
 
 import numpy as np
+
 import pyqtgraph as pg
 
 data = np.random.normal(size=1000)

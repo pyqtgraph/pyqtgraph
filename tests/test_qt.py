@@ -1,7 +1,8 @@
-import pyqtgraph as pg
 import os
+
 import pytest
 
+import pyqtgraph as pg
 
 app = pg.mkQApp()
 

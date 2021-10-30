@@ -2,10 +2,13 @@
 Test for unwanted reference cycles
 
 """
-import pyqtgraph as pg
-import numpy as np
-import weakref
 import warnings
+import weakref
+
+import numpy as np
+
+import pyqtgraph as pg
+
 app = pg.mkQApp()
 
 def assert_alldead(refs):

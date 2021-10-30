@@ -1,5 +1,6 @@
 from ..Qt import QtCore, QtGui
 
+
 class CmdInput(QtGui.QLineEdit):
     
     sigExecuteCmd = QtCore.Signal(object)

@@ -2,9 +2,10 @@
 Demonstrates use of GLGraphItem
 """
 
+import numpy as np
+
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-import numpy as np
 
 app = pg.mkQApp("GLGraphItem Example")
 w = gl.GLViewWidget()

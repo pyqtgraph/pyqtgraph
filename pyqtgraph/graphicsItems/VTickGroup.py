@@ -1,10 +1,11 @@
 if __name__ == '__main__':
-    import os, sys
+    import os
+    import sys
     path = os.path.abspath(os.path.dirname(__file__))
     sys.path.insert(0, os.path.join(path, '..', '..'))
 
-from ..Qt import QtGui
 from .. import functions as fn
+from ..Qt import QtGui
 from .UIGraphicsItem import UIGraphicsItem
 
 __all__ = ['VTickGroup']

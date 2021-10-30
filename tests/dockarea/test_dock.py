@@ -1,7 +1,9 @@
 import pyqtgraph as pg
+
 pg.mkQApp()
 
 import pyqtgraph.dockarea as da
+
 
 def test_dock():
     name = "évènts_zàhéér"

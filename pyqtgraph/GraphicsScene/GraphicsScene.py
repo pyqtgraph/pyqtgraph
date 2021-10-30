@@ -1,12 +1,12 @@
-import weakref
 import warnings
+import weakref
 from time import perf_counter, perf_counter_ns
 
-from ..Qt import QtCore, QtGui, QT_LIB, isQObjectAlive
-from ..Point import Point
-from .mouseEvents import *
 from .. import debug as debug
 from .. import getConfigOption
+from ..Point import Point
+from ..Qt import QT_LIB, QtCore, QtGui, isQObjectAlive
+from .mouseEvents import *
 
 getMillis = lambda: perf_counter_ns() // 10 ** 6
 

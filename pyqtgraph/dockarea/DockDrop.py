@@ -1,5 +1,6 @@
 from ..Qt import QtCore, QtGui
 
+
 class DockDrop(object):
     """Provides dock-dropping methods"""
     def __init__(self, allowedAreas=None):

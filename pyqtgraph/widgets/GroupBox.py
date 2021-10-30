@@ -1,4 +1,4 @@
-from ..Qt import QtGui, QtCore
+from ..Qt import QtCore, QtGui
 from .PathButton import PathButton
 
 __all__ = ['GroupBox']

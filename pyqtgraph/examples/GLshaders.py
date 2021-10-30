@@ -4,9 +4,10 @@ used to affect the appearance of a surface.
 """
 
 import numpy as np
-from pyqtgraph.Qt import QtCore, QtGui
+
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("GLShaders Example")
 w = gl.GLViewWidget()

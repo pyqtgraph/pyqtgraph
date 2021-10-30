@@ -1,7 +1,13 @@
-import os, time, sys, traceback, weakref
-import numpy as np
+import os
+import sys
 import threading
+import time
+import traceback
 import warnings
+import weakref
+
+import numpy as np
+
 try:
     import __builtin__ as builtins
     import cPickle as pickle
@@ -11,6 +17,7 @@ except ImportError:
 
 # color printing for debugging
 from ..util import cprint
+
 
 class ClosedError(Exception):
     """Raised when an event handler receives a request to close the connection

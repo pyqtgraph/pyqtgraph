@@ -1,7 +1,9 @@
 import time
+
 import numpy as np
-import pyqtgraph.multiprocess as mp
+
 import pyqtgraph as pg
+import pyqtgraph.multiprocess as mp
 
 print( "\n=================\nParallelize")
 

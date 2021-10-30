@@ -1,8 +1,9 @@
 from OpenGL.GL import *  # noqa
 import numpy as np
-from ...Qt import QtCore, QtGui
-from .. GLGraphicsItem import GLGraphicsItem
+
 from ... import functions as fn
+from ...Qt import QtCore, QtGui
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLTextItem']
 

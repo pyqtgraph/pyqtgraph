@@ -1,5 +1,6 @@
 from time import perf_counter
-from ..Qt import QtGui, QtCore
+
+from ..Qt import QtCore, QtGui
 
 __all__ = ['ProgressDialog']
 

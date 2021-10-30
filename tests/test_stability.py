@@ -6,10 +6,13 @@ the tear them down repeatedly.
 
 The purpose of this is to attempt to generate segmentation faults.
 """
-from pyqtgraph.Qt import QtTest
+import gc
+import sys
+import weakref
+from random import randint, seed
+
 import pyqtgraph as pg
-from random import seed, randint
-import sys, gc, weakref
+from pyqtgraph.Qt import QtTest
 
 app = pg.mkQApp()
 

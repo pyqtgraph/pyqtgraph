@@ -1,26 +1,26 @@
+import collections.abc
 import importlib
 import os
 import warnings
 import weakref
-import collections.abc
 
 import numpy as np
 
+from ... import functions as fn
+from ... import icons
+from ...Qt import QT_LIB, QtCore, QtGui
+from ...WidgetGroup import WidgetGroup
+from ...widgets.FileDialog import FileDialog
 from ..AxisItem import AxisItem
 from ..ButtonItem import ButtonItem
 from ..GraphicsWidget import GraphicsWidget
 from ..InfiniteLine import InfiniteLine
 from ..LabelItem import LabelItem
 from ..LegendItem import LegendItem
-from ..PlotDataItem import PlotDataItem
 from ..PlotCurveItem import PlotCurveItem
+from ..PlotDataItem import PlotDataItem
 from ..ScatterPlotItem import ScatterPlotItem
 from ..ViewBox import ViewBox
-from ... import functions as fn
-from ... import icons
-from ...Qt import QtGui, QtCore, QT_LIB
-from ...WidgetGroup import WidgetGroup
-from ...widgets.FileDialog import FileDialog
 
 translate = QtCore.QCoreApplication.translate
 

@@ -1,4 +1,4 @@
-from pyqtgraph import mkQApp, ProgressDialog
+from pyqtgraph import ProgressDialog, mkQApp
 
 mkQApp()
 

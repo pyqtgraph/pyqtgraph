@@ -1,6 +1,6 @@
-from .basetypes import WidgetParameterItem
+from ...Qt import QtGui, QtWidgets
 from ..Parameter import Parameter
-from ...Qt import QtWidgets, QtGui
+from .basetypes import WidgetParameterItem
 
 
 class FontParameterItem(WidgetParameterItem):

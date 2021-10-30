@@ -1,7 +1,9 @@
+from time import perf_counter
+
+import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
-from time import perf_counter
 
 app = pg.mkQApp()
 plt = pg.PlotWidget()

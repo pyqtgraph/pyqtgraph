@@ -1,9 +1,11 @@
 import sys
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph.parametertree as pt
-import pyqtgraph as pg
-from pyqtgraph.functions import eq
+
 import numpy as np
+
+import pyqtgraph as pg
+import pyqtgraph.parametertree as pt
+from pyqtgraph.functions import eq
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp()
 

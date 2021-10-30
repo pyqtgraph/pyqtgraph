@@ -5,8 +5,8 @@ Based on colorama (see pyqtgraph/util/colorama/README.txt)
 """
 import sys
 
-from .colorama.winterm import WinTerm, WinColor, WinStyle
 from .colorama.win32 import windll
+from .colorama.winterm import WinColor, WinStyle, WinTerm
 
 _WIN = sys.platform.startswith('win')
 if windll is not None:

@@ -2,10 +2,12 @@
 Various methods of drawing scrolling plots.
 """
 
+from time import perf_counter
+
+import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
-from time import perf_counter
 
 win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: Scrolling Plots')

@@ -10,14 +10,14 @@ Includes:
 """
 
 import warnings
+
 warnings.warn(
     "None of these are used in pyqtgraph. Will be removed in 0.13",
     DeprecationWarning, stacklevel=2
 )
 
-import threading
 import copy
-
+import threading
 from collections import OrderedDict
 
 try:

@@ -7,7 +7,6 @@ Distributed under MIT/X11 license. See license.txt for more information.
 
 import sys
 import warnings
-
 from time import perf_counter as clock
 from time import time as system_time
 

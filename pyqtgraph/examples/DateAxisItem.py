@@ -8,6 +8,7 @@ import time
 from datetime import datetime, timedelta
 
 import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 

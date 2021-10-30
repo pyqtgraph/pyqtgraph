@@ -5,9 +5,10 @@ This allows graphics to be rendered in a child process and displayed in the
 parent, which can improve CPU usage on multi-core processors.
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.widgets.RemoteGraphicsView import RemoteGraphicsView
+
 app = pg.mkQApp()
 
 ## Create the widget

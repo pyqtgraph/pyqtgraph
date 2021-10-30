@@ -1,4 +1,5 @@
 import time
+
 from pyqtgraph.Qt import QtCore, QtGui, QtTest
 
 

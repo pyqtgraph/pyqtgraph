@@ -1,14 +1,16 @@
-from ..Qt import QtGui, QtCore
-import numpy as np
-from ..Point import Point
-from .. import debug as debug
-from math import ceil, floor, log, log10, isfinite
 import sys
+import warnings
 import weakref
+from math import ceil, floor, isfinite, log, log10
+
+import numpy as np
+
+from .. import debug as debug
 from .. import functions as fn
 from .. import getConfigOption
+from ..Point import Point
+from ..Qt import QtCore, QtGui
 from .GraphicsWidget import GraphicsWidget
-import warnings
 
 __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):

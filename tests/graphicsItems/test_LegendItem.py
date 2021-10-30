@@ -1,5 +1,6 @@
 import pyqtgraph as pg
 
+
 def test_legend_item_basics():
     pg.mkQApp()
 

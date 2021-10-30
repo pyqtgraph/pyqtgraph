@@ -1,8 +1,11 @@
-from ..Qt import QtGui
+import traceback
+import types
 from collections import OrderedDict
-from .TableWidget import TableWidget
-import types, traceback
+
 import numpy as np
+
+from ..Qt import QtGui
+from .TableWidget import TableWidget
 
 try:
     import metaarray  # noqa

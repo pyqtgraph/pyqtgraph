@@ -1,9 +1,11 @@
 #!/usr/bin/python
 
-from pyqtgraph.Qt import QtGui, QtCore
-import numpy as np
-import pyqtgraph as pg
 from time import perf_counter
+
+import numpy as np
+
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Infinite Line Performance")
 

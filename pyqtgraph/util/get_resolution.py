@@ -1,6 +1,7 @@
 from .. import mkQApp
 from ..Qt import QtGui
 
+
 def test_screenInformation():
     # a qApp is still needed, otherwise screen is None
     qApp = mkQApp()

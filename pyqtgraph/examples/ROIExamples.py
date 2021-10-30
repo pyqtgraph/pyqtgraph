@@ -4,9 +4,10 @@ region of interest marker. It is possible to customize the layout and
 function of the scale/rotate handles in very flexible ways. 
 """
 
+import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
 
 pg.setConfigOptions(imageAxisOrder='row-major')
 

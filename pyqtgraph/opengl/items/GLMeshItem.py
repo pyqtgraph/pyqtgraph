@@ -1,11 +1,10 @@
 from OpenGL.GL import *  # noqa
-from .. GLGraphicsItem import GLGraphicsItem
-from .. MeshData import MeshData
-from ...Qt import QtGui
-from .. import shaders
 import numpy as np
 
-
+from ...Qt import QtGui
+from .. import shaders
+from ..GLGraphicsItem import GLGraphicsItem
+from ..MeshData import MeshData
 
 __all__ = ['GLMeshItem']
 

@@ -3,9 +3,11 @@ Displays an interactive Koch fractal
 """
 
 from functools import reduce
+
+import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
 
 app = pg.mkQApp("Fractal Example")
 

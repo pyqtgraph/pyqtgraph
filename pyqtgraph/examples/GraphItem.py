@@ -2,9 +2,10 @@
 Simple example of GraphItem use.
 """
 
+import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
 
 # Enable antialiasing for prettier plots
 pg.setConfigOptions(antialias=True)

@@ -2,10 +2,10 @@
 Demonstrate using QPainter on a subclass of GLGraphicsItem.
 """
 
+import OpenGL.GL as GL
 import pyqtgraph as pg
 import pyqtgraph.opengl
 from pyqtgraph.Qt import QtCore, QtGui
-import OpenGL.GL as GL
 
 SIZE = 32
 

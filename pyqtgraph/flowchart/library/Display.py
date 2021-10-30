@@ -1,10 +1,11 @@
-from ..Node import Node
-from ...Qt import QtCore, QtGui
-from ...graphicsItems.ScatterPlotItem import ScatterPlotItem
-from ... import PlotDataItem, ComboBox
-
-from .common import *
 import numpy as np
+
+from ... import ComboBox, PlotDataItem
+from ...graphicsItems.ScatterPlotItem import ScatterPlotItem
+from ...Qt import QtCore, QtGui
+from ..Node import Node
+from .common import *
+
 
 class PlotWidgetNode(Node):
     """Connection to PlotWidget. Will plot arrays, metaarrays, and display event lists."""

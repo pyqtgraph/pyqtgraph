@@ -1,6 +1,8 @@
-import weakref
-import pyqtgraph as pg
 import faulthandler
+import weakref
+
+import pyqtgraph as pg
+
 faulthandler.enable()
 
 pg.mkQApp()

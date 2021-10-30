@@ -1,4 +1,5 @@
 import pytest
+
 import pyqtgraph as pg
 import pyqtgraph.dockarea as da
 

@@ -1,4 +1,4 @@
-from ..Qt import QtGui, QtCore
+from ..Qt import QtCore, QtGui
 
 translate = QtCore.QCoreApplication.translate
 

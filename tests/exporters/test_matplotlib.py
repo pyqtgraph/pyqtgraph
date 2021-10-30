@@ -1,6 +1,8 @@
 import pytest
+
 import pyqtgraph as pg
 from pyqtgraph.exporters import MatplotlibExporter
+
 pytest.importorskip("matplotlib")
 import matplotlib
 

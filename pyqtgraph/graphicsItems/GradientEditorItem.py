@@ -1,12 +1,14 @@
 import operator
 import weakref
-import numpy as np
-from ..Qt import QtGui, QtCore
-from .. import functions as fn
-from .GraphicsWidget import GraphicsWidget
-from ..widgets.SpinBox import SpinBox
 from collections import OrderedDict
+
+import numpy as np
+
+from .. import functions as fn
 from ..colormap import ColorMap
+from ..Qt import QtCore, QtGui
+from ..widgets.SpinBox import SpinBox
+from .GraphicsWidget import GraphicsWidget
 
 translate = QtCore.QCoreApplication.translate
 

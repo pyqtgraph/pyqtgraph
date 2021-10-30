@@ -1,9 +1,8 @@
 from OpenGL.GL import *  # noqa
+from ... import functions as fn
+from ...Qt import QtCore, QtGui
 from ..GLGraphicsItem import GLGraphicsItem
 from .GLScatterPlotItem import GLScatterPlotItem
-from ...Qt import QtCore, QtGui
-from ... import functions as fn
-
 
 __all__ = ['GLGraphItem']
 

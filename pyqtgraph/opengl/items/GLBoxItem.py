@@ -1,7 +1,7 @@
 from OpenGL.GL import *  # noqa
-from .. GLGraphicsItem import GLGraphicsItem
-from ...Qt import QtGui
 from ... import functions as fn
+from ...Qt import QtGui
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLBoxItem']
 

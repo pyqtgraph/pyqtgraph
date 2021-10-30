@@ -1,9 +1,14 @@
-from math import atan2, asin, sin, cos, degrees, sqrt, hypot
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
+import csv
+import gzip
+import os
+from math import asin, atan2, cos, degrees, hypot, sin, sqrt
+
 import numpy as np
-import csv, gzip, os
+
+import pyqtgraph as pg
 from pyqtgraph import Point
+from pyqtgraph.Qt import QtCore, QtGui
+
 
 class GlassDB:
     """

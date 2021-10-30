@@ -3,11 +3,10 @@ Demonstrates the appearance / interactivity of GradientWidget
 (without actually doing anything useful with it)
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
-
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Gradiant Widget Example")
 w = QtGui.QMainWindow()

@@ -1,5 +1,5 @@
 from OpenGL.GL import *  # noqa
-from .. GLGraphicsItem import GLGraphicsItem
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLImageItem']
 

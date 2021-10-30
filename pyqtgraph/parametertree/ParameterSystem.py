@@ -1,7 +1,7 @@
 __all__ = ["ParameterSystem", "SystemSolver"]
 
-from .parameterTypes import GroupParameter
 from .. import functions as fn
+from .parameterTypes import GroupParameter
 from .SystemSolver import SystemSolver
 
 

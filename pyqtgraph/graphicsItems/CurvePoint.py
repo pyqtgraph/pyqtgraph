@@ -1,8 +1,9 @@
-from math import atan2, degrees
-from ..Qt import QtGui, QtCore
-from . import ArrowItem
-from ..functions import clip_scalar
 import weakref
+from math import atan2, degrees
+
+from ..functions import clip_scalar
+from ..Qt import QtCore, QtGui
+from . import ArrowItem
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['CurvePoint', 'CurveArrow']

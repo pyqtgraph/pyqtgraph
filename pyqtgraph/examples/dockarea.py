@@ -11,12 +11,12 @@ docks were created with the notion that the entire window (or any portion of it)
 would consist of dockable components.
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
-import pyqtgraph.console
 import numpy as np
 
+import pyqtgraph as pg
+import pyqtgraph.console
 from pyqtgraph.dockarea import *
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("DockArea Example")
 win = QtGui.QMainWindow()

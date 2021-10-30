@@ -10,11 +10,13 @@ between the two cases. IF you have a multi-core CPU, it should be obvious that t
 remote case is much faster.
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
+from time import perf_counter
+
+import numpy as np
+
 import pyqtgraph as pg
 import pyqtgraph.widgets.RemoteGraphicsView
-import numpy as np
-from time import perf_counter
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp()
 

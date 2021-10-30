@@ -2,9 +2,10 @@
 Tests use of IsoCurve item displayed with image
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
+
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Isocurve Example")
 

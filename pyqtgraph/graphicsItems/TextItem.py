@@ -1,7 +1,8 @@
 from math import atan2, degrees
-from ..Qt import QtCore, QtGui
-from ..Point import Point
+
 from .. import functions as fn
+from ..Point import Point
+from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['TextItem']

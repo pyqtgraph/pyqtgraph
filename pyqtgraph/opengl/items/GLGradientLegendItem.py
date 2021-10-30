@@ -1,6 +1,6 @@
-from ... Qt import QtCore, QtGui
 from ... import functions as fn
-from ... colormap import ColorMap
+from ...colormap import ColorMap
+from ...Qt import QtCore, QtGui
 from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLGradientLegendItem']

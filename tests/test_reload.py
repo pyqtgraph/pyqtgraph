@@ -1,7 +1,11 @@
-import os, sys, shutil, time
-import pyqtgraph as pg
+import os
+import shutil
+import sys
+import time
+
 import pytest
 
+import pyqtgraph as pg
 
 pgpath = os.path.join(os.path.dirname(pg.__file__), '..')
 pgpath_repr = repr(pgpath)

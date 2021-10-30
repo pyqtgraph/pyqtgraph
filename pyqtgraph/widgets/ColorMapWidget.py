@@ -1,8 +1,10 @@
-from ..Qt import QtCore
-from .. import parametertree as ptree
-import numpy as np
 from collections import OrderedDict
+
+import numpy as np
+
 from .. import functions as fn
+from .. import parametertree as ptree
+from ..Qt import QtCore
 
 __all__ = ['ColorMapWidget']
 

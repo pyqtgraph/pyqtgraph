@@ -1,10 +1,11 @@
-from ..Qt import QtGui
 from .. import functions as fn
+from ..Qt import QtGui
 from .GraphicsWidget import GraphicsWidget
+from .LabelItem import LabelItem
+from .PlotItem import PlotItem
+
 ## Must be imported at the end to avoid cyclic-dependency hell:
 from .ViewBox import ViewBox
-from .PlotItem import PlotItem
-from .LabelItem import LabelItem
 
 __all__ = ['GraphicsLayout']
 class GraphicsLayout(GraphicsWidget):

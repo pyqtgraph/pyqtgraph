@@ -1,8 +1,9 @@
 from OpenGL.GL import *  # noqa
-from .. GLGraphicsItem import GLGraphicsItem
+import numpy as np
+
 from ... import QtGui
 from ... import functions as fn
-import numpy as np
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLLinePlotItem']
 

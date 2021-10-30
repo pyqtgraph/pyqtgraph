@@ -3,8 +3,8 @@ This example displays all color maps currently available, either as local data
 or imported from Matplotlib of ColorCET.
 """
 
-from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp()
 

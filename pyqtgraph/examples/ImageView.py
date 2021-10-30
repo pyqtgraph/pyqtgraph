@@ -12,8 +12,9 @@ ImageView provides:
 """
 
 import numpy as np
-from pyqtgraph.Qt import QtCore, QtGui
+
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 # Interpret image data as row-major instead of col-major
 pg.setConfigOptions(imageAxisOrder='row-major')

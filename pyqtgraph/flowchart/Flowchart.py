@@ -1,21 +1,24 @@
-from ..Qt import QtCore, QtGui, QT_LIB
-from .Node import *
-from collections import OrderedDict
-from ..widgets.TreeWidget import *
-from .. import FileDialog, DataTreeWidget
-
 import importlib
+from collections import OrderedDict
+
+from .. import DataTreeWidget, FileDialog
+from ..Qt import QT_LIB, QtCore, QtGui
+from ..widgets.TreeWidget import *
+from .Node import *
+
 FlowchartCtrlTemplate = importlib.import_module(
     f'.FlowchartCtrlTemplate_{QT_LIB.lower()}', package=__package__)
     
-from .Terminal import Terminal
 from numpy import ndarray
-from .library import LIBRARY
-from ..debug import printExc
+
 from .. import configfile as configfile
 from .. import dockarea as dockarea
-from . import FlowchartGraphicsView
 from .. import functions as fn
+from ..debug import printExc
+from . import FlowchartGraphicsView
+from .library import LIBRARY
+from .Terminal import Terminal
+
 
 def strDict(d):
     return dict([(str(k), v) for k, v in d.items()])

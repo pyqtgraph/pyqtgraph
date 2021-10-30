@@ -1,10 +1,12 @@
+import sys
+from typing import Any, Dict, Type, Union
+
 import numpy as np
 import pytest
-import sys
-from typing import Dict, Any, Union, Type
 
-from pyqtgraph import getCupy, getConfigOption, setConfigOption
+from pyqtgraph import getConfigOption, getCupy, setConfigOption
 from pyqtgraph.functions import makeARGB as real_makeARGB
+
 try:
     import cupy
 except ImportError:

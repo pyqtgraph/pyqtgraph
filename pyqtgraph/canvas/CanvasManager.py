@@ -1,7 +1,9 @@
 from ..Qt import QtCore, QtGui
+
 if not hasattr(QtCore, 'Signal'):
     QtCore.Signal = QtCore.pyqtSignal
 import weakref
+
 
 class CanvasManager(QtCore.QObject):
     SINGLETON = None

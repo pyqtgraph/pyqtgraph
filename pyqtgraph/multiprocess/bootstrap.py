@@ -1,6 +1,8 @@
 """For starting up remote processes"""
-import sys, pickle, os
 import importlib
+import os
+import pickle
+import sys
 
 if __name__ == '__main__':
     if hasattr(os, 'setpgrp'):

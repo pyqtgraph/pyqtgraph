@@ -1,9 +1,10 @@
 from OpenGL.GL import *  # noqa
-from .. GLGraphicsItem import GLGraphicsItem
-from .. import shaders
+import numpy as np
+
 from ... import functions as fn
 from ...Qt import QtGui
-import numpy as np
+from .. import shaders
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLScatterPlotItem']
 

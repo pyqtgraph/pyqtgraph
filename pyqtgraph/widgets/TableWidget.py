@@ -1,6 +1,7 @@
 import numpy as np
-from ..Qt import QtGui, QtCore
+
 from .. import metaarray
+from ..Qt import QtCore, QtGui
 
 translate = QtCore.QCoreApplication.translate
 

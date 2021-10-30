@@ -1,11 +1,14 @@
-import numpy as np
-import pyqtgraph.multiprocess as mp
-import pyqtgraph as pg
 import time
+
+import numpy as np
+
+import pyqtgraph as pg
+import pyqtgraph.multiprocess as mp
 
 print("\n=================\nStart Process")
 proc = mp.Process()
 import os
+
 print("parent:", os.getpid(), "child:", proc.proc.pid)
 print("started")
 rnp = proc._import('numpy')
@@ -35,10 +38,12 @@ print( "process finished")
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
+
 app = pg.mkQApp("Multiprocess Example")
 
 print( "\n=================\nStart QtProcess")
 import sys
+
 if (sys.flags.interactive != 1):
     print( "   (not interactive; remote process will exit immediately.)")
 proc = mp.QtProcess()
