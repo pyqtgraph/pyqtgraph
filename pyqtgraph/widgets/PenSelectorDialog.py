@@ -1,5 +1,6 @@
 from ..Qt import QtCore, QtGui, QtWidgets
-from ..parametertree import Parameter, ParameterTree
+from ..parametertree.Parameter import Parameter
+from ..parametertree.ParameterTree import ParameterTree
 from ..functions import mkPen
 
 import re
