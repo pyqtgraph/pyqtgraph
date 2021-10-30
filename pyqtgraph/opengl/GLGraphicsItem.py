@@ -1,4 +1,4 @@
-from OpenGL.GL import *
+from OpenGL.GL import *  # noqa
 from OpenGL import GL
 from ..Qt import QtCore
 from .. import Transform3D

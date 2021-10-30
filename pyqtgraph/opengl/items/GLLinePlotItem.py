@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from OpenGL.GL import *
+from OpenGL.GL import *  # noqa
 from .. GLGraphicsItem import GLGraphicsItem
 from ... import QtGui
 from ... import functions as fn

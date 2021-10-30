@@ -1,4 +1,4 @@
-from OpenGL.GL import *
+from OpenGL.GL import *  # noqa
 import numpy as np
 from ...Qt import QtCore, QtGui
 from .. GLGraphicsItem import GLGraphicsItem

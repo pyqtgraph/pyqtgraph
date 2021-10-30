@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from OpenGL.GL import *
+from OpenGL.GL import *  # noqa
 from .GLMeshItem import GLMeshItem
 from .. MeshData import MeshData
 import numpy as np

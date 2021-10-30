@@ -1,4 +1,4 @@
-from OpenGL.GL import *
+from OpenGL.GL import *  # noqa
 from .. GLGraphicsItem import GLGraphicsItem
 from ...Qt import QtGui
 from ... import functions as fn
@@ -84,5 +84,3 @@ class GLBoxItem(GLGraphicsItem):
         glVertex3f(x, y, z)
         
         glEnd()
-        
-        

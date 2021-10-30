@@ -10,7 +10,7 @@ from ..Qt import QtCore, QtGui, QtWidgets
 
 try:
     QOpenGLWidget = QtWidgets.QOpenGLWidget
-    from OpenGL.GL import *
+    from OpenGL.GL import *  # noqa
 
     HAVE_OPENGL = True
 except (ImportError, AttributeError):

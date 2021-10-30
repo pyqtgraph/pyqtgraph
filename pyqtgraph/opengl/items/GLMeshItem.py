@@ -1,4 +1,4 @@
-from OpenGL.GL import *
+from OpenGL.GL import *  # noqa
 from .. GLGraphicsItem import GLGraphicsItem
 from .. MeshData import MeshData
 from ...Qt import QtGui
