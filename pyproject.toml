@@ -30,3 +30,7 @@ src_paths = ["pyqtgraph", "tests"]
 skip_glob = ["**/*Template*.py", "**/colorama"]
 skip_gitignore = true
 known_third_party = ["QtCore", "QtGui", "QtWidgets"]
+
+[tool.pycln]
+all = true
+exclude = '(Template|__init__.py)'

@@ -15,7 +15,8 @@ import numpy as np
 
 import pyqtgraph as pg
 import pyqtgraph.console
-from pyqtgraph.dockarea import *
+from pyqtgraph.dockarea.Dock import Dock
+from pyqtgraph.dockarea.DockArea import DockArea
 from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("DockArea Example")
