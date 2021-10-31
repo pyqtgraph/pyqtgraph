@@ -102,7 +102,7 @@ jobs:
       run: |
         mkdir $SCREENSHOT_DIR
         pytest tests -v
-        pytest examples -v
+        pytest pyqtgraph/examples -v
       shell: bash
     - name: Upload Screenshots
       uses: actions/upload-artifact@v2

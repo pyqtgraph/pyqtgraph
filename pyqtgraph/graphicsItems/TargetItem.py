@@ -138,7 +138,7 @@ class TargetItem(UIGraphicsItem):
     def sigDragged(self):
         warnings.warn(
             "'sigDragged' has been deprecated and will be removed in 0.13.0.  Use "
-            "`sigPositionChanged` instead",
+            "`sigPositionChangeFinished` instead",
             DeprecationWarning,
             stacklevel=2,
         )
