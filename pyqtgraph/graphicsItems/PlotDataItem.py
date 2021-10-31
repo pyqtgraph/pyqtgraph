@@ -285,7 +285,7 @@ class PlotDataItem(GraphicsObject):
         require merging the entire plot into a single entity before the alpha value can be applied. For plots with more
         than a few hundred points, this can result in excessive slowdown.
 
-        Since version 0.12.3, this slowdown is automatically avoided by an algorithm that draws line segments
+        Since version 0.12.4, this slowdown is automatically avoided by an algorithm that draws line segments
         separately for fully opaque lines. Setting `alpha` < 1 reverts to the previous, slower drawing method.
         
         For lines with a wdith of more than 4 pixels, :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>` will automatically
