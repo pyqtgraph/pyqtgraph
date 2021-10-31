@@ -3,12 +3,11 @@ Example demonstrating a variety of scatter plot features.
 """
 
 from collections import namedtuple
-from itertools import chain
 
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("Scatter Plot Item Example") 
 mw = QtGui.QMainWindow()

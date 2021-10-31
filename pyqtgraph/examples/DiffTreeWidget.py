@@ -7,7 +7,6 @@ nested dicts, lists, and arrays.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("DiffTreeWidget Example")
 A = {

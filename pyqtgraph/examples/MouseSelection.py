@@ -5,7 +5,6 @@ Demonstrates selecting plot curves by mouse click
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 
 win = pg.plot()
 win.setWindowTitle('pyqtgraph example: Plot data selection')

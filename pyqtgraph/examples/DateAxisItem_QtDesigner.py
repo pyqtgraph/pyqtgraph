@@ -6,13 +6,12 @@ one would have to subclass plotWidget in order to attach a dateaxis to it.
 """
 
 import os
-import sys
 import time
 
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtWidgets, loadUiType
+from pyqtgraph.Qt import QtWidgets, loadUiType
 
 pg.setConfigOption('background', 'w')
 pg.setConfigOption('foreground', 'k')

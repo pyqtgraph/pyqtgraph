@@ -9,7 +9,6 @@ import numpy as np
 
 import pyqtgraph as pg
 import pyqtgraph.console
-from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp()
 

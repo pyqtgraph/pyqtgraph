@@ -8,7 +8,7 @@ import time
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets, mkQApp
+from pyqtgraph.Qt import QtCore, mkQApp
 
 
 class DataSource(object):

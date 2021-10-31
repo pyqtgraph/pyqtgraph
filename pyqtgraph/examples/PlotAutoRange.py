@@ -6,7 +6,7 @@ This example demonstrates the different auto-ranging capabilities of ViewBoxes
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore
 
 app = pg.mkQApp("Plot Auto Range Example")
 #mw = QtGui.QMainWindow()

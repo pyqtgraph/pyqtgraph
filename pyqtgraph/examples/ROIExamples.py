@@ -7,7 +7,6 @@ function of the scale/rotate handles in very flexible ways.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 
 pg.setConfigOptions(imageAxisOrder='row-major')
 

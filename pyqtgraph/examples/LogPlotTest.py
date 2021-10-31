@@ -5,7 +5,6 @@ Simple logarithmic plotting test
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Log Plot Example")
 

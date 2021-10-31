@@ -1,8 +1,6 @@
 import sys
 
 import pyqtgraph as pg
-from pyqtgraph import setConfigOption
-from pyqtgraph.graphicsItems import TextItem
 from pyqtgraph.Qt import QtGui
 
 # For packages that require scipy, these may be needed: 

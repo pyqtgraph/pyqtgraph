@@ -5,7 +5,6 @@ In this example we draw two different kinds of histogram.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 
 win = pg.GraphicsLayoutWidget(show=True)
 win.resize(800,350)

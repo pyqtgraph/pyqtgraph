@@ -6,7 +6,6 @@ plots, similar to "markers" in matplotlib and vispy.
 """
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Symbols Examples")
 win = pg.GraphicsLayoutWidget(show=True, title="Scatter Plot Symbols")

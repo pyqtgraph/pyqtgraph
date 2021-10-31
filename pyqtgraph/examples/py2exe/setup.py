@@ -1,13 +1,10 @@
 import shutil
 from distutils.core import setup
-from glob import glob
 
 # Remove the build folder
 shutil.rmtree("build", ignore_errors=True)
 shutil.rmtree("dist", ignore_errors=True)
 import sys
-
-import py2exe
 
 includes = ['PyQt4', 'PyQt4.QtGui', 'PyQt4.QtSvg', 'sip', 'pyqtgraph.graphicsItems']
 excludes = ['_gtkagg', '_tkagg', 'bsddb', 'curses', 'email', 'pywin.debugger',

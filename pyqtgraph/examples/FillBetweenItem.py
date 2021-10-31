@@ -5,7 +5,7 @@ Demonstrates use of FillBetweenItem to fill the space between two plot curves.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore
 
 #FIXME: When running on Qt5, not as perfect as on Qt4
 

@@ -5,7 +5,6 @@ Simple examples demonstrating the use of GLMeshItem.
 
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("GLMeshItem Example")
 w = gl.GLViewWidget()

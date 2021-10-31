@@ -6,7 +6,7 @@ the mouse.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore
 
 app = pg.mkQApp("Draw Example")
 

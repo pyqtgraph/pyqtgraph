@@ -13,7 +13,6 @@ import numpy as np
 import verlet_chain
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 
 sim = verlet_chain.ChainSim()
 

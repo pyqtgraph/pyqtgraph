@@ -3,12 +3,11 @@ This example demonstrates the creation of a plot with
 DateAxisItem and a customized ViewBox. 
 """
 
-import time
 
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore
 
 
 class CustomViewBox(pg.ViewBox):

@@ -1,6 +1,5 @@
 # Build with `python setup.py build_exe`
 import shutil
-from glob import glob
 from pathlib import Path
 
 from cx_Freeze import Executable, setup

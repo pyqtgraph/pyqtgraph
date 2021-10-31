@@ -15,10 +15,8 @@ from ..Qt import QtCore, QtGui
 from .AxisItem import *
 from .GradientEditorItem import *
 from .GraphicsWidget import GraphicsWidget
-from .GridItem import *
 from .LinearRegionItem import *
 from .PlotCurveItem import *
-from .PlotDataItem import *
 from .ViewBox import *
 
 __all__ = ['HistogramLUTItem']

@@ -6,8 +6,6 @@ the mouse.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Point import Point
-from pyqtgraph.Qt import QtCore, QtGui
 
 #generate layout
 app = pg.mkQApp("Crosshair Example")

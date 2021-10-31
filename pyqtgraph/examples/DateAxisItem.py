@@ -5,12 +5,10 @@ timestamps on x-axis which automatically adapt to current zoom level.
 """
 
 import time
-from datetime import datetime, timedelta
 
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("DateAxisItem Example")
 

@@ -4,12 +4,12 @@ Demonstrate using QPainter on a subclass of GLGraphicsItem.
 
 import OpenGL.GL as GL
 import pyqtgraph as pg
-import pyqtgraph.opengl
+from pyqtgraph.opengl import GLAxisItem, GLGraphicsItem, GLGridItem, GLViewWidget
 from pyqtgraph.Qt import QtCore, QtGui
 
 SIZE = 32
 
-class GLPainterItem(pg.opengl.GLGraphicsItem.GLGraphicsItem):
+class GLPainterItem(GLGraphicsItem.GLGraphicsItem):
     def __init__(self, **kwds):
         super().__init__()
         glopts = kwds.pop('glOptions', 'additive')
@@ -71,17 +71,17 @@ class GLPainterItem(pg.opengl.GLGraphicsItem.GLGraphicsItem):
 
 
 pg.mkQApp("GLPainterItem Example")
-glv = pg.opengl.GLViewWidget()
+glv = GLViewWidget()
 glv.show()
 glv.setWindowTitle('pyqtgraph example: GLPainterItem')
 glv.setCameraPosition(distance=50, elevation=90, azimuth=0)
 
-griditem = pg.opengl.GLGridItem()
+griditem = GLGridItem()
 griditem.setSize(SIZE, SIZE)
 griditem.setSpacing(1, 1)
 glv.addItem(griditem)
 
-axisitem = pg.opengl.GLAxisItem()
+axisitem = GLAxisItem()
 axisitem.setSize(SIZE/2, SIZE/2, 1)
 glv.addItem(axisitem)
 

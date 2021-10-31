@@ -18,7 +18,7 @@ import h5py
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtGui
 
 pg.mkQApp()
 

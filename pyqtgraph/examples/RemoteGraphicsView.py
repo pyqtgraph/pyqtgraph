@@ -6,7 +6,6 @@ parent, which can improve CPU usage on multi-core processors.
 """
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.widgets.RemoteGraphicsView import RemoteGraphicsView
 
 app = pg.mkQApp()

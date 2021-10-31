@@ -14,10 +14,10 @@ would consist of dockable components.
 import numpy as np
 
 import pyqtgraph as pg
-import pyqtgraph.console
+from pyqtgraph.console import ConsoleWidget
 from pyqtgraph.dockarea.Dock import Dock
 from pyqtgraph.dockarea.DockArea import DockArea
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("DockArea Example")
 win = QtGui.QMainWindow()
@@ -79,7 +79,7 @@ saveBtn.clicked.connect(save)
 restoreBtn.clicked.connect(load)
 
 
-w2 = pg.console.ConsoleWidget()
+w2 = ConsoleWidget()
 d2.addWidget(w2)
 
 ## Hide title bar on dock 3

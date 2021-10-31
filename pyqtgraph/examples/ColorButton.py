@@ -3,10 +3,9 @@ Simple example demonstrating a button which displays a colored rectangle
 and allows the user to select a new color by clicking on the button.
 """
 
-import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("ColorButton Example")
 win = QtGui.QMainWindow()

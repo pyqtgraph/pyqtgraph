@@ -5,7 +5,7 @@ This example demonstrates some of the plotting items available in pyqtgraph.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore
 
 app = pg.mkQApp("InfiniteLine Example")
 win = pg.GraphicsLayoutWidget(show=True, title="Plotting items examples")

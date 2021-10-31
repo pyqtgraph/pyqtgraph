@@ -7,7 +7,7 @@ the left/right mouse buttons. Right click on any plot to show a context menu.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore
 
 app = pg.mkQApp("Plotting Example")
 #mw = QtGui.QMainWindow()

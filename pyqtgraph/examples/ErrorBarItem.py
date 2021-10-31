@@ -5,7 +5,6 @@ Demonstrates basic use of ErrorBarItem
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 
 pg.setConfigOptions(antialias=True)
 

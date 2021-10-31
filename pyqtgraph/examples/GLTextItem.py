@@ -5,7 +5,7 @@ Simple examples demonstrating the use of GLTextItem.
 
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-from pyqtgraph.Qt import QtCore, QtGui, mkQApp
+from pyqtgraph.Qt import mkQApp
 
 app = mkQApp("GLTextItem Example")
 

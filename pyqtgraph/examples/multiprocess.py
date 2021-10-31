@@ -1,4 +1,3 @@
-import time
 
 import numpy as np
 
@@ -37,7 +36,6 @@ print( "process finished")
 
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Multiprocess Example")
 

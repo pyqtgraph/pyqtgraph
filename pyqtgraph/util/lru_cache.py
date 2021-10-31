@@ -7,7 +7,6 @@ warnings.warn(
 
 import itertools
 import operator
-import sys
 
 
 class LRUCache(object):

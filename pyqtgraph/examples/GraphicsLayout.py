@@ -7,7 +7,6 @@ labels
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Gradiant Layout Example")
 view = pg.GraphicsView()

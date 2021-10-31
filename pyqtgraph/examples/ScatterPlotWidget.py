@@ -20,7 +20,6 @@ The widget consists of four components:
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 
 pg.mkQApp()
 

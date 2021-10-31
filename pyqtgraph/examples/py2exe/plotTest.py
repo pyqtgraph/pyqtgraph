@@ -3,8 +3,6 @@ import sys
 from PyQt4 import QtGui
 
 import pyqtgraph as pg
-from pyqtgraph import setConfigOption
-from pyqtgraph.graphicsItems import TextItem
 
 # For packages that require scipy, these may be needed: 
 #   from scipy.stats import futil

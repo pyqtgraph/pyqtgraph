@@ -10,10 +10,8 @@ QDoubleSpinBox providing some advanced features:
 
 import ast
 
-import numpy as np
-
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("SpinBox Example")
 

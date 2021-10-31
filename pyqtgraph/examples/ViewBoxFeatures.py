@@ -8,7 +8,6 @@ This example demonstrates many of the features ViewBox provides.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 
 x = np.arange(1000, dtype=float)
 y = np.random.normal(size=1000)

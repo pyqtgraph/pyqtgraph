@@ -10,7 +10,7 @@ import pyqtgraph as pg
 import pyqtgraph.flowchart.library as fclib
 from pyqtgraph.flowchart import Flowchart, Node
 from pyqtgraph.flowchart.library.common import CtrlNode
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("Flowchart Custom Node Example")
 

@@ -8,9 +8,8 @@ from time import perf_counter
 import numpy as np
 
 import pyqtgraph as pg
-import pyqtgraph.graphicsItems.ScatterPlotItem
 import pyqtgraph.parametertree as ptree
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+from pyqtgraph.Qt import QtCore, QtWidgets
 
 translate = QtCore.QCoreApplication.translate
 

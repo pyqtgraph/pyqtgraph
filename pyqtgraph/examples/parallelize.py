@@ -1,7 +1,5 @@
 import time
 
-import numpy as np
-
 import pyqtgraph as pg
 import pyqtgraph.multiprocess as mp
 

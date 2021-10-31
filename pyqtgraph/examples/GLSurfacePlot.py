@@ -6,7 +6,7 @@ import numpy as np
 
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore
 
 ## Create a GL View widget to display data
 app = pg.mkQApp("GLSurfacePlot Example")
