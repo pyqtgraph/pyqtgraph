@@ -100,8 +100,8 @@ class LineSegments:
 class PlotCurveItem(GraphicsObject):
     """
     Class representing a single plot curve. Instances of this class are created
-    automatically as part of PlotDataItem; these rarely need to be instantiated
-    directly.
+    automatically as part of :class:`PlotDataItem <pyqtgraph.PlotDataItem>`; 
+    these rarely need to be instantiated directly.
 
     Features:
 
@@ -150,7 +150,7 @@ class PlotCurveItem(GraphicsObject):
             'connect': 'all',
             'mouseWidth': 8, # width of shape responding to mouse click
             'compositionMode': None,
-            'skipFiniteCheck': True
+            'skipFiniteCheck': False
         }
         if 'pen' not in kargs:
             self.opts['pen'] = fn.mkPen('w')
@@ -404,6 +404,15 @@ class PlotCurveItem(GraphicsObject):
         self.fillPath = None
         self.invalidateBounds()
         self.update()
+        
+    def setSkipFiniteCheck(self, skipFiniteCheck):
+        """
+        When it is known that the plot data passed to `PlotCurveItem` contains only finite numerical values,
+        the `skipFiniteCheck` property can help speed up plotting. If this flag is set and the data contains 
+        any non-finite values (such as `NaN` or `Inf`), unpredictable behavior will occur. The data might not
+        be plotted, or there migth be significant performance impact.
+        """
+        self.opts['skipFiniteCheck']  = bool(skipFiniteCheck)
 
     def setData(self, *args, **kargs):
         """
@@ -434,7 +443,6 @@ class PlotCurveItem(GraphicsObject):
                         respectively. In this case len(x) == len(y)
                         If not passed or an empty string or None is passed, the
                         step mode is not enabled.
-                        Passing True is a deprecated equivalent to "center".
         connect         Argument specifying how vertexes should be connected
                         by line segments. Default is "all", indicating full
                         connection. "pairs" causes only even-numbered segments
@@ -443,18 +451,20 @@ class PlotCurveItem(GraphicsObject):
                         connectivity, specify an array of boolean values.
         compositionMode See :func:`setCompositionMode
                         <pyqtgraph.PlotCurveItem.setCompositionMode>`.
-        skipFiniteCheck Optimization parameter that can speed up plot time by
-                        telling the painter to not check and compensate for NaN
-                        values.  If set to True, and NaN values exist, the data
-                        may not be displayed or your plot will take a
-                        significant performance hit.  Defaults to False.
+        skipFiniteCheck (bool, defaults to `False`) Optimization flag that can
+                        speed up plotting by not checking and compensating for
+                        `NaN` values.  If set to True, and NaN values exist, the
+                        data may not be displayed or the plot may take a
+                        significant performance hit.
         =============== ========================================================
 
         If non-keyword arguments are used, they will be interpreted as
         setData(y) for a single argument and setData(x, y) for two
         arguments.
-
-
+        
+        **Notes on performance:**
+        Line widths greater than 1 pixel affect the performance as discussed in 
+        the documentation of :class:`PlotDataItem <pyqtgraph.PlotDataItem>`.
         """
         self.updateData(*args, **kargs)
 
@@ -505,7 +515,10 @@ class PlotCurveItem(GraphicsObject):
         if self.opts['stepMode'] in ("center", True):  ## check against True for backwards compatibility
             if self.opts['stepMode'] is True:
                 import warnings
-                warnings.warn('stepMode=True is deprecated, use stepMode="center" instead', DeprecationWarning, stacklevel=3)
+                warnings.warn(
+                    'stepMode=True is deprecated and will result in an error after October 2022. Use stepMode="center" instead.',
+                    DeprecationWarning, stacklevel=3
+                )
             if len(self.xData) != len(self.yData)+1:  ## allow difference of 1 for step mode plots
                 raise Exception("len(X) must be len(Y)+1 since stepMode=True (got %s and %s)" % (self.xData.shape, self.yData.shape))
         else:
@@ -533,8 +546,8 @@ class PlotCurveItem(GraphicsObject):
             self.setBrush(kargs['brush'])
         if 'antialias' in kargs:
             self.opts['antialias'] = kargs['antialias']
-
-        self.opts['skipFiniteCheck'] = kargs.get('skipFiniteCheck', False)
+        if 'skipFiniteCheck' in kargs:
+            self.opts['skipFiniteCheck'] = kargs['skipFiniteCheck']
 
         profiler('set')
         self.update()
