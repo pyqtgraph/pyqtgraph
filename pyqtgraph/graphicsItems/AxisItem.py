@@ -210,9 +210,15 @@ class AxisItem(GraphicsWidget):
         If *log* is True, then ticks are displayed on a logarithmic scale and values
         are adjusted accordingly. (This is usually accessed by changing the log mode
         of a :func:`PlotItem <pyqtgraph.PlotItem.setLogMode>`)
+        The linked ViewBox will be informed of the change.
         """
         self.logMode = log
         self.picture = None
+        if self._linkedView is not None:
+            if self.orientation in ('top', 'bottom'):
+                self._linkedView().setLogMode('x', log)
+            elif self.orientation in ('left', 'right'):
+                self._linkedView().setLogMode('y', log)
         self.update()
 
     def setTickFont(self, font):
