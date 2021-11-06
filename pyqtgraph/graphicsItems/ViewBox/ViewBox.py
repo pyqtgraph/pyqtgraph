@@ -164,11 +164,14 @@ class ViewBox(GraphicsWidget):
             'wheelScaleFactor': -1.0 / 8.0,
 
             'background': None,
+            
+            'logMode': [False, False],
 
             # Limits
-            'limits': {
-                'xLimits': [None, None],   # Maximum and minimum visible X values
-                'yLimits': [None, None],   # Maximum and minimum visible Y values
+            # maximum value of double float is 1.7E+308, but internal caluclations exceed this limit before the range reaches it.
+            'limits': { 
+                'xLimits': [-1E307, +1E307],   # Maximum and minimum visible X values
+                'yLimits': [-1E307, +1E307],   # Maximum and minimum visible Y values
                 'xRange': [None, None],   # Maximum and minimum X range
                 'yRange': [None, None],   # Maximum and minimum Y range
                 }
@@ -485,6 +488,26 @@ class ViewBox(GraphicsWidget):
         # behavior (because the user is unaware of targetRange).
         if self.state['aspectLocked'] is False: # (interferes with aspect locking)
             self.state['targetRange'] = [self.state['viewRange'][0][:], self.state['viewRange'][1][:]]
+            
+    def _effectiveLimits(self):
+        # Determines restricted effective scaling range when in log mapping mode
+        if self.state['logMode'][0]:
+            xlimits = (# constrain to the +1.7E308 to 2.2E-308 range of double float values
+                max( self.state['limits']['xLimits'][0], -307.6 ),
+                min( self.state['limits']['xLimits'][1], +308.2 )
+            )
+        else:
+            xlimits = self.state['limits']['xLimits']
+        
+        if self.state['logMode'][1]: 
+            ylimits = (# constrain to the +1.7E308 to 2.2E-308 range of double float values
+                max( self.state['limits']['yLimits'][0], -307.6 ),
+                min( self.state['limits']['yLimits'][1], +308.2 )
+            )
+        else:
+            ylimits = self.state['limits']['yLimits']
+        # print('limits ', xlimits, ylimits) # diagnostic output should reflect additional limit in log mode
+        return (xlimits, ylimits)
 
     def setRange(self, rect=None, xRange=None, yRange=None, padding=None, update=True, disableAutoRange=True):
         """
@@ -506,7 +529,6 @@ class ViewBox(GraphicsWidget):
         ================== =====================================================================
 
         """
-
         changes = {}   # axes
         setRequested = [False, False]
 
@@ -533,8 +555,10 @@ class ViewBox(GraphicsWidget):
             yOff = False if setRequested[1] else None
             self.enableAutoRange(x=xOff, y=yOff)
             changed.append(True)
-
-        limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
+            
+        limits = self._effectiveLimits()
+        # print('rng:limits ', limits) # diagnostic output should reflect additional limit in log mode
+        # limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
         minRng = [self.state['limits']['xRange'][0], self.state['limits']['yRange'][0]]
         maxRng = [self.state['limits']['xRange'][1], self.state['limits']['yRange'][1]]
 
@@ -929,6 +953,15 @@ class ViewBox(GraphicsWidget):
     def setYLink(self, view):
         """Link this view's Y axis to another view. (see LinkView)"""
         self.linkView(self.YAxis, view)
+        
+    def setLogMode(self, axis, logMode):
+        """Informs ViewBox that log mode is active for the specified axis, so that the view range cen be restricted"""
+        if axis == 'x':
+            self.state['logMode'][0] = bool(logMode)
+            # print('x log mode', self.state['logMode'][0] )
+        elif axis == 'y':
+            self.state['logMode'][1] = bool(logMode)
+            # print('x log mode', self.state['logMode'][0] )
 
     def linkView(self, axis, view):
         """
@@ -1485,15 +1518,15 @@ class ViewBox(GraphicsWidget):
         aspect = self.state['aspectLocked']  # size ratio / view ratio
         tr = self.targetRect()
         bounds = self.rect()
-
-        limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
+        
+        limits = self._effectiveLimits()
+        # print('upd:limits ', limits) # diagnostic output should reflect additional limit in log mode
         minRng = [self.state['limits']['xRange'][0], self.state['limits']['yRange'][0]]
         maxRng = [self.state['limits']['xRange'][1], self.state['limits']['yRange'][1]]
 
         for axis in [0, 1]:
             if limits[axis][0] is None and limits[axis][1] is None and minRng[axis] is None and maxRng[axis] is None:
                 continue
-
             # max range cannot be larger than bounds, if they are given
             if limits[axis][0] is not None and limits[axis][1] is not None:
                 if maxRng[axis] is not None:
