@@ -16,6 +16,10 @@ win.setWindowTitle('pyqtgraph example: crosshair')
 label = pg.LabelItem(justify='right')
 win.addItem(label)
 p1 = win.addPlot(row=1, col=0)
+# customize the averaged curve that can be activated from the context menu:
+p1.avgPen = pg.mkPen('#FFFFFF')
+p1.avgShadowPen = pg.mkPen('#8080DD', width=10)
+
 p2 = win.addPlot(row=2, col=0)
 
 region = pg.LinearRegionItem()

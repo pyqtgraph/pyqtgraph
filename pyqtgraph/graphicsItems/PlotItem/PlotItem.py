@@ -180,7 +180,10 @@ class PlotItem(GraphicsWidget):
         self.dataItems = []
         self.paramList = {}
         self.avgCurves = {}
-        
+        # Change these properties to adjust the appearance of the averged curve:
+        self.avgPen = fn.mkPen([0, 200, 0])
+        self.avgShadowPen = fn.mkPen([0, 0, 0], width=4) # the previous default of [0,0,0,100] prevent fast drawing of the wide shadow line
+
         ### Set up context menu
         
         w = QtGui.QWidget()
@@ -475,8 +478,8 @@ class PlotItem(GraphicsWidget):
         ### Create a new curve if needed
         if key not in self.avgCurves:
             plot = PlotDataItem()
-            plot.setPen(fn.mkPen([0, 200, 0]))
-            plot.setShadowPen(fn.mkPen([0, 0, 0, 100], width=3))
+            plot.setPen( self.avgPen )
+            plot.setShadowPen(  self.avgShadowPen )
             plot.setAlpha(1.0, False)
             plot.setZValue(100)
             self.addItem(plot, skipAverage=True)
