@@ -1500,10 +1500,17 @@ class ViewBox(GraphicsWidget):
 
         bounds = QtCore.QRectF(range[0][0], range[1][0], range[0][1]-range[0][0], range[1][1]-range[1][0])
         return bounds
-        
-    def update(self, *args, **kwargs):
-        self.prepareForPaint()
-        GraphicsWidget.update(self, *args, **kwargs)
+
+    # Including a prepareForPaint call is part of the Qt strategy to
+    # defer expensive redraw opertions until requested by a 'sigPrepareForPaint' signal
+    # 
+    # However, as currently implemented, a call to prepareForPaint as part of the regular 
+    # 'update' call results in an undesired reset of pan/zoom:
+    # https://github.com/pyqtgraph/pyqtgraph/issues/2029
+    #
+    # def update(self, *args, **kwargs):
+    #     self.prepareForPaint()
+    #     GraphicsWidget.update(self, *args, **kwargs)
 
     def updateViewRange(self, forceX=False, forceY=False):
         ## Update viewRange to match targetRange as closely as possible, given
