@@ -514,7 +514,6 @@ class PlotCurveItem(GraphicsObject):
 
         if self.opts['stepMode'] in ("center", True):  ## check against True for backwards compatibility
             if self.opts['stepMode'] is True:
-                import warnings
                 warnings.warn(
                     'stepMode=True is deprecated and will result in an error after October 2022. Use stepMode="center" instead.',
                     DeprecationWarning, stacklevel=3
