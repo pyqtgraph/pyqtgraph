@@ -128,8 +128,8 @@ class PlotCurveItem(GraphicsObject):
         ==============  =======================================================
         **Arguments:**
         parent          The parent GraphicsObject (optional)
-        clickable       If True, the item will emit sigClicked when it is
-                        clicked on. Defaults to False.
+        clickable       If `True`, the item will emit ``sigClicked`` when it is
+                        clicked on. Defaults to `False`.
         ==============  =======================================================
         """
         GraphicsObject.__init__(self, kargs.get('parent', None))
@@ -169,7 +169,7 @@ class PlotCurveItem(GraphicsObject):
     def setClickable(self, s, width=None):
         """Sets whether the item responds to mouse clicks.
 
-        The *width* argument specifies the width in pixels orthogonal to the
+        The `width` argument specifies the width in pixels orthogonal to the
         curve that will respond to a mouse click.
         """
         self.clickable = s
@@ -378,9 +378,11 @@ class PlotCurveItem(GraphicsObject):
         self.update()
 
     def setShadowPen(self, *args, **kargs):
-        """Set the shadow pen used to draw behind the primary pen.
+        """
+        Set the shadow pen used to draw behind the primary pen.
         This pen must have a larger width than the primary
-        pen to be visible.
+        pen to be visible. Arguments are passed to 
+        :func:`mkPen <pyqtgraph.mkPen>`
         """
         if args[0] is None:
             self.opts['shadowPen'] = None
@@ -390,7 +392,10 @@ class PlotCurveItem(GraphicsObject):
         self.update()
 
     def setBrush(self, *args, **kargs):
-        """Set the brush used when filling the area under the curve"""
+        """
+        Sets the brush used when filling the area under the curve. All 
+        arguments are passed to :func:`mkBrush <pyqtgraph.mkBrush>`.
+        """
         if args[0] is None:
             self.opts['brush'] = None
         else:
@@ -399,7 +404,7 @@ class PlotCurveItem(GraphicsObject):
         self.update()
 
     def setFillLevel(self, level):
-        """Set the level filled to when filling under the curve"""
+        """Sets the level filled to when filling under the curve"""
         self.opts['fillLevel'] = level
         self.fillPath = None
         self.invalidateBounds()
@@ -407,7 +412,7 @@ class PlotCurveItem(GraphicsObject):
         
     def setSkipFiniteCheck(self, skipFiniteCheck):
         """
-        When it is known that the plot data passed to `PlotCurveItem` contains only finite numerical values,
+        When it is known that the plot data passed to ``PlotCurveItem`` contains only finite numerical values,
         the `skipFiniteCheck` property can help speed up plotting. If this flag is set and the data contains 
         any non-finite values (such as `NaN` or `Inf`), unpredictable behavior will occur. The data might not
         be plotted, or there migth be significant performance impact.
@@ -416,53 +421,56 @@ class PlotCurveItem(GraphicsObject):
 
     def setData(self, *args, **kargs):
         """
-        =============== ========================================================
+        =============== =================================================================
         **Arguments:**
-        x, y            (numpy arrays) Data to show
+        x, y            (numpy arrays) Data to display
         pen             Pen to use when drawing. Any single argument accepted by
                         :func:`mkPen <pyqtgraph.mkPen>` is allowed.
         shadowPen       Pen for drawing behind the primary pen. Usually this
                         is used to emphasize the curve by providing a
                         high-contrast border. Any single argument accepted by
                         :func:`mkPen <pyqtgraph.mkPen>` is allowed.
-        fillLevel       (float or None) Fill the area 'under' the curve to
-                        *fillLevel*
-        fillOutline     (bool) If True, an outline surrounding the *fillLevel*
+        fillLevel       (float or None) Fill the area under the curve to
+                        the specified value.
+        fillOutline     (bool) If True, an outline surrounding the `fillLevel`
                         area is drawn.
-        brush           QBrush to use when filling. Any single argument accepted
+        brush           Brush to use when filling. Any single argument accepted
                         by :func:`mkBrush <pyqtgraph.mkBrush>` is allowed.
         antialias       (bool) Whether to use antialiasing when drawing. This
                         is disabled by default because it decreases performance.
-        stepMode        (str or None) If "center", a step is drawn using the x
-                        values as boundaries and the given y values are
+        stepMode        (str or None) If 'center', a step is drawn using the `x`
+                        values as boundaries and the given `y` values are
                         associated to the mid-points between the boundaries of
                         each step. This is commonly used when drawing
-                        histograms. Note that in this case, len(x) == len(y) + 1
-                        If "left" or "right", the step is drawn assuming that
-                        the y value is associated to the left or right boundary,
-                        respectively. In this case len(x) == len(y)
-                        If not passed or an empty string or None is passed, the
+                        histograms. Note that in this case, ``len(x) == len(y) + 1``
+                        
+                        If 'left' or 'right', the step is drawn assuming that
+                        the `y` value is associated to the left or right boundary,
+                        respectively. In this case ``len(x) == len(y)``
+                        If not passed or an empty string or `None` is passed, the
                         step mode is not enabled.
         connect         Argument specifying how vertexes should be connected
-                        by line segments. Default is "all", indicating full
-                        connection. "pairs" causes only even-numbered segments
-                        to be drawn. "finite" causes segments to be omitted if
-                        they are attached to nan or inf values. For any other
-                        connectivity, specify an array of boolean values.
+                        by line segments. 
+                        
+                            | 'all' (default) indicates full connection. 
+                            | 'pairs' omits even-numbered segments. 
+                            | 'finite' omits segments attached to `NaN` or `Inf` values. 
+                            | For any other connectivity, specify an array of boolean values.
         compositionMode See :func:`setCompositionMode
                         <pyqtgraph.PlotCurveItem.setCompositionMode>`.
         skipFiniteCheck (bool, defaults to `False`) Optimization flag that can
                         speed up plotting by not checking and compensating for
-                        `NaN` values.  If set to True, and NaN values exist, the
+                        `NaN` values.  If set to `True`, and `NaN` values exist, the
                         data may not be displayed or the plot may take a
                         significant performance hit.
-        =============== ========================================================
+        =============== =================================================================
 
         If non-keyword arguments are used, they will be interpreted as
-        setData(y) for a single argument and setData(x, y) for two
+        ``setData(y)`` for a single argument and ``setData(x, y)`` for two
         arguments.
         
         **Notes on performance:**
+        
         Line widths greater than 1 pixel affect the performance as discussed in 
         the documentation of :class:`PlotDataItem <pyqtgraph.PlotDataItem>`.
         """
