@@ -453,7 +453,7 @@ class PlotCurveItem(GraphicsObject):
                         by line segments. 
                         
                             | 'all' (default) indicates full connection. 
-                            | 'pairs' omits even-numbered segments. 
+                            | 'pairs' draws one separate line segment for each two points given.
                             | 'finite' omits segments attached to `NaN` or `Inf` values. 
                             | For any other connectivity, specify an array of boolean values.
         compositionMode See :func:`setCompositionMode
