@@ -574,7 +574,7 @@ class ViewBox(GraphicsWidget):
                     dy = 1
                 mn -= dy*0.5
                 mx += dy*0.5
-            # Make sure that the range include a usable number of quantization steps:
+            # Make sure that the range includes a usable number of quantization steps:
             #    approx. eps  : 3e-16
             #    * min. steps : 10
             #    * mean value : (mn+mx)*0.5 
