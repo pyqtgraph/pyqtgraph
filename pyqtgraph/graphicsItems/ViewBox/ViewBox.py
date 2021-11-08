@@ -574,6 +574,11 @@ class ViewBox(GraphicsWidget):
                     dy = 1
                 mn -= dy*0.5
                 mx += dy*0.5
+            # Make sure that the range include a usable number of quantization steps:
+            quantization_limit = (mn+mx) * 0.5 * 3e-15 # ~10 discrete steps of double resolution
+            if mx-mn < 2*quantization_limit:
+                mn -= quantization_limit
+                mx += quantization_limit
 
             # Make sure no nan/inf get through
             if not math.isfinite(mn) or not math.isfinite(mx):
@@ -917,6 +922,7 @@ class ViewBox(GraphicsWidget):
                         childRange = self.childrenBounds(frac=fractionVisible)
                 ## Make corrections to range
                 xr = childRange[ax]
+                print('childRange:',xr)
                 if xr is not None:
                     if self.state['autoPan'][ax]:
                         x = sum(xr) * 0.5
@@ -924,9 +930,16 @@ class ViewBox(GraphicsWidget):
                         childRange[ax] = [x-w2, x+w2]
                     else:
                         padding = self.suggestPadding(ax)
+                        print('padding:',padding)
                         wp = (xr[1] - xr[0]) * padding
+                        print('wp:', wp)
+                        # if padding > 0: # padding is requested, make sure that it does not collapse for large numbers:
+                        #     xr_mid = (xr[1] + xr[0]) * 0.5 # a relative range of 1e-13 of the mean can display 
+                        #     wp = max(wp, xr_mid*1e-13)     # approximately 300x the fractional resolution of a double
+                        #     print('--> wp:', wp)
                         childRange[ax][0] -= wp
                         childRange[ax][1] += wp
+                        print('--> childRange:',xr)
                     targetRect[ax] = childRange[ax]
                     args['xRange' if ax == 0 else 'yRange'] = targetRect[ax]
 
