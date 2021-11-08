@@ -210,9 +210,15 @@ class AxisItem(GraphicsWidget):
         If *log* is True, then ticks are displayed on a logarithmic scale and values
         are adjusted accordingly. (This is usually accessed by changing the log mode
         of a :func:`PlotItem <pyqtgraph.PlotItem.setLogMode>`)
+        The linked ViewBox will be informed of the change.
         """
         self.logMode = log
         self.picture = None
+        if self._linkedView is not None:
+            if self.orientation in ('top', 'bottom'):
+                self._linkedView().setLogMode('x', log)
+            elif self.orientation in ('left', 'right'):
+                self._linkedView().setLogMode('y', log)
         self.update()
 
     def setTickFont(self, font):
@@ -1186,8 +1192,8 @@ class AxisItem(GraphicsWidget):
             return
         # Did the event occur inside the linked ViewBox (and not over the axis iteself)?
         if lv.sceneBoundingRect().contains(event.scenePos()):
-            # pass event to linked ViewBox without marking it as single axis zoom
-            lv.wheelEvent(event)
+            event.ignore()
+            return
         else:
             # pass event to linked viewbox with appropriate single axis zoom parameter
             if self.orientation in ['left', 'right']:
@@ -1202,8 +1208,8 @@ class AxisItem(GraphicsWidget):
             return
         # Did the mouse down event occur inside the linked ViewBox (and not the axis)?
         if lv.sceneBoundingRect().contains(event.buttonDownScenePos()):
-            # pass event to linked ViewBox without marking it as single axis pan
-            return lv.mouseDragEvent(event)
+            event.ignore()
+            return
         # otherwise pass event to linked viewbox with appropriate single axis parameter
         if self.orientation in ['left', 'right']:
             return lv.mouseDragEvent(event, axis=1)
