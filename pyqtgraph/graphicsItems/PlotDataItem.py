@@ -671,7 +671,6 @@ class PlotDataItem(GraphicsObject):
                        The default is to replace all existing data.
         ============== ===================================================================
         """
-        append = kargs.get("append", False)
         if kargs.get("stepMode", None) is True:
             warnings.warn(
                 'stepMode=True is deprecated, use stepMode="center" instead',
@@ -749,7 +748,6 @@ class PlotDataItem(GraphicsObject):
             y = kargs['y']
             if dataType(y) == 'MetaArray':
                 y = y.asarray()
-        append = ('append' in kargs and kargs['append'])
 
         profiler('interpret data')
         ## pull in all style arguments.
@@ -786,6 +784,8 @@ class PlotDataItem(GraphicsObject):
             #if k in kargs:
                 #self.opts[k] = kargs[k]
             #scatterArgs[v] = self.opts[k]
+            
+        append = ('append' in kargs and kargs['append'])
 
         if y is None or len(y) == 0: # empty data is represented as None
             yData = None
@@ -1138,7 +1138,7 @@ class PlotDataItem(GraphicsObject):
             if idx == 2: break # only convert the first two arguments
             try: # if it converts to float, then convert to single-value ndarray
                 arg_list[idx] = np.full(1, float(arg_list[idx]))
-            except TypeError: pass
+            except TypeError: pass # TypeError occurs for data that does not need conversion
         kargs['append'] = True
         self.setData(*arg_list, **kargs)
 
