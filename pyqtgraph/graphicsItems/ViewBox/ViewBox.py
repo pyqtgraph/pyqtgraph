@@ -575,7 +575,10 @@ class ViewBox(GraphicsWidget):
                 mn -= dy*0.5
                 mx += dy*0.5
             # Make sure that the range include a usable number of quantization steps:
-            quantization_limit = (mn+mx) * 0.5 * 3e-15 # ~10 discrete steps of double resolution
+            #    approx. eps  : 3e-16
+            #    * min. steps : 10
+            #    * mean value : (mn+mx)*0.5 
+            quantization_limit = (mn+mx) * 1.5e-15 # +/-10 discrete steps of double resolution
             if mx-mn < 2*quantization_limit:
                 mn -= quantization_limit
                 mx += quantization_limit
