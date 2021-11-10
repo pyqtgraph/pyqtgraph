@@ -124,5 +124,6 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [Semi-Supervised Semantic Annotator](https://gitlab.com/ficsresearch/s3ah)
 * [PyMeasure](https://github.com/pymeasure/pymeasure)
 * [Exo-Striker](https://github.com/3fon3fonov/exostriker)
+* [HussariX](https://github.com/sem-geologist/HussariX)
 
 Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!
