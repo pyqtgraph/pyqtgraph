@@ -305,17 +305,30 @@ if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
     
     # Import all QtWidgets objects into QtGui
     _fallbacks = dir(QtWidgets)
-    def lazyGetattr(obj):
-        if not (obj in _fallbacks and obj.startswith('Q')):
-            raise AttributeError(f"module 'QtGui' has no attribute '{obj}'")
-
-        warnings.warn(
-            "Accessing QtWidgets through QtGui is deprecated and will be removed after Jan 2022."
-            f" Use QtWidgets.{obj} instead.",
-            DeprecationWarning, stacklevel=2
-        )
-        attr = getattr(QtWidgets, obj)
-        setattr(QtGui, obj, attr)
+    def lazyGetattr(name):
+        if not (name in _fallbacks and name.startswith('Q')):
+            raise AttributeError(f"module 'QtGui' has no attribute '{name}'")
+        # This whitelist is attrs which are not shared between PyQt6.QtGui and PyQt5.QtGui, but which can be found on
+        # one of the QtWidgets.
+        whitelist = [
+            "QAction",
+            "QActionGroup",
+            "QFileSystemModel",
+            "QPagedPaintDevice",
+            "QPaintEvent",
+            "QShortcut",
+            "QUndoCommand",
+            "QUndoGroup",
+            "QUndoStack",
+        ]
+        if name not in whitelist:
+            warnings.warn(
+                "Accessing QtWidgets through QtGui is deprecated and will be removed after Jan 2022."
+                f" Use QtWidgets.{name} instead.",
+                DeprecationWarning, stacklevel=2
+            )
+        attr = getattr(QtWidgets, name)
+        setattr(QtGui, name, attr)
         return attr
 
     QtGui.__getattr__ = lazyGetattr
