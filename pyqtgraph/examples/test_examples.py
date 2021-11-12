@@ -54,7 +54,7 @@ installedFrontends = sorted([
 
 darwin_opengl_broken = (platform.system() == "Darwin" and
             tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and
-            sys.version_info < (3, 9, 1))
+            (sys.version_info < (3, 8, 10) or sys.version_info == (3, 9, 0)))
 
 darwin_opengl_reason = ("pyopenGL cannot find openGL library on big sur: "
                         "https://github.com/python/cpython/pull/21241")
