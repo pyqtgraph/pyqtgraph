@@ -96,6 +96,9 @@ class ViewBox(GraphicsWidget):
     sigStateChanged = QtCore.Signal(object)
     sigTransformChanged = QtCore.Signal(object)
     sigResized = QtCore.Signal(object)
+    sigMouseDragged = QtCore.Signal(object, object)
+    sigMouseWheel = QtCore.Signal(object, object)
+    sigHistoryChanged = QtCore.Signal(object)
 
     ## mouse modes
     PanMode = 3
@@ -650,7 +653,7 @@ class ViewBox(GraphicsWidget):
         ==============  =============================================================
         **Arguments:**
         padding         The fraction of the total data range to add on to the final
-                        visible range. By default, this value is set between the 
+                        visible range. By default, this value is set between the
                         default padding and 0.1 depending on the size of the ViewBox.
         items           If specified, this is a list of items to consider when
                         determining the visible range.
@@ -667,7 +670,7 @@ class ViewBox(GraphicsWidget):
     def suggestPadding(self, axis):
         l = self.width() if axis==0 else self.height()
         def_pad = self.state['defaultPadding']
-        if def_pad == 0.: 
+        if def_pad == 0.:
             return def_pad # respect requested zero padding
         max_pad = max(0.1, def_pad) # don't shrink a large default padding
         if l > 0:
@@ -1115,7 +1118,7 @@ class ViewBox(GraphicsWidget):
         """
         self.border = fn.mkPen(*args, **kwds)
         self.borderRect.setPen(self.border)
-    
+
     def setDefaultPadding(self, padding=0.02):
         """
         Sets the fraction of the data range that is used to pad the view range in when auto-ranging.
@@ -1223,10 +1226,11 @@ class ViewBox(GraphicsWidget):
         if axis == ViewBox.XAxis:
             self.sigXRangeChangedManually.emit(mask)
         elif axis == ViewBox.YAxis:
-            self.sigYRangeChangedManually.emit(mask)
+           self.sigYRangeChangedManually.emit(mask)
         elif axis is None:
-            self.sigXRangeChangedManually.emit(mask)
-            self.sigYRangeChangedManually.emit(mask)
+           self.sigXRangeChangedManually.emit(mask)
+           self.sigYRangeChangedManually.emit(mask)
+           self.sigMouseWheel.emit(ev, axis)
         self.sigRangeChangedManually.emit(mask)
 
     def mouseClickEvent(self, ev):
@@ -1269,6 +1273,7 @@ class ViewBox(GraphicsWidget):
                     self.rbScaleBox.hide()
                     ax = QtCore.QRectF(Point(ev.buttonDownPos(ev.button())), Point(pos))
                     ax = self.childGroup.mapRectFromParent(ax)
+                    self.sigMouseDragged.emit(ev, axis)
                     self.showAxRect(ax)
                     self.axHistoryPointer += 1
                     self.axHistory = self.axHistory[:self.axHistoryPointer] + [ax]
@@ -1293,6 +1298,7 @@ class ViewBox(GraphicsWidget):
                 elif axis is None:
                     self.sigXRangeChangedManually.emit(mask)
                     self.sigYRangeChangedManually.emit(mask)
+                    self.sigMouseDragged.emit(ev, axis)
                 self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         elif ev.button() & QtCore.Qt.MouseButton.RightButton:
             #print "vb.rightDrag"
@@ -1320,6 +1326,7 @@ class ViewBox(GraphicsWidget):
             elif axis is None:
                 self.sigXRangeChangedManually.emit(self.state['mouseEnabled'])
                 self.sigYRangeChangedManually.emit(self.state['mouseEnabled'])
+                self.sigMouseDragged.emit(ev, axis)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
     def keyPressEvent(self, ev):
@@ -1348,6 +1355,7 @@ class ViewBox(GraphicsWidget):
         ptr = max(0, min(len(self.axHistory)-1, self.axHistoryPointer+d))
         if ptr != self.axHistoryPointer:
             self.axHistoryPointer = ptr
+            self.sigHistoryChanged.emit(d)
             self.showAxRect(self.axHistory[ptr])
 
     def updateScaleBox(self, p1, p2):
@@ -1493,7 +1501,7 @@ class ViewBox(GraphicsWidget):
 
         bounds = QtCore.QRectF(range[0][0], range[1][0], range[0][1]-range[0][0], range[1][1]-range[1][0])
         return bounds
-        
+
     def update(self, *args, **kwargs):
         self.prepareForPaint()
         GraphicsWidget.update(self, *args, **kwargs)

@@ -221,11 +221,33 @@ class MultiAxisPlotWidget(PlotWidget):
         # SELECT CHARTS
         if charts is None:
             charts = self.charts
+        last_shown = None
         for k, c in self.charts.items():
+            try:
+                c.plotItem.vb.sigMouseDragged.disconnect()
+            except TypeError:
+                pass
+            try:
+                c.plotItem.vb.sigMouseWheel.disconnect()
+            except TypeError:
+                pass
+            try:
+                c.plotItem.vb.sigHistoryChanged.disconnect()
+            except TypeError:
+                pass
             if k in charts:
                 c.show()
+                last_shown = c
             else:
                 c.hide()
+        if last_shown is not None:
+            # FROM "https://github.com/pyqtgraph/pyqtgraph/pull/2010" by herodotus77
+            # propagate mouse actions to charts "hidden" behind
+            for k, c in self.charts.items():
+                if c is not last_shown:
+                    last_shown.plotItem.vb.sigMouseDragged.connect(c.plotItem.vb.mouseDragEvent)
+                    last_shown.plotItem.vb.sigMouseWheel.connect(c.plotItem.vb.wheelEvent)
+                    last_shown.plotItem.vb.sigHistoryChanged.connect(c.plotItem.vb.scaleHistory)
         # MOVE LEGEND TO LAYOUT
         if self.pi.legend is not None:
             self.pi.legend.setParentItem(self.pi)

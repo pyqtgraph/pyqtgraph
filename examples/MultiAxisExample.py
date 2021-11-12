@@ -22,14 +22,17 @@ mpw.addLegend(offset=(0, 0))
 # TITLE
 mpw.setTitle("MultiAxisPlotWidget Example")
 # AXYS
-a1 = mpw.addAxis("samples1", "bottom", text="Samples1", units="samples1")
-a2 = mpw.addAxis("samples2", "bottom", text="Samples2", units="samples2")
-as1 = mpw.addAxis("sin1", "left", text="Data1", units="sin1")
-as2 = mpw.addAxis("sin2", "left", text="Data2", units="sin2")
+ax1 = mpw.addAxis("sx1", "bottom", text="Samples1", units="sx1")
+ax2 = mpw.addAxis("sx2", "bottom", text="Samples2", units="sx2")
+ax3 = mpw.addAxis("sx3", "bottom", text="Samples3", units="sx3")
+ay1 = mpw.addAxis("sy1", "left", text="Data1", units="sy1")
+ay2 = mpw.addAxis("sy2", "left", text="Data2", units="sy2")
+ay3 = mpw.addAxis("sy3", "left", text="Data3", units="sy3")
 # CHARTS
-c1, pi1 = mpw.addChart("Dataset 1", "sin1", "samples1")
-c2, pi2 = mpw.addChart("Dataset 2", "sin1", "samples2")
-c3, pi3 = mpw.addChart("Dataset 3", "sin2", "samples2")
+c1, pi1 = mpw.addChart("Dataset 1", x_axis="sx1", y_axis="sy1")
+c2, pi2 = mpw.addChart("Dataset 2", x_axis="sx2", y_axis="sy1")
+c3, pi3 = mpw.addChart("Dataset 3", x_axis="sx2", y_axis="sy2")
+c4, pi4 = mpw.addChart("Dataset 4", x_axis="sx3", y_axis="sy3")
 # make and display chart
 mpw.makeLayout()
 
@@ -39,6 +42,8 @@ data2 = data1 * 2
 c2.setData(data2)
 data3 = np.array(np.sin(np.linspace(0, 4 * np.pi, num=500))) * 3
 c3.setData(data3)
+data4 = np.array(np.sin(np.linspace(0, 4 * np.pi, num=500))) * 3
+c4.setData(data4)
 
 mpw.update()
 
