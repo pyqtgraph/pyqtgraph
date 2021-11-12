@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from collections import OrderedDict
 from argparse import Namespace
 
@@ -80,6 +81,7 @@ examples_ = OrderedDict([
     ])),
     ('Widgets', OrderedDict([
         ('PlotWidget', 'PlotWidget.py'),
+        ('MultiAxisPlotWidget example', 'MultiAxisExample.py'),
         ('SpinBox', 'SpinBox.py'),
         ('ConsoleWidget', 'ConsoleWidget.py'),
         ('Histogram / lookup table', 'HistogramLUT.py'),

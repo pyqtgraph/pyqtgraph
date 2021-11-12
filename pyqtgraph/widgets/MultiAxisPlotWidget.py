@@ -12,7 +12,7 @@ from ..widgets.PlotWidget import PlotWidget
 
 class MultiAxisPlotWidget(PlotWidget):
     def __init__(self, **kargs):
-        """PlotWidget but with support for multi axis"""
+        """PlotWidget but with support for multi axis."""
         PlotWidget.__init__(self, **kargs)
         # plotitem shortcut
         self.pi = super().getPlotItem()
@@ -28,6 +28,18 @@ class MultiAxisPlotWidget(PlotWidget):
         self.charts = {}
 
     def addAxis(self, name, *args, **kwargs):
+        """Add a new axis (AxisItem) to the widget, will be shown and linked to a chart when used in addChart().
+
+        Parameters:
+        name (str):
+            The name associated with this axis item, used to store and recall the newly created axis.
+            Also sets the AxisItem name parameter.
+        *args and **kwargs:
+            Parameters to be passed to the newly created AxisItem.
+            Remember to set the AxisItem orientation.
+        Returns:
+            AxisItem: The newly created AxisItem.
+        """
         axis = AxisItem(name=name, *args, **kwargs)
         axis.autorange = True
         axis.charts_connections = []
@@ -35,6 +47,31 @@ class MultiAxisPlotWidget(PlotWidget):
         return axis
 
     def addChart(self, name, x_axis=None, y_axis=None, chart=None, *args, **kwargs):
+        """Add a new chart (PlotDataItem in a PlotItem) to the widget, will be shown when used in makeLayout().
+
+        Parameters:
+        name (str):
+            The name associated with this chart item, used to store and recall the newly created chart.
+            Also sets the PlotItem name parameter and the PlotDataItem name parameter if no other chart is passed.
+        x_axis (str, None):
+            one of the default PlotItem axis names ("top", "right", "bottom", "left"),
+            or the name of an axis previously created by calling addAxis().
+            This axis will be set in the new PlotItem based on the selected axis orientation.
+            If None "bottom" will be used as default.
+        y_axis (str, None):
+            one of the default PlotItem axis names ("top", "right", "bottom", "left"),
+            or the name of an axis previously created by calling addAxis().
+            This axis will be set in the new PlotItem based on the selected axis orientation.
+            If None "left" will be used as default.
+        chart (PlotDataItem, ...):
+            The chart to be used inside the new PlotItem.
+            If left as None a new PlotDataItem will be created and it's name parameter set.
+        *args and **kwargs:
+            Parameters to be passed to the newly created PlotItem.
+        Returns:
+            PlotDataItem: The newly created PlotDataItem.
+            PlotItem: The newly created PlotItem.
+        """
         # CHART
         if chart is None:
             chart = PlotDataItem(name=name)
@@ -68,6 +105,7 @@ class MultiAxisPlotWidget(PlotWidget):
             view = plotitem.getViewBox()
             self.linkAxisToView(x_axis, view)
             self.linkAxisToView(y_axis, view)
+            # TODO: check this
             for k, pos, axis in [["top", [1, 1], y], ["bottom", [3, 1], x]]:  # , ["left", [2, 0], y], ["right", [2, 2], x]]:
                 # # DO NOT USE, WILL MAKE AXIS UNMATCHED TO DATA
                 # # you can't add the new ones after, it doesn't work for some reason
@@ -92,6 +130,7 @@ class MultiAxisPlotWidget(PlotWidget):
         return chart, plotitem
 
     def clearLayout(self):
+        """Clears the widget but keeps all created axis and charts."""
         while self.layout.count() > 0:
             item = self.layout.itemAt(0)
             self.layout.removeAt(0)
@@ -99,6 +138,15 @@ class MultiAxisPlotWidget(PlotWidget):
             del item
 
     def linkAxisToView(self, axis_name, view):
+        """Links an axis to a view that should use such axis.
+            This is an internal function and is not intended to be used by the user.
+
+        Parameters:
+        axis_name (str):
+            The name associated with the axis to link to whe view.
+        view (ViewBox):
+            The ViewBox to associate the axis to.
+        """
         axis = self.axis[axis_name]
         # connect view changes to axis
         # set axis main view link if not assigned
@@ -132,6 +180,14 @@ class MultiAxisPlotWidget(PlotWidget):
         view.sigStateChanged.emit(view)
 
     def makeLayout(self, axis=None, charts=None):
+        """Adds all given axis and charts to the widget.
+
+        Parameters:
+        axis (list, None):
+            The name associated with the axis to link to whe view.
+        charts (ViewBox):
+            The ViewBox to associate the axis to.
+        """
         self.clearLayout()
         # SELECT AND ASSEMBLE AXIS
         if axis is None:
@@ -176,18 +232,39 @@ class MultiAxisPlotWidget(PlotWidget):
         self.update()
 
     def clean(self):
+        """Clears all charts' contents."""
         # CLEAR PLOTS
         for p in self.charts.values():
             p.clear()
         self.update()
 
     def getPlotItem(self, name=None):
+        """Get the PlotItem associated to the chart of given name.
+
+        Parameters:
+        name (str, None):
+            The name of the chart to select.
+            If None the default one will be selected.
+        Returns:
+            PlotItem: The PlotItem associated to the selected chart.
+        """
         if name is None:
             return self.pi
         else:
             return self.charts[name].plotItem
 
     def setAxisRange(self, axis_name, range=None, **kwargs):
+        """Sets the range of the axis with given name.
+
+        Parameters:
+        axis_name (str, None):
+            The name of the axis to select.
+        range (list, None):
+            The range to set to the axis to selected.
+            If None: autorange will be enabled.
+            If list of len 1: range will be set between 0 and range[0]
+            If list of len 2: range will be set between the two range values
+        """
         if range is None or len(range) == 0:
             # AUTORANGE
             range = None
@@ -215,6 +292,7 @@ class MultiAxisPlotWidget(PlotWidget):
                     vb.setYRange(*range, **kwargs)
 
     def update(self):
+        """Updates all charts' contents."""
         for axis_name, axis in self.axis.items():
             if axis.autorange:
                 charts = [self.charts[connection] for connection in axis.charts_connections]
@@ -238,7 +316,19 @@ class MultiAxisPlotWidget(PlotWidget):
         super().update()
 
     def enableAxisAutoRange(self, axis_name):
+        """Enables autorange for the axis with given name.
+
+        Parameters:
+        axis_name (str, None):
+            The name of the axis to select.
+        """
         self.axis[axis_name].autorange = True
 
     def disableAxisAutoRange(self, axis_name):
+        """Disables autorange for the axis with given name.
+
+        Parameters:
+        axis_name (str, None):
+            The name of the axis to select.
+        """
         self.axis[axis_name].autorange = False
