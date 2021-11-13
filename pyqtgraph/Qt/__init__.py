@@ -22,6 +22,12 @@ PYQT6 = 'PyQt6'
 
 QT_LIB = os.getenv('PYQTGRAPH_QT_LIB')
 
+if QT_LIB is not None:
+    try:
+        __import__(QT_LIB)
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError(f"Environment variable PYQTGRAPH_QT_LIB is set to '{os.getenv('PYQTGRAPH_QT_LIB')}', but no module with this name was found.")
+
 ## Automatically determine which Qt package to use (unless specified by
 ## environment variable).
 ## This is done by first checking to see whether one of the libraries
