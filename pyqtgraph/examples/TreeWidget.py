@@ -5,7 +5,7 @@ that allows widgets to be added and dragged within the tree more easily.
 
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtWidgets
+from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("TreeWidget Example")
 

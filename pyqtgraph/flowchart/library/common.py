@@ -1,6 +1,6 @@
 import numpy as np
 
-from ...Qt import QtCore, QtGui, QtWidgets
+from ...Qt import QtCore, QtWidgets
 
 #from ...SignalProxy import SignalProxy
 from ...WidgetGroup import WidgetGroup

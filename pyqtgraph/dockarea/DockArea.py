@@ -1,6 +1,6 @@
 import weakref
 
-from ..Qt import QtGui, QtWidgets
+from ..Qt import QtWidgets
 from .Container import *
 from .Dock import Dock
 from .DockDrop import *

@@ -4,7 +4,7 @@ the appearance of images. This is a wrapper around HistogramLUTItem
 """
 
 from ..graphicsItems.HistogramLUTItem import HistogramLUTItem
-from ..Qt import QtCore, QtGui, QtWidgets
+from ..Qt import QtCore, QtWidgets
 from .GraphicsView import GraphicsView
 
 __all__ = ['HistogramLUTWidget']

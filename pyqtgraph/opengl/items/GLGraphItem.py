@@ -1,6 +1,6 @@
 from OpenGL.GL import *  # noqa
 from ... import functions as fn
-from ...Qt import QtCore, QtGui, QtWidgets
+from ...Qt import QtCore, QtGui
 from ..GLGraphicsItem import GLGraphicsItem
 from .GLScatterPlotItem import GLScatterPlotItem
 

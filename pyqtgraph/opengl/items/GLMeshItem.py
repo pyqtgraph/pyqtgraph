@@ -1,7 +1,7 @@
 from OpenGL.GL import *  # noqa
 import numpy as np
 
-from ...Qt import QtGui, QtWidgets
+from ...Qt import QtGui
 from .. import shaders
 from ..GLGraphicsItem import GLGraphicsItem
 from ..MeshData import MeshData

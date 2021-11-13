@@ -1,6 +1,6 @@
 import importlib
 
-from ..Qt import QT_LIB, QtGui, QtWidgets
+from ..Qt import QT_LIB, QtGui
 
 GL_VENDOR = 7936
 GL_RENDERER = 7937

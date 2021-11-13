@@ -8,7 +8,7 @@ from math import hypot
 from .. import functions as fn
 from ..GraphicsScene import GraphicsScene
 from ..Point import Point
-from ..Qt import QtCore, QtGui, QtWidgets, isQObjectAlive
+from ..Qt import QtCore, QtWidgets, isQObjectAlive
 
 __all__ = ['GraphicsItem']
 
@@ -536,7 +536,6 @@ class GraphicsItem(object):
     def viewChanged(self, view, oldView):
         """Called when this item's view has changed
         (ie, the item has been added to or removed from a ViewBox)"""
-        pass
         
     def _replaceView(self, oldView, item=None):
         if item is None:
@@ -557,7 +556,6 @@ class GraphicsItem(object):
         """
         # when this is called, _cachedView is not invalidated.
         # this means that for functions overriding viewRangeChanged, viewRect() may be stale.
-        pass
     
     def viewTransformChanged(self):
         """

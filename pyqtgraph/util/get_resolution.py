@@ -1,5 +1,5 @@
 from .. import mkQApp
-from ..Qt import QtGui, QtWidgets
+from ..Qt import QtGui
 
 
 def test_screenInformation():

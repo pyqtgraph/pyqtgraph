@@ -1,7 +1,7 @@
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtWidgets
+from pyqtgraph.Qt import QtGui
 
 
 def check_format(shape, dtype, levels, lut, expected_format):

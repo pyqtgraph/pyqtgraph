@@ -15,7 +15,7 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.metaarray as metaarray
 from pyqtgraph.flowchart import Flowchart
-from pyqtgraph.Qt import QtGui, QtWidgets
+from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("Flowchart Example")
 

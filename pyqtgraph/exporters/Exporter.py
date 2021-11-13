@@ -2,7 +2,7 @@ import os
 import re
 
 from ..GraphicsScene import GraphicsScene
-from ..Qt import QtCore, QtGui, QtWidgets
+from ..Qt import QtCore, QtWidgets
 from ..widgets.FileDialog import FileDialog
 
 LastExportDirectory = None

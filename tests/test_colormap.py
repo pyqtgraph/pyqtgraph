@@ -1,7 +1,7 @@
 import pytest
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtWidgets
+from pyqtgraph.Qt import QtGui
 
 pos = [0.0, 0.5, 1.0]
 qcols = [

@@ -12,7 +12,7 @@ as well as some customized parameter types
 from _buildParamTypes import makeAllParamTypes
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtWidgets
+from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("Parameter Tree Example")
 import pyqtgraph.parametertree.parameterTypes as pTypes

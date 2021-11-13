@@ -2,7 +2,7 @@ import importlib
 from collections import OrderedDict
 
 from .. import DataTreeWidget, FileDialog
-from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
+from ..Qt import QT_LIB, QtCore, QtWidgets
 from .Node import *
 
 FlowchartCtrlTemplate = importlib.import_module(

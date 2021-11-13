@@ -17,7 +17,7 @@ import pyqtgraph as pg
 from pyqtgraph.console import ConsoleWidget
 from pyqtgraph.dockarea.Dock import Dock
 from pyqtgraph.dockarea.DockArea import DockArea
-from pyqtgraph.Qt import QtGui, QtWidgets
+from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("DockArea Example")
 win = QtWidgets.QMainWindow()

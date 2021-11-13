@@ -5,7 +5,7 @@ import numpy as np
 
 from .. import Qt, colormap
 from .. import functions as fn
-from ..Qt import QtCore, QtGui, QtWidgets
+from ..Qt import QtCore, QtGui
 from .GradientEditorItem import Gradients  # List of colormaps
 from .GraphicsObject import GraphicsObject
 

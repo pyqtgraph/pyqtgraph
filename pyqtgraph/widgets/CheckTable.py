@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui, QtWidgets
+from ..Qt import QtCore, QtWidgets
 from . import VerticalLabel
 
 __all__ = ['CheckTable']

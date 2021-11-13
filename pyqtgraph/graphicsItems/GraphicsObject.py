@@ -1,4 +1,4 @@
-from ..Qt import QT_LIB, QtGui, QtWidgets
+from ..Qt import QT_LIB, QtWidgets
 
 if QT_LIB.startswith('PyQt'):
     from ..Qt import sip

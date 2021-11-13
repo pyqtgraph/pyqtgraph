@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui, QtTest, QtWidgets
+from pyqtgraph.Qt import QtCore, QtGui, QtTest
 from tests.image_testing import TransposedImageItem, assertImageApproved
 
 try:

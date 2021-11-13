@@ -1,7 +1,7 @@
 import pytest
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+from pyqtgraph.Qt import QtCore, QtGui
 
 
 def test_Vector_init():

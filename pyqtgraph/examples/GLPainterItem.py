@@ -6,7 +6,7 @@ import OpenGL.GL as GL
 
 import pyqtgraph as pg
 from pyqtgraph.opengl import GLAxisItem, GLGraphicsItem, GLGridItem, GLViewWidget
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+from pyqtgraph.Qt import QtCore, QtGui
 
 SIZE = 32
 

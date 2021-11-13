@@ -1,7 +1,7 @@
 import numpy as np
 
 from . import functions as fn
-from .Qt import QtGui, QtWidgets
+from .Qt import QtGui
 from .Vector import Vector
 
 

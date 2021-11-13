@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-from ..Qt import QtGui, QtWidgets
+from ..Qt import QtWidgets
 from .TableWidget import TableWidget
 
 try:

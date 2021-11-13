@@ -5,7 +5,7 @@ and allows the user to select a new color by clicking on the button.
 
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtWidgets
+from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("ColorButton Example")
 win = QtWidgets.QMainWindow()

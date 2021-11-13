@@ -4,7 +4,7 @@ from math import atan2
 
 from .. import functions as fn
 from ..Point import Point
-from ..Qt import QtCore, QtGui, QtWidgets
+from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
 from .ScatterPlotItem import Symbols, makeCrosshair
 from .TextItem import TextItem

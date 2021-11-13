@@ -10,7 +10,7 @@ __all__ = ['GraphicsWindow', 'TabWindow', 'PlotWindow', 'ImageWindow']
 import warnings
 
 from .imageview import *
-from .Qt import QtCore, QtGui, QtWidgets, mkQApp
+from .Qt import QtCore, QtWidgets, mkQApp
 from .widgets.GraphicsLayoutWidget import GraphicsLayoutWidget
 from .widgets.PlotWidget import *
 

@@ -3,7 +3,7 @@ import importlib
 from .. import ItemGroup, SRTTransform
 from .. import functions as fn
 from ..graphicsItems.ROI import ROI
-from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
+from ..Qt import QT_LIB, QtCore, QtWidgets
 
 ui_template = importlib.import_module(
     f'.TransformGuiTemplate_{QT_LIB.lower()}', package=__package__)

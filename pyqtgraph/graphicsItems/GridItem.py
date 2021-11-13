@@ -3,7 +3,7 @@ import numpy as np
 from .. import functions as fn
 from .. import getConfigOption
 from ..Point import Point
-from ..Qt import QtCore, QtGui, QtWidgets
+from ..Qt import QtCore, QtGui
 from .UIGraphicsItem import *
 
 __all__ = ['GridItem']

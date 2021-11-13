@@ -3,7 +3,7 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.functions as fn
 from pyqtgraph.exporters import ImageExporter
-from pyqtgraph.Qt import QtGui, QtWidgets
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp()
 

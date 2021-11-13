@@ -1,6 +1,6 @@
 import pyqtgraph as pg
 from pyqtgraph.GraphicsScene import GraphicsScene
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+from pyqtgraph.Qt import QtCore, QtWidgets
 
 app = pg.mkQApp("GraphicsScene Example")
 win = pg.GraphicsView()

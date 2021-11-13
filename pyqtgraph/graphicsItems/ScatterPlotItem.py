@@ -10,7 +10,7 @@ from .. import Qt, debug
 from .. import functions as fn
 from .. import getConfigOption
 from ..Point import Point
-from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
+from ..Qt import QT_LIB, QtCore, QtGui
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['ScatterPlotItem', 'SpotItem']

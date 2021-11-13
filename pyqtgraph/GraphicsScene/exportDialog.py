@@ -4,7 +4,7 @@ from .. import exporters as exporters
 from .. import functions as fn
 from ..graphicsItems.PlotItem import PlotItem
 from ..graphicsItems.ViewBox import ViewBox
-from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
+from ..Qt import QT_LIB, QtCore, QtWidgets
 
 ui_template = importlib.import_module(
     f'.exportDialogTemplate_{QT_LIB.lower()}', package=__package__)

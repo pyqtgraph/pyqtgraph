@@ -4,7 +4,7 @@ import numpy as np
 
 from .. import functions as fn
 from ..Point import Point
-from ..Qt import QtCore, QtGui, QtWidgets
+from ..Qt import QtCore, QtGui
 from .GraphicsItem import GraphicsItem
 from .GraphicsObject import GraphicsObject
 from .TextItem import TextItem

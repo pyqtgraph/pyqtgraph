@@ -7,7 +7,7 @@ Tests the creation of a HistogramLUTWidget.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtWidgets
+from pyqtgraph.Qt import QtWidgets
 
 
 def testHistogramLUTWidget():

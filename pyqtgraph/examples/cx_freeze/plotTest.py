@@ -1,7 +1,7 @@
 import sys
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtWidgets
+from pyqtgraph.Qt import QtWidgets
 
 # For packages that require scipy, these may be needed: 
 #   from scipy.stats import futil

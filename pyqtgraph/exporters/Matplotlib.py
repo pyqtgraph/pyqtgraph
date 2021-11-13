@@ -1,6 +1,6 @@
 from .. import PlotItem
 from .. import functions as fn
-from ..Qt import QtCore, QtGui, QtWidgets
+from ..Qt import QtCore, QtWidgets
 from .Exporter import Exporter
 
 __all__ = ['MatplotlibExporter']
