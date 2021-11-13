@@ -13,7 +13,7 @@ from ..widgets.PlotWidget import PlotWidget
 class MultiAxisPlotWidget(PlotWidget):
     def __init__(self, **kargs):
         """PlotWidget but with support for multi axis."""
-        PlotWidget.__init__(self, **kargs)
+        PlotWidget.__init__(self, enableMenu=False, **kargs)
         # plotitem shortcut
         self.pi = super().getPlotItem()
         # default vb from plotItem shortcut
@@ -97,7 +97,7 @@ class MultiAxisPlotWidget(PlotWidget):
                 self.addAxis(y_axis, "left", parent=self.pi)
                 y = self.axis[y_axis]
             # VIEW
-            plotitem = PlotItem(parent=self.pi, name=name, *args, **kwargs)
+            plotitem = PlotItem(parent=self.pi, name=name, *args, enableMenu=False, **kwargs)
             # hide all plotitem axis (they vould interfere with viewbox)
             for a in ["left", "bottom", "right", "top"]:
                 plotitem.hideAxis(a)
@@ -223,17 +223,18 @@ class MultiAxisPlotWidget(PlotWidget):
             charts = self.charts
         last_shown = None
         for k, c in self.charts.items():
+            c.plotItem.vb.state["isTopLevel"] = False
             try:
                 c.plotItem.vb.sigMouseDragged.disconnect()
-            except TypeError:
+            except (TypeError, RuntimeError):
                 pass
             try:
                 c.plotItem.vb.sigMouseWheel.disconnect()
-            except TypeError:
+            except (TypeError, RuntimeError):
                 pass
             try:
                 c.plotItem.vb.sigHistoryChanged.disconnect()
-            except TypeError:
+            except (TypeError, RuntimeError):
                 pass
             if k in charts:
                 c.show()
