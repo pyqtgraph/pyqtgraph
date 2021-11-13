@@ -27,7 +27,7 @@ class MultiAxisPlotWidget(PlotWidget):
         self.axis = {}
         self.charts = {}
 
-    def addAxis(self, name, *args, **kwargs):
+    def addAxis(self, orientation, name, *args, **kwargs):
         """Add a new axis (AxisItem) to the widget, will be shown and linked to a chart when used in addChart().
 
         Parameters:
@@ -40,7 +40,9 @@ class MultiAxisPlotWidget(PlotWidget):
         Returns:
             AxisItem: The newly created AxisItem.
         """
-        axis = AxisItem(name=name, *args, **kwargs)
+
+        axis = AxisItem(orientation, name=name, *args, **kwargs)
+        axis.setLabel(text=kwargs['text'], units=kwargs['units'])
         axis.autorange = True
         axis.charts_connections = []
         self.axis[name] = axis
@@ -83,11 +85,13 @@ class MultiAxisPlotWidget(PlotWidget):
             # X AXIS
             if x_axis is None:  # use default axis if none provided
                 x_axis = "bottom"
+            # print("_ADD CHART", x_axis, x_axis in self.axis)
             if x_axis in self.axis:
                 x = self.axis[x_axis]
             else:
                 self.addAxis(x_axis, "bottom", parent=self.pi)
                 x = self.axis[x_axis]
+
             # Y AXIS
             if y_axis is None:  # use default axis if none provided
                 y_axis = "left"
@@ -96,6 +100,7 @@ class MultiAxisPlotWidget(PlotWidget):
             else:
                 self.addAxis(y_axis, "left", parent=self.pi)
                 y = self.axis[y_axis]
+
             # VIEW
             plotitem = PlotItem(parent=self.pi, name=name, *args, enableMenu=False, **kwargs)
             # hide all plotitem axis (they vould interfere with viewbox)
@@ -127,6 +132,7 @@ class MultiAxisPlotWidget(PlotWidget):
         # create a mapping for this chart and his axis
         self.axis[x_axis].charts_connections.append(name)
         self.axis[y_axis].charts_connections.append(name)
+
         return chart, plotitem
 
     def clearLayout(self):
@@ -313,6 +319,29 @@ class MultiAxisPlotWidget(PlotWidget):
                 for chart in charts:
                     vb = chart.plotItem.getViewBox()
                     vb.setYRange(*range, **kwargs)
+
+    def setAxisInvert(self, axis_name, invert=False, **kwargs):
+        """Sets the inverted status of axis with given name.
+
+        Parameters:
+        axis_name (str, None):
+            The name of the axis to select.
+        invert (bool, False):
+            The invert of the axis.
+            If False: invert will remain as the default.
+        """
+
+        axis = self.axis[axis_name]
+        charts = [self.charts[connection] for connection in axis.charts_connections]
+
+        if axis.orientation in ["top", "bottom"]:  # IS X AXIS
+            for chart in charts:
+                vb = chart.plotItem.getViewBox()
+                vb.invertX(invert)
+        elif axis.orientation in ["left", "right"]:  # IS Y AXIS
+            for chart in charts:
+                vb = chart.plotItem.getViewBox()
+                vb.invertY(invert)
 
     def update(self):
         """Updates all charts' contents."""

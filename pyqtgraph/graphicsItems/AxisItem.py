@@ -21,7 +21,7 @@ class AxisItem(GraphicsWidget):
     If maxTickLength is negative, ticks point into the plot.
     """
 
-    def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
+    def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', name='', **args):
         """
         =============== ===============================================================
         **Arguments:**
@@ -47,6 +47,7 @@ class AxisItem(GraphicsWidget):
         GraphicsWidget.__init__(self, parent)
         self.label = QtGui.QGraphicsTextItem(self)
         self.picture = None
+        self.name = name
         self.orientation = orientation
         if orientation not in ['left', 'right', 'top', 'bottom']:
             raise Exception("Orientation argument must be one of 'left', 'right', 'top', or 'bottom'.")

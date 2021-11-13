@@ -3,6 +3,7 @@
 # Add path to library (just for examples; you do not need this)
 import initExample
 import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 
@@ -18,16 +19,16 @@ mw.setCentralWidget(mpw)
 mw.show()
 
 # LEGEND
-mpw.addLegend(offset=(0, 0))
+mpw.addLegend(offset=(450, 50))
 # TITLE
 mpw.setTitle("MultiAxisPlotWidget Example")
 # AXYS
-ax1 = mpw.addAxis("sx1", "bottom", text="Samples1", units="sx1")
-ax2 = mpw.addAxis("sx2", "bottom", text="Samples2", units="sx2")
-ax3 = mpw.addAxis("sx3", "bottom", text="Samples3", units="sx3")
-ay1 = mpw.addAxis("sy1", "left", text="Data1", units="sy1")
-ay2 = mpw.addAxis("sy2", "left", text="Data2", units="sy2")
-ay3 = mpw.addAxis("sy3", "left", text="Data3", units="sy3")
+ax1 = mpw.addAxis("bottom", name="sx1", text="Samples1", units="sx1")
+ax2 = mpw.addAxis("bottom", name="sx2", text="Samples2", units="sx2")
+ax3 = mpw.addAxis("bottom", name="sx3", text="Samples3", units="sx3")
+ay1 = mpw.addAxis("left", name="sy1", text="Data1", units="sy1")
+ay2 = mpw.addAxis("left", name="sy2", text="Data2", units="sy2")
+ay3 = mpw.addAxis("left", name="sy3", text="Data3", units="sy3")
 # CHARTS
 c1, pi1 = mpw.addChart("Dataset 1", x_axis="sx1", y_axis="sy1")
 c2, pi2 = mpw.addChart("Dataset 2", x_axis="sx2", y_axis="sy1")
@@ -37,15 +38,15 @@ c4, pi4 = mpw.addChart("Dataset 4", x_axis="sx3", y_axis="sy3")
 mpw.makeLayout()
 
 data1 = np.array(np.sin(np.linspace(0, 2 * np.pi, num=1000)))
-c1.setData(data1)
+c1.setData(data1, pen=pg.mkPen('r', width=2))
 data2 = data1 * 2
-c2.setData(data2)
+c2.setData(data2, pen=pg.mkPen('g', width=2))
 data3 = np.array(np.sin(np.linspace(0, 4 * np.pi, num=500))) * 3
-c3.setData(data3)
-data4 = np.array(np.sin(np.linspace(0, 4 * np.pi, num=500))) * 3
-c4.setData(data4)
+c3.setData(data3, pen=pg.mkPen('k', width=2))
+data4 = np.array(np.sin(np.linspace(0, 4 * np.pi, num=500))) * 5
+c4.setData(data4, pen=pg.mkPen('b', width=2))
 
-mpw.update()
+# mpw.update()
 
 
 # Start Qt event loop unless running in interactive mode.
