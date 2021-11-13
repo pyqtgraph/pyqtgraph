@@ -193,6 +193,7 @@ import atexit
 
 from .colormap import *
 from .functions import *
+# from .graphicsItems.plotDataMappings import *
 from .graphicsItems.ArrowItem import *
 from .graphicsItems.AxisItem import *
 from .graphicsItems.BarGraphItem import *

@@ -10,6 +10,7 @@ from .. import getConfigOption
 from ..Point import Point
 from ..Qt import QtCore, QtGui
 from .GraphicsWidget import GraphicsWidget
+from .. import plotDataMappings
 
 __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):
@@ -87,6 +88,7 @@ class AxisItem(GraphicsWidget):
         self.labelUnitPrefix = unitPrefix
         self.labelStyle = args
         self.logMode = False
+        self.mapping = plotDataMappings.get('identity')
 
         self._tickLevels = None  ## used to override the automatic ticking system with explicit ticks
         self._tickSpacing = None  # used to override default tickSpacing method
@@ -205,6 +207,18 @@ class AxisItem(GraphicsWidget):
         self.prepareGeometryChange()
         self.update()
 
+    def setMapping(self, mapping):
+        """ 
+        Sets data mapping function. Currently, only `plotDataMapping.LogMapping` 
+        is supported, others will be treated as indentity
+        """
+        self.picture = None
+        if isinstance(mapping, plotDataMappings.LogMapping):
+            self.logMode = True
+        else:
+            self.logMode = True
+        self.update()
+
     def setLogMode(self, log):
         """
         If *log* is True, then ticks are displayed on a logarithmic scale and values
@@ -214,11 +228,19 @@ class AxisItem(GraphicsWidget):
         """
         self.logMode = log
         self.picture = None
-        if self._linkedView is not None:
-            if self.orientation in ('top', 'bottom'):
-                self._linkedView().setLogMode('x', log)
-            elif self.orientation in ('left', 'right'):
-                self._linkedView().setLogMode('y', log)
+        # if self._linkedView is not None:
+        #     axis = None
+        #     if self.orientation in ('top', 'bottom'):
+        #         axis = 'x'
+        #         # self._linkedView().setLogMode('x', log)
+        #     elif self.orientation in ('left', 'right'):
+        #         axis = 'y'
+        #         # self._linkedView().setLogMode('y', log)
+        #     if axis is not None:
+        #         if log:
+        #             self._linkedView().setMapping(axis, plotDataMappings.getLog() )
+        #         else:
+        #             self._linkedView().setMapping(axis, plotDataMappings.getIdentity() )
         self.update()
 
     def setTickFont(self, font):
@@ -770,9 +792,14 @@ class AxisItem(GraphicsWidget):
         allValues = np.array([])
         for i in range(len(tickLevels)):
             spacing, offset = tickLevels[i]
+            if not np.isfinite(spacing):
+                # print(f"infinite spacing for tick level {i}")
+                continue
 
             ## determine starting tick
             start = (ceil((minVal-offset) / spacing) * spacing) + offset
+            if np.isnan(start):
+                print(minVal, offset, spacing)
 
             ## determine number of ticks
             num = int((maxVal-start) / spacing) + 1
