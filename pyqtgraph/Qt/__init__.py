@@ -22,6 +22,14 @@ PYQT6 = 'PyQt6'
 
 QT_LIB = os.getenv('PYQTGRAPH_QT_LIB')
 
+class QtModuleNotFoundError(ModuleNotFoundError):
+    """The purpose of this exception is to ensure that the user is aware what PYQTGRAPH_QT_LIB is set to."""
+    def __init__(self):
+        self.message = (f"Environment variable PYQTGRAPH_QT_LIB is set to '{os.getenv('PYQTGRAPH_QT_LIB')}', but no module with this name was found.")
+
+    def __str__(self):
+        return str(self.message)
+
 ## Automatically determine which Qt package to use (unless specified by
 ## environment variable).
 ## This is done by first checking to see whether one of the libraries
@@ -146,7 +154,10 @@ from . import QtCore, QtGui, QtWidgets
 if QT_LIB == PYQT5:
     # We're using PyQt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure for Qt5
-    import PyQt5.QtCore, PyQt5.QtGui, PyQt5.QtWidgets
+    try:
+        import PyQt5.QtCore, PyQt5.QtGui, PyQt5.QtWidgets
+    except ModuleNotFoundError:
+        raise QtModuleNotFoundError()
     _copy_attrs(PyQt5.QtCore, QtCore)
     _copy_attrs(PyQt5.QtGui, QtGui)
     _copy_attrs(PyQt5.QtWidgets, QtWidgets)
@@ -170,7 +181,10 @@ if QT_LIB == PYQT5:
     VERSION_INFO = 'PyQt5 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 elif QT_LIB == PYQT6:
-    import PyQt6.QtCore, PyQt6.QtGui, PyQt6.QtWidgets
+    try:
+        import PyQt6.QtCore, PyQt6.QtGui, PyQt6.QtWidgets
+    except ModuleNotFoundError:
+        raise QtModuleNotFoundError()
     _copy_attrs(PyQt6.QtCore, QtCore)
     _copy_attrs(PyQt6.QtGui, QtGui)
     _copy_attrs(PyQt6.QtWidgets, QtWidgets)
@@ -193,7 +207,10 @@ elif QT_LIB == PYQT6:
     VERSION_INFO = 'PyQt6 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 elif QT_LIB == PYSIDE2:
-    import PySide2.QtCore, PySide2.QtGui, PySide2.QtWidgets
+    try:
+        import PySide2.QtCore, PySide2.QtGui, PySide2.QtWidgets
+    except ModuleNotFoundError:
+        raise QtModuleNotFoundError()
     _copy_attrs(PySide2.QtCore, QtCore)
     _copy_attrs(PySide2.QtGui, QtGui)
     _copy_attrs(PySide2.QtWidgets, QtWidgets)
@@ -211,7 +228,10 @@ elif QT_LIB == PYSIDE2:
     import PySide2
     VERSION_INFO = 'PySide2 ' + PySide2.__version__ + ' Qt ' + QtCore.__version__
 elif QT_LIB == PYSIDE6:
-    import PySide6.QtCore, PySide6.QtGui, PySide6.QtWidgets
+    try:
+        import PySide6.QtCore, PySide6.QtGui, PySide6.QtWidgets
+    except ModuleNotFoundError:
+        raise QtModuleNotFoundError()
     _copy_attrs(PySide6.QtCore, QtCore)
     _copy_attrs(PySide6.QtGui, QtGui)
     _copy_attrs(PySide6.QtWidgets, QtWidgets)
