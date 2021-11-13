@@ -2,9 +2,10 @@ from ... import functions as fn
 from ...Qt import QtWidgets
 from ..ParameterItem import ParameterItem
 from . import BoolParameterItem, SimpleParameter
-from .basetypes import GroupParameter, GroupParameterItem, WidgetParameterItem
+from .basetypes import WidgetParameterItem
+from .group import GroupParameter, GroupParameterItem
 from .list import ListParameter
-from .slider import Emitter
+from .basetypes import Emitter
 
 
 class ChecklistParameterItem(GroupParameterItem):

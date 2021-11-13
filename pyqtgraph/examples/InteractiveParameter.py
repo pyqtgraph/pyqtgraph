@@ -1,6 +1,3 @@
-import initExample ## Add path to library (just for examples; you do not need this)
-
-
 from functools import wraps
 
 import pyqtgraph as pg

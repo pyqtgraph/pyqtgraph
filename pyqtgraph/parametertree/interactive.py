@@ -314,7 +314,7 @@ def _resolveTitle(name, titleFormat):
     # else: titleFormat should be callable
     return titleFormat(name)
 
-def _suppyCfgOpts(func):
+def _supplyCfgOpts(func):
     """Makes sure that config options can be supplied during normal function runs"""
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -322,7 +322,7 @@ def _suppyCfgOpts(func):
         return func(*args, **newKwargs)
     return wrapper
 
-@_suppyCfgOpts
+@_supplyCfgOpts
 def interact(func, *, runOpts=RunOpts.ON_CHANGED, ignores=None, parent=None, title=None, runFunc=None,
              nest=True, existOk=True, **overrides):
     """

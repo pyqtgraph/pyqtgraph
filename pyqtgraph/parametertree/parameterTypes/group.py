@@ -1,6 +1,5 @@
-from .. import ParameterItem, Parameter
+from ..parameterTypes.basetypes import ParameterItem, Parameter
 from ...Qt import QtWidgets, QtCore, QtGui
-
 
 class GroupParameterItem(ParameterItem):
     """
@@ -31,7 +30,6 @@ class GroupParameterItem(ParameterItem):
             l.addStretch()
             self.addWidgetBox = w
             self.addItem = QtWidgets.QTreeWidgetItem([])
-            self.addItem.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
             self.addItem.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
             self.addItem.depth = self.depth + 1
             ParameterItem.addChild(self, self.addItem)
@@ -119,10 +117,10 @@ class GroupParameterItem(ParameterItem):
 class GroupParameter(Parameter):
     """
     Group parameters are used mainly as a generic parent item that holds (and groups!) a set
-    of child parameters. 
-    
+    of child parameters.
+
     It also provides a simple mechanism for displaying a button or combo
-    that can be used to add new parameters to the group. To enable this, the group 
+    that can be used to add new parameters to the group. To enable this, the group
     must be initialized with the 'addText' option (the text will be displayed on
     a button which, when clicked, will cause addNew() to be called). If the 'addList'
     option is specified as well, then a dropdown-list of addable items will be displayed

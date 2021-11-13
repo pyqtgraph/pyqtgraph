@@ -6,9 +6,6 @@ For testing rapid updates of ScatterPlotItem under various conditions.
 (Scatter plots are still rather slow to draw; expect about 20fps)
 """
 
-# Add path to library (just for examples; you do not need this)
-import initExample
-
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore, QtWidgets

@@ -281,3 +281,10 @@ class SimpleParameter(Parameter):
             # raise TypeError(f'No interpreter found for type {typ}')
         interpreter = getattr(builtins, typ, _missing_interp)
         return interpreter(v)
+
+class Emitter(QtCore.QObject):
+    """
+    WidgetParameterItem is not a QObject, so create a QObject wrapper that items can use for emitting
+    """
+    sigChanging = QtCore.Signal(object, object)
+    sigChanged = QtCore.Signal(object, object)
