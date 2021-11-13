@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Node import Node
 from .common import CtrlNode
 
@@ -102,4 +101,3 @@ class FloorDivideNode(BinOpNode):
     def __init__(self, name):
         BinOpNode.__init__(self, name, '__floordiv__')
         
-

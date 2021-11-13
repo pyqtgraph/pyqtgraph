@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 ################################################################################
 ## Form generated from reading UI file 'axisCtrlTemplate.ui'
@@ -135,4 +134,3 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.autoPanCheck.setText(QCoreApplication.translate("Form", u"Auto Pan Only", None))
     # retranslateUi
-

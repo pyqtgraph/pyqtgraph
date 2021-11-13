@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 configfile.py - Human-readable text configuration file library 
 Copyright 2010  Luke Campagnola
@@ -9,14 +8,20 @@ file format. Data structures may be nested and contain any data type as long
 as it can be converted to/from a string using repr and eval.
 """
 
-import re, os, sys, datetime
-import numpy
-from collections import OrderedDict
+import datetime
+import os
+import re
+import sys
 import tempfile
+from collections import OrderedDict
+
+import numpy
+
 from . import units
-from .Qt import QtCore
-from .Point import Point
 from .colormap import ColorMap
+from .Point import Point
+from .Qt import QtCore
+
 GLOBAL_PATH = None # so not thread safe.
 
 
@@ -43,7 +48,7 @@ def writeConfigFile(data, fname):
         fd.write(s)
 
 
-def readConfigFile(fname):
+def readConfigFile(fname, **scope):
     #cwd = os.getcwd()
     global GLOBAL_PATH
     if GLOBAL_PATH is not None:
@@ -52,6 +57,21 @@ def readConfigFile(fname):
             fname = fname2
 
     GLOBAL_PATH = os.path.dirname(os.path.abspath(fname))
+
+    local = {**scope, **units.allUnits}
+    local['OrderedDict'] = OrderedDict
+    local['readConfigFile'] = readConfigFile
+    local['Point'] = Point
+    local['QtCore'] = QtCore
+    local['ColorMap'] = ColorMap
+    local['datetime'] = datetime
+    # Needed for reconstructing numpy arrays
+    local['array'] = numpy.array
+    for dtype in ['int8', 'uint8',
+                  'int16', 'uint16', 'float16',
+                  'int32', 'uint32', 'float32',
+                  'int64', 'uint64', 'float64']:
+        local[dtype] = getattr(numpy, dtype)
         
     try:
         #os.chdir(newDir)  ## bad.
@@ -59,7 +79,7 @@ def readConfigFile(fname):
             s = fd.read()
         s = s.replace("\r\n", "\n")
         s = s.replace("\r", "\n")
-        data = parseString(s)[1]
+        data = parseString(s, **local)[1]
     except ParseError:
         sys.exc_info()[1].fileName = fname
         raise
@@ -93,7 +113,7 @@ def genString(data, indent=''):
             s += indent + sk + ': ' + repr(data[k]).replace("\n", "\\\n") + '\n'
     return s
     
-def parseString(lines, start=0):
+def parseString(lines, start=0, **scope):
     
     data = OrderedDict()
     if isinstance(lines, str):
@@ -135,33 +155,19 @@ def parseString(lines, start=0):
             v = v.strip()
             
             ## set up local variables to use for eval
-            local = units.allUnits.copy()
-            local['OrderedDict'] = OrderedDict
-            local['readConfigFile'] = readConfigFile
-            local['Point'] = Point
-            local['QtCore'] = QtCore
-            local['ColorMap'] = ColorMap
-            local['datetime'] = datetime
-            # Needed for reconstructing numpy arrays
-            local['array'] = numpy.array
-            for dtype in ['int8', 'uint8', 
-                          'int16', 'uint16', 'float16',
-                          'int32', 'uint32', 'float32',
-                          'int64', 'uint64', 'float64']:
-                local[dtype] = getattr(numpy, dtype)
-                
             if len(k) < 1:
                 raise ParseError('Missing name preceding colon', ln+1, l)
             if k[0] == '(' and k[-1] == ')':  ## If the key looks like a tuple, try evaluating it.
                 try:
-                    k1 = eval(k, local)
+                    k1 = eval(k, scope)
                     if type(k1) is tuple:
                         k = k1
                 except:
+                    # If tuple conversion fails, keep the string
                     pass
             if re.search(r'\S', v) and v[0] != '#':  ## eval the value
                 try:
-                    val = eval(v, local)
+                    val = eval(v, scope)
                 except:
                     ex = sys.exc_info()[1]
                     raise ParseError("Error evaluating expression '%s': [%s: %s]" % (v, ex.__class__.__name__, str(ex)), (ln+1), l)
@@ -171,7 +177,7 @@ def parseString(lines, start=0):
                     val = {}
                 else:
                     #print "Going deeper..", ln+1
-                    (ln, val) = parseString(lines, start=ln+1)
+                    (ln, val) = parseString(lines, start=ln+1, **scope)
             data[k] = val
         #print k, repr(val)
     except ParseError:

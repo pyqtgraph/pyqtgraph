@@ -1,15 +1,26 @@
-# -*- coding: utf-8 -*-
-import subprocess, atexit, os, sys, time, signal, inspect
+import atexit
+import inspect
 import multiprocessing.connection
+import os
+import signal
+import subprocess
+import sys
+import time
+
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
 
-from .remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
 from ..Qt import QT_LIB, mkQApp
 from ..util import cprint  # color printing for debugging
-
+from .remoteproxy import (
+    ClosedError,
+    LocalObjectProxy,
+    NoResultError,
+    ObjectProxy,
+    RemoteEventHandler,
+)
 
 __all__ = ['Process', 'QtProcess', 'ForkedProcess', 'ClosedError', 'NoResultError']
 
@@ -397,8 +408,8 @@ class RemoteQtEventHandler(RemoteEventHandler):
         try:
             RemoteEventHandler.processRequests(self)
         except ClosedError:
-            from ..Qt import QtGui
-            QtGui.QApplication.instance().quit()
+            from ..Qt import QtWidgets
+            QtWidgets.QApplication.instance().quit()
             self.timer.stop()
             #raise SystemExit
 
@@ -419,7 +430,7 @@ class QtProcess(Process):
     
         proc = QtProcess()            
         rQtGui = proc._import('PyQt4.QtGui')
-        btn = rQtGui.QPushButton('button on child process')
+        btn = rQtWidgets.QPushButton('button on child process')
         btn.show()
         
         def slot():
@@ -430,15 +441,17 @@ class QtProcess(Process):
     def __init__(self, **kwds):
         if 'target' not in kwds:
             kwds['target'] = startQtEventLoop
-        from ..Qt import QtGui  ## avoid module-level import to keep bootstrap snappy.
+        from ..Qt import (  # # avoid module-level import to keep bootstrap snappy.
+            QtWidgets,
+        )
         self._processRequests = kwds.pop('processRequests', True)
-        if self._processRequests and QtGui.QApplication.instance() is None:
+        if self._processRequests and QtWidgets.QApplication.instance() is None:
             raise Exception("Must create QApplication before starting QtProcess, or use QtProcess(processRequests=False)")
         Process.__init__(self, **kwds)
         self.startEventTimer()
         
     def startEventTimer(self):
-        from ..Qt import QtCore  ## avoid module-level import to keep bootstrap snappy.
+        from ..Qt import QtCore  # # avoid module-level import to keep bootstrap snappy.
         self.timer = QtCore.QTimer()
         if self._processRequests:
             self.startRequestProcessing()
@@ -466,8 +479,8 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
     conn = multiprocessing.connection.Client(('localhost', int(port)), authkey=authkey)
     if debug:
         cprint.cout(debug, '[%d] connected; starting remote proxy.\n' % os.getpid(), -1)
-    from ..Qt import QtGui
-    app = QtGui.QApplication.instance()
+    from ..Qt import QtWidgets
+    app = QtWidgets.QApplication.instance()
     #print app
     if app is None:
         app = mkQApp()
@@ -480,6 +493,8 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
     app.exec() if hasattr(app, 'exec') else app.exec_()
 
 import threading
+
+
 class FileForwarder(threading.Thread):
     """
     Background thread that forwards data from one pipe to another. 

@@ -5,4 +5,3 @@ CurveArrow
     :members:
 
     .. automethod:: pyqtgraph.CurveArrow.__init__
-

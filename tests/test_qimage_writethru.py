@@ -1,5 +1,7 @@
 import numpy as np
+
 import pyqtgraph as pg
+
 
 def test_qimage_writethrough():
     w, h = 256, 256

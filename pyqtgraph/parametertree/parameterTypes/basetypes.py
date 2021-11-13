@@ -1,9 +1,11 @@
 import builtins
 
-from .. import ParameterItem, Parameter
 from ... import functions as fn
-from ...Qt import QtWidgets, QtCore, QtGui
 from ... import icons
+from ...Qt import QtCore, QtGui, QtWidgets
+from ..Parameter import Parameter
+from ..ParameterItem import ParameterItem
+
 
 class WidgetParameterItem(ParameterItem):
     """

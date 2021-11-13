@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
-from OpenGL.GL import *
-from .. GLGraphicsItem import GLGraphicsItem
-from .. import shaders
+from OpenGL.GL import *  # noqa
+import numpy as np
+
 from ... import functions as fn
 from ...Qt import QtGui
-import numpy as np
+from .. import shaders
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLScatterPlotItem']
 
@@ -12,7 +12,7 @@ class GLScatterPlotItem(GLGraphicsItem):
     """Draws points at a list of 3D positions."""
     
     def __init__(self, **kwds):
-        GLGraphicsItem.__init__(self)
+        super().__init__()
         glopts = kwds.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
         self.pos = None
@@ -126,10 +126,10 @@ class GLScatterPlotItem(GLGraphicsItem):
                     glEnableClientState(GL_COLOR_ARRAY)
                     glColorPointerf(self.color)
                 else:
-                    if isinstance(self.color, QtGui.QColor):
-                        glColor4f(*fn.glColor(self.color))
-                    else:
-                        glColor4f(*self.color)
+                    color = self.color
+                    if isinstance(color, QtGui.QColor):
+                        color = color.getRgbF()
+                    glColor4f(*color)
                 
                 if not self.pxMode or isinstance(self.size, np.ndarray):
                     glEnableClientState(GL_NORMAL_ARRAY)
@@ -138,9 +138,12 @@ class GLScatterPlotItem(GLGraphicsItem):
                         norm[...,0] = self.size
                     else:
                         gpos = self.mapToView(pos.transpose()).transpose()
-                        pxSize = self.view().pixelSize(gpos)
+                        if self.view():
+                            pxSize = self.view().pixelSize(gpos)
+                        else:
+                            pxSize = self.parentItem().view().pixelSize(gpos)
                         norm[...,0] = self.size / pxSize
-                    
+        
                     glNormalPointerf(norm)
                 else:
                     glNormal3f(self.size, 0, 0)  ## vertex shader uses norm.x to determine point size

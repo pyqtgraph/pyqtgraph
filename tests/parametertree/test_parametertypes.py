@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
 import sys
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph.parametertree as pt
-import pyqtgraph as pg
-from pyqtgraph.functions import eq
+
 import numpy as np
+
+import pyqtgraph as pg
+import pyqtgraph.parametertree as pt
+from pyqtgraph.functions import eq
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp()
 
@@ -31,8 +32,8 @@ def test_types():
         dict(name='float', type='float'),
         dict(name='int', type='int'),
         dict(name='str', type='str'),
-        dict(name='list', type='list', values=['x','y','z']),
-        dict(name='dict', type='list', values={'x':1, 'y':3, 'z':7}),
+        dict(name='list', type='list', limits=['x','y','z']),
+        dict(name='dict', type='list', limits={'x':1, 'y':3, 'z':7}),
         dict(name='bool', type='bool'),
         dict(name='color', type='color'),
     ]
@@ -129,8 +130,8 @@ def test_limits_enforcement():
     p = pt.Parameter.create(name='params', type='group', children=[
         dict(name='float', type='float', limits=[0, 1]),
         dict(name='int', type='int', bounds=[0, 1]),
-        dict(name='list', type='list', values=['x', 'y']),
-        dict(name='dict', type='list', values={'x': 1, 'y': 2}),
+        dict(name='list', type='list', limits=['x', 'y']),
+        dict(name='dict', type='list', limits={'x': 1, 'y': 2}),
     ])
     t = pt.ParameterTree()
     t.setParameters(p)

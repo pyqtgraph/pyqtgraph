@@ -1,9 +1,10 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtCore
-from .. import parametertree as ptree
-import numpy as np
 from collections import OrderedDict
+
+import numpy as np
+
 from .. import functions as fn
+from .. import parametertree as ptree
+from ..Qt import QtCore
 
 __all__ = ['DataFilterWidget']
 
@@ -130,7 +131,7 @@ class RangeFilterItem(ptree.types.SimpleParameter):
         ptree.types.SimpleParameter.__init__(self, 
             name=name, autoIncrementName=True, type='bool', value=True, removable=True, renamable=True, 
             children=[
-                #dict(name="Field", type='list', value=name, values=fields),
+                #dict(name="Field", type='list', value=name, limits=fields),
                 dict(name='Min', type='float', value=0.0, suffix=units, siPrefix=True),
                 dict(name='Max', type='float', value=1.0, suffix=units, siPrefix=True),
             ])

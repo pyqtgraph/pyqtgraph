@@ -5,4 +5,3 @@ ImageView
     :members:
 
     .. automethod:: pyqtgraph.ImageView.__init__
-

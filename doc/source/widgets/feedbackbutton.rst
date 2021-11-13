@@ -5,4 +5,3 @@ FeedbackButton
     :members:
 
     .. automethod:: pyqtgraph.FeedbackButton.__init__
-

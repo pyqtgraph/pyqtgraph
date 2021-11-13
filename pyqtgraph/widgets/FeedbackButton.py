@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtWidgets
 
 __all__ = ['FeedbackButton']
 
-class FeedbackButton(QtGui.QPushButton):
+class FeedbackButton(QtWidgets.QPushButton):
     """
     QPushButton which flashes success/failure indication for slow or asynchronous procedures.
     """
@@ -16,7 +15,7 @@ class FeedbackButton(QtGui.QPushButton):
     sigReset = QtCore.Signal()
     
     def __init__(self, *args):
-        QtGui.QPushButton.__init__(self, *args)
+        QtWidgets.QPushButton.__init__(self, *args)
         self.origStyle = None
         self.origText = self.text()
         self.origStyle = self.styleSheet()
@@ -70,7 +69,7 @@ class FeedbackButton(QtGui.QPushButton):
             self.setText(message, temporary=True)
             self.setToolTip(tip, temporary=True)
             if processEvents:
-                QtGui.QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
         else:
             self.sigCallProcess.emit(message, tip, processEvents)
            
@@ -123,29 +122,29 @@ class FeedbackButton(QtGui.QPushButton):
         if text is None:
             text = self.origText
         #print text
-        QtGui.QPushButton.setText(self, text)
+        QtWidgets.QPushButton.setText(self, text)
         if not temporary:
             self.origText = text
 
     def setToolTip(self, text=None, temporary=False):
         if text is None:
             text = self.origTip
-        QtGui.QPushButton.setToolTip(self, text)
+        QtWidgets.QPushButton.setToolTip(self, text)
         if not temporary:
             self.origTip = text
 
     def setStyleSheet(self, style=None, temporary=False):
         if style is None:
             style = self.origStyle
-        QtGui.QPushButton.setStyleSheet(self, style)
+        QtWidgets.QPushButton.setStyleSheet(self, style)
         if not temporary:
             self.origStyle = style
 
 
 if __name__ == '__main__':
     import time
-    app = QtGui.QApplication([])
-    win = QtGui.QMainWindow()
+    app = QtWidgets.QApplication([])
+    win = QtWidgets.QMainWindow()
     btn = FeedbackButton("Button")
     fail = True
     def click():

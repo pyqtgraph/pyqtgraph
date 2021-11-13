@@ -1,4 +1,5 @@
 import pyqtgraph as pg
+
 pg.mkQApp()
 
 def test_combobox():

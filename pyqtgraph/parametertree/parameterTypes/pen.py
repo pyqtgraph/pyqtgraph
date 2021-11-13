@@ -1,8 +1,9 @@
-from .basetypes import WidgetParameterItem
-from .. import Parameter
 from ... import functions as fn
-from ...Qt import QtWidgets, QtGui, QtCore
+from ...Qt import QtCore, QtGui, QtWidgets
 from ...widgets.PenSelectorDialog import PenSelectorDialog
+from ..Parameter import Parameter
+from .basetypes import WidgetParameterItem
+
 
 class PenParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):

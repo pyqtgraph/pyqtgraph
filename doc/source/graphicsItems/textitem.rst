@@ -5,4 +5,3 @@ TextItem
     :members:
 
     .. automethod:: pyqtgraph.TextItem.__init__
-

@@ -1,26 +1,29 @@
-# -*- coding: utf-8 -*-
 """
 PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.12.2'
+__version__ = '0.12.3'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
+import os
+import sys
+
+import numpy  # # pyqtgraph requires numpy
+
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt and PySide.
-from .Qt import QtCore, QtGui, mkQApp
+from .Qt import QtCore, QtGui, QtWidgets
 from .Qt import exec_ as exec
+from .Qt import mkQApp
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
-#if QtGui.QApplication.instance() is None:
-    #app = QtGui.QApplication([])
+#if QtWidgets.QApplication.instance() is None:
+    #app = QtWidgets.QApplication([])
 
-import numpy  ## pyqtgraph requires numpy
               ## (import here to avoid massive error dump later on if numpy is not available)
 
-import os, sys
 
 ## in general openGL is poorly supported with Qt+GraphicsView.
 ## we only enable it where the performance benefit is critical.
@@ -185,98 +188,98 @@ path = os.path.split(__file__)[0]
 #importAll('widgets', globals(), locals(),
           #excludes=['MatplotlibWidget', 'RawImageWidget', 'RemoteGraphicsView'])
 
-from .graphicsItems.VTickGroup import * 
-from .graphicsItems.GraphicsWidget import * 
-from .graphicsItems.ScaleBar import * 
-from .graphicsItems.PlotDataItem import * 
-from .graphicsItems.GraphItem import * 
-from .graphicsItems.TextItem import * 
-from .graphicsItems.GraphicsLayout import * 
-from .graphicsItems.UIGraphicsItem import * 
-from .graphicsItems.GraphicsObject import * 
-from .graphicsItems.PlotItem import * 
-from .graphicsItems.ROI import * 
-from .graphicsItems.InfiniteLine import * 
-from .graphicsItems.HistogramLUTItem import * 
-from .graphicsItems.GridItem import * 
-from .graphicsItems.GradientLegend import * 
-from .graphicsItems.GraphicsItem import * 
-from .graphicsItems.BarGraphItem import * 
-from .graphicsItems.ViewBox import * 
-from .graphicsItems.ArrowItem import * 
-from .graphicsItems.ImageItem import * 
-from .graphicsItems.PColorMeshItem import * 
-from .graphicsItems.AxisItem import * 
-from .graphicsItems.DateAxisItem import *
-from .graphicsItems.LabelItem import * 
-from .graphicsItems.CurvePoint import * 
-from .graphicsItems.GraphicsWidgetAnchor import * 
-from .graphicsItems.PlotCurveItem import * 
-from .graphicsItems.ButtonItem import * 
-from .graphicsItems.GradientEditorItem import * 
-from .graphicsItems.ColorBarItem import * 
-from .graphicsItems.MultiPlotItem import * 
-from .graphicsItems.ErrorBarItem import * 
-from .graphicsItems.IsocurveItem import * 
-from .graphicsItems.LinearRegionItem import * 
-from .graphicsItems.FillBetweenItem import * 
-from .graphicsItems.LegendItem import * 
-from .graphicsItems.ScatterPlotItem import * 
-from .graphicsItems.ItemGroup import *
-from .graphicsItems.TargetItem import * 
+## Attempts to work around exit crashes:
+import atexit
 
-from .widgets.MultiPlotWidget import * 
-from .widgets.ScatterPlotWidget import * 
-from .widgets.ColorMapWidget import * 
-from .widgets.FileDialog import * 
-from .widgets.ValueLabel import * 
-from .widgets.HistogramLUTWidget import * 
-from .widgets.CheckTable import * 
-from .widgets.BusyCursor import * 
-from .widgets.PlotWidget import * 
-from .widgets.ComboBox import * 
-from .widgets.GradientWidget import * 
-from .widgets.DataFilterWidget import * 
-from .widgets.SpinBox import * 
-from .widgets.JoystickButton import * 
-from .widgets.GraphicsLayoutWidget import * 
-from .widgets.TreeWidget import * 
-from .widgets.PathButton import * 
-from .widgets.VerticalLabel import * 
-from .widgets.FeedbackButton import * 
-from .widgets.ColorButton import * 
-from .widgets.DataTreeWidget import * 
-from .widgets.DiffTreeWidget import * 
-from .widgets.GraphicsView import * 
-from .widgets.LayoutWidget import * 
-from .widgets.TableWidget import * 
-from .widgets.ProgressDialog import *
-from .widgets.GroupBox import GroupBox
-from .widgets.RemoteGraphicsView import RemoteGraphicsView
-
-from .imageview import *
-from .WidgetGroup import *
-from .Point import Point
-from .Vector import Vector
-from .SRTTransform import SRTTransform
-from .Transform3D import Transform3D
-from .SRTTransform3D import SRTTransform3D
-from .functions import *
-from .graphicsWindows import *
-from .SignalProxy import *
 from .colormap import *
-from .ptime import time
-from .Qt import isQObjectAlive
-from .ThreadsafeTimer import *
+from .functions import *
+from .graphicsItems.ArrowItem import *
+from .graphicsItems.AxisItem import *
+from .graphicsItems.BarGraphItem import *
+from .graphicsItems.ButtonItem import *
+from .graphicsItems.ColorBarItem import *
+from .graphicsItems.CurvePoint import *
+from .graphicsItems.DateAxisItem import *
+from .graphicsItems.ErrorBarItem import *
+from .graphicsItems.FillBetweenItem import *
+from .graphicsItems.GradientEditorItem import *
+from .graphicsItems.GradientLegend import *
+from .graphicsItems.GraphicsItem import *
+from .graphicsItems.GraphicsLayout import *
+from .graphicsItems.GraphicsObject import *
+from .graphicsItems.GraphicsWidget import *
+from .graphicsItems.GraphicsWidgetAnchor import *
+from .graphicsItems.GraphItem import *
+from .graphicsItems.GridItem import *
+from .graphicsItems.HistogramLUTItem import *
+from .graphicsItems.ImageItem import *
+from .graphicsItems.InfiniteLine import *
+from .graphicsItems.IsocurveItem import *
+from .graphicsItems.ItemGroup import *
+from .graphicsItems.LabelItem import *
+from .graphicsItems.LegendItem import *
+from .graphicsItems.LinearRegionItem import *
+from .graphicsItems.MultiPlotItem import *
+from .graphicsItems.PColorMeshItem import *
+from .graphicsItems.PlotCurveItem import *
+from .graphicsItems.PlotDataItem import *
+from .graphicsItems.PlotItem import *
+from .graphicsItems.ROI import *
+from .graphicsItems.ScaleBar import *
+from .graphicsItems.ScatterPlotItem import *
+from .graphicsItems.TargetItem import *
+from .graphicsItems.TextItem import *
+from .graphicsItems.UIGraphicsItem import *
+from .graphicsItems.ViewBox import *
+from .graphicsItems.VTickGroup import *
 
 # indirect imports used within library
 from .GraphicsScene import GraphicsScene
-from .util.cupy_helper import getCupy
+from .graphicsWindows import *
+from .imageview import *
 
 # indirect imports known to be used outside of the library
 from .metaarray import MetaArray
 from .ordereddict import OrderedDict
-
+from .Point import Point
+from .ptime import time
+from .Qt import isQObjectAlive
+from .SignalProxy import *
+from .SRTTransform import SRTTransform
+from .SRTTransform3D import SRTTransform3D
+from .ThreadsafeTimer import *
+from .Transform3D import Transform3D
+from .util.cupy_helper import getCupy
+from .Vector import Vector
+from .WidgetGroup import *
+from .widgets.BusyCursor import *
+from .widgets.CheckTable import *
+from .widgets.ColorButton import *
+from .widgets.ColorMapWidget import *
+from .widgets.ComboBox import *
+from .widgets.DataFilterWidget import *
+from .widgets.DataTreeWidget import *
+from .widgets.DiffTreeWidget import *
+from .widgets.FeedbackButton import *
+from .widgets.FileDialog import *
+from .widgets.GradientWidget import *
+from .widgets.GraphicsLayoutWidget import *
+from .widgets.GraphicsView import *
+from .widgets.GroupBox import GroupBox
+from .widgets.HistogramLUTWidget import *
+from .widgets.JoystickButton import *
+from .widgets.LayoutWidget import *
+from .widgets.MultiPlotWidget import *
+from .widgets.PathButton import *
+from .widgets.PlotWidget import *
+from .widgets.ProgressDialog import *
+from .widgets.RemoteGraphicsView import RemoteGraphicsView
+from .widgets.ScatterPlotWidget import *
+from .widgets.SpinBox import *
+from .widgets.TableWidget import *
+from .widgets.TreeWidget import *
+from .widgets.ValueLabel import *
+from .widgets.VerticalLabel import *
 
 ##############################################################
 ## PyQt and PySide both are prone to crashing on exit. 
@@ -286,8 +289,6 @@ from .ordereddict import OrderedDict
 ##  2. Terminate the process before python starts tearing down
 ##     This is potentially dangerous
 
-## Attempts to work around exit crashes:
-import atexit
 _cleanupCalled = False
 def cleanup():
     global _cleanupCalled
@@ -303,16 +304,16 @@ def cleanup():
     ## ALL QGraphicsItems must have a scene before they are deleted.
     ## This is potentially very expensive, but preferred over crashing.
     ## Note: this appears to be fixed in PySide as of 2012.12, but it should be left in for a while longer..
-    app = QtGui.QApplication.instance()
-    if app is None or not isinstance(app, QtGui.QApplication):
+    app = QtWidgets.QApplication.instance()
+    if app is None or not isinstance(app, QtWidgets.QApplication):
         # app was never constructed is already deleted or is an
         # QCoreApplication/QGuiApplication and not a full QApplication
         return
     import gc
-    s = QtGui.QGraphicsScene()
+    s = QtWidgets.QGraphicsScene()
     for o in gc.get_objects():
         try:
-            if isinstance(o, QtGui.QGraphicsItem) and isQObjectAlive(o) and o.scene() is None:
+            if isinstance(o, QtWidgets.QGraphicsItem) and isQObjectAlive(o) and o.scene() is None:
                 if getConfigOption('crashWarning'):
                     sys.stderr.write('Error: graphics item without scene. '
                         'Make sure ViewBox.close() and GraphicsView.close() '
@@ -334,7 +335,7 @@ def _connectCleanup():
     global _cleanupConnected
     if _cleanupConnected:
         return
-    QtGui.QApplication.instance().aboutToQuit.connect(cleanup)
+    QtWidgets.QApplication.instance().aboutToQuit.connect(cleanup)
     _cleanupConnected = True
 
 

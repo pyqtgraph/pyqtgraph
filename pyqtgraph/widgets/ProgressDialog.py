@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
 from time import perf_counter
-from ..Qt import QtGui, QtCore
+
+from ..Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ['ProgressDialog']
 
 
-class ProgressDialog(QtGui.QProgressDialog):
+class ProgressDialog(QtWidgets.QProgressDialog):
     """
     Extends QProgressDialog:
     
@@ -65,7 +65,7 @@ class ProgressDialog(QtGui.QProgressDialog):
             
         self.busyCursor = busyCursor
 
-        QtGui.QProgressDialog.__init__(self, labelText, cancelText, minimum, maximum, parent)
+        QtWidgets.QProgressDialog.__init__(self, labelText, cancelText, minimum, maximum, parent)
         
         # If this will be a nested dialog, then we ignore the wait time
         if nested is True and len(ProgressDialog.allDialogs) > 0:
@@ -82,7 +82,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         if self.disabled:
             return self
         if self.busyCursor:
-            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.CursorShape.WaitCursor))
+            QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.CursorShape.WaitCursor))
         
         if self.nested and len(ProgressDialog.allDialogs) > 0:
             topDialog = ProgressDialog.allDialogs[0]
@@ -98,7 +98,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         if self.disabled:
             return
         if self.busyCursor:
-            QtGui.QApplication.restoreOverrideCursor()
+            QtWidgets.QApplication.restoreOverrideCursor()
             
         if self._topDialog is not None:
             self._topDialog._removeSubDialog(self)
@@ -152,14 +152,14 @@ class ProgressDialog(QtGui.QProgressDialog):
         # extract all child widgets and place into a new layout that we can add to
         if self._nestingReady is False:
             # top layout contains progress bars + cancel button at the bottom
-            self._topLayout = QtGui.QGridLayout()
+            self._topLayout = QtWidgets.QGridLayout()
             self.setLayout(self._topLayout)
             self._topLayout.setContentsMargins(0, 0, 0, 0)
             
             # A vbox to contain all progress bars
-            self.nestedVBox = QtGui.QWidget()
+            self.nestedVBox = QtWidgets.QWidget()
             self._topLayout.addWidget(self.nestedVBox, 0, 0, 1, 2)
-            self.nestedLayout = QtGui.QVBoxLayout()
+            self.nestedLayout = QtWidgets.QVBoxLayout()
             self.nestedVBox.setLayout(self.nestedLayout)
             
             # re-insert all widgets
@@ -180,10 +180,10 @@ class ProgressDialog(QtGui.QProgressDialog):
         #   2. the cancel button
         
         if self._nestableWidgets is None:
-            widgets = [ch for ch in self.children() if isinstance(ch, QtGui.QWidget)]
-            label = [ch for ch in self.children() if isinstance(ch, QtGui.QLabel)][0]
-            bar = [ch for ch in self.children() if isinstance(ch, QtGui.QProgressBar)][0]
-            btn = [ch for ch in self.children() if isinstance(ch, QtGui.QPushButton)][0]
+            widgets = [ch for ch in self.children() if isinstance(ch, QtWidgets.QWidget)]
+            label = [ch for ch in self.children() if isinstance(ch, QtWidgets.QLabel)][0]
+            bar = [ch for ch in self.children() if isinstance(ch, QtWidgets.QProgressBar)][0]
+            btn = [ch for ch in self.children() if isinstance(ch, QtWidgets.QPushButton)][0]
             
             sw = ProgressWidget(label, bar)
             
@@ -202,55 +202,55 @@ class ProgressDialog(QtGui.QProgressDialog):
     def setValue(self, val):
         if self.disabled:
             return
-        QtGui.QProgressDialog.setValue(self, val)
+        QtWidgets.QProgressDialog.setValue(self, val)
         
         # Qt docs say this should happen automatically, but that doesn't seem
         # to be the case.
         if self.windowModality() == QtCore.Qt.WindowModality.WindowModal:
             now = perf_counter()
             if self._lastProcessEvents is None or (now - self._lastProcessEvents) > 0.2:
-                QtGui.QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
                 self._lastProcessEvents = now
         
     def setLabelText(self, val):
         if self.disabled:
             return
-        QtGui.QProgressDialog.setLabelText(self, val)
+        QtWidgets.QProgressDialog.setLabelText(self, val)
     
     def setMaximum(self, val):
         if self.disabled:
             return
-        QtGui.QProgressDialog.setMaximum(self, val)
+        QtWidgets.QProgressDialog.setMaximum(self, val)
 
     def setMinimum(self, val):
         if self.disabled:
             return
-        QtGui.QProgressDialog.setMinimum(self, val)
+        QtWidgets.QProgressDialog.setMinimum(self, val)
         
     def wasCanceled(self):
         if self.disabled:
             return False
-        return QtGui.QProgressDialog.wasCanceled(self)
+        return QtWidgets.QProgressDialog.wasCanceled(self)
 
     def maximum(self):
         if self.disabled:
             return 0
-        return QtGui.QProgressDialog.maximum(self)
+        return QtWidgets.QProgressDialog.maximum(self)
 
     def minimum(self):
         if self.disabled:
             return 0
-        return QtGui.QProgressDialog.minimum(self)
+        return QtWidgets.QProgressDialog.minimum(self)
 
 
-class ProgressWidget(QtGui.QWidget):
+class ProgressWidget(QtWidgets.QWidget):
     """Container for a label + progress bar that also allows its child widgets
     to be hidden without changing size.
     """
     def __init__(self, label, bar):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.hidden = False
-        self.layout = QtGui.QVBoxLayout()
+        self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
         
         self.label = label

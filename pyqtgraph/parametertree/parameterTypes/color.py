@@ -1,6 +1,6 @@
-from ...widgets.ColorButton import ColorButton
 from ... import functions as fn
-from .basetypes import WidgetParameterItem, SimpleParameter
+from ...widgets.ColorButton import ColorButton
+from .basetypes import SimpleParameter, WidgetParameterItem
 
 
 class ColorParameterItem(WidgetParameterItem):
@@ -27,5 +27,5 @@ class ColorParameter(SimpleParameter):
 
     def saveState(self, filter=None):
         state = super().saveState(filter)
-        state['value'] = fn.colorTuple(self.value())
+        state['value'] = self.value().getRgb()
         return state

@@ -1,17 +1,17 @@
-# -*- coding: utf-8 -*-
 """
-This module exists to smooth out some of the differences between PySide and PyQt4:
+This module exists to smooth out some of the differences between Qt versions.
 
-* Automatically import either PyQt4 or PySide depending on availability
-* Allow to import QtCore/QtGui pyqtgraph.Qt without specifying which Qt wrapper
+* Automatically import Qt lib depending on availability
+* Allow you to import QtCore/QtGui from pyqtgraph.Qt without specifying which Qt wrapper
   you want to use.
-* Declare QtCore.Signal, .Slot in PyQt4
-* Declare loadUiType function for Pyside
-
 """
 
-import os, sys, re, time, subprocess, warnings
-
+import os
+import re
+import subprocess
+import sys
+import time
+import warnings
 
 PYSIDE = 'PySide'
 PYSIDE2 = 'PySide2'
@@ -21,6 +21,12 @@ PYQT5 = 'PyQt5'
 PYQT6 = 'PyQt6'
 
 QT_LIB = os.getenv('PYQTGRAPH_QT_LIB')
+
+if QT_LIB is not None:
+    try:
+        __import__(QT_LIB)
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError(f"Environment variable PYQTGRAPH_QT_LIB is set to '{os.getenv('PYQTGRAPH_QT_LIB')}', but no module with this name was found.")
 
 ## Automatically determine which Qt package to use (unless specified by
 ## environment variable).
@@ -146,7 +152,9 @@ from . import QtCore, QtGui, QtWidgets
 if QT_LIB == PYQT5:
     # We're using PyQt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure for Qt5
-    import PyQt5.QtCore, PyQt5.QtGui, PyQt5.QtWidgets
+    import PyQt5.QtCore
+    import PyQt5.QtGui
+    import PyQt5.QtWidgets
     _copy_attrs(PyQt5.QtCore, QtCore)
     _copy_attrs(PyQt5.QtGui, QtGui)
     _copy_attrs(PyQt5.QtWidgets, QtWidgets)
@@ -170,7 +178,9 @@ if QT_LIB == PYQT5:
     VERSION_INFO = 'PyQt5 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 elif QT_LIB == PYQT6:
-    import PyQt6.QtCore, PyQt6.QtGui, PyQt6.QtWidgets
+    import PyQt6.QtCore
+    import PyQt6.QtGui
+    import PyQt6.QtWidgets
     _copy_attrs(PyQt6.QtCore, QtCore)
     _copy_attrs(PyQt6.QtGui, QtGui)
     _copy_attrs(PyQt6.QtWidgets, QtWidgets)
@@ -193,7 +203,9 @@ elif QT_LIB == PYQT6:
     VERSION_INFO = 'PyQt6 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 elif QT_LIB == PYSIDE2:
-    import PySide2.QtCore, PySide2.QtGui, PySide2.QtWidgets
+    import PySide2.QtCore
+    import PySide2.QtGui
+    import PySide2.QtWidgets
     _copy_attrs(PySide2.QtCore, QtCore)
     _copy_attrs(PySide2.QtGui, QtGui)
     _copy_attrs(PySide2.QtWidgets, QtWidgets)
@@ -207,11 +219,13 @@ elif QT_LIB == PYSIDE2:
     except ImportError as err:
         QtTest = FailedImport(err)
 
-    import shiboken2 as shiboken
     import PySide2
+    import shiboken2 as shiboken
     VERSION_INFO = 'PySide2 ' + PySide2.__version__ + ' Qt ' + QtCore.__version__
 elif QT_LIB == PYSIDE6:
-    import PySide6.QtCore, PySide6.QtGui, PySide6.QtWidgets
+    import PySide6.QtCore
+    import PySide6.QtGui
+    import PySide6.QtWidgets
     _copy_attrs(PySide6.QtCore, QtCore)
     _copy_attrs(PySide6.QtGui, QtGui)
     _copy_attrs(PySide6.QtWidgets, QtWidgets)
@@ -229,8 +243,8 @@ elif QT_LIB == PYSIDE6:
     except ImportError as err:
         QtTest = FailedImport(err)
 
-    import shiboken6 as shiboken
     import PySide6
+    import shiboken6 as shiboken
     VERSION_INFO = 'PySide6 ' + PySide6.__version__ + ' Qt ' + QtCore.__version__
 
 else:
@@ -243,7 +257,7 @@ if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
     # recreate the Qt4 structure
 
     if QT_LIB in [PYQT5, PYSIDE2]:
-        __QGraphicsItem_scale = QtWidgets.QGraphicsItem.scale	
+        __QGraphicsItem_scale = QtWidgets.QGraphicsItem.scale
 
         def scale(self, *args):
             warnings.warn(
@@ -296,11 +310,37 @@ if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
         QtWidgets.QHeaderView.setResizeMode = setResizeMode	
     
     # Import all QtWidgets objects into QtGui
-    for o in dir(QtWidgets):
-        if o.startswith('Q'):
-            setattr(QtGui, o, getattr(QtWidgets,o) )
+    _fallbacks = dir(QtWidgets)
+
+    def lazyGetattr(name):
+        if not (name in _fallbacks and name.startswith('Q')):
+            raise AttributeError(f"module 'QtGui' has no attribute '{name}'")
+        # This whitelist is attrs which are not shared between PyQt6.QtGui and PyQt5.QtGui, but which can be found on
+        # one of the QtWidgets.
+        whitelist = [
+            "QAction",
+            "QActionGroup",
+            "QFileSystemModel",
+            "QPagedPaintDevice",
+            "QPaintEvent",
+            "QShortcut",
+            "QUndoCommand",
+            "QUndoGroup",
+            "QUndoStack",
+        ]
+        if name not in whitelist:
+            warnings.warn(
+                "Accessing pyqtgraph.QtWidgets through QtGui is deprecated and will be removed sometime"
+                f" after May 2022. Use QtWidgets.{name} instead.",
+                DeprecationWarning, stacklevel=2
+            )
+        attr = getattr(QtWidgets, name)
+        setattr(QtGui, name, attr)
+        return attr
+
+    QtGui.__getattr__ = lazyGetattr
     
-    QtGui.QApplication.setGraphicsSystem = None
+    QtWidgets.QApplication.setGraphicsSystem = None
 
 
 if QT_LIB in [PYQT6, PYSIDE6]:
@@ -323,9 +363,9 @@ if QT_LIB in [PYSIDE2, PYSIDE6]:
             @staticmethod
             def qWait(msec):
                 start = time.time()
-                QtGui.QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
                 while time.time() < start + msec * 0.001:
-                    QtGui.QApplication.processEvents()
+                    QtWidgets.QApplication.processEvents()
             QtTest.QTest.qWait = qWait
 
 
@@ -381,7 +421,7 @@ def mkQApp(name=None):
         app = QtWidgets.QApplication.instance()
         app.setProperty('darkMode', color.lower() != "#ffffff")
 
-    QAPP = QtGui.QApplication.instance()
+    QAPP = QtWidgets.QApplication.instance()
     if QAPP is None:
         # hidpi handling
         qtVersionCompare = tuple(map(int, QtVersion.split(".")))
@@ -390,11 +430,11 @@ def mkQApp(name=None):
             pass
         elif qtVersionCompare > (5, 14):
             os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
-            QtGui.QApplication.setHighDpiScaleFactorRoundingPolicy(QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+            QtWidgets.QApplication.setHighDpiScaleFactorRoundingPolicy(QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
         else:  # qt 5.12 and 5.13
-            QtGui.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
-            QtGui.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
-        QAPP = QtGui.QApplication(sys.argv or ["pyqtgraph"])
+            QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+            QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
+        QAPP = QtWidgets.QApplication(sys.argv or ["pyqtgraph"])
         QAPP.paletteChanged.connect(onPaletteChange)
         QAPP.paletteChanged.emit(QAPP.palette())
 

@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 import numpy as np
-from . import functions
+
+from ... import Point, PolyLineROI
 from ... import functions as pgfn
-from .common import *
-from ... import PolyLineROI
-from ... import Point
 from ... import metaarray as metaarray
+from . import functions
+from .common import *
 
 
 class Downsample(CtrlNode):

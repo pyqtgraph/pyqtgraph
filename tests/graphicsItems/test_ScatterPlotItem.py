@@ -1,6 +1,7 @@
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph as pg
 import numpy as np
+
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 
 def test_scatterplotitem():

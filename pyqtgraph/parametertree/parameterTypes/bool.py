@@ -1,5 +1,5 @@
-from pyqtgraph.Qt import QtWidgets
-from pyqtgraph.parametertree.parameterTypes import WidgetParameterItem
+from ...Qt import QtWidgets
+from .basetypes import WidgetParameterItem
 
 
 class BoolParameterItem(WidgetParameterItem):

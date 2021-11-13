@@ -1,6 +1,6 @@
+from ...Qt import QtCore, QtWidgets
+from ..Parameter import Parameter
 from .basetypes import WidgetParameterItem
-from .. import Parameter
-from ...Qt import QtWidgets, QtCore
 
 
 class TextParameterItem(WidgetParameterItem):

@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
-from OpenGL.GL import *
-from .. GLGraphicsItem import GLGraphicsItem
-from ...Qt import QtGui
+from OpenGL.GL import *  # noqa
 import numpy as np
+
+from ...Qt import QtGui
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLVolumeItem']
 

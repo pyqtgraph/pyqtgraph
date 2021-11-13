@@ -1,13 +1,15 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui, QtWidgets
-from OpenGL.GL import *
-import OpenGL.GL.framebufferobjects as glfbo
+from OpenGL.GL import *  # noqa
+import OpenGL.GL.framebufferobjects as glfbo  # noqa
+import warnings
+from math import cos, radians, sin, tan
+
 import numpy as np
+
 from .. import Vector
 from .. import functions as fn
 from .. import getConfigOption
-import warnings
-from math import cos, sin, tan, radians
+from ..Qt import QtCore, QtGui, QtWidgets
+
 ##Vector = QtGui.QVector3D
 
 
@@ -138,9 +140,9 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
     def setBackgroundColor(self, *args, **kwds):
         """
         Set the background color of the widget. Accepts the same arguments as
-        pg.mkColor() and pg.glColor().
+        :func:`~pyqtgraph.mkColor`.
         """
-        self.opts['bgcolor'] = fn.glColor(*args, **kwds)
+        self.opts['bgcolor'] = fn.mkColor(*args, **kwds).getRgbF()
         self.update()
         
     def getViewport(self):

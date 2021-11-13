@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 import numpy as np
+
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui
-from pyqtgraph.exporters import ImageExporter
 import pyqtgraph.functions as fn
+from pyqtgraph.exporters import ImageExporter
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp()
 

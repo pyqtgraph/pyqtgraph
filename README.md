@@ -39,7 +39,7 @@ Currently this means:
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
   [PySide2](https://wiki.qt.io/Qt_for_Python), or
   [PySide6](https://wiki.qt.io/Qt_for_Python)
-* [`numpy`](https://github.com/numpy/numpy) 1.17+
+* [`numpy`](https://github.com/numpy/numpy) 1.18+
 
 ### Optional added functionalities
 
@@ -121,6 +121,9 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
 * [argos](https://github.com/titusjan/argos)
 * [PySpectra](http://hasyweb.desy.de/services/computing/Spock/node138.html)
-* [Semi-Supervised Semantic Annotator](https://gitlab.com/ficsresearch/s3a)
+* [Semi-Supervised Semantic Annotator](https://gitlab.com/ficsresearch/s3ah)
+* [PyMeasure](https://github.com/pymeasure/pymeasure)
+* [Exo-Striker](https://github.com/3fon3fonov/exostriker)
+* [HussariX](https://github.com/sem-geologist/HussariX)
 
 Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!

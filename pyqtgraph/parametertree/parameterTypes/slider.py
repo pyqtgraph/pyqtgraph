@@ -1,17 +1,8 @@
 import numpy as np
 
-from .basetypes import WidgetParameterItem
-from .. import Parameter
 from ...Qt import QtCore, QtWidgets
-
-
-class Emitter(QtCore.QObject):
-    """
-    WidgetParameterItem is not a QObject, and the slider's value needs to be converted before
-    emitting. So, create an emitter class here that can be used instead
-    """
-    sigChanging = QtCore.Signal(object, object)
-    sigChanged = QtCore.Signal(object, object)
+from ..Parameter import Parameter
+from .basetypes import Emitter, WidgetParameterItem
 
 
 class SliderParameterItem(WidgetParameterItem):
@@ -43,6 +34,7 @@ class SliderParameterItem(WidgetParameterItem):
     def makeWidget(self):
         param = self.param
         opts = param.opts
+        opts.setdefault('limits', [0, 0])
         self._suffix = opts.get('suffix')
 
         self.slider = QtWidgets.QSlider()
@@ -104,7 +96,7 @@ class SliderParameterItem(WidgetParameterItem):
         span = opts.get('span', None)
         if span is None:
             step = opts.get('step', 1)
-            start, stop = opts['limits']
+            start, stop = opts.get('limits', param.opts['limits'])
             # Add a bit to 'stop' since python slicing excludes the last value
             span = np.arange(start, stop + step, step)
         precision = opts.get('precision', 2)

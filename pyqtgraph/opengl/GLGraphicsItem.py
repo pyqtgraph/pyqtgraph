@@ -1,8 +1,8 @@
-from OpenGL.GL import *
+from OpenGL.GL import *  # noqa
 from OpenGL import GL
-from ..Qt import QtCore
-from .. import Transform3D
 
+from .. import Transform3D
+from ..Qt import QtCore
 
 GLOptions = {
     'opaque': {
@@ -32,7 +32,7 @@ class GLGraphicsItem(QtCore.QObject):
     _nextId = 0
     
     def __init__(self, parentItem=None):
-        QtCore.QObject.__init__(self)
+        super().__init__()
         self._id = GLGraphicsItem._nextId
         GLGraphicsItem._nextId += 1
         

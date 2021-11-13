@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 functions.py -  Miscellaneous functions with no other home
 Copyright 2010  Luke Campagnola
@@ -8,21 +7,20 @@ Distributed under MIT/X11 license. See license.txt for more information.
 from __future__ import division
 
 import decimal
+import math
 import re
 import struct
 import sys
 import warnings
-import math
+from collections import OrderedDict
 
 import numpy as np
+
+from . import Qt, debug, reload
+from .metaarray import MetaArray
+from .Qt import QT_LIB, QtCore, QtGui
 from .util.cupy_helper import getCupy
 from .util.numba_helper import getNumbaFunctions
-
-from . import debug, reload
-from .Qt import QtGui, QtCore, QT_LIB, QtVersion
-from . import Qt
-from .metaarray import MetaArray
-from collections import OrderedDict
 
 # in order of appearance in this file.
 # add new functions to this list only if they are to reside in pg namespace.
@@ -224,7 +222,7 @@ class Color(QtGui.QColor):
         
     def glColor(self):
         """Return (r,g,b,a) normalized for use in opengl"""
-        return (self.red()/255., self.green()/255., self.blue()/255., self.alpha()/255.)
+        return self.getRgbF()
         
     def __getitem__(self, ind):
         return (self.red, self.green, self.blue, self.alpha)[ind]()
@@ -258,6 +256,16 @@ def mkColor(*args):
                     return Colors[c]
                 except KeyError:
                     raise ValueError('No color named "%s"' % c)
+            have_alpha = len(c) in [5, 9] and c[0] == '#'  # "#RGBA" and "#RRGGBBAA"
+            if not have_alpha:
+                # try parsing SVG named colors, including "#RGB" and "#RRGGBB".
+                # note that QColor.setNamedColor() treats a 9-char hex string as "#AARRGGBB".
+                qcol = QtGui.QColor()
+                qcol.setNamedColor(c)
+                if qcol.isValid():
+                    return qcol
+                # on failure, fallback to pyqtgraph parsing
+                # this includes the deprecated case of non-#-prefixed hex strings
             if c[0] == '#':
                 c = c[1:]
             else:
@@ -385,14 +393,21 @@ def mkPen(*args, **kargs):
         pen.setStyle(style)
     if dash is not None:
         pen.setDashPattern(dash)
+
+    # for width > 1.0, we are drawing many short segments to emulate a
+    # single polyline. the default SquareCap style causes artifacts.
+    # these artifacts can be avoided by using RoundCap.
+    # this does have a performance penalty, so enable it only
+    # for thicker line widths where the artifacts are visible.
+    if width > 4.0:
+        pen.setCapStyle(QtCore.Qt.PenCapStyle.RoundCap)
+
     return pen
 
 
 def hsvColor(hue, sat=1.0, val=1.0, alpha=1.0):
     """Generate a QColor from HSVa values. (all arguments are float 0.0-1.0)"""
-    c = QtGui.QColor()
-    c.setHsvF(hue, sat, val, alpha)
-    return c
+    return QtGui.QColor.fromHsvF(hue, sat, val, alpha)
     
 # Matrices and math taken from "CIELab Color Space" by Gernot Hoffmann
 # http://docs-hoffmann.de/cielab03022003.pdf
@@ -475,10 +490,7 @@ def CIELabColor(L, a, b, alpha=1.0):
         else:
             arr_sRGB[idx] = 12.92 * val # (s)
     arr_sRGB = clip_array( arr_sRGB, 0.0, 1.0 ) # avoid QColor errors
-    qcol = QtGui.QColor()
-    qcol.setRgbF( *arr_sRGB )
-    if alpha < 1.0: qcol.setAlpha(alpha)
-    return qcol
+    return QtGui.QColor.fromRgbF( *arr_sRGB, alpha )
 
 def colorCIELab(qcol):
     """
@@ -555,7 +567,7 @@ def colorDistance(colors, metric='CIE76'):
 
 def colorTuple(c):
     """Return a tuple (R,G,B,A) from a QColor"""
-    return (c.red(), c.green(), c.blue(), c.alpha())
+    return c.getRgb()
 
 def colorStr(c):
     """Generate a hex string code from a QColor"""
@@ -581,10 +593,7 @@ def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, mi
         v = maxValue
     h = minHue + (indh * (maxHue-minHue)) // hues
     
-    c = QtGui.QColor()
-    c.setHsv(h, sat, v)
-    c.setAlpha(alpha)
-    return c
+    return QtGui.QColor.fromHsv(h, sat, v, alpha)
 
 
 def glColor(*args, **kargs):
@@ -593,7 +602,7 @@ def glColor(*args, **kargs):
     Accepts same arguments as :func:`mkColor <pyqtgraph.mkColor>`.
     """
     c = mkColor(*args, **kargs)
-    return (c.red()/255., c.green()/255., c.blue()/255., c.alpha()/255.)
+    return c.getRgbF()
 
     
 
@@ -1121,7 +1130,10 @@ def transformCoordinates(tr, coords, transpose=False):
     m = m[:, :-1]
     
     ## map coordinates and return
-    mapped = (m*coords).sum(axis=1)  ## apply scale/rotate
+    # nan or inf points will not plot, but should not generate warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        mapped = (m*coords).sum(axis=1)  ## apply scale/rotate
     mapped += translate
     
     if transpose:
@@ -1167,6 +1179,7 @@ def solveBilinearTransform(points1, points2):
         mapped = np.dot(matrix, [x*y, x, y, 1])
     """
     import numpy.linalg
+
     ## A is 4 rows (points) x 4 columns (xy, x, y, 1)
     ## B is 4 rows (points) x 2 columns (x, y)
     A = np.array([[points1[i].x()*points1[i].y(), points1[i].x(), points1[i].y(), 1] for i in range(4)])
@@ -1868,6 +1881,160 @@ def downsample(data, n, axis=0, xvals='subsample'):
         return MetaArray(d2, info=info)
 
 
+def _compute_backfill_indices(isfinite):
+    # the presence of inf/nans result in an empty QPainterPath being generated
+    # this behavior started in Qt 5.12.3 and was introduced in this commit
+    # https://github.com/qt/qtbase/commit/c04bd30de072793faee5166cff866a4c4e0a9dd7
+    # We therefore replace non-finite values
+
+    # credit: Divakar https://stackoverflow.com/a/41191127/643629
+    mask = ~isfinite
+    idx = np.arange(len(isfinite))
+    idx[mask] = -1
+    np.maximum.accumulate(idx, out=idx)
+    first = np.searchsorted(idx, 0)
+    if first < len(isfinite):
+        # Replace all non-finite entries from beginning of arr with the first finite one
+        idx[:first] = first
+        return idx
+    else:
+        return None
+
+
+def _arrayToQPath_all(x, y, finiteCheck):
+    n = x.shape[0]
+    if n == 0:
+        return QtGui.QPainterPath()
+
+    finite_idx = None
+    if finiteCheck:
+        isfinite = np.isfinite(x) & np.isfinite(y)
+        if not isfinite.all():
+            finite_idx = isfinite.nonzero()[0]
+            n = len(finite_idx)
+
+    if n < 2:
+        return QtGui.QPainterPath()
+
+    chunksize = 10000
+    numchunks = (n + chunksize - 1) // chunksize
+    minchunks = 3
+
+    if numchunks < minchunks:
+        # too few chunks, batching would be a pessimization
+        poly = create_qpolygonf(n)
+        arr = ndarray_from_qpolygonf(poly)
+
+        if finite_idx is None:
+            arr[:, 0] = x
+            arr[:, 1] = y
+        else:
+            arr[:, 0] = x[finite_idx]
+            arr[:, 1] = y[finite_idx]
+
+        path = QtGui.QPainterPath()
+        if hasattr(path, 'reserve'):    # Qt 5.13
+            path.reserve(n)
+        path.addPolygon(poly)
+        return path
+
+    # at this point, we have numchunks >= minchunks
+
+    path = QtGui.QPainterPath()
+    if hasattr(path, 'reserve'):    # Qt 5.13
+        path.reserve(n)
+    subpoly = QtGui.QPolygonF()
+    subpath = None
+    for idx in range(numchunks):
+        sl = slice(idx*chunksize, min((idx+1)*chunksize, n))
+        currsize = sl.stop - sl.start
+        if currsize != subpoly.size():
+            if hasattr(subpoly, 'resize'):
+                subpoly.resize(currsize)
+            else:
+                subpoly.fill(QtCore.QPointF(), currsize)
+        subarr = ndarray_from_qpolygonf(subpoly)
+        if finite_idx is None:
+            subarr[:, 0] = x[sl]
+            subarr[:, 1] = y[sl]
+        else:
+            fiv = finite_idx[sl]  # view
+            subarr[:, 0] = x[fiv]
+            subarr[:, 1] = y[fiv]
+        if subpath is None:
+            subpath = QtGui.QPainterPath()
+        subpath.addPolygon(subpoly)
+        path.connectPath(subpath)
+        if hasattr(subpath, 'clear'):   # Qt 5.13
+            subpath.clear()
+        else:
+            subpath = None
+    return path
+
+
+def _arrayToQPath_finite(x, y, isfinite=None):
+    n = x.shape[0]
+    if n == 0:
+        return QtGui.QPainterPath()
+
+    if isfinite is None:
+        isfinite = np.isfinite(x) & np.isfinite(y)
+
+    path = QtGui.QPainterPath()
+    if hasattr(path, 'reserve'):    # Qt 5.13
+        path.reserve(n)
+
+    sidx = np.nonzero(~isfinite)[0] + 1
+    # note: the chunks are views
+    xchunks = np.split(x, sidx)
+    ychunks = np.split(y, sidx)
+    chunks = list(zip(xchunks, ychunks))
+
+    # create a single polygon able to hold the largest chunk
+    maxlen = max(len(chunk) for chunk in xchunks)
+    subpoly = create_qpolygonf(maxlen)
+    subarr = ndarray_from_qpolygonf(subpoly)
+
+    # resize and fill do not change the capacity
+    if hasattr(subpoly, 'resize'):
+        subpoly_resize = subpoly.resize
+    else:
+        # PyQt will be less efficient
+        subpoly_resize = lambda n, v=QtCore.QPointF() : subpoly.fill(v, n)
+
+    # notes:
+    # - we backfill the non-finite in order to get the same image as the
+    #   old codepath on the CI. somehow P1--P2 gets rendered differently
+    #   from P1--P2--P2
+    # - we do not generate MoveTo(s) that are not followed by a LineTo,
+    #   thus the QPainterPath can be different from the old codepath's
+
+    # all chunks except the last chunk have a trailing non-finite
+    for xchunk, ychunk in chunks[:-1]:
+        lc = len(xchunk)
+        if lc <= 1:
+            # len 1 means we have a string of non-finite
+            continue
+        subpoly_resize(lc)
+        subarr[:lc, 0] = xchunk
+        subarr[:lc, 1] = ychunk
+        subarr[lc-1] = subarr[lc-2] # fill non-finite with its neighbour
+        path.addPolygon(subpoly)
+
+    # handle last chunk, which is either all-finite or empty
+    for xchunk, ychunk in chunks[-1:]:
+        lc = len(xchunk)
+        if lc <= 1:
+            # can't draw a line with just 1 point
+            continue
+        subpoly_resize(lc)
+        subarr[:lc, 0] = xchunk
+        subarr[:lc, 1] = ychunk
+        path.addPolygon(subpoly)
+
+    return path
+
+
 def arrayToQPath(x, y, connect='all', finiteCheck=True):
     """
     Convert an array of x,y coordinates to QPainterPath as efficiently as
@@ -1890,7 +2057,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         only values with 1 will connect to the previous point.  Def
     finiteCheck : bool, default Ture
         When false, the check for finite values will be skipped, which can
-        improve performance. If finite values are present in `x` or `y`,
+        improve performance. If nonfinite values are present in `x` or `y`,
         an empty QPainterPath will be generated.
     
     Returns
@@ -1923,143 +2090,84 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     This binary format may change in future versions of Qt
     """
 
-    path = QtGui.QPainterPath()
     n = x.shape[0]
     if n == 0:
-      return path
+        return QtGui.QPainterPath()
 
     connect_array = None
     if isinstance(connect, np.ndarray):
         # make connect argument contain only str type
         connect_array, connect = connect, 'array'
 
-    use_qpolygonf = connect == 'all'
-
     isfinite = None
+
     if connect == 'finite':
-        isfinite = np.isfinite(x) & np.isfinite(y)
         if not finiteCheck:
-            # if user specified to skip finite check, then that forces use_qpolygonf
-            use_qpolygonf = True
+            # if user specified to skip finite check, then we skip the heuristic
+            return _arrayToQPath_finite(x, y)
+
+        # otherwise use a heuristic
+        # if non-finite aren't that many, then use_qpolyponf
+        isfinite = np.isfinite(x) & np.isfinite(y)
+        nonfinite_cnt = n - np.sum(isfinite)
+        all_isfinite = nonfinite_cnt == 0
+        if all_isfinite:
+            # delegate to connect='all'
+            connect = 'all'
+            finiteCheck = False
+        elif nonfinite_cnt / n < 2 / 100:
+            return _arrayToQPath_finite(x, y, isfinite)
         else:
-            # otherwise use a heuristic
-            # if non-finite aren't that many, then use_qpolyponf
-            nonfinite_cnt = n - np.sum(isfinite)
-            if nonfinite_cnt / n < 2 / 100:
-                use_qpolygonf = True
-                finiteCheck = False
-            if nonfinite_cnt == 0:
-                connect = 'all'
+            # delegate to connect=ndarray
+            # finiteCheck=True, all_isfinite=False
+            connect = 'array'
+            connect_array = isfinite
 
-    if use_qpolygonf:
-        backstore = create_qpolygonf(n)
-        arr = np.frombuffer(ndarray_from_qpolygonf(backstore), dtype=[('x', 'f8'), ('y', 'f8')])
-    else:
-        backstore = bytearray(4 + n*20 + 8)
-        arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
-            count=n, offset=4)
-        struct.pack_into('>i', backstore, 0, n)
-        # cStart, fillRule (Qt.FillRule.OddEvenFill)
-        struct.pack_into('>ii', backstore, 4+n*20, 0, 0)
+    if connect == 'all':
+        return _arrayToQPath_all(x, y, finiteCheck)
 
-    # Fill array with vertex values
-    arr['x'] = x
-    arr['y'] = y
+    backstore = QtCore.QByteArray()
+    backstore.resize(4 + n*20 + 8)      # contents uninitialized
+    backstore.replace(0, 4, struct.pack('>i', n))
+    # cStart, fillRule (Qt.FillRule.OddEvenFill)
+    backstore.replace(4+n*20, 8, struct.pack('>ii', 0, 0))
+    arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
+        count=n, offset=4)
 
-    # the presence of inf/nans result in an empty QPainterPath being generated
-    # this behavior started in Qt 5.12.3 and was introduced in this commit
-    # https://github.com/qt/qtbase/commit/c04bd30de072793faee5166cff866a4c4e0a9dd7
-    # We therefore replace non-finite values 
+    backfill_idx = None
     if finiteCheck:
         if isfinite is None:
             isfinite = np.isfinite(x) & np.isfinite(y)
-        if not np.all(isfinite):
-            # credit: Divakar https://stackoverflow.com/a/41191127/643629
-            mask = ~isfinite
-            idx = np.arange(len(x))
-            idx[mask] = -1
-            np.maximum.accumulate(idx, out=idx)
-            first = np.searchsorted(idx, 0)
-            if first < len(x):
-                # Replace all non-finite entries from beginning of arr with the first finite one
-                idx[:first] = first
-                arr[:] = arr[:][idx]
+            all_isfinite = np.all(isfinite)
+        if not all_isfinite:
+            backfill_idx = _compute_backfill_indices(isfinite)
+
+    if backfill_idx is None:
+        arr['x'] = x
+        arr['y'] = y
+    else:
+        arr['x'] = x[backfill_idx]
+        arr['y'] = y[backfill_idx]
 
     # decide which points are connected by lines
-    if connect == 'all':
-        path.addPolygon(backstore)
-        return path
-    elif connect == 'pairs':
-        arr['c'][::2] = 0
+    if connect == 'pairs':
+        arr['c'][0::2] = 0
         arr['c'][1::2] = 1  # connect every 2nd point to every 1st one
-    elif connect == 'finite':
+    elif connect == 'array':
         # Let's call a point with either x or y being nan is an invalid point.
         # A point will anyway not connect to an invalid point regardless of the
         # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
         # the next point of an invalid point.
-        if not use_qpolygonf:
-            arr[1:]['c'] = isfinite[:-1]
-        else:
-            sidx = np.nonzero(~isfinite)[0] + 1
-            chunks = np.split(arr, sidx)    # note: the chunks are views
-
-            # create a single polygon able to hold the largest chunk
-            maxlen = max(len(chunk) for chunk in chunks)
-            subpoly = create_qpolygonf(maxlen)
-            subarr = np.frombuffer(ndarray_from_qpolygonf(subpoly), dtype=arr.dtype)
-
-            # resize and fill do not change the capacity
-            if hasattr(subpoly, 'resize'):
-                subpoly_resize = subpoly.resize
-            else:
-                # PyQt will be less efficient
-                subpoly_resize = lambda n, v=QtCore.QPointF() : subpoly.fill(v, n)
-
-            # notes:
-            # - we backfill the non-finite in order to get the same image as the
-            #   old codepath on the CI. somehow P1--P2 gets rendered differently
-            #   from P1--P2--P2
-            # - we do not generate MoveTo(s) that are not followed by a LineTo,
-            #   thus the QPainterPath can be different from the old codepath's
-
-            # all chunks except the last chunk have a trailing non-finite
-            for chunk in chunks[:-1]:
-                lc = len(chunk)
-                if lc <= 1:
-                    # len 1 means we have a string of non-finite
-                    continue
-                subpoly_resize(lc)
-                subarr[:lc] = chunk
-                subarr[lc-1] = subarr[lc-2] # fill non-finite with its neighbour
-                path.addPolygon(subpoly)
-
-            # handle last chunk, which is either all-finite or empty
-            for chunk in chunks[-1:]:
-                lc = len(chunk)
-                if lc <= 1:
-                    # can't draw a line with just 1 point
-                    continue
-                subpoly_resize(lc)
-                subarr[:lc] = chunk
-                path.addPolygon(subpoly)
-
-            return path
-    elif connect == 'array':
-        arr[1:]['c'] = connect_array[:-1]
+        arr['c'][:1] = 0  # the first vertex has no previous vertex to connect
+        arr['c'][1:] = connect_array[:-1]
     else:
         raise ValueError('connect argument must be "all", "pairs", "finite", or array')
 
-    arr[0]['c'] = 0  # the first vertex has no previous vertex to connect
+    path = QtGui.QPainterPath()
+    if hasattr(path, 'reserve'):    # Qt 5.13
+        path.reserve(n)
 
-    # create QDataStream object and stream into QPainterPath
-    path.strn = backstore
-    if QT_LIB == "PyQt6" and QtCore.PYQT_VERSION < 0x60101:
-        # due to issue detailed here:
-        # https://www.riverbankcomputing.com/pipermail/pyqt/2021-May/043942.html
-        buf = QtCore.QByteArray(path.strn, len(path.strn))
-    else:
-        buf = QtCore.QByteArray(path.strn)
-    ds = QtCore.QDataStream(buf)
+    ds = QtCore.QDataStream(backstore)
     ds >> path
     return path
 

@@ -1,7 +1,7 @@
-from .basetypes import WidgetParameterItem, SimpleParameter
-from ...Qt import QtCore
 from ...colormap import ColorMap
+from ...Qt import QtCore
 from ...widgets.GradientWidget import GradientWidget
+from .basetypes import SimpleParameter, WidgetParameterItem
 
 
 class ColorMapParameterItem(WidgetParameterItem):

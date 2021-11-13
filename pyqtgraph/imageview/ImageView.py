@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ImageView.py -  Widget for basic image dispay and analysis
 Copyright 2010  Luke Campagnola
@@ -12,32 +11,34 @@ Widget used for displaying 2D or 3D data. Features:
   - ROI plotting
   - Image normalization through a variety of methods
 """
+import importlib
 import os
 from math import log10
-import numpy as np
 from time import perf_counter
 
-from ..Qt import QtCore, QtGui, QT_LIB
+import numpy as np
+
 from .. import functions as fn
-import importlib
+from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
+
 ui_template = importlib.import_module(
     f'.ImageViewTemplate_{QT_LIB.lower()}', package=__package__)
 
+from .. import debug as debug
+from .. import getConfigOption
+from ..graphicsItems.GradientEditorItem import addGradientListToDocstring
 from ..graphicsItems.ImageItem import *
-from ..graphicsItems.ROI import *
-from ..graphicsItems.LinearRegionItem import *
 from ..graphicsItems.InfiniteLine import *
+from ..graphicsItems.LinearRegionItem import *
+from ..graphicsItems.ROI import *
 from ..graphicsItems.ViewBox import *
 from ..graphicsItems.VTickGroup import VTickGroup
-from ..graphicsItems.GradientEditorItem import addGradientListToDocstring
-from .. import debug as debug
 from ..SignalProxy import SignalProxy
-from .. import getConfigOption
 
 try:
-    from bottleneck import nanmin, nanmax
+    from bottleneck import nanmax, nanmin
 except ImportError:
-    from numpy import nanmin, nanmax
+    from numpy import nanmax, nanmin
 
 translate = QtCore.QCoreApplication.translate
 
@@ -48,7 +49,7 @@ class PlotROI(ROI):
         self.addRotateHandle([0, 0], [0.5, 0.5])
 
 
-class ImageView(QtGui.QWidget):
+class ImageView(QtWidgets.QWidget):
     """
     Widget used for display and analysis of image data.
     Implements many features:
@@ -115,7 +116,7 @@ class ImageView(QtGui.QWidget):
                 
             pg.ImageView(view=pg.PlotItem())
         """
-        QtGui.QWidget.__init__(self, parent, *args)
+        QtWidgets.QWidget.__init__(self, parent, *args)
         self._imageLevels = None  # [(min, max), ...] per channel image metrics
         self.levelMin = None    # min / max levels across all channels
         self.levelMax = None
@@ -127,7 +128,6 @@ class ImageView(QtGui.QWidget):
         self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
         self.scene = self.ui.graphicsView.scene()
-        self.ui.histogram.setLevelMode(levelMode)
         
         self.ignorePlaying = False
         
@@ -138,15 +138,6 @@ class ImageView(QtGui.QWidget):
         self.ui.graphicsView.setCentralItem(self.view)
         self.view.setAspectLocked(True)
         self.view.invertY()
-        
-        if imageItem is None:
-            self.imageItem = ImageItem()
-        else:
-            self.imageItem = imageItem
-        self.view.addItem(self.imageItem)
-        self.currentIndex = 0
-        
-        self.ui.histogram.setImageItem(self.imageItem)
         
         self.menu = None
         
@@ -162,7 +153,6 @@ class ImageView(QtGui.QWidget):
         self.view.addItem(self.normRoi)
         self.normRoi.hide()
         self.roiCurves = []
-        self.roiCurve = self.ui.roiPlot.plot()
         self.timeLine = InfiniteLine(0, movable=True)
         if getConfigOption('background')=='w':
             self.timeLine.setPen((20, 80,80, 200))
@@ -171,6 +161,18 @@ class ImageView(QtGui.QWidget):
         self.timeLine.setZValue(1)
         self.ui.roiPlot.addItem(self.timeLine)
         self.ui.splitter.setSizes([self.height()-35, 35])
+
+        # init imageItem and histogram
+        if imageItem is None:
+            self.imageItem = ImageItem()
+        else:
+            self.imageItem = imageItem
+            self.setImage(imageItem.image, autoRange=False, autoLevels=False, transform=imageItem.transform())
+        self.view.addItem(self.imageItem)
+        self.currentIndex = 0
+        
+        self.ui.histogram.setImageItem(self.imageItem)
+        self.ui.histogram.setLevelMode(levelMode)
         
         # make splitter an unchangeable small grey line:
         s = self.ui.splitter
@@ -358,13 +360,15 @@ class ImageView(QtGui.QWidget):
         
         profiler()
 
-        self.imageItem.resetTransform()
-        if scale is not None:
-            self.imageItem.scale(*scale)
-        if pos is not None:
-            self.imageItem.setPos(*pos)
-        if transform is not None:
-            self.imageItem.setTransform(transform)
+        if transform is None:
+            transform = QtGui.QTransform()
+            # note that the order of transform is
+            #   scale followed by translate
+            if pos is not None:
+                transform.translate(*pos)
+            if scale is not None:
+                transform.scale(*scale)
+        self.imageItem.setTransform(transform)
 
         profiler()
 
@@ -563,12 +567,12 @@ class ImageView(QtGui.QWidget):
         if self.ui.roiBtn.isChecked():
             showRoiPlot = True
             self.roi.show()
-            #self.ui.roiPlot.show()
             self.ui.roiPlot.setMouseEnabled(True, True)
             self.ui.splitter.setSizes([int(self.height()*0.6), int(self.height()*0.4)])
             self.ui.splitter.handle(1).setEnabled(True)
-            self.roiCurve.show()
             self.roiChanged()
+            for c in self.roiCurves:
+                c.show()
             self.ui.roiPlot.showAxis('left')
         else:
             self.roi.hide()
@@ -584,13 +588,11 @@ class ImageView(QtGui.QWidget):
             self.ui.roiPlot.setXRange(mn, mx, padding=0.01)
             self.timeLine.show()
             self.timeLine.setBounds([mn, mx])
-            self.ui.roiPlot.show()
             if not self.ui.roiBtn.isChecked():
                 self.ui.splitter.setSizes([self.height()-35, 35])
                 self.ui.splitter.handle(1).setEnabled(False)
         else:
             self.timeLine.hide()
-            #self.ui.roiPlot.hide()
             
         self.ui.roiPlot.setVisible(showRoiPlot)
 
@@ -818,7 +820,7 @@ class ImageView(QtGui.QWidget):
             self.imageItem.save(fileName)
             
     def exportClicked(self):
-        fileName = QtGui.QFileDialog.getSaveFileName()
+        fileName = QtWidgets.QFileDialog.getSaveFileName()
         if isinstance(fileName, tuple):
             fileName = fileName[0]  # Qt4/5 API difference
         if fileName == '':
@@ -826,7 +828,7 @@ class ImageView(QtGui.QWidget):
         self.export(str(fileName))
         
     def buildMenu(self):
-        self.menu = QtGui.QMenu()
+        self.menu = QtWidgets.QMenu()
         self.normAction = QtGui.QAction(translate("ImageView", "Normalization"), self.menu)
         self.normAction.setCheckable(True)
         self.normAction.toggled.connect(self.normToggled)

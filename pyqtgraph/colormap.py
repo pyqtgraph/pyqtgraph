@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
-import numpy as np
-from .Qt import QtGui, QtCore
-from .functions import mkColor, eq, colorDistance, clip_scalar, clip_array
-from os import path, listdir
-from collections.abc import Callable, Sequence
 import warnings
+from collections.abc import Callable, Sequence
+from os import listdir, path
+
+import numpy as np
+
+from .functions import clip_array, clip_scalar, colorDistance, eq, mkColor
+from .Qt import QtCore, QtGui
 
 __all__ = ['ColorMap']
 
@@ -249,8 +250,7 @@ def makeHslCycle( hue=0.0, saturation=1.0, lightness=0.5, steps=36 ):
     lgt_vals = np.linspace(lgtA, lgtB, num=steps+1)
     color_list = []
     for hue, sat, lgt in zip( hue_vals, sat_vals, lgt_vals):
-        qcol = QtGui.QColor()
-        qcol.setHslF( hue%1.0, sat, lgt )
+        qcol = QtGui.QColor.fromHslF( hue%1.0, sat, lgt )
         color_list.append( qcol )
     name = f'Hue {hueA:0.2f}-{hueB:0.2f}'
     return ColorMap( None, color_list, name=name )
@@ -311,8 +311,7 @@ def makeMonochrome(color='neutral'):
     l_vals = np.linspace(l_min, l_max, num=16)
     color_list = []
     for l_val in l_vals:
-        qcol = QtGui.QColor()
-        qcol.setHslF( h_val, s_val, l_val )
+        qcol = QtGui.QColor.fromHslF( h_val, s_val, l_val )
         color_list.append( qcol )
     return ColorMap( None, color_list, name=name, linearize=True )
 
@@ -333,7 +332,7 @@ def modulatedBarData(length=768, width=32):
     data = np.zeros( (length, width) )
     for idx in range(width):
         data[:,idx] = gradient + (idx/(width-1)) * modulation
-    clip_array(data, 0.0, 1.0)
+    clip_array(data, 0.0, 1.0, out=data)
     return data
 
 class ColorMap(object):
@@ -581,7 +580,7 @@ class ColorMap(object):
             mode = self.enumMap[mode.lower()]
 
         if mode == self.QCOLOR:
-            pos, color = self.getStops(self.BYTE)
+            pos, color = self.getStops(self.FLOAT)
         else:
             pos, color = self.getStops(mode)
 
@@ -606,9 +605,9 @@ class ColorMap(object):
         # Convert to QColor if requested
         if mode == self.QCOLOR:
             if np.isscalar(data):
-                return QtGui.QColor(*interp)
+                return QtGui.QColor.fromRgbF(*interp)
             else:
-                return [QtGui.QColor(*x.tolist()) for x in interp]
+                return [QtGui.QColor.fromRgbF(*x.tolist()) for x in interp]
         else:
             return interp
 
@@ -762,8 +761,10 @@ class ColorMap(object):
                 color = color.astype(float) / 255.
             elif mode == self.QCOLOR:
                 if color.dtype.kind == 'f':
-                    color = (color*255).astype(np.ubyte)
-                color = [QtGui.QColor(*x.tolist()) for x in color]
+                    factory = QtGui.QColor.fromRgbF
+                else:
+                    factory = QtGui.QColor.fromRgb
+                color = [factory(*x.tolist()) for x in color]
             self.stopsCache[mode] = (self.pos, color)
         return self.stopsCache[mode]
 

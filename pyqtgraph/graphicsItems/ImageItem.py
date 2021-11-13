@@ -1,21 +1,15 @@
-# -*- coding: utf-8 -*-
-from __future__ import division
+import warnings
+from collections.abc import Callable
 
 import numpy
 
-from .GraphicsObject import GraphicsObject
 from .. import debug as debug
 from .. import functions as fn
 from .. import getConfigOption
 from ..Point import Point
-from ..Qt import QtGui, QtCore
+from ..Qt import QtCore, QtGui, QtWidgets
 from ..util.cupy_helper import getCupy
-
-try:
-    from collections.abc import Callable
-except ImportError:
-    # fallback for python < 3.3
-    from collections import Callable
+from .GraphicsObject import GraphicsObject
 
 translate = QtCore.QCoreApplication.translate
 
@@ -535,7 +529,19 @@ class ImageItem(GraphicsObject):
         levels = self.levels
         augmented_alpha = False
 
-        if image.dtype.kind == 'f':
+        if lut is not None and lut.dtype != self._xp.uint8:
+            # Both _try_rescale_float() and _try_combine_lut() assume that
+            # lut is of type uint8. It is considered a usage error if that
+            # is not the case.
+            # However, the makeARGB() codepath has previously allowed such
+            # a usage to work. Rather than fail outright, we delegate this
+            # case to makeARGB().
+            warnings.warn(
+                "Using non-uint8 LUTs is an undocumented accidental feature and may "
+                "be removed at some point in the future. Please open an issue if you "
+                "instead believe this to be worthy of protected inclusion in pyqtgraph.",
+                DeprecationWarning, stacklevel=2)
+        elif image.dtype.kind == 'f':
             image, levels, lut, augmented_alpha = self._try_rescale_float(image, levels, lut)
             # if we succeeded, we will have an uint8 image with levels None.
             # lut if not None will have <= 256 entries
@@ -1011,7 +1017,7 @@ class ImageItem(GraphicsObject):
         if self.menu is None:
             if not self.removable:
                 return None
-            self.menu = QtGui.QMenu()
+            self.menu = QtWidgets.QMenu()
             self.menu.setTitle(translate("ImageItem", "Image"))
             remAct = QtGui.QAction(translate("ImageItem", "Remove image"), self.menu)
             remAct.triggered.connect(self.removeClicked)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 ################################################################################
 ## Form generated from reading UI file 'TransformGuiTemplate.ui'
@@ -74,4 +73,3 @@ class Ui_Form(object):
         self.mirrorImageBtn.setText(QCoreApplication.translate("Form", u"Mirror", None))
         self.reflectImageBtn.setText(QCoreApplication.translate("Form", u"Reflect", None))
     # retranslateUi
-

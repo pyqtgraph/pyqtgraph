@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
+from .. import debug as debug
+from .. import functions as fn
+from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
 from .InfiniteLine import InfiniteLine
-from .. import functions as fn
-from .. import debug as debug
 
 __all__ = ['LinearRegionItem']
 

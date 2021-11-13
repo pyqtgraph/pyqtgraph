@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
+import re
+import warnings
+import weakref
+from collections import OrderedDict
+
 from .. import functions as fn
 from ..Qt import QtCore
-import weakref, re
-from collections import OrderedDict
 from .ParameterItem import ParameterItem
-import warnings
 
 PARAM_TYPES = {}
 PARAM_NAMES = {}
@@ -516,7 +517,7 @@ class Parameter(QtCore.QObject):
                 self.setLimits(opts[k])
             elif k == 'default':
                 self.setDefault(opts[k])
-            elif k not in self.opts or self.opts[k] != opts[k]:
+            elif k not in self.opts or not fn.eq(self.opts[k], opts[k]):
                 self.opts[k] = opts[k]
                 changed[k] = opts[k]
                 

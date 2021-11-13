@@ -1,26 +1,23 @@
-# -*- coding: utf-8 -*-
 """
 GraphicsWidget displaying an image histogram along with gradient editor. Can be used to
 adjust the appearance of images.
 """
 
 
-from ..Qt import QtGui, QtCore
-from .. import functions as fn
-from .GraphicsWidget import GraphicsWidget
-from .ViewBox import *
-from .GradientEditorItem import *
-from .LinearRegionItem import *
-from .PlotDataItem import *
-from .PlotCurveItem import *
-from .AxisItem import *
-from .GridItem import *
-from ..Point import Point
-from .. import functions as fn
-import numpy as np
-from .. import debug as debug
-
 import weakref
+
+import numpy as np
+
+from .. import debug as debug
+from .. import functions as fn
+from ..Point import Point
+from ..Qt import QtCore, QtGui, QtWidgets
+from .AxisItem import *
+from .GradientEditorItem import *
+from .GraphicsWidget import GraphicsWidget
+from .LinearRegionItem import *
+from .PlotCurveItem import *
+from .ViewBox import *
 
 __all__ = ['HistogramLUTItem']
 
@@ -102,7 +99,7 @@ class HistogramLUTItem(GraphicsWidget):
         elif orientation == 'horizontal' and gradientPosition not in {'top', 'bottom'}:
             self.gradientPosition = 'bottom'
 
-        self.layout = QtGui.QGraphicsGridLayout()
+        self.layout = QtWidgets.QGraphicsGridLayout()
         self.setLayout(self.layout)
         self.layout.setContentsMargins(1, 1, 1, 1)
         self.layout.setSpacing(0)
@@ -363,7 +360,7 @@ class HistogramLUTItem(GraphicsWidget):
                     if autoLevel:
                         mn = h[0][0]
                         mx = h[0][-1]
-                        self.region[i].setRegion([mn, mx])
+                        self.regions[i].setRegion([mn, mx])
                 else:
                     # hide channels not present in image data
                     self.plots[i].setVisible(False)
@@ -443,7 +440,7 @@ class HistogramLUTItem(GraphicsWidget):
             self.regions[i].setVisible(False)
 
         if self.levelMode == 'rgba':
-            imax = 4
+            nch = 4
             if self.imageItem() is not None:
                 # Only show rgb channels if connected image lacks alpha.
                 nch = self.imageItem().channels()
