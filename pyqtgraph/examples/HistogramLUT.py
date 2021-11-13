@@ -8,15 +8,15 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("Histogram Lookup Table Example")
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 win.resize(880, 600)
 win.show()
 win.setWindowTitle('pyqtgraph example: Histogram LUT')
 
-cw = QtGui.QWidget()
+cw = QtWidgets.QWidget()
 win.setCentralWidget(cw)
 
-layout = QtGui.QGridLayout()
+layout = QtWidgets.QGridLayout()
 cw.setLayout(layout)
 layout.setSpacing(0)
 
@@ -30,8 +30,8 @@ hist = pg.HistogramLUTWidget(gradientPosition="left")
 layout.addWidget(hist, 0, 2)
 
 
-monoRadio = QtGui.QRadioButton('mono')
-rgbaRadio = QtGui.QRadioButton('rgba')
+monoRadio = QtWidgets.QRadioButton('mono')
+rgbaRadio = QtWidgets.QRadioButton('rgba')
 layout.addWidget(monoRadio, 1, 2)
 layout.addWidget(rgbaRadio, 2, 2)
 monoRadio.setChecked(True)

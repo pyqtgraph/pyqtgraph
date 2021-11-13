@@ -49,8 +49,8 @@ class UIGraphicsItem(GraphicsObject):
             
         ## workaround for pyqt bug:
         ## http://www.riverbankcomputing.com/pipermail/pyqt/2012-August/031818.html
-        if QT_LIB == 'PyQt5' and change == self.GraphicsItemChange.ItemParentChange and isinstance(ret, QtGui.QGraphicsItem):
-            ret = sip.cast(ret, QtGui.QGraphicsItem)
+        if QT_LIB == 'PyQt5' and change == self.GraphicsItemChange.ItemParentChange and isinstance(ret, QtWidgets.QGraphicsItem):
+            ret = sip.cast(ret, QtWidgets.QGraphicsItem)
         
         if change == self.GraphicsItemChange.ItemScenePositionHasChanged:
             self.setNewBounds()

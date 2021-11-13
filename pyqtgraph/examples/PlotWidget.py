@@ -9,12 +9,12 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp()
-mw = QtGui.QMainWindow()
+mw = QtWidgets.QMainWindow()
 mw.setWindowTitle('pyqtgraph example: PlotWidget')
 mw.resize(800,800)
-cw = QtGui.QWidget()
+cw = QtWidgets.QWidget()
 mw.setCentralWidget(cw)
-l = QtGui.QVBoxLayout()
+l = QtWidgets.QVBoxLayout()
 cw.setLayout(l)
 
 pw = pg.PlotWidget(name='Plot1')  ## giving the plots names allows us to link their axes together
@@ -31,7 +31,7 @@ p1 = pw.plot()
 p1.setPen((200,200,100))
 
 ## Add in some extra graphics
-rect = QtGui.QGraphicsRectItem(QtCore.QRectF(0, 0, 1, 5e-11))
+rect = QtWidgets.QGraphicsRectItem(QtCore.QRectF(0, 0, 1, 5e-11))
 rect.setPen(pg.mkPen(100, 200, 100))
 pw.addItem(rect)
 

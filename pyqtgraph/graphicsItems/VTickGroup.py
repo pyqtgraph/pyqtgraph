@@ -39,7 +39,7 @@ class VTickGroup(UIGraphicsItem):
         if pen is None:
             pen = (200, 200, 200)
             
-        self.path = QtGui.QGraphicsPathItem()
+        self.path = QtWidgets.QGraphicsPathItem()
         
         self.ticks = []
         self.xvals = []

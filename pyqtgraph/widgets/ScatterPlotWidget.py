@@ -13,7 +13,7 @@ from .PlotWidget import PlotWidget
 
 __all__ = ['ScatterPlotWidget']
 
-class ScatterPlotWidget(QtGui.QSplitter):
+class ScatterPlotWidget(QtWidgets.QSplitter):
     """
     This is a high-level widget for exploring relationships in tabular data.
         
@@ -39,10 +39,10 @@ class ScatterPlotWidget(QtGui.QSplitter):
     sigScatterPlotHovered = QtCore.Signal(object, object, object)
 
     def __init__(self, parent=None):
-        QtGui.QSplitter.__init__(self, QtCore.Qt.Orientation.Horizontal)
-        self.ctrlPanel = QtGui.QSplitter(QtCore.Qt.Orientation.Vertical)
+        QtWidgets.QSplitter.__init__(self, QtCore.Qt.Orientation.Horizontal)
+        self.ctrlPanel = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
         self.addWidget(self.ctrlPanel)
-        self.fieldList = QtGui.QListWidget()
+        self.fieldList = QtWidgets.QListWidget()
         self.fieldList.setSelectionMode(self.fieldList.SelectionMode.ExtendedSelection)
         self.ptree = ptree.ParameterTree(showHeader=False)
         self.filter = DataFilterParameter()
@@ -88,7 +88,7 @@ class ScatterPlotWidget(QtGui.QSplitter):
         self.mouseOverField = mouseOverField
         self.fieldList.clear()
         for f,opts in fields:
-            item = QtGui.QListWidgetItem(f)
+            item = QtWidgets.QListWidgetItem(f)
             item.opts = opts
             item = self.fieldList.addItem(item)
         self.filter.setFields(fields)

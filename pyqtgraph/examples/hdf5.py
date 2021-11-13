@@ -129,7 +129,7 @@ if len(sys.argv) > 1:
 else:
     fileName = 'test.hdf5'
     if not os.path.isfile(fileName):
-        size, ok = QtGui.QInputDialog.getDouble(None, "Create HDF5 Dataset?", "This demo requires a large HDF5 array. To generate a file, enter the array size (in GB) and press OK.", 2.0)
+        size, ok = QtWidgets.QInputDialog.getDouble(None, "Create HDF5 Dataset?", "This demo requires a large HDF5 array. To generate a file, enter the array size (in GB) and press OK.", 2.0)
         if not ok:
             sys.exit(0)
         else:

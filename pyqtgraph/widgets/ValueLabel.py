@@ -5,7 +5,7 @@ from ..Qt import QtGui
 
 __all__ = ['ValueLabel']
 
-class ValueLabel(QtGui.QLabel):
+class ValueLabel(QtWidgets.QLabel):
     """
     QLabel specifically for displaying numerical values.
     Extends QLabel adding some extra functionality:
@@ -29,7 +29,7 @@ class ValueLabel(QtGui.QLabel):
                             This option is not compatible with siPrefix
         ==============      ==================================================================================
         """
-        QtGui.QLabel.__init__(self, parent)
+        QtWidgets.QLabel.__init__(self, parent)
         self.values = []
         self.averageTime = averageTime ## no averaging by default
         self.suffix = suffix

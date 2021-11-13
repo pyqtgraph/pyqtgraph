@@ -14,7 +14,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Arrow Example")
 
-w = QtGui.QMainWindow()
+w = QtWidgets.QMainWindow()
 cw = pg.GraphicsLayoutWidget()
 w.show()
 w.resize(400,600)

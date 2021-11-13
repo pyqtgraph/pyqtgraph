@@ -27,7 +27,7 @@ class FlowchartViewBox(ViewBox):
         
     def getMenu(self, ev):
         ## called by ViewBox to create a new context menu
-        self._fc_menu = QtGui.QMenu()
+        self._fc_menu = QtWidgets.QMenu()
         self._subMenus = self.getContextMenus(ev)
         for menu in self._subMenus:
             self._fc_menu.addMenu(menu)

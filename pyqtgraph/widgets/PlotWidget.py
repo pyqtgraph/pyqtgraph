@@ -49,7 +49,7 @@ class PlotWidget(GraphicsView):
         and all others are passed
         to :func:`PlotItem.__init__() <pyqtgraph.PlotItem.__init__>`."""
         GraphicsView.__init__(self, parent, background=background)
-        self.setSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Expanding)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.enableMouse(False)
         if plotItem is None:
             self.plotItem = PlotItem(**kargs)

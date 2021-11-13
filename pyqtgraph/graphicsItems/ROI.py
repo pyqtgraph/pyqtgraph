@@ -125,7 +125,7 @@ class ROI(GraphicsObject):
                             stealing clicks from objects behind the ROI. To 
                             enable clicking, call 
                             roi.setAcceptedMouseButtons(QtCore.Qt.MouseButton.LeftButton). 
-                            See QtGui.QGraphicsItem documentation for more 
+                            See QtWidgets.QGraphicsItem documentation for more 
                             details.
     sigRemoveRequested      Emitted when the user selects 'remove' from the 
                             ROI's context menu (if available).
@@ -227,7 +227,7 @@ class ROI(GraphicsObject):
         self.setAngle(state['angle'], update=update)
     
     def setZValue(self, z):
-        QtGui.QGraphicsItem.setZValue(self, z)
+        QtWidgets.QGraphicsItem.setZValue(self, z)
         for h in self.handles:
             h['item'].setZValue(z+1)
         
@@ -289,7 +289,7 @@ class ROI(GraphicsObject):
             pos = Point(pos, y)
 
         self.state['pos'] = pos
-        QtGui.QGraphicsItem.setPos(self, pos)
+        QtWidgets.QGraphicsItem.setPos(self, pos)
         if update:
             self.stateChanged(finish=finish)
         
@@ -712,7 +712,7 @@ class ROI(GraphicsObject):
         return self.mapToParent(self.mapFromScene(pt))
 
     def setSelected(self, s):
-        QtGui.QGraphicsItem.setSelected(self, s)
+        QtWidgets.QGraphicsItem.setSelected(self, s)
         #print "select", self, s
         if s:
             for h in self.handles:
@@ -775,7 +775,7 @@ class ROI(GraphicsObject):
 
     def getMenu(self):
         if self.menu is None:
-            self.menu = QtGui.QMenu()
+            self.menu = QtWidgets.QMenu()
             self.menu.setTitle(translate("ROI", "ROI"))
             remAct = QtGui.QAction(translate("ROI", "Remove ROI"), self.menu)
             remAct.triggered.connect(self.removeClicked)
@@ -1433,7 +1433,7 @@ class Handle(UIGraphicsItem):
                 ev.ignore()        
                 
     def buildMenu(self):
-        menu = QtGui.QMenu()
+        menu = QtWidgets.QMenu()
         menu.setTitle(translate("ROI", "Handle"))
         self.removeAction = menu.addAction(translate("ROI", "Remove handle"), self.removeClicked) 
         return menu
@@ -1687,7 +1687,7 @@ class LineROI(ROI):
         self.addScaleHandle([0.5, 1], [0.5, 0.5])
 
 
-class MultiRectROI(QtGui.QGraphicsObject):
+class MultiRectROI(QtWidgets.QGraphicsObject):
     r"""
     Chain of rectangular ROIs connected by handles.
 
@@ -1707,7 +1707,7 @@ class MultiRectROI(QtGui.QGraphicsObject):
     sigRegionChanged = QtCore.Signal(object)
     
     def __init__(self, points, width, pen=None, **args):
-        QtGui.QGraphicsObject.__init__(self)
+        QtWidgets.QGraphicsObject.__init__(self)
         self.pen = pen
         self.roiArgs = args
         self.lines = []

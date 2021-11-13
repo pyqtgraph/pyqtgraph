@@ -20,11 +20,11 @@ from pyqtgraph.Qt import QtGui
 app = pg.mkQApp("Flowchart Example")
 
 ## Create main window with grid layout
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 win.setWindowTitle('pyqtgraph example: Flowchart')
-cw = QtGui.QWidget()
+cw = QtWidgets.QWidget()
 win.setCentralWidget(cw)
-layout = QtGui.QGridLayout()
+layout = QtWidgets.QGridLayout()
 cw.setLayout(layout)
 
 ## Create flowchart, define input/output terminals

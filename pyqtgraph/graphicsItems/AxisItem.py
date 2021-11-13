@@ -45,7 +45,7 @@ class AxisItem(GraphicsWidget):
         """
 
         GraphicsWidget.__init__(self, parent)
-        self.label = QtGui.QGraphicsTextItem(self)
+        self.label = QtWidgets.QGraphicsTextItem(self)
         self.picture = None
         self.orientation = orientation
         if orientation not in ['left', 'right', 'top', 'bottom']:

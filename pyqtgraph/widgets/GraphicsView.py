@@ -13,7 +13,7 @@ from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
 __all__ = ['GraphicsView']
 
 
-class GraphicsView(QtGui.QGraphicsView):
+class GraphicsView(QtWidgets.QGraphicsView):
     """Re-implementation of QGraphicsView that removes scrollbars and allows unambiguous control of the 
     viewed coordinate range. Also automatically creates a GraphicsScene and a central QGraphicsWidget
     that is automatically scaled to the full view geometry.
@@ -58,7 +58,7 @@ class GraphicsView(QtGui.QGraphicsView):
         
         self.closed = False
         
-        QtGui.QGraphicsView.__init__(self, parent)
+        QtWidgets.QGraphicsView.__init__(self, parent)
         
         # This connects a cleanup function to QApplication.aboutToQuit. It is
         # called from here because we have no good way to react when the
@@ -80,12 +80,12 @@ class GraphicsView(QtGui.QGraphicsView):
         self.setBackground(background)
         
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
-        self.setFrameShape(QtGui.QFrame.Shape.NoFrame)
+        self.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setTransformationAnchor(QtGui.QGraphicsView.ViewportAnchor.NoAnchor)
-        self.setResizeAnchor(QtGui.QGraphicsView.ViewportAnchor.AnchorViewCenter)
-        self.setViewportUpdateMode(QtGui.QGraphicsView.ViewportUpdateMode.MinimalViewportUpdate)
+        self.setTransformationAnchor(QtWidgets.QGraphicsView.ViewportAnchor.NoAnchor)
+        self.setResizeAnchor(QtWidgets.QGraphicsView.ViewportAnchor.AnchorViewCenter)
+        self.setViewportUpdateMode(QtWidgets.QGraphicsView.ViewportUpdateMode.MinimalViewportUpdate)
         
         
         self.lockedViewports = []
@@ -109,8 +109,8 @@ class GraphicsView(QtGui.QGraphicsView):
         ## by default we set up a central widget with a grid layout.
         ## this can be replaced if needed.
         self.centralWidget = None
-        self.setCentralItem(QtGui.QGraphicsWidget())
-        self.centralLayout = QtGui.QGraphicsGridLayout()
+        self.setCentralItem(QtWidgets.QGraphicsWidget())
+        self.centralLayout = QtWidgets.QGraphicsGridLayout()
         self.centralWidget.setLayout(self.centralLayout)
         
         self.mouseEnabled = False
@@ -163,7 +163,7 @@ class GraphicsView(QtGui.QGraphicsView):
 
             v = QtWidgets.QOpenGLWidget()
         else:
-            v = QtGui.QWidget()
+            v = QtWidgets.QWidget()
             
         self.setViewport(v)
             

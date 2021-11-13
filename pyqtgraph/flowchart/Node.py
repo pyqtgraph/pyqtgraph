@@ -461,14 +461,14 @@ class TextItem(QtWidgets.QGraphicsTextItem):
         super().keyPressEvent(ev)
 
 
-#class NodeGraphicsItem(QtGui.QGraphicsItem):
+#class NodeGraphicsItem(QtWidgets.QGraphicsItem):
 class NodeGraphicsItem(GraphicsObject):
     def __init__(self, node):
-        #QtGui.QGraphicsItem.__init__(self)
+        #QtWidgets.QGraphicsItem.__init__(self)
         GraphicsObject.__init__(self)
         #QObjectWorkaround.__init__(self)
         
-        #self.shadow = QtGui.QGraphicsDropShadowEffect()
+        #self.shadow = QtWidgets.QGraphicsDropShadowEffect()
         #self.shadow.setOffset(5,5)
         #self.shadow.setBlurRadius(10)
         #self.setGraphicsEffect(self.shadow)
@@ -590,7 +590,7 @@ class NodeGraphicsItem(GraphicsObject):
             ev.accept()
             #print "    ev.button: left"
             sel = self.isSelected()
-            #ret = QtGui.QGraphicsItem.mousePressEvent(self, ev)
+            #ret = QtWidgets.QGraphicsItem.mousePressEvent(self, ev)
             self.setSelected(True)
             if not sel and self.isSelected():
                 #self.setBrush(QtGui.QBrush(QtGui.QColor(200, 200, 255)))
@@ -645,7 +645,7 @@ class NodeGraphicsItem(GraphicsObject):
         menu.popup(QtCore.QPoint(pos.x(), pos.y()))
         
     def buildMenu(self):
-        self.menu = QtGui.QMenu()
+        self.menu = QtWidgets.QMenu()
         self.menu.setTitle(translate("Context Menu", "Node"))
         a = self.menu.addAction(translate("Context Menu","Add input"), self.addInputFromMenu)
         if not self.node._allowAddInput:

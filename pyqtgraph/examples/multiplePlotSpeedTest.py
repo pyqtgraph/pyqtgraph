@@ -34,7 +34,7 @@ def plot():
             plt.addItem(pg.PlotCurveItem(x=x+i, y=y+j))
             
             #path = pg.arrayToQPath(x+i, y+j)
-            #item = QtGui.QGraphicsPathItem(path)
+            #item = QtWidgets.QGraphicsPathItem(path)
             #item.setPen(pg.mkPen('w'))
             #plt.addItem(item)
             
@@ -67,7 +67,7 @@ def fastPlot():
     conn = np.ones((n*n,pts))
     conn[:,-1] = False # make sure plots are disconnected
     path = pg.arrayToQPath(xdata.flatten(), ydata.flatten(), conn.flatten())
-    item = QtGui.QGraphicsPathItem(path)
+    item = QtWidgets.QGraphicsPathItem(path)
     item.setPen(pg.mkPen('w'))
     plt.addItem(item)
     

@@ -18,7 +18,7 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
     def __init__(self, text=' ', parent=None, angle=0, **args):
         GraphicsWidget.__init__(self, parent)
         GraphicsWidgetAnchor.__init__(self)
-        self.item = QtGui.QGraphicsTextItem(self)
+        self.item = QtWidgets.QGraphicsTextItem(self)
         self.opts = {
             'color': None,
             'justify': 'center'

@@ -20,7 +20,7 @@ from pyqtgraph.dockarea.DockArea import DockArea
 from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("DockArea Example")
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 area = DockArea()
 win.setCentralWidget(area)
 win.resize(1000,500)
@@ -52,7 +52,7 @@ area.moveDock(d5, 'top', d2)     ## move d5 to top edge of d2
 
 ## first dock gets save/restore buttons
 w1 = pg.LayoutWidget()
-label = QtGui.QLabel(""" -- DockArea Example -- 
+label = QtWidgets.QLabel(""" -- DockArea Example -- 
 This window has 6 Dock widgets in it. Each dock can be dragged
 by its title bar to occupy a different space within the window 
 but note that one dock has its title bar hidden). Additionally,
@@ -60,8 +60,8 @@ the borders between docks may be dragged to resize. Docks that are dragged on to
 of one another are stacked in a tabbed layout. Double-click a dock title
 bar to place it in its own window.
 """)
-saveBtn = QtGui.QPushButton('Save dock state')
-restoreBtn = QtGui.QPushButton('Restore dock state')
+saveBtn = QtWidgets.QPushButton('Save dock state')
+restoreBtn = QtWidgets.QPushButton('Restore dock state')
 restoreBtn.setEnabled(False)
 w1.addWidget(label, row=0, col=0)
 w1.addWidget(saveBtn, row=1, col=0)

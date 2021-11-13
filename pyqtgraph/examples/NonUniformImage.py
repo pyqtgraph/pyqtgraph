@@ -40,7 +40,7 @@ Gradients['gor'] = {'ticks': [(0.0, (74, 158, 71)), (0.5, (255, 230, 0)), (1, (1
 
 app = pg.mkQApp("NonUniform Image Example")
 
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 cw = pg.GraphicsLayoutWidget()
 win.show()
 win.resize(600, 400)

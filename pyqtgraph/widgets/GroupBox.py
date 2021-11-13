@@ -3,13 +3,13 @@ from .PathButton import PathButton
 
 __all__ = ['GroupBox']
 
-class GroupBox(QtGui.QGroupBox):
+class GroupBox(QtWidgets.QGroupBox):
     """Subclass of QGroupBox that implements collapse handle.
     """
     sigCollapseChanged = QtCore.Signal(object)
     
     def __init__(self, *args):
-        QtGui.QGroupBox.__init__(self, *args)
+        QtWidgets.QGroupBox.__init__(self, *args)
         
         self._collapsed = False
         # We modify the size policy when the group box is collapsed, so 
@@ -55,7 +55,7 @@ class GroupBox(QtGui.QGroupBox):
         
         if c is True:
             self.collapseBtn.setPath(self.closePath)
-            self.setSizePolicy(QtGui.QSizePolicy.Policy.Preferred, QtGui.QSizePolicy.Policy.Preferred, closing=True)
+            self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred, closing=True)
         elif c is False:
             self.collapseBtn.setPath(self.openPath)
             self.setSizePolicy(self._lastSizePolicy)
@@ -63,28 +63,28 @@ class GroupBox(QtGui.QGroupBox):
             raise TypeError("Invalid argument %r; must be bool." % c)
         
         for ch in self.children():
-            if isinstance(ch, QtGui.QWidget) and ch is not self.collapseBtn:
+            if isinstance(ch, QtWidgets.QWidget) and ch is not self.collapseBtn:
                 ch.setVisible(not c)
         
         self._collapsed = c
         self.sigCollapseChanged.emit(c)
 
     def setSizePolicy(self, *args, **kwds):
-        QtGui.QGroupBox.setSizePolicy(self, *args)
+        QtWidgets.QGroupBox.setSizePolicy(self, *args)
         if kwds.pop('closing', False) is True:
             self._lastSizePolicy = self.sizePolicy()
 
     def setHorizontalPolicy(self, *args):
-        QtGui.QGroupBox.setHorizontalPolicy(self, *args)
+        QtWidgets.QGroupBox.setHorizontalPolicy(self, *args)
         self._lastSizePolicy = self.sizePolicy()
 
     def setVerticalPolicy(self, *args):
-        QtGui.QGroupBox.setVerticalPolicy(self, *args)
+        QtWidgets.QGroupBox.setVerticalPolicy(self, *args)
         self._lastSizePolicy = self.sizePolicy()
 
     def setTitle(self, title):
         # Leave room for button
-        QtGui.QGroupBox.setTitle(self, "   " + title)
+        QtWidgets.QGroupBox.setTitle(self, "   " + title)
         
     def widgetGroupInterface(self):
         return (self.sigCollapseChanged, 

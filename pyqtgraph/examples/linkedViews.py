@@ -9,7 +9,7 @@ import numpy as np
 import pyqtgraph as pg
 
 app = pg.mkQApp("Linked Views Example")
-#mw = QtGui.QMainWindow()
+#mw = QtWidgets.QMainWindow()
 #mw.resize(800,800)
 
 x = np.linspace(-50, 50, 1000)
@@ -34,7 +34,7 @@ p4.setYLink(p1)
 p3 = win.addPlot(x=x, y=y, name="Plot3", title="Plot3: X linked with Plot1", row=2, col=0)
 p3.setXLink(p1)
 p3.setLabel('left', "Label to test offset")
-#QtGui.QApplication.processEvents()
+#QtWidgets.QApplication.processEvents()
 
 if __name__ == '__main__':
     pg.exec()

@@ -12,12 +12,12 @@ from pyqtgraph.Qt import QtGui
 app = pg.mkQApp("Data Slicing Example")
 
 ## Create window with two ImageView widgets
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 win.resize(800,800)
 win.setWindowTitle('pyqtgraph example: DataSlicing')
-cw = QtGui.QWidget()
+cw = QtWidgets.QWidget()
 win.setCentralWidget(cw)
-l = QtGui.QGridLayout()
+l = QtWidgets.QGridLayout()
 cw.setLayout(l)
 imv1 = pg.ImageView()
 imv2 = pg.ImageView()

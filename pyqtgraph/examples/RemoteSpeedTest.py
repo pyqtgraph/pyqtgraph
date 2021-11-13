@@ -26,10 +26,10 @@ view.setWindowTitle('pyqtgraph example: RemoteSpeedTest')
 
 app.aboutToQuit.connect(view.close)
 
-label = QtGui.QLabel()
-rcheck = QtGui.QCheckBox('plot remote')
+label = QtWidgets.QLabel()
+rcheck = QtWidgets.QCheckBox('plot remote')
 rcheck.setChecked(True)
-lcheck = QtGui.QCheckBox('plot local')
+lcheck = QtWidgets.QCheckBox('plot local')
 lplt = pg.PlotWidget()
 layout = pg.LayoutWidget()
 layout.addWidget(rcheck)

@@ -20,8 +20,8 @@ def BusyCursor():
     in_gui_thread = (app is not None) and (QtCore.QThread.currentThread() == app.thread())
     try:
         if in_gui_thread:
-            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.CursorShape.WaitCursor))
+            QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.CursorShape.WaitCursor))
         yield
     finally:
         if in_gui_thread:
-            QtGui.QApplication.restoreOverrideCursor()
+            QtWidgets.QApplication.restoreOverrideCursor()

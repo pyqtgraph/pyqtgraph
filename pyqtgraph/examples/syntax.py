@@ -184,7 +184,7 @@ class PythonHighlighter(QSyntaxHighlighter):
 
     @property
     def styles(self):
-        app = QtGui.QApplication.instance()
+        app = QtWidgets.QApplication.instance()
         return DARK_STYLES if app.property('darkMode') else LIGHT_STYLES
 
     def highlightBlock(self, text):

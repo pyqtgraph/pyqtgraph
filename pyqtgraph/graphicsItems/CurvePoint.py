@@ -81,7 +81,7 @@ class CurvePoint(GraphicsObject):
         self.resetTransform()
         if self._rotate:
             self.setRotation(180 + degrees(rads))
-        QtGui.QGraphicsItem.setPos(self, *newPos)
+        QtWidgets.QGraphicsItem.setPos(self, *newPos)
         return True
         
     def boundingRect(self):

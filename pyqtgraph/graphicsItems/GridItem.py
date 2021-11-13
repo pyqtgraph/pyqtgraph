@@ -17,9 +17,9 @@ class GridItem(UIGraphicsItem):
 
     def __init__(self, pen='default', textPen='default'):
         UIGraphicsItem.__init__(self)
-        #QtGui.QGraphicsItem.__init__(self, *args)
-        #self.setFlag(QtGui.QGraphicsItem.GraphicsItemFlag.ItemClipsToShape)
-        #self.setCacheMode(QtGui.QGraphicsItem.CacheMode.DeviceCoordinateCache)
+        #QtWidgets.QGraphicsItem.__init__(self, *args)
+        #self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemClipsToShape)
+        #self.setCacheMode(QtWidgets.QGraphicsItem.CacheMode.DeviceCoordinateCache)
 
         self.opts = {}
 

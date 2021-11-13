@@ -59,7 +59,7 @@ if RawImageGLWidget is not None:
 
 app = pg.mkQApp("Video Speed Test Example")
 
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 win.setWindowTitle('pyqtgraph example: VideoSpeedTest')
 ui = ui_template.Ui_MainWindow()
 ui.setupUi(win)

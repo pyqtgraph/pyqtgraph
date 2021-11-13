@@ -2,7 +2,7 @@ from ..Qt import QtCore, QtGui
 
 translate = QtCore.QCoreApplication.translate
 
-class ParameterItem(QtGui.QTreeWidgetItem):
+class ParameterItem(QtWidgets.QTreeWidgetItem):
     """
     Abstract ParameterTree item. 
     Used to represent the state of a Parameter from within a ParameterTree.
@@ -16,7 +16,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
     """
     
     def __init__(self, param, depth=0):
-        QtGui.QTreeWidgetItem.__init__(self, [param.title(), ''])
+        QtWidgets.QTreeWidgetItem.__init__(self, [param.title(), ''])
 
         self.param = param
         self.param.registerItem(self)  ## let parameter know this item is connected to it (for debugging)
@@ -108,7 +108,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             return
         
         ## Generate context menu for renaming/removing parameter
-        self.contextMenu = QtGui.QMenu() # Put in global name space to prevent garbage collection
+        self.contextMenu = QtWidgets.QMenu() # Put in global name space to prevent garbage collection
         self.contextMenu.addSeparator()
         if opts.get('renamable', False):
             self.contextMenu.addAction(translate("ParameterItem", 'Rename')).triggered.connect(self.editName)

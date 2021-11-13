@@ -14,7 +14,7 @@ except:
     exit()
 
 app = pg.mkQApp("MultiPlot Widget Example")
-mw = QtGui.QMainWindow()
+mw = QtWidgets.QMainWindow()
 mw.resize(800,800)
 pw = MultiPlotWidget()
 mw.setCentralWidget(pw)

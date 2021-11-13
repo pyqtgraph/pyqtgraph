@@ -24,10 +24,10 @@ class HistogramLUTWidget(GraphicsView):
 
         self.orientation = kargs.get('orientation', 'vertical')
         if self.orientation == 'vertical':
-            self.setSizePolicy(QtGui.QSizePolicy.Policy.Preferred, QtGui.QSizePolicy.Policy.Expanding)
+            self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Expanding)
             self.setMinimumWidth(95)
         else:
-            self.setSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Preferred)
+            self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
             self.setMinimumHeight(95)
 
     def sizeHint(self):

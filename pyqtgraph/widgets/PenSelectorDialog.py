@@ -167,7 +167,7 @@ class PenSelectorDialog(QtWidgets.QDialog):
         self.param.sigTreeStateChanged.connect(maybeUpdatePreview)
         infoLbl = QtWidgets.QLabel('Click and drag below to test the pen')
         infoLbl.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
-        policy = QtGui.QSizePolicy.Policy
+        policy = QtWidgets.QSizePolicy.Policy
         infoLbl.setSizePolicy(policy.Expanding, policy.Fixed)
         self.labelPenPreview.setMinimumSize(10,30)
         self.tree.setMinimumSize(240, 135)

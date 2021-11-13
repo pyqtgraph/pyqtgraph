@@ -7,14 +7,14 @@ from .DataTreeWidget import DataTreeWidget
 __all__ = ['DiffTreeWidget']
 
 
-class DiffTreeWidget(QtGui.QWidget):
+class DiffTreeWidget(QtWidgets.QWidget):
     """
     Widget for displaying differences between hierarchical python data structures
     (eg, nested dicts, lists, and arrays)
     """
     def __init__(self, parent=None, a=None, b=None):
-        QtGui.QWidget.__init__(self, parent)
-        self.layout = QtGui.QHBoxLayout()
+        QtWidgets.QWidget.__init__(self, parent)
+        self.layout = QtWidgets.QHBoxLayout()
         self.setLayout(self.layout)
         self.trees = [DataTreeWidget(self), DataTreeWidget(self)]
         for t in self.trees:

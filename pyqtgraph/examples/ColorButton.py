@@ -8,7 +8,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("ColorButton Example")
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 btn = pg.ColorButton()
 win.setCentralWidget(btn)
 win.show()

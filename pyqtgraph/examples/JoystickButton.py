@@ -9,12 +9,12 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Joystick Button Example")
-mw = QtGui.QMainWindow()
+mw = QtWidgets.QMainWindow()
 mw.resize(300,50)
 mw.setWindowTitle('pyqtgraph example: JoystickButton')
-cw = QtGui.QWidget()
+cw = QtWidgets.QWidget()
 mw.setCentralWidget(cw)
-layout = QtGui.QGridLayout()
+layout = QtWidgets.QGridLayout()
 cw.setLayout(layout)
 mw.show()
 

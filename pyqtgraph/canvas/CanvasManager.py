@@ -46,9 +46,9 @@ class CanvasManager(QtCore.QObject):
 manager = CanvasManager()
 
 
-class CanvasCombo(QtGui.QComboBox):
+class CanvasCombo(QtWidgets.QComboBox):
     def __init__(self, parent=None):
-        QtGui.QComboBox.__init__(self, parent)
+        QtWidgets.QComboBox.__init__(self, parent)
         man = CanvasManager.instance()
         man.sigCanvasListChanged.connect(self.updateCanvasList)
         self.hostName = None

@@ -15,11 +15,11 @@ from pyqtgraph.Qt import QtGui
 app = pg.mkQApp("Flowchart Custom Node Example")
 
 ## Create main window with a grid layout inside
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 win.setWindowTitle('pyqtgraph example: FlowchartCustomNode')
-cw = QtGui.QWidget()
+cw = QtWidgets.QWidget()
 win.setCentralWidget(cw)
-layout = QtGui.QGridLayout()
+layout = QtWidgets.QGridLayout()
 cw.setLayout(layout)
 
 ## Create an empty flowchart with a single input and output

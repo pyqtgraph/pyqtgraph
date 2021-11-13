@@ -99,7 +99,7 @@ class HistogramLUTItem(GraphicsWidget):
         elif orientation == 'horizontal' and gradientPosition not in {'top', 'bottom'}:
             self.gradientPosition = 'bottom'
 
-        self.layout = QtGui.QGraphicsGridLayout()
+        self.layout = QtWidgets.QGraphicsGridLayout()
         self.setLayout(self.layout)
         self.layout.setContentsMargins(1, 1, 1, 1)
         self.layout.setSpacing(0)
