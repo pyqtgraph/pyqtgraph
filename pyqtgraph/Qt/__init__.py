@@ -305,6 +305,7 @@ if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
     
     # Import all QtWidgets objects into QtGui
     _fallbacks = dir(QtWidgets)
+
     def lazyGetattr(name):
         if not (name in _fallbacks and name.startswith('Q')):
             raise AttributeError(f"module 'QtGui' has no attribute '{name}'")
@@ -323,8 +324,8 @@ if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
         ]
         if name not in whitelist:
             warnings.warn(
-                "Accessing QtWidgets through QtGui is deprecated and will be removed after Jan 2022."
-                f" Use QtWidgets.{name} instead.",
+                "Accessing pyqtgraph.QtWidgets through QtGui is deprecated and will be removed sometime"
+                f" after May 2022. Use QtWidgets.{name} instead.",
                 DeprecationWarning, stacklevel=2
             )
         attr = getattr(QtWidgets, name)
