@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 """
 Simple logarithmic plotting test
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
+
 import pyqtgraph as pg
 
 app = pg.mkQApp("Log Plot Example")

@@ -1,13 +1,13 @@
-# -*- coding: utf-8 -*-
 """
 Example demonstrating a variety of scatter plot features.
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph as pg
-import numpy as np
 from collections import namedtuple
-from itertools import chain
+
+import numpy as np
+
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("Scatter Plot Item Example") 
 mw = QtGui.QMainWindow()

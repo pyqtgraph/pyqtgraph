@@ -1,16 +1,16 @@
-# -*- coding: utf-8 -*-
 """
 RawImageWidget.py
 Copyright 2010-2016 Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-from .. import getConfigOption, functions as fn, getCupy
+from .. import functions as fn
+from .. import getConfigOption, getCupy
 from ..Qt import QtCore, QtGui, QtWidgets
 
 try:
     QOpenGLWidget = QtWidgets.QOpenGLWidget
-    from OpenGL.GL import *
+    from OpenGL.GL import *  # noqa
 
     HAVE_OPENGL = True
 except (ImportError, AttributeError):

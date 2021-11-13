@@ -1,5 +1,5 @@
-from ..Qt import QtGui, QtCore
 from .. import functions as fn
+from ..Qt import QtCore, QtGui
 
 __all__ = ['PathButton']
 

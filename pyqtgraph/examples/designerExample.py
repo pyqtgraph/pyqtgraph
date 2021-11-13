@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Simple example of loading UI template created with Qt Designer.
 
@@ -8,10 +7,11 @@ ScatterPlotSpeedTest examples; these .ui files have been compiled with the
 tools/rebuildUi.py script).
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
 import os
+
+import numpy as np
+
+import pyqtgraph as pg
 
 pg.mkQApp()
 

@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates some of the plotting items available in pyqtgraph.
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
-import pyqtgraph as pg
 
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore
 
 app = pg.mkQApp("InfiniteLine Example")
 win = pg.GraphicsLayoutWidget(show=True, title="Plotting items examples")

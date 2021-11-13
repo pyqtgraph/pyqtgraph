@@ -9,11 +9,10 @@ running the `examples/verlet_chain/make` script.
 
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
-
 import verlet_chain
+
+import pyqtgraph as pg
 
 sim = verlet_chain.ChainSim()
 

@@ -1,9 +1,9 @@
+from OpenGL.GL import *  # noqa
 import numpy as np
 
-from OpenGL.GL import *
-from .. GLGraphicsItem import GLGraphicsItem
 from ... import QtGui
 from ... import functions as fn
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLGridItem']
 

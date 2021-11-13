@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ImageView.py -  Widget for basic image dispay and analysis
 Copyright 2010  Luke Campagnola
@@ -12,32 +11,34 @@ Widget used for displaying 2D or 3D data. Features:
   - ROI plotting
   - Image normalization through a variety of methods
 """
+import importlib
 import os
 from math import log10
-import numpy as np
 from time import perf_counter
 
-from ..Qt import QtCore, QtGui, QT_LIB
+import numpy as np
+
 from .. import functions as fn
-import importlib
+from ..Qt import QT_LIB, QtCore, QtGui
+
 ui_template = importlib.import_module(
     f'.ImageViewTemplate_{QT_LIB.lower()}', package=__package__)
 
+from .. import debug as debug
+from .. import getConfigOption
+from ..graphicsItems.GradientEditorItem import addGradientListToDocstring
 from ..graphicsItems.ImageItem import *
-from ..graphicsItems.ROI import *
-from ..graphicsItems.LinearRegionItem import *
 from ..graphicsItems.InfiniteLine import *
+from ..graphicsItems.LinearRegionItem import *
+from ..graphicsItems.ROI import *
 from ..graphicsItems.ViewBox import *
 from ..graphicsItems.VTickGroup import VTickGroup
-from ..graphicsItems.GradientEditorItem import addGradientListToDocstring
-from .. import debug as debug
 from ..SignalProxy import SignalProxy
-from .. import getConfigOption
 
 try:
-    from bottleneck import nanmin, nanmax
+    from bottleneck import nanmax, nanmin
 except ImportError:
-    from numpy import nanmin, nanmax
+    from numpy import nanmax, nanmin
 
 translate = QtCore.QCoreApplication.translate
 

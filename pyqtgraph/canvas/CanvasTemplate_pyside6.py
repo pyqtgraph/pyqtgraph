@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 ################################################################################
 ## Form generated from reading UI file 'CanvasTemplate.ui'
@@ -123,4 +122,3 @@ class Ui_Form(object):
         self.mirrorSelectionBtn.setText(QCoreApplication.translate("Form", u"Mirror Selection", None))
         self.reflectSelectionBtn.setText(QCoreApplication.translate("Form", u"MirrorXY", None))
     # retranslateUi
-

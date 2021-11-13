@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 from contextlib import contextmanager
 
-from ..Qt import QtGui, QtCore
+from ..Qt import QtCore, QtGui
 
 __all__ = ["BusyCursor"]
 

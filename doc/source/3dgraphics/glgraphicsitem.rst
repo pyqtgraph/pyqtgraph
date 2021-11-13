@@ -5,4 +5,3 @@ GLGraphicsItem
     :members:
 
     .. automethod:: pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem.__init__
-

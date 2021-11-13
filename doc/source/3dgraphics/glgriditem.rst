@@ -5,4 +5,3 @@ GLGridItem
     :members:
 
     .. automethod:: pyqtgraph.opengl.GLGridItem.__init__
-

@@ -6,6 +6,7 @@ Demonstrate creation of a custom graphic (a candlestick plot)
 import pyqtgraph as pg
 from pyqtgraph import QtCore, QtGui
 
+
 ## Create a subclass of GraphicsObject.
 ## The only required methods are paint() and boundingRect() 
 ## (see QGraphicsItem documentation)

@@ -1,9 +1,11 @@
-# -*- coding: utf-8 -*-
-from math import atan2, degrees
-from .Qt import QtCore, QtGui
-from .Point import Point
-import numpy as np
 import warnings
+from math import atan2, degrees
+
+import numpy as np
+
+from .Point import Point
+from .Qt import QtCore, QtGui
+
 
 class SRTTransform(QtGui.QTransform):
     """Transform that can always be represented as a combination of 3 matrices: scale * rotate * translate
@@ -173,8 +175,9 @@ class SRTTransform(QtGui.QTransform):
 
         
 if __name__ == '__main__':
-    from . import widgets
     import GraphicsView
+
+    from . import widgets
     from .functions import *
     app = pg.mkQApp()
     win = QtGui.QMainWindow()

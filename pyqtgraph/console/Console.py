@@ -1,12 +1,15 @@
-# -*- coding: utf-8 -*-
-import sys, re, traceback, subprocess
+import importlib
 import pickle
+import re
+import subprocess
+import sys
+import traceback
 
-from ..Qt import QtCore, QtGui, QT_LIB
 from .. import exceptionHandling as exceptionHandling
 from .. import getConfigOption
 from ..functions import SignalBlock
-import importlib
+from ..Qt import QT_LIB, QtCore, QtGui
+
 ui_template = importlib.import_module(
     f'.template_{QT_LIB.lower()}', package=__package__)
 

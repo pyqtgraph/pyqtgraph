@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Very basic 3D graphics example; create a view widget and add a few items.
 

@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 Simple example of subclassing GraphItem.
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
+
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore
 
 # Enable antialiasing for prettier plots
 pg.setConfigOptions(antialias=True)

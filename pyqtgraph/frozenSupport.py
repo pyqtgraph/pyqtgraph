@@ -1,5 +1,8 @@
 ## Definitions helpful in frozen environments (eg py2exe)
-import os, sys, zipfile
+import os
+import sys
+import zipfile
+
 
 def listdir(path):
     """Replacement for os.listdir that works in frozen environments."""

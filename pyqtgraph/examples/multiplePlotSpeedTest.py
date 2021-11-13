@@ -1,8 +1,9 @@
-# -*- coding: utf-8 -*-
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
 from time import perf_counter
+
+import numpy as np
+
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp()
 plt = pg.PlotWidget()

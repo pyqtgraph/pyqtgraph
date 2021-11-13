@@ -1,11 +1,12 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 
 import numpy as np
 from numpy import linspace
-from pyqtgraph.Qt import QtGui, QtCore
+
 import pyqtgraph as pg
 from pyqtgraph import MultiPlotWidget
+from pyqtgraph.Qt import QtGui
+
 try:
     from pyqtgraph.metaarray import *
 except:
@@ -32,4 +33,3 @@ pw.plot(ma, pen='y')
 
 if __name__ == '__main__':
     pg.exec()
-

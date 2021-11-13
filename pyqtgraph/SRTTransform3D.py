@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
 from math import atan2, degrees
+
+import numpy as np
+
 from .Qt import QtCore, QtGui
-from .Vector import Vector
 from .Transform3D import Transform3D
 from .Vector import Vector
-import numpy as np
+
 
 class SRTTransform3D(Transform3D):
     """4x4 Transform matrix that can always be represented as a combination of 3 matrices: scale * rotate * translate
@@ -225,8 +226,9 @@ class SRTTransform3D(Transform3D):
             raise Exception("Argument 'nd' must be 2 or 3")
         
 if __name__ == '__main__':
-    from . import widgets
     import GraphicsView
+
+    from . import widgets
     from .functions import *
     app = pg.mkQApp()
     win = QtGui.QMainWindow()

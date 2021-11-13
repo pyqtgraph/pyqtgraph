@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
-from math import atan2
-from ..Qt import QtGui, QtCore
-from ..Point import Point
-from .. import functions as fn
-from .GraphicsObject import GraphicsObject
-from .UIGraphicsItem import UIGraphicsItem
-from .TextItem import TextItem
-from .ScatterPlotItem import Symbols, makeCrosshair
-from .ViewBox import ViewBox
 import string
 import warnings
+from math import atan2
+
+from .. import functions as fn
+from ..Point import Point
+from ..Qt import QtCore, QtGui
+from .GraphicsObject import GraphicsObject
+from .ScatterPlotItem import Symbols, makeCrosshair
+from .TextItem import TextItem
+from .UIGraphicsItem import UIGraphicsItem
+from .ViewBox import ViewBox
 
 __all__ = ['TargetItem', 'TargetLabel']
 

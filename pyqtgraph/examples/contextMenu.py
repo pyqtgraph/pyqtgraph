@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates adding a custom context menu to a GraphicsItem
 and extending the context menu of a ViewBox.
@@ -9,9 +8,9 @@ displayed as well.
 
 """
 
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
 
 win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: context menu')

@@ -1,9 +1,11 @@
-from ..Qt import QtCore, QtGui, QtWidgets
-from ..parametertree import Parameter, ParameterTree
-from ..functions import mkPen
-
 import re
 from contextlib import ExitStack
+
+from ..functions import mkPen
+from ..parametertree.Parameter import Parameter
+from ..parametertree.ParameterTree import ParameterTree
+from ..Qt import QtCore, QtGui, QtWidgets
+
 
 class PenPreviewArea(QtWidgets.QLabel):
     def __init__(self, pen):

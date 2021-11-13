@@ -1,14 +1,10 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates basic use of ErrorBarItem
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 
 import pyqtgraph as pg
-import numpy as np
 
 pg.setConfigOptions(antialias=True)
 

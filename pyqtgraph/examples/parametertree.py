@@ -5,14 +5,14 @@ demonstrates a variety of different parameter types (int, float, list, etc.)
 as well as some customized parameter types
 """
 
-import pyqtgraph as pg
 # `makeAllParamTypes` creates several parameters from a dictionary of config specs.
 # This contains information about the options for each parameter so they can be directly
 # inserted into the example parameter tree. To create your own parameters, simply follow
 # the guidelines demonstrated by other parameters created here.
 from _buildParamTypes import makeAllParamTypes
-from pyqtgraph.Qt import QtGui
 
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("Parameter Tree Example")
 import pyqtgraph.parametertree.parameterTypes as pTypes

@@ -1,14 +1,15 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 """
 Test the speed of rapidly updating multiple plot curves
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
-import numpy as np
-import pyqtgraph as pg
-
 from time import perf_counter
+
+import numpy as np
+
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore
+
 # pg.setConfigOptions(useOpenGL=True)
 app = pg.mkQApp("MultiPlot Speed Test")
 

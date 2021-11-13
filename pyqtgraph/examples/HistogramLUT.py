@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 """
 Use a HistogramLUTWidget to control the contrast / coloration of an image.
 """
 
 import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 

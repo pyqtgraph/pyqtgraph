@@ -1,12 +1,13 @@
-# -*- coding: utf-8 -*-
-from .Exporter import Exporter
-from ..parametertree import Parameter
-from ..Qt import QtGui, QtCore, QtSvg
-from .. import debug
-from .. import functions as fn
 import re
 import xml.dom.minidom as xml
+
 import numpy as np
+
+from .. import debug
+from .. import functions as fn
+from ..parametertree import Parameter
+from ..Qt import QtCore, QtGui, QtSvg
+from .Exporter import Exporter
 
 translate = QtCore.QCoreApplication.translate
 

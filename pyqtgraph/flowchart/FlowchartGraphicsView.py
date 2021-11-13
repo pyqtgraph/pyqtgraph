@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
-from ..widgets.GraphicsView import GraphicsView
 from ..graphicsItems.ViewBox import ViewBox
+from ..Qt import QtCore, QtGui
+from ..widgets.GraphicsView import GraphicsView
 
 translate = QtCore.QCoreApplication.translate
 

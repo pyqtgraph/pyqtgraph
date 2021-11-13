@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates the SpinBox widget, which is an extension of 
 QDoubleSpinBox providing some advanced features:
@@ -9,10 +8,10 @@ QDoubleSpinBox providing some advanced features:
 
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
 import ast
+
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("SpinBox Example")
 

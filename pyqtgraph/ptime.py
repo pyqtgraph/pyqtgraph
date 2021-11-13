@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ptime.py -  Precision time function made os-independent (should have been taken care of by python)
 Copyright 2010  Luke Campagnola
@@ -8,7 +7,6 @@ Distributed under MIT/X11 license. See license.txt for more information.
 
 import sys
 import warnings
-
 from time import perf_counter as clock
 from time import time as system_time
 
@@ -39,4 +37,3 @@ if sys.platform.startswith('win'):
     time = winTime
 else:
     time = unixTime
-

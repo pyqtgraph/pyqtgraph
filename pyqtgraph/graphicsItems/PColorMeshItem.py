@@ -1,14 +1,13 @@
-# -*- coding: utf-8 -*-
 import itertools
 import warnings
-from ..Qt import QtGui, QtCore
-from .. import Qt
-import numpy as np
-from .. import functions as fn
-from .GraphicsObject import GraphicsObject
-from .GradientEditorItem import Gradients # List of colormaps
-from .. import colormap
 
+import numpy as np
+
+from .. import Qt, colormap
+from .. import functions as fn
+from ..Qt import QtCore, QtGui
+from .GradientEditorItem import Gradients  # List of colormaps
+from .GraphicsObject import GraphicsObject
 
 __all__ = ['PColorMeshItem']
 

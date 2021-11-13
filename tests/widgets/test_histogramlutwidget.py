@@ -4,9 +4,11 @@ HistogramLUTWidget test:
 Tests the creation of a HistogramLUTWidget.
 """
 
+import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
-import numpy as np
+
 
 def testHistogramLUTWidget():
     pg.mkQApp()

@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 Widget displaying an image histogram along with gradient editor. Can be used to adjust
 the appearance of images. This is a wrapper around HistogramLUTItem
 """
 
-from ..Qt import QtGui, QtCore
-from .GraphicsView import GraphicsView
 from ..graphicsItems.HistogramLUTItem import HistogramLUTItem
+from ..Qt import QtCore, QtGui
+from .GraphicsView import GraphicsView
 
 __all__ = ['HistogramLUTWidget']
 

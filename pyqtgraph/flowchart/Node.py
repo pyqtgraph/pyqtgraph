@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui, QtWidgets
-from ..graphicsItems.GraphicsObject import GraphicsObject
-from .. import functions as fn
-from .Terminal import *
-from collections import OrderedDict
-from ..debug import *
 import warnings
+from collections import OrderedDict
+
+from .. import functions as fn
+from ..debug import *
+from ..graphicsItems.GraphicsObject import GraphicsObject
+from ..Qt import QtCore, QtGui, QtWidgets
+from .Terminal import *
 
 translate = QtCore.QCoreApplication.translate
 

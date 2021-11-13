@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui
+
 
 class CmdInput(QtGui.QLineEdit):
     

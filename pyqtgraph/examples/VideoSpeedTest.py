@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Tests the speed of image updates for an ImageItem and RawImageWidget.
 The speed will generally depend on the type of data being shown, whether
@@ -8,17 +7,17 @@ is used by the view widget
 
 import argparse
 import sys
+from time import perf_counter
 
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
-from time import perf_counter
-
+from pyqtgraph.Qt import QT_LIB, QtCore, QtGui
 
 pg.setConfigOption('imageAxisOrder', 'row-major')
 
 import importlib
+
 ui_template = importlib.import_module(f'VideoTemplate_{QT_LIB.lower()}')
 
 try:

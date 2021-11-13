@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates a way to put multiple axes around a single plot. 
 
 (This will eventually become a built-in feature of PlotItem)
 """
 
+
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
 
 pg.mkQApp()
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example shows how to insert text into a scene using TextItem. This class 
 is for displaying text that is anchored to a particular location in the data
@@ -8,9 +7,10 @@ For text that scales with the data, use QTextItem.
 For text that can be placed in a layout, use LabelItem.
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
+
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore
 
 x = np.linspace(-20, 20, 1000)
 y = np.sin(x) / x

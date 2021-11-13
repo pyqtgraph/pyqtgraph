@@ -1,15 +1,15 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 """
 For testing rapid updates of ScatterPlotItem under various conditions.
 """
 
-import numpy as np
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
-import pyqtgraph.parametertree as ptree
-import pyqtgraph.graphicsItems.ScatterPlotItem
 from time import perf_counter
+
+import numpy as np
+
+import pyqtgraph as pg
+import pyqtgraph.parametertree as ptree
+from pyqtgraph.Qt import QtCore, QtWidgets
 
 translate = QtCore.QCoreApplication.translate
 

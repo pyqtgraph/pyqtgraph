@@ -1,17 +1,17 @@
-# -*- coding: utf-8 -*-
-import weakref
-import sys
 import math
+import sys
+import weakref
 from copy import deepcopy
+
 import numpy as np
-from ...Qt import QtGui, QtCore
-from ...Point import Point
-from ... import functions as fn
-from .. ItemGroup import ItemGroup
-from .. GraphicsWidget import GraphicsWidget
+
 from ... import debug as debug
+from ... import functions as fn
 from ... import getConfigOption
-from ...Qt import isQObjectAlive
+from ...Point import Point
+from ...Qt import QtCore, QtGui, isQObjectAlive
+from ..GraphicsWidget import GraphicsWidget
+from ..ItemGroup import ItemGroup
 
 __all__ = ['ViewBox']
 

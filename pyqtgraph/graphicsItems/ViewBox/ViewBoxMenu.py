@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
-from ...Qt import QtCore, QtGui, QT_LIB
+import importlib
+
+from ...Qt import QT_LIB, QtCore, QtGui
 from ...WidgetGroup import WidgetGroup
 
-import importlib
 ui_template = importlib.import_module(
     f'.axisCtrlTemplate_{QT_LIB.lower()}', package=__package__)
 
-import weakref 
+import weakref
 
 translate = QtCore.QCoreApplication.translate
 class ViewBoxMenu(QtGui.QMenu):
@@ -269,5 +269,3 @@ class ViewBoxMenu(QtGui.QMenu):
 
         
 from .ViewBox import ViewBox
-        
-    

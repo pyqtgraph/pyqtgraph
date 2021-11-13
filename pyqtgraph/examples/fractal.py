@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
 """
 Displays an interactive Koch fractal
 """
 
 from functools import reduce
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+
 import numpy as np
+
+import pyqtgraph as pg
 
 app = pg.mkQApp("Fractal Example")
 

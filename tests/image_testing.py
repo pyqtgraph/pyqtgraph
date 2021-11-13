@@ -16,20 +16,18 @@ Procedure for unit-testing with images:
     environment variable PYQTGRAPH_AUDIT_ALL=1.
 """
 
-import time
+import inspect
 import os
 import sys
-import inspect
+import time
 import warnings
-import numpy as np
-
 from pathlib import Path
 
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph import functions as fn
-from pyqtgraph import GraphicsLayoutWidget
-from pyqtgraph import ImageItem, TextItem
+import numpy as np
 
+from pyqtgraph import GraphicsLayoutWidget, ImageItem, TextItem
+from pyqtgraph import functions as fn
+from pyqtgraph.Qt import QtCore, QtGui
 
 tester = None
 

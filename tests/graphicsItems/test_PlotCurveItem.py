@@ -1,4 +1,5 @@
 import numpy as np
+
 import pyqtgraph as pg
 from tests.image_testing import assertImageApproved
 

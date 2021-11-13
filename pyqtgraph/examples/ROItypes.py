@@ -1,8 +1,8 @@
 #!/usr/bin/python -i
-# -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
+
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 pg.setConfigOptions(imageAxisOrder='row-major')
 

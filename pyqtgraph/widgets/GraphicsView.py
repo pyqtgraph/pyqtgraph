@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 """
 GraphicsView.py -   Extension of QGraphicsView
 Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
-from ..Point import Point
-from ..GraphicsScene import GraphicsScene
 from .. import functions as fn
 from .. import getConfigOption
+from ..GraphicsScene import GraphicsScene
+from ..Point import Point
+from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
 
 __all__ = ['GraphicsView']
 

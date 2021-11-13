@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 Simple demonstration of TreeWidget, which is an extension of QTreeWidget
 that allows widgets to be added and dragged within the tree more easily.
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
 
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("TreeWidget Example")
 

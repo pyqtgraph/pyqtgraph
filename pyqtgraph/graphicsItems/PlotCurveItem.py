@@ -1,16 +1,17 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui, QtWidgets
+
 HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
-from .. import Qt
-import math
 import itertools
-import warnings
-import numpy as np
-from .GraphicsObject import GraphicsObject
-from .. import functions as fn
+import math
 import sys
+import warnings
+
+import numpy as np
+
+from .. import Qt, debug
+from .. import functions as fn
 from .. import getConfigOption
-from .. import debug
+from .GraphicsObject import GraphicsObject
 
 __all__ = ['PlotCurveItem']
 

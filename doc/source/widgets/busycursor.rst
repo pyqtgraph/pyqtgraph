@@ -5,4 +5,3 @@ BusyCursor
     :members:
 
     .. automethod:: pyqtgraph.BusyCursor.__init__
-

@@ -5,4 +5,3 @@ GLScatterPlotItem
     :members:
 
     .. automethod:: pyqtgraph.opengl.GLScatterPlotItem.__init__
-

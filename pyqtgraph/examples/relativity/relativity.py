@@ -1,14 +1,15 @@
-# -*- coding: utf-8 -*-
-import numpy as np
 import collections
-import sys, os
+import os
+import sys
+from time import perf_counter
+
+import numpy as np
+
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph import configfile
 from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph.parametertree import types as pTypes
-import pyqtgraph.configfile
-
-from time import perf_counter
+from pyqtgraph.Qt import QtCore, QtGui
 
 
 class RelativityGUI(QtGui.QWidget):
@@ -167,7 +168,7 @@ class RelativityGUI(QtGui.QWidget):
         if filename == '':
             return
         state = self.params.saveState()
-        pg.configfile.writeConfigFile(state, str(filename)) 
+        configfile.writeConfigFile(state, str(filename)) 
         
     def load(self):
         filename = pg.QtGui.QFileDialog.getOpenFileName(self, "Save State..", "", "Config Files (*.cfg)")
@@ -175,7 +176,7 @@ class RelativityGUI(QtGui.QWidget):
             filename = filename[0]  # Qt4/5 API difference
         if filename == '':
             return
-        state = pg.configfile.readConfigFile(str(filename)) 
+        state = configfile.readConfigFile(str(filename)) 
         self.loadState(state)
         
     def loadPreset(self, param, preset):
@@ -183,7 +184,7 @@ class RelativityGUI(QtGui.QWidget):
             return
         path = os.path.abspath(os.path.dirname(__file__))
         fn = os.path.join(path, 'presets', preset+".cfg")
-        state = pg.configfile.readConfigFile(fn)
+        state = configfile.readConfigFile(fn)
         self.loadState(state)
         
     def loadState(self, state):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 DEPRECATED:  The classes below are convenience classes that create a new window
 containting a single, specific widget. These classes are now unnecessary because
@@ -8,11 +7,12 @@ show() method.
 
 __all__ = ['GraphicsWindow', 'TabWindow', 'PlotWindow', 'ImageWindow']
 
-from .Qt import QtCore, QtGui, mkQApp
-from .widgets.PlotWidget import *
-from .imageview import *
-from .widgets.GraphicsLayoutWidget import GraphicsLayoutWidget
 import warnings
+
+from .imageview import *
+from .Qt import QtCore, QtGui, mkQApp
+from .widgets.GraphicsLayoutWidget import GraphicsLayoutWidget
+from .widgets.PlotWidget import *
 
 
 class GraphicsWindow(GraphicsLayoutWidget):

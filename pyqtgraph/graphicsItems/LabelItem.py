@@ -1,9 +1,8 @@
-from ..Qt import QtGui, QtCore
 from .. import functions as fn
+from .. import getConfigOption
+from ..Qt import QtCore, QtGui
 from .GraphicsWidget import GraphicsWidget
 from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
-from .. import getConfigOption
-
 
 __all__ = ['LabelItem']
 

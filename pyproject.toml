@@ -1,0 +1,36 @@
+[tool.black]
+line-length = 88
+target-version = ['py37']
+include = '\.pyi?$'
+exclude = '''
+
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv*
+    | _build
+    | buck-out
+    | build
+    | dist
+  )/
+
+)
+'''
+
+[tool.isort]
+profile = "black"
+honor_noqa = true
+color_output = true
+py_version = 37
+src_paths = ["pyqtgraph", "tests"]
+skip_glob = ["**/*Template*.py", "**/colorama"]
+skip_gitignore = true
+known_third_party = ["QtCore", "QtGui", "QtWidgets"]
+
+[tool.pycln]
+all = true
+exclude = '(Template|__init__.py)'

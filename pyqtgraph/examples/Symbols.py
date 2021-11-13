@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example shows all the scatter plot symbols available in pyqtgraph.
 
@@ -6,7 +5,6 @@ These symbols are used to mark point locations for scatter plots and some line
 plots, similar to "markers" in matplotlib and vispy.
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
 app = pg.mkQApp("Symbols Examples")

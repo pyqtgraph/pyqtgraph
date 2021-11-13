@@ -1,7 +1,7 @@
-from ..Qt import QtGui
 from .. import functions as fn
-from .PlotDataItem import PlotDataItem
+from ..Qt import QtGui
 from .PlotCurveItem import PlotCurveItem
+from .PlotDataItem import PlotDataItem
 
 __all__ = ['FillBetweenItem']
 

@@ -1,7 +1,7 @@
 import numpy as np
 
-from pyqtgraph.Qt import QtWidgets
 from pyqtgraph.parametertree.parameterTypes import QtEnumParameter as enum
+from pyqtgraph.Qt import QtWidgets
 
 dlg = QtWidgets.QFileDialog
 

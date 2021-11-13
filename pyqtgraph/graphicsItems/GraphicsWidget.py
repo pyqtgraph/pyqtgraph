@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtGui
 from .GraphicsItem import GraphicsItem
 

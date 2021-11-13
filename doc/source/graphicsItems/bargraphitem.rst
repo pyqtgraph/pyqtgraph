@@ -5,4 +5,3 @@ BarGraphItem
     :members:
 
     .. automethod:: pyqtgraph.BarGraphItem.__init__
-

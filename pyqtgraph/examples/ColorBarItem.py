@@ -1,11 +1,12 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates the use of ColorBarItem, which displays a simple interactive color bar.
 """
 
 import numpy as np
-from pyqtgraph.Qt import QtWidgets, mkQApp
+
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtWidgets, mkQApp
+
 
 class MainWindow(QtWidgets.QMainWindow):
     """ example application main window """

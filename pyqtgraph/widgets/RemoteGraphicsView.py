@@ -1,11 +1,18 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore, QT_LIB
+from ..Qt import QT_LIB, QtCore, QtGui
+
 if QT_LIB.startswith('PyQt'):
     from ..Qt import sip
+
+import atexit
+import mmap
+import os
+import random
+import sys
+import tempfile
+
+from .. import CONFIG_OPTIONS
 from .. import multiprocess as mp
 from .GraphicsView import GraphicsView
-from .. import CONFIG_OPTIONS
-import mmap, tempfile, os, atexit, sys, random
 
 __all__ = ['RemoteGraphicsView']
 

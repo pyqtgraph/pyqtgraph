@@ -6,4 +6,3 @@ recursive-include tests *
 recursive-include benchmarks *.py
 include doc/Makefile doc/make.bat README.md LICENSE.txt CHANGELOG CODE_OF_CONDUCT.md CONTRIBUTING.md tox.ini
 global-exclude *.pyc
-

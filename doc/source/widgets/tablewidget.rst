@@ -5,4 +5,3 @@ TableWidget
     :members:
 
     .. automethod:: pyqtgraph.TableWidget.__init__
-

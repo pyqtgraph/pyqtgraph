@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 """
 ViewBox is the general-purpose graphical container that allows the user to 
 zoom / pan to inspect any area of a 2D coordinate system. 
@@ -11,8 +10,9 @@ plot area with axes, very similar to the way PlotItem is built.
 ## This example uses a ViewBox to create a PlotWidget-like interface
 
 import numpy as np
-from pyqtgraph.Qt import QtGui, QtCore
+
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("ViewBox Example")
 mw = QtGui.QMainWindow()

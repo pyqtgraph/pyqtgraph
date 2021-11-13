@@ -15,5 +15,3 @@ TickSliderItem
 
     .. automethod:: pyqtgraph.TickSliderItem.__init__
     
-
-

@@ -1,5 +1,9 @@
-# -*- coding: utf-8 -*-
-import os, sys, time, multiprocessing, re
+import multiprocessing
+import os
+import re
+import sys
+import time
+
 from .processes import ForkedProcess
 from .remoteproxy import ClosedError
 

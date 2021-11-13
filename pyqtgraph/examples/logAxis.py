@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrate programmatic setting of log transformation modes.
 """
 
 import numpy as np
+
 import pyqtgraph as pg
 
 app = pg.mkQApp("Log Axis Example")

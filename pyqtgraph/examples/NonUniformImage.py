@@ -1,16 +1,15 @@
-# -*- coding: utf-8 -*-
 """
 Display a non-uniform image.
 This example displays 2-d data as an image with non-uniformly
 distributed sample points.
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph as pg
 import numpy as np
+
+import pyqtgraph as pg
 from pyqtgraph.graphicsItems.GradientEditorItem import Gradients
 from pyqtgraph.graphicsItems.NonUniformImage import NonUniformImage
-
+from pyqtgraph.Qt import QtGui
 
 RPM2RADS = 2 * np.pi / 60
 RADS2RPM = 1 / RPM2RADS

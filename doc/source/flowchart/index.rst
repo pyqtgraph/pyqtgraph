@@ -141,5 +141,3 @@ Flowchart Nodes implement a very useful generalization in data processing by com
     
     ## later on, process data through the node
     filteredData = filterNode.process(inputTerminal=rawData)
-
-

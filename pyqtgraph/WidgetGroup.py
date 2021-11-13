@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 WidgetGroup.py -  WidgetGroup class for easily managing lots of Qt widgets
 Copyright 2010  Luke Campagnola
@@ -8,9 +7,10 @@ This class addresses the problem of having to save and restore the state
 of a large group of widgets. 
 """
 
-from .Qt import QtCore, QtGui
-import weakref, inspect
+import inspect
+import weakref
 
+from .Qt import QtCore, QtGui
 
 __all__ = ['WidgetGroup']
 

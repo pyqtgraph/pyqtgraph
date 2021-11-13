@@ -5,4 +5,3 @@ GraphicsScene
     :members:
 
     .. automethod:: pyqtgraph.GraphicsScene.__init__
-

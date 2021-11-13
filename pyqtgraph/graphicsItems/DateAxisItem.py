@@ -1,10 +1,11 @@
 import sys
-import numpy as np
 import time
+from collections import OrderedDict
 from datetime import datetime, timedelta
 
+import numpy as np
+
 from .AxisItem import AxisItem
-from collections import OrderedDict
 
 __all__ = ['DateAxisItem']
 

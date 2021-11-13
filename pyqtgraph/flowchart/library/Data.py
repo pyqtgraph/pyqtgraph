@@ -1,13 +1,13 @@
-# -*- coding: utf-8 -*-
-from ..Node import Node
-from ...Qt import QtGui, QtCore, QtWidgets
-import numpy as np
-import sys
-from .common import *
-from ...widgets.TreeWidget import TreeWidget
-from ...graphicsItems.LinearRegionItem import LinearRegionItem
 
+import numpy as np
+
+from ...graphicsItems.LinearRegionItem import LinearRegionItem
+from ...Qt import QtCore, QtGui, QtWidgets
+from ...widgets.TreeWidget import TreeWidget
+from ..Node import Node
 from . import functions
+from .common import *
+
 
 class ColumnSelectNode(Node):
     """Select named columns from a record array or MetaArray."""

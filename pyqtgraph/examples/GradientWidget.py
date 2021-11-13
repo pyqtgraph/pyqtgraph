@@ -1,14 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates the appearance / interactivity of GradientWidget
 (without actually doing anything useful with it)
 """
 
+
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
-
-
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("Gradiant Widget Example")
 w = QtGui.QMainWindow()
@@ -47,6 +44,3 @@ l.addWidget(label, 1, 1)
 
 if __name__ == '__main__':
     pg.exec()
-
-
-

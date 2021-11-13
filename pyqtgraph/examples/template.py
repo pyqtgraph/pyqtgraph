@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 Description of example
 """
 
+import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, mkQApp
-import numpy as np
 
 app = mkQApp()
 

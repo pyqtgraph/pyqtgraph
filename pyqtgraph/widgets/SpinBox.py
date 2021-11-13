@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
-from math import isnan, isinf
 import decimal
 import re
+from math import isinf, isnan
 
-from ..Qt import QtGui, QtCore
-from ..SignalProxy import SignalProxy
 from .. import functions as fn
-
+from ..Qt import QtCore, QtGui
+from ..SignalProxy import SignalProxy
 
 __all__ = ['SpinBox']
 

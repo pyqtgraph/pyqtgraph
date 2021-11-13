@@ -1,9 +1,10 @@
-from ..Qt import QtGui, QtCore
-from .UIGraphicsItem import *
 import numpy as np
-from ..Point import Point
+
 from .. import functions as fn
 from .. import getConfigOption
+from ..Point import Point
+from ..Qt import QtCore, QtGui
+from .UIGraphicsItem import *
 
 __all__ = ['GridItem']
 class GridItem(UIGraphicsItem):

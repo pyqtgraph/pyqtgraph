@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 ################################################################################
 ## Form generated from reading UI file 'template.ui'
@@ -154,4 +153,3 @@ class Ui_Form(object):
         self.exceptionInfoLabel.setText(QCoreApplication.translate("Form", u"Stack Trace", None))
         self.label.setText(QCoreApplication.translate("Form", u"Filter (regex):", None))
     # retranslateUi
-

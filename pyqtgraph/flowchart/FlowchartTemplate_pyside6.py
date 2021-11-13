@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 ################################################################################
 ## Form generated from reading UI file 'FlowchartTemplate.ui'
@@ -66,4 +65,3 @@ class Ui_Form(object):
         self.selDescLabel.setText("")
         self.selNameLabel.setText("")
     # retranslateUi
-

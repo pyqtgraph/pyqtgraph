@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 from pyqtgraph.GraphicsScene import GraphicsScene
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("GraphicsScene Example")
 win = pg.GraphicsView()

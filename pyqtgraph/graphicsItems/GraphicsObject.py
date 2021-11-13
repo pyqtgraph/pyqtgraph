@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtGui, QT_LIB
+from ..Qt import QT_LIB, QtGui
+
 if QT_LIB.startswith('PyQt'):
     from ..Qt import sip
+
 from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsObject']

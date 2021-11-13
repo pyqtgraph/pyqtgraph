@@ -1,16 +1,15 @@
-# -*- coding: utf-8 -*-
+import warnings
+from collections.abc import Callable
+
 import numpy
 
-from .GraphicsObject import GraphicsObject
 from .. import debug as debug
 from .. import functions as fn
 from .. import getConfigOption
 from ..Point import Point
-from ..Qt import QtGui, QtCore
+from ..Qt import QtCore, QtGui
 from ..util.cupy_helper import getCupy
-
-import warnings
-from collections.abc import Callable
+from .GraphicsObject import GraphicsObject
 
 translate = QtCore.QCoreApplication.translate
 

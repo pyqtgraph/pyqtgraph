@@ -1,13 +1,15 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates plotting with color gradients.
 It also shows multiple plots with timed rolling updates
 """
 
-import numpy as np
 import time
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets, mkQApp
+
+import numpy as np
+
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, mkQApp
+
 
 class DataSource(object):
     """ source of buffered demonstration data """

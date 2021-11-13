@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates the use of pyqtgraph's dock widget system.
 
@@ -12,12 +11,13 @@ docks were created with the notion that the entire window (or any portion of it)
 would consist of dockable components.
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
-import pyqtgraph.console
 import numpy as np
 
-from pyqtgraph.dockarea import *
+import pyqtgraph as pg
+from pyqtgraph.console import ConsoleWidget
+from pyqtgraph.dockarea.Dock import Dock
+from pyqtgraph.dockarea.DockArea import DockArea
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp("DockArea Example")
 win = QtGui.QMainWindow()
@@ -79,7 +79,7 @@ saveBtn.clicked.connect(save)
 restoreBtn.clicked.connect(load)
 
 
-w2 = pg.console.ConsoleWidget()
+w2 = ConsoleWidget()
 d2.addWidget(w2)
 
 ## Hide title bar on dock 3

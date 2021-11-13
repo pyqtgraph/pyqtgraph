@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui, QtWidgets
 import weakref
-from ..graphicsItems.GraphicsObject import GraphicsObject
+
 from .. import functions as fn
+from ..graphicsItems.GraphicsObject import GraphicsObject
 from ..Point import Point
+from ..Qt import QtCore, QtGui, QtWidgets
 
 translate = QtCore.QCoreApplication.translate
 

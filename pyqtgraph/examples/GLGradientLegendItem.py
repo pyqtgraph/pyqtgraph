@@ -1,6 +1,7 @@
+import numpy
+
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-import numpy
 
 app = pg.mkQApp()
 w = gl.GLViewWidget()

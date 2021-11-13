@@ -2,6 +2,7 @@ import gc
 
 from ..Qt import QtCore
 
+
 class GarbageCollector(object):
     '''
     Disable automatic garbage collection and instead collect manually

@@ -1,13 +1,14 @@
+import operator
 import warnings
-from math import hypot
+import weakref
 from collections import OrderedDict
 from functools import reduce
-from ..Qt import QtGui, QtCore, isQObjectAlive
+from math import hypot
+
+from .. import functions as fn
 from ..GraphicsScene import GraphicsScene
 from ..Point import Point
-from .. import functions as fn
-import weakref
-import operator
+from ..Qt import QtCore, QtGui, isQObjectAlive
 
 __all__ = ['GraphicsItem']
 

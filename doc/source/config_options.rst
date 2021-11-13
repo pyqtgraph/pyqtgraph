@@ -37,4 +37,3 @@ crashWarning       bool                False              If True, print warning
 .. autofunction:: pyqtgraph.setConfigOptions
 
 .. autofunction:: pyqtgraph.getConfigOption
-

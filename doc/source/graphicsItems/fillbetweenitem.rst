@@ -5,4 +5,3 @@ FillBetweenItem
     :members:
 
     .. automethod:: pyqtgraph.FillBetweenItem.__init__
-

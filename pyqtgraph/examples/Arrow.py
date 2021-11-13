@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Display an animated arrowhead following a curve.
 This example uses the CurveArrow class, which is a combination
@@ -9,9 +8,9 @@ To attach other types of item to a curve, use CurvePoint.
 """
 
 import numpy as np
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph as pg
 
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp("Arrow Example")
 

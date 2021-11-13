@@ -1,9 +1,9 @@
 # Build with `python setup.py build_exe`
-from cx_Freeze import setup, Executable
+import shutil
 from pathlib import Path
 
-import shutil
-from glob import glob
+from cx_Freeze import Executable, setup
+
 # Remove the build folder
 shutil.rmtree("build", ignore_errors=True)
 shutil.rmtree("dist", ignore_errors=True)
@@ -18,6 +18,7 @@ excludes = ['cvxopt','_gtkagg', '_tkagg', 'bsddb', 'curses', 'email', 'pywin.deb
 # Workaround for making sure the templates are included in the frozen app package
 include_files = []
 import pyqtgraph
+
 pg_folder = Path(pyqtgraph.__file__).parent
 templates = pg_folder.rglob('*template*.py')
 sources = [str(w) for w in templates]
@@ -44,5 +45,3 @@ setup(name = "cx_freeze plot test",
       description = "cx_freeze plot test",
       options = {"build_exe": build_exe_options},
       executables = [Executable("plotTest.py", base=base)])
-
-

@@ -1,9 +1,10 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore, QT_LIB
+import importlib
+
+from .. import ItemGroup, SRTTransform
 from .. import functions as fn
 from ..graphicsItems.ROI import ROI
-from .. import SRTTransform, ItemGroup
-import importlib
+from ..Qt import QT_LIB, QtCore, QtGui
+
 ui_template = importlib.import_module(
     f'.TransformGuiTemplate_{QT_LIB.lower()}', package=__package__)
 
