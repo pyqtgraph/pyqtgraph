@@ -7,7 +7,7 @@ from numpy.testing import assert_array_almost_equal
 
 import pyqtgraph as pg
 from pyqtgraph.functions import arrayToQPath, eq
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtGui, QtWidgets
 
 np.random.seed(12345)
 

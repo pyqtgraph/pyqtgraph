@@ -8,7 +8,7 @@ from math import hypot
 from .. import functions as fn
 from ..GraphicsScene import GraphicsScene
 from ..Point import Point
-from ..Qt import QtCore, QtGui, isQObjectAlive
+from ..Qt import QtCore, QtGui, QtWidgets, isQObjectAlive
 
 __all__ = ['GraphicsItem']
 

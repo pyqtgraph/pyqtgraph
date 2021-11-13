@@ -9,7 +9,7 @@ import pyqtgraph as pg
 from pyqtgraph import configfile
 from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph.parametertree import types as pTypes
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 
 class RelativityGUI(QtWidgets.QWidget):

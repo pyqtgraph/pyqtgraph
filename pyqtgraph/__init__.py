@@ -14,7 +14,7 @@ import numpy  # # pyqtgraph requires numpy
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt and PySide.
-from .Qt import QtCore, QtGui
+from .Qt import QtCore, QtGui, QtWidgets
 from .Qt import exec_ as exec
 from .Qt import mkQApp
 

@@ -6,7 +6,7 @@ import numpy as np
 from .. import debug
 from .. import functions as fn
 from ..parametertree import Parameter
-from ..Qt import QtCore, QtGui, QtSvg
+from ..Qt import QtCore, QtGui, QtSvg, QtWidgets
 from .Exporter import Exporter
 
 translate = QtCore.QCoreApplication.translate

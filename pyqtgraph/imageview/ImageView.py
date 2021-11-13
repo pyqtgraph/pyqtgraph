@@ -19,7 +19,7 @@ from time import perf_counter
 import numpy as np
 
 from .. import functions as fn
-from ..Qt import QT_LIB, QtCore, QtGui
+from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
 
 ui_template = importlib.import_module(
     f'.ImageViewTemplate_{QT_LIB.lower()}', package=__package__)

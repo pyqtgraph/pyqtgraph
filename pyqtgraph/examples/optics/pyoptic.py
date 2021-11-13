@@ -7,7 +7,7 @@ import numpy as np
 
 import pyqtgraph as pg
 from pyqtgraph import Point
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 
 class GlassDB:

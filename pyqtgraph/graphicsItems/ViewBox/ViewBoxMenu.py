@@ -1,6 +1,6 @@
 import importlib
 
-from ...Qt import QT_LIB, QtCore, QtGui
+from ...Qt import QT_LIB, QtCore, QtGui, QtWidgets
 from ...WidgetGroup import WidgetGroup
 
 ui_template = importlib.import_module(

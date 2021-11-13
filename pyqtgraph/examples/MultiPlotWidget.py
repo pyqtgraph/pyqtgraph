@@ -5,7 +5,7 @@ from numpy import linspace
 
 import pyqtgraph as pg
 from pyqtgraph import MultiPlotWidget
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtGui, QtWidgets
 
 try:
     from pyqtgraph.metaarray import *

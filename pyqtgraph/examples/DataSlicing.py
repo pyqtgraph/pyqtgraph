@@ -7,7 +7,7 @@ a 2D plane and interpolate data along that plane to generate a slice image
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtGui, QtWidgets
 
 app = pg.mkQApp("Data Slicing Example")
 

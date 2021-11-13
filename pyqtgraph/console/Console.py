@@ -8,7 +8,7 @@ import traceback
 from .. import exceptionHandling as exceptionHandling
 from .. import getConfigOption
 from ..functions import SignalBlock
-from ..Qt import QT_LIB, QtCore, QtGui
+from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
 
 ui_template = importlib.import_module(
     f'.template_{QT_LIB.lower()}', package=__package__)

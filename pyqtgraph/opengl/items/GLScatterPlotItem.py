@@ -2,7 +2,7 @@ from OpenGL.GL import *  # noqa
 import numpy as np
 
 from ... import functions as fn
-from ...Qt import QtGui
+from ...Qt import QtGui, QtWidgets
 from .. import shaders
 from ..GLGraphicsItem import GLGraphicsItem
 

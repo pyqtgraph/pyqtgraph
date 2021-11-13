@@ -6,7 +6,7 @@ letting go of the joystick).
 """
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 app = pg.mkQApp("Joystick Button Example")
 mw = QtWidgets.QMainWindow()

@@ -5,7 +5,7 @@ import numpy as np
 from .. import functions as fn
 from .. import mkBrush, mkPen
 from ..colormap import ColorMap
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['NonUniformImage']

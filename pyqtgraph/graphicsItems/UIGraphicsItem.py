@@ -1,4 +1,4 @@
-from ..Qt import QT_LIB, QtCore, QtGui
+from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
 from .GraphicsObject import GraphicsObject
 
 if QT_LIB.startswith('PyQt'):

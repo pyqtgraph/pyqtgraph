@@ -18,7 +18,7 @@ import numpy as np
 
 from . import Qt, debug, reload
 from .metaarray import MetaArray
-from .Qt import QT_LIB, QtCore, QtGui
+from .Qt import QT_LIB, QtCore, QtGui, QtWidgets
 from .util.cupy_helper import getCupy
 from .util.numba_helper import getNumbaFunctions
 

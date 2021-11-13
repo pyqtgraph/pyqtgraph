@@ -1,6 +1,6 @@
 import warnings
 
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ['VerticalLabel']
 #class VerticalLabel(QtWidgets.QLabel):

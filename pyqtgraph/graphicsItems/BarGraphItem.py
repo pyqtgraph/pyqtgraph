@@ -2,7 +2,7 @@ import numpy as np
 
 from .. import functions as fn
 from .. import getConfigOption
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['BarGraphItem']

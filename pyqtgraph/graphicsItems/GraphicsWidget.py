@@ -1,4 +1,4 @@
-from ..Qt import QtGui
+from ..Qt import QtGui, QtWidgets
 from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsWidget']

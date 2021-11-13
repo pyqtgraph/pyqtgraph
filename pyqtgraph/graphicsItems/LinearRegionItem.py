@@ -1,6 +1,6 @@
 from .. import debug as debug
 from .. import functions as fn
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsObject import GraphicsObject
 from .InfiniteLine import InfiniteLine
 

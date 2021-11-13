@@ -5,7 +5,7 @@ Use a HistogramLUTWidget to control the contrast / coloration of an image.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtGui, QtWidgets
 
 app = pg.mkQApp("Histogram Lookup Table Example")
 win = QtWidgets.QMainWindow()

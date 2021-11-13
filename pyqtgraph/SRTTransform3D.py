@@ -2,7 +2,7 @@ from math import atan2, degrees
 
 import numpy as np
 
-from .Qt import QtCore, QtGui
+from .Qt import QtCore, QtGui, QtWidgets
 from .Transform3D import Transform3D
 from .Vector import Vector
 

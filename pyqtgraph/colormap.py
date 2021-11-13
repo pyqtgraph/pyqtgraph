@@ -5,7 +5,7 @@ from os import listdir, path
 import numpy as np
 
 from .functions import clip_array, clip_scalar, colorDistance, eq, mkColor
-from .Qt import QtCore, QtGui
+from .Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ['ColorMap']
 

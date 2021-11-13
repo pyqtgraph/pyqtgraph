@@ -27,7 +27,7 @@ import numpy as np
 
 from pyqtgraph import GraphicsLayoutWidget, ImageItem, TextItem
 from pyqtgraph import functions as fn
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 tester = None
 

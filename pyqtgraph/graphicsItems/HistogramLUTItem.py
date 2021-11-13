@@ -11,7 +11,7 @@ import numpy as np
 from .. import debug as debug
 from .. import functions as fn
 from ..Point import Point
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from .AxisItem import *
 from .GradientEditorItem import *
 from .GraphicsWidget import GraphicsWidget

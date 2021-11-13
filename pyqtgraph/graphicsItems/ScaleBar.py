@@ -1,7 +1,7 @@
 from .. import functions as fn
 from .. import getConfigOption
 from ..Point import Point
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsObject import *
 from .GraphicsWidgetAnchor import *
 from .TextItem import TextItem

@@ -1,6 +1,6 @@
 # based on https://github.com/art1415926535/PyQt5-syntax-highlighting
 
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 QRegExp = QtCore.QRegExp
 

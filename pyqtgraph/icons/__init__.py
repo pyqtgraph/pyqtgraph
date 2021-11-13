@@ -1,7 +1,7 @@
 import os.path as op
 import warnings
 
-from ..Qt import QtGui
+from ..Qt import QtGui, QtWidgets
 
 __all__ = ['getGraphIcon', 'getGraphPixmap']
 

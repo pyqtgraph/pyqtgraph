@@ -3,7 +3,7 @@ import re
 from math import isinf, isnan
 
 from .. import functions as fn
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from ..SignalProxy import SignalProxy
 
 __all__ = ['SpinBox']

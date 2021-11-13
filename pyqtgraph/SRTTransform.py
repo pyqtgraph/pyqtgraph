@@ -4,7 +4,7 @@ from math import atan2, degrees
 import numpy as np
 
 from .Point import Point
-from .Qt import QtCore, QtGui
+from .Qt import QtCore, QtGui, QtWidgets
 
 
 class SRTTransform(QtGui.QTransform):

@@ -4,7 +4,7 @@ or imported from Matplotlib of ColorCET.
 """
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 app = pg.mkQApp()
 

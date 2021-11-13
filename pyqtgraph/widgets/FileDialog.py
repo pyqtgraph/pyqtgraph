@@ -1,6 +1,6 @@
 import sys
 
-from ..Qt import QtGui
+from ..Qt import QtGui, QtWidgets
 
 __all__ = ['FileDialog']
 

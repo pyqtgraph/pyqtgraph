@@ -5,7 +5,7 @@ Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from ..graphicsItems.PlotItem import *
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsView import *
 
 __all__ = ['PlotWidget']

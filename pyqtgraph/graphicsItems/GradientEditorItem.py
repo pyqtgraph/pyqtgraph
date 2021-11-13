@@ -6,7 +6,7 @@ import numpy as np
 
 from .. import functions as fn
 from ..colormap import ColorMap
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from ..widgets.SpinBox import SpinBox
 from .GraphicsWidget import GraphicsWidget
 

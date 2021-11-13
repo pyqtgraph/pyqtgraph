@@ -1,7 +1,7 @@
 import sys
 from collections import OrderedDict
 
-from ..Qt import QtGui
+from ..Qt import QtGui, QtWidgets
 
 __all__ = ['ComboBox']
 

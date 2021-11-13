@@ -12,7 +12,7 @@ from time import perf_counter
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QT_LIB, QtCore, QtGui
+from pyqtgraph.Qt import QT_LIB, QtCore, QtGui, QtWidgets
 
 pg.setConfigOption('imageAxisOrder', 'row-major')
 

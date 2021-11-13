@@ -3,7 +3,7 @@ from time import perf_counter
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtGui, QtWidgets
 
 app = pg.mkQApp()
 plt = pg.PlotWidget()

@@ -1,5 +1,5 @@
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui, QtTest
+from pyqtgraph.Qt import QtCore, QtGui, QtTest, QtWidgets
 from tests.ui_testing import mouseDrag, mouseMove
 
 pg.mkQApp()

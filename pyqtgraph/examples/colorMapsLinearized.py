@@ -6,7 +6,7 @@ or using the `ColorMap`'s `linearize()` method.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 name_list = (
     'warm','neutral','cool',

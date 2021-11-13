@@ -1,6 +1,6 @@
 from OpenGL.GL import *  # noqa
 from ... import functions as fn
-from ...Qt import QtGui
+from ...Qt import QtGui, QtWidgets
 from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLBoxItem']

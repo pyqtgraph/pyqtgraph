@@ -1,7 +1,7 @@
 from OpenGL.GL import *  # noqa
 import numpy as np
 
-from ...Qt import QtGui
+from ...Qt import QtGui, QtWidgets
 from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLVolumeItem']

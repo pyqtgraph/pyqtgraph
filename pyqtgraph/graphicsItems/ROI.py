@@ -21,7 +21,7 @@ from .. import functions as fn
 
 #from numpy.linalg import norm
 from ..Point import Point
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from ..SRTTransform import SRTTransform
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem

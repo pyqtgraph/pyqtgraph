@@ -1,6 +1,6 @@
 from .. import functions as fn
 from .. import getConfigOption
-from ..Qt import QtGui
+from ..Qt import QtGui, QtWidgets
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['ErrorBarItem']

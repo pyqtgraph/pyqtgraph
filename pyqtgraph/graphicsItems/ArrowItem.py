@@ -1,7 +1,7 @@
 from math import hypot
 
 from .. import functions as fn
-from ..Qt import QtGui
+from ..Qt import QtGui, QtWidgets
 
 __all__ = ['ArrowItem']
 

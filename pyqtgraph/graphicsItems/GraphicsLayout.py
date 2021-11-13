@@ -1,5 +1,5 @@
 from .. import functions as fn
-from ..Qt import QtGui
+from ..Qt import QtGui, QtWidgets
 from .GraphicsWidget import GraphicsWidget
 from .LabelItem import LabelItem
 from .PlotItem import PlotItem

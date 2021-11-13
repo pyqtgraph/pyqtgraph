@@ -408,7 +408,7 @@ class RemoteQtEventHandler(RemoteEventHandler):
         try:
             RemoteEventHandler.processRequests(self)
         except ClosedError:
-            from ..Qt import QtGui
+            from ..Qt import QtGui, QtWidgets
             QtWidgets.QApplication.instance().quit()
             self.timer.stop()
             #raise SystemExit
@@ -441,7 +441,10 @@ class QtProcess(Process):
     def __init__(self, **kwds):
         if 'target' not in kwds:
             kwds['target'] = startQtEventLoop
-        from ..Qt import QtGui  # # avoid module-level import to keep bootstrap snappy.
+        from ..Qt import (  # # avoid module-level import to keep bootstrap snappy.
+            QtGui,
+            QtWidgets,
+        )
         self._processRequests = kwds.pop('processRequests', True)
         if self._processRequests and QtWidgets.QApplication.instance() is None:
             raise Exception("Must create QApplication before starting QtProcess, or use QtProcess(processRequests=False)")
@@ -477,7 +480,7 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
     conn = multiprocessing.connection.Client(('localhost', int(port)), authkey=authkey)
     if debug:
         cprint.cout(debug, '[%d] connected; starting remote proxy.\n' % os.getpid(), -1)
-    from ..Qt import QtGui
+    from ..Qt import QtGui, QtWidgets
     app = QtWidgets.QApplication.instance()
     #print app
     if app is None:

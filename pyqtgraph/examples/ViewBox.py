@@ -12,7 +12,7 @@ plot area with axes, very similar to the way PlotItem is built.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 app = pg.mkQApp("ViewBox Example")
 mw = QtWidgets.QMainWindow()

@@ -5,7 +5,7 @@ if __name__ == '__main__':
     sys.path.insert(0, os.path.join(path, '..', '..'))
 
 from .. import functions as fn
-from ..Qt import QtGui
+from ..Qt import QtGui, QtWidgets
 from .UIGraphicsItem import UIGraphicsItem
 
 __all__ = ['VTickGroup']

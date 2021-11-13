@@ -1,5 +1,5 @@
 from ..parametertree import Parameter
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from .Exporter import Exporter
 
 translate = QtCore.QCoreApplication.translate

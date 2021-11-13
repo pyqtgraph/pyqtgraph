@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui, QtTest
+from pyqtgraph.Qt import QtCore, QtGui, QtTest, QtWidgets
 from tests.image_testing import assertImageApproved
 from tests.ui_testing import mouseClick, mouseDrag, mouseMove, resizeWindow
 

@@ -8,7 +8,7 @@ from .. import debug as debug
 from .. import functions as fn
 from .. import getConfigOption
 from ..Point import Point
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsWidget import GraphicsWidget
 
 __all__ = ['AxisItem']
