@@ -37,6 +37,9 @@ c4, pi4 = mpw.addChart("Dataset 4", x_axis="sx3", y_axis="sy3")
 # make and display chart
 mpw.makeLayout()
 
+mpw.setAxisInvert("sy1", invert=True)
+mpw.setAxisInvert("sx1", invert=True)
+
 data1 = np.array(np.sin(np.linspace(0, 2 * np.pi, num=1000)))
 c1.setData(data1, pen=pg.mkPen('r', width=2))
 data2 = data1 * 2
