@@ -10,7 +10,7 @@ __all__ = ['GraphicsWindow', 'TabWindow', 'PlotWindow', 'ImageWindow']
 import warnings
 
 from .imageview import *
-from .Qt import QtCore, QtGui, mkQApp
+from .Qt import QtCore, QtWidgets, mkQApp
 from .widgets.GraphicsLayoutWidget import GraphicsLayoutWidget
 from .widgets.PlotWidget import *
 
@@ -36,7 +36,7 @@ class GraphicsWindow(GraphicsLayoutWidget):
         self.show()
         
 
-class TabWindow(QtGui.QMainWindow):
+class TabWindow(QtWidgets.QMainWindow):
     """
     (deprecated)
     """
@@ -46,9 +46,9 @@ class TabWindow(QtGui.QMainWindow):
             DeprecationWarning, stacklevel=2
         )
         mkQApp()
-        QtGui.QMainWindow.__init__(self)
+        QtWidgets.QMainWindow.__init__(self)
         self.resize(*size)
-        self.cw = QtGui.QTabWidget()
+        self.cw = QtWidgets.QTabWidget()
         self.setCentralWidget(self.cw)
         if title is not None:
             self.setWindowTitle(title)
@@ -71,7 +71,7 @@ class PlotWindow(PlotWidget):
             DeprecationWarning, stacklevel=2
         )    
         mkQApp()
-        self.win = QtGui.QMainWindow()
+        self.win = QtWidgets.QMainWindow()
         PlotWidget.__init__(self, **kargs)
         self.win.setCentralWidget(self)
         for m in ['resize']:
@@ -98,7 +98,7 @@ class ImageWindow(ImageView):
             DeprecationWarning, stacklevel=2
         ) 
         mkQApp()
-        self.win = QtGui.QMainWindow()
+        self.win = QtWidgets.QMainWindow()
         self.win.resize(800,600)
         if 'title' in kargs:
             self.win.setWindowTitle(kargs['title'])

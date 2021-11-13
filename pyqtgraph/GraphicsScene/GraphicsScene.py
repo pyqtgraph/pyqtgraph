@@ -5,7 +5,7 @@ from time import perf_counter, perf_counter_ns
 from .. import debug as debug
 from .. import getConfigOption
 from ..Point import Point
-from ..Qt import QT_LIB, QtCore, QtGui, isQObjectAlive
+from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets, isQObjectAlive
 from .mouseEvents import *
 
 getMillis = lambda: perf_counter_ns() // 10 ** 6
@@ -20,7 +20,7 @@ else:
 
 __all__ = ['GraphicsScene']
 
-class GraphicsScene(QtGui.QGraphicsScene):
+class GraphicsScene(QtWidgets.QGraphicsScene):
     """
     Extension of QGraphicsScene that implements a complete, parallel mouse event system.
     (It would have been preferred to just alter the way QGraphicsScene creates and delivers 
@@ -99,7 +99,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         )
 
     def __init__(self, clickRadius=2, moveDistance=5, parent=None):
-        QtGui.QGraphicsScene.__init__(self, parent)
+        QtWidgets.QGraphicsScene.__init__(self, parent)
         self.setClickRadius(clickRadius)
         self.setMoveDistance(moveDistance)
         self.exportDirectory = None
@@ -121,7 +121,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         
     def render(self, *args):
         self.prepareForPaint()
-        return QtGui.QGraphicsScene.render(self, *args)
+        return QtWidgets.QGraphicsScene.render(self, *args)
 
     def prepareForPaint(self):
         """Called before every render. This method will inform items that the scene is about to
@@ -394,26 +394,26 @@ class GraphicsScene(QtGui.QGraphicsScene):
 
     def addItem(self, item):
         # extend QGraphicsScene.addItem to emit a sigItemAdded signal
-        ret = QtGui.QGraphicsScene.addItem(self, item)
+        ret = QtWidgets.QGraphicsScene.addItem(self, item)
         self.sigItemAdded.emit(item)
         return ret
 
     def removeItem(self, item):
         # extend QGraphicsScene.removeItem to emit a sigItemRemoved signal
-        ret = QtGui.QGraphicsScene.removeItem(self, item)
+        ret = QtWidgets.QGraphicsScene.removeItem(self, item)
         self.sigItemRemoved.emit(item)
         return ret
         
     def items(self, *args):
-        items = QtGui.QGraphicsScene.items(self, *args)
+        items = QtWidgets.QGraphicsScene.items(self, *args)
         return self.translateGraphicsItems(items)
     
     def selectedItems(self, *args):
-        items = QtGui.QGraphicsScene.selectedItems(self, *args)
+        items = QtWidgets.QGraphicsScene.selectedItems(self, *args)
         return self.translateGraphicsItems(items)
 
     def itemAt(self, *args):
-        item = QtGui.QGraphicsScene.itemAt(self, *args)
+        item = QtWidgets.QGraphicsScene.itemAt(self, *args)
         return self.translateGraphicsItem(item)
 
     def itemsNearEvent(self, event, selMode=QtCore.Qt.ItemSelectionMode.IntersectsItemShape, sortOrder=QtCore.Qt.SortOrder.DescendingOrder, hoverable=False):
@@ -482,10 +482,10 @@ class GraphicsScene(QtGui.QGraphicsScene):
         ### same pyqt bug -- mouseEvent.widget() doesn't give us the original python object.
         ### [[doesn't seem to work correctly]]
         #if HAVE_SIP and isinstance(self, sip.wrapper):
-            #addr = sip.unwrapinstance(sip.cast(widget, QtGui.QWidget))
+            #addr = sip.unwrapinstance(sip.cast(widget, QtWidgets.QWidget))
             ##print "convert", widget, addr
             #for v in self.views():
-                #addr2 = sip.unwrapinstance(sip.cast(v, QtGui.QWidget))
+                #addr2 = sip.unwrapinstance(sip.cast(v, QtWidgets.QWidget))
                 ##print "   check:", v, addr2
                 #if addr2 == addr:
                     #return v
@@ -539,7 +539,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
             menu.addSeparator()
 
         for m in menusToAdd:
-            if isinstance(m, QtGui.QMenu):
+            if isinstance(m, QtWidgets.QMenu):
                 menu.addAction(m.menuAction())
             elif isinstance(m, QtGui.QAction):
                 menu.addAction(m)

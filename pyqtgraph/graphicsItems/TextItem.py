@@ -2,7 +2,7 @@ from math import atan2, degrees
 
 from .. import functions as fn
 from ..Point import Point
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['TextItem']
@@ -47,7 +47,7 @@ class TextItem(GraphicsObject):
         self.rotateAxis = None if rotateAxis is None else Point(rotateAxis)
         #self.angle = 0
         GraphicsObject.__init__(self)
-        self.textItem = QtGui.QGraphicsTextItem()
+        self.textItem = QtWidgets.QGraphicsTextItem()
         self.textItem.setParentItem(self)
         self._lastTransform = None
         self._lastScene = None
@@ -75,7 +75,7 @@ class TextItem(GraphicsObject):
         """
         Set the plain text to be rendered by this item. 
         
-        See QtGui.QGraphicsTextItem.setPlainText().
+        See QtWidgets.QGraphicsTextItem.setPlainText().
         """
         if text != self.toPlainText():
             self.textItem.setPlainText(text)
@@ -88,7 +88,7 @@ class TextItem(GraphicsObject):
         """
         Set the HTML code to be rendered by this item. 
         
-        See QtGui.QGraphicsTextItem.setHtml().
+        See QtWidgets.QGraphicsTextItem.setHtml().
         """
         if self.toHtml() != html:
             self.textItem.setHtml(html)
@@ -104,7 +104,7 @@ class TextItem(GraphicsObject):
         If the text requires more space than the width limit, then it will be
         wrapped into multiple lines.
         
-        See QtGui.QGraphicsTextItem.setTextWidth().
+        See QtWidgets.QGraphicsTextItem.setTextWidth().
         """
         self.textItem.setTextWidth(*args)
         self.updateTextPos()
@@ -113,7 +113,7 @@ class TextItem(GraphicsObject):
         """
         Set the font for this text. 
         
-        See QtGui.QGraphicsTextItem.setFont().
+        See QtWidgets.QGraphicsTextItem.setFont().
         """
         self.textItem.setFont(*args)
         self.updateTextPos()
@@ -137,7 +137,7 @@ class TextItem(GraphicsObject):
         """
         Set the color for this text.
         
-        See QtGui.QGraphicsItem.setDefaultTextColor().
+        See QtWidgets.QGraphicsItem.setDefaultTextColor().
         """
         self.color = fn.mkColor(color)
         self.textItem.setDefaultTextColor(self.color)

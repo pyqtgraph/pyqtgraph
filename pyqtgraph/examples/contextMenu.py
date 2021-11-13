@@ -10,7 +10,7 @@ displayed as well.
 
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: context menu')
@@ -84,7 +84,7 @@ class MenuBox(pg.GraphicsObject):
     # a context menu that includes their parents' menus.
     def getContextMenus(self, event=None):
         if self.menu is None:
-            self.menu = QtGui.QMenu()
+            self.menu = QtWidgets.QMenu()
             self.menu.setTitle(self.name+ " options..")
             
             green = QtGui.QAction("Turn green", self.menu)
@@ -97,8 +97,8 @@ class MenuBox(pg.GraphicsObject):
             self.menu.addAction(blue)
             self.menu.green = blue
             
-            alpha = QtGui.QWidgetAction(self.menu)
-            alphaSlider = QtGui.QSlider()
+            alpha = QtWidgets.QWidgetAction(self.menu)
+            alphaSlider = QtWidgets.QSlider()
             alphaSlider.setOrientation(QtCore.Qt.Orientation.Horizontal)
             alphaSlider.setMaximum(255)
             alphaSlider.setValue(255)

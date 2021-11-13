@@ -5,17 +5,17 @@ Demonstrates the appearance / interactivity of GradientWidget
 
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("Gradiant Widget Example")
-w = QtGui.QMainWindow()
+w = QtWidgets.QMainWindow()
 w.show()
 w.setWindowTitle('pyqtgraph example: GradientWidget')
 w.setGeometry(10, 50, 400, 400)
-cw = QtGui.QWidget()
+cw = QtWidgets.QWidget()
 w.setCentralWidget(cw)
 
-l = QtGui.QGridLayout()
+l = QtWidgets.QGridLayout()
 l.setSpacing(0)
 cw.setLayout(l)
 
@@ -25,7 +25,7 @@ w2 = pg.GradientWidget(orientation='right', allowAdd=False)
 w3 = pg.GradientWidget(orientation='bottom', allowAdd=False, allowRemove=False)
 w4 = pg.GradientWidget(orientation='left')
 w4.loadPreset('spectrum')
-label = QtGui.QLabel("""
+label = QtWidgets.QLabel("""
 - Click a triangle to change its color
 - Drag triangles to move
 - Right-click a gradient to load triangle presets

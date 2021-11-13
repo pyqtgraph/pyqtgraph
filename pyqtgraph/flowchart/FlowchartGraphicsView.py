@@ -1,5 +1,5 @@
 from ..graphicsItems.ViewBox import ViewBox
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from ..widgets.GraphicsView import GraphicsView
 
 translate = QtCore.QCoreApplication.translate
@@ -27,7 +27,7 @@ class FlowchartViewBox(ViewBox):
         
     def getMenu(self, ev):
         ## called by ViewBox to create a new context menu
-        self._fc_menu = QtGui.QMenu()
+        self._fc_menu = QtWidgets.QMenu()
         self._subMenus = self.getContextMenus(ev)
         for menu in self._subMenus:
             self._fc_menu.addMenu(menu)

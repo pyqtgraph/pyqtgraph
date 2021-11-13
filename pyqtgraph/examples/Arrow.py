@@ -10,11 +10,11 @@ To attach other types of item to a curve, use CurvePoint.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtWidgets
 
 app = pg.mkQApp("Arrow Example")
 
-w = QtGui.QMainWindow()
+w = QtWidgets.QMainWindow()
 cw = pg.GraphicsLayoutWidget()
 w.show()
 w.resize(400,600)

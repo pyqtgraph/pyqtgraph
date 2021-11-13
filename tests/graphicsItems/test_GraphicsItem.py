@@ -24,7 +24,7 @@ def test_getViewWidget_deleted():
     assert item.getViewWidget() is view
     
     # Arrange to have Qt automatically delete the view widget
-    obj = pg.QtGui.QWidget()
+    obj = pg.QtWidgets.QWidget()
     view.setParent(obj)
     del obj
 

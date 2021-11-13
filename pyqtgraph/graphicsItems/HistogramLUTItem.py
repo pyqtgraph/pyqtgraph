@@ -11,7 +11,7 @@ import numpy as np
 from .. import debug as debug
 from .. import functions as fn
 from ..Point import Point
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from .AxisItem import *
 from .GradientEditorItem import *
 from .GraphicsWidget import GraphicsWidget
@@ -99,7 +99,7 @@ class HistogramLUTItem(GraphicsWidget):
         elif orientation == 'horizontal' and gradientPosition not in {'top', 'bottom'}:
             self.gradientPosition = 'bottom'
 
-        self.layout = QtGui.QGraphicsGridLayout()
+        self.layout = QtWidgets.QGraphicsGridLayout()
         self.setLayout(self.layout)
         self.layout.setContentsMargins(1, 1, 1, 1)
         self.layout.setSpacing(0)

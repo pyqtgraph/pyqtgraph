@@ -6,7 +6,7 @@ import numpy as np
 
 from .. import functions as fn
 from ..colormap import ColorMap
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from ..widgets.SpinBox import SpinBox
 from .GraphicsWidget import GraphicsWidget
 
@@ -83,7 +83,7 @@ class TickSliderItem(GraphicsWidget):
         }
         
         self.setOrientation(orientation)
-        #self.setFrameStyle(QtGui.QFrame.Shape.NoFrame | QtGui.QFrame.Shadow.Plain)
+        #self.setFrameStyle(QtWidgets.QFrame.Shape.NoFrame | QtWidgets.QFrame.Shadow.Plain)
         #self.setBackgroundRole(QtGui.QPalette.ColorRole.NoRole)
         #self.setMouseTracking(True)
         
@@ -240,7 +240,7 @@ class TickSliderItem(GraphicsWidget):
         self.length = float(newLen)
         
     #def mousePressEvent(self, ev):
-        #QtGui.QGraphicsView.mousePressEvent(self, ev)
+        #QtWidgets.QGraphicsView.mousePressEvent(self, ev)
         #self.ignoreRelease = False
         #for i in self.items(ev.pos()):
             #if isinstance(i, Tick):
@@ -250,7 +250,7 @@ class TickSliderItem(GraphicsWidget):
             ##self.ignoreRelease = True
         
     #def mouseReleaseEvent(self, ev):
-        #QtGui.QGraphicsView.mouseReleaseEvent(self, ev)
+        #QtWidgets.QGraphicsView.mouseReleaseEvent(self, ev)
         #if self.ignoreRelease:
             #return
             
@@ -377,7 +377,7 @@ class TickSliderItem(GraphicsWidget):
         return tick
 
     #def mouseMoveEvent(self, ev):
-        #QtGui.QGraphicsView.mouseMoveEvent(self, ev)
+        #QtWidgets.QGraphicsView.mouseMoveEvent(self, ev)
 
     def listTicks(self):
         """Return a sorted list of all the Tick objects on the slider."""
@@ -424,16 +424,16 @@ class GradientEditorItem(TickSliderItem):
         self.currentTick = None
         self.currentTickColor = None
         self.rectSize = 15
-        self.gradRect = QtGui.QGraphicsRectItem(QtCore.QRectF(0, self.rectSize, 100, self.rectSize))
-        self.backgroundRect = QtGui.QGraphicsRectItem(QtCore.QRectF(0, -self.rectSize, 100, self.rectSize))
+        self.gradRect = QtWidgets.QGraphicsRectItem(QtCore.QRectF(0, self.rectSize, 100, self.rectSize))
+        self.backgroundRect = QtWidgets.QGraphicsRectItem(QtCore.QRectF(0, -self.rectSize, 100, self.rectSize))
         self.backgroundRect.setBrush(QtGui.QBrush(QtCore.Qt.BrushStyle.DiagCrossPattern))
         self.colorMode = 'rgb'
         
         TickSliderItem.__init__(self, *args, **kargs)
         
-        self.colorDialog = QtGui.QColorDialog()
-        self.colorDialog.setOption(QtGui.QColorDialog.ColorDialogOption.ShowAlphaChannel, True)
-        self.colorDialog.setOption(QtGui.QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
+        self.colorDialog = QtWidgets.QColorDialog()
+        self.colorDialog.setOption(QtWidgets.QColorDialog.ColorDialogOption.ShowAlphaChannel, True)
+        self.colorDialog.setOption(QtWidgets.QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
         
         self.colorDialog.currentColorChanged.connect(self.currentColorChanged)
         self.colorDialog.rejected.connect(self.currentColorRejected)
@@ -451,7 +451,7 @@ class GradientEditorItem(TickSliderItem):
         self.hsvAction.setCheckable(True)
         self.hsvAction.triggered.connect(self._setColorModeToHSV)
             
-        self.menu = QtGui.QMenu()
+        self.menu = QtWidgets.QMenu()
         
         ## build context menu of gradients
         l = self.length
@@ -465,16 +465,16 @@ class GradientEditorItem(TickSliderItem):
             brush = QtGui.QBrush(grad)
             p.fillRect(QtCore.QRect(0, 0, 100, 15), brush)
             p.end()
-            label = QtGui.QLabel()
+            label = QtWidgets.QLabel()
             label.setPixmap(px)
             label.setContentsMargins(1, 1, 1, 1)
-            labelName = QtGui.QLabel(g)
-            hbox = QtGui.QHBoxLayout()
+            labelName = QtWidgets.QLabel(g)
+            hbox = QtWidgets.QHBoxLayout()
             hbox.addWidget(labelName)
             hbox.addWidget(label)
-            widget = QtGui.QWidget()
+            widget = QtWidgets.QWidget()
             widget.setLayout(hbox)
-            act = QtGui.QWidgetAction(self)
+            act = QtWidgets.QWidgetAction(self)
             act.setDefaultWidget(widget)
             act.triggered.connect(self.contextMenuClicked)
             act.name = g
@@ -865,11 +865,11 @@ class GradientEditorItem(TickSliderItem):
                 self.sigGradientChanged.disconnect(fn)
 
 
-class Tick(QtGui.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsObject instead results in
+class Tick(QtWidgets.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsObject instead results in
                                     ## activating this bug: https://bugreports.qt-project.org/browse/PYSIDE-86
     ## private class
 
-    # When making Tick a subclass of QtGui.QGraphicsObject as origin,
+    # When making Tick a subclass of QtWidgets.QGraphicsObject as origin,
     # ..GraphicsScene.items(self, *args) will get Tick object as a
     # class of QtGui.QMultimediaWidgets.QGraphicsVideoItem in python2.7-PyQt5(5.4.0)
 
@@ -891,7 +891,7 @@ class Tick(QtGui.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsO
         self.pg.lineTo(QtCore.QPointF(scale/3**0.5, scale))
         self.pg.closeSubpath()
         
-        QtGui.QGraphicsWidget.__init__(self)
+        QtWidgets.QGraphicsWidget.__init__(self)
         self.setPos(pos[0], pos[1])
         if self.movable:
             self.setZValue(1)
@@ -952,10 +952,10 @@ class Tick(QtGui.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsO
         self.update()
         
 
-class TickMenu(QtGui.QMenu):
+class TickMenu(QtWidgets.QMenu):
     
     def __init__(self, tick, sliderItem):
-        QtGui.QMenu.__init__(self)
+        QtWidgets.QMenu.__init__(self)
         
         self.tick = weakref.ref(tick)
         self.sliderItem = weakref.ref(sliderItem)
@@ -965,8 +965,8 @@ class TickMenu(QtGui.QMenu):
             self.removeAct.setEnabled(False)
             
         positionMenu = self.addMenu(translate("GradientEditorItem", "Set Position"))
-        w = QtGui.QWidget()
-        l = QtGui.QGridLayout()
+        w = QtWidgets.QWidget()
+        l = QtWidgets.QGridLayout()
         w.setLayout(l)
         
         value = sliderItem.tickValue(tick)
@@ -975,15 +975,15 @@ class TickMenu(QtGui.QMenu):
         #self.dataPosSpin = SpinBox(value=dataVal)
         #self.dataPosSpin.setOpts(decimals=3, siPrefix=True)
                 
-        l.addWidget(QtGui.QLabel(f"{translate('GradiantEditorItem', 'Position')}:"), 0,0)
+        l.addWidget(QtWidgets.QLabel(f"{translate('GradiantEditorItem', 'Position')}:"), 0,0)
         l.addWidget(self.fracPosSpin, 0, 1)
-        #l.addWidget(QtGui.QLabel("Position (data units):"), 1, 0)
+        #l.addWidget(QtWidgets.QLabel("Position (data units):"), 1, 0)
         #l.addWidget(self.dataPosSpin, 1,1)
         
         #if self.sliderItem().dataParent is None:
         #    self.dataPosSpin.setEnabled(False)
         
-        a = QtGui.QWidgetAction(self)
+        a = QtWidgets.QWidgetAction(self)
         a.setDefaultWidget(w)
         positionMenu.addAction(a)        
         

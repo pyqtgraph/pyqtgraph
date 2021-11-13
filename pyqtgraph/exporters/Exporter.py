@@ -2,7 +2,7 @@ import os
 import re
 
 from ..GraphicsScene import GraphicsScene
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtWidgets
 from ..widgets.FileDialog import FileDialog
 
 LastExportDirectory = None
@@ -47,8 +47,8 @@ class Exporter(object):
         if opts is None:
             opts = {}
         self.fileDialog = FileDialog()
-        self.fileDialog.setFileMode(QtGui.QFileDialog.FileMode.AnyFile)
-        self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptMode.AcceptSave)
+        self.fileDialog.setFileMode(QtWidgets.QFileDialog.FileMode.AnyFile)
+        self.fileDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         if filter is not None:
             if isinstance(filter, str):
                 self.fileDialog.setNameFilter(filter)
@@ -119,7 +119,7 @@ class Exporter(object):
             root = self.item
         preItems = []
         postItems = []
-        if isinstance(root, QtGui.QGraphicsScene):
+        if isinstance(root, QtWidgets.QGraphicsScene):
             childs = [i for i in root.items() if i.parentItem() is None]
             rootItem = []
         else:

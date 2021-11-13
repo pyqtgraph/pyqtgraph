@@ -14,13 +14,13 @@ import numpy  # # pyqtgraph requires numpy
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt and PySide.
-from .Qt import QtCore, QtGui
+from .Qt import QtCore, QtGui, QtWidgets
 from .Qt import exec_ as exec
 from .Qt import mkQApp
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
-#if QtGui.QApplication.instance() is None:
-    #app = QtGui.QApplication([])
+#if QtWidgets.QApplication.instance() is None:
+    #app = QtWidgets.QApplication([])
 
               ## (import here to avoid massive error dump later on if numpy is not available)
 
@@ -304,16 +304,16 @@ def cleanup():
     ## ALL QGraphicsItems must have a scene before they are deleted.
     ## This is potentially very expensive, but preferred over crashing.
     ## Note: this appears to be fixed in PySide as of 2012.12, but it should be left in for a while longer..
-    app = QtGui.QApplication.instance()
-    if app is None or not isinstance(app, QtGui.QApplication):
+    app = QtWidgets.QApplication.instance()
+    if app is None or not isinstance(app, QtWidgets.QApplication):
         # app was never constructed is already deleted or is an
         # QCoreApplication/QGuiApplication and not a full QApplication
         return
     import gc
-    s = QtGui.QGraphicsScene()
+    s = QtWidgets.QGraphicsScene()
     for o in gc.get_objects():
         try:
-            if isinstance(o, QtGui.QGraphicsItem) and isQObjectAlive(o) and o.scene() is None:
+            if isinstance(o, QtWidgets.QGraphicsItem) and isQObjectAlive(o) and o.scene() is None:
                 if getConfigOption('crashWarning'):
                     sys.stderr.write('Error: graphics item without scene. '
                         'Make sure ViewBox.close() and GraphicsView.close() '
@@ -335,7 +335,7 @@ def _connectCleanup():
     global _cleanupConnected
     if _cleanupConnected:
         return
-    QtGui.QApplication.instance().aboutToQuit.connect(cleanup)
+    QtWidgets.QApplication.instance().aboutToQuit.connect(cleanup)
     _cleanupConnected = True
 
 

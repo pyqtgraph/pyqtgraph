@@ -1,5 +1,5 @@
 from .. import functions as fn
-from ..Qt import QtGui
+from ..Qt import QtWidgets
 from .GraphicsWidget import GraphicsWidget
 from .LabelItem import LabelItem
 from .PlotItem import PlotItem
@@ -21,14 +21,14 @@ class GraphicsLayout(GraphicsWidget):
         elif border is False:
             border = None  
         self.border = border
-        self.layout = QtGui.QGraphicsGridLayout()
+        self.layout = QtWidgets.QGraphicsGridLayout()
         self.setLayout(self.layout)
         self.items = {}  ## item: [(row, col), (row, col), ...]  lists all cells occupied by the item
         self.rows = {}   ## row: {col1: item1, col2: item2, ...}    maps cell location to item
-        self.itemBorders = {}  ## {item1: QtGui.QGraphicsRectItem, ...} border rects
+        self.itemBorders = {}  ## {item1: QtWidgets.QGraphicsRectItem, ...} border rects
         self.currentRow = 0
         self.currentCol = 0
-        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Expanding))
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding))
     
     #def resizeEvent(self, ev):
         #ret = GraphicsWidget.resizeEvent(self, ev)
@@ -125,7 +125,7 @@ class GraphicsLayout(GraphicsWidget):
                 self.rows[row2][col2] = item
                 self.items[item].append((row2, col2))
 
-        borderRect = QtGui.QGraphicsRectItem()
+        borderRect = QtWidgets.QGraphicsRectItem()
 
         borderRect.setParentItem(self)
         borderRect.setZValue(1e3)

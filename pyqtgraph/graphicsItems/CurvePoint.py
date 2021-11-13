@@ -2,7 +2,7 @@ import weakref
 from math import atan2, degrees
 
 from ..functions import clip_scalar
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtWidgets
 from . import ArrowItem
 from .GraphicsObject import GraphicsObject
 
@@ -81,7 +81,7 @@ class CurvePoint(GraphicsObject):
         self.resetTransform()
         if self._rotate:
             self.setRotation(180 + degrees(rads))
-        QtGui.QGraphicsItem.setPos(self, *newPos)
+        QtWidgets.QGraphicsItem.setPos(self, *newPos)
         return True
         
     def boundingRect(self):

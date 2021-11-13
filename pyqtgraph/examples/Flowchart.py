@@ -15,16 +15,16 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.metaarray as metaarray
 from pyqtgraph.flowchart import Flowchart
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("Flowchart Example")
 
 ## Create main window with grid layout
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 win.setWindowTitle('pyqtgraph example: Flowchart')
-cw = QtGui.QWidget()
+cw = QtWidgets.QWidget()
 win.setCentralWidget(cw)
-layout = QtGui.QGridLayout()
+layout = QtWidgets.QGridLayout()
 cw.setLayout(layout)
 
 ## Create flowchart, define input/output terminals

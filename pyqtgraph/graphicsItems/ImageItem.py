@@ -7,7 +7,7 @@ from .. import debug as debug
 from .. import functions as fn
 from .. import getConfigOption
 from ..Point import Point
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from ..util.cupy_helper import getCupy
 from .GraphicsObject import GraphicsObject
 
@@ -1017,7 +1017,7 @@ class ImageItem(GraphicsObject):
         if self.menu is None:
             if not self.removable:
                 return None
-            self.menu = QtGui.QMenu()
+            self.menu = QtWidgets.QMenu()
             self.menu.setTitle(translate("ImageItem", "Image"))
             remAct = QtGui.QAction(translate("ImageItem", "Remove image"), self.menu)
             remAct.triggered.connect(self.removeClicked)

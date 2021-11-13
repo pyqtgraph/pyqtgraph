@@ -9,7 +9,7 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.graphicsItems.GradientEditorItem import Gradients
 from pyqtgraph.graphicsItems.NonUniformImage import NonUniformImage
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtWidgets
 
 RPM2RADS = 2 * np.pi / 60
 RADS2RPM = 1 / RPM2RADS
@@ -40,7 +40,7 @@ Gradients['gor'] = {'ticks': [(0.0, (74, 158, 71)), (0.5, (255, 230, 0)), (1, (1
 
 app = pg.mkQApp("NonUniform Image Example")
 
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 cw = pg.GraphicsLayoutWidget()
 win.show()
 win.resize(600, 400)
