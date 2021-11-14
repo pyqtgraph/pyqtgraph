@@ -9,6 +9,7 @@ from .GraphicsItem import GraphicsItem
 from .GraphicsObject import GraphicsObject
 from .TextItem import TextItem
 from .ViewBox import ViewBox
+from .. import plotDataMappings
 
 __all__ = ['InfiniteLine', 'InfLineLabel']
 
@@ -70,8 +71,12 @@ class InfiniteLine(GraphicsObject):
         self._boundingRect = None
 
         self._name = name
-
+        
         GraphicsObject.__init__(self)
+
+        # mappings from data space to view space:
+        self.xMapping = plotDataMappings.get('identity')
+        self.yMapping = plotDataMappings.get('identity')
 
         if bounds is None:              ## allowed value boundaries for orthogonal lines
             self.maxRange = [None, None]
@@ -80,15 +85,15 @@ class InfiniteLine(GraphicsObject):
         self.moving = False
         self.setMovable(movable)
         self.mouseHovering = False
-        self.p = [0, 0]
+        self.p    = [np.nan, np.nan] # data space position of line
+        self.vs_p = [np.nan, np.nan] # view space position of line
+        
         self.setAngle(angle)
 
-        if pos is None:
-            pos = Point(0,0)
+        if pos is None: pos = Point(1E-100, 1E-100)
         self.setPos(pos)
 
-        if pen is None:
-            pen = (200, 200, 100)
+        if pen is None: pen = (200, 200, 100)
         self.setPen(pen)
         
         if hoverPen is None:
@@ -98,7 +103,7 @@ class InfiniteLine(GraphicsObject):
         
         self.span = span
         self.currentPen = self.pen
-
+        
         self.markers = []
         self._maxMarkerSize = 0
         if markers is not None:
@@ -113,6 +118,23 @@ class InfiniteLine(GraphicsObject):
         if label is not None:
             labelOpts = {} if labelOpts is None else labelOpts
             self.label = InfLineLabel(self, text=label, **labelOpts)
+
+    def setMappings(self, xMapping, yMapping):
+        """ Updates mapping for x and y axis, None retains previous mapping """
+        # print(f"InfiniteLine, new mappings: {xMapping} / {yMapping}")
+        if xMapping is not None:
+            self.xMapping = xMapping
+        if yMapping is not None:
+            self.yMapping = yMapping
+        self.vs_p = [
+            self.xMapping.mapFloat( self.p[0] ),
+            self.yMapping.mapFloat( self.p[1] )
+        ]
+        # print(f"updated mapped position: {self.p} -> {self.vs_p}")
+        self.viewTransformChanged()
+        GraphicsObject.setPos(self, Point(self.vs_p))
+        # self.sigPositionChanged.emit(self)
+
 
     def setMovable(self, m):
         """Set whether the line is movable by the user."""
@@ -133,6 +155,7 @@ class InfiniteLine(GraphicsObject):
         """Set the pen for drawing the line. Allowable arguments are any that are valid
         for :func:`mkPen <pyqtgraph.mkPen>`."""
         self.pen = fn.mkPen(*args, **kwargs)
+        self.pen.setJoinStyle(QtCore.Qt.PenJoinStyle.MiterJoin) # is this needed?
         if not self.mouseHovering:
             self.currentPen = self.pen
             self.update()
@@ -151,6 +174,7 @@ class InfiniteLine(GraphicsObject):
                            (isinstance(args[0], dict) and 'width' in args[0]))
                           ) or 'width' in kwargs)
         self.hoverPen = fn.mkPen(*args, **kwargs)
+        self.hoverPen.setJoinStyle(QtCore.Qt.PenJoinStyle.MiterJoin) # is this needed?
         if not widthSpecified:
             self.hoverPen.setWidth(self.pen.width())
             
@@ -222,9 +246,23 @@ class InfiniteLine(GraphicsObject):
         self.resetTransform()
         self.setRotation(self.angle)
         self.update()
+        
+    def setVSPos(self, vs_pos):
+        """ Set line position based on view space coordinate """
+        ds_xpos = self.xMapping.reverseFloat(vs_pos[0])
+        if np.isnan(ds_xpos):
+            # print(f"view space x coordinate {vs_pos[1]} out of conversion range")
+            return
+        ds_ypos = self.yMapping.reverseFloat(vs_pos[1])
+        if np.isnan(ds_ypos):
+            # print(f"view space y coordinate {vs_pos[1]} out of conversion range")
+            return
+        self.setPos( (ds_xpos, ds_ypos) )
+        # print(f"setting from view space: {vs_pos} --> {(ds_xpos, ds_ypos)} --> {self.vs_p}")
+
 
     def setPos(self, pos):
-
+        # print('setting position to', pos)
         if isinstance(pos, (list, tuple, np.ndarray)) and not np.ndim(pos) == 0:
             newPos = list(pos)
         elif isinstance(pos, QtCore.QPointF):
@@ -251,8 +289,13 @@ class InfiniteLine(GraphicsObject):
 
         if self.p != newPos:
             self.p = newPos
+            self.vs_p = [
+                self.xMapping.mapFloat( self.p[0] ),
+                self.yMapping.mapFloat( self.p[1] )
+            ]
             self.viewTransformChanged()
-            GraphicsObject.setPos(self, Point(self.p))
+            # print(f"{self.p} --> {self.vs_p}")
+            GraphicsObject.setPos(self, Point(self.vs_p))
             self.sigPositionChanged.emit(self)
 
     def getXPos(self):
@@ -279,6 +322,19 @@ class InfiniteLine(GraphicsObject):
         a single value. Otherwise, a 2D coordinate must be specified (list, tuple and
         QPointF are all acceptable)."""
         self.setPos(v)
+        
+    def vsValue(self):
+        """ 
+        Returns the value of the line in view space coordinates.
+        Used by LinearRegionItem to determine filled area
+        """
+        if self.angle%180 == 0:
+            return self.vs_p[1]
+        elif self.angle%180 == 90:
+            return self.vs_p[0]
+        else:
+            return self.vs_p
+        
 
     ## broken in 4.7
     #def itemChange(self, change, val):
@@ -297,7 +353,7 @@ class InfiniteLine(GraphicsObject):
 
     def _computeBoundingRect(self):
         #br = UIGraphicsItem.boundingRect(self)
-        vr = self.viewRect()  # bounds of containing ViewBox mapped to local coords.
+        vr = self.viewRect()  # bounds of containing ViewBox mapped to view space local coords.
         if vr is None:
             return QtCore.QRectF()
         
@@ -341,11 +397,9 @@ class InfiniteLine(GraphicsObject):
         p.setRenderHint(p.RenderHint.Antialiasing)
         
         left, right = self._endPoints
-        pen = self.currentPen
-        pen.setJoinStyle(QtCore.Qt.PenJoinStyle.MiterJoin)
-        p.setPen(pen)
+        # print(f"L {left} / R {right}")
+        p.setPen(self.currentPen)
         p.drawLine(Point(left, 0), Point(right, 0))
-        
         
         if len(self.markers) == 0:
             return
@@ -385,6 +439,7 @@ class InfiniteLine(GraphicsObject):
             return (0,0)
 
     def mouseDragEvent(self, ev):
+        # dragging coordinates are all in view space
         if self.movable and ev.button() == QtCore.Qt.MouseButton.LeftButton:
             if ev.isStart():
                 self.moving = True
@@ -395,7 +450,7 @@ class InfiniteLine(GraphicsObject):
             if not self.moving:
                 return
 
-            self.setPos(self.cursorOffset + self.mapToParent(ev.pos()))
+            self.setVSPos(self.cursorOffset + self.mapToParent(ev.pos()))
             self.sigDragged.emit(self)
             if ev.isFinish():
                 self.moving = False
@@ -405,7 +460,7 @@ class InfiniteLine(GraphicsObject):
         self.sigClicked.emit(self, ev)
         if self.moving and ev.button() == QtCore.Qt.MouseButton.RightButton:
             ev.accept()
-            self.setPos(self.startPosition)
+            self.setVSPos(self.startPosition)
             self.moving = False
             self.sigDragged.emit(self)
             self.sigPositionChangeFinished.emit(self)

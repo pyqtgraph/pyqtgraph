@@ -975,19 +975,17 @@ class ViewBox(GraphicsWidget):
         """Link this view's Y axis to another view. (see LinkView)"""
         self.linkView(self.YAxis, view)
         
-    def setMapping(self, axis, mapping):
+    def setMappings(self, xMapping, yMapping):
         """
-        Sets a mapping function described by a `plotDataMappings.PlotDataMap` object.
+        Sets a mapping functions for x and y data, described by `plotDataMappings.PlotDataMap` objects.
         Eventually, objects assigned to this ViewBox should retrieve this from here.
         The mapping also provides limits for the allowed zoom range.
+        Passing `None` will leave the current mapping unchanged
         """
-        # print(f"ViewBox is setting {axis} mapping to {mapping.name}")
-        if axis == 'x':
-            self.state['xMapping'] = mapping
-            # print('x mapping', type(self.state['xMapping'] ) )
-        elif axis == 'y':
-            self.state['yMapping'] = mapping
-            # print('y mapping', type(self.state['yMapping'] ) )
+        if xMapping is not None:
+            self.state['xMapping'] = xMapping
+        if yMapping is not None:
+            self.state['yMapping'] = yMapping
 
     def linkView(self, axis, view):
         """
@@ -1462,7 +1460,10 @@ class ViewBox(GraphicsWidget):
 
                 ## If we are ignoring only one axis, we need to check for rotations
                 if useX != useY:  ##   !=  means  xor
-                    ang = round(item.transformAngle())
+                    ang_float = item.transformAngle()
+                    if np.isnan(ang_float):
+                        continue # Item reports invalid angle
+                    ang = round(ang_float)
                     if ang == 0 or ang == 180:
                         pass
                     elif ang == 90 or ang == 270:

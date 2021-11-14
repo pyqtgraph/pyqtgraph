@@ -40,29 +40,54 @@ class PlotDataMapping(object):
     def __init__(self, name):
         """ initialize and look up limits """
         self.name = name
-        self.vsLimits = (None, None) 
+        self.vsLimits = (None, None)
+        
+    def __str__(self):
+        return f"{self.name} mapping"
 
-    def map(self, dsValues):
+    def map(self, dsValues, finiteCheck=False):
         """ 
         Maps values from data space to view space.
-
+        Returns `mappedData`
+        
+        If `finiteCheck = True`, the data is also checked for non-finite values.
         Returns `(mappedData, containsNonFinite)`
         If `containsNonFinite == None`, no information is available.
         """
         del dsValues
+        if not finiteCheck:
+            return None
+        # also report non-finites:
         return None, None
-    
-    def reverse(self, vsValues):
+
+    def mapFloat(self, vsValue):
+        """
+        Maps single float value from data space to view space.
+        Returns `mappedValue`
+        """
+        return None
+
+    def reverse(self, vsValues, finiteCheck=False):
         """
         Reverse maps values from view space to data space.
+        Returns `reversedData`
         
-        Returns `(mappedData, containsNonFinite)`
+        If `finiteCheck = True`, the data is also checked for non-finite values.
+        Returns `(reversedData, containsNonFinite)`
         If `containsNonFinite == None`, no information is available.
         """
         del vsValues
+        if not finiteCheck:
+            return None
+        # also report non-finites:
         return None, None
-        dsValues = vsValues
-        return dsValues
+        
+    def reverseFloat(self, vsValue):
+        """
+        Reverse maps single float value from view space to data space.
+        Returns `reversedValue`
+        """
+        return None
 
 
 class IdentityMapping(PlotDataMapping):
@@ -78,13 +103,25 @@ class IdentityMapping(PlotDataMapping):
         # If we limit to min/2 to max/2, scaling calculations still fail
         self.vsLimits = (info.min/4, info.max/4)
 
-    def map(self, dsValues):
+    def map(self, dsValues, finiteCheck=False):
         vsValues = dsValues # no mapping is applied
+        if not finiteCheck:
+            return vsValues
+        # also report non-finites:
         return vsValues, None 
 
-    def reverse(self, vsValues):
+    def mapFloat(self, dsValue):
+        return dsValue
+
+    def reverse(self, vsValues, finiteCheck=False):
         dsValues = vsValues
-        return dsValues, None
+        if not finiteCheck:
+            return dsValues
+        # also report non-finites:
+        return dsValues, None 
+        
+    def reverseFloat(self, vsValue):
+        return vsValue
 
 
 class LogMapping(PlotDataMapping):
@@ -100,7 +137,7 @@ class LogMapping(PlotDataMapping):
             np.log10( np.finfo(float).max )
         )
 
-    def map(self, dsValues):
+    def map(self, dsValues, finiteCheck=False):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
             vsValues = np.log10(dsValues)
@@ -110,11 +147,34 @@ class LogMapping(PlotDataMapping):
             containsNonfinite = True
         else:
             containsNonfinite = False
+        if not finiteCheck:
+            return vsValues
+        # also report non-finites:
         return vsValues, containsNonfinite 
-    
-    def reverse(self, vsValues):
+        
+    def mapFloat(self, dsValue):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            vsValue = np.log10( float(dsValue) )
+        if not np.isfinite(vsValue): vsValue = np.nan
+        return vsValue            
+
+    def reverse(self, vsValues, finiteCheck=False):
         dsValues = 10**vsValues # np.nan silently results in np.nan
-        return dsValues, None
+        if not finiteCheck:
+            return dsValues
+        # also report non-finites:
+        nonfinites = ~np.isfinite( dsValues )
+        if nonfinites.any():
+            containsNonfinite = True
+        return dsValues, containsNonfinite 
+
+    def reverseFloat(self, vsValue):
+        if vsValue < self.vsLimits[0]: return np.nan
+        if vsValue > self.vsLimits[1]: return np.nan
+        dsValue = 10**float(vsValue)
+        return dsValue
+        
         
 register('identity', IdentityMapping() )
 register('log'     , LogMapping() )

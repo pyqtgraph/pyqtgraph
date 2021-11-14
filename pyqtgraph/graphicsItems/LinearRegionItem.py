@@ -162,6 +162,13 @@ class LinearRegionItem(GraphicsObject):
         self.lineMoved(0)
         self.lineMoved(1)
         self.lineMoveFinished()
+        
+    def setMappings(self, xMapping, yMapping):
+        """ Updates mapping for x and y axis, None retains previous mapping """
+        self.viewTransformChanged()
+        for line in self.lines:
+            line.setMappings(xMapping, yMapping)
+
 
     def setBrush(self, *br, **kargs):
         """Set the brush that fills the region. Can have any arguments that are valid
@@ -246,7 +253,9 @@ class LinearRegionItem(GraphicsObject):
         if self.clipItem is not None:
             self._updateClipItemBounds()
 
-        rng = self.getRegion()
+        # rng = self.getRegion()
+        rng = (self.lines[0].vsValue(), self.lines[1].vsValue())
+
         if self.orientation in ('vertical', LinearRegionItem.Vertical):
             br.setLeft(rng[0])
             br.setRight(rng[1])
@@ -304,6 +313,7 @@ class LinearRegionItem(GraphicsObject):
         self.sigRegionChangeFinished.emit(self)
 
     def mouseDragEvent(self, ev):
+        # dragging coordinates are all in view space
         if not self.movable or ev.button() != QtCore.Qt.MouseButton.LeftButton:
             return
         ev.accept()
@@ -319,7 +329,7 @@ class LinearRegionItem(GraphicsObject):
             
         self.lines[0].blockSignals(True)  # only want to update once
         for i, l in enumerate(self.lines):
-            l.setPos(self.cursorOffsets[i] + ev.pos())
+            l.setVSPos(self.cursorOffsets[i] + ev.pos())
         self.lines[0].blockSignals(False)
         self.prepareGeometryChange()
         

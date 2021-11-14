@@ -545,7 +545,7 @@ class PlotItem(GraphicsWidget):
             #self.addItem(c)
         
         # look for method to directly set mapping:
-        if hasattr(item, 'setMapping'):
+        if hasattr(item, 'setMappings'):
             if self.ctrl.logXCheck.isChecked():
                 xMapping = plotDataMappings.get('log')
             else:
@@ -554,7 +554,7 @@ class PlotItem(GraphicsWidget):
                 yMapping = plotDataMappings.get('log')
             else:
                 yMapping = plotDataMappings.get('identity')
-            item.setMapping(xMapping, yMapping )
+            item.setMappings( xMapping, yMapping )
         
         # otherwise fall back to previous log mode setting:
         elif hasattr(item, 'setLogMode'):
@@ -923,17 +923,15 @@ class PlotItem(GraphicsWidget):
         if y: yMapping = plotDataMappings.get('log')
         else: yMapping = plotDataMappings.get('identity')
         for i in self.items:
-            if hasattr(i, 'setMapping'):
-                i.setMapping('x', xMapping)
-                i.setMapping('y', yMapping)
+            if hasattr(i, 'setMappings'):
+                i.setMappings(xMapping, yMapping)
             elif hasattr(i, 'setLogMode'):
                 i.setLogMode(x,y)
         self.getAxis('bottom').setLogMode(x)
         self.getAxis('top').setLogMode(x)
         self.getAxis('left').setLogMode(y)
         self.getAxis('right').setLogMode(y)
-        self.vb.setMapping('x', xMapping)
-        self.vb.setMapping('y', yMapping)
+        self.vb.setMappings(xMapping, yMapping)
         self.enableAutoRange()
         self.recomputeAverages()
     
