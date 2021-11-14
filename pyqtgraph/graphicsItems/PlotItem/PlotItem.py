@@ -1,27 +1,26 @@
-# -*- coding: utf-8 -*-
+import collections.abc
 import importlib
 import os
 import warnings
 import weakref
-import collections.abc
 
 import numpy as np
 
+from ... import functions as fn
+from ... import icons
+from ...Qt import QT_LIB, QtCore, QtGui, QtWidgets
+from ...WidgetGroup import WidgetGroup
+from ...widgets.FileDialog import FileDialog
 from ..AxisItem import AxisItem
 from ..ButtonItem import ButtonItem
 from ..GraphicsWidget import GraphicsWidget
 from ..InfiniteLine import InfiniteLine
 from ..LabelItem import LabelItem
 from ..LegendItem import LegendItem
-from ..PlotDataItem import PlotDataItem
 from ..PlotCurveItem import PlotCurveItem
+from ..PlotDataItem import PlotDataItem
 from ..ScatterPlotItem import ScatterPlotItem
 from ..ViewBox import ViewBox
-from ... import functions as fn
-from ... import icons
-from ...Qt import QtGui, QtCore, QT_LIB
-from ...WidgetGroup import WidgetGroup
-from ...widgets.FileDialog import FileDialog
 
 translate = QtCore.QCoreApplication.translate
 
@@ -114,7 +113,7 @@ class PlotItem(GraphicsWidget):
         
         GraphicsWidget.__init__(self, parent)
         
-        self.setSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Expanding)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         
         ## Set up control buttons
         path = os.path.dirname(__file__)
@@ -124,7 +123,7 @@ class PlotItem(GraphicsWidget):
         self.buttonsHidden = False ## whether the user has requested buttons to be hidden
         self.mouseHovering = False
         
-        self.layout = QtGui.QGraphicsGridLayout()
+        self.layout = QtWidgets.QGraphicsGridLayout()
         self.layout.setContentsMargins(1,1,1,1)
         self.setLayout(self.layout)
         self.layout.setHorizontalSpacing(0)
@@ -180,10 +179,13 @@ class PlotItem(GraphicsWidget):
         self.dataItems = []
         self.paramList = {}
         self.avgCurves = {}
-        
+        # Change these properties to adjust the appearance of the averged curve:
+        self.avgPen = fn.mkPen([0, 200, 0])
+        self.avgShadowPen = fn.mkPen([0, 0, 0], width=4) # the previous default of [0,0,0,100] prevent fast drawing of the wide shadow line
+
         ### Set up context menu
         
-        w = QtGui.QWidget()
+        w = QtWidgets.QWidget()
         self.ctrl = c = ui_template.Ui_Form()
         c.setupUi(w)
         dv = QtGui.QDoubleValidator(self)
@@ -198,13 +200,13 @@ class PlotItem(GraphicsWidget):
         ]
         
         
-        self.ctrlMenu = QtGui.QMenu()
+        self.ctrlMenu = QtWidgets.QMenu()
         
         self.ctrlMenu.setTitle(translate("PlotItem", 'Plot Options'))
         self.subMenus = []
         for name, grp in menuItems:
-            sm = QtGui.QMenu(name)
-            act = QtGui.QWidgetAction(self)
+            sm = QtWidgets.QMenu(name)
+            act = QtWidgets.QWidgetAction(self)
             act.setDefaultWidget(grp)
             sm.addAction(act)
             self.subMenus.append(sm)
@@ -475,8 +477,8 @@ class PlotItem(GraphicsWidget):
         ### Create a new curve if needed
         if key not in self.avgCurves:
             plot = PlotDataItem()
-            plot.setPen(fn.mkPen([0, 200, 0]))
-            plot.setShadowPen(fn.mkPen([0, 0, 0, 100], width=3))
+            plot.setPen( self.avgPen )
+            plot.setShadowPen(  self.avgShadowPen )
             plot.setAlpha(1.0, False)
             plot.setZValue(100)
             self.addItem(plot, skipAverage=True)
@@ -710,7 +712,7 @@ class PlotItem(GraphicsWidget):
                 ## If the parameter is not in the list, add it.
                 matches = self.ctrl.avgParamList.findItems(p, QtCore.Qt.MatchFlag.MatchExactly)
                 if len(matches) == 0:
-                    i = QtGui.QListWidgetItem(p)
+                    i = QtWidgets.QListWidgetItem(p)
                     if p in self.paramList and self.paramList[p] is True:
                         i.setCheckState(QtCore.Qt.CheckState.Checked)
                     else:
@@ -1318,7 +1320,7 @@ class PlotItem(GraphicsWidget):
         self.fileDialog = FileDialog()
         if PlotItem.lastFileDir is not None:
             self.fileDialog.setDirectory(PlotItem.lastFileDir)
-        self.fileDialog.setFileMode(QtGui.QFileDialog.FileMode.AnyFile)
-        self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptMode.AcceptSave)
+        self.fileDialog.setFileMode(QtWidgets.QFileDialog.FileMode.AnyFile)
+        self.fileDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         self.fileDialog.show()
         self.fileDialog.fileSelected.connect(handler)

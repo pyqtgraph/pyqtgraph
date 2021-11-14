@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtCore
-from .. import functions as fn
-from .PlotItem import PlotItem
-from .ImageItem import ImageItem
-from .LinearRegionItem import LinearRegionItem
-
-import weakref
 import math
 import warnings
+import weakref
+
 import numpy as np
+
+from .. import functions as fn
+from ..Qt import QtCore
+from .ImageItem import ImageItem
+from .LinearRegionItem import LinearRegionItem
+from .PlotItem import PlotItem
 
 __all__ = ['ColorBarItem']
 

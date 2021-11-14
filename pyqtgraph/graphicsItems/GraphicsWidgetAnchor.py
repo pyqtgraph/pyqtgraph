@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Point import Point
 
 __all__ = ['GraphicsWidgetAnchor']

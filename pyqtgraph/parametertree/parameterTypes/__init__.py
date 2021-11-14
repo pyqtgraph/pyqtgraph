@@ -1,5 +1,11 @@
+from ..Parameter import registerParameterItemType, registerParameterType
 from .action import ActionParameter, ActionParameterItem
-from .basetypes import WidgetParameterItem, SimpleParameter, GroupParameter, GroupParameterItem
+from .basetypes import (
+    GroupParameter,
+    GroupParameterItem,
+    SimpleParameter,
+    WidgetParameterItem,
+)
 from .bool import BoolParameterItem
 from .calendar import CalendarParameter, CalendarParameterItem
 from .checklist import ChecklistParameter, ChecklistParameterItem
@@ -15,7 +21,6 @@ from .qtenum import QtEnumParameter
 from .slider import SliderParameter, SliderParameterItem
 from .str import StrParameterItem
 from .text import TextParameter, TextParameterItem
-from ..Parameter import registerParameterType, registerParameterItemType
 
 registerParameterItemType('bool',  BoolParameterItem,    SimpleParameter, override=True)
 registerParameterItemType('float', NumericParameterItem, SimpleParameter, override=True)

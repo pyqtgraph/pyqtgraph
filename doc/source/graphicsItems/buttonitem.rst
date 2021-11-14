@@ -5,4 +5,3 @@ ButtonItem
     :members:
 
     .. automethod:: pyqtgraph.ButtonItem.__init__
-

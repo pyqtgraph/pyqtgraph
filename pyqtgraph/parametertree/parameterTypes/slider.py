@@ -1,8 +1,9 @@
 import numpy as np
 
-from .basetypes import WidgetParameterItem, Emitter
-from ..Parameter import Parameter
 from ...Qt import QtCore, QtWidgets
+from ..Parameter import Parameter
+from .basetypes import Emitter, WidgetParameterItem
+
 
 class SliderParameterItem(WidgetParameterItem):
     slider: QtWidgets.QSlider

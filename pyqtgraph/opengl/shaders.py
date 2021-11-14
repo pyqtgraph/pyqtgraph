@@ -1,9 +1,9 @@
+from OpenGL.GL import *  # noqa
+from OpenGL.GL import shaders  # noqa
 try:
     from OpenGL import NullFunctionError
 except ImportError:
     from OpenGL.error import NullFunctionError
-from OpenGL.GL import *
-from OpenGL.GL import shaders
 import re
 
 ## For centralizing and managing vertex/fragment shader programs.

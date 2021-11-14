@@ -1,6 +1,6 @@
-from ...widgets.ColorButton import ColorButton
 from ... import functions as fn
-from .basetypes import WidgetParameterItem, SimpleParameter
+from ...widgets.ColorButton import ColorButton
+from .basetypes import SimpleParameter, WidgetParameterItem
 
 
 class ColorParameterItem(WidgetParameterItem):

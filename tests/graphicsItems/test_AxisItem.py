@@ -1,5 +1,6 @@
-import pyqtgraph as pg
 from math import isclose
+
+import pyqtgraph as pg
 
 app = pg.mkQApp()
 

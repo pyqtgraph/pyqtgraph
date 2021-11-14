@@ -5,4 +5,3 @@ MultiPlotWidget
     :members:
 
     .. automethod:: pyqtgraph.MultiPlotWidget.__init__
-

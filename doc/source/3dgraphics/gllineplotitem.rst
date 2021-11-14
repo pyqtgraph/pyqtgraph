@@ -5,4 +5,3 @@ GLLinePlotItem
     :members:
 
     .. automethod:: pyqtgraph.opengl.GLLinePlotItem.__init__
-

@@ -29,4 +29,3 @@ Contents:
     glgraphicsitem
     glscatterplotitem
     meshdata
-

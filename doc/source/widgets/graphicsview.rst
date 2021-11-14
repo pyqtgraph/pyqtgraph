@@ -5,4 +5,3 @@ GraphicsView
     :members:
 
     .. automethod:: pyqtgraph.GraphicsView.__init__
-

@@ -1,7 +1,9 @@
+import math
+
 import pytest
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
-import math
 
 angles = [
 	((1, 0), (0, 1), 90),

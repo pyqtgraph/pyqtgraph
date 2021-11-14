@@ -5,4 +5,3 @@ GraphicsWidget
     :members:
 
     .. automethod:: pyqtgraph.GraphicsWidget.__init__
-

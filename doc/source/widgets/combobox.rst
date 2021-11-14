@@ -5,4 +5,3 @@ ComboBox
     :members:
 
     .. automethod:: pyqtgraph.ComboBox.__init__
-

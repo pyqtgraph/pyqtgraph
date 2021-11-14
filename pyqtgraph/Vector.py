@@ -1,12 +1,13 @@
-# -*- coding: utf-8 -*-
 """
 Vector.py -  Extension of QVector3D which adds a few missing methods.
 Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 from math import acos, degrees
-from .Qt import QtGui, QtCore, QT_LIB
+
 from . import functions as fn
+from .Qt import QT_LIB, QtCore, QtGui
+
 
 class Vector(QtGui.QVector3D):
     """Extension of QVector3D which adds a few helpful methods."""

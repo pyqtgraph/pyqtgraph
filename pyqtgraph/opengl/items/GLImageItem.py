@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-from OpenGL.GL import *
-from .. GLGraphicsItem import GLGraphicsItem
+from OpenGL.GL import *  # noqa
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLImageItem']
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtWidgets
 from ..widgets.TreeWidget import TreeWidget
 from .ParameterItem import ParameterItem

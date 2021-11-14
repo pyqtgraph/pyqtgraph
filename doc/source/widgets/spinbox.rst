@@ -5,4 +5,3 @@ SpinBox
     :members:
 
     .. automethod:: pyqtgraph.SpinBox.__init__
-

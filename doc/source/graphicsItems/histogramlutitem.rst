@@ -5,4 +5,3 @@ HistogramLUTItem
     :members:
 
     .. automethod:: pyqtgraph.HistogramLUTItem.__init__
-

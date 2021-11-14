@@ -40,9 +40,3 @@ Basic usage example::
     xgrid.scale(0.2, 0.1, 0.1)
     ygrid.scale(0.2, 0.1, 0.1)
     zgrid.scale(0.1, 0.2, 0.1)
-
-
-
-
-
-

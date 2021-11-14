@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 ################################################################################
 ## Form generated from reading UI file 'plotConfigTemplate.ui'
@@ -251,4 +250,3 @@ class Ui_Form(object):
         self.alphaGroup.setTitle(QCoreApplication.translate("Form", u"Alpha", None))
         self.autoAlphaCheck.setText(QCoreApplication.translate("Form", u"Auto", None))
     # retranslateUi
-
