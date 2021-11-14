@@ -464,7 +464,7 @@ Docstring Limitations / Considerations
 
 Using ``InteractiveFunction``
 -----------------------------
-In all versions of ``interact`` described so far, it is not possible to temporarily stop an interacted function from triggering on parameter changes. Normally, one can ``disconnect`` the hooked-up signals, but since the actually connected functions are out of scope, this is not possible when using ``interact``. Additionally, it is not possible to change overrides or ``deferred`` arguments after the fact. If any of these needs arise, use an ``InteractiveFunction`` instead during registration. This provides ``disconnect()`` and ``reconnect()`` methods, and object accessors to ``deferred`` arguments.
+In all versions of ``interact`` described so far, it is not possible to temporarily stop an interacted function from triggering on parameter changes. Normally, one can ``disconnect`` the hooked-up signals, but since the actually connected functions are out of scope, this is not possible when using ``interact``. Additionally, it is not possible to change overrides or ``deferred`` arguments after the fact. Finally, it is not possible to easily call an interacted function with parameter arguments/defaults through normal `interact` use. If any of these needs arise, use an ``InteractiveFunction`` instead during registration. This provides ``disconnect()`` and ``reconnect()`` methods, and object accessors to ``deferred`` arguments.
 
 .. code:: python
 
@@ -484,8 +484,26 @@ In all versions of ``interact`` described so far, it is not possible to temporar
     param['a'] = 10
     # Will print 10
 
+Note that in cases like these, where simple wrapping of a function must take place, you can use ``InteractiveFunction`` like a decorator:
+
+.. code:: python
+
+    from pyqtgraph.parametertree import InteractiveFunction, interact, Parameter, RunOpts
+
+    @InteractiveFunction
+    def myfunc(a=5):
+        print(a)
+
+    # myfunc is now an InteractiveFunction that can be used as above
+    # Also, calling `myfunc` will preserve parameter arguments
+    param = interact(myfunc, RunOpts.ON_BUTTON)
+    param['a'] = 6
+
+    myfunc()
+    # will print '6' since this is the parameter value
 
 .. [1]
    Functions defined in C or whose definitions cannot be parsed by
    ``inspect.signature`` cannot be used here. However, in these cases a dummy function
-   can be wrapped while the C function is passed to the ``runFunc`` argument.
+   can be wrapped while the C function is passed to the ``runFunc`` argument. Note that all values are passed
+   as keywords, so if positional arguments are expected it will not work.
