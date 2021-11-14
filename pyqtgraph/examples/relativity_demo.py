@@ -2,7 +2,7 @@
 Special relativity simulation 
 """
 
-from pyqtgraph.examples.relativity import RelativityGUI
+from relativity import RelativityGUI
 
 import pyqtgraph as pg
 
