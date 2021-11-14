@@ -157,7 +157,21 @@ def test_AxisItem_label_visibility():
        ('left', True, False, False),
     ],
 )
-def test_AxisItem_setLogMode(orientation, x, y, expected):
+def test_AxisItem_setLogMode_two_args(orientation, x, y, expected):
     axis = pg.AxisItem(orientation)
     axis.setLogMode(x, y)
+    assert axis.logMode == expected
+
+@pytest.mark.parametrize(
+    "orientation,log,expected",
+    [
+       ('top', True, True),
+       ('left', True, True),
+       ('top', False, False),
+       ('left', False, False),
+    ],
+)
+def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
+    axis = pg.AxisItem(orientation)
+    axis.setLogMode(log)
     assert axis.logMode == expected
