@@ -609,7 +609,7 @@ class PlotItem(GraphicsWidget):
         if z is not None:
             line.setZValue(z)
         return line
-        
+
     def removeItem(self, item):
         """
         Remove an item from the internal ViewBox.
