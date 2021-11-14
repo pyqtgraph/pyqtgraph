@@ -167,6 +167,8 @@ class LogMapping(PlotDataMapping):
         nonfinites = ~np.isfinite( dsValues )
         if nonfinites.any():
             containsNonfinite = True
+        else:
+            containsNonfinite = False
         return dsValues, containsNonfinite 
 
     def reverseFloat(self, vsValue):
