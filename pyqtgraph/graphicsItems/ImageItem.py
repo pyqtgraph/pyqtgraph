@@ -197,6 +197,7 @@ class ImageItem(GraphicsObject):
             self.setColorMap(colorMap)
         bar = ColorBarItem.ColorBarItem(**kargs)
         bar.setImageItem( self, insert_in=plot )
+        return bar
 
     def setLookupTable(self, lut, update=True):
         """
