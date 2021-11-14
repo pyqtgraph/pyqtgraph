@@ -246,13 +246,14 @@ class InteractiveFunction:
     there is no way to access these connections later to i.e. disconnect them temporarily. This utility class
     wraps a normal function but can provide an external scope for accessing the hooked up parameter signals.
     """
+
     def __init__(self, func, deferred=None, **extra):
         """
         For information on these parameters, see the signature of :func:`interact`. `extra` are extra kwargs that aren't
         parameters, but are forwarded to `func`
         """
         super().__init__()
-        self.params = None
+        self.params = []
         self.func = func
         if deferred is None:
             deferred = {}
@@ -262,28 +263,45 @@ class InteractiveFunction:
         functools.update_wrapper(self, func)
         self._disconnected = False
         self.extra = extra
+        self.paramKwargs = {}
 
     def __call__(self, **kwargs):
         """
         Calls `self.func`. Extra, deferred, and parameter keywords as defined on init and through
         :func:`InteractiveFunction.setParams` are forwarded during the call.
         """
-        paramKwargs = self.extra.copy()
-        for p in self.params:
-            p = p()
-            if p is None:
-                raise RuntimeError('Calling interactive function with deleted parameter')
-            paramKwargs[p.name()] = p.value()
+        runKwargs = self.extra.copy()
+        runKwargs.update(self.paramKwargs)
         for kk, vv in self.deferred.items():
-            paramKwargs[kk] = vv()
-        paramKwargs.update(**kwargs)
-        return self.func(**paramKwargs)
+            runKwargs[kk] = vv()
+        runKwargs.update(**kwargs)
+        return self.func(**runKwargs)
+
+    def updateCachedParamValues(self, param, value):
+        """
+        This function is connected to `sigChanged` of every parameter associated with it. This way, those parameters
+        don't have to be queried for their value every time InteractiveFunction is __call__'ed
+        """
+        self.paramKwargs[param.name()] = value
 
     def setParams(self, params=None):
         """Creates weakrefs to each parameter to avoid extending their lives"""
         if params is None:
             params = []
-        self.params = [weakref.ref(p) for p in params]
+        for p in self.params:
+            p = p()
+            if p is None:
+                raise RuntimeError('Calling interactive function with deleted parameter')
+            p.sigValueChanged.disconnect(self.updateCachedParamValues)
+        # Disconnected all old signals, clear out and get ready for new ones
+        self.params.clear()
+        # Also flush old cache
+        self.paramKwargs.clear()
+        for param in params:
+            self.params.append(weakref.ref(param))
+            param.sigValueChanged.connect(self.updateCachedParamValues)
+            # Populate initial values
+            self.paramKwargs[param.name()] = param.value()
 
     def run_changing(self, _param, value):
         if self._disconnected:
