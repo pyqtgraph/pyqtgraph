@@ -134,7 +134,7 @@ def test_zoom_ratio_with_limits1():
     viewRange = vb.getState()['viewRange']
     viewWidth = viewRange[0][1] - viewRange[0][0]
     viewHeight = viewRange[1][1] - viewRange[1][0]
-
+    
     # Make sure our view is within limits and the proper aspect ratio
     assert viewRange[0][0] >= -5
     assert viewRange[0][1] <= 5

@@ -547,13 +547,13 @@ class PlotItem(GraphicsWidget):
         # look for method to directly set mapping:
         if hasattr(item, 'setMapping'):
             if self.ctrl.logXCheck.isChecked():
-                xMapping = plotDataMappings.getLog()
+                xMapping = plotDataMappings.get('log')
             else:
-                xMapping = plotDataMappings.getIdentity()
+                xMapping = plotDataMappings.get('identity')
             if self.ctrl.logYCheck.isChecked():
-                yMapping = plotDataMappings.getLog()
+                yMapping = plotDataMappings.get('log')
             else:
-                yMapping = plotDataMappings.getIdentity()
+                yMapping = plotDataMappings.get('identity')
             item.setMapping(xMapping, yMapping )
         
         # otherwise fall back to previous log mode setting:

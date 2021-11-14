@@ -173,8 +173,10 @@ class ViewBox(GraphicsWidget):
             # Limits
             # maximum value of double float is 1.7E+308, but internal calculations exceed this limit before the range reaches it.
             'limits': { 
-                'xLimits': [-1E307, +1E307],   # Maximum and minimum visible X values
-                'yLimits': [-1E307, +1E307],   # Maximum and minimum visible Y values
+                # 'xLimits': [-1E307, +1E307],   # Maximum and minimum visible X values
+                # 'yLimits': [-1E307, +1E307],   # Maximum and minimum visible Y values
+                'xLimits': [None, None],   # Maximum and minimum visible X values
+                'yLimits': [None, None],   # Maximum and minimum visible Y values
                 'xRange': [None, None],   # Maximum and minimum X range
                 'yRange': [None, None],   # Maximum and minimum Y range
                 }
@@ -506,25 +508,19 @@ class ViewBox(GraphicsWidget):
         if self.state['aspectLocked'] is False: # (interferes with aspect locking)
             self.state['targetRange'] = [self.state['viewRange'][0][:], self.state['viewRange'][1][:]]
             
-    # def _effectiveLimits(self):
-    #     # Determines restricted effective scaling range when in log mapping mode
-    #     if self.state['logMode'][0]:
-    #         xlimits = (# constrain to the +1.7E308 to 2.2E-308 range of double float values
-    #             max( self.state['limits']['xLimits'][0], -307.6 ),
-    #             min( self.state['limits']['xLimits'][1], +308.2 )
-    #         )
-    #     else:
-    #         xlimits = self.state['limits']['xLimits']
-        
-    #     if self.state['logMode'][1]: 
-    #         ylimits = (# constrain to the +1.7E308 to 2.2E-308 range of double float values
-    #             max( self.state['limits']['yLimits'][0], -307.6 ),
-    #             min( self.state['limits']['yLimits'][1], +308.2 )
-    #         )
-    #     else:
-    #         ylimits = self.state['limits']['yLimits']
-    #     # print('limits ', xlimits, ylimits) # diagnostic output should reflect additional limit in log mode
-    #     return (xlimits, ylimits)
+    def _effectiveLimits(self):
+        # Determines restricted effective scaling range when in log mapping mode
+        # merge x limits:
+        (set_xmin, set_xmax) = self.state['limits']['xLimits']
+        (map_xmin, map_xmax) = self.state['xMapping'].vsLimits
+        if set_xmin is None or set_xmin < map_xmin: set_xmin = map_xmin
+        if set_xmax is None or set_xmax > map_xmax: set_xmax = map_xmax
+        # merge y limits:
+        (set_ymin, set_ymax) = self.state['limits']['yLimits']
+        (map_ymin, map_ymax) = self.state['yMapping'].vsLimits
+        if set_ymin is None or set_ymin < map_ymin: set_ymin = map_ymin
+        if set_ymax is None or set_ymax > map_ymax: set_ymax = map_ymax
+        return(set_xmin, set_xmax), (set_ymin, set_ymax)
 
     def setRange(self, rect=None, xRange=None, yRange=None, padding=None, update=True, disableAutoRange=True):
         """
@@ -573,12 +569,7 @@ class ViewBox(GraphicsWidget):
             self.enableAutoRange(x=xOff, y=yOff)
             changed.append(True)
             
-        # limits = self._effectiveLimits()
-        limits = (
-            self.state['xMapping'].vsLimits,
-            self.state['yMapping'].vsLimits
-        )
-
+        limits = self._effectiveLimits()
         # print('rng:limits ', limits) # diagnostic output should reflect additional limit in log mode
         # limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
         minRng = [self.state['limits']['xRange'][0], self.state['limits']['yRange'][0]]
@@ -984,28 +975,19 @@ class ViewBox(GraphicsWidget):
         """Link this view's Y axis to another view. (see LinkView)"""
         self.linkView(self.YAxis, view)
         
-    # def setLogMode(self, axis, logMode):
-    #     """Informs ViewBox that log mode is active for the specified axis, so that the view range cen be restricted"""
-    #     if axis == 'x':
-    #         self.state['logMode'][0] = bool(logMode)
-    #         # print('x log mode', self.state['logMode'][0] )
-    #     elif axis == 'y':
-    #         self.state['logMode'][1] = bool(logMode)
-    #         # print('x log mode', self.state['logMode'][0] )
-
     def setMapping(self, axis, mapping):
         """
         Sets a mapping function described by a `plotDataMappings.PlotDataMap` object.
         Eventually, objects assigned to this ViewBox should retrieve this from here.
         The mapping also provides limits for the allowed zoom range.
         """
-        print(f"ViewBox is setting {axis} mapping to {mapping.name}")
+        # print(f"ViewBox is setting {axis} mapping to {mapping.name}")
         if axis == 'x':
             self.state['xMapping'] = mapping
-            print('x mapping', type(self.state['xMapping'] ) )
+            # print('x mapping', type(self.state['xMapping'] ) )
         elif axis == 'y':
             self.state['yMapping'] = mapping
-            print('y mapping', type(self.state['yMapping'] ) )
+            # print('y mapping', type(self.state['yMapping'] ) )
 
     def linkView(self, axis, view):
         """
@@ -1570,12 +1552,7 @@ class ViewBox(GraphicsWidget):
         tr = self.targetRect()
         bounds = self.rect()
         
-        # limits = self._effectiveLimits()
-        limits = (
-            self.state['xMapping'].vsLimits,
-            self.state['yMapping'].vsLimits
-        )
-
+        limits = self._effectiveLimits()
         # print('upd:limits ', limits) # diagnostic output should reflect additional limit in log mode
         minRng = [self.state['limits']['xRange'][0], self.state['limits']['yRange'][0]]
         maxRng = [self.state['limits']['xRange'][1], self.state['limits']['yRange'][1]]
