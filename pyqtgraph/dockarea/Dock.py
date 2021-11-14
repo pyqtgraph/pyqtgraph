@@ -227,7 +227,7 @@ class Dock(QtWidgets.QWidget, DockDrop):
     def close(self):
         """Remove this dock from the DockArea it lives inside."""
         if self._container is None:
-            warnings.warn(f"Cannot close dock {self} because it is not open.")
+            warnings.warn(f"Cannot close dock {self} because it is not open.", RuntimeWarning, stacklevel=2)
             return
 
         self.setParent(None)
