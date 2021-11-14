@@ -10,6 +10,9 @@ from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
 from ..util.cupy_helper import getCupy
 from .GraphicsObject import GraphicsObject
+from .. import colormap
+from . import ColorBarItem
+# from .ColorBarItem import ColorBarItem
 
 translate = QtCore.QCoreApplication.translate
 
@@ -43,6 +46,7 @@ class ImageItem(GraphicsObject):
         self.levels = None  ## [min, max] or [[redMin, redMax], ...]
         self.lut = None
         self.autoDownsample = False
+        self._colorMap = None # This is only set if a color map is assigned directly
         self._lastDownsample = (1, 1)
         self._processingBuffer = None
         self._displayBuffer = None
@@ -161,6 +165,60 @@ class ImageItem(GraphicsObject):
         When ``autoLevels`` is active, the format is [`blackLevel`, `whiteLevel`].
         """
         return self.levels
+        
+    def setColorMap(self, colorMap):
+        """
+        Sets a color map for false color display of a monochrome image.
+
+        Parameters
+        ----------
+        colorMap : `pyqtgraph.ColorMap` or `str`
+            A string argument will be passed to `pyqtgraph.colormap.get()`
+        """
+        if isinstance(colorMap, colormap.ColorMap):
+            self._colorMap = colorMap
+        elif isinstance(colorMap, str):
+            self._colorMap = colormap.get(colorMap)
+        else:
+            raise TypeError("'colorMap' argument must be ColorMap or string")
+        self.setLookupTable( self._colorMap.getLookupTable(nPts=256) )
+        
+    def getColorMap(self):
+        """
+        Returns the assigned color map, or None if not available
+        """
+        return self._colorMap
+        
+    def addColorBar(self, colorMap=None, plot=None, **kargs):
+        """ Convenience function to add a ColorBarItem on the right side of the plot """
+        if colorMap is not None:
+            self.setColorMap(colorMap)
+        bar = ColorBarItem.ColorBarItem(**kargs)
+        bar.setImageItem( self, insert_in=plot,  )
+        
+        # def setImageItem(self, insert_in=None):
+            
+            
+            
+        #         def addColorBar(self, imageItem=None, colorMap=None):
+        # if imageItem is None:
+        #     for item in self.items:
+        #         if isinstance(item, ImageItem):
+        #             print('found an imageitem!')
+        #             imageItem = item
+        #     if imageItem is None:
+        #         raise ValueError("No ImageItem found. Please include 'imageItem' parameter.")
+        # bar = ColorBarItem()
+        # bar.setImageItem(imageItem, insert_in=self)
+
+
+            
+            
+            
+            
+            
+            
+        
 
     def setLookupTable(self, lut, update=True):
         """
@@ -225,6 +283,8 @@ class ImageItem(GraphicsObject):
                 Sets a pen to draw to draw an image border. See :func:`~pyqtgraph.ImageItem.setBorder`.
             compositionMode:
                 See :func:`~pyqtgraph.ImageItem.setCompositionMode`
+            colorMap: `pyqtgraph.ColorMap` or str
+                Sets a color map. A string will be passed to `pyqtgraph.colormap.get()`
             lut: array
                 Sets a color lookup table to use when displaying the image.
                 See :func:`~pyqtgraph.ImageItem.setLookupTable`.
@@ -245,7 +305,9 @@ class ImageItem(GraphicsObject):
             if val not in ('row-major', 'col-major'):
                 raise ValueError("axisOrder must be either 'row-major' or 'col-major'")
             self.axisOrder = val
-            self._update_data_transforms(self.axisOrder) # update cached transforms 
+            self._update_data_transforms(self.axisOrder) # update cached transforms
+        if 'colorMap' in kargs:
+            self.setColorMap(kargs['colorMap'])
         if 'lut' in kargs:
             self.setLookupTable(kargs['lut'], update=update)
         if 'levels' in kargs:
@@ -422,7 +484,6 @@ class ImageItem(GraphicsObject):
             self._inverseDataTransform.scale(1, -1)
             self._inverseDataTransform.rotate(-90)
 
-        
     def dataTransform(self):
         """
         Returns the transform that maps from this image's input array to its

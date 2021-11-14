@@ -155,6 +155,14 @@ class ColorBarItem(PlotItem):
             self.img_list = [ weakref.ref(item) for item in img ]
         except TypeError: # failed to iterate, make a single-item list
             self.img_list = [ weakref.ref( img ) ]
+        if self._colorMap is None: # check if one of the assigned images has a defined color map
+            for img_weakref in self.img_list:
+                img = img_weakref()
+                if img is not None:
+                    img_cm = img.getColorMap()
+                    if img_cm is not None:
+                        self._colorMap = img_cm
+                        break
         if insert_in is not None:
             if self.horizontal:
                 insert_in.layout.addItem( self, 5, 1 ) # insert in layout below bottom axis

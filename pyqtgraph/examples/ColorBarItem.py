@@ -24,26 +24,15 @@ class MainWindow(QtWidgets.QMainWindow):
         noisy_transposed = noisy_data.transpose()
 
         #--- add non-interactive image with integrated color -----------------
-        i1 = pg.ImageItem(image=data)
+        i1 = pg.ImageItem(image=data, colorMap='CET-L9')
         p1 = gr_wid.addPlot(title="non-interactive")
         p1.addItem( i1 )
+        i1.addColorBar(values=(0, 30_000), plot=p1, interactive=False)
         p1.setMouseEnabled( x=False, y=False)
         p1.disableAutoRange()
         p1.hideButtons()
         p1.setRange(xRange=(0,100), yRange=(0,100), padding=0)
-        for key in ['left','right','top','bottom']:
-            p1.showAxis(key)
-            axis = p1.getAxis(key)
-            axis.setZValue(1)
-            if key in ['top', 'right']: 
-                p1.getAxis(key).setStyle( showValues=False )
-
-        cmap = pg.colormap.get('CET-L9')
-        bar = pg.ColorBarItem(
-            interactive=False, values= (0, 30_000), colorMap=cmap,
-            label='vertical fixed color bar'
-        )
-        bar.setImageItem( i1, insert_in=p1 )
+        p1.showAxes(True, showValues=(True,False,False,True) )
 
         #--- add interactive image with integrated horizontal color bar --------------
         i2 = pg.ImageItem(image=noisy_data)
