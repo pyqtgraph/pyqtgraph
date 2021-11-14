@@ -12,7 +12,6 @@ from ..util.cupy_helper import getCupy
 from .GraphicsObject import GraphicsObject
 from .. import colormap
 from . import ColorBarItem
-# from .ColorBarItem import ColorBarItem
 
 translate = QtCore.QCoreApplication.translate
 
@@ -190,35 +189,14 @@ class ImageItem(GraphicsObject):
         return self._colorMap
         
     def addColorBar(self, colorMap=None, plot=None, **kargs):
-        """ Convenience function to add a ColorBarItem on the right side of the plot """
+        """ 
+        Convenience method to add a ColorBarItem for this `ImageItem` to the specified plot.
+        All additional parameters will be passed on to ColorBarItem.
+        """
         if colorMap is not None:
             self.setColorMap(colorMap)
         bar = ColorBarItem.ColorBarItem(**kargs)
-        bar.setImageItem( self, insert_in=plot,  )
-        
-        # def setImageItem(self, insert_in=None):
-            
-            
-            
-        #         def addColorBar(self, imageItem=None, colorMap=None):
-        # if imageItem is None:
-        #     for item in self.items:
-        #         if isinstance(item, ImageItem):
-        #             print('found an imageitem!')
-        #             imageItem = item
-        #     if imageItem is None:
-        #         raise ValueError("No ImageItem found. Please include 'imageItem' parameter.")
-        # bar = ColorBarItem()
-        # bar.setImageItem(imageItem, insert_in=self)
-
-
-            
-            
-            
-            
-            
-            
-        
+        bar.setImageItem( self, insert_in=plot )
 
     def setLookupTable(self, lut, update=True):
         """
