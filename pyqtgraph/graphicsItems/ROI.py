@@ -652,7 +652,7 @@ class ROI(GraphicsObject):
         handle = self.handles[index]['item']
         self.handles.pop(index)
         handle.disconnectROI(self)
-        if len(handle.rois) == 0:
+        if len(handle.rois) == 0 and self.scene() is not None:
             self.scene().removeItem(handle)
         self.stateChanged()
     
