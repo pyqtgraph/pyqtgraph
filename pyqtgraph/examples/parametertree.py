@@ -9,7 +9,7 @@ as well as some customized parameter types
 # This contains information about the options for each parameter so they can be directly
 # inserted into the example parameter tree. To create your own parameters, simply follow
 # the guidelines demonstrated by other parameters created here.
-from _buildParamTypes import makeAllParamTypes
+from pyqtgraph.examples._buildParamTypes import makeAllParamTypes
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets

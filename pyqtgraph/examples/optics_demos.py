@@ -3,7 +3,7 @@ Optical system design demo
 """
 
 import numpy as np
-from optics import *
+from pyqtgraph.examples.optics import *
 
 import pyqtgraph as pg
 from pyqtgraph import Point

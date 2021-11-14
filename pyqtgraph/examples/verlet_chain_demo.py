@@ -10,7 +10,7 @@ running the `examples/verlet_chain/make` script.
 """
 
 import numpy as np
-import verlet_chain
+from pyqtgraph.examples import verlet_chain
 
 import pyqtgraph as pg
 
