@@ -303,22 +303,22 @@ class InteractiveFunction:
             # Populate initial values
             self.paramKwargs[param.name()] = param.value()
 
-    def run_changing(self, _param, value):
+    def runFromChanging(self, _param, value):
         if self._disconnected:
             return
         return self(**{_param.name(): value})
 
-    def run_changedOrButton(self, **kwargs):
+    def runFromChangedOrButton(self, **kwargs):
         if self._disconnected:
             return
         return self(**kwargs)
 
     def disconnect(self):
-        """Simulates disconnecting the runnable by turning `run_*` functions into no-ops"""
+        """Simulates disconnecting the runnable by turning `runFrom*` functions into no-ops"""
         self._disconnected = True
 
     def reconnect(self):
-        """Simulates reconnecting the runnable by re-enabling `run_*` functions"""
+        """Simulates reconnecting the runnable by re-enabling `runFrom*` functions"""
         self._disconnected = False
 
     def __str__(self):
@@ -447,13 +447,9 @@ def _createFuncParamChild(parent, chDict, runOpts, existOk, toExec):
     # I tried connecting directly to the runnables in `toExec`, but they result in early garbage collection. This
     # doesn't happen with local functions
     if RunOpts.ON_CHANGED in runOpts:
-        def run_change():
-            toExec.run_changedOrButton()
-        child.sigValueChanged.connect(run_change)
+        child.sigValueChanged.connect(toExec.runFromChangedOrButton)
     if RunOpts.ON_CHANGING in runOpts:
-        def run_changing(_param, _val):
-            toExec.run_changing(_param, _val)
-        child.sigValueChanging.connect(run_changing)
+        child.sigValueChanging.connect(toExec.runFromChanging)
     return child
 
 def _makeRunButton(nest, tip, interactiveFunc):
@@ -465,6 +461,6 @@ def _makeRunButton(nest, tip, interactiveFunc):
     child = Parameter.create(**createOpts)
     # A local function will avoid garbage collection by holding a reference to `toExec`
     def run():
-        interactiveFunc.run_changedOrButton()
+        interactiveFunc.runFromChangedOrButton()
     child.sigActivated.connect(run)
     return child
