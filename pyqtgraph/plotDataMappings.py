@@ -40,7 +40,7 @@ class PlotDataMapping(object):
     def __init__(self, name):
         """ initialize and look up limits """
         self.name = name
-        self.vsLimits = (None, None)
+        # self.vsLimits = (None, None) # subclasses need to implement this.
         
     def __str__(self):
         return f"{self.name} mapping"
