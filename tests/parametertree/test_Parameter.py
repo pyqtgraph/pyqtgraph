@@ -174,14 +174,14 @@ def test_interactiveFunc():
     host = interact(interactive, runOpts=[])
 
     host['a'] = 7
-    assert interactive.runFromChangedOrButton() == 7
+    assert interactive.runFromButton() == 7
 
     interactive.disconnect()
-    interactive.runFromChangedOrButton(a=10)
+    interactive.runFromButton(a=10)
     assert value == 7
 
     interactive.reconnect()
-    interactive.runFromChangedOrButton(a=10)
+    interactive.runFromButton(a=10)
     assert value == 10
 
 def test_badOptsContext():

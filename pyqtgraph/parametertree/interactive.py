@@ -303,12 +303,12 @@ class InteractiveFunction:
             # Populate initial values
             self.paramKwargs[param.name()] = param.value()
 
-    def runFromChanging(self, _param, value):
+    def runFromChangedOrChanging(self, _param, value):
         if self._disconnected:
             return
         return self(**{_param.name(): value})
 
-    def runFromChangedOrButton(self, **kwargs):
+    def runFromButton(self, **kwargs):
         if self._disconnected:
             return
         return self(**kwargs)
@@ -407,11 +407,6 @@ def interact(func, *, runOpts=RunOpts.ON_CHANGED, ignores=None, parent=None, tit
         name = chDict['name']
         if name in ignores:
             continue
-        # Make sure args without defaults have overrides
-        if chDict['value'] is RunOpts.PARAM_UNSET and name not in toExec.deferred:
-            raise ValueError(f'Cannot interact with "{func} since it has required parameter "{name}"'
-                             f' with no default or deferred value provided.')
-
         child = _createFuncParamChild(parent, chDict, runOpts, existOk, toExec)
         useParams.append(child)
 
@@ -440,16 +435,18 @@ def _resolveParent(parent, nest, parentOpts, existOk):
 def _createFuncParamChild(parent, chDict, runOpts, existOk, toExec):
     name = chDict['name']
     # Make sure args without defaults have overrides
-    if chDict['value'] is RunOpts.PARAM_UNSET and name not in toExec.deferred:
+    if chDict['value'] is RunOpts.PARAM_UNSET and name not in toExec.deferred and name not in toExec.extra:
         raise ValueError(f'Cannot interact with "{toExec} since it has required parameter "{name}"'
                          f' with no default or deferred value provided.')
     child = parent.addChild(chDict, existOk=existOk)
     # I tried connecting directly to the runnables in `toExec`, but they result in early garbage collection. This
     # doesn't happen with local functions
+    def runner(param, val):
+        toExec.runFromChangedOrChanging(param, val)
     if RunOpts.ON_CHANGED in runOpts:
-        child.sigValueChanged.connect(toExec.runFromChangedOrButton)
+        child.sigValueChanged.connect(runner)
     if RunOpts.ON_CHANGING in runOpts:
-        child.sigValueChanging.connect(toExec.runFromChanging)
+        child.sigValueChanging.connect(runner)
     return child
 
 def _makeRunButton(nest, tip, interactiveFunc):
@@ -461,6 +458,6 @@ def _makeRunButton(nest, tip, interactiveFunc):
     child = Parameter.create(**createOpts)
     # A local function will avoid garbage collection by holding a reference to `toExec`
     def run():
-        interactiveFunc.runFromChangedOrButton()
+        interactiveFunc.runFromButton()
     child.sigActivated.connect(run)
     return child
