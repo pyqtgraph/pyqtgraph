@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 __all__ = ["MultiAxisPlotWidget"]
 
 import weakref
@@ -222,7 +221,9 @@ class MultiAxisPlotWidget(PlotWidget):
         if charts is None:
             charts = self.charts
         last_shown = None
+        scene = self.scene()
         for k, c in self.charts.items():
+            scene.sigPrepareForPaint.connect(c.plotItem.vb.prepareForPaint)
             c.plotItem.vb.state["isTopLevel"] = False
             try:
                 c.plotItem.vb.sigMouseDragged.disconnect()
