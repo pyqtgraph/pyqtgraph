@@ -1,5 +1,5 @@
-import numpy as np
 import numba
+import numpy as np
 
 rescale_functions = {}
 

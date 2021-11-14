@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 configfile.py - Human-readable text configuration file library 
 Copyright 2010  Luke Campagnola
@@ -9,14 +8,20 @@ file format. Data structures may be nested and contain any data type as long
 as it can be converted to/from a string using repr and eval.
 """
 
-import re, os, sys, datetime
-import numpy
-from collections import OrderedDict
+import datetime
+import os
+import re
+import sys
 import tempfile
+from collections import OrderedDict
+
+import numpy
+
 from . import units
-from .Qt import QtCore
-from .Point import Point
 from .colormap import ColorMap
+from .Point import Point
+from .Qt import QtCore
+
 GLOBAL_PATH = None # so not thread safe.
 
 

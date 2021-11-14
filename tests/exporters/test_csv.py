@@ -1,11 +1,14 @@
 """
 CSV export test
 """
-from __future__ import division, print_function, absolute_import
-import numpy as np
-import pyqtgraph as pg
+from __future__ import absolute_import, division, print_function
+
 import csv
 import tempfile
+
+import numpy as np
+
+import pyqtgraph as pg
 
 app = pg.mkQApp()
 

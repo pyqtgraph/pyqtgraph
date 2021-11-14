@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
-import numpy as np
-from ..Point import Point
-from .. import debug as debug
-from math import ceil, floor, log, log10, isfinite
-import sys
+import warnings
 import weakref
+from math import ceil, floor, isfinite, log, log10
+
+import numpy as np
+
+from .. import debug as debug
 from .. import functions as fn
 from .. import getConfigOption
+from ..Point import Point
+from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsWidget import GraphicsWidget
-import warnings
 
 __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):
@@ -45,7 +45,7 @@ class AxisItem(GraphicsWidget):
         """
 
         GraphicsWidget.__init__(self, parent)
-        self.label = QtGui.QGraphicsTextItem(self)
+        self.label = QtWidgets.QGraphicsTextItem(self)
         self.picture = None
         self.name = name
         self.orientation = orientation
@@ -211,9 +211,15 @@ class AxisItem(GraphicsWidget):
         If *log* is True, then ticks are displayed on a logarithmic scale and values
         are adjusted accordingly. (This is usually accessed by changing the log mode
         of a :func:`PlotItem <pyqtgraph.PlotItem.setLogMode>`)
+        The linked ViewBox will be informed of the change.
         """
         self.logMode = log
         self.picture = None
+        if self._linkedView is not None:
+            if self.orientation in ('top', 'bottom'):
+                self._linkedView().setLogMode('x', log)
+            elif self.orientation in ('left', 'right'):
+                self._linkedView().setLogMode('y', log)
         self.update()
 
     def setTickFont(self, font):
@@ -1187,8 +1193,8 @@ class AxisItem(GraphicsWidget):
             return
         # Did the event occur inside the linked ViewBox (and not over the axis iteself)?
         if lv.sceneBoundingRect().contains(event.scenePos()):
-            # pass event to linked ViewBox without marking it as single axis zoom
-            lv.wheelEvent(event)
+            event.ignore()
+            return
         else:
             # pass event to linked viewbox with appropriate single axis zoom parameter
             if self.orientation in ['left', 'right']:
@@ -1203,8 +1209,8 @@ class AxisItem(GraphicsWidget):
             return
         # Did the mouse down event occur inside the linked ViewBox (and not the axis)?
         if lv.sceneBoundingRect().contains(event.buttonDownScenePos()):
-            # pass event to linked ViewBox without marking it as single axis pan
-            return lv.mouseDragEvent(event)
+            event.ignore()
+            return
         # otherwise pass event to linked viewbox with appropriate single axis parameter
         if self.orientation in ['left', 'right']:
             return lv.mouseDragEvent(event, axis=1)

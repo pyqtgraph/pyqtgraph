@@ -5,4 +5,3 @@ ColorButton
     :members:
 
     .. automethod:: pyqtgraph.ColorButton.__init__
-

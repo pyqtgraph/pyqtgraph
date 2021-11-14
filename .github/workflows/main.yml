@@ -90,19 +90,19 @@ jobs:
         QT_DEBUG_PLUGINS: 1
     - name: 'XVFB Display Info'
       run: |
-        xvfb-run --server-args="-screen 0, 1920x1200x24 -ac +extension GLX +render -noreset" python -c "from pyqtgraph.opengl.glInfo import GLTest"
+        xvfb-run --server-args="-screen 0, 1920x1200x24 -ac +extension GLX +render -noreset" python -m pyqtgraph.util.glinfo
         xvfb-run --server-args="-screen 0, 1920x1200x24 -ac +extension GLX +render -noreset" python -m pyqtgraph.util.get_resolution
       if: runner.os == 'Linux'
     - name: 'Display Info'
       run: |
-        python -c "from pyqtgraph.opengl.glInfo import GLTest"
+        python -m pyqtgraph.util.glinfo
         python -m pyqtgraph.util.get_resolution
       if: runner.os != 'Linux'
     - name: Run Tests
       run: |
         mkdir $SCREENSHOT_DIR
         pytest tests -v
-        pytest examples -v
+        pytest pyqtgraph/examples -v
       shell: bash
     - name: Upload Screenshots
       uses: actions/upload-artifact@v2

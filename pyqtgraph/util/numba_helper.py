@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
 from warnings import warn
 
 from .. import getConfigOption
+
 
 def getNumbaFunctions():
     if getConfigOption("useNumba"):

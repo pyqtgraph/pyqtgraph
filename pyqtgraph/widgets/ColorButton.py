@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
 from .. import functions as functions
+from ..Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ['ColorButton']
 
-class ColorButton(QtGui.QPushButton):
+class ColorButton(QtWidgets.QPushButton):
     """
-    **Bases:** QtGui.QPushButton
+    **Bases:** QtWidgets.QPushButton
     
     Button displaying a color and allowing the user to select a new color.
     
@@ -20,12 +19,12 @@ class ColorButton(QtGui.QPushButton):
     sigColorChanged = QtCore.Signal(object)   ## emitted when the selected color is accepted (user clicks OK)
     
     def __init__(self, parent=None, color=(128,128,128), padding=6):
-        QtGui.QPushButton.__init__(self, parent)
+        QtWidgets.QPushButton.__init__(self, parent)
         self.padding = (padding, padding, -padding, -padding) if isinstance(padding, (int, float)) else padding
         self.setColor(color)
-        self.colorDialog = QtGui.QColorDialog()
-        self.colorDialog.setOption(QtGui.QColorDialog.ColorDialogOption.ShowAlphaChannel, True)
-        self.colorDialog.setOption(QtGui.QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
+        self.colorDialog = QtWidgets.QColorDialog()
+        self.colorDialog.setOption(QtWidgets.QColorDialog.ColorDialogOption.ShowAlphaChannel, True)
+        self.colorDialog.setOption(QtWidgets.QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
         self.colorDialog.currentColorChanged.connect(self.dialogColorChanged)
         self.colorDialog.rejected.connect(self.colorRejected)
         self.colorDialog.colorSelected.connect(self.colorSelected)

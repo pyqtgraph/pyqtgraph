@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore, QtWidgets
-from .GraphicsView import GraphicsView
 from ..graphicsItems.GradientEditorItem import GradientEditorItem
+from ..Qt import QtCore, QtGui, QtWidgets
+from .GraphicsView import GraphicsView
 
 __all__ = ['GradientWidget']
 

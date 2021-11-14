@@ -5,4 +5,3 @@ DateAxisItem
     :members:
 
     .. automethod:: pyqtgraph.DateAxisItem.__init__
-

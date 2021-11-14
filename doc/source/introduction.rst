@@ -45,21 +45,14 @@ Examples
 --------
 
 PyQtGraph includes an extensive set of examples that can be accessed by
-running either ``python -m pyqtgraph.examples`` [#editableInstall]_ or ::
+running either ``python -m pyqtgraph.examples`` or ::
 
     import pyqtgraph.examples
     pyqtgraph.examples.run()
 
-Or, if the project repository is local, you can run``python examples/`` from
-the source root.
-
 This will start a launcher with a list of available examples. Select an item
 from the list to view its source code and double-click an item to run the
 example.
-
-Note If you have installed pyqtgraph with ``python setup.py develop``
-then the examples are incorrectly exposed as a top-level module. In this case,
-use ``import examples; examples.run()``.
 
 
 How does it compare to...
@@ -88,5 +81,3 @@ I am wrong here)
 
 
 .. rubric:: Footnotes
-
-.. [#editableInstall] This method does not work when pyqtgraph is installed in editable mode.

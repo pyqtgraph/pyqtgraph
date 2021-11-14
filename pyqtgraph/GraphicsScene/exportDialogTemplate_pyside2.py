@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 ################################################################################
 ## Form generated from reading UI file 'exportDialogTemplate.ui'
@@ -92,4 +91,3 @@ class Ui_Form(object):
         self.label_3.setText(QCoreApplication.translate("Form", u"Export options", None))
         self.copyBtn.setText(QCoreApplication.translate("Form", u"Copy", None))
     # retranslateUi
-

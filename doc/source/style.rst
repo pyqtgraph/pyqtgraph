@@ -43,5 +43,3 @@ These defaults can be changed using pyqtgraph.setConfigOption()::
     pg.plot([1,4,2,3,5])
     
 (Note that this must be set *before* creating any widgets)
-
-

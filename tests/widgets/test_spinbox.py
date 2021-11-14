@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 import pytest
+
 import pyqtgraph as pg
 
 pg.mkQApp()
