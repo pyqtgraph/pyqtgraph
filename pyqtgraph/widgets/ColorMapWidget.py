@@ -80,7 +80,7 @@ class ColorMapParameter(ptree.types.GroupParameter):
                     for i, child in enumerate(children):
                         try:
                             child.setValue(v[i])
-                        except IndexError('No default color set for child %s' % child.name()):
+                        except IndexError:
                             continue
             else:
                 item[k] = v
