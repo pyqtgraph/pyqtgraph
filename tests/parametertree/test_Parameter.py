@@ -113,6 +113,11 @@ def test_interact():
         for ch in 'different', 'Y':
             assert ch in titles
 
+    with RunOpts.optsContext(title='Group only'):
+        host = interact(a, x=1)
+        assert host.title() == 'Group only'
+        assert [p.title() is None for p in host]
+
     with RunOpts.optsContext(runOpts=RunOpts.ON_CHANGED):
         host = interact(a, x=5)
         host['y'] = 20

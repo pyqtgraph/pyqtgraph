@@ -62,7 +62,7 @@ def funcToParamDict(func, title=None, **overrides):
     children = []
     out = dict(name=func.__name__, type='group', children=children)
     if title is not None:
-        out['title'] = _resolveTitle(func.__name__, title)
+        out['title'] = _resolveTitle(func.__name__, title, forwardStrTitle=True)
 
     funcParams = inspect.signature(func).parameters
     parsedDoc = parseIniDocstring(func.__doc__)
@@ -324,10 +324,11 @@ class InteractiveFunction:
     def __str__(self):
         return self.func.__str__()
 
-def _resolveTitle(name, titleFormat):
-    if titleFormat is None:
+def _resolveTitle(name, titleFormat, forwardStrTitle=False):
+    isstr = isinstance(titleFormat, str)
+    if titleFormat is None or (isstr and not forwardStrTitle):
         return name
-    if isinstance(titleFormat, str):
+    elif isstr:
         return titleFormat
     # else: titleFormat should be callable
     return titleFormat(name)
