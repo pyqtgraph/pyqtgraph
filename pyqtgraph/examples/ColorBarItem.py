@@ -46,7 +46,6 @@ class MainWindow(QtWidgets.QMainWindow):
         p2.getAxis('bottom').setLabel('bottom axis label')
         p2.getAxis('right').setLabel('right axis label')
 
-        # cmap = pg.colormap.get('CET-L4')
         bar = pg.ColorBarItem(
             values = (0, 30_000),
             colorMap='CET-L4',
