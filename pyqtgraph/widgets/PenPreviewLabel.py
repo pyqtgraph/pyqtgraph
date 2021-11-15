@@ -1,15 +1,17 @@
-from pyqtgraph import QtWidgets, QtGui
+from ..Qt import QtWidgets, QtGui
+from ..functions import mkPen
 
 
 class PenPreviewLabel(QtWidgets.QLabel):
     def __init__(self, param):
         super().__init__()
         self.param = param
-        param.sigValueChanged.connect(self.update)
+        self.pen = QtGui.QPen(self.param.pen)
+        param.sigValueChanging.connect(self.onPenChanging)
 
-    @property
-    def pen(self):
-        return self.param.pen
+    def onPenChanging(self, param, val):
+        self.pen = QtGui.QPen(val)
+        self.update()
 
     def paintEvent(self, ev):
         path = QtGui.QPainterPath()
@@ -23,4 +25,9 @@ class PenPreviewLabel(QtWidgets.QLabel):
         painter = QtGui.QPainter(self)
         painter.setPen(self.pen)
         painter.drawPath(path)
+
+        # No indication of "cosmetic" from just the paint path, so add something extra in that case
+        if self.pen.isCosmetic():
+            painter.setPen(mkPen('k'))
+            painter.drawText(w * 0.81, 12, 'C')
         painter.end()
