@@ -6,7 +6,7 @@ from ...Qt import QtCore, QtWidgets
 from ...widgets.TreeWidget import TreeWidget
 from ..Node import Node
 from . import functions
-from .common import *
+from .common import CtrlNode
 
 
 class ColumnSelectNode(Node):

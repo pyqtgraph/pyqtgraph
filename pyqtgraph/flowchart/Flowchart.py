@@ -1,9 +1,11 @@
+__init__ = ["Flowchart", "FlowchartGraphicsItem", "FlowchartNode"]
+
 import importlib
 from collections import OrderedDict
 
 from .. import DataTreeWidget, FileDialog
 from ..Qt import QT_LIB, QtCore, QtWidgets
-from .Node import *
+from .Node import Node
 
 FlowchartCtrlTemplate = importlib.import_module(
     f'.FlowchartCtrlTemplate_{QT_LIB.lower()}', package=__package__)
@@ -14,6 +16,7 @@ from .. import configfile as configfile
 from .. import dockarea as dockarea
 from .. import functions as fn
 from ..debug import printExc
+from ..graphicsItems.GraphicsObject import GraphicsObject
 from . import FlowchartGraphicsView
 from .library import LIBRARY
 from .Terminal import Terminal
@@ -431,7 +434,7 @@ class Flowchart(Node):
         conn = set()
         for n in self._nodes.values():
             terms = n.outputs()
-            for n, t in terms.items():
+            for t in terms.values():
                 for c in t.connections():
                     conn.add((t, c))
         return conn

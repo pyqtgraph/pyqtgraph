@@ -115,6 +115,8 @@ class ParameterSystem(GroupParameter):
             bg = fn.mkBrush('y')
             bold = True
             readonly = False
+        else:
+            raise ValueError("'state' must be one of 'autoSet', 'autoUnset', or 'fixed'")
             
         param.setReadonly(readonly)
         

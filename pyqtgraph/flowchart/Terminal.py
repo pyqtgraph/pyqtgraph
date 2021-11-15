@@ -1,3 +1,5 @@
+__all__ = ["Terminal", "TerminalGraphicsItem"]
+
 import weakref
 
 from .. import functions as fn

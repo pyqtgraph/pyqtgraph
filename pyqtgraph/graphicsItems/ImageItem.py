@@ -1039,7 +1039,10 @@ class ImageItem(GraphicsObject):
         #print(ev.pressure())
 
     def drawAt(self, pos, ev=None):
-        pos = [int(pos.x()), int(pos.y())]
+        if self.axisOrder == "col-major":
+            pos = [int(pos.x()), int(pos.y())]
+        else:
+            pos = [int(pos.y()), int(pos.x())]
         dk = self.drawKernel
         kc = self.drawKernelCenter
         sx = [0,dk.shape[0]]

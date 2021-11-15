@@ -907,10 +907,10 @@ class PlotItem(GraphicsWidget):
         for i in self.items:
             if hasattr(i, 'setLogMode'):
                 i.setLogMode(x,y)
-        self.getAxis('bottom').setLogMode(x)
-        self.getAxis('top').setLogMode(x)
-        self.getAxis('left').setLogMode(y)
-        self.getAxis('right').setLogMode(y)
+        self.getAxis('bottom').setLogMode(x, y)
+        self.getAxis('top').setLogMode(x, y)
+        self.getAxis('left').setLogMode(x, y)
+        self.getAxis('right').setLogMode(x, y)
         self.enableAutoRange()
         self.recomputeAverages()
     
@@ -993,6 +993,8 @@ class PlotItem(GraphicsWidget):
             method = 'mean'
         elif self.ctrl.peakRadio.isChecked():
             method = 'peak'
+        else:
+            raise ValueError("one of the method radios must be selected for: 'subsample', 'mean', or 'peak'.")
         
         return ds, auto, method
         

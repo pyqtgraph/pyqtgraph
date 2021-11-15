@@ -1,3 +1,5 @@
+import pytest
+
 import pyqtgraph as pg
 
 pg.mkQApp()
@@ -17,10 +19,16 @@ def test_closable_dock():
     name = "Test close dock"
     dock = da.Dock(name=name, closable=True)
 
-    assert dock.label.closeButton != None
+    assert dock.label.closeButton is not None
 
 def test_hide_title_dock():
     name = "Test hide title dock"
     dock = da.Dock(name=name, hideTitle=True)
 
     assert dock.labelHidden == True
+
+def test_close():
+    name = "Test close dock"
+    dock = da.Dock(name=name, hideTitle=True)
+    with pytest.warns(Warning):
+        dock.close()

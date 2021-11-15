@@ -1,9 +1,9 @@
 import weakref
 
 from ..Qt import QtWidgets
-from .Container import *
+from .Container import Container, HContainer, TContainer, VContainer
 from .Dock import Dock
-from .DockDrop import *
+from .DockDrop import DockDrop
 
 
 class DockArea(Container, QtWidgets.QWidget, DockDrop):
@@ -129,6 +129,8 @@ class DockArea(Container, QtWidgets.QWidget, DockDrop):
             new = HContainer(self)
         elif typ == 'tab':
             new = TContainer(self)
+        else:
+            raise ValueError("typ must be one of 'vertical', 'horizontal', or 'tab'")
         return new
         
     def addContainer(self, typ, obj):

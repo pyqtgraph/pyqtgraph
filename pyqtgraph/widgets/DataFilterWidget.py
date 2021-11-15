@@ -60,6 +60,8 @@ class DataFilterParameter(ptree.types.GroupParameter):
             child = self.addChild(RangeFilterItem(name, self.fields[name]))
         elif mode == 'enum':
             child = self.addChild(EnumFilterItem(name, self.fields[name]))
+        else:
+            raise ValueError("field mode must be 'range' or 'enum'")
         return child
             
     def fieldNames(self):
