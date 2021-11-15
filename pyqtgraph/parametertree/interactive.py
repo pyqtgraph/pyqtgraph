@@ -390,7 +390,15 @@ def interact(func, *, runOpts=RunOpts.ON_CHANGED, ignores=None, parent=None, tit
 
     toExec = runFunc or func
     if not isinstance(toExec, InteractiveFunction):
-        toExec = InteractiveFunction(toExec)
+        # If a reference isn't captured somewhere, garbage collection of the newly created
+        # "InteractiveFunction" instance prevents connected signals from firing
+        # Use a list in case multiple interact() calls are made with the same function
+        interactive = InteractiveFunction(toExec)
+        if hasattr(toExec, 'interactiveRefs'):
+            toExec.interactiveRefs.append(interactive)
+        else:
+            toExec.interactiveRefs = [interactive]
+        toExec = interactive
 
     # Values can't come both from deferred and overrides/params, so ensure they don't get created
     if ignores is None:
@@ -439,14 +447,10 @@ def _createFuncParamChild(parent, chDict, runOpts, existOk, toExec):
         raise ValueError(f'Cannot interact with "{toExec} since it has required parameter "{name}"'
                          f' with no default or deferred value provided.')
     child = parent.addChild(chDict, existOk=existOk)
-    # I tried connecting directly to the runnables in `toExec`, but they result in early garbage collection. This
-    # doesn't happen with local functions
-    def runner(param, val):
-        toExec.runFromChangedOrChanging(param, val)
     if RunOpts.ON_CHANGED in runOpts:
-        child.sigValueChanged.connect(runner)
+        child.sigValueChanged.connect(toExec.runFromChangedOrChanging)
     if RunOpts.ON_CHANGING in runOpts:
-        child.sigValueChanging.connect(runner)
+        child.sigValueChanging.connect(toExec.runFromChangedOrChanging)
     return child
 
 def _makeRunButton(nest, tip, interactiveFunc):
@@ -457,7 +461,5 @@ def _makeRunButton(nest, tip, interactiveFunc):
         createOpts['tip'] = tip
     child = Parameter.create(**createOpts)
     # A local function will avoid garbage collection by holding a reference to `toExec`
-    def run():
-        interactiveFunc.runFromButton()
-    child.sigActivated.connect(run)
+    child.sigActivated.connect(interactiveFunc.runFromButton)
     return child
