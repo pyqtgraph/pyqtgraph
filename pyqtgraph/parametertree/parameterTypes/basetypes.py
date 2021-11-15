@@ -319,24 +319,30 @@ class GroupParameterItem(ParameterItem):
         self.optsChanged(self.param, self.param.opts)
 
     def updateDepth(self, depth):
-        ## Change item's appearance based on its depth in the tree
-        ## This allows highest-level groups to be displayed more prominently.
-        if depth == 0:
-            for c in [0,1]:
-                self.setBackground(c, QtGui.QBrush(QtGui.QColor(100,100,100)))
-                self.setForeground(c, QtGui.QBrush(QtGui.QColor(220,220,255)))
-                font = self.font(c)
-                font.setBold(True)
+        """
+        Change item's appearance based on its depth in the tree
+        This allows highest-level groups to be displayed more prominently.
+        """
+        app = QtWidgets.QApplication.instance()
+        palette = app.palette()
+        textColor = palette.text().color()
+        backgroundColor = palette.button().color().darker(110)
+        altBackgroundColor = palette.dark().color()
+
+        if app.property('darkMode'):
+            backgroundColor = palette.button().color().lighter(115)
+            altBackgroundColor = palette.light().color().lighter(190)
+
+        for c in [0, 1]:
+            font = self.font(c)
+            font.setBold(True)
+            if depth == 0:
+                backgroundColor = altBackgroundColor
                 font.setPointSize(font.pointSize()+1)
-                self.setFont(c, font)
-        else:
-            for c in [0,1]:
-                self.setBackground(c, QtGui.QBrush(QtGui.QColor(220,220,220)))
-                self.setForeground(c, QtGui.QBrush(QtGui.QColor(50,50,50)))
-                font = self.font(c)
-                font.setBold(True)
-                #font.setPointSize(font.pointSize()+1)
-                self.setFont(c, font)
+
+            self.setBackground(c, backgroundColor)
+            self.setForeground(c, textColor)
+            self.setFont(c, font)
         self.titleChanged()  # sets the size hint for column 0 which is based on the new font
 
     def addClicked(self):
