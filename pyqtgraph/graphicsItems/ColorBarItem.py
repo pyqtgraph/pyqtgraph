@@ -17,8 +17,11 @@ class ColorBarItem(PlotItem):
     """
     **Bases:** :class:`PlotItem <pyqtgraph.PlotItem>`
 
-    :class:`ColorBarItem` is a simpler, compact alternative to :class:`~pyqtgraph.HistogramLUTItem`, 
-    without histogram or the option to adjust the colors of the look-up table.
+    :class:`ColorBarItem` controls the application of a 
+    :ref:`color map <apiref_colormap>` to one (or more) 
+    :class:`~pyqtgraph.ImageItem`. It is a simpler, compact alternative to 
+    :class:`~pyqtgraph.HistogramLUTItem`, without histogram or the 
+    option to adjust the colors of the look-up table.
 
     A labeled axis is displayed directly next to the gradient to help identify values.
     Handles included in the color bar allow for interactive adjustment.
