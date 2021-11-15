@@ -6,6 +6,7 @@ from .basetypes import GroupParameter, Parameter, ParameterItem
 from .qtenum import QtEnumParameter
 from ... import functions as fn
 from ...Qt import QtCore
+from ...SignalProxy import SignalProxy
 from ...widgets.PenPreviewLabel import PenPreviewLabel
 
 class PenParameterItem(GroupParameterItem):
@@ -45,6 +46,10 @@ class PenParameter(GroupParameter):
         if 'children' in opts:
             raise KeyError('Cannot set "children" argument in Pen Parameter opts')
         super().__init__(**opts, children=list(children))
+        self.valChangingProxy = SignalProxy(self.sigValueChanging, delay=1.0, slot=self._childrenFinishedChanging)
+
+    def _childrenFinishedChanging(self, paramAndValue):
+        self.sigValueChanged.emit(*paramAndValue)
 
     def saveState(self, filter=None):
         state = super().saveState(filter)
@@ -124,12 +129,12 @@ class PenParameter(GroupParameter):
             name = name.title().strip()
             p.setOpts(title=name, default=default)
 
-        def setterWrapper(setter):
-            def newSetter(_, value):
-                setter(value)
-                self.sigValueChanged.emit(self, self.pen)
+        def penPropertyWrapper(propertySetter):
+            def tiePenPropToParam(_, value):
+                propertySetter(value)
+                self.sigValueChanging.emit(self, self.pen)
 
-            return newSetter
+            return tiePenPropToParam
 
         if boundPen is not None:
             self.updateFromPen(param, boundPen)
@@ -137,10 +142,13 @@ class PenParameter(GroupParameter):
                 setter, setName = self._setterForParam(p.name(), boundPen, returnName=True)
                 # Instead, set the parameter which will signal the old setter
                 setattr(boundPen, setName, p.setValue)
-                p.sigValueChanged.connect(setterWrapper(setter))
+                newSetter = penPropertyWrapper(setter)
+                p.sigValueChanging.connect(newSetter)
                 # Force children to emulate self's value instead of being part of a tree like normal
                 p.sigValueChanged.disconnect(p._emitValueChanged)
-                # Populate initial value
+                # Some widgets (e.g. checkbox, combobox) don't emit 'changing' signals, so tie to 'changed' as well
+                p.sigValueChanged.connect(newSetter)
+
         return param
 
     @staticmethod
