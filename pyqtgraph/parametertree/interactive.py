@@ -246,7 +246,7 @@ class InteractiveFunction:
     wraps a normal function but can provide an external scope for accessing the hooked up parameter signals.
     """
 
-    def __init__(self, func, deferred=None, **extra):
+    def __init__(self, func, *, deferred=None, **extra):
         """
         Wraps a callable function in a way that forwards Parameter arguments as keywords
 
