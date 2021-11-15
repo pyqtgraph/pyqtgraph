@@ -72,14 +72,15 @@ class ColorBarItem(PlotItem):
         self.horizontal = bool( orientation in ('h', 'horizontal') )
 
         self.lo_prv, self.hi_prv = self.values # remember previous values while adjusting range
-        if limits is None:
-            self.lo_lim = None
-            self.hi_lim = None
-        else:
+        self.lo_lim = None
+        self.hi_lim = None
+        if limits is not None:
             self.lo_lim, self.hi_lim = limits
             # slightly expand the limits to match the rounding steps:
-            self.lo_lim = self.rounding * math.floor( self.lo_lim/self.rounding )
-            self.hi_lim = self.rounding * math.ceil(  self.hi_lim/self.rounding )
+            if self.lo_lim is not None:
+                self.lo_lim = self.rounding * math.floor( self.lo_lim/self.rounding )
+            if self.hi_lim is not None:
+                self.hi_lim = self.rounding * math.ceil( self.hi_lim/self.rounding )
 
         self.disableAutoRange()
         self.hideButtons()
