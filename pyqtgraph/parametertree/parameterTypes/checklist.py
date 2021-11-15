@@ -1,5 +1,5 @@
 from ... import functions as fn
-from ...Qt import QtWidgets, QtCore
+from ...Qt import QtWidgets
 from ...SignalProxy import SignalProxy
 from ..ParameterItem import ParameterItem
 from . import BoolParameterItem, SimpleParameter
@@ -151,7 +151,7 @@ class ChecklistParameter(GroupParameter):
             # Also, value calculation will be incorrect until children are added, so make sure to recompute
             self.setValue(value)
 
-        self.coalesceProxy = SignalProxy(self.sigValueChanging, delay=opts.get('delay', 1.0), slot=self._finishChildChanges)
+        self.valChangingProxy = SignalProxy(self.sigValueChanging, delay=opts.get('delay', 1.0), slot=self._finishChildChanges)
 
     def updateLimits(self, _param, limits):
         oldOpts = self.names
@@ -191,7 +191,7 @@ class ChecklistParameter(GroupParameter):
             # self.opts['value'] = self._VALUE_UNSET
             self.updateLimits(None, self.opts.get('limits', []))
         if 'delay' in opts:
-            self.coalesceProxy.setDelay(opts['delay'])
+            self.valChangingProxy.setDelay(opts['delay'])
     
     def value(self):
         vals = [self.forward[p.name()] for p in self.children() if p.value()]
