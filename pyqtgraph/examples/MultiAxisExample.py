@@ -47,4 +47,4 @@ mpw.update()
 
 # Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()
