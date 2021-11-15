@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
+from .. import PlotItem
+from ..parametertree import Parameter
 from ..Qt import QtCore
 from .Exporter import Exporter
-from ..parametertree import Parameter
-from .. import PlotItem
 
 translate = QtCore.QCoreApplication.translate
 

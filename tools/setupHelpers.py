@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from contextlib import suppress
 
 import json
@@ -10,7 +9,7 @@ import sys
 from distutils import core
 from typing import Dict, Any
 
-from generateChangelog import generateDebianChangelog
+from .generateChangelog import generateDebianChangelog
 
 # Maximum allowed repository size difference (in kB) following merge.
 # This is used to prevent large files from being inappropriately added to
@@ -323,17 +322,6 @@ def mergeTests():
     else:
         print("\033[0;31m" + "\nMerge tests failed." + "\033[0m")
     return ret
-
-
-def listAllPackages(pkgroot):
-    path = os.getcwd()
-    n = len(path.split(os.path.sep))
-    subdirs = [
-        i[0].split(os.path.sep)[n:]
-        for i in os.walk(os.path.join(path, pkgroot))
-        if '__init__.py' in i[2]
-    ]
-    return ['.'.join(p) for p in subdirs]
 
 
 def getInitVersion(pkgroot):

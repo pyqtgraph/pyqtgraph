@@ -1,9 +1,9 @@
 import os
 import re
 
-from .str import StrParameterItem
+from ...Qt import QtCore, QtGui, QtWidgets
 from ..Parameter import Parameter
-from ...Qt import QtWidgets, QtGui, QtCore
+from .str import StrParameterItem
 
 
 def _set_filepicker_kwargs(fileDlg, **kwargs):

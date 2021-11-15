@@ -1,7 +1,7 @@
-from OpenGL.GL import *
-from .. GLGraphicsItem import GLGraphicsItem
-from ...Qt import QtGui
+from OpenGL.GL import *  # noqa
 from ... import functions as fn
+from ...Qt import QtGui
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLBoxItem']
 
@@ -84,5 +84,3 @@ class GLBoxItem(GLGraphicsItem):
         glVertex3f(x, y, z)
         
         glEnd()
-        
-        

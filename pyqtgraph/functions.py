@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 functions.py -  Miscellaneous functions with no other home
 Copyright 2010  Luke Campagnola
@@ -8,21 +7,20 @@ Distributed under MIT/X11 license. See license.txt for more information.
 from __future__ import division
 
 import decimal
+import math
 import re
 import struct
 import sys
 import warnings
-import math
+from collections import OrderedDict
 
 import numpy as np
+
+from . import Qt, debug, reload
+from .metaarray import MetaArray
+from .Qt import QT_LIB, QtCore, QtGui
 from .util.cupy_helper import getCupy
 from .util.numba_helper import getNumbaFunctions
-
-from . import debug, reload
-from .Qt import QtGui, QtCore, QT_LIB, QtVersion
-from . import Qt
-from .metaarray import MetaArray
-from collections import OrderedDict
 
 # in order of appearance in this file.
 # add new functions to this list only if they are to reside in pg namespace.
@@ -1181,6 +1179,7 @@ def solveBilinearTransform(points1, points2):
         mapped = np.dot(matrix, [x*y, x, y, 1])
     """
     import numpy.linalg
+
     ## A is 4 rows (points) x 4 columns (xy, x, y, 1)
     ## B is 4 rows (points) x 2 columns (x, y)
     A = np.array([[points1[i].x()*points1[i].y(), points1[i].x(), points1[i].y(), 1] for i in range(4)])
@@ -1907,11 +1906,15 @@ def _arrayToQPath_all(x, y, finiteCheck):
     if n == 0:
         return QtGui.QPainterPath()
 
-    backfill_idx = None
+    finite_idx = None
     if finiteCheck:
         isfinite = np.isfinite(x) & np.isfinite(y)
-        if not np.all(isfinite):
-            backfill_idx = _compute_backfill_indices(isfinite)
+        if not isfinite.all():
+            finite_idx = isfinite.nonzero()[0]
+            n = len(finite_idx)
+
+    if n < 2:
+        return QtGui.QPainterPath()
 
     chunksize = 10000
     numchunks = (n + chunksize - 1) // chunksize
@@ -1922,12 +1925,12 @@ def _arrayToQPath_all(x, y, finiteCheck):
         poly = create_qpolygonf(n)
         arr = ndarray_from_qpolygonf(poly)
 
-        if backfill_idx is None:
+        if finite_idx is None:
             arr[:, 0] = x
             arr[:, 1] = y
         else:
-            arr[:, 0] = x[backfill_idx]
-            arr[:, 1] = y[backfill_idx]
+            arr[:, 0] = x[finite_idx]
+            arr[:, 1] = y[finite_idx]
 
         path = QtGui.QPainterPath()
         if hasattr(path, 'reserve'):    # Qt 5.13
@@ -1951,13 +1954,13 @@ def _arrayToQPath_all(x, y, finiteCheck):
             else:
                 subpoly.fill(QtCore.QPointF(), currsize)
         subarr = ndarray_from_qpolygonf(subpoly)
-        if backfill_idx is None:
+        if finite_idx is None:
             subarr[:, 0] = x[sl]
             subarr[:, 1] = y[sl]
         else:
-            bfv = backfill_idx[sl]  # view
-            subarr[:, 0] = x[bfv]
-            subarr[:, 1] = y[bfv]
+            fiv = finite_idx[sl]  # view
+            subarr[:, 0] = x[fiv]
+            subarr[:, 1] = y[fiv]
         if subpath is None:
             subpath = QtGui.QPainterPath()
         subpath.addPolygon(subpoly)

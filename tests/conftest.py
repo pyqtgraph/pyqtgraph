@@ -1,6 +1,8 @@
-import pytest
 import os
 import sys
+
+import pytest
+
 
 @pytest.fixture
 def tmp_module(tmp_path):

@@ -1,11 +1,20 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    sha: master
+    rev: v4.0.1
     hooks:
     -   id: check-added-large-files
         args: ['--maxkb=100']
     -   id: check-case-conflict
     -   id: end-of-file-fixer
     -   id: fix-encoding-pragma
+        args: ['--remove']
     -   id: mixed-line-ending
         args: [--fix=lf]
+    -   id: check-merge-conflict
+    -   id: check-toml
+    -   id: debug-statements
+    -   id: check-ast
+-   repo: https://github.com/pycqa/isort
+    rev: 5.9.3
+    hooks:
+    -   id: isort

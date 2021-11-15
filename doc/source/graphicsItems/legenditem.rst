@@ -5,4 +5,3 @@ LegendItem
     :members:
 
     .. automethod:: pyqtgraph.LegendItem.__init__
-

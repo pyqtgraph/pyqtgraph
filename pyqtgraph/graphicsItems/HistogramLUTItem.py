@@ -1,26 +1,23 @@
-# -*- coding: utf-8 -*-
 """
 GraphicsWidget displaying an image histogram along with gradient editor. Can be used to
 adjust the appearance of images.
 """
 
 
-from ..Qt import QtGui, QtCore
-from .. import functions as fn
-from .GraphicsWidget import GraphicsWidget
-from .ViewBox import *
-from .GradientEditorItem import *
-from .LinearRegionItem import *
-from .PlotDataItem import *
-from .PlotCurveItem import *
-from .AxisItem import *
-from .GridItem import *
-from ..Point import Point
-from .. import functions as fn
-import numpy as np
-from .. import debug as debug
-
 import weakref
+
+import numpy as np
+
+from .. import debug as debug
+from .. import functions as fn
+from ..Point import Point
+from ..Qt import QtCore, QtGui, QtWidgets
+from .AxisItem import *
+from .GradientEditorItem import *
+from .GraphicsWidget import GraphicsWidget
+from .LinearRegionItem import *
+from .PlotCurveItem import *
+from .ViewBox import *
 
 __all__ = ['HistogramLUTItem']
 
@@ -102,7 +99,7 @@ class HistogramLUTItem(GraphicsWidget):
         elif orientation == 'horizontal' and gradientPosition not in {'top', 'bottom'}:
             self.gradientPosition = 'bottom'
 
-        self.layout = QtGui.QGraphicsGridLayout()
+        self.layout = QtWidgets.QGraphicsGridLayout()
         self.setLayout(self.layout)
         self.layout.setContentsMargins(1, 1, 1, 1)
         self.layout.setSpacing(0)

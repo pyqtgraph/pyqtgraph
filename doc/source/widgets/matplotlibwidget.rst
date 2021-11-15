@@ -5,4 +5,3 @@ MatplotlibWidget
     :members:
 
     .. automethod:: pyqtgraph.widgets.MatplotlibWidget.MatplotlibWidget.__init__
-

@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
 from collections import OrderedDict
 from copy import deepcopy
-from pyqtgraph.functions import arrayToQPath, eq
 
 import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal
 
 import pyqtgraph as pg
+from pyqtgraph.functions import arrayToQPath, eq
 from pyqtgraph.Qt import QtGui
 
 np.random.seed(12345)

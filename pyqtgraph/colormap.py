@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
-import numpy as np
-from .Qt import QtGui, QtCore
-from .functions import mkColor, eq, colorDistance, clip_scalar, clip_array
-from os import path, listdir
-from collections.abc import Callable, Sequence
 import warnings
+from collections.abc import Callable, Sequence
+from os import listdir, path
+
+import numpy as np
+
+from .functions import clip_array, clip_scalar, colorDistance, eq, mkColor
+from .Qt import QtCore, QtGui
 
 __all__ = ['ColorMap']
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 __all__ = ["MultiAxisPlotWidget"]
 
 import weakref
@@ -208,6 +207,7 @@ class MultiAxisPlotWidget(PlotWidget):
     def connect_signals(self, top_level, chart):
         tvb = top_level.plotItem.vb
         cvb = chart.plotItem.vb
+        scene = self.scene()
         for axis_name in chart.axes:
             # link axis to view
             axis = self.axes[axis_name]
@@ -244,6 +244,8 @@ class MultiAxisPlotWidget(PlotWidget):
         # resize plotitem according to the master one
         # resizing it's view doesn't work for some reason
         self.vb.sigResized.connect(lambda vb: chart.plotItem.setGeometry(vb.sceneBoundingRect()))
+        # fix prepareForPaint by outofculture
+        scene.sigPrepareForPaint.connect(cvb.prepareForPaint)
         try:
             cvb.sigMouseDragged.disconnect()
         except (TypeError, RuntimeError):
@@ -257,6 +259,8 @@ class MultiAxisPlotWidget(PlotWidget):
         except (TypeError, RuntimeError):
             pass
         if cvb is not tvb:
+            # FROM "https://github.com/pyqtgraph/pyqtgraph/pull/2010" by herodotus77
+            # propagate mouse actions to charts "hidden" behind
             tvb.sigMouseDragged.connect(cvb.mouseDragEvent)
             tvb.sigMouseWheel.connect(cvb.wheelEvent)
             tvb.sigHistoryChanged.connect(cvb.scaleHistory)

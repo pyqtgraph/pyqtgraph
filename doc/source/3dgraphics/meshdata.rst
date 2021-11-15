@@ -5,4 +5,3 @@ MeshData
     :members:
 
     .. automethod:: pyqtgraph.opengl.MeshData.__init__
-

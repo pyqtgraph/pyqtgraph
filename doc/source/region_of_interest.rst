@@ -19,5 +19,3 @@ To automatically extract a region of image data using an ROI and an ImageItem, u
 ROI can also be used as a control for moving/rotating/scaling items in a scene similar to most vector graphics editing applications.
 
 See the ROITypes example for more information.
-
-

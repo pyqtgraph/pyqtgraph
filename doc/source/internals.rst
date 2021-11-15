@@ -6,4 +6,3 @@ Internals - Extensions to Qt's GraphicsView
 * GraphicsObject
 * GraphicsWidget
 * ViewBox
-

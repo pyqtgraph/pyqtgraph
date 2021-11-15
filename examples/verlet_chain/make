@@ -1,3 +1,0 @@
-gcc -fPIC -c relax.c
-gcc -shared -o maths.so relax.o
-
