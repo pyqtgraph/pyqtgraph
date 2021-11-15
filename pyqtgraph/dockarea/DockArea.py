@@ -1,9 +1,9 @@
 import weakref
 
 from ..Qt import QtWidgets
-from .Container import *
+from .Container import Container, HContainer, TContainer, VContainer
 from .Dock import Dock
-from .DockDrop import *
+from .DockDrop import DockDrop
 
 
 class DockArea(Container, QtWidgets.QWidget, DockDrop):

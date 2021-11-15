@@ -1,7 +1,9 @@
+import warnings
+
 from ..Qt import QtCore, QtGui, QtWidgets
 from ..widgets.VerticalLabel import VerticalLabel
-from .DockDrop import *
-import warnings
+from .DockDrop import DockDrop
+
 
 class Dock(QtWidgets.QWidget, DockDrop):
 
