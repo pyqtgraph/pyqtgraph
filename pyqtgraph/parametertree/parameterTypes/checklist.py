@@ -1,5 +1,6 @@
 from ... import functions as fn
-from ...Qt import QtWidgets
+from ...Qt import QtWidgets, QtCore
+from ...SignalProxy import SignalProxy
 from ..ParameterItem import ParameterItem
 from . import BoolParameterItem, SimpleParameter
 from .basetypes import GroupParameter, GroupParameterItem, WidgetParameterItem
@@ -128,9 +129,17 @@ class ChecklistParameter(GroupParameter):
                    all checked values. When *True*, it behaves like a ``list`` type -- only one value can be selected.
                    If no values are selected and ``exclusive`` is set to *True*, the first available limit is selected.
                    The return value of an ``exclusive`` checklist is a single value rather than a list with one element.
+    delay          Controls the wait time between editing the checkboxes/radio button children and firing a "value changed"
+                   signal. This allows users to edit multiple boxes at once for a single value update.
     ============== ========================================================
     """
     itemClass = ChecklistParameterItem
+
+    _onSubParamChange = QtCore.Signal(object, object)
+    """
+    Coalesces all child changes so they can be rate-limited. This means multiple children can be changed
+    before self's value reports a change
+    """
 
     def __init__(self, **opts):
         self.targetValue = None
@@ -147,6 +156,8 @@ class ChecklistParameter(GroupParameter):
             self.updateLimits(self, limits)
             # Also, value calculation will be incorrect until children are added, so make sure to recompute
             self.setValue(value)
+
+        self.coalesceProxy = SignalProxy(self._onSubParamChange, delay=opts.get('delay', 1.0), slot=self._finishChildChanges)
 
     def updateLimits(self, _param, limits):
         oldOpts = self.names
@@ -172,7 +183,8 @@ class ChecklistParameter(GroupParameter):
         self.unblockTreeChangeSignal()
         self.setValue(val)
 
-    def _onSubParamChange(self, param, value):
+    def _finishChildChanges(self, paramAndValue):
+        param, value = paramAndValue
         if self.opts['exclusive']:
             val = self.reverse[0][self.reverse[1].index(param.name())]
             return self.setValue(val)
@@ -184,6 +196,8 @@ class ChecklistParameter(GroupParameter):
             # Force set value to ensure updates
             # self.opts['value'] = self._VALUE_UNSET
             self.updateLimits(None, self.opts.get('limits', []))
+        if 'delay' in opts:
+            self.coalesceProxy.setDelay(opts['delay'])
     
     def value(self):
         vals = [self.forward[p.name()] for p in self.children() if p.value()]

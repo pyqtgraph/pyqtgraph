@@ -91,6 +91,11 @@ cfg = {
         'exclusive': {
             'type': 'bool',
             'value': False,
+        },
+        'delay': {
+            'type': 'float',
+            'value': 1.0,
+            'limits': [0, None]
         }
     },
 
