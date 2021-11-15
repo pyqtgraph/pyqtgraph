@@ -434,7 +434,7 @@ class Flowchart(Node):
         conn = set()
         for n in self._nodes.values():
             terms = n.outputs()
-            for n, t in terms.items():
+            for t in terms.values():
                 for c in t.connections():
                     conn.add((t, c))
         return conn
