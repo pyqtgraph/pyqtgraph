@@ -135,12 +135,6 @@ class ChecklistParameter(GroupParameter):
     """
     itemClass = ChecklistParameterItem
 
-    _onSubParamChange = QtCore.Signal(object, object)
-    """
-    Coalesces all child changes so they can be rate-limited. This means multiple children can be changed
-    before self's value reports a change
-    """
-
     def __init__(self, **opts):
         self.targetValue = None
         limits = opts.setdefault('limits', [])
@@ -157,7 +151,7 @@ class ChecklistParameter(GroupParameter):
             # Also, value calculation will be incorrect until children are added, so make sure to recompute
             self.setValue(value)
 
-        self.coalesceProxy = SignalProxy(self._onSubParamChange, delay=opts.get('delay', 1.0), slot=self._finishChildChanges)
+        self.coalesceProxy = SignalProxy(self.sigValueChanging, delay=opts.get('delay', 1.0), slot=self._finishChildChanges)
 
     def updateLimits(self, _param, limits):
         oldOpts = self.names
@@ -177,7 +171,7 @@ class ChecklistParameter(GroupParameter):
             self.addChild(child)
             # Prevent child from broadcasting tree state changes, since this is handled by self
             child.blockTreeChangeSignal()
-            child.sigValueChanged.connect(self._onSubParamChange)
+            child.sigValueChanged.connect(self.sigValueChanging)
         # Purge child changes before unblocking
         self.treeStateChanges.clear()
         self.unblockTreeChangeSignal()
@@ -226,5 +220,5 @@ class ChecklistParameter(GroupParameter):
             names = [self.reverse[1][0]]
         for chParam in self:
             checked = chParam.name() in names
-            chParam.setValue(checked, self._onSubParamChange)
+            chParam.setValue(checked, self.sigValueChanging)
         super().setValue(self.value(), blockSignal)
