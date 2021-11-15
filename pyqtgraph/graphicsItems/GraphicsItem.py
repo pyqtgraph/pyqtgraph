@@ -299,7 +299,7 @@ class GraphicsItem(object):
         Return None if pixel size is not yet defined (usually because the item has not yet been displayed).
         """
         normV, orthoV = self.pixelVectors(direction)
-        if normV == None or orthoV == None:
+        if normV is None or orthoV is None:
             return None
         if ortho:
             return orthoV.length()
