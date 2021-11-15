@@ -129,7 +129,7 @@ class GraphItem(GraphicsObject):
             p.end()
 
     def paint(self, p, *args):
-        if self.picture == None:
+        if self.picture is None:
             self.generatePicture()
         if getConfigOption('antialias') is True:
             p.setRenderHint(p.RenderHint.Antialiasing)

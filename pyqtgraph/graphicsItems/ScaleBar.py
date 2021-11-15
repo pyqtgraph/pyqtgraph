@@ -24,7 +24,7 @@ class ScaleBar(GraphicsObject, GraphicsWidgetAnchor):
         self.pen = fn.mkPen(pen)
         self._width = width
         self.size = size
-        if offset == None:
+        if offset is None:
             offset = (0,0)
         self.offset = offset
         

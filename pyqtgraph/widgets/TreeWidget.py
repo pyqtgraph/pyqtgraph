@@ -149,7 +149,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
         ### intended to put a limit on how deep nests of children can go.
         ### self.childNestingLimit is upheld when moving items without children, but if the item being moved has children/grandchildren, the children/grandchildren
         ### can end up over the childNestingLimit. 
-        if self.childNestingLimit == None:
+        if self.childNestingLimit is None:
             pass # enable drops in all items (but only if there are drops that aren't enabled? for performance...)
         else:
             items = self.listAllItems()
