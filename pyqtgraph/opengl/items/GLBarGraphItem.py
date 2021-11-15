@@ -1,3 +1,5 @@
+__all__ = ["GLBarGraphItem"]
+
 import numpy as np
 
 from ..MeshData import MeshData

@@ -1,3 +1,4 @@
+__all__ = ["Canvas"]
 
 import importlib
 

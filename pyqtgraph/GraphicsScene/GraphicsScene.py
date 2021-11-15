@@ -6,7 +6,7 @@ from .. import debug as debug
 from .. import getConfigOption
 from ..Point import Point
 from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets, isQObjectAlive
-from .mouseEvents import *
+from .mouseEvents import HoverEvent, MouseClickEvent, MouseDragEvent
 
 getMillis = lambda: perf_counter_ns() // 10 ** 6
 

@@ -1,9 +1,11 @@
+__init__ = ["Flowchart", "FlowchartGraphicsItem", "FlowchartNode"]
+
 import importlib
 from collections import OrderedDict
 
 from .. import DataTreeWidget, FileDialog
 from ..Qt import QT_LIB, QtCore, QtWidgets
-from .Node import *
+from .Node import Node
 
 FlowchartCtrlTemplate = importlib.import_module(
     f'.FlowchartCtrlTemplate_{QT_LIB.lower()}', package=__package__)
