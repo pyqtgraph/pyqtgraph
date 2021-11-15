@@ -16,6 +16,7 @@ from .. import configfile as configfile
 from .. import dockarea as dockarea
 from .. import functions as fn
 from ..debug import printExc
+from ..graphicsItems.GraphicsObject import GraphicsObject
 from . import FlowchartGraphicsView
 from .library import LIBRARY
 from .Terminal import Terminal
