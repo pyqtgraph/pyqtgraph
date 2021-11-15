@@ -8,7 +8,7 @@ import numpy as np
 
 from ... import functions as fn
 from ... import icons
-from ...Qt import QT_LIB, QtCore, QtGui, QtWidgets
+from ...Qt import QT_LIB, QtCore, QtWidgets
 from ...WidgetGroup import WidgetGroup
 from ...widgets.FileDialog import FileDialog
 from ..AxisItem import AxisItem

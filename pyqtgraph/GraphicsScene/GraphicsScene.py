@@ -432,8 +432,8 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             point = event.buttonDownScenePos()
         else:
             point = event.scenePos()
-        w = rect.width()
-        h = rect.height()
+        #w = rect.width()
+        #h = rect.height()
         #rgn = QtCore.QRectF(point.x()-w, point.y()-h, 2*w, 2*h)
         #self.searchRect.setRect(rgn)
 

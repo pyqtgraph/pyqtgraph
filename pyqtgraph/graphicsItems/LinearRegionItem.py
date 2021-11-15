@@ -1,4 +1,3 @@
-from .. import debug as debug
 from .. import functions as fn
 from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
