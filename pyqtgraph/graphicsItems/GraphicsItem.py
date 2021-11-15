@@ -8,7 +8,7 @@ from math import hypot
 from .. import functions as fn
 from ..GraphicsScene import GraphicsScene
 from ..Point import Point
-from ..Qt import QtCore, QtGui, isQObjectAlive
+from ..Qt import QtCore, QtWidgets, isQObjectAlive
 
 __all__ = ['GraphicsItem']
 
@@ -51,7 +51,7 @@ class GraphicsItem(object):
     def __init__(self, register=None):
         if not hasattr(self, '_qtBaseClass'):
             for b in self.__class__.__bases__:
-                if issubclass(b, QtGui.QGraphicsItem):
+                if issubclass(b, QtWidgets.QGraphicsItem):
                     self.__class__._qtBaseClass = b
                     break
         if not hasattr(self, '_qtBaseClass'):
@@ -299,7 +299,7 @@ class GraphicsItem(object):
         Return None if pixel size is not yet defined (usually because the item has not yet been displayed).
         """
         normV, orthoV = self.pixelVectors(direction)
-        if normV == None or orthoV == None:
+        if normV is None or orthoV is None:
             return None
         if ortho:
             return orthoV.length()
@@ -460,7 +460,7 @@ class GraphicsItem(object):
             #if ch2.scene() is not scene:
                 #print "item", ch2, "has different scene:", ch2.scene(), scene
                 #scene.addItem(ch2)
-                #QtGui.QApplication.processEvents()
+                #QtWidgets.QApplication.processEvents()
                 #print "   --> ", ch2.scene()
             #self.setChildScene(ch2)
 
@@ -536,7 +536,6 @@ class GraphicsItem(object):
     def viewChanged(self, view, oldView):
         """Called when this item's view has changed
         (ie, the item has been added to or removed from a ViewBox)"""
-        pass
         
     def _replaceView(self, oldView, item=None):
         if item is None:
@@ -557,7 +556,6 @@ class GraphicsItem(object):
         """
         # when this is called, _cachedView is not invalidated.
         # this means that for functions overriding viewRangeChanged, viewRect() may be stale.
-        pass
     
     def viewTransformChanged(self):
         """

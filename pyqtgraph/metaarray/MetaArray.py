@@ -413,6 +413,8 @@ class MetaArray(object):
             ind.append(order)
         elif isinstance(axis, str):
             ind = (slice(axis, order),)
+        else:
+            raise TypeError("axis must be type (int, str)")
         return self[tuple(ind)]
   
     def append(self, val, axis):
@@ -905,7 +907,7 @@ class MetaArray(object):
         
         if proc == False:
             raise Exception('remote read failed')
-        if proc == None:
+        if proc is None:
             from .. import multiprocess as mp
 
             #print "new process"

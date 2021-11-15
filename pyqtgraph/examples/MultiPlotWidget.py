@@ -5,7 +5,7 @@ from numpy import linspace
 
 import pyqtgraph as pg
 from pyqtgraph import MultiPlotWidget
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtWidgets
 
 try:
     from pyqtgraph.metaarray import *
@@ -14,7 +14,7 @@ except:
     exit()
 
 app = pg.mkQApp("MultiPlot Widget Example")
-mw = QtGui.QMainWindow()
+mw = QtWidgets.QMainWindow()
 mw.resize(800,800)
 pw = MultiPlotWidget()
 mw.setCentralWidget(pw)

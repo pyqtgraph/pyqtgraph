@@ -8,7 +8,7 @@ import numpy as np
 
 from ... import functions as fn
 from ... import icons
-from ...Qt import QT_LIB, QtCore, QtGui
+from ...Qt import QT_LIB, QtCore, QtGui, QtWidgets
 from ...WidgetGroup import WidgetGroup
 from ...widgets.FileDialog import FileDialog
 from ..AxisItem import AxisItem
@@ -114,7 +114,7 @@ class PlotItem(GraphicsWidget):
         
         GraphicsWidget.__init__(self, parent)
         
-        self.setSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Expanding)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         
         ## Set up control buttons
         path = os.path.dirname(__file__)
@@ -124,7 +124,7 @@ class PlotItem(GraphicsWidget):
         self.buttonsHidden = False ## whether the user has requested buttons to be hidden
         self.mouseHovering = False
         
-        self.layout = QtGui.QGraphicsGridLayout()
+        self.layout = QtWidgets.QGraphicsGridLayout()
         self.layout.setContentsMargins(1,1,1,1)
         self.setLayout(self.layout)
         self.layout.setHorizontalSpacing(0)
@@ -186,7 +186,7 @@ class PlotItem(GraphicsWidget):
 
         ### Set up context menu
         
-        w = QtGui.QWidget()
+        w = QtWidgets.QWidget()
         self.ctrl = c = ui_template.Ui_Form()
         c.setupUi(w)
         dv = QtGui.QDoubleValidator(self)
@@ -201,13 +201,13 @@ class PlotItem(GraphicsWidget):
         ]
         
         
-        self.ctrlMenu = QtGui.QMenu()
+        self.ctrlMenu = QtWidgets.QMenu()
         
         self.ctrlMenu.setTitle(translate("PlotItem", 'Plot Options'))
         self.subMenus = []
         for name, grp in menuItems:
-            sm = QtGui.QMenu(name)
-            act = QtGui.QWidgetAction(self)
+            sm = QtWidgets.QMenu(name)
+            act = QtWidgets.QWidgetAction(self)
             act.setDefaultWidget(grp)
             sm.addAction(act)
             self.subMenus.append(sm)
@@ -726,7 +726,7 @@ class PlotItem(GraphicsWidget):
                 ## If the parameter is not in the list, add it.
                 matches = self.ctrl.avgParamList.findItems(p, QtCore.Qt.MatchFlag.MatchExactly)
                 if len(matches) == 0:
-                    i = QtGui.QListWidgetItem(p)
+                    i = QtWidgets.QListWidgetItem(p)
                     if p in self.paramList and self.paramList[p] is True:
                         i.setCheckState(QtCore.Qt.CheckState.Checked)
                     else:
@@ -927,11 +927,12 @@ class PlotItem(GraphicsWidget):
                 i.setMappings(xMapping, yMapping)
             elif hasattr(i, 'setLogMode'):
                 i.setLogMode(x,y)
-        self.getAxis('bottom').setLogMode(x)
-        self.getAxis('top').setLogMode(x)
-        self.getAxis('left').setLogMode(y)
-        self.getAxis('right').setLogMode(y)
+        
+        for edge in ('bottom','top', 'left', 'right'):
+            self.getAxis(edge).setLogMode(x, y)
+
         self.vb.setMappings(xMapping, yMapping)
+
         self.enableAutoRange()
         self.recomputeAverages()
     
@@ -1014,6 +1015,8 @@ class PlotItem(GraphicsWidget):
             method = 'mean'
         elif self.ctrl.peakRadio.isChecked():
             method = 'peak'
+        else:
+            raise ValueError("one of the method radios must be selected for: 'subsample', 'mean', or 'peak'.")
         
         return ds, auto, method
         
@@ -1341,7 +1344,7 @@ class PlotItem(GraphicsWidget):
         self.fileDialog = FileDialog()
         if PlotItem.lastFileDir is not None:
             self.fileDialog.setDirectory(PlotItem.lastFileDir)
-        self.fileDialog.setFileMode(QtGui.QFileDialog.FileMode.AnyFile)
-        self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptMode.AcceptSave)
+        self.fileDialog.setFileMode(QtWidgets.QFileDialog.FileMode.AnyFile)
+        self.fileDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         self.fileDialog.show()
         self.fileDialog.fileSelected.connect(handler)

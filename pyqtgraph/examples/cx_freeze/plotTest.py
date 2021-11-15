@@ -1,7 +1,7 @@
 import sys
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtWidgets
 
 # For packages that require scipy, these may be needed: 
 #   from scipy.stats import futil
@@ -9,7 +9,7 @@ from pyqtgraph.Qt import QtGui
 
 pg.setConfigOption('background','w')
 pg.setConfigOption('foreground','k')
-app = QtGui.QApplication(sys.argv)
+app = QtWidgets.QApplication(sys.argv)
 
 pw = pg.plot(x = [0, 1, 2, 4], y = [4, 5, 9, 6])
 pw.showGrid(x=True,y=True)

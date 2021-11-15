@@ -1,6 +1,8 @@
+__all__ = ["CtrlNode", "PlottingCtrlNode", "metaArrayWrapper"]
+
 import numpy as np
 
-from ...Qt import QtCore, QtGui
+from ...Qt import QtCore, QtWidgets
 
 #from ...SignalProxy import SignalProxy
 from ...WidgetGroup import WidgetGroup
@@ -19,8 +21,8 @@ except:
 
 def generateUi(opts):
     """Convenience function for generating common UI types"""
-    widget = QtGui.QWidget()
-    l = QtGui.QFormLayout()
+    widget = QtWidgets.QWidget()
+    l = QtWidgets.QFormLayout()
     l.setSpacing(0)
     widget.setLayout(l)
     ctrls = {}
@@ -39,7 +41,7 @@ def generateUi(opts):
         tip = o.pop('tip', None)
 
         if t == 'intSpin':
-            w = QtGui.QSpinBox()
+            w = QtWidgets.QSpinBox()
             if 'max' in o:
                 w.setMaximum(o['max'])
             if 'min' in o:
@@ -47,7 +49,7 @@ def generateUi(opts):
             if 'value' in o:
                 w.setValue(o['value'])
         elif t == 'doubleSpin':
-            w = QtGui.QDoubleSpinBox()
+            w = QtWidgets.QDoubleSpinBox()
             if 'max' in o:
                 w.setMaximum(o['max'])
             if 'min' in o:
@@ -58,11 +60,11 @@ def generateUi(opts):
             w = SpinBox()
             w.setOpts(**o)
         elif t == 'check':
-            w = QtGui.QCheckBox()
+            w = QtWidgets.QCheckBox()
             if 'checked' in o:
                 w.setChecked(o['checked'])
         elif t == 'combo':
-            w = QtGui.QComboBox()
+            w = QtWidgets.QComboBox()
             for i in o['values']:
                 w.addItem(i)
         #elif t == 'colormap':

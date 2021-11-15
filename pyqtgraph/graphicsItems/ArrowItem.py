@@ -1,11 +1,11 @@
 from math import hypot
 
 from .. import functions as fn
-from ..Qt import QtGui
+from ..Qt import QtGui, QtWidgets
 
 __all__ = ['ArrowItem']
 
-class ArrowItem(QtGui.QGraphicsPathItem):
+class ArrowItem(QtWidgets.QGraphicsPathItem):
     """
     For displaying scale-invariant arrows.
     For arrows pointing to a location on a curve, see CurveArrow
@@ -19,7 +19,7 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         the setStyle() method.
         """
         self.opts = {}
-        QtGui.QGraphicsPathItem.__init__(self, parent)
+        QtWidgets.QGraphicsPathItem.__init__(self, parent)
 
         if 'size' in opts:
             opts['headLen'] = opts['size']
@@ -114,7 +114,7 @@ class ArrowItem(QtGui.QGraphicsPathItem):
 
     def shape(self):
         #if not self.opts['pxMode']:
-            #return QtGui.QGraphicsPathItem.shape(self)
+            #return QtWidgets.QGraphicsPathItem.shape(self)
         return self.path
     
     ## dataBounds and pixelPadding methods are provided to ensure ViewBox can

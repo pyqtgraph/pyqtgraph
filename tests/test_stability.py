@@ -22,9 +22,9 @@ widgetTypes = [
     pg.PlotWidget, 
     pg.ImageView, 
     pg.GraphicsView, 
-    pg.QtGui.QWidget,
-    pg.QtGui.QTreeWidget, 
-    pg.QtGui.QPushButton,
+    pg.QtWidgets.QWidget,
+    pg.QtWidgets.QTreeWidget, 
+    pg.QtWidgets.QPushButton,
     ]
 
 itemTypes = [
@@ -32,7 +32,7 @@ itemTypes = [
     pg.ImageItem, 
     pg.PlotDataItem, 
     pg.ViewBox,
-    pg.QtGui.QGraphicsRectItem
+    pg.QtWidgets.QGraphicsRectItem
     ]
 
 widgets = []

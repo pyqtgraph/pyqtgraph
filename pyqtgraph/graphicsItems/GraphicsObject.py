@@ -1,4 +1,4 @@
-from ..Qt import QT_LIB, QtGui
+from ..Qt import QT_LIB, QtWidgets
 
 if QT_LIB.startswith('PyQt'):
     from ..Qt import sip
@@ -6,16 +6,16 @@ if QT_LIB.startswith('PyQt'):
 from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsObject']
-class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
+class GraphicsObject(GraphicsItem, QtWidgets.QGraphicsObject):
     """
-    **Bases:** :class:`GraphicsItem <pyqtgraph.graphicsItems.GraphicsItem>`, :class:`QtGui.QGraphicsObject`
+    **Bases:** :class:`GraphicsItem <pyqtgraph.graphicsItems.GraphicsItem>`, :class:`QtWidgets.QGraphicsObject`
 
     Extension of QGraphicsObject with some useful methods (provided by :class:`GraphicsItem <pyqtgraph.graphicsItems.GraphicsItem>`)
     """
-    _qtBaseClass = QtGui.QGraphicsObject
+    _qtBaseClass = QtWidgets.QGraphicsObject
     def __init__(self, *args):
         self.__inform_view_on_changes = True
-        QtGui.QGraphicsObject.__init__(self, *args)
+        QtWidgets.QGraphicsObject.__init__(self, *args)
         self.setFlag(self.GraphicsItemFlag.ItemSendsGeometryChanges)
         GraphicsItem.__init__(self)
         
@@ -35,7 +35,7 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
             
         ## workaround for pyqt bug:
         ## http://www.riverbankcomputing.com/pipermail/pyqt/2012-August/031818.html
-        if QT_LIB == 'PyQt5' and change == self.GraphicsItemChange.ItemParentChange and isinstance(ret, QtGui.QGraphicsItem):
-            ret = sip.cast(ret, QtGui.QGraphicsItem)
+        if QT_LIB == 'PyQt5' and change == self.GraphicsItemChange.ItemParentChange and isinstance(ret, QtWidgets.QGraphicsItem):
+            ret = sip.cast(ret, QtWidgets.QGraphicsItem)
 
         return ret

@@ -17,7 +17,7 @@ class ImageExporter(Exporter):
     def __init__(self, item):
         Exporter.__init__(self, item)
         tr = self.getTargetRect()
-        if isinstance(item, QtGui.QGraphicsItem):
+        if isinstance(item, QtWidgets.QGraphicsItem):
             scene = item.scene()
         else:
             scene = item

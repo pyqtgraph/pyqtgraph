@@ -6,7 +6,7 @@ or using the `ColorMap`'s `linearize()` method.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 name_list = (
     'warm','neutral','cool',
@@ -59,14 +59,14 @@ for example_idx in range(3):
     cm_list.append( (f'random {example_idx+1}', cm) )
 
 app = pg.mkQApp()
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 win.resize(1000,800)
 
 lw = pg.GraphicsLayoutWidget()
 lw.setFixedWidth(1000)
-lw.setSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Expanding)
+lw.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
 
-scr = QtGui.QScrollArea()
+scr = QtWidgets.QScrollArea()
 scr.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
 scr.setWidget(lw)
 win.setCentralWidget(scr)

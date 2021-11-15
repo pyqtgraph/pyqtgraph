@@ -19,7 +19,7 @@ from time import perf_counter
 import numpy as np
 
 from .. import functions as fn
-from ..Qt import QT_LIB, QtCore, QtGui
+from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
 
 ui_template = importlib.import_module(
     f'.ImageViewTemplate_{QT_LIB.lower()}', package=__package__)
@@ -49,7 +49,7 @@ class PlotROI(ROI):
         self.addRotateHandle([0, 0], [0.5, 0.5])
 
 
-class ImageView(QtGui.QWidget):
+class ImageView(QtWidgets.QWidget):
     """
     Widget used for display and analysis of image data.
     Implements many features:
@@ -116,7 +116,7 @@ class ImageView(QtGui.QWidget):
                 
             pg.ImageView(view=pg.PlotItem())
         """
-        QtGui.QWidget.__init__(self, parent, *args)
+        QtWidgets.QWidget.__init__(self, parent, *args)
         self._imageLevels = None  # [(min, max), ...] per channel image metrics
         self.levelMin = None    # min / max levels across all channels
         self.levelMax = None
@@ -820,7 +820,7 @@ class ImageView(QtGui.QWidget):
             self.imageItem.save(fileName)
             
     def exportClicked(self):
-        fileName = QtGui.QFileDialog.getSaveFileName()
+        fileName = QtWidgets.QFileDialog.getSaveFileName()
         if isinstance(fileName, tuple):
             fileName = fileName[0]  # Qt4/5 API difference
         if fileName == '':
@@ -828,7 +828,7 @@ class ImageView(QtGui.QWidget):
         self.export(str(fileName))
         
     def buildMenu(self):
-        self.menu = QtGui.QMenu()
+        self.menu = QtWidgets.QMenu()
         self.normAction = QtGui.QAction(translate("ImageView", "Normalization"), self.menu)
         self.normAction.setCheckable(True)
         self.normAction.toggled.connect(self.normToggled)

@@ -15,7 +15,7 @@ from time import perf_counter
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtWidgets
 
 app = pg.mkQApp()
 
@@ -26,10 +26,10 @@ view.setWindowTitle('pyqtgraph example: RemoteSpeedTest')
 
 app.aboutToQuit.connect(view.close)
 
-label = QtGui.QLabel()
-rcheck = QtGui.QCheckBox('plot remote')
+label = QtWidgets.QLabel()
+rcheck = QtWidgets.QCheckBox('plot remote')
 rcheck.setChecked(True)
-lcheck = QtGui.QCheckBox('plot local')
+lcheck = QtWidgets.QCheckBox('plot local')
 lplt = pg.PlotWidget()
 layout = pg.LayoutWidget()
 layout.addWidget(rcheck)

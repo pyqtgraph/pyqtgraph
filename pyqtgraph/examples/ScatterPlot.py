@@ -7,10 +7,10 @@ from collections import namedtuple
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtGui, QtWidgets
 
 app = pg.mkQApp("Scatter Plot Item Example") 
-mw = QtGui.QMainWindow()
+mw = QtWidgets.QMainWindow()
 mw.resize(800,800)
 view = pg.GraphicsLayoutWidget()  ## GraphicsView with GraphicsLayout inserted by default
 mw.setCentralWidget(view)

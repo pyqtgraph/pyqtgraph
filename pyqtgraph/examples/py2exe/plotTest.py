@@ -1,7 +1,5 @@
 import sys
 
-from PyQt4 import QtGui
-
 import pyqtgraph as pg
 
 # For packages that require scipy, these may be needed: 
@@ -10,7 +8,7 @@ import pyqtgraph as pg
 
 pg.setConfigOption('background','w')
 pg.setConfigOption('foreground','k')
-app = QtGui.QApplication(sys.argv)
+app = QtWidgets.QApplication(sys.argv)
 
 pw = pg.plot(x = [0, 1, 2, 4], y = [4, 5, 9, 6])
 pw.showGrid(x=True,y=True)

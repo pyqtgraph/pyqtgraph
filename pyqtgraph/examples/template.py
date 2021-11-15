@@ -5,7 +5,7 @@ Description of example
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui, mkQApp
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets, mkQApp
 
 app = mkQApp()
 

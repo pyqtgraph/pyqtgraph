@@ -1,3 +1,5 @@
+__all__ = ["Terminal", "TerminalGraphicsItem"]
+
 import weakref
 
 from .. import functions as fn
@@ -299,7 +301,7 @@ class TerminalGraphicsItem(GraphicsObject):
         self.term = term
         GraphicsObject.__init__(self, parent)
         self.brush = fn.mkBrush(0,0,0)
-        self.box = QtGui.QGraphicsRectItem(0, 0, 10, 10, self)
+        self.box = QtWidgets.QGraphicsRectItem(0, 0, 10, 10, self)
         on_update = self.labelChanged if self.term.isRenamable() else None
         self.label = TextItem(self.term.name(), self, on_update)
         self.label.setScale(0.7)
@@ -373,7 +375,7 @@ class TerminalGraphicsItem(GraphicsObject):
         
     def getMenu(self):
         if self.menu is None:
-            self.menu = QtGui.QMenu()
+            self.menu = QtWidgets.QMenu()
             self.menu.setTitle(translate("Context Menu", "Terminal"))
             remAct = QtGui.QAction(translate("Context Menu", "Remove terminal"), self.menu)
             remAct.triggered.connect(self.removeSelf)
