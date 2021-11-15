@@ -85,6 +85,8 @@ class ExceptionHandler(object):
             ## as soon as possible.)
             if clear_tracebacks is True:
                 sys.last_traceback = None
+
+            return ret
         
         finally:
             sys.setrecursionlimit(recursionLimit)            

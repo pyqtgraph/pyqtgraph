@@ -103,8 +103,6 @@ class GLVolumeItem(GLGraphicsItem):
         glDisable(GL_TEXTURE_3D)
                 
     def drawVolume(self, ax, d):
-        N = 5
-        
         imax = [0,1,2]
         imax.remove(ax)
         

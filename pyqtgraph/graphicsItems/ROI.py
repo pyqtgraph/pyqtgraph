@@ -1036,7 +1036,6 @@ class ROI(GraphicsObject):
             ## Move all handles to match the current configuration of the ROI
             for h in self.handles:
                 if h['item'] in self.childItems():
-                    p = h['pos']
                     h['item'].setPos(h['pos'] * self.state['size'])
                     
             self.update()
@@ -1522,7 +1521,7 @@ class Handle(UIGraphicsItem):
         return self._shape
     
     def boundingRect(self):
-        s1 = self.shape()
+        s1 = self.shape()  # noqa: avoid problems with shape invalidation
         return self.shape().boundingRect()
             
     def generateShape(self):
@@ -2120,7 +2119,6 @@ class PolyLineROI(ROI):
             pos = pos
         else:
             raise Exception("Either an event or a position must be given.")
-        h1 = segment.handles[0]['item']
         h2 = segment.handles[1]['item']
         
         i = self.segments.index(segment)
@@ -2280,8 +2278,6 @@ class LineSegmentROI(ROI):
         arguments.
         """
         imgPts = [self.mapToItem(img, h.pos()) for h in self.endpoints]
-        rgns = []
-        coords = []
 
         d = Point(imgPts[1] - imgPts[0])
         o = Point(imgPts[0])

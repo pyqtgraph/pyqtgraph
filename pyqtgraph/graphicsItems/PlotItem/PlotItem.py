@@ -116,7 +116,6 @@ class PlotItem(GraphicsWidget):
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         
         ## Set up control buttons
-        path = os.path.dirname(__file__)
         self.autoBtn = ButtonItem(icons.getGraphPixmap('auto'), 14, self)
         self.autoBtn.mode = 'auto'
         self.autoBtn.clicked.connect(self.autoBtnClicked)
@@ -188,7 +187,6 @@ class PlotItem(GraphicsWidget):
         w = QtWidgets.QWidget()
         self.ctrl = c = ui_template.Ui_Form()
         c.setupUi(w)
-        dv = QtGui.QDoubleValidator(self)
         
         menuItems = [
             (translate("PlotItem", 'Transforms'), c.transformGroup),
@@ -736,8 +734,6 @@ class PlotItem(GraphicsWidget):
         rect = self.vb.viewRect()
         xRange = rect.left(), rect.right() 
         
-        svg = ""
-
         dx = max(rect.right(),0) - min(rect.left(),0)
         ymn = min(rect.top(), rect.bottom())
         ymx = max(rect.top(), rect.bottom())
@@ -792,9 +788,6 @@ class PlotItem(GraphicsWidget):
 
             for item in self.dataItems:
                 if isinstance(item, ScatterPlotItem):
-                    pRect = item.boundingRect()
-                    vRect = pRect.intersected(rect)
-
                     for point in item.points():
                         pos = point.pos()
                         if not rect.contains(pos):
@@ -1181,7 +1174,6 @@ class PlotItem(GraphicsWidget):
         axis must be one of 'left', 'bottom', 'right', or 'top'
         """
         s = self.getScale(axis)
-        p = self.axes[axis]['pos']
         if show:
             s.show()
         else:
@@ -1287,7 +1279,6 @@ class PlotItem(GraphicsWidget):
         return c
         
     def _plotMetaArray(self, arr, x=None, autoLabel=True, **kargs):
-        inf = arr.infoCopy()
         if arr.ndim != 1:
             raise Exception('can only automatically plot 1 dimensional arrays.')
         ## create curve

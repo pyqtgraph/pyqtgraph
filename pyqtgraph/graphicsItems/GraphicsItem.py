@@ -580,7 +580,6 @@ class GraphicsItem(object):
     
     def childrenShape(self):
         """Return the union of the shapes of all descendants of this item in local coordinates."""
-        childs = self.allChildItems()
         shapes = [self.mapFromItem(c, c.shape()) for c in self.allChildItems()]
         return reduce(operator.add, shapes)
     

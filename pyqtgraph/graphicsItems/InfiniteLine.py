@@ -617,6 +617,5 @@ class InfLineLabel(TextItem):
         pt1, pt2 = self.getEndpoints()
         if pt1 is None:
             return 0
-        view = self.getViewBox()
         pos = self.mapToParent(pos)
         return (pos.x() - pt1.x()) / (pt2.x()-pt1.x())

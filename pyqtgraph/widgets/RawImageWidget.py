@@ -143,7 +143,7 @@ if HAVE_OPENGL:
                     return
                 img, args, kwds = self.opts
                 kwds['useRGBA'] = True
-                self.image, alpha = fn.makeARGB(img, *args, **kwds)
+                self.image, _ = fn.makeARGB(img, *args, **kwds)
 
             if not self.uploaded:
                 self.uploadTexture()

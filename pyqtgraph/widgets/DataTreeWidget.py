@@ -49,8 +49,6 @@ class DataTreeWidget(QtWidgets.QTreeWidget):
         self.nodes[path] = node
 
         typeStr, desc, childs, widget = self.parse(data)
-        node.setText(1, typeStr)
-        node.setText(2, desc)
             
         # Truncate description and add text box if needed
         if len(desc) > 100:
@@ -59,6 +57,9 @@ class DataTreeWidget(QtWidgets.QTreeWidget):
                 widget = QtWidgets.QPlainTextEdit(str(data))
                 widget.setMaximumHeight(200)
                 widget.setReadOnly(True)
+
+        node.setText(1, typeStr)
+        node.setText(2, desc)
         
         # Add widget to new subnode
         if widget is not None:

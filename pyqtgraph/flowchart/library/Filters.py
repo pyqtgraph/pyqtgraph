@@ -314,7 +314,6 @@ class RemovePeriodic(CtrlNode):
         
         ## determine frequencies in fft data
         df = 1.0 / (len(data1) * dt)
-        freqs = np.linspace(0.0, (len(ft)-1) * df, len(ft))
         
         ## flatten spikes at f0 and harmonics
         f0 = self.ctrls['f0'].value()

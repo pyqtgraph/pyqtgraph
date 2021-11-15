@@ -58,7 +58,7 @@ class HDF5Exporter(Exporter):
                 d = c.getData()
                 fdata = numpy.array([d[0], d[1]]).astype('double')
                 cname = c.name() if c.name() is not None else str(i)
-                dset = dgroup.create_dataset(cname, data=fdata)
+                dgroup.create_dataset(cname, data=fdata)
         else:
             for i, c in enumerate(self.item.curves):
                 d = c.getData()
@@ -67,7 +67,7 @@ class HDF5Exporter(Exporter):
                 data.append(d[1])
 
             fdata = numpy.array(data).astype('double')
-            dset = fd.create_dataset(dsname, data=fdata)
+            fd.create_dataset(dsname, data=fdata)
 
         fd.close()
 

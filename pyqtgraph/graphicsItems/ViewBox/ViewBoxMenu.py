@@ -39,7 +39,7 @@ class ViewBoxMenu(QtWidgets.QMenu):
             self.axes.append(m)
             self.ctrl.append(ui)
             wg = WidgetGroup(w)
-            self.widgetGroups.append(w)
+            self.widgetGroups.append(wg)
             
             connects = [
                 (ui.mouseCheck.toggled, 'MouseToggled'),
