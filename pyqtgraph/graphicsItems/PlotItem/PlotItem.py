@@ -688,7 +688,7 @@ class PlotItem(GraphicsWidget):
         Adds a color bar linked to the ImageItem specified by `image`.
         AAdditional parameters will be passed to the `pyqtgraph.ColorBarItem`.
         
-        A call like `plot.addColorBar(img, colorMap='viridis') is a convenient
+        A call like `plot.addColorBar(img, colorMap='viridis')` is a convenient
         method to assign and show a color map.
         """
         from ..ColorBarItem import ColorBarItem # avoid circular import

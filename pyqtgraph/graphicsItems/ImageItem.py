@@ -11,7 +11,6 @@ from ..Qt import QtCore, QtGui, QtWidgets
 from ..util.cupy_helper import getCupy
 from .GraphicsObject import GraphicsObject
 from .. import colormap
-from . import ColorBarItem
 
 translate = QtCore.QCoreApplication.translate
 
@@ -188,20 +187,20 @@ class ImageItem(GraphicsObject):
         """
         return self._colorMap
         
-    def addColorBar(self, colorMap=None, plot=None, **kargs):
-        """ 
-        Convenience method to add a ColorBarItem for this `ImageItem` to the specified plot.
-        All additional parameters will be passed on to ColorBarItem.
-        """
-        if colorMap is not None:
-            self.setColorMap(colorMap)
-        print('trying to get viewbox')
-        vb = self.getViewBox()
-        print(vb.getParent())
-        # print(self.getViewBox())
-        bar = ColorBarItem.ColorBarItem(**kargs)
-        bar.setImageItem( self, insert_in=plot )
-        return bar
+    # def addColorBar(self, colorMap=None, plot=None, **kargs):
+    #     """ 
+    #     Convenience method to add a ColorBarItem for this `ImageItem` to the specified plot.
+    #     All additional parameters will be passed on to ColorBarItem.
+    #     """
+    #     if colorMap is not None:
+    #         self.setColorMap(colorMap)
+    #     print('trying to get viewbox')
+    #     vb = self.getViewBox()
+    #     print(vb.getParent())
+    #     # print(self.getViewBox())
+    #     bar = ColorBarItem.ColorBarItem(**kargs)
+    #     bar.setImageItem( self, insert_in=plot )
+    #     return bar
 
     def setLookupTable(self, lut, update=True):
         """
