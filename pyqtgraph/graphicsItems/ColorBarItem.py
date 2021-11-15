@@ -9,6 +9,7 @@ from ..Qt import QtCore
 from .ImageItem import ImageItem
 from .LinearRegionItem import LinearRegionItem
 from .PlotItem import PlotItem
+from .. import colormap 
 
 __all__ = ['ColorBarItem']
 
@@ -67,7 +68,7 @@ class ColorBarItem(PlotItem):
             colorMap = cmap
         self.img_list  = [] # list of controlled ImageItems
         self.values    = values
-        self._colorMap = colorMap
+        self._colorMap = None
         self.rounding  = rounding
         self.horizontal = bool( orientation in ('h', 'horizontal') )
 
@@ -115,7 +116,7 @@ class ColorBarItem(PlotItem):
             self.bar.setImage( np.linspace(0, 1, 256).reshape( (1,-1) ) )
             if label is not None: self.getAxis('left').setLabel(label)
         self.addItem(self.bar)
-        if cmap is not None: self.setColorMap(cmap)
+        if colorMap is not None: self.setColorMap(colorMap)
 
         if interactive:
             if self.horizontal:
@@ -186,6 +187,8 @@ class ColorBarItem(PlotItem):
         Sets a ColorMap object to determine the ColorBarItem's look-up table. The same
         look-up table is applied to any assigned ImageItem.
         """
+        if isinstance(colorMap, str):
+            colorMap = colormap.get(colorMap)
         self._colorMap = colorMap
         self._update_items( update_cmap = True )
         

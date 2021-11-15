@@ -195,6 +195,10 @@ class ImageItem(GraphicsObject):
         """
         if colorMap is not None:
             self.setColorMap(colorMap)
+        print('trying to get viewbox')
+        vb = self.getViewBox()
+        print(vb.getParent())
+        # print(self.getViewBox())
         bar = ColorBarItem.ColorBarItem(**kargs)
         bar.setImageItem( self, insert_in=plot )
         return bar

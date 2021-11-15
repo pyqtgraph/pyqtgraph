@@ -683,6 +683,19 @@ class PlotItem(GraphicsWidget):
             self.legend.setParentItem(self.vb)
         return self.legend
         
+    def addColorBar(self, image, **kargs):
+        """
+        Adds a color bar linked to the ImageItem specified by `image`.
+        AAdditional parameters will be passed to the `pyqtgraph.ColorBarItem`.
+        
+        A call like `plot.addColorBar(img, colorMap='viridis') is a convenient
+        method to assign and show a color map.
+        """
+        from ..ColorBarItem import ColorBarItem # avoid circular import
+        bar = ColorBarItem(**kargs)
+        bar.setImageItem( image, insert_in=self )
+        return bar
+
     def scatterPlot(self, *args, **kargs):
         if 'pen' in kargs:
             kargs['symbolPen'] = kargs['pen']
