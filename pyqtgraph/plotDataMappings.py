@@ -157,7 +157,7 @@ class LogMapping(PlotDataMapping):
             warnings.simplefilter("ignore", RuntimeWarning)
             vsValue = np.log10( float(dsValue) )
         if not np.isfinite(vsValue): vsValue = np.nan
-        return vsValue            
+        return vsValue
 
     def reverse(self, vsValues, finiteCheck=False):
         dsValues = 10**vsValues # np.nan silently results in np.nan

@@ -170,11 +170,8 @@ class ViewBox(GraphicsWidget):
             'xMapping': plotDataMappings.get('identity'),
             'yMapping': plotDataMappings.get('identity'),
 
-            # Limits
-            # maximum value of double float is 1.7E+308, but internal calculations exceed this limit before the range reaches it.
+            # User limits: Number representation limit are applied separately.
             'limits': { 
-                # 'xLimits': [-1E307, +1E307],   # Maximum and minimum visible X values
-                # 'yLimits': [-1E307, +1E307],   # Maximum and minimum visible Y values
                 'xLimits': [None, None],   # Maximum and minimum visible X values
                 'yLimits': [None, None],   # Maximum and minimum visible Y values
                 'xRange': [None, None],   # Maximum and minimum X range
@@ -1429,12 +1426,22 @@ class ViewBox(GraphicsWidget):
             useX = True
             useY = True
 
-            if hasattr(item, 'dataBounds'):
-                if frac is None:
-                    frac = (1.0, 1.0)
+            have_bounds = False
+
+            if frac is None: frac = (1.0, 1.0)
+            if not have_bounds and hasattr(item, 'vsBounds'): # prefer bounds that are explicitly in view space
+                xr = item.vsBounds(0, frac=frac[0], orthoRange=orthoRange[0])
+                yr = item.vsBounds(1, frac=frac[1], orthoRange=orthoRange[1])
+                pxPad = 0 if not hasattr(item, 'pixelPadding') else item.pixelPadding()
+                have_bounds = True
+                
+            if not have_bounds and hasattr(item, 'dataBounds'): # fall back to unspecific legacy method
                 xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
                 yr = item.dataBounds(1, frac=frac[1], orthoRange=orthoRange[1])
                 pxPad = 0 if not hasattr(item, 'pixelPadding') else item.pixelPadding()
+                have_bounds = True
+            
+            if have_bounds:
                 if (
                     xr is None or
                     (xr[0] is None and xr[1] is None) or
@@ -1472,7 +1479,6 @@ class ViewBox(GraphicsWidget):
                         ## Item is rotated at non-orthogonal angle, ignore bounds entirely.
                         ## Not really sure what is the expected behavior in this case.
                         continue  ## need to check for item rotations and decide how best to apply this boundary.
-
 
                 itemBounds.append((bounds, useX, useY, pxPad))
             else:

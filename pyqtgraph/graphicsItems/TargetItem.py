@@ -198,7 +198,6 @@ class TargetItem(UIGraphicsItem):
     def setMappings(self, xMapping, yMapping):
         """ Updates mapping for x and y axis, None retains previous mapping """
         # print(f"InfiniteLine, new mappings: {xMapping} / {yMapping}")
-        # print(f"current position: {self._pos}")
         if xMapping is not None:
             self.xMapping = xMapping
         if yMapping is not None:

@@ -114,8 +114,7 @@ class AxisItem(GraphicsWidget):
         if linkView is not None:
             self._linkToView_internal(linkView)
 
-        self.grid = False
-        
+        self.grid = False        
         #self.setCacheMode(self.DeviceCoordinateCache)
 
     def setStyle(self, **kwds):
@@ -216,7 +215,7 @@ class AxisItem(GraphicsWidget):
         if isinstance(mapping, plotDataMappings.LogMapping):
             self.logMode = True
         else:
-            self.logMode = True
+            self.logMode = False
         self.update()
 
     def setLogMode(self, *args):
@@ -820,8 +819,7 @@ class AxisItem(GraphicsWidget):
 
             ## determine starting tick
             start = (ceil((minVal-offset) / spacing) * spacing) + offset
-            if np.isnan(start):
-                print(minVal, offset, spacing)
+            # if np.isnan(start): print(minVal, offset, spacing)
 
             ## determine number of ticks
             num = int((maxVal-start) / spacing) + 1
@@ -836,22 +834,12 @@ class AxisItem(GraphicsWidget):
         if self.logMode:
             return self.logTickValues(minVal, maxVal, size, ticks)
 
-
-        #nticks = []
-        #for t in ticks:
-            #nvals = []
-            #for v in t[1]:
-                #nvals.append(v/self.scale)
-            #nticks.append((t[0]/self.scale,nvals))
-        #ticks = nticks
-
         return ticks
 
     def logTickValues(self, minVal, maxVal, size, stdTicks):
 
         ## start with the tick spacing given by tickValues().
         ## Any level whose spacing is < 1 needs to be converted to log scale
-
         ticks = []
         for (spacing, t) in stdTicks:
             if spacing >= 1.0:
