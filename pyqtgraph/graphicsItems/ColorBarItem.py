@@ -273,13 +273,13 @@ class ColorBarItem(PlotItem):
             if hi_new > self.hi_lim: # limit maximum value
                 # print('lim +')
                 hi_new = self.hi_lim 
-                if bot !=0:                    # moving entire region?
+                if top!=0 and bot!=0:          # moving entire region?
                     lo_new = hi_new - span_prv # avoid collapsing the span against top limit
         if self.lo_lim is not None:
             if lo_new < self.lo_lim: # limit minimum value
                 # print('lim -')
                 lo_new = self.lo_lim 
-                if top !=0:                    # moving entire region?
+                if top!=0 and bot!=0:          # moving entire region?
                     hi_new = lo_new + span_prv # avoid collapsing the span against bottom limit
         if hi_new-lo_new < self.rounding: # do not allow less than one "rounding" unit of span 
             # print('lim X')
