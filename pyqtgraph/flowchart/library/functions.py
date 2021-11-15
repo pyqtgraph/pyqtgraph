@@ -325,7 +325,7 @@ def removePeriodic(data, f0=60.0, dt=None, harmonics=10, samples=4):
     
     ft = np.fft.fft(data1)
     
-    ## determine frequencies in fft data
+    ## determine frequency step in fft data
     df = 1.0 / (len(data1) * dt)
     
     ## flatten spikes at f0 and harmonics
