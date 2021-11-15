@@ -377,7 +377,7 @@ def interact(func, *, runOpts=RunOpts.ON_CHANGED, ignores=None, parent=None, tit
     existOk: bool
         Whether it is OK for existing paramter names to bind to this function. See behavior during
         'Parameter.insertChild'
-    overrides: sequence
+    overrides: dict
         Override descriptions to provide additional parameter options for each argument. Moreover,
         extra parameters can be defined here if the original function uses ``**`` to consume additional keyword
         arguments. Each override can be a value (e.g. 5) or a dict specification of a parameter
