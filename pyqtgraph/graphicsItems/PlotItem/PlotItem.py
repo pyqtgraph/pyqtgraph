@@ -993,6 +993,8 @@ class PlotItem(GraphicsWidget):
             method = 'mean'
         elif self.ctrl.peakRadio.isChecked():
             method = 'peak'
+        else:
+            raise ValueError("one of the method radios must be selected for: 'subsample', 'mean', or 'peak'.")
         
         return ds, auto, method
         

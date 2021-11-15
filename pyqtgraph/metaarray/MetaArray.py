@@ -413,6 +413,8 @@ class MetaArray(object):
             ind.append(order)
         elif isinstance(axis, str):
             ind = (slice(axis, order),)
+        else:
+            raise TypeError("axis must be type (int, str)")
         return self[tuple(ind)]
   
     def append(self, val, axis):

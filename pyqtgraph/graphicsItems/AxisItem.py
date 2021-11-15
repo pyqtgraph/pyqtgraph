@@ -938,6 +938,8 @@ class AxisItem(GraphicsWidget):
             tickStop = bounds.top()
             tickDir = 1
             axis = 1
+        else:
+            raise ValueError("self.orientation must be in ('left', 'right', 'top', 'bottom')")
         #print tickStart, tickStop, span
 
         ## determine size of this item in pixels
