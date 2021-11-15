@@ -89,7 +89,6 @@ def funcToParamDict(func, title=None, **overrides):
 
 def createFuncParameter(name, signatureParam, docDict, overridesDict, title=None):
     """
-    (Once organization PR is in place, this will be a regular function in the file instead of a class method).
     Constructs a dict ready for insertion into a group parameter based on the provided information in the
     `inspect.signature` parameter, user-specified overrides, function doc info, and true parameter name.
 
@@ -249,8 +248,17 @@ class InteractiveFunction:
 
     def __init__(self, func, deferred=None, **extra):
         """
-        For information on these parameters, see the signature of :func:`interact`. `extra` are extra kwargs that aren't
-        parameters, but are forwarded to `func`
+        Wraps a callable function in a way that forwards Parameter arguments as keywords
+
+        Parameters
+        ----------
+        func: callable
+            Function to wrap
+        deferred: dict[str, callable]
+            Arguments that shouldn't be constant, but can't be represented as a parameter. See the rst docs for
+            more information.
+        extra: dict
+            extra keyword arguments to pass to `func` when this wrapper is called
         """
         super().__init__()
         self.params = []
@@ -378,7 +386,7 @@ def interact(func, *, runOpts=RunOpts.ON_CHANGED, ignores=None, parent=None, tit
     existOk: bool
         Whether it is OK for existing paramter names to bind to this function. See behavior during
         'Parameter.insertChild'
-    overrides: dict
+    overrides:
         Override descriptions to provide additional parameter options for each argument. Moreover,
         extra parameters can be defined here if the original function uses ``**`` to consume additional keyword
         arguments. Each override can be a value (e.g. 5) or a dict specification of a parameter
