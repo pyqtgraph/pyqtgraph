@@ -17,16 +17,16 @@ class ColorBarItem(PlotItem):
     """
     **Bases:** :class:`PlotItem <pyqtgraph.PlotItem>`
 
-    ColorBarItem is a simpler, compact alternative to HistogramLUTItem, without histogram
-    or the option to adjust the look-up table.
+    :class:`ColorBarItem` is a simpler, compact alternative to :class:`~pyqtgraph.HistogramLUTItem`, 
+    without histogram or the option to adjust the colors of the look-up table.
 
     A labeled axis is displayed directly next to the gradient to help identify values.
     Handles included in the color bar allow for interactive adjustment.
 
-    A ColorBarItem can be assigned one or more ImageItems that will be displayed according
-    to the selected color map and levels. The ColorBarItem can be used as a separate
-    element in a GraphicsLayout or added to the layout of a PlotItem used to display image
-    data with coordinate axes.
+    A ColorBarItem can be assigned one or more :class:`~pyqtgraph.ImageItem`s that will be displayed 
+    according to the selected color map and levels. The ColorBarItem can be used as a separate
+    element in a :class:`~pyqtgraph.GraphicsLayout` or added to the layout of a 
+    :class:`~pyqtgraph.PlotItem` used to display image data with coordinate axes.
 
     =============================  =============================================
     **Signals:**
@@ -43,20 +43,30 @@ class ColorBarItem(PlotItem):
         """
         Creates a new ColorBarItem.
 
-        ==============  ===========================================================================
-        **Arguments:**
-        values          The range of values as tuple (min, max)
-        width           (default=25) The width of the displayed color bar
-        colorMap        ColorMap object, look-up table is also applied to assigned ImageItem(s)
-        label           (default=None) Label applied to color bar axis
-        interactive     (default=True) Handles are displayed to interactively adjust level range
-        limits          Limits to adjustment range as (low, high) tuple, None disables limit
-        rounding        (default=1) Adjusted range values are rounded to multiples of this values
-        orientation     (default='vertical') 'horizontal' or 'h' gives a horizontal color bar.
-        pen             color of adjustement handles in interactive mode
-        hoverPen        color of adjustement handles when hovered over
-        hoverBrush      color of movable center region when hovered over
-        ==============  ===========================================================================
+        Parameters
+        ----------
+        colorMap: `str` or :class:`~pyqtgraph.ColorMap`
+            Determines the color map displayed and applied to assigned ImageItem(s).
+        values: tuple of float
+            The range of image levels covered by the color bar, as ``(min, max)``.
+        width: float, default=25
+            The width of the displayed color bar.
+        label: str, optional
+            Label applied to the color bar axis.
+        interactive: bool, default=True
+            If `True`, handles are displayed to interactively adjust the level range.
+        limits: `None` or `tuple of float`
+            Limits the adjustment range to `(low, high)`, `None` disables the limit.
+        rounding: float, default=1
+            Adjusted range values are rounded to multiples of this value.
+        orientation: str, default 'vertical'
+            'horizontal' or 'h' gives a horizontal color bar instead of the default vertical bar
+        pen: :class:`Qpen` or argument to :func:`~pyqtgraph.mkPen`
+            Sets the color of adjustment handles in interactive mode.
+        hoverPen: :class:`QPen` or argument to :func:`~pyqtgraph.mkPen`
+            Sets the color of adjustement handles when hovered over.
+        hoverBrush: :class:`QBrush` or argument to :func:`~pyqtgraph.mkBrush`
+            Sets the color of movable center region when hovered over.
         """
         super().__init__()
         if cmap is not None: 
@@ -141,16 +151,19 @@ class ColorBarItem(PlotItem):
 
     def setImageItem(self, img, insert_in=None):
         """
-        assign ImageItem or list of ImageItems to be controlled
+        Assigns an ImageItem or list of ImageItems to be represented and controlled
 
-        ==============  ==========================================================================
-        **Arguments:**
-        image           ImageItem or list of [ImageItem, ImageItem, ...] that will be set to the
-                        color map of the ColorBarItem. In interactive mode, the levels of all
-                        assigned ImageItems will be controlled simultaneously.
-        insert_in       If a PlotItem is given, the color bar is inserted on the right or bottom
-                        of the plot
-        ==============  ==========================================================================
+        Parameters
+        ----------
+        image: :class:`~pyqtgraph.ImageItem` or list of `[ImageItem, ImageItem, ...]`
+            Assigns one or more ImageItems to this ColorBarItem.
+            If a :class:`~pyqtgraph.ColorMap` is defined for ColorBarItem, this will be assigned to the 
+            ImageItems. Otherwise, the ColorBarItem will attempt to retrieve a color map from the ImageItems.
+            In interactive mode, ColorBarItem will control the levels of the assigned ImageItems, 
+            simultaneously if there is more than one.
+        insert_in: :class:`~pyqtgraph.PlotItem`, optional
+            If a PlotItem is given, the color bar is inserted on the right
+            or bottom of the plot, depending on the specified orientation.
         """
         try:
             self.img_list = [ weakref.ref(item) for item in img ]
@@ -184,8 +197,11 @@ class ColorBarItem(PlotItem):
 
     def setColorMap(self, colorMap):
         """
-        Sets a ColorMap object to determine the ColorBarItem's look-up table. The same
+        Sets a color map to determine the ColorBarItem's look-up table. The same
         look-up table is applied to any assigned ImageItem.
+        
+        `colorMap` can be a :class:`~pyqtgraph.ColorMap` or a string argument that is passed to 
+        :func:`colormap.get() <pyqtgraph.colormap.get>`.
         """
         if isinstance(colorMap, str):
             colorMap = colormap.get(colorMap)
@@ -208,15 +224,17 @@ class ColorBarItem(PlotItem):
 
     def setLevels(self, values=None, low=None, high=None ):
         """
-        Sets the displayed range of levels as specified.
+        Sets the displayed range of image levels.
 
-        ==============  ===========================================================================
-        **Arguments:**
-        values          specifies levels as tuple (low, high). Either value can be None to leave
-                        to previous value unchanged. Takes precedence over low and high parameters.
-        low             new low level to be applied to color bar and assigned images
-        high            new high level to be applied to color bar and assigned images
-        ==============  ===========================================================================
+        Parameters
+        ----------
+        values: tuple of float
+            Specifies levels as tuple ``(low, high)``. Either value can be `None` to leave
+            the previous value unchanged. Takes precedence over `low` and `high` parameters.
+        low: float
+            Applies a new low level to color bar and assigned images
+        high: float
+            Applies a new high level to color bar and assigned images
         """
         if values is not None: # values setting takes precendence
             low, high = values
@@ -234,7 +252,7 @@ class ColorBarItem(PlotItem):
         self._update_items()
 
     def levels(self):
-        """ returns the currently set levels as the tuple (low, high). """
+        """ Returns the currently set levels as the tuple ``(low, high)``. """
         return self.values
 
     def _update_items(self, update_cmap=False):

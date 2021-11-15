@@ -22,6 +22,7 @@ from ..PlotDataItem import PlotDataItem
 from ..ScatterPlotItem import ScatterPlotItem
 from ..ViewBox import ViewBox
 
+
 translate = QtCore.QCoreApplication.translate
 
 ui_template = importlib.import_module(
@@ -344,7 +345,7 @@ class PlotItem(GraphicsWidget):
         
     def setLogMode(self, x=None, y=None):
         """
-        Set log scaling for x and/or y axes.
+        Set log scaling for `x` and/or `y` axes.
         This informs PlotDataItems to transform logarithmically and switches
         the axes to use log ticking. 
         
@@ -520,8 +521,9 @@ class PlotItem(GraphicsWidget):
     def addItem(self, item, *args, **kargs):
         """
         Add a graphics item to the view box. 
-        If the item has plot data (PlotDataItem, PlotCurveItem, ScatterPlotItem), it may
-        be included in analysis performed by the PlotItem.
+        If the item has plot data (:class:`~pyqtgrpah.PlotDataItem`, 
+        :class:`~pyqtgraph.PlotCurveItem`, :class:`~pyqtgraph.ScatterPlotItem`), 
+        it may be included in analysis performed by the PlotItem.
         """
         if item in self.items:
             warnings.warn('Item already added to PlotItem, ignoring.')
@@ -579,7 +581,8 @@ class PlotItem(GraphicsWidget):
         self.addItem(item, *args)
         
     def listDataItems(self):
-        """Return a list of all data items (PlotDataItem, PlotCurveItem, ScatterPlotItem, etc)
+        """Return a list of all data items (:class:`~pyqtgrpah.PlotDataItem`, 
+        :class:`~pyqtgraph.PlotCurveItem`, :class:`~pyqtgraph.ScatterPlotItem`, etc)
         contained in this PlotItem."""
         return self.dataItems[:]
         
@@ -588,16 +591,15 @@ class PlotItem(GraphicsWidget):
             'PlotItem.addCurve is deprecated and will be removed in 0.13. '
             'Use PlotItem.addItem instead.',
             DeprecationWarning, stacklevel=2
-        )    
-
+        )
         self.addItem(c, params)
 
     def addLine(self, x=None, y=None, z=None, **kwds):
         """
-        Create an InfiniteLine and add to the plot. 
+        Create an :class:`~pyqtgraph.InfiniteLine` and add to the plot. 
         
-        If *x* is specified,
-        the line will be vertical. If *y* is specified, the line will be
+        If `x` is specified,
+        the line will be vertical. If `y` is specified, the line will be
         horizontal. All extra keyword arguments are passed to
         :func:`InfiniteLine.__init__() <pyqtgraph.InfiniteLine.__init__>`.
         Returns the item created.
@@ -612,7 +614,7 @@ class PlotItem(GraphicsWidget):
 
     def removeItem(self, item):
         """
-        Remove an item from the internal ViewBox.
+        Remove an item from the PlotItem's :class:`~pyqtgraph.ViewBox`.
         """
         if not item in self.items:
             return
@@ -632,7 +634,7 @@ class PlotItem(GraphicsWidget):
 
     def clear(self):
         """
-        Remove all items from the ViewBox.
+        Remove all items from the PlotItem's :class:`~pyqtgraph.ViewBox`.
         """
         for i in self.items[:]:
             self.removeItem(i)
@@ -644,13 +646,17 @@ class PlotItem(GraphicsWidget):
         self.avgCurves = {}        
     
     def plot(self, *args, **kargs):
+#        **Additional arguments:**
         """
         Add and return a new plot.
         See :func:`PlotDataItem.__init__ <pyqtgraph.PlotDataItem.__init__>` for data arguments
         
-        Extra allowed arguments are:
-            clear    - clear all plots before displaying new data
-            params   - meta-parameters to associate with this data
+        **Additional allowed arguments**
+        
+        ========= =================================================================
+        `clear`   clears all plots before displaying new data
+        `params`  sets meta-parameters to associate with this data
+        ========= =================================================================
         """
         clear = kargs.get('clear', False)
         params = kargs.get('params', None)
@@ -668,14 +674,14 @@ class PlotItem(GraphicsWidget):
 
     def addLegend(self, offset=(30, 30), **kwargs):
         """
-        Create a new :class:`~pyqtgraph.LegendItem` and anchor it over the
-        internal ViewBox. Plots will be automatically displayed in the legend
-        if they are created with the 'name' argument.
+        Create a new :class:`~pyqtgraph.LegendItem` and anchor it over the internal 
+        :class:`~pyqtgraph.ViewBox`. Plots added after this will be automatically 
+        displayed in the legend if they are created with a 'name' argument.
 
-        If a LegendItem has already been created using this method, that
-        item will be returned rather than creating a new one.
+        If a :class:`~pyqtGraph.LegendItem` has already been created using this method, 
+        that item will be returned rather than creating a new one.
 
-        Accepts the same arguments as :meth:`~pyqtgraph.LegendItem`.
+        Accepts the same arguments as :func:`~pyqtgraph.LegendItem.__init__`.
         """
 
         if self.legend is None:
@@ -945,20 +951,26 @@ class PlotItem(GraphicsWidget):
         
         
     def setDownsampling(self, ds=None, auto=None, mode=None):
-        """Change the default downsampling mode for all PlotDataItems managed by this plot.
+        """
+        Changes the default downsampling mode for all :class:`~pyqtgraph.PlotDataItem` managed by this plot.
         
-        =============== =================================================================
+        =============== ====================================================================
         **Arguments:**
         ds              (int) Reduce visible plot samples by this factor, or
+
                         (bool) To enable/disable downsampling without changing the value.
-        auto            (bool) If True, automatically pick *ds* based on visible range
-        mode            'subsample': Downsample by taking the first of N samples.
-                        This method is fastest and least accurate.
+
+        auto            (bool) If `True`, automatically pick ``ds`` based on visible range
+
+        mode            'subsample': Downsample by taking the first of N samples. This 
+                        method is fastest but least accurate.
+
                         'mean': Downsample by taking the mean of N samples.
-                        'peak': Downsample by drawing a saw wave that follows the min
-                        and max of the original data. This method produces the best
-                        visual representation of the data but is slower.
-        =============== =================================================================
+
+                        'peak': Downsample by drawing a saw wave that follows the min and 
+                        max of the original data. This method produces the best visual 
+                        representation of the data but is slower.
+        =============== ====================================================================
         """
         if ds is not None:
             if ds is False:
@@ -1010,8 +1022,8 @@ class PlotItem(GraphicsWidget):
         return ds, auto, method
         
     def setClipToView(self, clip):
-        """Set the default clip-to-view mode for all PlotDataItems managed by this plot.
-        If *clip* is True, then PlotDataItems will attempt to draw only points within the visible
+        """Set the default clip-to-view mode for all :class:`~pyqtgraph.PlotDataItem`s managed by this plot.
+        If *clip* is `True`, then PlotDataItems will attempt to draw only points within the visible
         range of the ViewBox."""
         self.ctrl.clipToViewCheck.setChecked(clip)
         
@@ -1026,16 +1038,17 @@ class PlotItem(GraphicsWidget):
                 curve.show()
     
     def updateDecimation(self):
-        """Reduce or increase number of visible curves depending from Max Traces spinner value
-        if Max Traces is checked in the context menu. Destroy not visible curves if forget traces
-        is checked. This function is called in most cases automaticaly when Max Traces GUI elements
-        are triggered. Also it is auto-called when state of PlotItem is updated, state restored
-        or new items being added/removed.
+        """
+        Reduce or increase number of visible curves according to value set by the `Max Traces` spinner,
+        if `Max Traces` is checked in the context menu. Destroy curves that are not visible if 
+        `forget traces` is checked. In most cases, this function is called automaticaly when the 
+        `Max Traces` GUI elements are triggered. It is also alled when the state of PlotItem is updated,
+        its state is restored, or new items added added/removed.
         
-        This can cause unexpected/conflicting state of curve visibility (or destruction) if curve
-        visibilities are controlled externaly. In case of external control it is adviced to disable
-        the Max Traces checkbox (or context menu) to prevent user from the unexpected
-        curve state change."""
+        This can cause an unexpected or conflicting state of curve visibility (or destruction) if curve
+        visibilities are controlled externally. In the case of external control it is advised to disable
+        the `Max Traces` checkbox (or context menu) to prevent unexpected curve state changes.
+        """
         if not self.ctrl.maxTracesCheck.isChecked():
             return
         else:
@@ -1099,7 +1112,7 @@ class PlotItem(GraphicsWidget):
         """
         Enable or disable the context menu for this PlotItem.
         By default, the ViewBox's context menu will also be affected.
-        (use enableViewBoxMenu=None to leave the ViewBox unchanged)
+        (use ``enableViewBoxMenu=None`` to leave the ViewBox unchanged)
         """
         self._menuEnabled = enableMenu
         if enableViewBoxMenu is None:
@@ -1137,7 +1150,7 @@ class PlotItem(GraphicsWidget):
         
     def setLabel(self, axis, text=None, units=None, unitPrefix=None, **args):
         """
-        Set the label for an axis. Basic HTML formatting is allowed.
+        Sets the label for an axis. Basic HTML formatting is allowed.
         
         ==============  =================================================================
         **Arguments:**
@@ -1156,7 +1169,7 @@ class PlotItem(GraphicsWidget):
         """
         Convenience function allowing multiple labels and/or title to be set in one call.
         Keyword arguments can be 'title', 'left', 'bottom', 'right', or 'top'.
-        Values may be strings or a tuple of arguments to pass to setLabel.
+        Values may be strings or a tuple of arguments to pass to :func:`setLabel`.
         """
         for k,v in kwds.items():
             if k == 'title':
