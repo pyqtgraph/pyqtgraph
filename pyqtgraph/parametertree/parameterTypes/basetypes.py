@@ -329,7 +329,14 @@ class GroupParameterItem(ParameterItem):
         backgroundColor = palette.button().color().darker(110)
         altBackgroundColor = palette.dark().color()
 
-        if app.property('darkMode'):
+        # if stylesheet and 'QDarkStyleSheet' in stylesheet:
+        if app.styleSheet(): # Assume the stylesheet is qdarkstyle
+            # #455364 is the background-color of the QHeaderView, #E0E1E3 is lineEdit text from QDarkStyle
+            # lighter/darker are applied to the colors to maintain a good contrast with the item:hover color
+            backgroundColor = QtGui.QColor('#455364').darker(100)
+            altBackgroundColor =  backgroundColor.lighter(130)
+            textColor = QtGui.QColor('#E0E1E3')
+        elif app.property('darkMode'):
             backgroundColor = palette.button().color().lighter(115)
             altBackgroundColor = palette.light().color().lighter(190)
 
