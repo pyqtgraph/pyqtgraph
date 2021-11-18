@@ -72,11 +72,15 @@ class ColorBarItem(PlotItem):
         self.horizontal = bool( orientation in ('h', 'horizontal') )
 
         self.lo_prv, self.hi_prv = self.values # remember previous values while adjusting range
-        if limits is None:
-            self.lo_lim = None
-            self.hi_lim = None
-        else:
+        self.lo_lim = None
+        self.hi_lim = None
+        if limits is not None:
             self.lo_lim, self.hi_lim = limits
+            # slightly expand the limits to match the rounding steps:
+            if self.lo_lim is not None:
+                self.lo_lim = self.rounding * math.floor( self.lo_lim/self.rounding )
+            if self.hi_lim is not None:
+                self.hi_lim = self.rounding * math.ceil( self.hi_lim/self.rounding )
 
         self.disableAutoRange()
         self.hideButtons()
@@ -259,32 +263,33 @@ class ColorBarItem(PlotItem):
         # These are the new values if adjuster is released now, rate of change depends on original separation
         span_prv = self.hi_prv - self.lo_prv # previous span of values
         hi_new = self.hi_prv + (span_prv + 2*self.rounding) * top # make sure that we can always
-        lo_new = self.lo_prv + (span_prv + 2*self.rounding) * bot #   reach 2x the minimal step
+        lo_new = self.lo_prv + (span_prv + 2*self.rounding) * bot # reach 2x the minimal step
+
         # Alternative model with speed depending on level magnitude:
         # mean_val = abs(self.lo_prv) + abs(self.hi_prv) / 2
         # hi_new = self.hi_prv + (mean_val + 2*self.rounding) * top # make sure that we can always
         # lo_new = self.lo_prv + (mean_val + 2*self.rounding) * bot #    reach 2x the minimal step
 
-        if self.hi_lim is not None and hi_new > self.hi_lim: # limit maximum value
-            # print('lim +')
-            hi_new = self.hi_lim
-            if lo_new > hi_new - span_prv: # avoid collapsing the span against top or bottom limits
-                lo_new = hi_new - span_prv
-        if self.lo_lim is not None and lo_new < self.lo_lim: # limit minimum value
-            # print('lim -')
-            lo_new = self.lo_lim
-            if hi_new < lo_new + span_prv: # avoid collapsing the span against top or bottom limits
-                hi_new = lo_new + span_prv
-        if lo_new + self.rounding > hi_new: # do not allow less than one "rounding" unit of span
-            # print('lim X')
+        if self.hi_lim is not None:
+            if hi_new > self.hi_lim: # limit maximum value
+                hi_new = self.hi_lim 
+                if top!=0 and bot!=0:          # moving entire region?
+                    lo_new = hi_new - span_prv # avoid collapsing the span against top limit
+        if self.lo_lim is not None:
+            if lo_new < self.lo_lim: # limit minimum value
+                lo_new = self.lo_lim 
+                if top!=0 and bot!=0:          # moving entire region?
+                    hi_new = lo_new + span_prv # avoid collapsing the span against bottom limit
+        if hi_new-lo_new < self.rounding: # do not allow less than one "rounding" unit of span 
             if   bot == 0: hi_new = lo_new + self.rounding
             elif top == 0: lo_new = hi_new - self.rounding
-            else:
-                lo_new = (lo_new + hi_new - self.rounding) / 2
-                hi_new = lo_new + self.rounding
+            else: # this should never happen, but let's try to recover if it does:
+                mid = (hi_new + lo_new) / 2
+                hi_new = mid + self.rounding / 2
+                lo_new = mid - self.rounding / 2
+
         lo_new = self.rounding * round( lo_new/self.rounding )
         hi_new = self.rounding * round( hi_new/self.rounding )
-        # if hi_new == lo_new: hi_new = lo_new + self.rounding # hack solution if axis span still collapses
         self.values = (lo_new, hi_new)
         self._update_items()
         self.sigLevelsChanged.emit(self)
