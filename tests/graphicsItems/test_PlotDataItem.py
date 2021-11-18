@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
-import numpy as np
 import warnings
+
+import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 

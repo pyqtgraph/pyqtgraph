@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from pyqtgraph import mkQApp, ProgressDialog
+from pyqtgraph import ProgressDialog, mkQApp
 
 mkQApp()
 

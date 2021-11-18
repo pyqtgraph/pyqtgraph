@@ -1,15 +1,19 @@
-from collections import namedtuple
-from pyqtgraph import Qt
 import contextlib
 import errno
-import time
 import importlib
 import itertools
-import pytest
-import os, sys
+import os
 import platform
 import subprocess
+import sys
+import time
 from argparse import Namespace
+from collections import namedtuple
+
+import pytest
+
+from pyqtgraph import Qt
+
 if __name__ == "__main__" and (__package__ is None or __package__==''):
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     sys.path.insert(0, parent_dir)
@@ -17,6 +21,7 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
     __package__ = "examples"
 
 from . import utils
+
 
 def buildFileList(examples, files=None):
     if files is None:
@@ -54,7 +59,7 @@ installedFrontends = sorted([
 
 darwin_opengl_broken = (platform.system() == "Darwin" and
             tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and
-            sys.version_info < (3, 9, 1))
+            (sys.version_info < (3, 8, 10) or sys.version_info == (3, 9, 0)))
 
 darwin_opengl_reason = ("pyopenGL cannot find openGL library on big sur: "
                         "https://github.com/python/cpython/pull/21241")

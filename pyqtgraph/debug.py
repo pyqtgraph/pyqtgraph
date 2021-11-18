@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 debug.py - Functions to aid in debugging 
 Copyright 2010  Luke Campagnola
@@ -8,13 +7,26 @@ Distributed under MIT/X11 license. See license.txt for more information.
 
 from __future__ import print_function
 
-import sys, traceback, time, gc, re, types, weakref, inspect, os, cProfile, threading
 import contextlib
+import cProfile
+import gc
+import inspect
+import os
+import re
+import sys
+import threading
+import time
+import traceback
+import types
 import warnings
+import weakref
 from time import perf_counter
+
 from numpy import ndarray
-from .Qt import QtCore, QT_LIB
+
+from .Qt import QT_LIB, QtCore
 from .util import cprint
+
 if sys.version.startswith("3.8") and QT_LIB == "PySide2":
     from .Qt import PySide2
     if tuple(map(int, PySide2.__version__.split("."))) < (5, 14):
@@ -1245,6 +1257,7 @@ def enableFaulthandler():
     """
     try:
         import faulthandler
+
         # necessary to disable first or else new threads may not be handled.
         faulthandler.disable()
         faulthandler.enable(all_threads=True)

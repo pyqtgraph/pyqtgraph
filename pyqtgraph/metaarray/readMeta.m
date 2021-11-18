@@ -81,6 +81,3 @@ else
     f = str(inds(length(inds))+1:length(str));
 end
 end
-
-
-

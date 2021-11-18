@@ -1,7 +1,7 @@
 import numpy as np
 
-from pyqtgraph.Qt import QtWidgets
 from pyqtgraph.parametertree.parameterTypes import QtEnumParameter as enum
+from pyqtgraph.Qt import QtWidgets
 
 dlg = QtWidgets.QFileDialog
 
@@ -91,6 +91,11 @@ cfg = {
         'exclusive': {
             'type': 'bool',
             'value': False,
+        },
+        'delay': {
+            'type': 'float',
+            'value': 1.0,
+            'limits': [0, None]
         }
     },
 

@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 MultiPlotWidget.py -  Convenience class--GraphicsView widget displaying a MultiPlotItem
 Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
+from ..graphicsItems import MultiPlotItem as MultiPlotItem
 from ..Qt import QtCore
 from .GraphicsView import GraphicsView
-from ..graphicsItems import MultiPlotItem as MultiPlotItem
 
 __all__ = ['MultiPlotWidget']
 class MultiPlotWidget(GraphicsView):

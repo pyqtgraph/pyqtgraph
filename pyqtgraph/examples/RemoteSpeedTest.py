@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates the use of RemoteGraphicsView to improve performance in
 applications with heavy load. It works by starting a second process to handle 
@@ -11,11 +10,12 @@ between the two cases. IF you have a multi-core CPU, it should be obvious that t
 remote case is much faster.
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph as pg
-import pyqtgraph.widgets.RemoteGraphicsView
-import numpy as np
 from time import perf_counter
+
+import numpy as np
+
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtWidgets
 
 app = pg.mkQApp()
 
@@ -26,10 +26,10 @@ view.setWindowTitle('pyqtgraph example: RemoteSpeedTest')
 
 app.aboutToQuit.connect(view.close)
 
-label = QtGui.QLabel()
-rcheck = QtGui.QCheckBox('plot remote')
+label = QtWidgets.QLabel()
+rcheck = QtWidgets.QCheckBox('plot remote')
 rcheck.setChecked(True)
-lcheck = QtGui.QCheckBox('plot local')
+lcheck = QtWidgets.QCheckBox('plot local')
 lplt = pg.PlotWidget()
 layout = pg.LayoutWidget()
 layout.addWidget(rcheck)

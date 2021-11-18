@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates common image analysis tools.
 
@@ -7,10 +6,10 @@ widget, but here we present a lower-level approach that provides finer control
 over the user interface.
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 
 # Interpret image data as row-major instead of col-major
 pg.setConfigOptions(imageAxisOrder='row-major')

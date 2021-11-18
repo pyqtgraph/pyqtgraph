@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates basic use of LegendItem
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
+
+import pyqtgraph as pg
 
 win = pg.plot()
 win.setWindowTitle('pyqtgraph example: BarGraphItem')

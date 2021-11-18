@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 functions.py -  Miscellaneous functions with no other home
 Copyright 2010  Luke Campagnola
@@ -8,21 +7,20 @@ Distributed under MIT/X11 license. See license.txt for more information.
 from __future__ import division
 
 import decimal
+import math
 import re
 import struct
 import sys
 import warnings
-import math
+from collections import OrderedDict
 
 import numpy as np
+
+from . import Qt, debug, reload
+from .metaarray import MetaArray
+from .Qt import QT_LIB, QtCore, QtGui
 from .util.cupy_helper import getCupy
 from .util.numba_helper import getNumbaFunctions
-
-from . import debug, reload
-from .Qt import QtGui, QtCore, QT_LIB, QtVersion
-from . import Qt
-from .metaarray import MetaArray
-from collections import OrderedDict
 
 # in order of appearance in this file.
 # add new functions to this list only if they are to reside in pg namespace.
@@ -1181,6 +1179,7 @@ def solveBilinearTransform(points1, points2):
         mapped = np.dot(matrix, [x*y, x, y, 1])
     """
     import numpy.linalg
+
     ## A is 4 rows (points) x 4 columns (xy, x, y, 1)
     ## B is 4 rows (points) x 2 columns (x, y)
     A = np.array([[points1[i].x()*points1[i].y(), points1[i].x(), points1[i].y(), 1] for i in range(4)])

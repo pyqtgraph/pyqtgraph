@@ -1,9 +1,11 @@
-from ..Qt import QtCore, QtGui, QtWidgets
-from ..parametertree import Parameter, ParameterTree
-from ..functions import mkPen
-
 import re
 from contextlib import ExitStack
+
+from ..functions import mkPen
+from ..parametertree.Parameter import Parameter
+from ..parametertree.ParameterTree import ParameterTree
+from ..Qt import QtCore, QtGui, QtWidgets
+
 
 class PenPreviewArea(QtWidgets.QLabel):
     def __init__(self, pen):
@@ -165,7 +167,7 @@ class PenSelectorDialog(QtWidgets.QDialog):
         self.param.sigTreeStateChanged.connect(maybeUpdatePreview)
         infoLbl = QtWidgets.QLabel('Click and drag below to test the pen')
         infoLbl.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
-        policy = QtGui.QSizePolicy.Policy
+        policy = QtWidgets.QSizePolicy.Policy
         infoLbl.setSizePolicy(policy.Expanding, policy.Fixed)
         self.labelPenPreview.setMinimumSize(10,30)
         self.tree.setMinimumSize(240, 135)

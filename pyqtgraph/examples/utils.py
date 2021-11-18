@@ -1,5 +1,5 @@
-from collections import OrderedDict
 from argparse import Namespace
+from collections import OrderedDict
 
 # Avoid clash with module name
 examples_ = OrderedDict([

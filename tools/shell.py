@@ -35,4 +35,3 @@ def ssh(host, cmd):
     proc = sp.Popen(['ssh', host], stdin=sp.PIPE)
     proc.stdin.write(cmd)
     proc.wait()
-

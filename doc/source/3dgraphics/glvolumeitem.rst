@@ -5,4 +5,3 @@ GLVolumeItem
     :members:
 
     .. automethod:: pyqtgraph.opengl.GLVolumeItem.__init__
-

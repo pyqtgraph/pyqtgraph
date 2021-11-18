@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrates some customized mouse interaction by drawing a crosshair that follows 
 the mouse.
 """
 
 import numpy as np
+
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph.Point import Point
 
 #generate layout
 app = pg.mkQApp("Crosshair Example")

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # pyqtgraph documentation build configuration file, created by
 # sphinx-quickstart on Fri Nov 18 19:33:12 2011.

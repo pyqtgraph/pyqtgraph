@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
+import re
+import warnings
+import weakref
+from collections import OrderedDict
+
 from .. import functions as fn
 from ..Qt import QtCore
-import weakref, re
-from collections import OrderedDict
 from .ParameterItem import ParameterItem
-import warnings
 
 PARAM_TYPES = {}
 PARAM_NAMES = {}

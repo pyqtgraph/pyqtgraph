@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
-from OpenGL.GL import *
-from .. GLGraphicsItem import GLGraphicsItem
-from .. import shaders
+from OpenGL.GL import *  # noqa
+import numpy as np
+
 from ... import functions as fn
 from ...Qt import QtGui
-import numpy as np
+from .. import shaders
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLScatterPlotItem']
 

@@ -1,25 +1,25 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates writing a custom Node subclass for use with flowcharts.
 
 We implement a couple of simple image processing nodes.
 """
 
-from pyqtgraph.flowchart import Flowchart, Node
-import pyqtgraph.flowchart.library as fclib
-from pyqtgraph.flowchart.library.common import CtrlNode
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph as pg
 import numpy as np
+
+import pyqtgraph as pg
+import pyqtgraph.flowchart.library as fclib
+from pyqtgraph.flowchart import Flowchart, Node
+from pyqtgraph.flowchart.library.common import CtrlNode
+from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("Flowchart Custom Node Example")
 
 ## Create main window with a grid layout inside
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 win.setWindowTitle('pyqtgraph example: FlowchartCustomNode')
-cw = QtGui.QWidget()
+cw = QtWidgets.QWidget()
 win.setCentralWidget(cw)
-layout = QtGui.QGridLayout()
+layout = QtWidgets.QGridLayout()
 cw.setLayout(layout)
 
 ## Create an empty flowchart with a single input and output

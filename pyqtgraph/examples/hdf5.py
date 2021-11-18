@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 In this example we create a subclass of PlotCurveItem for displaying a very large 
 data set from an HDF5 file that does not fit in memory. 
@@ -12,11 +11,14 @@ A more clever implementation of this class would employ some kind of caching
 to avoid re-reading the entire visible waveform at every update.
 """
 
-import sys, os
-import numpy as np
+import os
+import sys
+
 import h5py
+import numpy as np
+
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtWidgets
 
 pg.mkQApp()
 
@@ -127,7 +129,7 @@ if len(sys.argv) > 1:
 else:
     fileName = 'test.hdf5'
     if not os.path.isfile(fileName):
-        size, ok = QtGui.QInputDialog.getDouble(None, "Create HDF5 Dataset?", "This demo requires a large HDF5 array. To generate a file, enter the array size (in GB) and press OK.", 2.0)
+        size, ok = QtWidgets.QInputDialog.getDouble(None, "Create HDF5 Dataset?", "This demo requires a large HDF5 array. To generate a file, enter the array size (in GB) and press OK.", 2.0)
         if not ok:
             sys.exit(0)
         else:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 MetaArray.py -  Class encapsulating ndarray with meta data
 Copyright 2010  Luke Campagnola
@@ -10,11 +9,12 @@ new methods for slicing and indexing the array based on this meta data.
 More info at http://www.scipy.org/Cookbook/MetaArray
 """
 
-import copy, os
+import copy
+import os
 import pickle
-import numpy as np
 import warnings
 
+import numpy as np
 
 ## By default, the library will use HDF5 when writing files.
 ## This can be overridden by setting USE_HDF5 = False
@@ -413,6 +413,8 @@ class MetaArray(object):
             ind.append(order)
         elif isinstance(axis, str):
             ind = (slice(axis, order),)
+        else:
+            raise TypeError("axis must be type (int, str)")
         return self[tuple(ind)]
   
     def append(self, val, axis):
@@ -905,8 +907,9 @@ class MetaArray(object):
         
         if proc == False:
             raise Exception('remote read failed')
-        if proc == None:
+        if proc is None:
             from .. import multiprocess as mp
+
             #print "new process"
             proc = mp.Process(executable='/usr/bin/python')
             proc.setProxyOptions(deferGetattr=True)

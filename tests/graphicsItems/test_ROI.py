@@ -1,12 +1,13 @@
-# -*- coding: utf-8 -*-
+import math
+import platform
+
 import numpy as np
 import pytest
+
 import pyqtgraph as pg
-import platform
 from pyqtgraph.Qt import QtCore, QtGui, QtTest
 from tests.image_testing import assertImageApproved
-from tests.ui_testing import mouseMove, mouseDrag, mouseClick, resizeWindow
-import math
+from tests.ui_testing import mouseClick, mouseDrag, mouseMove, resizeWindow
 
 app = pg.mkQApp()
 pg.setConfigOption("mouseRateLimit", 0)

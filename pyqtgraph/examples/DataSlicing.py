@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Demonstrate a simple data-slicing task: given 3D data (displayed at top), select 
 a 2D plane and interpolate data along that plane to generate a slice image 
@@ -6,18 +5,19 @@ a 2D plane and interpolate data along that plane to generate a slice image
 """
 
 import numpy as np
-from pyqtgraph.Qt import QtCore, QtGui
+
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("Data Slicing Example")
 
 ## Create window with two ImageView widgets
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 win.resize(800,800)
 win.setWindowTitle('pyqtgraph example: DataSlicing')
-cw = QtGui.QWidget()
+cw = QtWidgets.QWidget()
 win.setCentralWidget(cw)
-l = QtGui.QGridLayout()
+l = QtWidgets.QGridLayout()
 cw.setLayout(l)
 imv1 = pg.ImageView()
 imv2 = pg.ImageView()

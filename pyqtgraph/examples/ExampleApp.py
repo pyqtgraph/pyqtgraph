@@ -1,23 +1,24 @@
 import keyword
 import os
 import re
-import sys
 import subprocess
+import sys
 from argparse import Namespace
-
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtWidgets, QtGui, QtCore, QT_LIB
 from collections import OrderedDict
 from functools import lru_cache
 
+import pyqtgraph as pg
+from pyqtgraph.Qt import QT_LIB, QtCore, QtGui, QtWidgets
 
 app = pg.mkQApp()
 
 
 path = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, path)
-import utils
 import importlib
+
+import utils
+
 ui_template = importlib.import_module(
     f'exampleLoaderTemplate_{QT_LIB.lower()}')
 
@@ -480,8 +481,8 @@ class ExampleLoader(QtWidgets.QMainWindow):
         path = os.path.dirname(os.path.dirname(example_path))
         env['PYTHONPATH'] = f'{path}'
         if edited:
-            proc = subprocess.Popen([sys.executable, '-'], stdin=subprocess.PIPE, cwd=path, env=env)
-            code = self.ui.codeView.toPlainText()
+            proc = subprocess.Popen([sys.executable, '-'], stdin=subprocess.PIPE, cwd=example_path, env=env)
+            code = self.ui.codeView.toPlainText().encode('UTF-8')
             proc.stdin.write(code)
             proc.stdin.close()
         else:

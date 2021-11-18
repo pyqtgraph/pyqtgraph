@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates the use of ImageView with 3-color image stacks.
 ImageView is a high-level widget for displaying and analyzing 2D and 3D data.
@@ -13,8 +12,9 @@ ImageView provides:
 """
 
 import numpy as np
-from pyqtgraph.Qt import QtCore, QtGui
+
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtWidgets
 
 # Interpret image data as row-major instead of col-major
 pg.setConfigOptions(imageAxisOrder='row-major')
@@ -22,7 +22,7 @@ pg.setConfigOptions(imageAxisOrder='row-major')
 app = pg.mkQApp("ImageView Example")
 
 ## Create window with ImageView widget
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 win.resize(800,800)
 imv = pg.ImageView()
 win.setCentralWidget(imv)

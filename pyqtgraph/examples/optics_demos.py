@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 Optical system design demo
 """
 
+import numpy as np
 from optics import *
 
 import pyqtgraph as pg
-
-import numpy as np
 from pyqtgraph import Point
 
 app = pg.mkQApp("Optics Demo")

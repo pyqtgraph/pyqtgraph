@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ViewBox is the general-purpose graphical container that allows the user to 
 zoom / pan to inspect any area of a 2D coordinate system. 
@@ -6,9 +5,9 @@ zoom / pan to inspect any area of a 2D coordinate system.
 This example demonstrates many of the features ViewBox provides.
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
+
+import pyqtgraph as pg
 
 x = np.arange(1000, dtype=float)
 y = np.random.normal(size=1000)

@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
-import numpy as np
-from ..Point import Point
-from .. import debug as debug
-from math import ceil, floor, log, log10, isfinite
-import sys
+import warnings
 import weakref
+from math import ceil, floor, isfinite, log, log10
+
+import numpy as np
+
+from .. import debug as debug
 from .. import functions as fn
 from .. import getConfigOption
+from ..Point import Point
+from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsWidget import GraphicsWidget
-import warnings
 
 __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):
@@ -45,7 +45,7 @@ class AxisItem(GraphicsWidget):
         """
 
         GraphicsWidget.__init__(self, parent)
-        self.label = QtGui.QGraphicsTextItem(self)
+        self.label = QtWidgets.QGraphicsTextItem(self)
         self.picture = None
         self.orientation = orientation
         if orientation not in ['left', 'right', 'top', 'bottom']:
@@ -205,20 +205,42 @@ class AxisItem(GraphicsWidget):
         self.prepareGeometryChange()
         self.update()
 
-    def setLogMode(self, log):
+    def setLogMode(self, *args, **kwargs):
         """
-        If *log* is True, then ticks are displayed on a logarithmic scale and values
-        are adjusted accordingly. (This is usually accessed by changing the log mode
-        of a :func:`PlotItem <pyqtgraph.PlotItem.setLogMode>`)
-        The linked ViewBox will be informed of the change.
+        Set log scaling for x and/or y axes.
+
+        If two positional arguments are provided, the first will set log scaling
+        for the x axis and the second for the y axis. If a single positional
+        argument is provided, it will set the log scaling along the direction of
+        the AxisItem. Alternatively, x and y can be passed as keyword arguments.
+
+        If an axis is set to log scale, ticks are displayed on a logarithmic scale
+        and values are adjusted accordingly. (This is usually accessed by changing
+        the log mode of a :func:`PlotItem <pyqtgraph.PlotItem.setLogMode>`.) The 
+        linked ViewBox will be informed of the change.
         """
-        self.logMode = log
-        self.picture = None
+        if len(args) == 1:
+            self.logMode = args[0]
+        else:
+            if len(args) == 2:
+                x, y = args
+            else:
+                x = kwargs.get('x')
+                y = kwargs.get('y')
+
+            if x is not None and self.orientation in ('top', 'bottom'):
+                self.logMode = x
+            if y is not None and self.orientation in ('left', 'right'):
+                self.logMode = y
+        
         if self._linkedView is not None:
-            if self.orientation in ('top', 'bottom'):
-                self._linkedView().setLogMode('x', log)
+            if self.orientation in ('top', 'bottom'):           
+                self._linkedView().setLogMode('x', self.logMode)    
             elif self.orientation in ('left', 'right'):
-                self._linkedView().setLogMode('y', log)
+                self._linkedView().setLogMode('y', self.logMode)    
+
+        self.picture = None
+
         self.update()
 
     def setTickFont(self, font):
@@ -916,6 +938,8 @@ class AxisItem(GraphicsWidget):
             tickStop = bounds.top()
             tickDir = 1
             axis = 1
+        else:
+            raise ValueError("self.orientation must be in ('left', 'right', 'top', 'bottom')")
         #print tickStart, tickStop, span
 
         ## determine size of this item in pixels

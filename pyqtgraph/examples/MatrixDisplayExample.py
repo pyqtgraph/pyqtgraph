@@ -1,11 +1,12 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates ViewBox and AxisItem configuration to plot a correlation matrix.
 """
 
 import numpy as np
+
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtWidgets, mkQApp, QtGui
+from pyqtgraph.Qt import QtGui, QtWidgets, mkQApp
+
 
 class MainWindow(QtWidgets.QMainWindow):
     """ example application main window """

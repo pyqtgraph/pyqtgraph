@@ -4,9 +4,9 @@ labels
 """
 
 
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph as pg
 import numpy as np
+
+import pyqtgraph as pg
 
 app = pg.mkQApp("Gradiant Layout Example")
 view = pg.GraphicsView()

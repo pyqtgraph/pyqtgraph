@@ -5,7 +5,8 @@ ImageItem
 :class:`~pyqtgraph.ViewBox`, which may itself be part of a :class:`~pyqtgraph.PlotItem`. It is designed
 for rapid updates as needed for a video display. The supplied data is optionally scaled (see 
 :func:`~pyqtgraph.ImageItem.setLevels`) and/or colored according to a
-lookup table (see :func:`~pyqtgraph.ImageItem.setLookupTable`.
+lookup table (see :func:`~pyqtgraph.ImageItem.setColorMap` and 
+:func:`~pyqtgraph.ImageItem.setLookupTable`).
 
 Data is provided as a NumPy array with an ordering of either
 

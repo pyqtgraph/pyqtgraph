@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 """
 Simple example demonstrating a button which displays a colored rectangle
 and allows the user to select a new color by clicking on the button.
 """
 
+
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
+from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("ColorButton Example")
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 btn = pg.ColorButton()
 win.setCentralWidget(btn)
 win.show()

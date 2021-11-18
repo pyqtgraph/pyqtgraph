@@ -1,9 +1,10 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtCore
-from .. import parametertree as ptree
-import numpy as np
 from collections import OrderedDict
+
+import numpy as np
+
 from .. import functions as fn
+from .. import parametertree as ptree
+from ..Qt import QtCore
 
 __all__ = ['DataFilterWidget']
 
@@ -59,6 +60,8 @@ class DataFilterParameter(ptree.types.GroupParameter):
             child = self.addChild(RangeFilterItem(name, self.fields[name]))
         elif mode == 'enum':
             child = self.addChild(EnumFilterItem(name, self.fields[name]))
+        else:
+            raise ValueError("field mode must be 'range' or 'enum'")
         return child
             
     def fieldNames(self):

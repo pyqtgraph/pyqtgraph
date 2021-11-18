@@ -1,4 +1,4 @@
-from ...Qt import QtCore, QT_LIB
+from ...Qt import QT_LIB, QtCore
 from .list import ListParameter
 
 

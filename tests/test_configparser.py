@@ -1,5 +1,7 @@
-from pyqtgraph import configfile
 import numpy as np
+
+from pyqtgraph import configfile
+
 
 def test_longArrays(tmpdir):
     """

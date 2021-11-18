@@ -1,11 +1,12 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates the use of ColorBarItem, which displays a simple interactive color bar.
 """
 
 import numpy as np
-from pyqtgraph.Qt import QtWidgets, mkQApp
+
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtWidgets, mkQApp
+
 
 class MainWindow(QtWidgets.QMainWindow):
     """ example application main window """
@@ -22,29 +23,20 @@ class MainWindow(QtWidgets.QMainWindow):
         noisy_data = data * (1 + 0.2 * np.random.random(data.shape) )
         noisy_transposed = noisy_data.transpose()
 
-        #--- add non-interactive image with integrated color -----------------
-        i1 = pg.ImageItem(image=data)
+        #--- add non-interactive image with integrated color ------------------
         p1 = gr_wid.addPlot(title="non-interactive")
+        # Basic steps to create a false color image with color bar:
+        i1 = pg.ImageItem(image=data)
         p1.addItem( i1 )
+        p1.addColorBar( i1, colorMap='CET-L9', values=(0, 30_000)) # , interactive=False)
+        #
         p1.setMouseEnabled( x=False, y=False)
         p1.disableAutoRange()
         p1.hideButtons()
         p1.setRange(xRange=(0,100), yRange=(0,100), padding=0)
-        for key in ['left','right','top','bottom']:
-            p1.showAxis(key)
-            axis = p1.getAxis(key)
-            axis.setZValue(1)
-            if key in ['top', 'right']: 
-                p1.getAxis(key).setStyle( showValues=False )
+        p1.showAxes(True, showValues=(True,False,False,True) )
 
-        cmap = pg.colormap.get('CET-L9')
-        bar = pg.ColorBarItem(
-            interactive=False, values= (0, 30_000), colorMap=cmap,
-            label='vertical fixed color bar'
-        )
-        bar.setImageItem( i1, insert_in=p1 )
-
-        #--- add interactive image with integrated horizontal color bar --------------
+        #--- add interactive image with integrated horizontal color bar -------
         i2 = pg.ImageItem(image=noisy_data)
         p2 = gr_wid.addPlot(1,0, 1,1, title="interactive")
         p2.addItem( i2, title='' )
@@ -54,10 +46,9 @@ class MainWindow(QtWidgets.QMainWindow):
         p2.getAxis('bottom').setLabel('bottom axis label')
         p2.getAxis('right').setLabel('right axis label')
 
-        cmap = pg.colormap.get('CET-L4')
         bar = pg.ColorBarItem(
             values = (0, 30_000),
-            colorMap=cmap,
+            colorMap='CET-L4',
             label='horizontal color bar',
             limits = (0, None),
             rounding=1000,

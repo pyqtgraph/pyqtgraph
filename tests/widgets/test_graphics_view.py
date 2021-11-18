@@ -1,5 +1,5 @@
-from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 app = pg.mkQApp()
 
@@ -11,10 +11,10 @@ def test_basics_graphics_view():
     assert view.backgroundBrush().color() == QtGui.QColor(0, 0, 0, 255)
 
     assert view.focusPolicy() == QtCore.Qt.FocusPolicy.StrongFocus
-    assert view.transformationAnchor() == QtGui.QGraphicsView.ViewportAnchor.NoAnchor
-    minimal_update = QtGui.QGraphicsView.ViewportUpdateMode.MinimalViewportUpdate
+    assert view.transformationAnchor() == QtWidgets.QGraphicsView.ViewportAnchor.NoAnchor
+    minimal_update = QtWidgets.QGraphicsView.ViewportUpdateMode.MinimalViewportUpdate
     assert view.viewportUpdateMode() == minimal_update
-    assert view.frameShape() == QtGui.QFrame.Shape.NoFrame
+    assert view.frameShape() == QtWidgets.QFrame.Shape.NoFrame
     assert view.hasMouseTracking() is True
 
     # Default properties
@@ -55,7 +55,7 @@ def test_basics_graphics_view():
 
     # Add and remove item
     # --------------------------------------
-    central_item = QtGui.QGraphicsWidget()
+    central_item = QtWidgets.QGraphicsWidget()
     view.setCentralItem(central_item)
     assert view.centralWidget is central_item
     # XXX: Removal of central item is not clear in code
@@ -63,7 +63,7 @@ def test_basics_graphics_view():
     assert isinstance(scene, pg.GraphicsScene)
     assert central_item in scene.items()
 
-    item = QtGui.QGraphicsWidget()
+    item = QtWidgets.QGraphicsWidget()
     assert item not in scene.items()
     view.addItem(item)
     assert item in scene.items()

@@ -1,19 +1,20 @@
-# -*- coding: utf-8 -*-
-import numpy as np
 import collections
-import sys, os
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph.parametertree import Parameter, ParameterTree
-from pyqtgraph.parametertree import types as pTypes
-import pyqtgraph.configfile
-
+import os
+import sys
 from time import perf_counter
 
+import numpy as np
 
-class RelativityGUI(QtGui.QWidget):
+import pyqtgraph as pg
+from pyqtgraph import configfile
+from pyqtgraph.parametertree import Parameter, ParameterTree
+from pyqtgraph.parametertree import types as pTypes
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+
+
+class RelativityGUI(QtWidgets.QWidget):
     def __init__(self):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         
         self.animations = []
         self.animTimer = QtCore.QTimer()
@@ -55,17 +56,17 @@ class RelativityGUI(QtGui.QWidget):
         
         
     def setupGUI(self):
-        self.layout = QtGui.QVBoxLayout()
+        self.layout = QtWidgets.QVBoxLayout()
         self.layout.setContentsMargins(0,0,0,0)
         self.setLayout(self.layout)
-        self.splitter = QtGui.QSplitter()
+        self.splitter = QtWidgets.QSplitter()
         self.splitter.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.layout.addWidget(self.splitter)
         
         self.tree = ParameterTree(showHeader=False)
         self.splitter.addWidget(self.tree)
         
-        self.splitter2 = QtGui.QSplitter()
+        self.splitter2 = QtWidgets.QSplitter()
         self.splitter2.setOrientation(QtCore.Qt.Orientation.Vertical)
         self.splitter.addWidget(self.splitter2)
         
@@ -161,21 +162,21 @@ class RelativityGUI(QtGui.QWidget):
         self.setAnimation(self.params['Animate'])
         
     def save(self):
-        filename = pg.QtGui.QFileDialog.getSaveFileName(self, "Save State..", "untitled.cfg", "Config Files (*.cfg)")
+        filename = pg.QtWidgets.QFileDialog.getSaveFileName(self, "Save State..", "untitled.cfg", "Config Files (*.cfg)")
         if isinstance(filename, tuple):
             filename = filename[0]  # Qt4/5 API difference
         if filename == '':
             return
         state = self.params.saveState()
-        pg.configfile.writeConfigFile(state, str(filename)) 
+        configfile.writeConfigFile(state, str(filename)) 
         
     def load(self):
-        filename = pg.QtGui.QFileDialog.getOpenFileName(self, "Save State..", "", "Config Files (*.cfg)")
+        filename = pg.QtWidgets.QFileDialog.getOpenFileName(self, "Save State..", "", "Config Files (*.cfg)")
         if isinstance(filename, tuple):
             filename = filename[0]  # Qt4/5 API difference
         if filename == '':
             return
-        state = pg.configfile.readConfigFile(str(filename)) 
+        state = configfile.readConfigFile(str(filename)) 
         self.loadState(state)
         
     def loadPreset(self, param, preset):
@@ -183,7 +184,7 @@ class RelativityGUI(QtGui.QWidget):
             return
         path = os.path.abspath(os.path.dirname(__file__))
         fn = os.path.join(path, 'presets', preset+".cfg")
-        state = pg.configfile.readConfigFile(fn)
+        state = configfile.readConfigFile(fn)
         self.loadState(state)
         
     def loadState(self, state):
@@ -670,15 +671,15 @@ class ClockItem(pg.ItemGroup):
     def __init__(self, clock):
         pg.ItemGroup.__init__(self)
         self.size = clock.size
-        self.item = QtGui.QGraphicsEllipseItem(QtCore.QRectF(0, 0, self.size, self.size))
+        self.item = QtWidgets.QGraphicsEllipseItem(QtCore.QRectF(0, 0, self.size, self.size))
         tr = QtGui.QTransform.fromTranslate(-self.size*0.5, -self.size*0.5)
         self.item.setTransform(tr)
         self.item.setPen(pg.mkPen(100,100,100))
         self.item.setBrush(clock.brush)
-        self.hand = QtGui.QGraphicsLineItem(0, 0, 0, self.size*0.5)
+        self.hand = QtWidgets.QGraphicsLineItem(0, 0, 0, self.size*0.5)
         self.hand.setPen(pg.mkPen('w'))
         self.hand.setZValue(10)
-        self.flare = QtGui.QGraphicsPolygonItem(QtGui.QPolygonF([
+        self.flare = QtWidgets.QGraphicsPolygonItem(QtGui.QPolygonF([
             QtCore.QPointF(0, -self.size*0.25),
             QtCore.QPointF(0, self.size*0.25),
             QtCore.QPointF(self.size*1.5, 0),

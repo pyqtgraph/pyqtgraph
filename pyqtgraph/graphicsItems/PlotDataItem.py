@@ -1,13 +1,14 @@
-# -*- coding: utf-8 -*-
 import warnings
+
 import numpy as np
+
+from .. import debug as debug
+from .. import functions as fn
+from .. import getConfigOption
 from ..Qt import QtCore
 from .GraphicsObject import GraphicsObject
 from .PlotCurveItem import PlotCurveItem
 from .ScatterPlotItem import ScatterPlotItem
-from .. import functions as fn
-from .. import debug as debug
-from .. import getConfigOption
 
 __all__ = ['PlotDataItem']
 
@@ -113,7 +114,7 @@ class PlotDataset(object):
     def applyLogMapping(self, logMode):
         """
         Applies a logarithmic mapping transformation (base 10) if requested for the respective axis.
-        This replaces the internal data. Values of `-inf` resulting from zeros in the original dataset are
+        This replaces the internal data. Values of ``-inf`` resulting from zeros in the original dataset are
         replaced by ``np.NaN``.
         
         Parameters
@@ -203,12 +204,14 @@ class PlotDataItem(GraphicsObject):
         **Line style keyword arguments:**
 
             ============ ==============================================================================
-            connect      Specifies how / whether vertexes should be connected.
+            connect      Specifies how / whether vertexes should be connected. See below for details.
             pen          Pen to use for drawing the lines between points.
                          Default is solid grey, 1px width. Use None to disable line drawing.
-                         May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
+                         May be a ``QPen`` or any single argument accepted by 
+                         :func:`mkPen() <pyqtgraph.mkPen>`
             shadowPen    Pen for secondary line to draw behind the primary line. Disabled by default.
-                         May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
+                         May be a ``QPen`` or any single argument accepted by 
+                         :func:`mkPen() <pyqtgraph.mkPen>`
             fillLevel    If specified, the area between the curve and fillLevel is filled.
             fillOutline  (bool) If True, an outline surrounding the *fillLevel* area is drawn.
             fillBrush    Fill to use in the *fillLevel* area. May be any single argument accepted by 
@@ -222,7 +225,7 @@ class PlotDataItem(GraphicsObject):
 
             ============ ==============================================================================
         
-        `connect` supports the follwoing arguments:
+        ``connect`` supports the follwoing arguments:
         
         - 'all' connects all points.  
         - 'pairs' generates lines between every other point.
@@ -261,7 +264,7 @@ class PlotDataItem(GraphicsObject):
 
             ================= =======================================================================
             antialias         (bool) By default, antialiasing is disabled to improve performance.
-                              Note that in some cases (in particular, when `pxMode=True`), points
+                              Note that in some cases (in particular, when ``pxMode=True``), points
                               will be rendered antialiased even if this is set to `False`.
             downsample        (int) Reduce the number of samples displayed by the given factor.
             downsampleMethod  'subsample': Downsample by taking the first of N samples.
@@ -285,11 +288,13 @@ class PlotDataItem(GraphicsObject):
                               :class:`ViewBox` height.
             dynamicRangeHyst  (float) Permits changes in vertical zoom up to the given hysteresis
                               factor (the default is 3.0) before the limit calculation is repeated.
-            skipFiniteCheck   (bool) Optimization parameter that can speed up plotting by not 
-                              checking and compensating for NaN values.  
-                              If set to `True`, and NaN values exist, the data
-                              may not be displayed or plot will take a
-                              significant performance hit.  Defaults to `False`.
+            skipFiniteCheck   (bool, default `False`) Optimization flag that can speed up plotting by not 
+                              checking and compensating for NaN values.  If set to `True`, and NaN 
+                              values exist, unpredicatable behavior will occur. The data may not be
+                              displayed or the plot may take a significant performance hit.
+                              
+                              In the default 'auto' connect mode, `PlotDataItem` will apply this 
+                              setting automatically.
             ================= =======================================================================
 
         **Meta-info keyword arguments:**
@@ -297,6 +302,23 @@ class PlotDataItem(GraphicsObject):
             ==========   ================================================
             name         (string) Name of item for use in the plot legend
             ==========   ================================================
+
+        **Notes on performance:**
+        
+        Plotting lines with the default single-pixel width is the fastest available option. For such lines,
+        translucent colors (`alpha` < 1) do not result in a significant slowdown.
+        
+        Wider lines increase the complexity due to the overlap of individual line segments. Translucent colors
+        require merging the entire plot into a single entity before the alpha value can be applied. For plots with more
+        than a few hundred points, this can result in excessive slowdown.
+
+        Since version 0.12.4, this slowdown is automatically avoided by an algorithm that draws line segments
+        separately for fully opaque lines. Setting `alpha` < 1 reverts to the previous, slower drawing method.
+        
+        For lines with a wdith of more than 4 pixels, :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>` will automatically
+        create a ``QPen`` with `Qt.PenCapStyle.RoundCap` to ensure a smooth connection of line segments. This incurs a
+        small performance penalty.
+
         """
         GraphicsObject.__init__(self)
         self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
@@ -328,6 +350,7 @@ class PlotDataItem(GraphicsObject):
         #self.clear()
         self.opts = {
             'connect': 'auto', # defaults to 'all', unless overridden to 'finite' for log-scaling
+            'skipFiniteCheck': False, 
             'fftMode': False,
             'logMode': [False, False],
             'derivativeMode': False,
@@ -358,7 +381,6 @@ class PlotDataItem(GraphicsObject):
             'clipToView': False,
             'dynamicRangeLimit': 1e6,
             'dynamicRangeHyst': 3.0,
-            'skipFiniteCheck': False,
             'data': None,
         }
         self.setCurveClickable(kargs.get('clickable', False))
@@ -427,10 +449,10 @@ class PlotDataItem(GraphicsObject):
 
     def setLogMode(self, xState, yState):
         """
-        When log mode is enabled for the respective axis by setting `xState` or 
-        `yState` to `True, a mapping according to ``mapped = np.log10( value )`` 
+        When log mode is enabled for the respective axis by setting ``xState`` or 
+        ``yState`` to `True, a mapping according to ``mapped = np.log10( value )`` 
         is applied to the data. For negative or zero values, this results in a 
-        NaN value.
+        `NaN` value.
         """
         if self.opts['logMode'] == [xState, yState]:
             return
@@ -502,7 +524,10 @@ class PlotDataItem(GraphicsObject):
         The argument can be a :class:`QtGui.QPen` or any combination of arguments accepted by 
         :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`.
         """
-        pen = fn.mkPen(*args, **kargs)
+        if args[0] is None:
+            pen = None
+        else:
+            pen = fn.mkPen(*args, **kargs)
         self.opts['shadowPen'] = pen
         #for c in self.curves:
             #c.setPen(pen)
@@ -514,7 +539,10 @@ class PlotDataItem(GraphicsObject):
         Sets the :class:`QtGui.QBrush` used to fill the area under the curve.
         See :func:`mkBrush() <pyqtgraph.functions.mkBrush>`) for arguments.
         """
-        brush = fn.mkBrush(*args, **kargs)
+        if args[0] is None:
+            brush = None
+        else:
+            brush = fn.mkBrush(*args, **kargs)
         if self.opts['fillBrush'] == brush:
             return
         self.opts['fillBrush'] = brush
@@ -659,6 +687,17 @@ class PlotDataItem(GraphicsObject):
         self._datasetDisplay = None  # invalidate display data
 
         self.updateItems(styleUpdate=False)
+        
+    def setSkipFiniteCheck(self, skipFiniteCheck):
+        """
+        When it is known that the plot data passed to ``PlotDataItem`` contains only finite numerical values,
+        the ``skipFiniteCheck`` property can help speed up plotting. If this flag is set and the data contains 
+        any non-finite values (such as `NaN` or `Inf`), unpredictable behavior will occur. The data might not
+        be plotted, or there migth be significant performance impact.
+        
+        In the default 'auto' connect mode, ``PlotDataItem`` will apply this setting automatically.
+        """
+        self.opts['skipFiniteCheck']  = bool(skipFiniteCheck)
 
     def setData(self, *args, **kargs):
         """
@@ -673,17 +712,17 @@ class PlotDataItem(GraphicsObject):
         """
         if kargs.get("stepMode", None) is True:
             warnings.warn(
-                'stepMode=True is deprecated, use stepMode="center" instead',
+                'stepMode=True is deprecated and will result in an error after October 2022. Use stepMode="center" instead.',
                 DeprecationWarning, stacklevel=3
             )
         if 'decimate' in kargs.keys():
             warnings.warn(
-                'decimate kwarg has been deprecated, it has no effect',
+                'The decimate keyword has been deprecated. It has no effect and may result in an error in releases after October 2022. ',
                 DeprecationWarning, stacklevel=2
             )
         if 'identical' in kargs.keys():
             warnings.warn(
-                'identical kwarg has been deprecated, it has no effect',
+                'The identical keyword has been deprecated. It has no effect may result in an error in releases after October 2022. ',
                 DeprecationWarning, stacklevel=2
             )
         profiler = debug.Profiler()
@@ -760,6 +799,9 @@ class PlotDataItem(GraphicsObject):
         if 'connect' in kargs:
             self.opts['connect'] = kargs['connect']
             self.setProperty('styleWasChanged', True)
+            
+        if 'skipFiniteCheck' in kargs:
+            self.opts['skipFiniteCheck'] = kargs['skipFiniteCheck']
 
         ## if symbol pen/brush are given with no previously set symbol, then assume symbol is 'o'
         if 'symbol' not in kargs and ('symbolPen' in kargs or 'symbolBrush' in kargs or 'symbolSize' in kargs):
@@ -900,7 +942,7 @@ class PlotDataItem(GraphicsObject):
     def getDisplayDataset(self):
         """
         Returns a :class:`PlotDataset <pyqtgraph.PlotDataset>` object that contains data suitable for display 
-        (after mapping and data reduction) as `dataset.x` and `dataset.y`.
+        (after mapping and data reduction) as ``dataset.x`` and ``dataset.y``.
         Intended for internal use.
         """
         if self._dataset is None:

@@ -1,10 +1,10 @@
 import warnings
 from collections import OrderedDict
 
-from .basetypes import WidgetParameterItem
-from ..Parameter import Parameter
-from ...Qt import QtWidgets
 from ... import functions as fn
+from ...Qt import QtWidgets
+from ..Parameter import Parameter
+from .basetypes import WidgetParameterItem
 
 
 class ListParameterItem(WidgetParameterItem):
@@ -124,4 +124,3 @@ class ListParameter(Parameter):
             reverse[0].append(v)
             reverse[1].append(k)
         return forward, reverse
-

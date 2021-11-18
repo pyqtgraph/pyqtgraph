@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates the SpinBox widget, which is an extension of 
 QDoubleSpinBox providing some advanced features:
@@ -9,10 +8,10 @@ QDoubleSpinBox providing some advanced features:
 
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
 import ast
+
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("SpinBox Example")
 
@@ -46,16 +45,16 @@ spins = [
 ]
 
 
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 win.setWindowTitle('pyqtgraph example: SpinBox')
-cw = QtGui.QWidget()
-layout = QtGui.QGridLayout()
+cw = QtWidgets.QWidget()
+layout = QtWidgets.QGridLayout()
 cw.setLayout(layout)
 win.setCentralWidget(cw)
 win.show()
 #win.resize(300, 600)
-changingLabel = QtGui.QLabel()  ## updated immediately
-changedLabel = QtGui.QLabel()   ## updated only when editing is finished or mouse wheel has stopped for 0.3sec
+changingLabel = QtWidgets.QLabel()  ## updated immediately
+changedLabel = QtWidgets.QLabel()   ## updated only when editing is finished or mouse wheel has stopped for 0.3sec
 changingLabel.setMinimumWidth(200)
 font = changingLabel.font()
 font.setBold(True)
@@ -73,7 +72,7 @@ def valueChanging(sb, value):
 
     
 for text, spin in spins:
-    label = QtGui.QLabel(text)
+    label = QtWidgets.QLabel(text)
     labels.append(label)
     layout.addWidget(label)
     layout.addWidget(spin)
@@ -85,22 +84,22 @@ layout.addWidget(changedLabel, 2, 1)
 
 
 #def mkWin():
-    #win = QtGui.QMainWindow()
-    #g = QtGui.QFormLayout()
-    #w = QtGui.QWidget()
+    #win = QtWidgets.QMainWindow()
+    #g = QtWidgets.QFormLayout()
+    #w = QtWidgets.QWidget()
     #w.setLayout(g)
     #win.setCentralWidget(w)
     #s1 = SpinBox(value=5, step=0.1, bounds=[-1.5, None], suffix='units')
-    #t1 = QtGui.QLineEdit()
+    #t1 = QtWidgets.QLineEdit()
     #g.addRow(s1, t1)
     #s2 = SpinBox(value=10e-6, dec=True, step=0.1, minStep=1e-6, suffix='A', siPrefix=True)
-    #t2 = QtGui.QLineEdit()
+    #t2 = QtWidgets.QLineEdit()
     #g.addRow(s2, t2)
     #s3 = SpinBox(value=1000, dec=True, step=0.5, minStep=1e-6, bounds=[1, 1e9], suffix='Hz', siPrefix=True)
-    #t3 = QtGui.QLineEdit()
+    #t3 = QtWidgets.QLineEdit()
     #g.addRow(s3, t3)
     #s4 = SpinBox(int=True, dec=True, step=1, minStep=1, bounds=[-10, 1000])
-    #t4 = QtGui.QLineEdit()
+    #t4 = QtWidgets.QLineEdit()
     #g.addRow(s4, t4)
 
     #win.show()

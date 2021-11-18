@@ -1,17 +1,18 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 """
 Update a simple plot as rapidly as possible to measure speed.
 """
 
-from collections import deque
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
-import numpy as np
-import pyqtgraph as pg
-from time import perf_counter
-import pyqtgraph.parametertree as ptree
-import pyqtgraph.functions as fn
 import argparse
+from collections import deque
+from time import perf_counter
+
+import numpy as np
+
+import pyqtgraph as pg
+import pyqtgraph.functions as fn
+import pyqtgraph.parametertree as ptree
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 # defaults here result in the same configuration as the original PlotSpeedTest
 parser = argparse.ArgumentParser()

@@ -68,7 +68,7 @@ PyQtGraph developers are highly encouraged to (but not required) to use [`pre-co
 To run the test suite, after installing the above dependencies run
 
 ```bash
-python -m pytest examples tests
+python -m pytest pyqtgraph/examples tests
 ```
 
 ### Tox

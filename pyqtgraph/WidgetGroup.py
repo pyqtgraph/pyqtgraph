@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 WidgetGroup.py -  WidgetGroup class for easily managing lots of Qt widgets
 Copyright 2010  Luke Campagnola
@@ -8,9 +7,10 @@ This class addresses the problem of having to save and restore the state
 of a large group of widgets. 
 """
 
-from .Qt import QtCore, QtGui
-import weakref, inspect
+import inspect
+import weakref
 
+from .Qt import QtCore, QtWidgets
 
 __all__ = ['WidgetGroup']
 
@@ -73,52 +73,52 @@ class WidgetGroup(QtCore.QObject):
     # Custom widgets not in this list can be made to work with WidgetGroup by giving them a 'widgetGroupInterface' method
     #   which returns the tuple.
     classes = {
-        QtGui.QSpinBox: (
+        QtWidgets.QSpinBox: (
             lambda w: w.valueChanged,
-            QtGui.QSpinBox.value, 
-            QtGui.QSpinBox.setValue
+            QtWidgets.QSpinBox.value, 
+            QtWidgets.QSpinBox.setValue
         ),
-        QtGui.QDoubleSpinBox: (
+        QtWidgets.QDoubleSpinBox: (
             lambda w: w.valueChanged,
-            QtGui.QDoubleSpinBox.value, 
-            QtGui.QDoubleSpinBox.setValue
+            QtWidgets.QDoubleSpinBox.value, 
+            QtWidgets.QDoubleSpinBox.setValue
         ),
-        QtGui.QSplitter: (
+        QtWidgets.QSplitter: (
             None,
             splitterState,
             restoreSplitter,
             True
         ),
-        QtGui.QCheckBox: (
+        QtWidgets.QCheckBox: (
             lambda w: w.stateChanged,
-            QtGui.QCheckBox.isChecked,
-            QtGui.QCheckBox.setChecked
+            QtWidgets.QCheckBox.isChecked,
+            QtWidgets.QCheckBox.setChecked
         ),
-        QtGui.QComboBox: (
+        QtWidgets.QComboBox: (
             lambda w: w.currentIndexChanged,
             comboState,
             setComboState
         ),
-        QtGui.QGroupBox: (
+        QtWidgets.QGroupBox: (
             lambda w: w.toggled,
-            QtGui.QGroupBox.isChecked,
-            QtGui.QGroupBox.setChecked,
+            QtWidgets.QGroupBox.isChecked,
+            QtWidgets.QGroupBox.setChecked,
             True
         ),
-        QtGui.QLineEdit: (
+        QtWidgets.QLineEdit: (
             lambda w: w.editingFinished,
             lambda w: str(w.text()),
-            QtGui.QLineEdit.setText
+            QtWidgets.QLineEdit.setText
         ),
-        QtGui.QRadioButton: (
+        QtWidgets.QRadioButton: (
             lambda w: w.toggled,
-            QtGui.QRadioButton.isChecked,
-            QtGui.QRadioButton.setChecked
+            QtWidgets.QRadioButton.isChecked,
+            QtWidgets.QRadioButton.setChecked
         ),
-        QtGui.QSlider: (
+        QtWidgets.QSlider: (
             lambda w: w.valueChanged,
-            QtGui.QSlider.value,
-            QtGui.QSlider.setValue
+            QtWidgets.QSlider.value,
+            QtWidgets.QSlider.setValue
         ),
     }
     

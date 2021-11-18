@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Magic Reload Library
 Luke Campagnola   2010
@@ -22,8 +21,16 @@ Does NOT:
 """
 
 from __future__ import print_function
-import inspect, os, sys, gc, traceback, types
+
+import gc
+import inspect
+import os
+import sys
+import traceback
+import types
+
 from .debug import printExc
+
 try:
     from importlib import reload as orig_reload
 except ImportError:
@@ -148,9 +155,9 @@ def reload(module, debug=False, lists=False, dicts=False):
                 old.pop(0)
         elif dicts and isinstance(old, dict):
             old.update(new)
-            for k in old:
-                if k not in new:
-                    del old[k]
+            for j in old:
+                if j not in new:
+                    del old[j]
         
 
 

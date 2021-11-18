@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
 
 """
 This example demonstrates the different auto-ranging capabilities of ViewBoxes
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
+
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore
 
 app = pg.mkQApp("Plot Auto Range Example")
-#mw = QtGui.QMainWindow()
+#mw = QtWidgets.QMainWindow()
 #mw.resize(800,800)
 
 win = pg.GraphicsLayoutWidget(show=True, title="Plot auto-range examples")

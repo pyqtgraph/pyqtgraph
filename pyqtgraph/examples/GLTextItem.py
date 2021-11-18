@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 Simple examples demonstrating the use of GLTextItem.
 
 """
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui, mkQApp
 import pyqtgraph.opengl as gl
+from pyqtgraph.Qt import mkQApp
 
 app = mkQApp("GLTextItem Example")
 

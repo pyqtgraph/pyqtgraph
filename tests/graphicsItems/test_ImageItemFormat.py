@@ -1,4 +1,5 @@
 import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 
@@ -165,4 +166,3 @@ def test_float32():
     check_format((h, w), dtype, levels, lut_mono2_l, Format.Format_Grayscale8)
     check_format((h, w), dtype, levels, lut_rgb_l, Format.Format_RGBX8888)
     check_format((h, w), dtype, levels, lut_rgba_l, Format.Format_RGBA8888)
-

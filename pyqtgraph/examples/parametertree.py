@@ -5,14 +5,14 @@ demonstrates a variety of different parameter types (int, float, list, etc.)
 as well as some customized parameter types
 """
 
-import pyqtgraph as pg
 # `makeAllParamTypes` creates several parameters from a dictionary of config specs.
 # This contains information about the options for each parameter so they can be directly
 # inserted into the example parameter tree. To create your own parameters, simply follow
 # the guidelines demonstrated by other parameters created here.
 from _buildParamTypes import makeAllParamTypes
-from pyqtgraph.Qt import QtGui
 
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("Parameter Tree Example")
 import pyqtgraph.parametertree.parameterTypes as pTypes
@@ -110,11 +110,10 @@ p.sigTreeStateChanged.connect(change)
 def valueChanging(param, value):
     print("Value changing (not finalized): %s %s" % (param, value))
     
-# Too lazy for recursion:
-for child in p.children():
-    child.sigValueChanging.connect(valueChanging)
-    for ch2 in child.children():
-        ch2.sigValueChanging.connect(valueChanging)
+# Only listen for changes of the 'widget' child:
+for child in p.child('Example Parameters'):
+    if 'widget' in child.names:
+        child.child('widget').sigValueChanging.connect(valueChanging)
         
 
 def save():
@@ -137,10 +136,10 @@ t.setWindowTitle('pyqtgraph example: Parameter Tree')
 t2 = ParameterTree()
 t2.setParameters(p, showTop=False)
 
-win = QtGui.QWidget()
-layout = QtGui.QGridLayout()
+win = QtWidgets.QWidget()
+layout = QtWidgets.QGridLayout()
 win.setLayout(layout)
-layout.addWidget(QtGui.QLabel("These are two views of the same data. They should always display the same values."), 0,  0, 1, 2)
+layout.addWidget(QtWidgets.QLabel("These are two views of the same data. They should always display the same values."), 0,  0, 1, 2)
 layout.addWidget(t, 1, 0, 1, 1)
 layout.addWidget(t2, 1, 1, 1, 1)
 win.show()

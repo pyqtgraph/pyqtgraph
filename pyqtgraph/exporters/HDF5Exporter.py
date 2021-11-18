@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
+import importlib
+
+import numpy
+
+from .. import PlotItem
+from ..parametertree import Parameter
 from ..Qt import QtCore
 from .Exporter import Exporter
-from ..parametertree import Parameter
-from .. import PlotItem
 
-import numpy 
-try:
-    import h5py
-    HAVE_HDF5 = True
-except ImportError:
-    HAVE_HDF5 = False
+HAVE_HDF5 = importlib.util.find_spec("h5py") is not None
 
 translate = QtCore.QCoreApplication.translate
 
@@ -37,6 +35,8 @@ class HDF5Exporter(Exporter):
             raise RuntimeError("This exporter requires the h5py package, "
                                "but it was not importable.")
         
+        import h5py
+
         if not isinstance(self.item, PlotItem):
             raise Exception("Must have a PlotItem selected for HDF5 export.")
         

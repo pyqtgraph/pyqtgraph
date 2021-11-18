@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This example demonstrates the use of pyqtgraph's dock widget system.
 
@@ -12,15 +11,16 @@ docks were created with the notion that the entire window (or any portion of it)
 would consist of dockable components.
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
-import pyqtgraph.console
 import numpy as np
 
-from pyqtgraph.dockarea import *
+import pyqtgraph as pg
+from pyqtgraph.console import ConsoleWidget
+from pyqtgraph.dockarea.Dock import Dock
+from pyqtgraph.dockarea.DockArea import DockArea
+from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("DockArea Example")
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 area = DockArea()
 win.setCentralWidget(area)
 win.resize(1000,500)
@@ -52,7 +52,7 @@ area.moveDock(d5, 'top', d2)     ## move d5 to top edge of d2
 
 ## first dock gets save/restore buttons
 w1 = pg.LayoutWidget()
-label = QtGui.QLabel(""" -- DockArea Example -- 
+label = QtWidgets.QLabel(""" -- DockArea Example -- 
 This window has 6 Dock widgets in it. Each dock can be dragged
 by its title bar to occupy a different space within the window 
 but note that one dock has its title bar hidden). Additionally,
@@ -60,8 +60,8 @@ the borders between docks may be dragged to resize. Docks that are dragged on to
 of one another are stacked in a tabbed layout. Double-click a dock title
 bar to place it in its own window.
 """)
-saveBtn = QtGui.QPushButton('Save dock state')
-restoreBtn = QtGui.QPushButton('Restore dock state')
+saveBtn = QtWidgets.QPushButton('Save dock state')
+restoreBtn = QtWidgets.QPushButton('Restore dock state')
 restoreBtn.setEnabled(False)
 w1.addWidget(label, row=0, col=0)
 w1.addWidget(saveBtn, row=1, col=0)
@@ -79,7 +79,7 @@ saveBtn.clicked.connect(save)
 restoreBtn.clicked.connect(load)
 
 
-w2 = pg.console.ConsoleWidget()
+w2 = ConsoleWidget()
 d2.addWidget(w2)
 
 ## Hide title bar on dock 3

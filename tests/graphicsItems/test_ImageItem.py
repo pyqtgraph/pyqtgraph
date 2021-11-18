@@ -1,11 +1,12 @@
-# -*- coding: utf-8 -*-
 import time
+
+import numpy as np
 import pytest
 
-from pyqtgraph.Qt import QtGui, QtTest, QtCore
-import numpy as np
 import pyqtgraph as pg
-from tests.image_testing import assertImageApproved, TransposedImageItem
+from pyqtgraph.Qt import QtCore, QtGui, QtTest
+from tests.image_testing import TransposedImageItem, assertImageApproved
+
 try:
     import cupy
 except ImportError:

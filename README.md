@@ -54,6 +54,7 @@ Through 3rd part libraries, additional functionality may be added to PyQtGraph, 
 | [`matplotlib`] | <ul><li> Export of PlotItem in matplotlib figure </li><li> Add matplotlib collection of colormaps </li></ul> |
 | [`cupy`]       | <ul><li> CUDA-enhanced image processing </li><li> Note: On Windows, CUDA toolkit must be >= 11.1 </li></ul> |
 | [`numba`]      | <ul><li> Faster image processing </li></ul> |
+| [`jupyter_rfb`]| <ul><li> Jupyter Notebook support </li> <li> [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pyqtgraph/pyqtgraph/HEAD?labpath=pyqtgraph%2Fexamples%2Fnotebooks) </li> </ul> |
 
 [`scipy`]: https://github.com/scipy/scipy
 [`ndimage`]: https://docs.scipy.org/doc/scipy/reference/ndimage.html
@@ -64,6 +65,7 @@ Through 3rd part libraries, additional functionality may be added to PyQtGraph, 
 [`matplotlib`]: https://github.com/matplotlib/matplotlib
 [`numba`]: https://github.com/numba/numba
 [`cupy`]: https://docs.cupy.dev/en/stable/install.html
+[`jupyter_rfb`]: https://github.com/vispy/jupyter_rfb
 
 Qt Bindings Test Matrix
 -----------------------
@@ -124,5 +126,6 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [Semi-Supervised Semantic Annotator](https://gitlab.com/ficsresearch/s3ah)
 * [PyMeasure](https://github.com/pymeasure/pymeasure)
 * [Exo-Striker](https://github.com/3fon3fonov/exostriker)
+* [HussariX](https://github.com/sem-geologist/HussariX)
 
 Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!

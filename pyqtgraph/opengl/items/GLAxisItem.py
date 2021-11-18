@@ -1,6 +1,6 @@
-from OpenGL.GL import *
-from .. GLGraphicsItem import GLGraphicsItem
+from OpenGL.GL import *  # noqa
 from ... import QtGui
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLAxisItem']
 
