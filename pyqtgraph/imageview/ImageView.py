@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ImageView.py -  Widget for basic image dispay and analysis
 Copyright 2010  Luke Campagnola
@@ -12,32 +11,34 @@ Widget used for displaying 2D or 3D data. Features:
   - ROI plotting
   - Image normalization through a variety of methods
 """
+import importlib
 import os
 from math import log10
-import numpy as np
 from time import perf_counter
 
-from ..Qt import QtCore, QtGui, QT_LIB
+import numpy as np
+
 from .. import functions as fn
-import importlib
+from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
+
 ui_template = importlib.import_module(
     f'.ImageViewTemplate_{QT_LIB.lower()}', package=__package__)
 
+from .. import debug as debug
+from .. import getConfigOption
+from ..graphicsItems.GradientEditorItem import addGradientListToDocstring
 from ..graphicsItems.ImageItem import *
-from ..graphicsItems.ROI import *
-from ..graphicsItems.LinearRegionItem import *
 from ..graphicsItems.InfiniteLine import *
+from ..graphicsItems.LinearRegionItem import *
+from ..graphicsItems.ROI import *
 from ..graphicsItems.ViewBox import *
 from ..graphicsItems.VTickGroup import VTickGroup
-from ..graphicsItems.GradientEditorItem import addGradientListToDocstring
-from .. import debug as debug
 from ..SignalProxy import SignalProxy
-from .. import getConfigOption
 
 try:
-    from bottleneck import nanmin, nanmax
+    from bottleneck import nanmax, nanmin
 except ImportError:
-    from numpy import nanmin, nanmax
+    from numpy import nanmax, nanmin
 
 translate = QtCore.QCoreApplication.translate
 
@@ -48,7 +49,7 @@ class PlotROI(ROI):
         self.addRotateHandle([0, 0], [0.5, 0.5])
 
 
-class ImageView(QtGui.QWidget):
+class ImageView(QtWidgets.QWidget):
     """
     Widget used for display and analysis of image data.
     Implements many features:
@@ -115,7 +116,7 @@ class ImageView(QtGui.QWidget):
                 
             pg.ImageView(view=pg.PlotItem())
         """
-        QtGui.QWidget.__init__(self, parent, *args)
+        QtWidgets.QWidget.__init__(self, parent, *args)
         self._imageLevels = None  # [(min, max), ...] per channel image metrics
         self.levelMin = None    # min / max levels across all channels
         self.levelMax = None
@@ -819,7 +820,7 @@ class ImageView(QtGui.QWidget):
             self.imageItem.save(fileName)
             
     def exportClicked(self):
-        fileName = QtGui.QFileDialog.getSaveFileName()
+        fileName = QtWidgets.QFileDialog.getSaveFileName()
         if isinstance(fileName, tuple):
             fileName = fileName[0]  # Qt4/5 API difference
         if fileName == '':
@@ -827,7 +828,7 @@ class ImageView(QtGui.QWidget):
         self.export(str(fileName))
         
     def buildMenu(self):
-        self.menu = QtGui.QMenu()
+        self.menu = QtWidgets.QMenu()
         self.normAction = QtGui.QAction(translate("ImageView", "Normalization"), self.menu)
         self.normAction.setCheckable(True)
         self.normAction.toggled.connect(self.normToggled)

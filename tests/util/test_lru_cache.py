@@ -49,4 +49,3 @@ def checkLru(lru):
 
     lru.clear()
     assert [] == list(lru.items())
-

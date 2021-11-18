@@ -5,4 +5,3 @@ ScatterPlotWidget
     :members:
 
     .. automethod:: pyqtgraph.ScatterPlotWidget.__init__
-

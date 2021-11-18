@@ -1,7 +1,8 @@
+import numpy as np
+from numpy.testing import assert_almost_equal, assert_array_almost_equal
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
-import numpy as np
-from numpy.testing import assert_array_almost_equal, assert_almost_equal
 
 testPoints = np.array([
                        [0, 0, 0],
@@ -35,5 +36,3 @@ def testMatrix():
     assert_array_almost_equal(tr3.getRotation()[1], tr.getRotation()[1])
     assert_array_almost_equal(tr3.getScale(), tr.getScale())
     assert_array_almost_equal(tr3.getTranslation(), tr.getTranslation())
-
-

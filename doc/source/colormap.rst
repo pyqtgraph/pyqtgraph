@@ -1,3 +1,5 @@
+.. _apiref_colormap:
+
 Color Maps
 ==========
 
@@ -12,9 +14,14 @@ To provide interactively user-defined color mappings, see
 :class:`~pyqtgraph.GradientEditorItem` combines the editing with a histogram and controls for
 interactively adjusting image levels.
 
+Setting a color map and adding a color bar can be as simple as::
+    
+    plot.addItem( img_item := pg.ImageItem(img_data) )
+    plot.addColorBar( img_item, colorMap='viridis', values=(0, 1) )    ```
+
 ColorMap can also be used a convenient source of colors from a consistent palette or to generate 
-QPen and QBrush objects used to draw lines and fills that are colored according to their values 
-along the horizontal or vertical axis.
+:class:`QPen` and :class:`QBrush` objects used to draw lines and fills that are colored according to 
+their values along the horizontal or vertical axis.
 
 
 Sources for color maps

@@ -5,4 +5,3 @@ LayoutWidget
     :members:
 
     .. automethod:: pyqtgraph.LayoutWidget.__init__
-

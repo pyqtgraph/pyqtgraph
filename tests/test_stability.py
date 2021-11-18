@@ -6,10 +6,13 @@ the tear them down repeatedly.
 
 The purpose of this is to attempt to generate segmentation faults.
 """
-from pyqtgraph.Qt import QtTest
+import gc
+import sys
+import weakref
+from random import randint, seed
+
 import pyqtgraph as pg
-from random import seed, randint
-import sys, gc, weakref
+from pyqtgraph.Qt import QtTest
 
 app = pg.mkQApp()
 
@@ -19,9 +22,9 @@ widgetTypes = [
     pg.PlotWidget, 
     pg.ImageView, 
     pg.GraphicsView, 
-    pg.QtGui.QWidget,
-    pg.QtGui.QTreeWidget, 
-    pg.QtGui.QPushButton,
+    pg.QtWidgets.QWidget,
+    pg.QtWidgets.QTreeWidget, 
+    pg.QtWidgets.QPushButton,
     ]
 
 itemTypes = [
@@ -29,7 +32,7 @@ itemTypes = [
     pg.ImageItem, 
     pg.PlotDataItem, 
     pg.ViewBox,
-    pg.QtGui.QGraphicsRectItem
+    pg.QtWidgets.QGraphicsRectItem
     ]
 
 widgets = []

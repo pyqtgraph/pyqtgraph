@@ -1,5 +1,7 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui
+__all__ = ["DockDrop"]
+
+from ..Qt import QtCore, QtGui, QtWidgets
+
 
 class DockDrop(object):
     """Provides dock-dropping methods"""
@@ -84,11 +86,11 @@ class DockDrop(object):
 
         
 
-class DropAreaOverlay(QtGui.QWidget):
+class DropAreaOverlay(QtWidgets.QWidget):
     """Overlay widget that draws drop areas during a drag-drop operation"""
     
     def __init__(self, parent):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self.dropArea = None
         self.hide()
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents)

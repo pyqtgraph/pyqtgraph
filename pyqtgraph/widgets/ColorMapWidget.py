@@ -1,9 +1,10 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtCore
-from .. import parametertree as ptree
-import numpy as np
 from collections import OrderedDict
+
+import numpy as np
+
 from .. import functions as fn
+from .. import parametertree as ptree
+from ..Qt import QtCore
 
 __all__ = ['ColorMapWidget']
 
@@ -79,7 +80,7 @@ class ColorMapParameter(ptree.types.GroupParameter):
                     for i, child in enumerate(children):
                         try:
                             child.setValue(v[i])
-                        except IndexError('No default color set for child %s' % child.name()):
+                        except IndexError:
                             continue
             else:
                 item[k] = v

@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 __all__ = ["ParameterSystem", "SystemSolver"]
 
-from .parameterTypes import GroupParameter
 from .. import functions as fn
+from .parameterTypes import GroupParameter
 from .SystemSolver import SystemSolver
 
 
@@ -116,6 +115,8 @@ class ParameterSystem(GroupParameter):
             bg = fn.mkBrush('y')
             bold = True
             readonly = False
+        else:
+            raise ValueError("'state' must be one of 'autoSet', 'autoUnset', or 'fixed'")
             
         param.setReadonly(readonly)
         
