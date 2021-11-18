@@ -247,7 +247,6 @@ from .Qt import isQObjectAlive
 from .SignalProxy import *
 from .SRTTransform import SRTTransform
 from .SRTTransform3D import SRTTransform3D
-from .ThreadsafeTimer import *
 from .Transform3D import Transform3D
 from .util.cupy_helper import getCupy
 from .Vector import Vector

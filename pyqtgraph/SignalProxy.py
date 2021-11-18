@@ -1,7 +1,7 @@
 import weakref
 from time import perf_counter
 
-from .ThreadsafeTimer import ThreadsafeTimer
+from . import ThreadsafeTimer
 from .functions import SignalBlock
 from .Qt import QtCore
 
@@ -33,7 +33,7 @@ class SignalProxy(QtCore.QObject):
         self.delay = delay
         self.rateLimit = rateLimit
         self.args = None
-        self.timer = ThreadsafeTimer()
+        self.timer = ThreadsafeTimer.ThreadsafeTimer()
         self.timer.timeout.connect(self.flush)
         self.lastFlushTime = None
         self.signal = signal
