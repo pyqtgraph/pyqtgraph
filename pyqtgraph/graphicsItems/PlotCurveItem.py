@@ -879,7 +879,7 @@ class PlotCurveItem(GraphicsObject):
 
         try:
             x, y = self.getData()
-            pos = np.empty((len(x), 2))
+            pos = np.empty((len(x), 2), dtype=np.float32)
             pos[:,0] = x
             pos[:,1] = y
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
@@ -906,7 +906,7 @@ class PlotCurveItem(GraphicsObject):
                 else:
                     gl.glDisable(gl.GL_LINE_SMOOTH)
 
-                gl.glDrawArrays(gl.GL_LINE_STRIP, 0, int(pos.size / pos.shape[-1]))
+                gl.glDrawArrays(gl.GL_LINE_STRIP, 0, pos.shape[0])
             finally:
                 gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         finally:
