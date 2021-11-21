@@ -29,7 +29,16 @@ exitCleanup        bool                True               Attempt to work around
 useOpenGL          bool                False              Enable OpenGL in GraphicsView.
 useCupy            bool                False              Use cupy to perform calculations on the GPU. Only currently applies to
                                                           ImageItem and its associated functions.
+useNumba           bool                False              Use numba acceleration where implemented.
 enableExperimental bool                False              Enable experimental features (the curious can search for this key in the code).
+                                                          In combination with useOpenGL, this makes PlotCurveItem use PyOpenGL
+                                                          for curve drawing.
+                                                          
+
+                                                          **Caveats**
+
+                                                            * Only a very limited subset of the full options of PlotCurveItem is implemented.
+                                                            * Single precision is used. This may cause drawing artifacts.
 crashWarning       bool                False              If True, print warnings about situations that may result in a crash.
 ================== =================== ================== ================================================================================
 
