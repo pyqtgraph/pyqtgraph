@@ -1,10 +1,9 @@
 import builtins
 
-from ... import functions as fn
-from ... import icons
-from ...Qt import QtCore, QtWidgets
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
+from ... import functions as fn, icons
+from ...Qt import QtCore, QtGui, QtWidgets
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -304,7 +303,7 @@ class GroupParameterItem(ParameterItem):
                 self.addWidget.clicked.connect(self.addClicked)
             w = QtWidgets.QWidget()
             l = QtWidgets.QHBoxLayout()
-            l.setContentsMargins(0,0,0,0)
+            l.setContentsMargins(0, 0, 0, 0)
             w.setLayout(l)
             l.addWidget(self.addWidget)
             l.addStretch()
@@ -321,11 +320,34 @@ class GroupParameterItem(ParameterItem):
         """
         Change set the item font to bold and increase the font size on outermost groups.
         """
+        app = QtWidgets.QApplication.instance()
+        palette = app.palette()
+        color = palette.background().color()
+        h, s, l = color.hue(), color.saturation(), color.lightness()
+
+        stylesheet =  app.styleSheet()
+        textColor = None
+        if '/* Light Style' in stylesheet or '/* Dark Style' in stylesheet:
+            background = QtGui.QColor(255,255,255,0)
+            altBackground = background
+            textColor = QtGui.QColor('#000000')
+            if '/* Light Style' in stylesheet:
+                textColor = QtGui.QColor('#F0F0F0')
+        elif app.property('darkMode'):
+            background = QtGui.QColor.fromHsl(h, s, l * .6, 255)
+            altBackground = QtGui.QColor.fromHsl(h, s, l * 1.1)
+        else:
+            background = QtGui.QColor.fromHsl(h, s, l)
+            altBackground = QtGui.QColor.fromHsl(h, s, l * .95, 255)
+
         for c in [0, 1]:
             font = self.font(c)
             font.setBold(True)
             if depth == 0:
-                font.setPointSize(font.pointSize()+1)
+                background = altBackground
+                font.setPointSize(font.pointSize() + 1)
+            self.setBackground(c, background)
+            self.setForeground(c, textColor or palette.text().color())
             self.setFont(c, font)
         self.titleChanged()  # sets the size hint for column 0 which is based on the new font
 
