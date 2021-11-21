@@ -1,4 +1,5 @@
 import warnings
+from contextlib import suppress
 
 import numpy as np
 
@@ -1176,11 +1177,11 @@ class PlotDataItem(GraphicsObject):
         ==========================  ======================================
         """
         arg_list = list(args)
-        for idx in range(len(args)):
-            if idx == 2: break # only convert the first two arguments
-            try: # if it converts to float, then convert to single-value ndarray
-                arg_list[idx] = np.full(1, float(arg_list[idx]))
-            except TypeError: pass # TypeError occurs for data that does not need conversion
+        for idx, arg in enumerate(args):
+            if idx == 2: # only convert the first two arguments
+                break 
+            with suppress(TypeError): # TypeError occurs for data that does not need conversion
+                arg_list[idx] = np.full(1, float(arg))
         kargs['append'] = True
         self.setData(*arg_list, **kargs)
 
