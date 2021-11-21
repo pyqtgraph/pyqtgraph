@@ -322,24 +322,11 @@ class GroupParameterItem(ParameterItem):
         """
         app = QtWidgets.QApplication.instance()
         palette = app.palette()
-        color = palette.window().color()
-        h, s, l = color.hue(), color.saturation(), color.lightness()
-
-        stylesheet =  app.styleSheet()
-        textColor = None
-        if '/* Light Style' in stylesheet or '/* Dark Style' in stylesheet:
-            background = QtGui.QColor(255,255,255,0)
-            altBackground = background
-            textColor = QtGui.QColor('#000000')
-            if '/* Light Style' in stylesheet:
-                textColor = QtGui.QColor('#F0F0F0')
-        elif app.property('darkMode'):
-            background = QtGui.QColor.fromHsl(h, s, l * .6, 255)
-            altBackground = QtGui.QColor.fromHsl(h, s, l * 1.1)
-        else:
-            background = QtGui.QColor.fromHsl(h, s, l)
-            altBackground = QtGui.QColor.fromHsl(h, s, l * .95, 255)
-
+        background = palette.base().color()
+        h, s, l, alpha = background.getHslF()
+        l = 0.5 + (l-0.5) * 0.80 # move closer to gray
+        altBackground = QtGui.QColor.fromHslF(h, s, l)
+        textColor = palette.text().color()
         for c in [0, 1]:
             font = self.font(c)
             font.setBold(True)

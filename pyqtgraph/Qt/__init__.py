@@ -404,6 +404,36 @@ if m is not None and list(map(int, m.groups())) < versionReq:
 App = QtWidgets.QApplication
 # subclassing QApplication causes segfaults on PySide{2, 6} / Python 3.8.7+
 
+def dark_QPalette():
+    # color definitions match QDarkstyle
+    BLACK      = QtGui.QColor('#000000')
+    BG_DARK    = QtGui.QColor('#19232D')
+    BG_NORMAL  = QtGui.QColor('#346792')
+    BG_LIGHT   = QtGui.QColor('#455364')
+    FG_LIGHT   = QtGui.QColor('#F0F0F0')
+    FG_NORMAL  = QtGui.QColor('#E0E1E3')
+    FG_DARK    = QtGui.QColor('#9DA9B5')
+    SEL_NORMAL = QtGui.QColor('#1A72BB')
+    qpal = QtGui.QPalette( QtGui.QColor(BG_DARK) )
+    for ptype in (  QtGui.QPalette.Active,  QtGui.QPalette.Inactive ):
+        qpal.setColor( ptype, QtGui.QPalette.Base           , BG_DARK )
+        qpal.setColor( ptype, QtGui.QPalette.Window         , BG_NORMAL )
+        qpal.setColor( ptype, QtGui.QPalette.WindowText     , FG_NORMAL )
+        qpal.setColor( ptype, QtGui.QPalette.AlternateBase  , BG_DARK )
+        qpal.setColor( ptype, QtGui.QPalette.Button         , BG_DARK )
+        qpal.setColor( ptype, QtGui.QPalette.ButtonText     , FG_LIGHT )
+        qpal.setColor( ptype, QtGui.QPalette.Highlight      , SEL_NORMAL )
+        qpal.setColor( ptype, QtGui.QPalette.HighlightedText, FG_LIGHT )
+        # qpal.setColor( ptype, QtGui.QPalette.Link           , SEL_NORMAL )
+        # qpal.setColor( ptype, QtGui.QPalette.LinkVisited    , FG_NORMAL )
+        qpal.setColor( ptype, QtGui.QPalette.Text           , FG_LIGHT )
+        qpal.setColor( ptype, QtGui.QPalette.ToolTipBase    , BG_LIGHT )
+        qpal.setColor( ptype, QtGui.QPalette.ToolTipText    , FG_LIGHT )
+    qpal.setColor( QtGui.QPalette.Disabled, QtGui.QPalette.Button    , BG_NORMAL )
+    qpal.setColor( QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, FG_DARK )
+    qpal.setColor( QtGui.QPalette.Disabled, QtGui.QPalette.WindowText, FG_DARK )
+    return qpal
+
 QAPP = None
 def mkQApp(name=None):
     """
@@ -418,9 +448,14 @@ def mkQApp(name=None):
     global PALETTE
 
     def onPaletteChange(palette):
+        print('palette changed!')
         color = palette.base().color().name()
         app = QtWidgets.QApplication.instance()
         app.setProperty('darkMode', color.lower() != "#ffffff")
+        print('stylesheet length:', len(app.styleSheet()) )
+        print('------------------------------------------------')
+
+        
 
     QAPP = QtWidgets.QApplication.instance()
     if QAPP is None:
@@ -439,6 +474,19 @@ def mkQApp(name=None):
         QAPP = QtWidgets.QApplication(sys.argv or ["pyqtgraph"])
         QAPP.paletteChanged.connect(onPaletteChange)
         QAPP.paletteChanged.emit(QAPP.palette())
+        
+        def patched_setStyleSheet(self, styleSheet):
+            QAPP._setStyleSheet(styleSheet) # I would rather call this as self._setStyleSheet, but that does not seem to work
+            if '/* QDarkStyleSheet' in styleSheet[:512]:
+                # print('this is QDarkStyle!')
+                app = QtWidgets.QApplication.instance()
+                palette = app.palette()
+                if palette.base().color().lightnessF() > 0.5:
+                    # need to fix light palette background in dark style sheet
+                    app.setPalette( dark_QPalette() )
+
+        QAPP._setStyleSheet = QAPP.setStyleSheet
+        QAPP.setStyleSheet = patched_setStyleSheet.__get__(QAPP.setStyleSheet, QtWidgets.QApplication)
 
     if name is not None:
         QAPP.setApplicationName(name)
