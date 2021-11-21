@@ -322,7 +322,7 @@ class GroupParameterItem(ParameterItem):
         """
         app = QtWidgets.QApplication.instance()
         palette = app.palette()
-        color = palette.background().color()
+        color = palette.window().color()
         h, s, l = color.hue(), color.saturation(), color.lightness()
 
         stylesheet =  app.styleSheet()
