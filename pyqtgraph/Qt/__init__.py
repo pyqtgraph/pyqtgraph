@@ -484,6 +484,7 @@ def mkQApp(name=None):
                 if palette.base().color().lightnessF() > 0.5:
                     # need to fix light palette background in dark style sheet
                     app.setPalette( dark_QPalette() )
+                    app.setProperty('darkMode', True )
 
         QAPP._setStyleSheet = QAPP.setStyleSheet
         QAPP.setStyleSheet = patched_setStyleSheet.__get__(QAPP.setStyleSheet, QtWidgets.QApplication)

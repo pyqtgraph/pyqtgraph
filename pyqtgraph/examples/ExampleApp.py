@@ -544,7 +544,12 @@ class ExampleLoader(QtWidgets.QMainWindow):
         event.accept()
 
 def main():
-    app = pg.mkQApp()
+    # app = pg.mkQApp()
+    
+    import qdarkstyle
+    app = pg.mkQApp("Parameter Tree Example")
+    app.setStyleSheet(qdarkstyle.load_stylesheet())
+    
     loader = ExampleLoader()
     loader.ui.exampleTree.setCurrentIndex(
         loader.ui.exampleTree.model().index(0,0)
