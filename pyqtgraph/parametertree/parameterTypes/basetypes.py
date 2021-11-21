@@ -2,10 +2,9 @@ import builtins
 
 from ... import functions as fn
 from ... import icons
-from ...Qt import QtCore, QtGui, QtWidgets
+from ...Qt import QtCore, QtWidgets
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
-
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -320,35 +319,13 @@ class GroupParameterItem(ParameterItem):
 
     def updateDepth(self, depth):
         """
-        Change item's appearance based on its depth in the tree
-        This allows highest-level groups to be displayed more prominently.
+        Change set the item font to bold and increase the font size on outermost groups.
         """
-        app = QtWidgets.QApplication.instance()
-        palette = app.palette()
-        textColor = palette.text().color()
-        backgroundColor = palette.button().color().darker(110)
-        altBackgroundColor = palette.dark().color()
-
-        # if stylesheet and 'QDarkStyleSheet' in stylesheet:
-        if app.styleSheet(): # Assume the stylesheet is qdarkstyle
-            # #455364 is the background-color of the QHeaderView, #E0E1E3 is lineEdit text from QDarkStyle
-            # lighter/darker are applied to the colors to maintain a good contrast with the item:hover color
-            backgroundColor = QtGui.QColor('#455364').darker(100)
-            altBackgroundColor =  backgroundColor.lighter(130)
-            textColor = QtGui.QColor('#E0E1E3')
-        elif app.property('darkMode'):
-            backgroundColor = palette.button().color().lighter(115)
-            altBackgroundColor = palette.light().color().lighter(190)
-
         for c in [0, 1]:
             font = self.font(c)
             font.setBold(True)
             if depth == 0:
-                backgroundColor = altBackgroundColor
                 font.setPointSize(font.pointSize()+1)
-
-            self.setBackground(c, backgroundColor)
-            self.setForeground(c, textColor)
             self.setFont(c, font)
         self.titleChanged()  # sets the size hint for column 0 which is based on the new font
 
