@@ -435,7 +435,7 @@ def dark_QPalette():
     return qpal
 
 QAPP = None
-def mkQApp(name=None):
+def mkQApp(name=None, style='system'):
     """
     Creates new QApplication or returns current instance if existing.
     
@@ -452,10 +452,6 @@ def mkQApp(name=None):
         color = palette.base().color().name()
         app = QtWidgets.QApplication.instance()
         app.setProperty('darkMode', color.lower() != "#ffffff")
-        print('stylesheet length:', len(app.styleSheet()) )
-        print('------------------------------------------------')
-
-        
 
     QAPP = QtWidgets.QApplication.instance()
     if QAPP is None:
@@ -477,6 +473,7 @@ def mkQApp(name=None):
         
         def patched_setStyleSheet(self, styleSheet):
             QAPP._setStyleSheet(styleSheet) # I would rather call this as self._setStyleSheet, but that does not seem to work
+            # print(styleSheet[:4024])
             if '/* QDarkStyleSheet' in styleSheet[:512]:
                 # print('this is QDarkStyle!')
                 app = QtWidgets.QApplication.instance()
@@ -488,6 +485,10 @@ def mkQApp(name=None):
 
         QAPP._setStyleSheet = QAPP.setStyleSheet
         QAPP.setStyleSheet = patched_setStyleSheet.__get__(QAPP.setStyleSheet, QtWidgets.QApplication)
+        if style == 'dark':
+            QAPP.setPalette( dark_QPalette() )
+            QAPP.setProperty('darkMode', True )
+            
 
     if name is not None:
         QAPP.setApplicationName(name)
