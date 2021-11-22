@@ -485,9 +485,10 @@ def mkQApp(name=None, style='system'):
 
         QAPP._setStyleSheet = QAPP.setStyleSheet
         QAPP.setStyleSheet = patched_setStyleSheet.__get__(QAPP.setStyleSheet, QtWidgets.QApplication)
-        if style == 'dark':
-            QAPP.setPalette( dark_QPalette() )
-            QAPP.setProperty('darkMode', True )
+    if style == 'dark':
+        print('setting dark palette')
+        QAPP.setPalette( dark_QPalette() )
+        QAPP.setProperty('darkMode', True )
             
 
     if name is not None:
