@@ -1,4 +1,5 @@
-from ..Qt import QtCore, QtWidgets
+from .parameterTypes import GroupParameterItem
+from ..Qt import QtCore, QtWidgets, mkQApp
 from ..widgets.TreeWidget import TreeWidget
 from .ParameterItem import ParameterItem
 
@@ -29,7 +30,10 @@ class ParameterTree(TreeWidget):
         self.itemCollapsed.connect(self.itemCollapsedEvent)
         self.lastSel = None
         self.setRootIsDecorated(False)
-        
+
+        app = mkQApp()
+        app.paletteChanged.connect(self.updatePalette)
+
     def setParameters(self, param, showTop=True):
         """
         Set the top-level :class:`Parameter <pyqtgraph.parametertree.Parameter>`
@@ -130,6 +134,16 @@ class ParameterTree(TreeWidget):
         if hasattr(item, 'contextMenuEvent'):
             item.contextMenuEvent(ev)
             
+    def updatePalette(self):
+        """
+        - called when application palette changes -
+        This should ensure that the color theme of the OS is applied to the GroupParameterItems
+        should the theme chang while the application is running.
+        """
+        for item in self.listAllItems():
+            if isinstance(item, GroupParameterItem):
+                item.updateDepth(item.depth)
+
     def itemChangedEvent(self, item, col):
         if hasattr(item, 'columnChangedEvent'):
             item.columnChangedEvent(col)

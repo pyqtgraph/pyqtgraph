@@ -1,9 +1,11 @@
 import builtins
+from functools import cached_property, partial
 
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
 from ... import functions as fn, icons
-from ...Qt import QtCore, QtGui, QtWidgets
+from ...Qt import QtCore, QtGui, QtWidgets, mkQApp
+
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -105,10 +107,10 @@ class WidgetParameterItem(ParameterItem):
         if ev.type() == ev.Type.KeyPress:
             if ev.key() == QtCore.Qt.Key.Key_Tab:
                 self.focusNext(forward=True)
-                return True ## don't let anyone else see this event
+                return True  ## don't let anyone else see this event
             elif ev.key() == QtCore.Qt.Key.Key_Backtab:
                 self.focusNext(forward=False)
-                return True ## don't let anyone else see this event
+                return True  ## don't let anyone else see this event
 
         return False
 
@@ -260,6 +262,7 @@ class SimpleParameter(Parameter):
       - 'color'
       - 'colormap'
     """
+
     def __init__(self, *args, **kargs):
         """
         Initialize the parameter.
@@ -272,13 +275,16 @@ class SimpleParameter(Parameter):
 
     def _interpretValue(self, v):
         typ = self.opts['type']
+
         def _missing_interp(v):
             # Assume raw interpretation
             return v
             # Or:
             # raise TypeError(f'No interpreter found for type {typ}')
+
         interpreter = getattr(builtins, typ, _missing_interp)
         return interpreter(v)
+
 
 class GroupParameterItem(ParameterItem):
     """
@@ -286,8 +292,11 @@ class GroupParameterItem(ParameterItem):
     of child parameters. It also provides a simple mechanism for displaying a button or combo
     that can be used to add new parameters to the group.
     """
+
     def __init__(self, param, depth):
         ParameterItem.__init__(self, param, depth)
+        # prevent 0 depth item's font from growing on every call of updateDepth
+        self.fontPointSize = partial(self.font(0).pointSize)
         self.updateDepth(depth)
 
         self.addItem = None
@@ -320,18 +329,18 @@ class GroupParameterItem(ParameterItem):
         """
         Change set the item font to bold and increase the font size on outermost groups.
         """
-        app = QtWidgets.QApplication.instance()
+        app = mkQApp()
         palette = app.palette()
         color = palette.window().color()
         h, s, l = color.hue(), color.saturation(), color.lightness()
 
-        stylesheet =  app.styleSheet()
         textColor = None
-        if '/* Light Style' in stylesheet or '/* Dark Style' in stylesheet:
-            background = QtGui.QColor(255,255,255,0)
+        if self.styleSheet:
+            background = QtGui.QColor(255, 255, 255, 0)
             altBackground = background
-            textColor = QtGui.QColor('#000000')
-            if '/* Light Style' in stylesheet:
+            if self.styleSheet == 'Light':
+                textColor = QtGui.QColor('#000000')
+            else:
                 textColor = QtGui.QColor('#F0F0F0')
         elif app.property('darkMode'):
             background = QtGui.QColor.fromHsl(h, s, l * .6, 255)
@@ -345,7 +354,7 @@ class GroupParameterItem(ParameterItem):
             font.setBold(True)
             if depth == 0:
                 background = altBackground
-                font.setPointSize(font.pointSize() + 1)
+                font.setPointSize(self.fontPointSize() + 1)
             self.setBackground(c, background)
             self.setForeground(c, textColor or palette.text().color())
             self.setFont(c, font)
@@ -379,7 +388,7 @@ class GroupParameterItem(ParameterItem):
 
     def addChild(self, child):  ## make sure added childs are actually inserted before add btn
         if self.addItem is not None:
-            ParameterItem.insertChild(self, self.childCount()-1, child)
+            ParameterItem.insertChild(self, self.childCount() - 1, child)
         else:
             ParameterItem.addChild(self, child)
 
@@ -405,6 +414,18 @@ class GroupParameterItem(ParameterItem):
                 self.addWidget.addItem(t)
         finally:
             self.addWidget.blockSignals(False)
+
+    @cached_property
+    def styleSheet(self):
+        stylesheet = mkQApp().styleSheet()[:500]
+        if not stylesheet:
+            return None
+        palette = None
+        if "/* Light Style -" in stylesheet:
+            palette = 'Dark'
+        elif "/* Dark Style -" in stylesheet:
+            palette = 'Light'
+        return palette
 
 
 class GroupParameter(Parameter):
@@ -433,6 +454,7 @@ class GroupParameter(Parameter):
     def setAddList(self, vals):
         """Change the list of options available for the user to add to the group."""
         self.setOpts(addList=vals)
+
 
 class Emitter(QtCore.QObject):
     """
