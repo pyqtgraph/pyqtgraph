@@ -367,7 +367,20 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.hl.setDocument(self.ui.codeView.document())
 
     def filterByContent(self, text=None):
-        # Don't filter very short strings
+        # If the new text isn't valid regex, fail early and highlight the search filter red to indicate a problem
+        # to the user
+        validRegex = True
+        try:
+            re.compile(text)
+            background = app.palette().background().color()
+        except re.error:
+            colors = DarkThemeColors if app.property('darkMode') else LightThemeColors
+            background = pg.mkColor(colors.Red)
+            background.setAlpha(100)
+            validRegex = False
+        self.ui.exampleFilter.setStyleSheet(f'background: {pg.mkColor(background).name(QtGui.QColor.HexArgb)}')
+        if not validRegex:
+            return
         checkDict = unnestedDict(utils.examples_)
         self.hl.searchText = text
         # Need to reapply to current document
