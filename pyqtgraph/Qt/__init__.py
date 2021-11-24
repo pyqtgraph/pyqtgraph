@@ -420,7 +420,8 @@ def mkQApp(name=None):
     def onPaletteChange(palette):
         color = palette.base().color().name()
         app = QtWidgets.QApplication.instance()
-        app.setProperty('darkMode', color.lower() != "#ffffff")
+        darkMode = color.lower() < "#e0e0e0"
+        app.setProperty('darkMode', darkMode )
 
     QAPP = QtWidgets.QApplication.instance()
     if QAPP is None:

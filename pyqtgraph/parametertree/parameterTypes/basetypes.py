@@ -1,11 +1,10 @@
 import builtins
-from functools import cached_property, partial
+from functools import  partial
 
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
 from ... import functions as fn, icons
 from ...Qt import QtCore, QtGui, QtWidgets, mkQApp
-
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -331,23 +330,11 @@ class GroupParameterItem(ParameterItem):
         """
         app = mkQApp()
         palette = app.palette()
-        color = palette.window().color()
-        h, s, l = color.hue(), color.saturation(), color.lightness()
-
-        textColor = None
-        if self.styleSheet:
-            background = QtGui.QColor(255, 255, 255, 0)
-            altBackground = background
-            if self.styleSheet == 'Light':
-                textColor = QtGui.QColor('#000000')
-            else:
-                textColor = QtGui.QColor('#F0F0F0')
-        elif app.property('darkMode'):
-            background = QtGui.QColor.fromHsl(h, s, l * .6, 255)
-            altBackground = QtGui.QColor.fromHsl(h, s, l * 1.1)
-        else:
-            background = QtGui.QColor.fromHsl(h, s, l)
-            altBackground = QtGui.QColor.fromHsl(h, s, l * .95, 255)
+        color = palette.base().color()
+        h, s, l, a = color.getHslF()
+        lightness = 0.5 + (l - 0.5) * .8
+        background = QtGui.QColor.fromHslF(h, s, lightness, a)
+        altBackground = color
 
         for c in [0, 1]:
             font = self.font(c)
@@ -356,7 +343,7 @@ class GroupParameterItem(ParameterItem):
                 background = altBackground
                 font.setPointSize(self.fontPointSize() + 1)
             self.setBackground(c, background)
-            self.setForeground(c, textColor or palette.text().color())
+            self.setForeground(c, palette.text().color())
             self.setFont(c, font)
         self.titleChanged()  # sets the size hint for column 0 which is based on the new font
 
@@ -415,17 +402,6 @@ class GroupParameterItem(ParameterItem):
         finally:
             self.addWidget.blockSignals(False)
 
-    @cached_property
-    def styleSheet(self):
-        stylesheet = mkQApp().styleSheet()[:500]
-        if not stylesheet:
-            return None
-        palette = None
-        if "/* Light Style -" in stylesheet:
-            palette = 'Dark'
-        elif "/* Dark Style -" in stylesheet:
-            palette = 'Light'
-        return palette
 
 
 class GroupParameter(Parameter):
