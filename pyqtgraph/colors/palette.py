@@ -1,4 +1,4 @@
-from pyqtgraph.Qt import QtGui
+from ..Qt import QtGui
 
 
 def getQDarkStyleDarkQPalette():
