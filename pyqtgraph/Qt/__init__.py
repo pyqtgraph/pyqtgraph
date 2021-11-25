@@ -415,13 +415,12 @@ def mkQApp(name=None):
     ============== ========================================================
     """
     global QAPP
-    global PALETTE
 
     def onPaletteChange(palette):
-        color = palette.base().color().name()
+        color = palette.base().color()
         app = QtWidgets.QApplication.instance()
-        darkMode = color.lower() < "#e0e0e0"
-        app.setProperty('darkMode', darkMode )
+        darkMode = color.lightnessF() < 0.5
+        app.setProperty('darkMode', darkMode)
 
     QAPP = QtWidgets.QApplication.instance()
     if QAPP is None:

@@ -159,19 +159,17 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
     def titleChanged(self):
         # called when the user-visble title has changed (either opts['title'], or name if title is None)
 
-        # when changing from light to dark mode updateDepth(GroupParamItem) will insert what I think is the
-        # invisible root node. Most of the time, in the example app the title for this node
-        # will be empty, occasionally its named params.
-
         title = self.param.title()
-        if title and title != 'params':
-            self.setText(0, title)
-            fm = QtGui.QFontMetrics(self.font(0))
-            textFlags = QtCore.Qt.TextFlag.TextSingleLine
-            size = fm.size(textFlags, self.text(0))
-            size.setHeight(int(size.height() * 1.35))
-            size.setWidth(int(size.width() * 1.15))
-            self.setSizeHint(0, size)
+        # This makes sure that items without a title or the title 'params' remain invisible
+        if not title or title == 'params':
+            return
+        self.setText(0, title)
+        fm = QtGui.QFontMetrics(self.font(0))
+        textFlags = QtCore.Qt.TextFlag.TextSingleLine
+        size = fm.size(textFlags, self.text(0))
+        size.setHeight(int(size.height() * 1.35))
+        size.setWidth(int(size.width() * 1.15))
+        self.setSizeHint(0, size)
 
     def limitsChanged(self, param, limits):
         """Called when the parameter's limits have changed"""

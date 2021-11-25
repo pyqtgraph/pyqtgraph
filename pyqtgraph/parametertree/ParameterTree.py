@@ -136,7 +136,7 @@ class ParameterTree(TreeWidget):
             
     def updatePalette(self):
         """
-        - called when application palette changes -
+        called when application palette changes
         This should ensure that the color theme of the OS is applied to the GroupParameterItems
         should the theme chang while the application is running.
         """

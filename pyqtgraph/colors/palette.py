@@ -1,9 +1,7 @@
-from .Qt import QtGui
+from pyqtgraph.Qt import QtGui
 
 
-def dark_QPalette():
-    RED = QtGui.QColor('#F00000')
-    BLACK = QtGui.QColor('#000000')
+def getQDarkStyleDarkQPalette():
     BG_DARK = QtGui.QColor('#19232D')
     BG_NORMAL = QtGui.QColor('#37414F')
     BG_LIGHT = QtGui.QColor('#455364')
@@ -37,9 +35,7 @@ def dark_QPalette():
     return qpal
 
 
-def light_QPalette():
-    RED = QtGui.QColor('#F00000')
-    BLACK = QtGui.QColor('#000000')
+def getQDarkStyleLightQPalette():
     BG_DARK = QtGui.QColor('#ACB1B6')
     BG_NORMAL = QtGui.QColor('#E0E1E3')
     BG_LIGHT = QtGui.QColor('#FAFAFA')
