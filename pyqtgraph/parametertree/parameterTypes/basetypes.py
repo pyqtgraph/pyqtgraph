@@ -3,7 +3,8 @@ from functools import  partial
 
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
-from ... import functions as fn, icons
+from ... import functions as fn
+from ... import icons
 from ...Qt import QtCore, QtGui, QtWidgets, mkQApp
 
 class WidgetParameterItem(ParameterItem):
@@ -294,8 +295,7 @@ class GroupParameterItem(ParameterItem):
 
     def __init__(self, param, depth):
         ParameterItem.__init__(self, param, depth)
-        # prevent 0 depth item's font from growing on every call of updateDepth
-        self.fontPointSize = partial(self.font(0).pointSize)
+        self._initialFontPointSize = self.font(0).pointSize()
         self.updateDepth(depth)
 
         self.addItem = None
@@ -324,25 +324,28 @@ class GroupParameterItem(ParameterItem):
 
         self.optsChanged(self.param, self.param.opts)
 
+    def pointSize(self):
+        return self._initialFontPointSize
+
     def updateDepth(self, depth):
         """
         Change set the item font to bold and increase the font size on outermost groups.
         """
         app = mkQApp()
         palette = app.palette()
-        color = palette.base().color()
-        h, s, l, a = color.getHslF()
+        background = palette.base().color()
+        h, s, l, a = background.getHslF()
         lightness = 0.5 + (l - 0.5) * .8
-        background = QtGui.QColor.fromHslF(h, s, lightness, a)
-        altBackground = color
+        altBackground = QtGui.QColor.fromHslF(h, s, lightness, a)
 
         for c in [0, 1]:
             font = self.font(c)
             font.setBold(True)
             if depth == 0:
-                background = altBackground
-                font.setPointSize(self.fontPointSize() + 1)
-            self.setBackground(c, background)
+                font.setPointSize(self.pointSize() + 1)
+                self.setBackground(c, background)
+            else:
+                self.setBackground(c, altBackground)
             self.setForeground(c, palette.text().color())
             self.setFont(c, font)
         self.titleChanged()  # sets the size hint for column 0 which is based on the new font
