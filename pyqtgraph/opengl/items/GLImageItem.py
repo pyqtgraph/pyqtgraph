@@ -51,14 +51,14 @@ class GLImageItem(GLGraphicsItem):
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
         #glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER)
-        shape = self.data.shape
+        h, w = self.data.shape[:2]
         
         ## Test texture dimensions first
-        glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, shape[0], shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
+        glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
         if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
-            raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
+            raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % (h, w))
         
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, shape[0], shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, self.data.transpose((1,0,2)))
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, self.data)
         glDisable(GL_TEXTURE_2D)
         
         #self.lists = {}
@@ -87,15 +87,16 @@ class GLImageItem(GLGraphicsItem):
         #glEnable( GL_ALPHA_TEST )
         glColor4f(1,1,1,1)
 
+        h, w = self.data.shape[:2]
         glBegin(GL_QUADS)
-        glTexCoord2f(0,0)
-        glVertex3f(0,0,0)
-        glTexCoord2f(1,0)
-        glVertex3f(self.data.shape[0], 0, 0)
-        glTexCoord2f(1,1)
-        glVertex3f(self.data.shape[0], self.data.shape[1], 0)
-        glTexCoord2f(0,1)
-        glVertex3f(0, self.data.shape[1], 0)
+        glTexCoord2f(1, 0)
+        glVertex3f(0, 0, 0)
+        glTexCoord2f(1, 1)
+        glVertex3f(h, 0, 0)
+        glTexCoord2f(0, 1)
+        glVertex3f(h, w, 0)
+        glTexCoord2f(0, 0)
+        glVertex3f(0, w, 0)
         glEnd()
         glDisable(GL_TEXTURE_2D)
                 
