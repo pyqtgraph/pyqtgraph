@@ -59,7 +59,8 @@ class GLVolumeItem(GLGraphicsItem):
         if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0, GL_TEXTURE_WIDTH) == 0:
             raise Exception("OpenGL failed to create 3D texture (%dx%dx%d); too large for this hardware." % shape[:3])
         
-        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, shape[0], shape[1], shape[2], 0, GL_RGBA, GL_UNSIGNED_BYTE, self.data.transpose((2,1,0,3)))
+        data = np.ascontiguousarray(self.data.transpose((2,1,0,3)))
+        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, shape[0], shape[1], shape[2], 0, GL_RGBA, GL_UNSIGNED_BYTE, data)
         glDisable(GL_TEXTURE_3D)
         
         self.lists = {}
