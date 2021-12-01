@@ -237,20 +237,18 @@ class MultiAxisPlotWidget(PlotWidget):
                 if axis.orientation in ["top", "bottom"]:
                     # connect axis main view changes to view
                     cvb.state["linkedViews"][cvb.XAxis] = weakref.ref(axis_view)
-                    if tvb is not cvb:
-                        # this signal is received multiple times when using mouse actions directly on the viewbox
-                        # this causes the non top layer views to scroll more than the frontmost one
-                        chart.mapw_conn["axis_view.sigXRangeChanged"] = axis_view.sigXRangeChanged.connect(cvb.linkedXChanged)
+                    # this signal is received multiple times when using mouse actions directly on the viewbox
+                    # this causes the non top layer views to scroll more than the frontmost one
+                    chart.mapw_conn["axis_view.sigXRangeChanged"] = axis_view.sigXRangeChanged.connect(cvb.linkedXChanged)
                     chart.mapw_conn["axis_view.sigResized"] = axis_view.sigResized.connect(cvb.linkedXChanged)
                     # disable autorange on manual movements
                     chart.mapw_conn["axis_view.sigXRangeChangedManually"] = axis_view.sigXRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))
                 elif axis.orientation in ["right", "left"]:
                     # connect axis main view changes to view
                     cvb.state["linkedViews"][cvb.YAxis] = weakref.ref(axis_view)
-                    if tvb is not cvb:
-                        # this signal is received multiple times when using mouse actions directly on the viewbox
-                        # this causes the non top layer views to scroll more than the frontmost one
-                        chart.mapw_conn["axis_view.sigYRangeChanged"] = axis_view.sigYRangeChanged.connect(cvb.linkedYChanged)
+                    # this signal is received multiple times when using mouse actions directly on the viewbox
+                    # this causes the non top layer views to scroll more than the frontmost one
+                    chart.mapw_conn["axis_view.sigYRangeChanged"] = axis_view.sigYRangeChanged.connect(cvb.linkedYChanged)
                     chart.mapw_conn["axis_view.sigResized"] = axis_view.sigResized.connect(cvb.linkedYChanged)
                     # disable autorange on manual movements
                     chart.mapw_conn["axis_view.sigYRangeChangedManually"] = axis_view.sigYRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))
