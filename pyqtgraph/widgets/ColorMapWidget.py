@@ -186,13 +186,13 @@ class ColorMapParameter(ptree.types.GroupParameter):
             item.restoreState(itemState)
         
     
-class RangeColorMapItem(ptree.types.SimpleParameter):
+class RangeColorMapItem(ptree.types.ColorMapParameter):
     mapType = 'range'
     
     def __init__(self, name, opts):
         self.fieldName = name
         units = opts.get('units', '')
-        ptree.types.SimpleParameter.__init__(self, 
+        ptree.types.ColorMapParameter.__init__(self,
             name=name, autoIncrementName=True, type='colormap', removable=True, renamable=True, 
             children=[
                 #dict(name="Field", type='list', value=name, limits=fields),
