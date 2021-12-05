@@ -844,7 +844,8 @@ class PlotCurveItem(GraphicsObject):
             gl.glLoadIdentity()
             gl.glOrtho(0, widget.width(), widget.height(), 0, -999999, 999999)
             gl.glMatrixMode(gl.GL_MODELVIEW)
-            gl.glLoadMatrixf(QtGui.QMatrix4x4(self.sceneTransform()).data())
+            mat = QtGui.QMatrix4x4(self.sceneTransform())
+            gl.glLoadMatrixf(np.array(mat.data(), dtype=np.float32))
 
         ## set clipping viewport
         view = self.getViewBox()
