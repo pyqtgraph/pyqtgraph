@@ -136,12 +136,12 @@ class MeshData(object):
         """
         if indexed is None:
             if verts is not None:
-                self._vertexes = verts
+                self._vertexes = np.ascontiguousarray(verts, dtype=np.float32)
             self._vertexesIndexedByFaces = None
         elif indexed=='faces':
             self._vertexes = None
             if verts is not None:
-                self._vertexesIndexedByFaces = verts
+                self._vertexesIndexedByFaces = np.ascontiguousarray(verts, dtype=np.float32)
         else:
             raise Exception("Invalid indexing mode. Accepts: None, 'faces'")
         
@@ -190,7 +190,7 @@ class MeshData(object):
             return self._faceNormals
         elif indexed == 'faces':
             if self._faceNormalsIndexedByFaces is None:
-                norms = np.empty((self._faceNormals.shape[0], 3, 3))
+                norms = np.empty((self._faceNormals.shape[0], 3, 3), dtype=np.float32)
                 norms[:] = self._faceNormals[:,np.newaxis,:]
                 self._faceNormalsIndexedByFaces = norms
             return self._faceNormalsIndexedByFaces
@@ -207,7 +207,7 @@ class MeshData(object):
         if self._vertexNormals is None:
             faceNorms = self.faceNormals()
             vertFaces = self.vertexFaces()
-            self._vertexNormals = np.empty(self._vertexes.shape, dtype=float)
+            self._vertexNormals = np.empty(self._vertexes.shape, dtype=np.float32)
             for vindex in range(self._vertexes.shape[0]):
                 faces = vertFaces[vindex]
                 if len(faces) == 0:
@@ -247,11 +247,11 @@ class MeshData(object):
         as indexed and should have shape (Nf, 3, 4)
         """
         if indexed is None:
-            self._vertexColors = colors
+            self._vertexColors = np.ascontiguousarray(colors, dtype=np.float32)
             self._vertexColorsIndexedByFaces = None
         elif indexed == 'faces':
             self._vertexColors = None
-            self._vertexColorsIndexedByFaces = colors
+            self._vertexColorsIndexedByFaces = np.ascontiguousarray(colors, dtype=np.float32)
         else:
             raise Exception("Invalid indexing mode. Accepts: None, 'faces'")
         
@@ -280,11 +280,11 @@ class MeshData(object):
         as indexed and should have shape (Nf, 3, 4)
         """
         if indexed is None:
-            self._faceColors = colors
+            self._faceColors = np.ascontiguousarray(colors, dtype=np.float32)
             self._faceColorsIndexedByFaces = None
         elif indexed == 'faces':
             self._faceColors = None
-            self._faceColorsIndexedByFaces = colors
+            self._faceColorsIndexedByFaces = np.ascontiguousarray(colors, dtype=np.float32)
         else:
             raise Exception("Invalid indexing mode. Accepts: None, 'faces'")
         
@@ -332,7 +332,7 @@ class MeshData(object):
                     verts[pt2] = index
                 self._vertexFaces[index].append(i)  # keep track of which vertexes belong to which faces
                 self._faces[i,j] = index
-        self._vertexes = np.array(self._vertexes, dtype=float)
+        self._vertexes = np.array(self._vertexes, dtype=np.float32)
     
     #def _setUnindexedFaces(self, faces, vertexes, vertexColors=None, faceColors=None):
         #self._vertexes = vertexes #[QtGui.QVector3D(*v) for v in vertexes]

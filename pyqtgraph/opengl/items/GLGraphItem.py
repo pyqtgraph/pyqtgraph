@@ -1,4 +1,5 @@
 from OpenGL.GL import *  # noqa
+import numpy as np
 from ... import functions as fn
 from ...Qt import QtCore, QtGui
 from ..GLGraphicsItem import GLGraphicsItem
@@ -88,7 +89,7 @@ class GLGraphItem(GLGraphicsItem):
                 or self.edgeColor is None:
             return None
         verts = self.scatter.pos
-        edges = self.edges.flatten()
+        edges = self.edges.astype(np.uint32).flatten()
         glEnableClientState(GL_VERTEX_ARRAY)
         try:
             glColor4f(*self.edgeColor.getRgbF())
