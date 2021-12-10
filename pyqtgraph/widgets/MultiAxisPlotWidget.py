@@ -25,6 +25,7 @@ class MultiAxisPlotWidget(PlotWidget):
         # CHARTS
         self.axes = {}
         self.charts = {}
+        self._signalConnectionsByChart = {}
 
     def addAxis(self, name, *args, axis=None, **kwargs):
         """Add a new axis (AxisItem) to the widget, will be shown and linked to a chart when used in addChart().
@@ -95,7 +96,8 @@ class MultiAxisPlotWidget(PlotWidget):
             plotitem = self.pi
         else:
             # VIEW
-            plotitem = PlotItem(parent=self.pi, name=name, *args, enableMenu=False, **kwargs)  # pass axisitems?
+            plotitem = PlotItem(parent=self.pi, name=name, *args,
+                                enableMenu=False, **kwargs)  # pass axisitems?
             # hide all plotitem axis (they vould interfere with viewbox)
             for a in ["left", "bottom", "right", "top"]:
                 plotitem.hideAxis(a)
@@ -116,8 +118,9 @@ class MultiAxisPlotWidget(PlotWidget):
         plotitem.addItem(chart)
         # keep plotitem inside chart
         chart.plotItem = plotitem
-        # keeptrack of connections inside chart
-        chart.mapw_conn = {}
+        # keeptrack of connections
+        if chart.name not in self._signalConnectionsByChart:
+            self._signalConnectionsByChart[chart.name] = {}
         # keep axis track
         chart.axes = [x_axis, y_axis]
         # keep chart
@@ -226,10 +229,13 @@ class MultiAxisPlotWidget(PlotWidget):
             # FROM AxisItem.linkToView
             # connect view changes to axis changes
             if axis.orientation in ["right", "left"]:
-                chart.mapw_conn["cvb.sigYRangeChanged"] = cvb.sigYRangeChanged.connect(axis.linkedViewChanged)
+                self._signalConnectionsByChart[chart.name]["cvb.sigYRangeChanged"] = cvb.sigYRangeChanged.connect(
+                    axis.linkedViewChanged)
             elif axis.orientation in ["top", "bottom"]:
-                chart.mapw_conn["cvb.sigXRangeChanged"] = cvb.sigXRangeChanged.connect(axis.linkedViewChanged)
-            chart.mapw_conn["cvb.sigResized"] = cvb.sigResized.connect(axis.linkedViewChanged)
+                self._signalConnectionsByChart[chart.name]["cvb.sigXRangeChanged"] = cvb.sigXRangeChanged.connect(
+                    axis.linkedViewChanged)
+            self._signalConnectionsByChart[chart.name]["cvb.sigResized"] = cvb.sigResized.connect(
+                axis.linkedViewChanged)
             axis_view = axis.linkedView()
             if cvb is not axis_view:
                 # FROM ViewBox.linkView
@@ -239,41 +245,53 @@ class MultiAxisPlotWidget(PlotWidget):
                     cvb.state["linkedViews"][cvb.XAxis] = weakref.ref(axis_view)
                     # this signal is received multiple times when using mouse actions directly on the viewbox
                     # this causes the non top layer views to scroll more than the frontmost one
-                    chart.mapw_conn["axis_view.sigXRangeChanged"] = axis_view.sigXRangeChanged.connect(cvb.linkedXChanged)
-                    chart.mapw_conn["axis_view.sigResized"] = axis_view.sigResized.connect(cvb.linkedXChanged)
+                    self._signalConnectionsByChart[chart.name]["axis_view.sigXRangeChanged"] = axis_view.sigXRangeChanged.connect(
+                        cvb.linkedXChanged)
+                    self._signalConnectionsByChart[chart.name]["axis_view.sigResized"] = axis_view.sigResized.connect(
+                        cvb.linkedXChanged)
                     # disable autorange on manual movements
-                    chart.mapw_conn["axis_view.sigXRangeChangedManually"] = axis_view.sigXRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))
+                    self._signalConnectionsByChart[chart.name]["axis_view.sigXRangeChangedManually"] = axis_view.sigXRangeChangedManually.connect(
+                        lambda mask: self.disableAxisAutoRange(axis_name))
                 elif axis.orientation in ["right", "left"]:
                     # connect axis main view changes to view
                     cvb.state["linkedViews"][cvb.YAxis] = weakref.ref(axis_view)
                     # this signal is received multiple times when using mouse actions directly on the viewbox
                     # this causes the non top layer views to scroll more than the frontmost one
-                    chart.mapw_conn["axis_view.sigYRangeChanged"] = axis_view.sigYRangeChanged.connect(cvb.linkedYChanged)
-                    chart.mapw_conn["axis_view.sigResized"] = axis_view.sigResized.connect(cvb.linkedYChanged)
+                    self._signalConnectionsByChart[chart.name]["axis_view.sigYRangeChanged"] = axis_view.sigYRangeChanged.connect(
+                        cvb.linkedYChanged)
+                    self._signalConnectionsByChart[chart.name]["axis_view.sigResized"] = axis_view.sigResized.connect(
+                        cvb.linkedYChanged)
                     # disable autorange on manual movements
-                    chart.mapw_conn["axis_view.sigYRangeChangedManually"] = axis_view.sigYRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))
-            chart.mapw_conn["cvb.sigStateChanged"] = cvb.sigStateChanged.emit(cvb)
+                    self._signalConnectionsByChart[chart.name]["axis_view.sigYRangeChangedManually"] = axis_view.sigYRangeChangedManually.connect(
+                        lambda mask: self.disableAxisAutoRange(axis_name))
+            self._signalConnectionsByChart[chart.name]["cvb.sigStateChanged"] = cvb.sigStateChanged.emit(
+                cvb)
         # resize plotitem according to the master one
         # resizing it's view doesn't work for some reason
-        chart.mapw_conn["self.vb.sigResized"] = self.vb.sigResized.connect(lambda vb: chart.plotItem.setGeometry(vb.sceneBoundingRect()))
+        self._signalConnectionsByChart[chart.name]["self.vb.sigResized"] = self.vb.sigResized.connect(
+            lambda vb: chart.plotItem.setGeometry(vb.sceneBoundingRect()))
         # fix prepareForPaint by outofculture
-        chart.mapw_conn["scene.sigPrepareForPaint"] = scene.sigPrepareForPaint.connect(cvb.prepareForPaint)
+        self._signalConnectionsByChart[chart.name]["scene.sigPrepareForPaint"] = scene.sigPrepareForPaint.connect(
+            cvb.prepareForPaint)
         if cvb is not tvb:
             # FROM "https://github.com/pyqtgraph/pyqtgraph/pull/2010" by herodotus77
             # propagate mouse actions to charts "hidden" behind
-            chart.mapw_conn["tvb.sigMouseDragged"] = tvb.sigMouseDragged.connect(cvb.mouseDragEvent)
-            chart.mapw_conn["tvb.sigMouseWheel"] = tvb.sigMouseWheel.connect(cvb.wheelEvent)
-            chart.mapw_conn["tvb.sigHistoryChanged"] = tvb.sigHistoryChanged.connect(cvb.scaleHistory)
+            self._signalConnectionsByChart[chart.name]["tvb.sigMouseDragged"] = tvb.sigMouseDragged.connect(
+                cvb.mouseDragEvent)
+            self._signalConnectionsByChart[chart.name]["tvb.sigMouseWheel"] = tvb.sigMouseWheel.connect(
+                cvb.wheelEvent)
+            self._signalConnectionsByChart[chart.name]["tvb.sigHistoryChanged"] = tvb.sigHistoryChanged.connect(
+                cvb.scaleHistory)
 
     def disconnect_all(self, chart):
         """Disconnects all signals related to this widget for the given chart."""
-        for conn_name, conn in chart.mapw_conn.items():
+        for conn_name, conn in self._signalConnectionsByChart[chart.name].items():
             if conn is not None:
                 try:
                     self.disconnect(conn)
                 except (TypeError, RuntimeError):
                     pass
-                chart.mapw_conn[conn_name] = None
+                self._signalConnectionsByChart[chart.name][conn_name] = None
 
     def clean(self):
         """Clears all charts' contents."""
