@@ -153,6 +153,19 @@ class ChecklistParameter(GroupParameter):
 
         self.valChangingProxy = SignalProxy(self.sigValueChanging, delay=opts.get('delay', 1.0), slot=self._finishChildChanges)
 
+    def childrenValue(self):
+        vals = [self.forward[p.name()] for p in self.children() if p.value()]
+        exclusive = self.opts['exclusive']
+        if not vals and exclusive:
+            return None
+        elif exclusive:
+            return vals[0]
+        else:
+            return vals
+
+    def _onChildChanging(self, _ch, _val):
+        self.sigValueChanging.emit(self, self.childrenValue())
+
     def updateLimits(self, _param, limits):
         oldOpts = self.names
         val = self.opts['value']
@@ -171,7 +184,7 @@ class ChecklistParameter(GroupParameter):
             self.addChild(child)
             # Prevent child from broadcasting tree state changes, since this is handled by self
             child.blockTreeChangeSignal()
-            child.sigValueChanged.connect(self.sigValueChanging)
+            child.sigValueChanged.connect(self._onChildChanging)
         # Purge child changes before unblocking
         self.treeStateChanges.clear()
         self.unblockTreeChangeSignal()
@@ -183,7 +196,7 @@ class ChecklistParameter(GroupParameter):
             val = self.reverse[0][self.reverse[1].index(param.name())]
             return self.setValue(val)
         # Interpret value, fire sigValueChanged
-        return self.setValue(self.value())
+        return self.setValue(self.childrenValue())
 
     def optsChanged(self, param, opts):
         if 'exclusive' in opts:
@@ -193,16 +206,6 @@ class ChecklistParameter(GroupParameter):
         if 'delay' in opts:
             self.valChangingProxy.setDelay(opts['delay'])
     
-    def value(self):
-        vals = [self.forward[p.name()] for p in self.children() if p.value()]
-        exclusive = self.opts['exclusive']
-        if not vals and exclusive:
-            return None
-        elif exclusive:
-            return vals[0]
-        else:
-            return vals
-
     def setValue(self, value, blockSignal=None):
         self.targetValue = value
         exclusive = self.opts['exclusive']
@@ -220,5 +223,5 @@ class ChecklistParameter(GroupParameter):
             names = [self.reverse[1][0]]
         for chParam in self:
             checked = chParam.name() in names
-            chParam.setValue(checked, self.sigValueChanging)
-        super().setValue(self.value(), blockSignal)
+            chParam.setValue(checked, self._onChildChanging)
+        super().setValue(self.childrenValue(), blockSignal)
