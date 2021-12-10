@@ -35,20 +35,27 @@ class MultiAxisPlotWidget(PlotWidget):
         self._signalConnectionsByChart = {}
 
     def addAxis(self, name, *args, axis=None, **kwargs):
-        """Add a new axis (AxisItem) to the widget, will be shown and linked to a chart when used in addChart().
+        """Add a new axis (AxisItem) to the widget, will be shown and linked to a
+        chart when used in addChart().
 
-        Parameters:
-        name (str):
-            The name associated with this axis item, used to store and recall the newly created axis.
-            Also sets the AxisItem name parameter.
-        chart AxisItem:
-            The axis to be used.
-            If left as None a new AxisItem will be created and it's name parameter set.
-        *args and **kwargs:
-            Parameters to be passed to the newly created AxisItem.
-            Remember to set the AxisItem orientation.
-        Returns:
-            AxisItem: The newly created AxisItem.
+        Parameters
+        ----------
+        name : str
+            The name associated with this axis item, used to store and recall
+            the newly created axis. Also sets the AxisItem name parameter.
+        chart : AxisItem
+            The axis to be used. If left as None a new AxisItem will be created
+            and it's name parameter set.
+        args : iterable
+            arguments to be passed to the newly created AxisItem
+        kwargs : dict
+            arguments to be passed to the newly created AxisItem.  Remember to
+            set the AxisItem orientation.
+
+        Returns
+        -------
+        AxisItem
+            The newly created AxisItem.
         """
         if axis is None:
             axis = AxisItem(*args, **kwargs)
@@ -60,30 +67,42 @@ class MultiAxisPlotWidget(PlotWidget):
         return axis
 
     def addChart(self, name, x_axis="bottom", y_axis="left", chart=None, *args, **kwargs):
-        """Add a new chart (PlotDataItem in a PlotItem) to the widget, will be shown when used in makeLayout().
+        """Add a new chart (PlotDataItem in a PlotItem) to the widget, will be
+        shown when used in makeLayout().
 
-        Parameters:
-        name (str):
-            The name associated with this chart item, used to store and recall the newly created chart.
-            Also sets the PlotItem name parameter and the PlotDataItem name parameter if no other chart is passed.
-        x_axis (str, None):
-            one of the default PlotItem axis names ("top", "right", "bottom", "left"),
-            or the name of an axis previously created by calling addAxis().
-            This axis will be set in the new PlotItem based on the selected axis orientation.
-            If None "bottom" will be used as default.
-        y_axis (str, None):
-            one of the default PlotItem axis names ("top", "right", "bottom", "left"),
-            or the name of an axis previously created by calling addAxis().
-            This axis will be set in the new PlotItem based on the selected axis orientation.
-            If None "left" will be used as default.
-        chart (PlotDataItem, ...):
-            The chart to be used inside the new PlotItem.
-            If left as None a new PlotDataItem will be created and it's name parameter set.
-        *args and **kwargs:
-            Parameters to be passed to the newly created PlotItem.
-        Returns:
-            PlotDataItem: The newly created PlotDataItem.
-            PlotItem: The newly created PlotItem.
+        Parameters
+        ----------
+        name : str
+            The name associated with this chart item, used to store and recall
+            the newly created chart. Also sets the PlotItem name parameter and
+            the PlotDataItem name parameter if no other chart is passed.
+        x_axis : str or None
+            one of the default PlotItem axis names ("top", "right", "bottom",
+            "left"), or the name of an axis previously created by calling
+            addAxis(). This axis will be set in the new PlotItem based on the
+            selected axis orientation. If None "bottom" will be used as
+            default.
+        y_axis : str or None
+            one of the default PlotItem axis names ("top", "right", "bottom",
+            "left"), or the name of an axis previously created by calling
+            addAxis(). This axis will be set in the new PlotItem based on the
+            selected axis orientation. If None "left" will be used as default.
+        chart : PlotDataItem
+            The chart to be used inside the new PlotItem. If left as None a
+            new PlotDataItem will be created and it's name parameter set.
+        *args : tuple
+            Arugments to be passed to the newly created PlotItem. See
+            :class:`~pyqtgraph.PlotItem`
+        kwargs : dict
+            Parameters to be passed to the newly created PlotItem. See
+            :class:`~pyqtgraph.PlotItem`
+
+        Returns
+        -------
+        PlotDataItem
+            The newly created PlotDataItem.
+        PlotItem
+            The newly created PlotItem.
         """
         # add default axis to the list of axes if requested
         if x_axis in ["bottom", "top"]:
@@ -150,10 +169,11 @@ class MultiAxisPlotWidget(PlotWidget):
     def makeLayout(self, axes=None, charts=None):
         """Adds all given axes and charts to the widget.
 
-        Parameters:
-        axes (list, None):
+        Parameters
+        ----------
+        axes : list of str or None:
             The names associated with the axes to show.
-        charts (list, None):
+        charts : list of PlotItems or None:
             The names associated with the charts to show.
         """
         self.clearLayout()
@@ -307,12 +327,16 @@ class MultiAxisPlotWidget(PlotWidget):
     def getPlotItem(self, name=None):
         """Get the PlotItem associated to the chart of given name.
 
-        Parameters:
-        name (str, None):
+        Parameters
+        ----------
+        name : str or None
             The name of the chart to select.
             If None the default one will be selected.
-        Returns:
-            PlotItem: The PlotItem associated to the selected chart.
+
+        Returns
+        -------
+        PlotItem
+            The PlotItem associated to the selected chart.
         """
         if name is None:
             return self.pi
@@ -322,10 +346,11 @@ class MultiAxisPlotWidget(PlotWidget):
     def setAxisRange(self, axis_name, range=None, **kwargs):
         """Sets the range of the axis with given name.
 
-        Parameters:
-        axis_name (str, None):
+        Parameters
+        ----------
+        axis_name : str or None
             The name of the axis to select.
-        range (list, None):
+        range : list of int or float or None
             The range to set to the axis to selected.
             If None: autorange will be enabled.
             If list of len 1: range will be set between 0 and range[0]
@@ -384,8 +409,9 @@ class MultiAxisPlotWidget(PlotWidget):
     def enableAxisAutoRange(self, axis_name):
         """Enables autorange for the axis with given name.
 
-        Parameters:
-        axis_name (str, None):
+        Parameters
+        ----------
+        axis_name : str or None
             The name of the axis to select.
         """
         self.axes[axis_name].autorange = True
@@ -393,8 +419,9 @@ class MultiAxisPlotWidget(PlotWidget):
     def disableAxisAutoRange(self, axis_name):
         """Disables autorange for the axis with given name.
 
-        Parameters:
-        axis_name (str, None):
+        Parameters
+        ----------
+        axis_name : str or None
             The name of the axis to select.
         """
         self.axes[axis_name].autorange = False

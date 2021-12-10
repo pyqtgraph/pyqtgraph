@@ -1,5 +1,5 @@
 MultiAxisPlotWidget
-===============
+===================
 
 .. autoclass:: pyqtgraph.MultiAxisPlotWidget
     :members:
