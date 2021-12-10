@@ -45,10 +45,19 @@ class GLScatterPlotItem(GLGraphicsItem):
             if k not in args:
                 raise Exception('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
             
-        args.remove('pxMode')
-        for arg in args:
-            if arg in kwds:
-                setattr(self, arg, kwds[arg])
+        if 'pos' in kwds:
+            pos = kwds.pop('pos')
+            self.pos = np.ascontiguousarray(pos, dtype=np.float32)
+        if 'color' in kwds:
+            color = kwds.pop('color')
+            if isinstance(color, np.ndarray):
+                color = np.ascontiguousarray(color, dtype=np.float32)
+            self.color = color
+        if 'size' in kwds:
+            size = kwds.pop('size')
+            if isinstance(size, np.ndarray):
+                size = np.ascontiguousarray(size, dtype=np.float32)
+            self.size = size
                 
         self.pxMode = kwds.get('pxMode', self.pxMode)
         self.update()
@@ -133,7 +142,7 @@ class GLScatterPlotItem(GLGraphicsItem):
                 
                 if not self.pxMode or isinstance(self.size, np.ndarray):
                     glEnableClientState(GL_NORMAL_ARRAY)
-                    norm = np.empty(pos.shape)
+                    norm = np.zeros(pos.shape, dtype=np.float32)
                     if self.pxMode:
                         norm[...,0] = self.size
                     else:
@@ -148,7 +157,7 @@ class GLScatterPlotItem(GLGraphicsItem):
                 else:
                     glNormal3f(self.size, 0, 0)  ## vertex shader uses norm.x to determine point size
                     #glPointSize(self.size)
-                glDrawArrays(GL_POINTS, 0, int(pos.size / pos.shape[-1]))
+                glDrawArrays(GL_POINTS, 0, pos.shape[0])
             finally:
                 glDisableClientState(GL_NORMAL_ARRAY)
                 glDisableClientState(GL_VERTEX_ARRAY)
