@@ -372,13 +372,14 @@ class ExampleLoader(QtWidgets.QMainWindow):
         validRegex = True
         try:
             re.compile(text)
-            background = app.palette().background().color()
+            self.ui.exampleFilter.setStyleSheet('')
         except re.error:
             colors = DarkThemeColors if app.property('darkMode') else LightThemeColors
-            background = pg.mkColor(colors.Red)
-            background.setAlpha(100)
+            errorColor = pg.mkColor(colors.Red)
             validRegex = False
-        self.ui.exampleFilter.setStyleSheet(f'background: {pg.mkColor(background).name(QtGui.QColor.HexArgb)}')
+            errorColor.setAlpha(100)
+            # Tuple prints nicely :)
+            self.ui.exampleFilter.setStyleSheet(f'background: rgba{errorColor.getRgb()}')
         if not validRegex:
             return
         checkDict = unnestedDict(utils.examples_)
