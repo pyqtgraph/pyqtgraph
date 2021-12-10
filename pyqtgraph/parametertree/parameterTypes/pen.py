@@ -143,7 +143,9 @@ class PenParameter(GroupParameter):
                 # Instead, set the parameter which will signal the old setter
                 setattr(boundPen, setName, p.setValue)
                 newSetter = penPropertyWrapper(setter)
-                p.sigValueChanging.connect(newSetter)
+                # Edge case: color picker uses a dialog with user interaction, so wait until full change there
+                if p.type() != 'color':
+                    p.sigValueChanging.connect(newSetter)
                 # Force children to emulate self's value instead of being part of a tree like normal
                 p.sigValueChanged.disconnect(p._emitValueChanged)
                 # Some widgets (e.g. checkbox, combobox) don't emit 'changing' signals, so tie to 'changed' as well
