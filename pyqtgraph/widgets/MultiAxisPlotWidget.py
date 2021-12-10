@@ -11,7 +11,13 @@ from ..widgets.PlotWidget import PlotWidget
 
 class MultiAxisPlotWidget(PlotWidget):
     def __init__(self, **kargs):
-        """PlotWidget but with support for multi axis."""
+        """PlotWidget but with support for multi axis.
+        usage: you generally want to call in this order:
+        .addAxis(...) as many times as axes needed,
+        .addChart(...) as many times as charts needed,
+        and then .makeLayout() once all the needed elements have been added.
+        Also consider calling .update() after updating the chart data.
+        Refer to the "MultiAxisExample" example if needed"""
         PlotWidget.__init__(self, enableMenu=False, **kargs)
         # plotitem shortcut
         self.pi = super().getPlotItem()
