@@ -6,6 +6,7 @@ from ..graphicsItems.AxisItem import AxisItem
 from ..graphicsItems.PlotDataItem import PlotDataItem
 from ..graphicsItems.PlotItem.PlotItem import PlotItem
 from ..graphicsItems.ViewBox import ViewBox
+from ..Qt.QtCore import QObject
 from ..widgets.PlotWidget import PlotWidget
 
 
@@ -17,7 +18,7 @@ class MultiAxisPlotWidget(PlotWidget):
         .addChart(...) as many times as charts needed,
         and then .makeLayout() once all the needed elements have been added.
         Also consider calling .update() after updating the chart data.
-        Refer to the "MultiAxisExample" example if needed"""
+        Refer to the example named "MultiAxisPlotWidget example" under the "Widgets" section if needed"""
         PlotWidget.__init__(self, enableMenu=False, **kargs)
         # plotitem shortcut
         self.pi = super().getPlotItem()
@@ -109,7 +110,7 @@ class MultiAxisPlotWidget(PlotWidget):
                 plotitem.hideAxis(a)
             # fix parent legend not showing child charts
             plotitem.legend = self.pi.legend
-            for k, pos, axis in [["left", [2, 0], y], ["bottom", [3, 1], x],  ["right", [2, 2], y], ["top", [1, 1], x]]:
+            for k, pos, axis in [["left", [2, 0], y], ["bottom", [3, 1], x], ["right", [2, 2], y], ["top", [1, 1], x]]:
                 # # DO NOT USE, WILL MAKE AXIS UNMATCHED TO DATA
                 # # you can't add the new ones after, it doesn't work for some reason
                 # # hide them instead
@@ -293,10 +294,7 @@ class MultiAxisPlotWidget(PlotWidget):
         """Disconnects all signals related to this widget for the given chart."""
         for conn_name, conn in self._signalConnectionsByChart[chart.name].items():
             if conn is not None:
-                try:
-                    self.disconnect(conn)
-                except (TypeError, RuntimeError):
-                    pass
+                QObject.disconnect(conn)
                 self._signalConnectionsByChart[chart.name][conn_name] = None
 
     def clean(self):
