@@ -880,8 +880,8 @@ class PlotDataItem(GraphicsObject):
             self.opts['pen'] is not None 
             or (self.opts['fillBrush'] is not None and self.opts['fillLevel'] is not None)
             ): # draw if visible...
-            # print('connect is', curveArgs['connect'], 'expect nonfinites:', dataset.containsNonfinite)
-            if curveArgs['connect'] == 'auto': # auto-switch to indicate non-finite values as interruptions in the curve
+            # auto-switch to indicate non-finite values as interruptions in the curve:
+            if isinstance(curveArgs['connect'], str) and curveArgs['connect'] == 'auto': # connect can also take a boolean array
                 if dataset.containsNonfinite is None:
                     curveArgs['connect'] = 'all' # this is faster, but silently connects the curve across any non-finite values
                 else:
