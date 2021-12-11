@@ -27,18 +27,18 @@ jobs:
           - python-version: "3.8"
             qt-lib: "pyqt"
             qt-version: "PyQt5~=5.15.0"
-            numpy-version: "~=1.21.0"
+            numpy-version: "~=1.19.0"
           - python-version: "3.8"
             qt-lib: "pyside"
             qt-version: "PySide2~=5.15.0"
-            numpy-version: "~=1.21.0"
+            numpy-version: "~=1.19.0"
           - python-version: "3.9"
             qt-lib: "pyqt"
-            qt-version: "PyQt6"
+            qt-version: "PyQt6~=6.1.0"
             numpy-version: "~=1.22.0"
           - python-version: "3.9"
             qt-lib: "pyside"
-            qt-version: "PySide6"
+            qt-version: "PySide6~=6.1.0"
             numpy-version: "~=1.22.0"
           - python-version: "3.10"
             qt-lib: "pyqt"
@@ -75,10 +75,8 @@ jobs:
       shell: cmd
     - name: Install Dependencies
       run: |
-        python -m pip install --upgrade pip setuptools wheel
-        python -m pip install ${{ matrix.qt-version }} numpy${{ matrix.numpy-version }} scipy pyopengl h5py matplotlib
-        python -m pip install --use-feature=in-tree-build .
-        python -m pip install pytest
+        python -m pip install --upgrade pip
+        python -m pip install ${{ matrix.qt-version }} numpy${{ matrix.numpy-version }} scipy pyopengl h5py matplotlib pytest pytest-xdist .
     - name: Optionally Install Numba
       if: matrix.python-version != '3.10'
       run: |
@@ -117,7 +115,7 @@ jobs:
       run: |
         mkdir $SCREENSHOT_DIR
         pytest tests -v
-        pytest pyqtgraph/examples -v
+        pytest pyqtgraph/examples -v -n auto
       shell: bash
     - name: Upload Screenshots
       uses: actions/upload-artifact@v2
