@@ -27,6 +27,19 @@ def easySample(a=5, b=6):
 
 @host.interactDecorator()
 @printResult
+def hasTooltipInfo(a=4, b=6):
+    """
+    [a.options]
+    tip=I'm the 'A' parameter
+    [b.options]
+    tip=My limits are from 0 to 10 incrementing by 2
+    limits=[0, 10]
+    step=2
+    """
+    return a + b
+
+@host.interactDecorator()
+@printResult
 def stringParams(a='5', b='6'):
     return a + b
 
