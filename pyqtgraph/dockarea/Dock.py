@@ -1,6 +1,8 @@
+import warnings
+
 from ..Qt import QtCore, QtGui, QtWidgets
 from ..widgets.VerticalLabel import VerticalLabel
-from .DockDrop import *
+from .DockDrop import DockDrop
 
 
 class Dock(QtWidgets.QWidget, DockDrop):
@@ -35,7 +37,6 @@ class Dock(QtWidgets.QWidget, DockDrop):
         self.widgetArea.setLayout(self.layout)
         self.widgetArea.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.widgets = []
-        self._container = None
         self.currentRow = 0
         #self.titlePos = 'top'
         self.raiseOverlay()
@@ -227,6 +228,10 @@ class Dock(QtWidgets.QWidget, DockDrop):
 
     def close(self):
         """Remove this dock from the DockArea it lives inside."""
+        if self._container is None:
+            warnings.warn(f"Cannot close dock {self} because it is not open.", RuntimeWarning, stacklevel=2)
+            return
+
         self.setParent(None)
         QtWidgets.QLabel.close(self.label)
         self.label.setParent(None)

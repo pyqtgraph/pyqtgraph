@@ -1,3 +1,5 @@
+__all__ = ["DockDrop"]
+
 from ..Qt import QtCore, QtGui, QtWidgets
 
 

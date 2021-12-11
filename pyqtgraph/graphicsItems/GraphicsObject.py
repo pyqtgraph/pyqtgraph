@@ -22,7 +22,12 @@ class GraphicsObject(GraphicsItem, QtWidgets.QGraphicsObject):
     def itemChange(self, change, value):
         ret = super().itemChange(change, value)
         if change in [self.GraphicsItemChange.ItemParentHasChanged, self.GraphicsItemChange.ItemSceneHasChanged]:
-            self.parentChanged()
+            import types
+            if isinstance(self.parentChanged, types.MethodType):
+                self.parentChanged()
+            else:
+                # workaround PySide6 6.2.2 issue https://bugreports.qt.io/browse/PYSIDE-1730
+                getattr(self.__class__, 'parentChanged')(self)
         try:
             inform_view_on_change = self.__inform_view_on_changes
         except AttributeError:

@@ -481,7 +481,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
         path = os.path.dirname(os.path.dirname(example_path))
         env['PYTHONPATH'] = f'{path}'
         if edited:
-            proc = subprocess.Popen([sys.executable, '-'], stdin=subprocess.PIPE, cwd=path, env=env)
+            proc = subprocess.Popen([sys.executable, '-'], stdin=subprocess.PIPE, cwd=example_path, env=env)
             code = self.ui.codeView.toPlainText().encode('UTF-8')
             proc.stdin.write(code)
             proc.stdin.close()

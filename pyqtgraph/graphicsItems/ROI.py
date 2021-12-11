@@ -652,7 +652,7 @@ class ROI(GraphicsObject):
         handle = self.handles[index]['item']
         self.handles.pop(index)
         handle.disconnectROI(self)
-        if len(handle.rois) == 0:
+        if len(handle.rois) == 0 and self.scene() is not None:
             self.scene().removeItem(handle)
         self.stateChanged()
     
@@ -2114,11 +2114,9 @@ class PolyLineROI(ROI):
         return h
         
     def segmentClicked(self, segment, ev=None, pos=None): ## pos should be in this item's coordinate system
-        if ev != None:
+        if ev is not None:
             pos = segment.mapToParent(ev.pos())
-        elif pos != None:
-            pos = pos
-        else:
+        elif pos is None:
             raise Exception("Either an event or a position must be given.")
         h1 = segment.handles[0]['item']
         h2 = segment.handles[1]['item']

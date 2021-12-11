@@ -110,11 +110,10 @@ p.sigTreeStateChanged.connect(change)
 def valueChanging(param, value):
     print("Value changing (not finalized): %s %s" % (param, value))
     
-# Too lazy for recursion:
-for child in p.children():
-    child.sigValueChanging.connect(valueChanging)
-    for ch2 in child.children():
-        ch2.sigValueChanging.connect(valueChanging)
+# Only listen for changes of the 'widget' child:
+for child in p.child('Example Parameters'):
+    if 'widget' in child.names:
+        child.child('widget').sigValueChanging.connect(valueChanging)
         
 
 def save():

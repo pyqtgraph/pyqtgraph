@@ -1,5 +1,6 @@
 from ... import functions as fn
 from ...Qt import QtWidgets
+from ...SignalProxy import SignalProxy
 from ..ParameterItem import ParameterItem
 from . import BoolParameterItem, SimpleParameter
 from .basetypes import WidgetParameterItem
@@ -129,6 +130,8 @@ class ChecklistParameter(GroupParameter):
                    all checked values. When *True*, it behaves like a ``list`` type -- only one value can be selected.
                    If no values are selected and ``exclusive`` is set to *True*, the first available limit is selected.
                    The return value of an ``exclusive`` checklist is a single value rather than a list with one element.
+    delay          Controls the wait time between editing the checkboxes/radio button children and firing a "value changed"
+                   signal. This allows users to edit multiple boxes at once for a single value update.
     ============== ========================================================
     """
     itemClass = ChecklistParameterItem
@@ -149,6 +152,21 @@ class ChecklistParameter(GroupParameter):
             # Also, value calculation will be incorrect until children are added, so make sure to recompute
             self.setValue(value)
 
+        self.valChangingProxy = SignalProxy(self.sigValueChanging, delay=opts.get('delay', 1.0), slot=self._finishChildChanges)
+
+    def childrenValue(self):
+        vals = [self.forward[p.name()] for p in self.children() if p.value()]
+        exclusive = self.opts['exclusive']
+        if not vals and exclusive:
+            return None
+        elif exclusive:
+            return vals[0]
+        else:
+            return vals
+
+    def _onChildChanging(self, _ch, _val):
+        self.sigValueChanging.emit(self, self.childrenValue())
+
     def updateLimits(self, _param, limits):
         oldOpts = self.names
         val = self.opts['value']
@@ -167,35 +185,28 @@ class ChecklistParameter(GroupParameter):
             self.addChild(child)
             # Prevent child from broadcasting tree state changes, since this is handled by self
             child.blockTreeChangeSignal()
-            child.sigValueChanged.connect(self._onSubParamChange)
+            child.sigValueChanged.connect(self._onChildChanging)
         # Purge child changes before unblocking
         self.treeStateChanges.clear()
         self.unblockTreeChangeSignal()
         self.setValue(val)
 
-    def _onSubParamChange(self, param, value):
+    def _finishChildChanges(self, paramAndValue):
+        param, value = paramAndValue
         if self.opts['exclusive']:
             val = self.reverse[0][self.reverse[1].index(param.name())]
             return self.setValue(val)
         # Interpret value, fire sigValueChanged
-        return self.setValue(self.value())
+        return self.setValue(self.childrenValue())
 
     def optsChanged(self, param, opts):
         if 'exclusive' in opts:
             # Force set value to ensure updates
             # self.opts['value'] = self._VALUE_UNSET
             self.updateLimits(None, self.opts.get('limits', []))
+        if 'delay' in opts:
+            self.valChangingProxy.setDelay(opts['delay'])
     
-    def value(self):
-        vals = [self.forward[p.name()] for p in self.children() if p.value()]
-        exclusive = self.opts['exclusive']
-        if not vals and exclusive:
-            return None
-        elif exclusive:
-            return vals[0]
-        else:
-            return vals
-
     def setValue(self, value, blockSignal=None):
         self.targetValue = value
         exclusive = self.opts['exclusive']
@@ -213,5 +224,5 @@ class ChecklistParameter(GroupParameter):
             names = [self.reverse[1][0]]
         for chParam in self:
             checked = chParam.name() in names
-            chParam.setValue(checked, self._onSubParamChange)
-        super().setValue(self.value(), blockSignal)
+            chParam.setValue(checked, self._onChildChanging)
+        super().setValue(self.childrenValue(), blockSignal)
