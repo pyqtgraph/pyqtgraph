@@ -1,15 +1,16 @@
+# -*- coding: utf-8 -*-
 
 ################################################################################
 ## Form generated from reading UI file 'template.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.1.0
+## Created by: Qt User Interface Compiler version 6.1.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
+from PySide6.QtCore import *  # type: ignore
+from PySide6.QtGui import *  # type: ignore
+from PySide6.QtWidgets import *  # type: ignore
 
 from .CmdInput import CmdInput
 
@@ -21,8 +22,8 @@ class Ui_Form(object):
         Form.resize(739, 497)
         self.gridLayout = QGridLayout(Form)
         self.gridLayout.setSpacing(0)
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.splitter = QSplitter(Form)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setOrientation(Qt.Vertical)
@@ -34,7 +35,8 @@ class Ui_Form(object):
         self.output = QPlainTextEdit(self.layoutWidget)
         self.output.setObjectName(u"output")
         font = QFont()
-        font.setFamilies([u"Monospace"])
+        font.setFamilies([u"Courier New"])
+        font.setStyleStrategy(QFont.PreferAntialias)
         self.output.setFont(font)
         self.output.setReadOnly(True)
 
@@ -153,3 +155,4 @@ class Ui_Form(object):
         self.exceptionInfoLabel.setText(QCoreApplication.translate("Form", u"Stack Trace", None))
         self.label.setText(QCoreApplication.translate("Form", u"Filter (regex):", None))
     # retranslateUi
+
