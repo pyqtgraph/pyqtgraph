@@ -1,11 +1,11 @@
 import builtins
-from functools import  partial
 
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
 from ... import functions as fn
 from ... import icons
 from ...Qt import QtCore, QtGui, QtWidgets, mkQApp
+
 
 class WidgetParameterItem(ParameterItem):
     """
