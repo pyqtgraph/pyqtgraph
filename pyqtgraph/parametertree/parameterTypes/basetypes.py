@@ -1,10 +1,10 @@
 import builtins
 
-from ... import functions as fn
-from ... import icons
-from ...Qt import QtCore, QtGui, QtWidgets
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
+from ... import functions as fn
+from ... import icons
+from ...Qt import QtCore, QtGui, QtWidgets, mkQApp
 
 
 class WidgetParameterItem(ParameterItem):
@@ -107,10 +107,10 @@ class WidgetParameterItem(ParameterItem):
         if ev.type() == ev.Type.KeyPress:
             if ev.key() == QtCore.Qt.Key.Key_Tab:
                 self.focusNext(forward=True)
-                return True ## don't let anyone else see this event
+                return True  ## don't let anyone else see this event
             elif ev.key() == QtCore.Qt.Key.Key_Backtab:
                 self.focusNext(forward=False)
-                return True ## don't let anyone else see this event
+                return True  ## don't let anyone else see this event
 
         return False
 
@@ -262,6 +262,7 @@ class SimpleParameter(Parameter):
       - 'color'
       - 'colormap'
     """
+
     def __init__(self, *args, **kargs):
         """
         Initialize the parameter.
@@ -274,13 +275,16 @@ class SimpleParameter(Parameter):
 
     def _interpretValue(self, v):
         typ = self.opts['type']
+
         def _missing_interp(v):
             # Assume raw interpretation
             return v
             # Or:
             # raise TypeError(f'No interpreter found for type {typ}')
+
         interpreter = getattr(builtins, typ, _missing_interp)
         return interpreter(v)
+
 
 class GroupParameterItem(ParameterItem):
     """
@@ -288,8 +292,10 @@ class GroupParameterItem(ParameterItem):
     of child parameters. It also provides a simple mechanism for displaying a button or combo
     that can be used to add new parameters to the group.
     """
+
     def __init__(self, param, depth):
         ParameterItem.__init__(self, param, depth)
+        self._initialFontPointSize = self.font(0).pointSize()
         self.updateDepth(depth)
 
         self.addItem = None
@@ -305,7 +311,7 @@ class GroupParameterItem(ParameterItem):
                 self.addWidget.clicked.connect(self.addClicked)
             w = QtWidgets.QWidget()
             l = QtWidgets.QHBoxLayout()
-            l.setContentsMargins(0,0,0,0)
+            l.setContentsMargins(0, 0, 0, 0)
             w.setLayout(l)
             l.addWidget(self.addWidget)
             l.addStretch()
@@ -318,25 +324,30 @@ class GroupParameterItem(ParameterItem):
 
         self.optsChanged(self.param, self.param.opts)
 
+    def pointSize(self):
+        return self._initialFontPointSize
+
     def updateDepth(self, depth):
-        ## Change item's appearance based on its depth in the tree
-        ## This allows highest-level groups to be displayed more prominently.
-        if depth == 0:
-            for c in [0,1]:
-                self.setBackground(c, QtGui.QBrush(QtGui.QColor(100,100,100)))
-                self.setForeground(c, QtGui.QBrush(QtGui.QColor(220,220,255)))
-                font = self.font(c)
-                font.setBold(True)
-                font.setPointSize(font.pointSize()+1)
-                self.setFont(c, font)
-        else:
-            for c in [0,1]:
-                self.setBackground(c, QtGui.QBrush(QtGui.QColor(220,220,220)))
-                self.setForeground(c, QtGui.QBrush(QtGui.QColor(50,50,50)))
-                font = self.font(c)
-                font.setBold(True)
-                #font.setPointSize(font.pointSize()+1)
-                self.setFont(c, font)
+        """
+        Change set the item font to bold and increase the font size on outermost groups.
+        """
+        app = mkQApp()
+        palette = app.palette()
+        background = palette.base().color()
+        h, s, l, a = background.getHslF()
+        lightness = 0.5 + (l - 0.5) * .8
+        altBackground = QtGui.QColor.fromHslF(h, s, lightness, a)
+
+        for c in [0, 1]:
+            font = self.font(c)
+            font.setBold(True)
+            if depth == 0:
+                font.setPointSize(self.pointSize() + 1)
+                self.setBackground(c, background)
+            else:
+                self.setBackground(c, altBackground)
+            self.setForeground(c, palette.text().color())
+            self.setFont(c, font)
         self.titleChanged()  # sets the size hint for column 0 which is based on the new font
 
     def addClicked(self):
@@ -367,7 +378,7 @@ class GroupParameterItem(ParameterItem):
 
     def addChild(self, child):  ## make sure added childs are actually inserted before add btn
         if self.addItem is not None:
-            ParameterItem.insertChild(self, self.childCount()-1, child)
+            ParameterItem.insertChild(self, self.childCount() - 1, child)
         else:
             ParameterItem.addChild(self, child)
 
@@ -393,6 +404,7 @@ class GroupParameterItem(ParameterItem):
                 self.addWidget.addItem(t)
         finally:
             self.addWidget.blockSignals(False)
+
 
 
 class GroupParameter(Parameter):
@@ -421,6 +433,7 @@ class GroupParameter(Parameter):
     def setAddList(self, vals):
         """Change the list of options available for the user to add to the group."""
         self.setOpts(addList=vals)
+
 
 class Emitter(QtCore.QObject):
     """
