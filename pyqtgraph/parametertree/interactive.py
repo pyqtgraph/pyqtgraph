@@ -292,24 +292,35 @@ class InteractiveFunction:
         """
         self.paramKwargs[param.name()] = value
 
-    def setParams(self, params=None):
-        """Creates weakrefs to each parameter to avoid extending their lives"""
-        if params is None:
-            params = []
-        for p in self.params:
-            p = p()
-            if p is None:
-                raise RuntimeError('Calling interactive function with deleted parameter')
-            p.sigValueChanged.disconnect(self.updateCachedParamValues)
-        # Disconnected all old signals, clear out and get ready for new ones
-        self.params.clear()
-        # Also flush old cache
-        self.paramKwargs.clear()
+    def hookupParams(self, params=None, clearOld=True):
+        """
+        Binds a new set of parameters to this function. If `clearOld` is *True* (default), previously bound parameters
+        are disconnected.
+        """
+        if clearOld:
+            self.removeParams()
         for param in params:
+            # Weakref prevents elongating the life of parameters
             self.params.append(weakref.ref(param))
             param.sigValueChanged.connect(self.updateCachedParamValues)
             # Populate initial values
             self.paramKwargs[param.name()] = param.value()
+
+    def removeParams(self, clearCache=True):
+        """
+        Disconnects from all signals of parameters in `self.params`. Also optionally clears the old cache of param
+        values
+        """
+        for p in self.params:
+            p = p()
+            if p is None:
+                # Param already out of scope, no way for its signals to fire. Nothing to do
+                continue
+            p.sigValueChanged.disconnect(self.updateCachedParamValues)
+        # Disconnected all old signals, clear out and get ready for new ones
+        self.params.clear()
+        if clearCache:
+            self.paramKwargs.clear()
 
     def runFromChangedOrChanging(self, _param, value):
         if self._disconnected:
@@ -427,7 +438,7 @@ def interact(func, *, runOpts=RunOpts.ON_CHANGED, ignores=None, parent=None, tit
         child = _createFuncParamChild(parent, chDict, runOpts, existOk, toExec)
         useParams.append(child)
 
-    toExec.setParams(useParams)
+    toExec.hookupParams(useParams)
     ret = parent
     if RunOpts.ON_BUTTON in runOpts:
         # Add an extra button child which can activate the function
