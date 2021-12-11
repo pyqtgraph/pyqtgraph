@@ -1,4 +1,4 @@
-from ..Qt import QtWidgets, QtGui
+from ..Qt import QtWidgets, QtGui, QtCore
 from ..functions import mkPen
 
 
@@ -29,5 +29,5 @@ class PenPreviewLabel(QtWidgets.QLabel):
         # No indication of "cosmetic" from just the paint path, so add something extra in that case
         if self.pen.isCosmetic():
             painter.setPen(mkPen('k'))
-            painter.drawText(w * 0.81, 12, 'C')
+            painter.drawText(QtCore.QPointF(w * 0.81, 12), 'C')
         painter.end()
