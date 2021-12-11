@@ -3,6 +3,8 @@ from .action import ActionParameter, ActionParameterItem
 from .basetypes import (
     SimpleParameter,
     WidgetParameterItem,
+    GroupParameter,
+    GroupParameterItem
 )
 from .bool import BoolParameterItem
 from .calendar import CalendarParameter, CalendarParameterItem
@@ -11,7 +13,6 @@ from .color import ColorParameter, ColorParameterItem
 from .colormap import ColorMapParameter, ColorMapParameterItem
 from .file import FileParameter, FileParameterItem
 from .font import FontParameter, FontParameterItem
-from .group import GroupParameter, GroupParameterItem
 from .list import ListParameter, ListParameterItem
 from .numeric import NumericParameterItem
 from .pen import PenParameter, PenParameterItem

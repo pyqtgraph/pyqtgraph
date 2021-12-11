@@ -4,9 +4,8 @@ from ...SignalProxy import SignalProxy
 from ..ParameterItem import ParameterItem
 from . import BoolParameterItem, SimpleParameter
 from .basetypes import WidgetParameterItem
-from .group import GroupParameter, GroupParameterItem
 from .list import ListParameter
-from .basetypes import Emitter
+from .basetypes import Emitter, GroupParameter, GroupParameterItem
 
 
 class ChecklistParameterItem(GroupParameterItem):

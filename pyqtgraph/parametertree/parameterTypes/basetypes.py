@@ -4,7 +4,7 @@ from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
 from ... import functions as fn
 from ... import icons
-from ...Qt import QtCore, QtGui, QtWidgets, mkQApp
+from ...Qt import QtGui, QtCore, QtWidgets, mkQApp
 
 
 class WidgetParameterItem(ParameterItem):
@@ -433,6 +433,20 @@ class GroupParameter(Parameter):
     def setAddList(self, vals):
         """Change the list of options available for the user to add to the group."""
         self.setOpts(addList=vals)
+
+    def interactDecorator(self, **opts):
+        """
+        Decorator version of `Parameter.interact`. All options are forwarded there, except for `func` so it can be
+        wrapped. Intended to be called using a GroupParameter, and the interactive parameter will be added
+        as a child. Note that unless a parent is explicitly passed, it will be set to 'self'
+        """
+        from ..interactive import interact
+        def wrapper(func):
+            opts.setdefault('parent', self)
+            interact(func, **opts)
+            return func
+
+        return wrapper
 
 
 class Emitter(QtCore.QObject):
