@@ -2,7 +2,7 @@ from functools import wraps
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
-from pyqtgraph.parametertree import Parameter, ParameterTree, RunOpts, InteractiveFunction, interact
+from pyqtgraph.parametertree import Parameter, ParameterTree, RunOpts, InteractiveFunction, interact, interactDefaults
 
 app = pg.mkQApp()
 
@@ -68,7 +68,7 @@ x = 10
 interact(func_interactive, parent=host)
 
 
-with RunOpts.optsContext(title=str.upper):
+with interactDefaults.optsContext(title=str.upper):
     @host.interactDecorator()
     @printResult
     def capslocknames(a=5):

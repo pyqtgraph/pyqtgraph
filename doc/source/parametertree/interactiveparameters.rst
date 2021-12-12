@@ -98,9 +98,9 @@ being interacted at once, and all should be with a “Run” button, simply
 use the provided context manager:
 
 .. code:: python
-
+   from pyqtgraph.parametertree import interactDefaults
    # `runOpts` can be set to any combination of options as demonstrated above, too
-   with RunOpts.optsContext(runOpts=RunOpts.ON_BUTTON):
+   with interactDefaults.optsContext(runOpts=RunOpts.ON_BUTTON):
        # All will have `runOpts` set to ON_BUTTON
        p1 = interact(aFunc)
        p2 = interact(bFunc)
@@ -108,13 +108,16 @@ use the provided context manager:
    # After the context, `runOpts` is back to the previous default
 
 If the default for all interaction should be changed, you can directly
-modify ``RunOpts.defaultCfg`` (but be warned – anyone who imports your
+call ``interactDefaults.setOpts`` (but be warned – anyone who imports your
 module will have it modified for them, too. So use the context manager
-whenever possible)
+whenever possible). The previous options set will be returned for easy
+resetting after:
 
 .. code:: python
 
-   RunOpts.defaultCfg['runOpts'] = RunOpts.ON_BUTTON
+   oldOpts = interactDefaults.setOpts(runOpts=RunOpts.ON_BUTTON)
+   # ... do some things...
+   interactDefaults.setOPts(**oldOpts)
 
 ``ignores``
 ^^^^^^^^^^^
@@ -348,7 +351,7 @@ If functions should have formatted titles, specify this in the
    def titleFormat(name):
        return name.replace('_', ' ').title()
 
-   with RunOpts.optsContext(title=titleFormat):
+   with interactDefaults.optsContext(title=titleFormat):
        # The title in the parameter tree will be "My Snake Case Function"
        params = interact(my_snake_case_function)
 

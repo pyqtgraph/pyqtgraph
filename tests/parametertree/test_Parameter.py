@@ -5,7 +5,7 @@ import pytest
 from functools import wraps
 from pyqtgraph.parametertree import Parameter
 from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
-from pyqtgraph.parametertree.interactive import interact, RunOpts, InteractiveFunction
+from pyqtgraph.parametertree import interact, RunOpts, InteractiveFunction, interactDefaults
 
 
 def test_parameter_hasdefault():
@@ -61,7 +61,7 @@ def test_unpack_parameter():
     assert result['c'] == 3.0
 
 def test_interact():
-    RunOpts.setOpts(runOpts=RunOpts.ON_BUTTON)
+    oldOpts = interactDefaults.setOpts(runOpts=RunOpts.ON_BUTTON)
     value = None
     def retain(func):
         """Retain result for post-call analysis"""
@@ -107,18 +107,18 @@ def test_interact():
     host.child('y').sigValueChanging.emit(host.child('y'), 100)
     assert value == (10, 100)
 
-    with RunOpts.optsContext(title=str.upper):
+    with interactDefaults.optsContext(title=str.upper):
         host = interact(a, x={'title': 'different', 'value': 5})
         titles = [p.title() for p in host]
         for ch in 'different', 'Y':
             assert ch in titles
 
-    with RunOpts.optsContext(title='Group only'):
+    with interactDefaults.optsContext(title='Group only'):
         host = interact(a, x=1)
         assert host.title() == 'Group only'
         assert [p.title() is None for p in host]
 
-    with RunOpts.optsContext(runOpts=RunOpts.ON_CHANGED):
+    with interactDefaults.optsContext(runOpts=RunOpts.ON_CHANGED):
         host = interact(a, x=5)
         host['y'] = 20
         assert value == (5, 20)
@@ -162,7 +162,7 @@ def test_interact():
     host['x'] = 100
     assert value == 100
 
-    RunOpts.setOpts(runOpts=None)
+    interactDefaults.setOpts(**oldOpts)
 
 def test_onlyRun():
     def a():
@@ -191,5 +191,34 @@ def test_interactiveFunc():
 
 def test_badOptsContext():
     with pytest.raises(KeyError):
-        with RunOpts.optsContext(bad=4):
+        with interactDefaults.optsContext(bad=4):
             pass
+
+def test_newRunButton():
+    def a(_=1):
+        pass
+    template = dict(defaultName='Test', type='action')
+    with interactDefaults.optsContext(runButtonTemplate=template):
+        x = interact(a, runOpts=RunOpts.ON_BUTTON)
+    assert 'Test' in x.names
+
+
+def test_updateParamDuringRun():
+    counter = 0
+
+    @InteractiveFunction
+    def func(a=1):
+        nonlocal counter
+        counter += a
+    param = interact(func)
+    func.propagateParamChanges = True
+
+    func(a=3)
+    # Ensure "test" was only run once
+    assert counter == 3
+    assert param['a'] == 3
+
+    func.propagateParamChanges = False
+    func(a=1)
+    assert counter == 4
+    assert param['a'] == 3

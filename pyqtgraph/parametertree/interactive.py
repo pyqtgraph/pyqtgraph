@@ -5,7 +5,6 @@ import functools
 import inspect
 import textwrap
 import weakref
-from functools import wraps
 
 from . import Parameter
 
@@ -26,34 +25,55 @@ class RunOpts:
     any of the parameters
     """
 
-    defaultCfg = {}
-    """Populated with any values that should override the default signature values in :func:`interact`."""
+class _InteractDefaults:
 
-    @classmethod
+    def __init__(self):
+        self.runOpts = RunOpts.ON_CHANGED
+        self.parent = None
+        self.title = None
+        self.nest = True
+        self.existOk = True
+
+        self.runButtonTemplate = dict(type='action', defaultName='Run')
+
+    def setOpts(self, **opts):
+        oldOpts = vars(self).copy()
+        allowed = set(oldOpts)
+        errors = set(opts).difference(allowed)
+        if errors:
+            raise KeyError(f'Unrecognized options: {errors}. Must be one of: {allowed}')
+
+        toReturn = {}
+        toUse = {}
+        for kk in allowed.intersection(opts):
+            toReturn[kk] = oldOpts[kk]
+            toUse[kk] = opts[kk]
+        self.__dict__.update(toUse)
+        return toReturn
+
     @contextlib.contextmanager
-    def optsContext(cls, **opts):
-        """
-        Sets default title format and default run format temporarily, within the scope of the context manager
-        """
-        oldOpts = RunOpts.defaultCfg.copy()
-        cls.setOpts(**opts)
+    def optsContext(self, **opts):
+        oldOpts = self.__dict__.copy()
+        self.setOpts(**opts)
         yield
-        RunOpts.defaultCfg = oldOpts
+        self.setOpts(**oldOpts)
 
-    @classmethod
-    def setOpts(cls, **opts):
-        """Overrides the default behavior of function interaction"""
-        attrs = set(inspect.signature(interact).parameters)
-        optsSet = set(opts)
-        useOpts = optsSet & attrs
-        if any(optsSet.difference(attrs)):
-            raise KeyError(f'Unrecognized option(s) "{optsSet.difference(attrs)}"')
-        for useOpt in useOpts:
-            if opts[useOpt] is None:
-                cls.defaultCfg.pop(useOpt, None)
-            else:
-                cls.defaultCfg[useOpt] = opts[useOpt]
+    def __str__(self):
+        return f'"interact" defaults: {vars(self)}'
 
+    def __repr__(self):
+        return str(self)
+
+interactDefaults = _InteractDefaults()
+
+def setRunButtonTemplate(template):
+    """
+    Changes the default template for buttons created when "ON_BUTTON" run behavior is requested.
+    A ``Parameter` is created from this dict that must function like an ActionParameter.
+    a ``defaultName`` key determines the button's name if ``nest=False`` during creation.
+    The old template is returned for convenient resetting as needed.
+    """
+    interactDefaults.runButtonTemplate = template
 
 def funcToParamDict(func, title=None, **overrides):
     """
@@ -111,7 +131,7 @@ def createFuncParameter(name, signatureParam, docDict, overridesDict, title=None
         overrideInfo = {'value': overrideInfo}
     # Overrides take precedence over doc and signature
     pgDict.update(overrideInfo)
-    # Name takes highest precedence since it must be bindable to a function argument
+    # Name takes the highest precedence since it must be bindable to a function argument
     pgDict['name'] = name
     # Required function arguments with any override specifications can still be unfilled at this point
     pgDict.setdefault('value', RunOpts.PARAM_UNSET)
@@ -224,6 +244,7 @@ def _parseIniDocstring_basic(doc):
                 # Remove this from the return value since it isn't really meaninful
                 del paramValues[paramK]
                 continue
+            # noinspection PyBroadException
             try:
                 paramValues[paramK] = ast.literal_eval(paramV)
             except:
@@ -233,7 +254,7 @@ def _parseIniDocstring_basic(doc):
             paramValues.setdefault('tip', backupTip.strip())
         out[paramName] = paramValues
     # Since function documentation can be used as a description for whatever group parameter hosts these
-    # parameters, store it in a name guaranteed not to collide with parameter names since it's invalid
+    # parameters, store it in a name guaranteed not to collide with parameter names since its invalid
     # variable syntax (contains '-')
     out['func-description'] = '\n'.join(parser.defaults())
     return out
@@ -270,6 +291,7 @@ class InteractiveFunction:
         self.__doc__ = func.__doc__
         functools.update_wrapper(self, func)
         self._disconnected = False
+        self.propagateParamChanges = False
         self.extra = extra
         self.paramKwargs = {}
 
@@ -278,6 +300,9 @@ class InteractiveFunction:
         Calls `self.func`. Extra, deferred, and parameter keywords as defined on init and through
         :func:`InteractiveFunction.setParams` are forwarded during the call.
         """
+        if self.propagateParamChanges:
+            self._updateParamsFromRunKwargs(**kwargs)
+
         runKwargs = self.extra.copy()
         runKwargs.update(self.paramKwargs)
         for kk, vv in self.deferred.items():
@@ -291,6 +316,24 @@ class InteractiveFunction:
         don't have to be queried for their value every time InteractiveFunction is __call__'ed
         """
         self.paramKwargs[param.name()] = value
+
+    def _updateParamsFromRunKwargs(self, **kwargs):
+        """
+        Updates attached params from __call__ without causing additional function runs
+        """
+        # Ensure updates don't cause firing of self's function
+        wasDisconnected = self.disconnect()
+        try:
+            for param in self.params:
+                param = param()
+                if param is None:
+                    continue
+                name = param.name()
+                if name in kwargs:
+                    param.setValue(kwargs[name])
+        finally:
+            if not wasDisconnected:
+                self.reconnect()
 
     def hookupParams(self, params=None, clearOld=True):
         """
@@ -308,7 +351,7 @@ class InteractiveFunction:
 
     def removeParams(self, clearCache=True):
         """
-        Disconnects from all signals of parameters in `self.params`. Also optionally clears the old cache of param
+        Disconnects from all signals of parameters in `self.params`. Also, optionally clears the old cache of param
         values
         """
         for p in self.params:
@@ -334,11 +377,15 @@ class InteractiveFunction:
 
     def disconnect(self):
         """Simulates disconnecting the runnable by turning `runFrom*` functions into no-ops"""
+        oldDisconnect = self._disconnected
         self._disconnected = True
+        return oldDisconnect
 
     def reconnect(self):
         """Simulates reconnecting the runnable by re-enabling `runFrom*` functions"""
+        oldDisconnect = self._disconnected
         self._disconnected = False
+        return oldDisconnect
 
     def __str__(self):
         return self.func.__str__()
@@ -352,17 +399,9 @@ def _resolveTitle(name, titleFormat, forwardStrTitle=False):
     # else: titleFormat should be callable
     return titleFormat(name)
 
-def _supplyCfgOpts(func):
-    """Makes sure that config options can be supplied during normal function runs"""
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        newKwargs = {**RunOpts.defaultCfg, **kwargs}
-        return func(*args, **newKwargs)
-    return wrapper
-
-@_supplyCfgOpts
-def interact(func, *, runOpts=RunOpts.ON_CHANGED, ignores=None, parent=None, title=None, runFunc=None,
-             nest=True, existOk=True, **overrides):
+def interact(func, *, ignores=None, runFunc=None, runOpts=RunOpts.PARAM_UNSET,
+             parent=RunOpts.PARAM_UNSET, title=RunOpts.PARAM_UNSET, nest=RunOpts.PARAM_UNSET,
+             existOk=RunOpts.PARAM_UNSET, **overrides):
     """
     Interacts with a function by making Parameters for each argument.
 
@@ -403,6 +442,18 @@ def interact(func, *, runOpts=RunOpts.ON_CHANGED, ignores=None, parent=None, tit
         arguments. Each override can be a value (e.g. 5) or a dict specification of a parameter
         (e.g. dict(type='list', limits=[0, 10, 20]))
     """
+    # Get every overridden default
+    if runOpts is RunOpts.PARAM_UNSET:
+        runOpts = interactDefaults.runOpts
+    if parent is RunOpts.PARAM_UNSET:
+        parent = interactDefaults.parent
+    if title is RunOpts.PARAM_UNSET:
+        title = interactDefaults.title
+    if nest is RunOpts.PARAM_UNSET:
+        nest = interactDefaults.nest
+    if existOk is RunOpts.PARAM_UNSET:
+        existOk = interactDefaults.existOk
+
     funcDict = funcToParamDict(func, title=title, **overrides)
     children = funcDict.pop('children', []) # type: list[dict]
     chNames = [ch['name'] for ch in children]
@@ -475,8 +526,12 @@ def _createFuncParamChild(parent, chDict, runOpts, existOk, toExec):
 
 def _makeRunButton(nest, tip, interactiveFunc):
     # Add an extra button child which can activate the function
-    name = 'Run' if nest else interactiveFunc.func.__name__
-    createOpts = dict(name=name, type='action')
+    template = interactDefaults.runButtonTemplate
+    createOpts = template.copy()
+
+    defaultName = template.get('defaultName', 'Run')
+    name = defaultName if nest else interactiveFunc.func.__name__
+    createOpts.setdefault('name', name)
     if tip:
         createOpts['tip'] = tip
     child = Parameter.create(**createOpts)

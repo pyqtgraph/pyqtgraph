@@ -10,7 +10,7 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
 import pyqtgraph.parametertree as ptree
-from pyqtgraph.parametertree import Parameter, RunOpts
+from pyqtgraph.parametertree import Parameter, RunOpts, interactDefaults
 import pyqtgraph.graphicsItems.ScatterPlotItem
 from time import perf_counter
 import re
@@ -44,7 +44,7 @@ def fmt(name):
     name = name.replace('_', ' ')
     return translate('ScatterPlot', name.title().strip() + ':    ')
 
-RunOpts.setOpts(title=fmt, nest=False)
+oldOpts = interactDefaults.setOpts(title=fmt, nest=False)
 
 @param.interactDecorator()
 def mkDataAndItem(count=500, size=10):
@@ -138,6 +138,6 @@ def pausePlot(paused=False):
 mkDataAndItem()
 timer.timeout.connect(update)
 timer.start(0)
-RunOpts.setOpts(title=None, nest=None)
+interactDefaults.setOpts(**oldOpts)
 if __name__ == '__main__':
     pg.exec()
