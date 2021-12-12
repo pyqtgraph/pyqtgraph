@@ -26,9 +26,6 @@ class MultiAxisPlotWidget(PlotWidget):
         self.vb = self.pi.vb
         # layout shortcut
         self.layout = self.pi.layout
-        # hide default axis
-        for axis_orientation in ["left", "bottom", "right", "top"]:
-            self.pi.hideAxis(axis_orientation)
         # CHARTS
         self.axes = {}
         self.charts = {}
@@ -80,13 +77,13 @@ class MultiAxisPlotWidget(PlotWidget):
             one of the default PlotItem axis names ("top", "right", "bottom",
             "left"), or the name of an axis previously created by calling
             addAxis(). This axis will be set in the new PlotItem based on the
-            selected axis orientation. If None "bottom" will be used as
+            selected axis orientation. If omitted "bottom" will be used as
             default.
         yAxisName : str, optional
             one of the default PlotItem axis names ("top", "right", "bottom",
             "left"), or the name of an axis previously created by calling
             addAxis(). This axis will be set in the new PlotItem based on the
-            selected axis orientation. If None "left" will be used as default.
+            selected axis orientation. If omitted "left" will be used as default.
         chart : PlotDataItem, optional
             The chart to be used inside the new PlotItem. If left as None a
             new PlotDataItem will be created and it's name parameter set.
@@ -104,29 +101,29 @@ class MultiAxisPlotWidget(PlotWidget):
         PlotItem
             The newly created PlotItem.
         """
-        # add default axis to the list of axes if requested
-        if xAxisName in ["bottom", "top"]:
-            x_axis = self.addAxis(xAxisName, axis=self.pi.axes[xAxisName]["item"])
-        elif xAxisName not in self.axes:
-            x_axis = self.addAxis(xAxisName)
+        if xAxisName not in self.axes:
+            if xAxisName in {"bottom", "top"}:
+                # add default axis to the list of axes if requested
+                x_axis = self.addAxis(xAxisName, axis=self.pi.axes[xAxisName]["item"])
+            else:
+                x_axis = self.addAxis(xAxisName, "bottom")
         else:
             x_axis = self.axes[xAxisName]
-        if yAxisName in ["left", "right"]:
-            y_axis = self.addAxis(yAxisName, axis=self.pi.axes[yAxisName]["item"])
-        elif yAxisName not in self.axes:
-            y_axis = self.addAxis(yAxisName)
+        if yAxisName not in self.axes:
+            if yAxisName in {"left", "right"}:
+                # add default axis to the list of axes if requested
+                y_axis = self.addAxis(yAxisName, yAxisName)
+            else:
+                y_axis = self.addAxis(yAxisName, "left")
         else:
             y_axis = self.axes[yAxisName]
-        if xAxisName in ["bottom", "top"] and yAxisName in ["left", "right"]:
+        if xAxisName in {"bottom", "top"} and yAxisName in {"left", "right"}:
             # use default plotitem if none provided
             plotitem = self.pi
         else:
             # VIEW
             plotitem = PlotItem(parent=self.pi, name=name, *args,
                                 enableMenu=False, **kwargs)  # pass axisitems?
-            # hide all plotitem axis (they vould interfere with viewbox)
-            for axis_orientation in ["left", "bottom", "right", "top"]:
-                plotitem.hideAxis(axis_orientation)
             # fix parent legend not showing child charts
             plotitem.legend = self.pi.legend
             for axis_orientation, pos, axis in [["left", [2, 0], y_axis], ["bottom", [3, 1], x_axis], ["right", [2, 2], y_axis], ["top", [1, 1], x_axis]]:
@@ -134,10 +131,10 @@ class MultiAxisPlotWidget(PlotWidget):
                 # # you can't add the new ones after, it doesn't work for some reason
                 # # hide them instead
                 # plotitem.layout.removeItem(plotitem.layout.itemAt(*pos))
+                # hide all plotitem axis (they vould interfere with viewbox)
+                plotitem.hideAxis(axis_orientation)
                 if axis.orientation == axis_orientation:
                     plotitem.axes[axis_orientation] = {"item": axis, "pos": pos}
-                # hide plotitem axes
-                plotitem.hideAxis(axis_orientation)
         # CHART
         if chart is None:
             chart = PlotDataItem(name=name)
@@ -180,8 +177,6 @@ class MultiAxisPlotWidget(PlotWidget):
         shown_charts = self._show_charts(charts)
         if len(shown_charts) != 0:
             top_level = shown_charts[list(shown_charts)[-1]]
-            # FROM "https://github.com/pyqtgraph/pyqtgraph/pull/2010" by herodotus77
-            # propagate mouse actions to charts "hidden" behind
             for chart in self.charts.values():
                 self._connect_signals(top_level, chart)
         # MOVE LEGEND TO LAYOUT
@@ -254,10 +249,10 @@ class MultiAxisPlotWidget(PlotWidget):
                 axis._linkedView = weakref.ref(chart_vb)
             # FROM AxisItem.linkToView
             # connect view changes to axis changes
-            if axis.orientation in ["right", "left"]:
+            if axis.orientation in {"right", "left"}:
                 signals["chart_vb.sigYRangeChanged"] = chart_vb.sigYRangeChanged.connect(
                     axis.linkedViewChanged)
-            elif axis.orientation in ["top", "bottom"]:
+            elif axis.orientation in {"top", "bottom"}:
                 signals["chart_vb.sigXRangeChanged"] = chart_vb.sigXRangeChanged.connect(
                     axis.linkedViewChanged)
             signals["chart_vb.sigResized"] = chart_vb.sigResized.connect(
@@ -266,7 +261,7 @@ class MultiAxisPlotWidget(PlotWidget):
             if chart_vb is not axis_view:
                 # FROM ViewBox.linkView
                 # connext axis's view changes to view since axis acts just like a proxy to it
-                if axis.orientation in ["top", "bottom"]:
+                if axis.orientation in {"top", "bottom"}:
                     # connect axis main view changes to view
                     chart_vb.state["linkedViews"][chart_vb.XAxis] = weakref.ref(axis_view)
                     # this signal is received multiple times when using mouse actions directly on the viewbox
@@ -278,7 +273,7 @@ class MultiAxisPlotWidget(PlotWidget):
                     # disable autorange on manual movements
                     signals["axis_view.sigXRangeChangedManually"] = axis_view.sigXRangeChangedManually.connect(
                         lambda mask: self.disableAxisAutoRange(axis_name))
-                elif axis.orientation in ["right", "left"]:
+                elif axis.orientation in {"right", "left"}:
                     # connect axis main view changes to view
                     chart_vb.state["linkedViews"][chart_vb.YAxis] = weakref.ref(axis_view)
                     # this signal is received multiple times when using mouse actions directly on the viewbox
@@ -293,8 +288,9 @@ class MultiAxisPlotWidget(PlotWidget):
             chart_vb.sigStateChanged.emit(chart_vb)
         # resize plotitem according to the master one
         # resizing it's view doesn't work for some reason
-        signals["self.vb.sigResized"] = self.vb.sigResized.connect(
-            lambda vb: chart.plotItem.setGeometry(vb.sceneBoundingRect()))
+        if chart.plotItem.vb is not self.vb:
+            signals["self.vb.sigResized"] = self.vb.sigResized.connect(
+                lambda vb: chart.plotItem.setGeometry(vb.sceneBoundingRect()))
         # fix prepareForPaint by outofculture
         signals["scene.sigPrepareForPaint"] = scene.sigPrepareForPaint.connect(
             chart_vb.prepareForPaint)
@@ -374,10 +370,10 @@ class MultiAxisPlotWidget(PlotWidget):
             self.disableAxisAutoRange(axisName)
             axis = self.axes[axisName]
             charts = [self.charts[chart] for chart in axis.charts]
-            if axis.orientation in ["top", "bottom"]:  # IS X AXIS
+            if axis.orientation in {"top", "bottom"}:  # IS X AXIS
                 for chart in charts:
                     chart.plotItem.vb.setXRange(*axisRange, **kwargs)
-            elif axis.orientation in ["left", "right"]:  # IS Y AXIS
+            elif axis.orientation in {"left", "right"}:  # IS Y AXIS
                 for chart in charts:
                     chart.plotItem.vb.setYRange(*axisRange, **kwargs)
 
@@ -387,7 +383,7 @@ class MultiAxisPlotWidget(PlotWidget):
             if axis.autorange:
                 charts = [self.charts[chart] for chart in axis.charts]
                 bounds = []
-                if axis.orientation in ["top", "bottom"]:  # IS X AXIS
+                if axis.orientation in {"top", "bottom"}:  # IS X AXIS
                     for chart in charts:
                         bounds += chart.dataBounds(ViewBox.XAxis)
                     bounds = [bound for bound in bounds if bound is not None]
@@ -395,7 +391,7 @@ class MultiAxisPlotWidget(PlotWidget):
                         for chart in charts:
                             vb = chart.plotItem.vb
                             vb.setXRange(min(bounds), max(bounds))
-                elif axis.orientation in ["left", "right"]:  # IS Y AXIS
+                elif axis.orientation in {"left", "right"}:  # IS Y AXIS
                     for chart in charts:
                         bounds += chart.dataBounds(ViewBox.YAxis)
                     bounds = [bound for bound in bounds if bound is not None]
