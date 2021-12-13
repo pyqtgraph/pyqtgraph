@@ -238,6 +238,7 @@ class MultiAxisPlotWidget(PlotWidget):
 
     def _connect_signals(self, top_level, chart):
         """Connects all signals related to this widget for the given chart given the top level one."""
+        global lambda_workaround_parameters
         self._disconnect_all(chart)
         top_vb = top_level.plotItem.vb
         chart_vb = chart.plotItem.vb
@@ -264,6 +265,12 @@ class MultiAxisPlotWidget(PlotWidget):
             if chart_vb is not axis_view:
                 # FROM ViewBox.linkView
                 # connext axis's view changes to view since axis acts just like a proxy to it
+                lambda_workaround_identifier_1 = uuid().hex
+
+                def lambda_workaround_function_1(mask):
+                    parameters = lambda_workaround_parameters[lambda_workaround_identifier_1]
+                    return parameters[0](*parameters[1], **parameters[2])
+                lambda_workaround_parameters[lambda_workaround_identifier_1] = [self.disableAxisAutoRange, [axis_name], {}]
                 if axis.orientation in {"top", "bottom"}:
                     # connect axis main view changes to view
                     chart_vb.state["linkedViews"][chart_vb.XAxis] = weakref.ref(axis_view)
@@ -274,8 +281,7 @@ class MultiAxisPlotWidget(PlotWidget):
                     signals["axis_view.sigResized"] = axis_view.sigResized.connect(
                         chart_vb.linkedXChanged)
                     # disable autorange on manual movements
-                    signals["axis_view.sigXRangeChangedManually"] = axis_view.sigXRangeChangedManually.connect(
-                        lambda mask: self.disableAxisAutoRange(axis_name))
+                    signals["axis_view.sigXRangeChangedManually"] = axis_view.sigXRangeChangedManually.connect(lambda_workaround_function_1)
                 elif axis.orientation in {"right", "left"}:
                     # connect axis main view changes to view
                     chart_vb.state["linkedViews"][chart_vb.YAxis] = weakref.ref(axis_view)
@@ -286,14 +292,18 @@ class MultiAxisPlotWidget(PlotWidget):
                     signals["axis_view.sigResized"] = axis_view.sigResized.connect(
                         chart_vb.linkedYChanged)
                     # disable autorange on manual movements
-                    signals["axis_view.sigYRangeChangedManually"] = axis_view.sigYRangeChangedManually.connect(
-                        lambda mask: self.disableAxisAutoRange(axis_name))
+                    signals["axis_view.sigYRangeChangedManually"] = axis_view.sigYRangeChangedManually.connect(lambda_workaround_function_1)
             chart_vb.sigStateChanged.emit(chart_vb)
         # resize plotitem according to the master one
         # resizing it's view doesn't work for some reason
         if chart.plotItem.vb is not self.vb:
-            signals["self.vb.sigResized"] = self.vb.sigResized.connect(
-                lambda vb: chart.plotItem.setGeometry(vb.sceneBoundingRect()))
+            lambda_workaround_identifier_2 = uuid().hex
+
+            def lambda_workaround_function_2(vb):
+                parameters = lambda_workaround_parameters[lambda_workaround_identifier_2]
+                return parameters[0](vb.sceneBoundingRect(), *parameters[1], **parameters[2])
+            lambda_workaround_parameters[lambda_workaround_identifier_2] = [chart.plotItem.setGeometry, [], {}]
+            signals["self.vb.sigResized"] = self.vb.sigResized.connect(lambda_workaround_function_2)
         # fix prepareForPaint by outofculture
         signals["scene.sigPrepareForPaint"] = scene.sigPrepareForPaint.connect(
             chart_vb.prepareForPaint)
