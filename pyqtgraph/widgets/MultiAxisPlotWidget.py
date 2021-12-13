@@ -1,6 +1,7 @@
 __all__ = ["MultiAxisPlotWidget"]
 
 import weakref
+from uuid import uuid4 as uuid
 
 from ..graphicsItems.AxisItem import AxisItem
 from ..graphicsItems.PlotDataItem import PlotDataItem
@@ -8,6 +9,8 @@ from ..graphicsItems.PlotItem.PlotItem import PlotItem
 from ..graphicsItems.ViewBox import ViewBox
 from ..Qt.QtCore import QObject
 from ..widgets.PlotWidget import PlotWidget
+
+lambda_workaround_parameters = {}
 
 
 class MultiAxisPlotWidget(PlotWidget):
@@ -189,7 +192,7 @@ class MultiAxisPlotWidget(PlotWidget):
         # SELECT AND ASSEMBLE AXES
         if axes is None:
             axes = self.axes.keys()
-        axes = set(axes)
+        axes = list(dict.fromkeys(axes))
         lo = {
             "left": [],
             "right": [],
@@ -225,8 +228,8 @@ class MultiAxisPlotWidget(PlotWidget):
         # SELECT CHARTS
         if charts is None:
             charts = self.charts.keys()
-        charts = set(charts)
-        for chart in [self.charts[chart_name] for chart_name in self.charts.keys() - charts]:
+        charts = list(dict.fromkeys(charts))
+        for chart in [self.charts[chart_name] for chart_name in self.charts.keys() - set(charts)]:
             chart.hide()
         shown_charts = {chart_name: self.charts[chart_name] for chart_name in charts}
         for chart_name, chart in shown_charts.items():
