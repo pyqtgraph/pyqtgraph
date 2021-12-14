@@ -1,7 +1,6 @@
 __all__ = ["MultiAxisPlotWidget"]
 
 import weakref
-from uuid import uuid4 as uuid
 
 from ..graphicsItems.AxisItem import AxisItem
 from ..graphicsItems.PlotDataItem import PlotDataItem
@@ -10,7 +9,35 @@ from ..graphicsItems.ViewBox import ViewBox
 from ..Qt.QtCore import QObject
 from ..widgets.PlotWidget import PlotWidget
 
-lambda_workaround_parameters = {}
+
+def connect_as_lambda(signal, func, *args, **kwargs):
+    import weakref
+    from inspect import ismethod
+    weakref_args = []
+    for i in range(len(args)):
+        try:
+            weakref_args.append(weakref.ref(args[i]))
+        except TypeError:
+            weakref_args.append(args[i])
+    del args
+    weakref_kwargs = {}
+    for key in list(kwargs.keys()):
+        try:
+            weakref_kwargs[key] = weakref.ref(kwargs[key])
+        except TypeError:
+            weakref_kwargs[key] = kwargs[key]
+    del kwargs
+    if ismethod(func):
+        weakref_obj = weakref.ref(func.__self__)
+        func = func.__func__
+
+        def slot(*a, **kwa):
+            func(weakref_obj(), *[arg() if type(arg) is weakref.ReferenceType else arg for arg in weakref_args], *a, **{kwarg_name: kwarg() if type(kwarg) is weakref.ReferenceType else kwarg for kwarg_name, kwarg in weakref_kwargs.items()}, **kwa)
+    else:
+
+        def slot(*a, **kwa):
+            func(*[arg() if type(arg) is weakref.ReferenceType else arg for arg in weakref_args], *a, **{kwarg_name: kwarg() if type(kwarg) is weakref.ReferenceType else kwarg for kwarg_name, kwarg in weakref_kwargs.items()}, **kwa)
+    return signal.connect(slot)
 
 
 class MultiAxisPlotWidget(PlotWidget):
@@ -23,9 +50,6 @@ class MultiAxisPlotWidget(PlotWidget):
         Also consider calling .update() after updating the chart data.
         Refer to the example named "MultiAxisPlotWidget example" under the "Widgets" section if needed"""
         super().__init__(enableMenu=False, **kargs)
-        global lambda_workaround_parameters
-        self.lambda_workaround_identifiers = set()
-        self.lambda_workaround_parameters = lambda_workaround_parameters
         # plotitem shortcut
         self.pi = super().getPlotItem()
         # default vb from plotItem shortcut
@@ -241,7 +265,6 @@ class MultiAxisPlotWidget(PlotWidget):
 
     def _connect_signals(self, top_level, chart):
         """Connects all signals related to this widget for the given chart given the top level one."""
-        global lambda_workaround_parameters
         self._disconnect_all(chart)
         top_vb = top_level.plotItem.vb
         chart_vb = chart.plotItem.vb
@@ -268,13 +291,6 @@ class MultiAxisPlotWidget(PlotWidget):
             if chart_vb is not axis_view:
                 # FROM ViewBox.linkView
                 # connext axis's view changes to view since axis acts just like a proxy to it
-                lambda_workaround_identifier_1 = uuid().hex
-                self.lambda_workaround_identifiers.add(lambda_workaround_identifier_1)
-
-                def lambda_workaround_function_1(mask):
-                    parameters = lambda_workaround_parameters[lambda_workaround_identifier_1]
-                    return getattr(parameters[0](), parameters[1])(*parameters[2], **parameters[3])
-                lambda_workaround_parameters[lambda_workaround_identifier_1] = [weakref.ref(self), "disableAxisAutoRange", [axis_name], {}]
                 if axis.orientation in {"top", "bottom"}:
                     # connect axis main view changes to view
                     chart_vb.state["linkedViews"][chart_vb.XAxis] = weakref.ref(axis_view)
@@ -285,30 +301,22 @@ class MultiAxisPlotWidget(PlotWidget):
                     signals["axis_view.sigResized"] = axis_view.sigResized.connect(
                         chart_vb.linkedXChanged)
                     # disable autorange on manual movements
-                    signals["axis_view.sigXRangeChangedManually"] = axis_view.sigXRangeChangedManually.connect(lambda_workaround_function_1)
+                    signals["axis_view.sigXRangeChangedManually"] = connect_as_lambda(axis_view.sigXRangeChangedManually, lambda self, axis_name, mask: self.disableAxisAutoRange(axis_name), self, axis_name)
                 elif axis.orientation in {"right", "left"}:
                     # connect axis main view changes to view
                     chart_vb.state["linkedViews"][chart_vb.YAxis] = weakref.ref(axis_view)
                     # this signal is received multiple times when using mouse actions directly on the viewbox
                     # this causes the non top layer views to scroll more than the frontmost one
-                    signals["axis_view.sigYRangeChanged"] = axis_view.sigYRangeChanged.coparameters[0].connect(
-                        chart_vb.linkedYChanged)
+                    signals["axis_view.sigYRangeChanged"] = axis_view.sigYRangeChanged.connect(chart_vb.linkedYChanged)
                     signals["axis_view.sigResized"] = axis_view.sigResized.connect(
                         chart_vb.linkedYChanged)
                     # disable autorange on manual movements
-                    signals["axis_view.sigYRangeChangedManually"] = axis_view.sigYRangeChangedManually.connect(lambda_workaround_function_1)
+                    signals["axis_view.sigYRangeChangedManually"] = connect_as_lambda(axis_view.sigYRangeChangedManually, lambda self, axis_name, mask: self.disableAxisAutoRange(axis_name), self, axis_name)
             chart_vb.sigStateChanged.emit(chart_vb)
         # resize plotitem according to the master one
         # resizing it's view doesn't work for some reason
         if chart.plotItem.vb is not self.vb:
-            lambda_workaround_identifier_2 = uuid().hex
-            self.lambda_workaround_identifiers.add(lambda_workaround_identifier_2)
-
-            def lambda_workaround_function_2(vb):
-                parameters = lambda_workaround_parameters[lambda_workaround_identifier_2]
-                return getattr(parameters[0](), parameters[1])(vb.sceneBoundingRect(), *parameters[2], **parameters[3])
-            lambda_workaround_parameters[lambda_workaround_identifier_2] = [weakref.ref(chart.plotItem), "setGeometry", [], {}]
-            signals["self.vb.sigResized"] = self.vb.sigResized.connect(lambda_workaround_function_2)
+            signals["self.vb.sigResized"] = connect_as_lambda(self.vb.sigResized, lambda self, chart, vb: chart.plotItem.setGeometry(vb.sceneBoundingRect()), self, chart)
         # fix prepareForPaint by outofculture
         signals["scene.sigPrepareForPaint"] = scene.sigPrepareForPaint.connect(
             chart_vb.prepareForPaint)
