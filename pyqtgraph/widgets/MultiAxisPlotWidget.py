@@ -23,6 +23,9 @@ class MultiAxisPlotWidget(PlotWidget):
         Also consider calling .update() after updating the chart data.
         Refer to the example named "MultiAxisPlotWidget example" under the "Widgets" section if needed"""
         super().__init__(enableMenu=False, **kargs)
+        global lambda_workaround_parameters
+        self.lambda_workaround_identifiers = set()
+        self.lambda_workaround_parameters = lambda_workaround_parameters
         # plotitem shortcut
         self.pi = super().getPlotItem()
         # default vb from plotItem shortcut
@@ -266,11 +269,12 @@ class MultiAxisPlotWidget(PlotWidget):
                 # FROM ViewBox.linkView
                 # connext axis's view changes to view since axis acts just like a proxy to it
                 lambda_workaround_identifier_1 = uuid().hex
+                self.lambda_workaround_identifiers.add(lambda_workaround_identifier_1)
 
                 def lambda_workaround_function_1(mask):
                     parameters = lambda_workaround_parameters[lambda_workaround_identifier_1]
-                    return parameters[0](*parameters[1], **parameters[2])
-                lambda_workaround_parameters[lambda_workaround_identifier_1] = [self.disableAxisAutoRange, [axis_name], {}]
+                    return getattr(parameters[0](), parameters[1])(*parameters[2], **parameters[3])
+                lambda_workaround_parameters[lambda_workaround_identifier_1] = [weakref.ref(self), "disableAxisAutoRange", [axis_name], {}]
                 if axis.orientation in {"top", "bottom"}:
                     # connect axis main view changes to view
                     chart_vb.state["linkedViews"][chart_vb.XAxis] = weakref.ref(axis_view)
@@ -287,7 +291,7 @@ class MultiAxisPlotWidget(PlotWidget):
                     chart_vb.state["linkedViews"][chart_vb.YAxis] = weakref.ref(axis_view)
                     # this signal is received multiple times when using mouse actions directly on the viewbox
                     # this causes the non top layer views to scroll more than the frontmost one
-                    signals["axis_view.sigYRangeChanged"] = axis_view.sigYRangeChanged.connect(
+                    signals["axis_view.sigYRangeChanged"] = axis_view.sigYRangeChanged.coparameters[0].connect(
                         chart_vb.linkedYChanged)
                     signals["axis_view.sigResized"] = axis_view.sigResized.connect(
                         chart_vb.linkedYChanged)
@@ -298,11 +302,12 @@ class MultiAxisPlotWidget(PlotWidget):
         # resizing it's view doesn't work for some reason
         if chart.plotItem.vb is not self.vb:
             lambda_workaround_identifier_2 = uuid().hex
+            self.lambda_workaround_identifiers.add(lambda_workaround_identifier_2)
 
             def lambda_workaround_function_2(vb):
                 parameters = lambda_workaround_parameters[lambda_workaround_identifier_2]
-                return parameters[0](vb.sceneBoundingRect(), *parameters[1], **parameters[2])
-            lambda_workaround_parameters[lambda_workaround_identifier_2] = [chart.plotItem.setGeometry, [], {}]
+                return getattr(parameters[0](), parameters[1])(vb.sceneBoundingRect(), *parameters[2], **parameters[3])
+            lambda_workaround_parameters[lambda_workaround_identifier_2] = [weakref.ref(chart.plotItem), "setGeometry", [], {}]
             signals["self.vb.sigResized"] = self.vb.sigResized.connect(lambda_workaround_function_2)
         # fix prepareForPaint by outofculture
         signals["scene.sigPrepareForPaint"] = scene.sigPrepareForPaint.connect(
