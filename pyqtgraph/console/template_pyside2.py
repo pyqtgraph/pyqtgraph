@@ -30,6 +30,7 @@ class Ui_Form(object):
         self.layoutWidget = QWidget(self.splitter)
         self.layoutWidget.setObjectName(u"layoutWidget")
         self.verticalLayout = QVBoxLayout(self.layoutWidget)
+        self.verticalLayout.setSpacing(4)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.output = QPlainTextEdit(self.layoutWidget)
@@ -44,6 +45,7 @@ class Ui_Form(object):
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setContentsMargins(6, -1, -1, -1)
         self.input = CmdInput(self.layoutWidget)
         self.input.setObjectName(u"input")
 
