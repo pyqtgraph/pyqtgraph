@@ -26,15 +26,6 @@ if __name__ == '__main__':
                 sys.path.pop()
             sys.path.extend(path)
 
-    pyqtapis = opts.pop('pyqtapis', None)
-    if pyqtapis is not None:
-        try:
-            from PyQt5 import sip
-        except ImportError:
-            import sip
-            for k,v in pyqtapis.items():
-                sip.setapi(k, v)
-        
     qt_lib = opts.pop('qt_lib', None)
     if qt_lib is not None:
         globals()[qt_lib] = importlib.import_module(qt_lib)

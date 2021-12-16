@@ -73,8 +73,9 @@ class Process(RemoteEventHandler):
                         for a python bug: http://bugs.python.org/issue3905
                         but has the side effect that child output is significantly
                         delayed relative to the parent output.
-        pyqtapis        Optional dictionary of PyQt API version numbers to set before
-                        importing pyqtgraph in the remote process.
+        pyqtapis        Formerly optional dictionary of PyQt API version numbers to set
+                        before importing pyqtgraph in the remote process.
+                        No longer has any effect.
         ==============  =============================================================
         """
         if target is None:
@@ -156,7 +157,6 @@ class Process(RemoteEventHandler):
             path=sysPath, 
             qt_lib=QT_LIB,
             debug=procDebug,
-            pyqtapis=pyqtapis,
             )
         pickle.dump(data, self.proc.stdin)
         self.proc.stdin.close()
