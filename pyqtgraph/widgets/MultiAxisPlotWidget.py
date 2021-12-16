@@ -1,5 +1,6 @@
 __all__ = ["MultiAxisPlotWidget"]
 
+import types
 import weakref
 
 from ..graphicsItems.AxisItem import AxisItem
@@ -10,34 +11,43 @@ from ..Qt.QtCore import QObject
 from ..widgets.PlotWidget import PlotWidget
 
 
-def connect_as_lambda(signal, func, *args, **kwargs):
-    import weakref
-    from inspect import ismethod
-    weakref_args = []
-    for i in range(len(args)):
-        try:
-            weakref_args.append(weakref.ref(args[i]))
-        except TypeError:
-            weakref_args.append(args[i])
-    del args
-    weakref_kwargs = {}
-    for key in list(kwargs.keys()):
-        try:
-            weakref_kwargs[key] = weakref.ref(kwargs[key])
-        except TypeError:
-            weakref_kwargs[key] = kwargs[key]
-    del kwargs
-    if ismethod(func):
-        weakref_obj = weakref.ref(func.__self__)
-        func = func.__func__
+class weakref_transparent_wrapper:
+    def __new__(cls, obj):
+        if hasattr(obj, "__weakref__"):
+            return super().__new__(cls)
+        else:
+            return obj
 
-        def slot(*a, **kwa):
-            func(weakref_obj(), *[arg() if type(arg) is weakref.ReferenceType else arg for arg in weakref_args], *a, **{kwarg_name: kwarg() if type(kwarg) is weakref.ReferenceType else kwarg for kwarg_name, kwarg in weakref_kwargs.items()}, **kwa)
-    else:
+    def __init__(self, obj):
+        weak_obj = weakref.ref(obj)
+        del obj
+        object.__setattr__(self, "__obj", weak_obj)
 
-        def slot(*a, **kwa):
-            func(*[arg() if type(arg) is weakref.ReferenceType else arg for arg in weakref_args], *a, **{kwarg_name: kwarg() if type(kwarg) is weakref.ReferenceType else kwarg for kwarg_name, kwarg in weakref_kwargs.items()}, **kwa)
-    return signal.connect(slot)
+    def __getattribute__(self, name):
+        if name != "__init__":
+            obj = object.__getattribute__(self, "__obj")
+            if type(obj) is weakref.ReferenceType:
+                obj = obj()
+            return obj.__getattribute__(name)
+        else:
+            return object.__getattribute__(self, name)
+
+
+def connect_as_lambda(signal, func):
+    func = types.FunctionType(
+        code=func.__code__,
+        globals=func.__globals__,
+        # globals={
+        #     var_name: weakref_transparent_wrapper(var)
+        #     if var_name in set(func.__code__.co_freevars + func.__code__.co_names + func.__code__.co_cellvars) else var
+        #     for var_name, var in func.__globals__.items()
+        # },
+        name=func.__name__,
+        argdefs=func.__defaults__,
+        closure=tuple(types.CellType(weakref_transparent_wrapper(cell.cell_contents)) for cell in func.__closure__)
+    )
+
+    return signal.connect(func)
 
 
 class MultiAxisPlotWidget(PlotWidget):
@@ -301,7 +311,7 @@ class MultiAxisPlotWidget(PlotWidget):
                     signals["axis_view.sigResized"] = axis_view.sigResized.connect(
                         chart_vb.linkedXChanged)
                     # disable autorange on manual movements
-                    signals["axis_view.sigXRangeChangedManually"] = connect_as_lambda(axis_view.sigXRangeChangedManually, lambda self, axis_name, mask: self.disableAxisAutoRange(axis_name), self, axis_name)
+                    signals["axis_view.sigXRangeChangedManually"] = connect_as_lambda(axis_view.sigXRangeChangedManually, lambda mask: self.disableAxisAutoRange(axis_name))
                 elif axis.orientation in {"right", "left"}:
                     # connect axis main view changes to view
                     chart_vb.state["linkedViews"][chart_vb.YAxis] = weakref.ref(axis_view)
@@ -311,12 +321,12 @@ class MultiAxisPlotWidget(PlotWidget):
                     signals["axis_view.sigResized"] = axis_view.sigResized.connect(
                         chart_vb.linkedYChanged)
                     # disable autorange on manual movements
-                    signals["axis_view.sigYRangeChangedManually"] = connect_as_lambda(axis_view.sigYRangeChangedManually, lambda self, axis_name, mask: self.disableAxisAutoRange(axis_name), self, axis_name)
+                    signals["axis_view.sigYRangeChangedManually"] = connect_as_lambda(axis_view.sigYRangeChangedManually, lambda mask: self.disableAxisAutoRange(axis_name))
             chart_vb.sigStateChanged.emit(chart_vb)
         # resize plotitem according to the master one
         # resizing it's view doesn't work for some reason
         if chart.plotItem.vb is not self.vb:
-            signals["self.vb.sigResized"] = connect_as_lambda(self.vb.sigResized, lambda self, chart, vb: chart.plotItem.setGeometry(vb.sceneBoundingRect()), self, chart)
+            signals["self.vb.sigResized"] = connect_as_lambda(self.vb.sigResized, lambda vb: chart.plotItem.setGeometry(vb.sceneBoundingRect()))
         # fix prepareForPaint by outofculture
         signals["scene.sigPrepareForPaint"] = scene.sigPrepareForPaint.connect(
             chart_vb.prepareForPaint)
