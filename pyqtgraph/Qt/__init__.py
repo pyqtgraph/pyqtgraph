@@ -34,7 +34,7 @@ if QT_LIB is not None:
 ## is already imported. If not, then attempt to import in the order
 ## specified in libOrder.
 if QT_LIB is None:
-    libOrder = [PYQT5, PYSIDE2, PYSIDE6, PYQT6]
+    libOrder = [PYQT6, PYSIDE6, PYQT5, PYSIDE2]
 
     for lib in libOrder:
         if lib in sys.modules:
