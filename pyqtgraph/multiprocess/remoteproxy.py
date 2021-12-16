@@ -78,12 +78,11 @@ class RemoteEventHandler(object):
             'returnType': 'auto',    ## 'proxy', 'value', 'auto'
             'autoProxy': False,      ## bool
             'deferGetattr': False,   ## True, False
-            'noProxyTypes': [ type(None), str, int, float, tuple, list, dict, LocalObjectProxy, ObjectProxy ],
+            'noProxyTypes': [
+                type(None), str, bytes, int, float, tuple, list, dict,
+                LocalObjectProxy, ObjectProxy,
+            ],
         }
-        if int(sys.version[0]) < 3:
-            self.proxyOptions['noProxyTypes'].append(unicode)
-        else:
-            self.proxyOptions['noProxyTypes'].append(bytes)
         
         self.optsLock = threading.RLock()
         
