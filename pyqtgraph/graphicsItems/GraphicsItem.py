@@ -408,8 +408,7 @@ class GraphicsItem(object):
         return self.mapToView(self.mapFromParent(self.pos()))
     
     def parentItem(self):
-        ## PyQt bug -- some items are returned incorrectly.
-        return GraphicsScene.translateGraphicsItem(self._qtBaseClass.parentItem(self))
+        return self._qtBaseClass.parentItem(self)
         
     def setParentItem(self, parent):
         ## Workaround for Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
@@ -420,8 +419,7 @@ class GraphicsItem(object):
         return self._qtBaseClass.setParentItem(self, parent)
     
     def childItems(self):
-        ## PyQt bug -- some child items are returned incorrectly.
-        return list(map(GraphicsScene.translateGraphicsItem, self._qtBaseClass.childItems(self)))
+        return self._qtBaseClass.childItems(self)
 
 
     def sceneTransform(self):
