@@ -1,7 +1,4 @@
-from ..Qt import QT_LIB, QtWidgets
-
-if QT_LIB.startswith('PyQt'):
-    from ..Qt import sip
+from ..Qt import QtWidgets
 
 from .GraphicsItem import GraphicsItem
 
@@ -38,9 +35,4 @@ class GraphicsObject(GraphicsItem, QtWidgets.QGraphicsObject):
             if inform_view_on_change and change in [self.GraphicsItemChange.ItemPositionHasChanged, self.GraphicsItemChange.ItemTransformHasChanged]:
                 self.informViewBoundsChanged()
             
-        ## workaround for pyqt bug:
-        ## http://www.riverbankcomputing.com/pipermail/pyqt/2012-August/031818.html
-        if QT_LIB == 'PyQt5' and change == self.GraphicsItemChange.ItemParentChange and isinstance(ret, QtWidgets.QGraphicsItem):
-            ret = sip.cast(ret, QtWidgets.QGraphicsItem)
-
         return ret
