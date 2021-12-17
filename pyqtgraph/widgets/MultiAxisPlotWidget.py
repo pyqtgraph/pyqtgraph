@@ -28,7 +28,7 @@ class weakref_transparent_wrapper:
             obj = object.__getattribute__(self, "__obj")
             if type(obj) is weakref.ReferenceType:
                 obj = obj()
-            return obj.__getattribute__(name)
+            return getattr(obj, name)
         else:
             return object.__getattribute__(self, name)
 
@@ -46,7 +46,6 @@ def connect_as_lambda(signal, func):
         argdefs=func.__defaults__,
         closure=tuple(types.CellType(weakref_transparent_wrapper(cell.cell_contents)) for cell in func.__closure__)
     )
-
     return signal.connect(func)
 
 
