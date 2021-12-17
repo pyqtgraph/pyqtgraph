@@ -68,6 +68,7 @@ class MultiAxisPlotWidget(PlotWidget):
         # CHARTS
         self.axes = {}
         self.charts = {}
+        self.plot_items = {}
         self._signalConnectionsByChart = {}
 
     def addAxis(self, name, *args, axis=None, **kwargs):
@@ -179,7 +180,7 @@ class MultiAxisPlotWidget(PlotWidget):
             chart = PlotDataItem(name=name)
         plotitem.addItem(chart)
         # keep plotitem inside chart
-        chart.plotItem = plotitem
+        self.plot_items[chart.name] = plotitem
         # keeptrack of connections
         if chart.name not in self._signalConnectionsByChart:
             self._signalConnectionsByChart[chart.name] = {}
@@ -218,9 +219,6 @@ class MultiAxisPlotWidget(PlotWidget):
             top_level = shown_charts[list(shown_charts)[-1]]
             for chart in self.charts.values():
                 self._connect_signals(top_level, chart)
-        # MOVE LEGEND TO LAYOUT
-        if self.pi.legend is not None:
-            self.pi.legend.setParentItem(self.pi)
         self.update()
 
     def _show_axes(self, axes=None):
@@ -275,8 +273,8 @@ class MultiAxisPlotWidget(PlotWidget):
     def _connect_signals(self, top_level, chart):
         """Connects all signals related to this widget for the given chart given the top level one."""
         self._disconnect_all(chart)
-        top_vb = top_level.plotItem.vb
-        chart_vb = chart.plotItem.vb
+        top_vb = self.plot_items[top_level.name].vb
+        chart_vb = self.plot_items[chart.name].vb
         signals = self._signalConnectionsByChart[chart.name]
         scene = self.scene()
         for axis_name in chart.axes:
@@ -324,8 +322,8 @@ class MultiAxisPlotWidget(PlotWidget):
             chart_vb.sigStateChanged.emit(chart_vb)
         # resize plotitem according to the master one
         # resizing it's view doesn't work for some reason
-        if chart.plotItem.vb is not self.vb:
-            signals["self.vb.sigResized"] = connect_as_lambda(self.vb.sigResized, lambda vb: chart.plotItem.setGeometry(vb.sceneBoundingRect()))
+        if self.plot_items[chart.name].vb is not self.vb:
+            signals["self.vb.sigResized"] = connect_as_lambda(self.vb.sigResized, lambda vb: self.plot_items[chart.name].setGeometry(vb.sceneBoundingRect()))
         # fix prepareForPaint by outofculture
         signals["scene.sigPrepareForPaint"] = scene.sigPrepareForPaint.connect(
             chart_vb.prepareForPaint)
@@ -371,7 +369,7 @@ class MultiAxisPlotWidget(PlotWidget):
         if name is None:
             return self.pi
         else:
-            return self.charts[name].plotItem
+            return self.plot_items[self.charts[name].name]
 
     def setAxisRange(self, axisName, axisRange=None, **kwargs):
         """Sets the axisRange of the axis with given name.
@@ -407,10 +405,10 @@ class MultiAxisPlotWidget(PlotWidget):
             charts = [self.charts[chart] for chart in axis.charts]
             if axis.orientation in {"top", "bottom"}:  # IS X AXIS
                 for chart in charts:
-                    chart.plotItem.vb.setXRange(*axisRange, **kwargs)
+                    self.plot_items[chart.name].vb.setXRange(*axisRange, **kwargs)
             elif axis.orientation in {"left", "right"}:  # IS Y AXIS
                 for chart in charts:
-                    chart.plotItem.vb.setYRange(*axisRange, **kwargs)
+                    self.plot_items[chart.name].vb.setYRange(*axisRange, **kwargs)
 
     def update(self):
         """Updates all charts' contents."""
@@ -424,7 +422,7 @@ class MultiAxisPlotWidget(PlotWidget):
                     bounds = [bound for bound in bounds if bound is not None]
                     if len(bounds) > 0:
                         for chart in charts:
-                            vb = chart.plotItem.vb
+                            vb = self.plot_items[chart.name].vb
                             vb.setXRange(min(bounds), max(bounds))
                 elif axis.orientation in {"left", "right"}:  # IS Y AXIS
                     for chart in charts:
@@ -432,7 +430,7 @@ class MultiAxisPlotWidget(PlotWidget):
                     bounds = [bound for bound in bounds if bound is not None]
                     if len(bounds) > 0:
                         for chart in charts:
-                            vb = chart.plotItem.vb
+                            vb = self.plot_items[chart.name].vb
                             vb.setYRange(min(bounds), max(bounds))
         super().update()
 
