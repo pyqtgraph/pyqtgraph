@@ -11,26 +11,26 @@ from ..Qt.QtCore import QObject
 from ..widgets.PlotWidget import PlotWidget
 
 
-class weakref_transparent_wrapper:
+class weakref_transparent_wrapper(QObject):
     def __new__(cls, obj):
         if hasattr(obj, "__weakref__"):
-            return super().__new__(cls)
+            return QObject.__new__(cls)
         else:
             return obj
 
     def __init__(self, obj):
         weak_obj = weakref.ref(obj)
         del obj
-        object.__setattr__(self, "__obj", weak_obj)
+        QObject.__setattr__(self, "__obj", weak_obj)
 
     def __getattribute__(self, name):
         if name != "__init__":
-            obj = object.__getattribute__(self, "__obj")
+            obj = QObject.__getattribute__(self, "__obj")
             if type(obj) is weakref.ReferenceType:
                 obj = obj()
             return getattr(obj, name)
         else:
-            return object.__getattribute__(self, name)
+            return QObject.__getattribute__(self, name)
 
 
 def connect_as_lambda(signal, func):
@@ -39,7 +39,7 @@ def connect_as_lambda(signal, func):
         globals=func.__globals__,
         # globals={
         #     var_name: weakref_transparent_wrapper(var)
-        #     if var_name in set(func.__code__.co_freevars + func.__code__.co_names + func.__code__.co_cellvars) else var
+        #     # if var_name in set(func.__code__.co_freevars + func.__code__.co_names + func.__code__.co_cellvars) else var
         #     for var_name, var in func.__globals__.items()
         # },
         name=func.__name__,
