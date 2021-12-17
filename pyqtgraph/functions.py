@@ -3243,6 +3243,19 @@ def connect_lambda(bound_signal, self, func, **kwargs):
     passing self as argument avoid lambda "leaks".
     from: `Kovid Goyal <https://riverbankcomputing.com/pipermail/pyqt/2018-July/040604.html>`_
     Example: connect_lambda(signal, self, lambda self, arg: self.method(arg))
+    
+    Saving a rereference to an object inside the
+    object itself or one of it's children creates a
+    reference loop that breaks garbage collection.
+    Method instances (like self.disableAxisAutoRange)
+    store a reference to self.
+    Lambdas and dynamic functions also store references
+    to the objects used inside them.
+    This means that using self in lambdas or dynamic
+    functions and using them as slots will break
+    garbage collection because PySide and PyQt store
+    the slots connected to signals in a way that
+    break garbage collection too.
 
     Parameters
     ----------

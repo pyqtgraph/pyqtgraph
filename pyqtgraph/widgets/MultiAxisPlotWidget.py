@@ -270,11 +270,11 @@ class MultiAxisPlotWidget(PlotWidget):
                     signals[axis_view.sigResized, chart_vb.linkedXChanged] = axis_view.sigResized.connect(
                         chart_vb.linkedXChanged)
                     # disable autorange on manual movements
-                    # using a method instances (like self.disableAxisAutoRange)
-                    # stores a reference to self and doing this creates a self
-                    # referencing loop that breaks garbage collection
-                    # like using self in lambdas does
-                    # using this lambda with ref as a workaround
+                    # using this lambda with ref here as a workaround
+                    # using connect_lambda here as a workaround
+                    # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
+                    # signals[axis_view.sigXRangeChangedManually, self.disableAxisAutoRange] =  # THIS BREAKS GARBAGE COLLECTION
+                    #     axis_view.sigXRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))  # THIS BREAKS GARBAGE COLLECTION
                     ref = weakref.ref(self)
                     signals[axis_view.sigXRangeChangedManually, lambda *args, **kwargs: ref().disableAxisAutoRange(*args, **kwargs)] = connect_lambda(axis_view.sigXRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
                 elif axis.orientation in {"right", "left"}:
@@ -286,12 +286,11 @@ class MultiAxisPlotWidget(PlotWidget):
                     signals[axis_view.sigResized, chart_vb.linkedYChanged] = axis_view.sigResized.connect(
                         chart_vb.linkedYChanged)
                     # disable autorange on manual movements
-                    # disable autorange on manual movements
-                    # using a method instances (like self.disableAxisAutoRange)
-                    # stores a reference to self and doing this creates a self
-                    # referencing loop that breaks garbage collection
-                    # like using self in lambdas does
-                    # using this lambda with ref as a workaround
+                    # using this lambda with ref here as a workaround
+                    # using connect_lambda here as a workaround
+                    # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
+                    # signals[axis_view.sigYRangeChangedManually, self.disableAxisAutoRange] =  # THIS BREAKS GARBAGE COLLECTION
+                    #     axis_view.sigYRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))  # THIS BREAKS GARBAGE COLLECTION
                     ref = weakref.ref(self)
                     signals[axis_view.sigYRangeChangedManually, lambda *args, **kwargs: ref().disableAxisAutoRange(*args, **kwargs)] = connect_lambda(axis_view.sigYRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
             chart_vb.sigStateChanged.emit(chart_vb)
@@ -299,6 +298,8 @@ class MultiAxisPlotWidget(PlotWidget):
         # resizing it's view doesn't work for some reason
         if self.plot_items[chart.name].vb is not self.vb:
             chart_pi = self.plot_items[chart.name]
+            # using connect_lambda here as a workaround
+            # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
             signals[self.vb.sigResized, chart_pi.setGeometry] = connect_lambda(self.vb.sigResized, chart_pi, lambda chart_pi, vb: chart_pi.setGeometry(vb.sceneBoundingRect()))
         # fix prepareForPaint by outofculture
         signals[scene.sigPrepareForPaint, chart_vb.prepareForPaint] = scene.sigPrepareForPaint.connect(
