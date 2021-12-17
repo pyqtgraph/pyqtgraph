@@ -285,7 +285,7 @@ class MultiAxisPlotWidget(PlotWidget):
         # resize plotitem according to the master one
         # resizing it's view doesn't work for some reason
         if self.plot_items[chart.name].vb is not self.vb:
-            signals["self.vb.sigResized"] = self.vb.sigResized.connect(lambda vb: self.plot_items[chart.name].setGeometry(vb.sceneBoundingRect()))
+            signals["self.vb.sigResized"] = connect_lambda(self.vb.sigResized, self.plot_items[chart.name], lambda chart_pi, vb: chart_pi.setGeometry(vb.sceneBoundingRect()))
         # fix prepareForPaint by outofculture
         signals["scene.sigPrepareForPaint"] = scene.sigPrepareForPaint.connect(
             chart_vb.prepareForPaint)
