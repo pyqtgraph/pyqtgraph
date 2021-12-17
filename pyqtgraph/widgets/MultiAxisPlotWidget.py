@@ -249,12 +249,12 @@ class MultiAxisPlotWidget(PlotWidget):
             # FROM AxisItem.linkToView
             # connect view changes to axis changes
             if axis.orientation in {"right", "left"}:
-                signals["chart_vb.sigYRangeChanged"] = chart_vb.sigYRangeChanged.connect(
+                signals[chart_vb.sigYRangeChanged, axis.linkedViewChanged] = chart_vb.sigYRangeChanged.connect(
                     axis.linkedViewChanged)
             elif axis.orientation in {"top", "bottom"}:
-                signals["chart_vb.sigXRangeChanged"] = chart_vb.sigXRangeChanged.connect(
+                signals[chart_vb.sigXRangeChanged, axis.linkedViewChanged] = chart_vb.sigXRangeChanged.connect(
                     axis.linkedViewChanged)
-            signals["chart_vb.sigResized"] = chart_vb.sigResized.connect(
+            signals[chart_vb.sigResized, axis.linkedViewChanged] = chart_vb.sigResized.connect(
                 axis.linkedViewChanged)
             axis_view = axis.linkedView()
             if chart_vb is not axis_view:
@@ -265,38 +265,52 @@ class MultiAxisPlotWidget(PlotWidget):
                     chart_vb.state["linkedViews"][chart_vb.XAxis] = weakref.ref(axis_view)
                     # this signal is received multiple times when using mouse actions directly on the viewbox
                     # this causes the non top layer views to scroll more than the frontmost one
-                    signals["axis_view.sigXRangeChanged"] = axis_view.sigXRangeChanged.connect(
+                    signals[axis_view.sigXRangeChanged, chart_vb.linkedXChanged] = axis_view.sigXRangeChanged.connect(
                         chart_vb.linkedXChanged)
-                    signals["axis_view.sigResized"] = axis_view.sigResized.connect(
+                    signals[axis_view.sigResized, chart_vb.linkedXChanged] = axis_view.sigResized.connect(
                         chart_vb.linkedXChanged)
                     # disable autorange on manual movements
-                    signals["axis_view.sigXRangeChangedManually"] = connect_lambda(axis_view.sigXRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
+                    # using a method instances (like self.disableAxisAutoRange)
+                    # stores a reference to self and doing this creates a self
+                    # referencing loop that breaks garbage collection
+                    # like using self in lambdas does
+                    # using this lambda with ref as a workaround
+                    ref = weakref.ref(self)
+                    signals[axis_view.sigXRangeChangedManually, lambda *args, **kwargs: ref().disableAxisAutoRange(*args, **kwargs)] = connect_lambda(axis_view.sigXRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
                 elif axis.orientation in {"right", "left"}:
                     # connect axis main view changes to view
                     chart_vb.state["linkedViews"][chart_vb.YAxis] = weakref.ref(axis_view)
                     # this signal is received multiple times when using mouse actions directly on the viewbox
                     # this causes the non top layer views to scroll more than the frontmost one
-                    signals["axis_view.sigYRangeChanged"] = axis_view.sigYRangeChanged.connect(chart_vb.linkedYChanged)
-                    signals["axis_view.sigResized"] = axis_view.sigResized.connect(
+                    signals[axis_view.sigYRangeChanged, chart_vb.linkedYChanged] = axis_view.sigYRangeChanged.connect(chart_vb.linkedYChanged)
+                    signals[axis_view.sigResized, chart_vb.linkedYChanged] = axis_view.sigResized.connect(
                         chart_vb.linkedYChanged)
                     # disable autorange on manual movements
-                    signals["axis_view.sigYRangeChangedManually"] = connect_lambda(axis_view.sigYRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
+                    # disable autorange on manual movements
+                    # using a method instances (like self.disableAxisAutoRange)
+                    # stores a reference to self and doing this creates a self
+                    # referencing loop that breaks garbage collection
+                    # like using self in lambdas does
+                    # using this lambda with ref as a workaround
+                    ref = weakref.ref(self)
+                    signals[axis_view.sigYRangeChangedManually, lambda *args, **kwargs: ref().disableAxisAutoRange(*args, **kwargs)] = connect_lambda(axis_view.sigYRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
             chart_vb.sigStateChanged.emit(chart_vb)
         # resize plotitem according to the master one
         # resizing it's view doesn't work for some reason
         if self.plot_items[chart.name].vb is not self.vb:
-            signals["self.vb.sigResized"] = connect_lambda(self.vb.sigResized, self.plot_items[chart.name], lambda chart_pi, vb: chart_pi.setGeometry(vb.sceneBoundingRect()))
+            chart_pi = self.plot_items[chart.name]
+            signals[self.vb.sigResized, chart_pi.setGeometry] = connect_lambda(self.vb.sigResized, chart_pi, lambda chart_pi, vb: chart_pi.setGeometry(vb.sceneBoundingRect()))
         # fix prepareForPaint by outofculture
-        signals["scene.sigPrepareForPaint"] = scene.sigPrepareForPaint.connect(
+        signals[scene.sigPrepareForPaint, chart_vb.prepareForPaint] = scene.sigPrepareForPaint.connect(
             chart_vb.prepareForPaint)
         if chart_vb is not top_vb:
             # FROM "https://github.com/pyqtgraph/pyqtgraph/pull/2010" by herodotus77
             # propagate mouse actions to charts "hidden" behind
-            signals["top_vb.sigMouseDragged"] = top_vb.sigMouseDragged.connect(
+            signals[top_vb.sigMouseDragged, chart_vb.mouseDragEvent] = top_vb.sigMouseDragged.connect(
                 chart_vb.mouseDragEvent)
-            signals["top_vb.sigMouseWheel"] = top_vb.sigMouseWheel.connect(
+            signals[top_vb.sigMouseWheel, chart_vb.wheelEvent] = top_vb.sigMouseWheel.connect(
                 chart_vb.wheelEvent)
-            signals["top_vb.sigHistoryChanged"] = top_vb.sigHistoryChanged.connect(
+            signals[top_vb.sigHistoryChanged, chart_vb.scaleHistory] = top_vb.sigHistoryChanged.connect(
                 chart_vb.scaleHistory)
 
     def _disconnect_all(self, chart):

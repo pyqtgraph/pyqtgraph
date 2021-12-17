@@ -3242,14 +3242,16 @@ def connect_lambda(bound_signal, self, func, **kwargs):
     """Convenience function for connecting a function to a signal
     passing self as argument avoid lambda "leaks".
     from: `Kovid Goyal <https://riverbankcomputing.com/pipermail/pyqt/2018-July/040604.html>`_
+    Example: connect_lambda(signal, self, lambda self, arg: self.method(arg))
 
     Parameters
     ----------
-    bound_signal : QSsignal
+    bound_signal : QSignal
         The signal to connect func to.
     self : object
-        The axis to be used. If left as None a new AxisItem will be created
-        and it's name parameter set.
+        The object to be passed to the func.
+        It will be wrapped transparently in a weakref
+        to resolve garbage collection issues.
     func : callable
         The callable to connect to bound_signal.
         Should expect at least one parameter: self.
