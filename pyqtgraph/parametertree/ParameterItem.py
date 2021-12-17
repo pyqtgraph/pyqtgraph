@@ -14,7 +14,7 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
     
     For more ParameterItem types, see ParameterTree.parameterTypes module.
     """
-    
+
     def __init__(self, param, depth=0):
         QtWidgets.QTreeWidgetItem.__init__(self, [param.title(), ''])
 
@@ -158,7 +158,12 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
 
     def titleChanged(self):
         # called when the user-visble title has changed (either opts['title'], or name if title is None)
-        self.setText(0, self.param.title())
+
+        title = self.param.title()
+        # This makes sure that items without a title or the title 'params' remain invisible
+        if not title or title == 'params':
+            return
+        self.setText(0, title)
         fm = QtGui.QFontMetrics(self.font(0))
         textFlags = QtCore.Qt.TextFlag.TextSingleLine
         size = fm.size(textFlags, self.text(0))
