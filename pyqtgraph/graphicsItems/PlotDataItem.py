@@ -199,7 +199,7 @@ class PlotDataItem(GraphicsObject):
 
             ============ ==============================================================================
         
-        ``connect`` supports the follwoing arguments:
+        ``connect`` supports the following arguments:
         
         - 'all' connects all points.  
         - 'pairs' generates lines between every other point.
@@ -228,7 +228,7 @@ class PlotDataItem(GraphicsObject):
                          specified in data coordinates.
             ============ ======================================================
             
-        Any symbol recognized by :class:`PlotCurveItem <pyqtgraph.PlotCurveItem>` can be specified,
+        Any symbol recognized by :class:`ScatterPlotItem <pyqtgraph.ScatterPlotItem>` can be specified,
         including 'o' (circle), 's' (square), 't', 't1', 't2', 't3' (triangles of different orientation),
         'd' (diamond), '+' (plus sign), 'x' (x mark), 'p' (pentagon), 'h' (hexagon) and 'star'.
         
@@ -251,7 +251,7 @@ class PlotDataItem(GraphicsObject):
                               multiple line segments per pixel. This can improve performance when
                               viewing very high-density data, but increases the initial overhead
                               and memory usage.
-            clipToView        (bool) If `True`, only data visible within the X range ofthe containing 
+            clipToView        (bool) If `True`, only data visible within the X range of the containing
                               :class:`ViewBox` is plotted. This can improve performance when plotting
                               very large data sets where only a fraction of the data is visible
                               at any time.
@@ -264,7 +264,7 @@ class PlotDataItem(GraphicsObject):
                               factor (the default is 3.0) before the limit calculation is repeated.
             skipFiniteCheck   (bool, default `False`) Optimization flag that can speed up plotting by not 
                               checking and compensating for NaN values.  If set to `True`, and NaN 
-                              values exist, unpredicatable behavior will occur. The data may not be
+                              values exist, unpredictable behavior will occur. The data may not be
                               displayed or the plot may take a significant performance hit.
                               
                               In the default 'auto' connect mode, `PlotDataItem` will apply this 
@@ -289,7 +289,7 @@ class PlotDataItem(GraphicsObject):
         Since version 0.12.4, this slowdown is automatically avoided by an algorithm that draws line segments
         separately for fully opaque lines. Setting `alpha` < 1 reverts to the previous, slower drawing method.
         
-        For lines with a wdith of more than 4 pixels, :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>` will automatically
+        For lines with a width of more than 4 pixels, :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>` will automatically
         create a ``QPen`` with `Qt.PenCapStyle.RoundCap` to ensure a smooth connection of line segments. This incurs a
         small performance penalty.
 
@@ -424,14 +424,14 @@ class PlotDataItem(GraphicsObject):
     def setLogMode(self, xState, yState):
         """
         When log mode is enabled for the respective axis by setting ``xState`` or 
-        ``yState`` to `True, a mapping according to ``mapped = np.log10( value )`` 
+        ``yState`` to `True`, a mapping according to ``mapped = np.log10( value )``
         is applied to the data. For negative or zero values, this results in a 
         `NaN` value.
         """
         if self.opts['logMode'] == [xState, yState]:
             return
         self.opts['logMode'] = [xState, yState]
-        self._datasetMapped  = None  # invalidata mapped data
+        self._datasetMapped  = None  # invalidate mapped data
         self._datasetDisplay = None  # invalidate display data
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
@@ -445,7 +445,7 @@ class PlotDataItem(GraphicsObject):
         if self.opts['derivativeMode'] == state:
             return
         self.opts['derivativeMode'] = state
-        self._datasetMapped  = None  # invalidata mapped data
+        self._datasetMapped  = None  # invalidate mapped data
         self._datasetDisplay = None  # invalidate display data
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
@@ -460,7 +460,7 @@ class PlotDataItem(GraphicsObject):
         if self.opts['phasemapMode'] == state:
             return
         self.opts['phasemapMode'] = state
-        self._datasetMapped  = None  # invalidata mapped data
+        self._datasetMapped  = None  # invalidate mapped data
         self._datasetDisplay = None  # invalidate display data
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
@@ -880,8 +880,8 @@ class PlotDataItem(GraphicsObject):
             self.opts['pen'] is not None 
             or (self.opts['fillBrush'] is not None and self.opts['fillLevel'] is not None)
             ): # draw if visible...
-            # print('connect is', curveArgs['connect'], 'expect nonfinites:', dataset.containsNonfinite)
-            if curveArgs['connect'] == 'auto': # auto-switch to indicate non-finite values as interruptions in the curve
+            # auto-switch to indicate non-finite values as interruptions in the curve:
+            if isinstance(curveArgs['connect'], str) and curveArgs['connect'] == 'auto': # connect can also take a boolean array
                 if dataset.containsNonfinite is None:
                     curveArgs['connect'] = 'all' # this is faster, but silently connects the curve across any non-finite values
                 else:

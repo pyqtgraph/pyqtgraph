@@ -14,6 +14,7 @@ import numpy  # # pyqtgraph requires numpy
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt and PySide.
+from .colors import palette
 from .Qt import QtCore, QtGui, QtWidgets
 from .Qt import exec_ as exec
 from .Qt import mkQApp
@@ -464,3 +465,20 @@ def stack(*args, **kwds):
     except NameError:
         consoles = [c]
     return c
+
+
+def setPalette(app, style):
+    if isinstance(style, str):
+        style = style.lower()
+        if style == 'qdarkstylelight':
+            p = palette.getQDarkStyleLightQPalette()
+        elif style in ['qdarkstyle','qdarkstyledark']:
+            p = palette.getQDarkStyleDarkQPalette()
+        else:
+            raise ValueError(f'no palette by the name {style} exists')
+    elif isinstance(style, QtGui.QPalette):
+        p = style
+    else:
+        raise TypeError('style either be a string or QPalette')
+    app.paletteChanged.emit(p)
+    app.setPalette(p)

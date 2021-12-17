@@ -12,6 +12,7 @@ import re
 import struct
 import sys
 import warnings
+import weakref
 from collections import OrderedDict
 
 import numpy as np
@@ -3235,3 +3236,45 @@ class SignalBlock(object):
     def __exit__(self, *args):
         if self.reconnect:
             self.signal.connect(self.slot)
+
+
+def connect_lambda(bound_signal, self, func, **kwargs):
+    """Convenience function for connecting a function to a signal
+    passing self as argument avoid lambda "leaks".
+    from: `Kovid Goyal <https://riverbankcomputing.com/pipermail/pyqt/2018-July/040604.html>`_
+
+    Parameters
+    ----------
+    bound_signal : QSsignal
+        The signal to connect func to.
+    self : object
+        The axis to be used. If left as None a new AxisItem will be created
+        and it's name parameter set.
+    func : callable
+        The callable to connect to bound_signal.
+        Should expect at least one parameter: self.
+        The function will be called like this: func(self, *args),
+        args are the parameters passed by the signal.
+    kwargs : dict, optional
+        extra keyword arguments to be passed to the .connect method
+        of the bound_signal.
+
+    Returns
+    -------
+    Connection
+        The newly created Connection QMetaObject
+        returned by the .connect method of the bound_signal.
+    """
+    ref = weakref.ref(self)
+    num_signal_args = func.__code__.co_argcount - 1
+    if num_signal_args < 0:
+        raise TypeError("lambda must take at least one argument")
+
+    def slot(*args):
+        ctx = ref()
+        if ctx is not None:
+            if len(args) != num_signal_args:
+                args = args[:num_signal_args]
+            func(ctx, *args)
+
+    return bound_signal.connect(slot, **kwargs)
