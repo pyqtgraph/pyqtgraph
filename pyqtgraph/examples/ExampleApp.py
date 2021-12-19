@@ -299,6 +299,9 @@ def unnestedDict(exDict):
 
 
 class ExampleLoader(QtWidgets.QMainWindow):
+    # update qtLibCombo item order to match bindings in the UI file and recreate
+    # the templates files if you change bindings.
+    bindings = {'PyQt6': 0, 'PySide6': 1, 'PyQt5': 2, 'PySide2': 3}
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         self.ui = ui_template.Ui_Form()
@@ -320,6 +323,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
         textFil = self.ui.exampleFilter
         self.curListener = None
         self.ui.exampleFilter.setFocus()
+        self.ui.qtLibCombo.setCurrentIndex(self.bindings[QT_LIB])
 
         def onComboChanged(searchType):
             if self.curListener is not None:
