@@ -25,7 +25,12 @@
         <widget class="QComboBox" name="qtLibCombo">
          <item>
           <property name="text">
-           <string>default</string>
+           <string>PyQt6</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PySide6</string>
           </property>
          </item>
          <item>
@@ -36,16 +41,6 @@
          <item>
           <property name="text">
            <string>PySide2</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>PySide6</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>PyQt6</string>
           </property>
          </item>
         </widget>
@@ -105,6 +100,7 @@
         <widget class="QLabel" name="loadedFileLabel">
          <property name="font">
           <font>
+           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
