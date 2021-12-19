@@ -57,7 +57,7 @@ class Ui_Form(object):
         self.loadedFileLabel = QtWidgets.QLabel(self.layoutWidget1)
         font = QtGui.QFont()
         font.setBold(True)
-        font.setWeight(75)
+        # font.setWeight(75)
         self.loadedFileLabel.setFont(font)
         self.loadedFileLabel.setText("")
         self.loadedFileLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
