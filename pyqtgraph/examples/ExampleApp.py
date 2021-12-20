@@ -7,6 +7,8 @@ from argparse import Namespace
 from collections import OrderedDict
 from functools import lru_cache
 
+import pkg_resources
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
@@ -302,6 +304,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
     # update qtLibCombo item order to match bindings in the UI file and recreate
     # the templates files if you change bindings.
     bindings = {'PyQt6': 0, 'PySide6': 1, 'PyQt5': 2, 'PySide2': 3}
+    modules = tuple(m.project_name for m in pkg_resources.working_set)
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         self.ui = ui_template.Ui_Form()
@@ -357,6 +360,17 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.ui.exampleTree.itemDoubleClicked.connect(self.loadFile)
         self.ui.codeView.textChanged.connect(self.onTextChange)
         self.codeBtn.clicked.connect(self.runEditedCode)
+
+    def showEvent(self, event) -> None:
+        super(ExampleLoader, self).showEvent(event)
+        disabledColor = pg.mkColor(QtCore.Qt.GlobalColor.red)
+        for name, idx in self.bindings.items():
+            disableBinding = name not in self.modules
+            if disableBinding:
+                item = self.ui.qtLibCombo.model().item(idx)
+                item.setData(disabledColor, QtCore.Qt.ItemDataRole.ForegroundRole)
+                item.setEnabled(False)
+                item.setToolTip(f'{item.text()} is not installed')
 
     def onTextChange(self):
         """
