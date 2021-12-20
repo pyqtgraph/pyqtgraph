@@ -502,14 +502,8 @@ class ExampleLoader(QtWidgets.QMainWindow):
         return None
 
     def loadFile(self, edited=False):
-
-        qtLib = str(self.ui.qtLibCombo.currentText())
-
-        env = None
-        if qtLib != 'default':
-            env = dict(os.environ, PYQTGRAPH_QT_LIB=qtLib)
-        else:
-            env = dict(os.environ)
+        qtLib = self.ui.qtLibCombo.currentText()
+        env = dict(os.environ, PYQTGRAPH_QT_LIB=qtLib)
         example_path = os.path.abspath(os.path.dirname(__file__))
         path = os.path.dirname(os.path.dirname(example_path))
         env['PYTHONPATH'] = f'{path}'
