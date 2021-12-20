@@ -328,6 +328,11 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.ui.exampleFilter.setFocus()
         self.ui.qtLibCombo.setCurrentIndex(self.bindings[QT_LIB])
 
+        fm = QtGui.QFontMetrics(self.ui.codeView.font())
+        tabWidth = fm.horizontalAdvance(' ' * 4)
+        # the default value is 80 pixels! that's more than 2x what we want.
+        self.ui.codeView.setTabStopDistance(tabWidth)
+
         def onComboChanged(searchType):
             if self.curListener is not None:
                 self.curListener.disconnect()
