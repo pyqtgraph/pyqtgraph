@@ -244,7 +244,6 @@ def mkColor(*args):
      "#RGBA"         previously allowed use without prefix is deprecated and 
      "#RRGGBB"       will be removed in 0.13
      "#RRGGBBAA"
-     Qt.GlobalColor
      QColor          QColor instance; makes a copy.
     ================ ================================================
     """
@@ -310,8 +309,6 @@ def mkColor(*args):
                 raise TypeError(err)
         elif np.issubdtype(type(args[0]), np.integer):
             return intColor(args[0])
-        elif isinstance(args[0], QtCore.Qt.GlobalColor):
-            return QtGui.QColor(args[0])
         else:
             raise TypeError(err)
     elif len(args) == 3:
