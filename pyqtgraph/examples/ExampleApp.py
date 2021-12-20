@@ -328,10 +328,6 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.ui.exampleFilter.setFocus()
         self.ui.qtLibCombo.setCurrentIndex(self.bindings[QT_LIB])
 
-        fm = QtGui.QFontMetrics(self.ui.codeView.font())
-        tabWidth = fm.horizontalAdvance(' ' * 4)
-        # the default value is 80 pixels! that's more than 2x what we want.
-        self.ui.codeView.setTabStopDistance(tabWidth)
 
         def onComboChanged(searchType):
             if self.curListener is not None:
@@ -365,6 +361,16 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.ui.exampleTree.itemDoubleClicked.connect(self.loadFile)
         self.ui.codeView.textChanged.connect(self.onTextChange)
         self.codeBtn.clicked.connect(self.runEditedCode)
+        self.updateCodeViewTabWidth(self.ui.codeView.font())
+
+    def updateCodeViewTabWidth(self,font):
+        """
+        Change the codeView tabStopDistance to 4 spaces based on the size of the current font
+        """
+        fm = QtGui.QFontMetrics(font)
+        tabWidth = fm.horizontalAdvance(' ' * 4)
+        # the default value is 80 pixels! that's more than 2x what we want.
+        self.ui.codeView.setTabStopDistance(tabWidth)
 
     def showEvent(self, event) -> None:
         super(ExampleLoader, self).showEvent(event)
@@ -573,6 +579,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
             # Reset to original size
             font.setPointSize(10)
         self.ui.codeView.setFont(font)
+        self.updateCodeViewTabWidth(font)
         event.accept()
 
 def main():
