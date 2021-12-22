@@ -22,28 +22,7 @@
      <widget class="QWidget" name="layoutWidget">
       <layout class="QGridLayout" name="gridLayout">
        <item row="4" column="1">
-        <widget class="QComboBox" name="qtLibCombo">
-         <item>
-          <property name="text">
-           <string>PyQt6</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>PySide6</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>PyQt5</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>PySide2</string>
-          </property>
-         </item>
-        </widget>
+        <widget class="QComboBox" name="qtLibCombo"/>
        </item>
        <item row="6" column="1">
         <widget class="QPushButton" name="loadBtn">
@@ -100,6 +79,7 @@
         <widget class="QLabel" name="loadedFileLabel">
          <property name="font">
           <font>
+           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
