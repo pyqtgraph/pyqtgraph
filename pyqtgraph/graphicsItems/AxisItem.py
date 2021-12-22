@@ -1,3 +1,4 @@
+import functools
 import warnings
 import weakref
 from math import ceil, floor, isfinite, log, log10
@@ -21,7 +22,21 @@ class AxisItem(GraphicsWidget):
     If maxTickLength is negative, ticks point into the plot.
     """
 
-    def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
+    def __init__(
+        self,
+        orientation,
+        pen=None,
+        textPen=None,
+        linkView=None,
+        parent=None,
+        maxTickLength=-5,
+        showValues=True,
+        text='',
+        units='',
+        unitPrefix='',
+        lru_cache_tick_strings: bool = True,
+        **args,
+    ):
         """
         =============== ===============================================================
         **Arguments:**
@@ -113,8 +128,9 @@ class AxisItem(GraphicsWidget):
             self._linkToView_internal(linkView)
 
         self.grid = False
-        
-        #self.setCacheMode(self.DeviceCoordinateCache)
+
+        if lru_cache_tick_strings:
+            self.tickStrings = functools.lru_cache(maxsize=2**20)(self.tickStrings)
 
     def setStyle(self, **kwds):
         """
@@ -903,7 +919,10 @@ class AxisItem(GraphicsWidget):
         be drawn, then generates from this a set of drawing commands to be
         interpreted by drawPicture().
         """
-        profiler = debug.Profiler()
+        profiler = debug.Profiler(
+            disabled=False,
+            delayed=False,
+        )
         if self.style['tickFont'] is not None:
             p.setFont(self.style['tickFont'])
         bounds = self.mapRectFromParent(self.geometry())
@@ -1034,7 +1053,6 @@ class AxisItem(GraphicsWidget):
                 tickSpecs.append((tickPen, Point(p1), Point(p2)))
         profiler('compute ticks')
 
-
         if self.style['stopAxisAtTick'][0] is True:
             minTickPosition = min(map(min, tickPositions))
             if axis == 0:
@@ -1075,17 +1093,22 @@ class AxisItem(GraphicsWidget):
             ## Get the list of strings to display for this level
             if tickStrings is None:
                 spacing, values = tickLevels[i]
-                strings = self.tickStrings(values, self.autoSIPrefixScale * self.scale, spacing)
+
+                strings = self.tickStrings(
+                    tuple(values),
+                    self.autoSIPrefixScale * self.scale,
+                    spacing,
+                )
             else:
                 strings = tickStrings[i]
 
             if len(strings) == 0:
                 continue
 
-            ## ignore strings belonging to ticks that were previously ignored
-            for j in range(len(strings)):
-                if tickPositions[i][j] is None:
-                    strings[j] = None
+            # ignore strings belonging to ticks that were previously ignored
+            # for j in range(len(strings)):
+            #     if tickPositions[i][j] is None:
+            #         strings[j] = None
 
             ## Measure density of text; decide whether to draw this level
             rects = []
