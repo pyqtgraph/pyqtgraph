@@ -7,7 +7,7 @@ from ..graphicsItems.AxisItem import AxisItem
 from ..graphicsItems.PlotDataItem import PlotDataItem
 from ..graphicsItems.PlotItem.PlotItem import PlotItem
 from ..graphicsItems.ViewBox import ViewBox
-from ..Qt.QtCore import QObject
+from ..Qt.QtCore import QObject, QSignalMapper
 from ..widgets.PlotWidget import PlotWidget
 
 
@@ -249,12 +249,12 @@ class MultiAxisPlotWidget(PlotWidget):
             # FROM AxisItem.linkToView
             # connect view changes to axis changes
             if axis.orientation in {"right", "left"}:
-                signals[chart_vb.sigYRangeChanged, axis.linkedViewChanged] = chart_vb.sigYRangeChanged.connect(
+                signals["propagate chart range to axis"] = chart_vb.sigYRangeChanged.connect(
                     axis.linkedViewChanged)
             elif axis.orientation in {"top", "bottom"}:
-                signals[chart_vb.sigXRangeChanged, axis.linkedViewChanged] = chart_vb.sigXRangeChanged.connect(
+                signals["propagate chart range to axis"] = chart_vb.sigXRangeChanged.connect(
                     axis.linkedViewChanged)
-            signals[chart_vb.sigResized, axis.linkedViewChanged] = chart_vb.sigResized.connect(
+            signals["propagate chart resize to axis"] = chart_vb.sigResized.connect(
                 axis.linkedViewChanged)
             axis_view = axis.linkedView()
             if chart_vb is not axis_view:
@@ -265,34 +265,30 @@ class MultiAxisPlotWidget(PlotWidget):
                     chart_vb.state["linkedViews"][chart_vb.XAxis] = weakref.ref(axis_view)
                     # this signal is received multiple times when using mouse actions directly on the viewbox
                     # this causes the non top layer views to scroll more than the frontmost one
-                    signals[axis_view.sigXRangeChanged, chart_vb.linkedXChanged] = axis_view.sigXRangeChanged.connect(
+                    signals["propagate axis range to chart"] = axis_view.sigXRangeChanged.connect(
                         chart_vb.linkedXChanged)
-                    signals[axis_view.sigResized, chart_vb.linkedXChanged] = axis_view.sigResized.connect(
+                    signals["propagate axis resize to chart"] = axis_view.sigResized.connect(
                         chart_vb.linkedXChanged)
                     # disable autorange on manual movements
-                    # using this lambda with ref here as a workaround
                     # using connect_lambda here as a workaround
                     # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
-                    # signals[axis_view.sigXRangeChangedManually, self.disableAxisAutoRange] =  # THIS BREAKS GARBAGE COLLECTION
+                    # signals["disable axis autorange on axis manual change"] =
                     #     axis_view.sigXRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))  # THIS BREAKS GARBAGE COLLECTION
-                    ref = weakref.ref(self)
-                    signals[axis_view.sigXRangeChangedManually, lambda *args, **kwargs: ref().disableAxisAutoRange(*args, **kwargs)] = connect_lambda(axis_view.sigXRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
+                    signals["disable axis autorange on axis manual change"] = connect_lambda(axis_view.sigXRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
                 elif axis.orientation in {"right", "left"}:
                     # connect axis main view changes to view
                     chart_vb.state["linkedViews"][chart_vb.YAxis] = weakref.ref(axis_view)
                     # this signal is received multiple times when using mouse actions directly on the viewbox
                     # this causes the non top layer views to scroll more than the frontmost one
-                    signals[axis_view.sigYRangeChanged, chart_vb.linkedYChanged] = axis_view.sigYRangeChanged.connect(chart_vb.linkedYChanged)
-                    signals[axis_view.sigResized, chart_vb.linkedYChanged] = axis_view.sigResized.connect(
+                    signals["propagate axis range to chart"] = axis_view.sigYRangeChanged.connect(chart_vb.linkedYChanged)
+                    signals["propagate axis resize to chart"] = axis_view.sigResized.connect(
                         chart_vb.linkedYChanged)
                     # disable autorange on manual movements
-                    # using this lambda with ref here as a workaround
                     # using connect_lambda here as a workaround
                     # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
-                    # signals[axis_view.sigYRangeChangedManually, self.disableAxisAutoRange] =  # THIS BREAKS GARBAGE COLLECTION
+                    # signals["disable axis autorange on axis manual change"] =
                     #     axis_view.sigYRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))  # THIS BREAKS GARBAGE COLLECTION
-                    ref = weakref.ref(self)
-                    signals[axis_view.sigYRangeChangedManually, lambda *args, **kwargs: ref().disableAxisAutoRange(*args, **kwargs)] = connect_lambda(axis_view.sigYRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
+                    signals["disable axis autorange on axis manual change"] = connect_lambda(axis_view.sigYRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
             chart_vb.sigStateChanged.emit(chart_vb)
         # resize plotitem according to the master one
         # resizing it's view doesn't work for some reason
@@ -300,18 +296,18 @@ class MultiAxisPlotWidget(PlotWidget):
             chart_pi = self.plot_items[chart.name]
             # using connect_lambda here as a workaround
             # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
-            signals[self.vb.sigResized, chart_pi.setGeometry] = connect_lambda(self.vb.sigResized, chart_pi, lambda chart_pi, vb: chart_pi.setGeometry(vb.sceneBoundingRect()))
+            signals["propagate default vb resize to chart"] = connect_lambda(self.vb.sigResized, chart_pi, lambda chart_pi, vb: chart_pi.setGeometry(vb.sceneBoundingRect()))
         # fix prepareForPaint by outofculture
-        signals[scene.sigPrepareForPaint, chart_vb.prepareForPaint] = scene.sigPrepareForPaint.connect(
+        signals["propagate default scene prepare_for_paint to chart"] = scene.sigPrepareForPaint.connect(
             chart_vb.prepareForPaint)
         if chart_vb is not top_vb:
             # FROM "https://github.com/pyqtgraph/pyqtgraph/pull/2010" by herodotus77
             # propagate mouse actions to charts "hidden" behind
-            signals[top_vb.sigMouseDragged, chart_vb.mouseDragEvent] = top_vb.sigMouseDragged.connect(
+            signals["propagate top level mouse drag interaction to chart"] = top_vb.sigMouseDragged.connect(
                 chart_vb.mouseDragEvent)
-            signals[top_vb.sigMouseWheel, chart_vb.wheelEvent] = top_vb.sigMouseWheel.connect(
+            signals["propagate top level mouse wheel interaction to chart"] = top_vb.sigMouseWheel.connect(
                 chart_vb.wheelEvent)
-            signals[top_vb.sigHistoryChanged, chart_vb.scaleHistory] = top_vb.sigHistoryChanged.connect(
+            signals["propagate top level history changes interaction to chart"] = top_vb.sigHistoryChanged.connect(
                 chart_vb.scaleHistory)
 
     def _disconnect_all(self, chart):
