@@ -5,7 +5,6 @@ This module exists to smooth out some of the differences between Qt versions.
 * Allow you to import QtCore/QtGui from pyqtgraph.Qt without specifying which Qt wrapper
   you want to use.
 """
-
 import os
 import re
 import subprocess
@@ -43,8 +42,9 @@ if QT_LIB is None:
 
 if QT_LIB is None:
     for lib in libOrder:
+        qt = lib + '.QtCore'
         try:
-            __import__(lib)
+            __import__(qt)
             QT_LIB = lib
             break
         except ImportError:
