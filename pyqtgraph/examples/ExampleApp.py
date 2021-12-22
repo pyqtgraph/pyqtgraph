@@ -325,6 +325,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
         textFil = self.ui.exampleFilter
         self.curListener = None
         self.ui.exampleFilter.setFocus()
+        self.ui.qtLibCombo.addItems(self.bindings.keys())
         self.ui.qtLibCombo.setCurrentIndex(self.bindings[QT_LIB])
 
 
