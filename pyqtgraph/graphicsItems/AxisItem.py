@@ -1094,11 +1094,11 @@ class AxisItem(GraphicsWidget):
             if tickStrings is None:
                 spacing, values = tickLevels[i]
 
-                strings = self.tickStrings(
+                strings = list(self.tickStrings(
                     tuple(values),
                     self.autoSIPrefixScale * self.scale,
                     spacing,
-                )
+                ))
             else:
                 strings = tickStrings[i]
 
@@ -1106,9 +1106,9 @@ class AxisItem(GraphicsWidget):
                 continue
 
             # ignore strings belonging to ticks that were previously ignored
-            # for j in range(len(strings)):
-            #     if tickPositions[i][j] is None:
-            #         strings[j] = None
+            for j in range(len(strings)):
+                if tickPositions[i][j] is None:
+                    strings[j] = None
 
             ## Measure density of text; decide whether to draw this level
             rects = []
