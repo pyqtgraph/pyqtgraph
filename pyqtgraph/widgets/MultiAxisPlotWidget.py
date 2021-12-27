@@ -7,7 +7,7 @@ from ..graphicsItems.AxisItem import AxisItem
 from ..graphicsItems.PlotDataItem import PlotDataItem
 from ..graphicsItems.PlotItem.PlotItem import PlotItem
 from ..graphicsItems.ViewBox import ViewBox
-from ..Qt.QtCore import QObject, QSignalMapper
+from ..Qt.QtCore import QObject
 from ..widgets.PlotWidget import PlotWidget
 
 
@@ -23,12 +23,17 @@ class MultiAxisPlotWidget(PlotWidget):
         super().__init__(enableMenu=False, **kargs)
         # plotitem shortcut
         self.pi = super().getPlotItem()
+        # override autorange button behaviour
+        self.pi.autoBtn.clicked.disconnect()
+        connect_lambda(self.pi.autoBtn.clicked, self, lambda self, button: (self.enableAxisAutoRange(), self.update()))
         # default vb from plotItem shortcut
         self.vb = self.pi.vb
         # layout shortcut
         self.layout = self.pi.layout
         # CHARTS
         self.axes = {}
+        # select custom behaviour
+        self.pi.extra_axes = self.axes
         self.charts = {}
         self.plot_items = {}
         self._signalConnectionsByChart = {}
@@ -56,6 +61,8 @@ class MultiAxisPlotWidget(PlotWidget):
         AxisItem
             The newly created AxisItem.
         """
+        if name is None:
+            raise AssertionError("Axis name should not be None")
         if axis is None:
             axis = AxisItem(*args, **kwargs)
         axis.name = name
@@ -103,6 +110,8 @@ class MultiAxisPlotWidget(PlotWidget):
         PlotItem
             The newly created PlotItem.
         """
+        if name is None:
+            raise AssertionError("Chart name should not be None")
         if xAxisName not in self.axes:
             if xAxisName in {"bottom", "top"}:
                 # add default axis to the list of axes if requested
@@ -126,6 +135,8 @@ class MultiAxisPlotWidget(PlotWidget):
             # VIEW
             plotitem = PlotItem(parent=self.pi, name=name, *args,
                                 enableMenu=False, **kwargs)  # pass axisitems?
+            # disable buttons (autoranging)
+            plotitem.hideButtons()
             # fix parent legend not showing child charts
             plotitem.legend = self.pi.legend
             for axis_orientation, pos, axis in [["left", [2, 0], y_axis], ["bottom", [3, 1], x_axis], ["right", [2, 2], y_axis], ["top", [1, 1], x_axis]]:
@@ -407,7 +418,7 @@ class MultiAxisPlotWidget(PlotWidget):
                             vb.setYRange(min(bounds), max(bounds))
         super().update()
 
-    def enableAxisAutoRange(self, axisName):
+    def enableAxisAutoRange(self, axisName=None):
         """Enables autorange for the axis with given name.
 
         Parameters
@@ -415,9 +426,13 @@ class MultiAxisPlotWidget(PlotWidget):
         axisName : str
             The name of the axis to select.
         """
-        self.axes[axisName].autorange = True
+        if axisName is not None:
+            self.axes[axisName].autorange = True
+        else:
+            for axis in self.axes.values():
+                axis.autorange = True
 
-    def disableAxisAutoRange(self, axisName):
+    def disableAxisAutoRange(self, axisName=None):
         """Disables autorange for the axis with given name.
 
         Parameters
@@ -425,4 +440,8 @@ class MultiAxisPlotWidget(PlotWidget):
         axisName : str
             The name of the axis to select.
         """
-        self.axes[axisName].autorange = False
+        if axisName is not None:
+            self.axes[axisName].autorange = False
+        else:
+            for axis in self.axes.values():
+                axis.autorange = False

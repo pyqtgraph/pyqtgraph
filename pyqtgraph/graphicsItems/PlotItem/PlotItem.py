@@ -22,7 +22,6 @@ from ..PlotDataItem import PlotDataItem
 from ..ScatterPlotItem import ScatterPlotItem
 from ..ViewBox import ViewBox
 
-
 translate = QtCore.QCoreApplication.translate
 
 ui_template = importlib.import_module(
@@ -123,6 +122,7 @@ class PlotItem(GraphicsWidget):
         self.autoBtn.clicked.connect(self.autoBtnClicked)
         self.buttonsHidden = False ## whether the user has requested buttons to be hidden
         self.mouseHovering = False
+        self.extra_axes = None
         
         self.layout = QtWidgets.QGraphicsGridLayout()
         self.layout.setContentsMargins(1,1,1,1)
@@ -697,7 +697,7 @@ class PlotItem(GraphicsWidget):
         A call like `plot.addColorBar(img, colorMap='viridis')` is a convenient
         method to assign and show a color map.
         """
-        from ..ColorBarItem import ColorBarItem # avoid circular import
+        from ..ColorBarItem import ColorBarItem  # avoid circular import
         bar = ColorBarItem(**kargs)
         bar.setImageItem( image, insert_in=self )
         return bar
@@ -1297,10 +1297,16 @@ class PlotItem(GraphicsWidget):
         
     def updateButtons(self):
         try:
-            if self._exportOpts is False and self.mouseHovering and not self.buttonsHidden and not all(self.vb.autoRangeEnabled()):
-                self.autoBtn.show()
+            if self.extra_axes is None:
+                if self._exportOpts is False and self.mouseHovering and not self.buttonsHidden and not all(self.vb.autoRangeEnabled()):
+                    self.autoBtn.show()
+                else:
+                    self.autoBtn.hide()
             else:
-                self.autoBtn.hide()
+                if self._exportOpts is False and self.mouseHovering and not self.buttonsHidden and not all(axis.autorange for axis in self.extra_axes.values()):
+                    self.autoBtn.show()
+                else:
+                    self.autoBtn.hide()
         except RuntimeError:
             pass  # this can happen if the plot has been deleted.
             
