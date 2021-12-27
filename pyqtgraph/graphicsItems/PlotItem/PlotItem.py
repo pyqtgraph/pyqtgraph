@@ -288,11 +288,15 @@ class PlotItem(GraphicsWidget):
         locals()[m] = _create_method(m)
         
     del _create_method
-    
-    def setAxisItems(self, axisItems=None):
+
+    def setAxisItems(
+        self,
+        axisItems=None,
+        add_to_layout: bool = True,
+    ):
         """
         Place axis items as given by `axisItems`. Initializes non-existing axis items.
-        
+
         ==============  ==========================================================================================
         **Arguments:**
         *axisItems*     Optional dictionary instructing the PlotItem to use pre-constructed items
@@ -300,27 +304,27 @@ class PlotItem(GraphicsWidget):
                         and the values must be instances of AxisItem (or at least compatible with AxisItem).
         ==============  ==========================================================================================
         """
-        
+
         if axisItems is None:
             axisItems = {}
-        
+
         # Array containing visible axis items
         # Also containing potentially hidden axes, but they are not touched so it does not matter
         visibleAxes = ['left', 'bottom']
         visibleAxes.extend(axisItems.keys()) # Note that it does not matter that this adds
                                              # some values to visibleAxes a second time
-        
+
         for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
             if k in self.axes:
                 if k not in axisItems:
                     continue # Nothing to do here
-                
+
                 # Remove old axis
                 oldAxis = self.axes[k]['item']
                 self.layout.removeItem(oldAxis)
                 oldAxis.scene().removeItem(oldAxis)
                 oldAxis.unlinkFromView()
-            
+
             # Create new axis
             if k in axisItems:
                 axis = axisItems[k]
@@ -330,19 +334,24 @@ class PlotItem(GraphicsWidget):
                             "Can't add an axis to multiple plots. Shared axes"
                             " can be achieved with multiple AxisItem instances"
                             " and set[X/Y]Link.")
-            else:
-                axis = AxisItem(orientation=k, parent=self)
-            
-            # Set up new axis
-            axis.linkToView(self.vb)
-            self.axes[k] = {'item': axis, 'pos': pos}
-            self.layout.addItem(axis, *pos)
-            # place axis above images at z=0, items that want to draw over the axes should be placed at z>=1:
-            axis.setZValue(0.5) 
-            axis.setFlag(axis.GraphicsItemFlag.ItemNegativeZStacksBehindParent)           
-            axisVisible = k in visibleAxes
-            self.showAxis(k, axisVisible)
-        
+            # else:
+            #     axis = AxisItem(orientation=k, parent=self)
+
+                # Set up new axis
+                axis.linkToView(self.vb)
+                self.axes[k] = {'item': axis, 'pos': pos}
+
+                # NOTE: in the overlay case the axis may be added to some
+                # other layout and should not be added here.
+                if add_to_layout:
+                    self.layout.addItem(axis, *pos)
+
+                # place axis above images at z=0, items that want to draw over the axes should be placed at z>=1:
+                axis.setZValue(0.5)
+                axis.setFlag(axis.GraphicsItemFlag.ItemNegativeZStacksBehindParent)
+                axisVisible = k in visibleAxes
+                self.showAxis(k, axisVisible)
+
     def setLogMode(self, x=None, y=None):
         """
         Set log scaling for `x` and/or `y` axes.
