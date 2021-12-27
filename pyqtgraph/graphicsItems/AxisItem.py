@@ -72,6 +72,7 @@ class AxisItem(GraphicsWidget):
             'maxTickLevel': 2,
             'maxTextLevel': 2,
             'tickAlpha': None,  ## If not none, use this alpha for all ticks.
+            'labelMargin': [5, 0],  # label margin : [between label and axis ticks, between label and axis external edge]
         }
 
         self.textWidth = 30  ## Keeps track of maximum width / height of tick text
@@ -259,7 +260,6 @@ class AxisItem(GraphicsWidget):
         #s = self.size()
 
         ## Set the position of the label
-        nudge = 5
         if self.label is None: # self.label is set to None on close, but resize events can still occur.
             self.picture = None
             return
@@ -267,17 +267,17 @@ class AxisItem(GraphicsWidget):
         br = self.label.boundingRect()
         p = QtCore.QPointF(0, 0)
         if self.orientation == 'left':
-            p.setY(int(self.size().height()/2 + br.width()/2))
-            p.setX(-nudge)
+            p.setY(int(self.size().height() / 2 + br.width() / 2))
+            p.setX(-self.style['labelMargin'][0] + self.style['labelMargin'][1])
         elif self.orientation == 'right':
-            p.setY(int(self.size().height()/2 + br.width()/2))
-            p.setX(int(self.size().width()-br.height()+nudge))
+            p.setY(int(self.size().height() / 2 + br.width() / 2))
+            p.setX(int(self.size().width() - br.height() + self.style['labelMargin'][0] - self.style['labelMargin'][1]))
         elif self.orientation == 'top':
-            p.setY(-nudge)
-            p.setX(int(self.size().width()/2. - br.width()/2.))
+            p.setY(-self.style['labelMargin'][0] + self.style['labelMargin'][1])
+            p.setX(int(self.size().width() / 2. - br.width() / 2.))
         elif self.orientation == 'bottom':
-            p.setX(int(self.size().width()/2. - br.width()/2.))
-            p.setY(int(self.size().height()-br.height()+nudge))
+            p.setX(int(self.size().width() / 2. - br.width() / 2.))
+            p.setY(int(self.size().height() - br.height() + self.style['labelMargin'][0] - self.style['labelMargin'][1]))
         self.label.setPos(p)
         self.picture = None
 
@@ -406,7 +406,8 @@ class AxisItem(GraphicsWidget):
                 h += self.style['tickTextOffset'][1] if self.style['showValues'] else 0
                 h += max(0, self.style['tickLength'])
                 if self.label.isVisible():
-                    h += self.label.boundingRect().height() * 0.8
+                    # bounding rect is usually an overestimate
+                    h += self.label.boundingRect().height() * 0.8 + sum(self.style['labelMargin'])
             else:
                 h = self.fixedHeight
 
@@ -437,7 +438,8 @@ class AxisItem(GraphicsWidget):
                 w += self.style['tickTextOffset'][0] if self.style['showValues'] else 0
                 w += max(0, self.style['tickLength'])
                 if self.label.isVisible():
-                    w += self.label.boundingRect().height() * 0.8  ## bounding rect is usually an overestimate
+                    # bounding rect is usually an overestimate
+                    w += self.label.boundingRect().height() * 0.8 + sum(self.style['labelMargin'])
             else:
                 w = self.fixedWidth
 

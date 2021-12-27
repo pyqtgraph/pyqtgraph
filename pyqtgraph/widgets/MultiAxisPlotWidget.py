@@ -207,6 +207,8 @@ class MultiAxisPlotWidget(PlotWidget):
             "bottom": [],
         }
         for axis in [self.axes[axis_name] for axis_name in axes]:
+            # add margin to the axis label to avoid overlap of other axis ticks
+            axis.setStyle(labelMargin=[5, 8])
             lo[axis.orientation].append(axis)
         horizontal_axes_pos_x = len(lo["left"])
         vertical_axes_pos_y = 1 + len(lo["top"])
