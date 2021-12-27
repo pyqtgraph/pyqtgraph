@@ -3,6 +3,7 @@ import importlib
 import os
 import warnings
 import weakref
+from typing import Optional
 
 import numpy as np
 
@@ -153,7 +154,7 @@ class PlotItem(GraphicsWidget):
         
         # Initialize axis items
         self.axes = {}
-        self.setAxisItems(axisItems)
+        self.setAxisItems(axisItems) #, add_to_layout=False)
         
         self.titleLabel = LabelItem('', size='11pt', parent=self)
         self.layout.addItem(self.titleLabel, 0, 1)
@@ -284,18 +285,65 @@ class PlotItem(GraphicsWidget):
                 return getattr(self.vb, name)(*args, **kwargs)
             method.__name__ = name
             return method
-        
+
         locals()[m] = _create_method(m)
-        
+
     del _create_method
 
+    def removeAxis(
+        self,
+        name: str,
+        unlink: bool = True,
+
+    ) -> Optional[AxisItem]:
+        """
+        Remove an axis from the contained axis items
+        by ```name: str```.
+
+        This means the axis graphics object will be removed
+        from the ``.layout: QGraphicsGridLayout`` as well as unlinked
+        from the underlying associated ``ViewBox``.
+
+        If the ``unlink: bool`` is set to ``False`` then the axis will
+        stay linked to its view and will only be removed from the
+        layoutonly be removed from the layout.
+
+        If no axis with ``name: str`` is found then this is a noop.
+
+        Return the axis instance that was removed.
+
+        """
+        entry = self.axes.pop(name, None)
+
+        if not entry:
+            return
+
+        axis = entry['item']
+        self.layout.removeItem(axis)
+        axis.scene().removeItem(axis)
+        if unlink:
+            axis.unlinkFromView()
+
+        self.update()
+
+        return axis
+
+    # NOTE: seriously.. y'all
+    # Why do we need to always have all axes created? I don't understand
+    # this at all. Everything seems to work if you just always apply the
+    # set passed to this method **EXCEPT** for some super weird reason
+    # the view box geometry still computes as though the space for the
+    # `'bottom'` axis is always there **UNLESS** you always add that
+    # axis but hide it? Why in tf would this be the case!?!?
     def setAxisItems(
         self,
-        axisItems=None,
+        # XXX: yeah yeah, i know we can't use type annots like this yet.
+        axisItems: Optional[dict[str, AxisItem]] = None,
         add_to_layout: bool = True,
     ):
         """
-        Place axis items as given by `axisItems`. Initializes non-existing axis items.
+        Place axis items as given by `axisItems`. Initializes
+        non-existing axis items.
 
         ==============  ==========================================================================================
         **Arguments:**
@@ -303,54 +351,88 @@ class PlotItem(GraphicsWidget):
                         for its axes. The dict keys must be axis names ('left', 'bottom', 'right', 'top')
                         and the values must be instances of AxisItem (or at least compatible with AxisItem).
         ==============  ==========================================================================================
+
         """
+        axisItems = axisItems or {}
 
-        if axisItems is None:
-            axisItems = {}
-
+        # XXX: wth is is this even saying?!?
         # Array containing visible axis items
         # Also containing potentially hidden axes, but they are not touched so it does not matter
-        visibleAxes = ['left', 'bottom']
-        visibleAxes.extend(axisItems.keys()) # Note that it does not matter that this adds
-                                             # some values to visibleAxes a second time
+        # visibleAxes = ['left', 'bottom']
+        # Note that it does not matter that this adds
+        # some values to visibleAxes a second time
 
-        for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
-            if k in self.axes:
-                if k not in axisItems:
-                    continue # Nothing to do here
+        # XXX: uhhh wat^ ..?
 
-                # Remove old axis
-                oldAxis = self.axes[k]['item']
-                self.layout.removeItem(oldAxis)
-                oldAxis.scene().removeItem(oldAxis)
-                oldAxis.unlinkFromView()
+        visibleAxes = list(axisItems.keys())
+
+        # TODO: we should probably invert the loop
+        # here to not loop the predefined "axis name set" and
+        # instead loop the `axisItems` input and lookup indices
+        # from a predefined map.
+        for name, pos in (
+            ('top', (1,1)),
+            ('bottom', (3,1)),
+            ('left', (2,0)),
+            ('right', (2,2))
+        ):
+            if name in self.axes and name in axisItems:
+                # we already have an axis entry for this name
+                # so remove the existing entry.
+                self.removeAxis(name)
+
+            # elif name not in axisItems:
+            #     # this axis entry is not provided in this call
+            #     # so remove any old/existing entry.
+            #     self.removeAxis(name)
 
             # Create new axis
-            if k in axisItems:
-                axis = axisItems[k]
+            if name in axisItems:
+                axis = axisItems[name]
                 if axis.scene() is not None:
-                    if k not in self.axes or axis != self.axes[k]["item"]:
+                    if name not in self.axes or axis != self.axes[name]["item"]:
                         raise RuntimeError(
                             "Can't add an axis to multiple plots. Shared axes"
                             " can be achieved with multiple AxisItem instances"
                             " and set[X/Y]Link.")
-            # else:
-            #     axis = AxisItem(orientation=k, parent=self)
 
-                # Set up new axis
-                axis.linkToView(self.vb)
-                self.axes[k] = {'item': axis, 'pos': pos}
+            else:
+                # XXX: ok but why do we want to add axes for all entries
+                # if not desired by the user? The only reason I can see
+                # adding this is without it there's some weird
+                # ``ViewBox`` geometry bug.. where a gap for the
+                # 'bottom' axis is somehow left in?
+                axis = AxisItem(orientation=name, parent=self)
 
-                # NOTE: in the overlay case the axis may be added to some
-                # other layout and should not be added here.
-                if add_to_layout:
-                    self.layout.addItem(axis, *pos)
+            axis.linkToView(self.vb)
 
-                # place axis above images at z=0, items that want to draw over the axes should be placed at z>=1:
-                axis.setZValue(0.5)
-                axis.setFlag(axis.GraphicsItemFlag.ItemNegativeZStacksBehindParent)
-                axisVisible = k in visibleAxes
-                self.showAxis(k, axisVisible)
+            # XXX: shouldn't you already know the ``pos`` from the name?
+            # Oh right instead of a global map that would let you
+            # reasily look that up it's redefined over and over and over
+            # again in methods..
+            self.axes[name] = {'item': axis, 'pos': pos}
+
+            # NOTE: in the overlay case the axis may be added to some
+            # other layout and should not be added here.
+            if add_to_layout:
+                self.layout.addItem(axis, *pos)
+
+            # place axis above images at z=0, items that want to draw
+            # over the axes should be placed at z>=1:
+            axis.setZValue(0.5)
+            axis.setFlag(
+                axis.GraphicsItemFlag.ItemNegativeZStacksBehindParent
+            )
+            # lol, what is this api..
+            if name in visibleAxes:
+                self.showAxis(name, True)
+            else:
+                # why do we need to insert all axes to ``.axes`` and
+                # only hide the ones the user doesn't specify? It all
+                # seems to work fine without doing this except for this
+                # weird gap for the 'bottom' axis that always shows up
+                # in the view box geometry??
+                self.hideAxis(name)
 
     def setLogMode(self, x=None, y=None):
         """
@@ -417,10 +499,17 @@ class PlotItem(GraphicsWidget):
         alpha = self.ctrl.gridAlphaSlider.value()
         x = alpha if self.ctrl.xGridCheck.isChecked() else False
         y = alpha if self.ctrl.yGridCheck.isChecked() else False
-        self.getAxis('top').setGrid(x)
-        self.getAxis('bottom').setGrid(x)
-        self.getAxis('left').setGrid(y)
-        self.getAxis('right').setGrid(y)
+        for name, dim in (
+            ('top', x),
+            ('bottom', x),
+            ('left', y), 
+            ('right',y)
+        ):
+            if name in self.axes:
+                self.getAxis(name).setGrid(dim)
+        # self.getAxis('bottom').setGrid(x)
+        # self.getAxis('left').setGrid(y)
+        # self.getAxis('right').setGrid(y)
 
     def viewGeometry(self):
         """Return the screen geometry of the viewbox"""
