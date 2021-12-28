@@ -10,6 +10,7 @@ from ... import functions as fn
 from ... import getConfigOption
 from ...Point import Point
 from ...Qt import QtCore, QtGui, QtWidgets, isQObjectAlive
+from ...Qt.QtCore import QEvent
 from ..GraphicsWidget import GraphicsWidget
 from ..ItemGroup import ItemGroup
 
@@ -108,7 +109,19 @@ class ViewBox(GraphicsWidget):
     NamedViews = weakref.WeakValueDictionary()   # name: ViewBox
     AllViews = weakref.WeakKeyDictionary()       # ViewBox: None
 
-    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None, invertX=False, defaultPadding=0.02):
+    def __init__(
+        self,
+        parent=None,
+        border=None,
+        lockAspect=False,
+        enableMouse=True,
+        invertY=False,
+        enableMenu=True,
+        name=None,
+        invertX=False,
+        defaultPadding=0.02,
+        allow_signal_relay: bool = False,
+    ):
         """
         =================  =============================================================
         **Arguments:**
@@ -154,8 +167,12 @@ class ViewBox(GraphicsWidget):
                                         ## otherwise float gives the fraction of data that is visible
             'autoPan': [False, False],         ## whether to only pan (do not change scaling) when auto-range is enabled
             'autoVisibleOnly': [False, False], ## whether to auto-range only to the visible portion of a plot
-            'linkedViews': [None, None],  ## may be None, "viewName", or weakref.ref(view)
-                                          ## a name string indicates that the view *should* link to another, but no view with that name exists yet.
+
+            # may be None, "viewName", or weakref.ref(view) a name
+            # string indicates that the view *should* link to another,
+            # but no view with that name exists yet.
+            'linkedViews': [None, None],
+
             'defaultPadding': defaultPadding,
 
             'mouseEnabled': [enableMouse, enableMouse],
@@ -235,6 +252,26 @@ class ViewBox(GraphicsWidget):
         if name is None:
             self.updateViewLists()
 
+        self.allow_signal_relay: bool = allow_signal_relay
+
+    # TODO: make this a decorator so that sub-types
+    # can get this behaviour while still using standard
+    # method override techniques..
+    def maybe_relay(self, ev: QEvent) -> bool:
+        '''
+        Depending on whether ``.allow_signal_relay`` is set
+        either consume or allow relay of ``ev: QEvent``.
+
+        Return a bool indicating if event was relayed.
+
+        '''
+        if self.allow_signal_relay:
+            ev.ignore()
+            return True
+        else:
+            ev.accept()
+            return False
+
     def getAspectRatio(self):
         '''return the current aspect ratio'''
         rect = self.rect()
@@ -254,7 +291,8 @@ class ViewBox(GraphicsWidget):
         this one. The specified *name* will appear in the drop-down lists for
         axis linking in the context menus of all other views.
 
-        The same can be accomplished by initializing the ViewBox with the *name* attribute.
+        The same can be accomplished by initializing the ViewBox with
+        the *name* attribute.
         """
         ViewBox.AllViews[self] = None
         if self.name is not None:
@@ -812,11 +850,14 @@ class ViewBox(GraphicsWidget):
 
     def enableAutoRange(self, axis=None, enable=True, x=None, y=None):
         """
-        Enable (or disable) auto-range for *axis*, which may be ViewBox.XAxis, ViewBox.YAxis, or ViewBox.XYAxes for both
-        (if *axis* is omitted, both axes will be changed).
-        When enabled, the axis will automatically rescale when items are added/removed or change their shape.
-        The argument *enable* may optionally be a float (0.0-1.0) which indicates the fraction of the data that should
-        be visible (this only works with items implementing a dataRange method, such as PlotDataItem).
+        Enable (or disable) auto-range for *axis*, which may be
+        ViewBox.XAxis, ViewBox.YAxis, or ViewBox.XYAxes for both (if
+        *axis* is omitted, both axes will be changed). When enabled, the
+        axis will automatically rescale when items are added/removed or
+        change their shape. The argument *enable* may optionally be
+        a float (0.0-1.0) which indicates the fraction of the data that
+        should be visible (this only works with items implementing
+                a dataRange method, such as PlotDataItem).
         """
         # support simpler interface:
         if x is not None or y is not None:
@@ -973,7 +1014,8 @@ class ViewBox(GraphicsWidget):
 
     def linkView(self, axis, view):
         """
-        Link X or Y axes of two views and unlink any previously connected axes. *axis* must be ViewBox.XAxis or ViewBox.YAxis.
+        Link X or Y axes of two views and unlink any previously
+        connected axes. *axis* must be ViewBox.XAxis or ViewBox.YAxis.
         If view is None, the axis is left unlinked.
         """
         if isinstance(view, str):
@@ -1247,6 +1289,7 @@ class ViewBox(GraphicsWidget):
         return self.mapSceneToView(item.sceneBoundingRect()).boundingRect()
 
     def wheelEvent(self, ev, axis=None):
+        print(self.name)
         if axis in (0, 1):
             mask = [False, False]
             mask[axis] = self.state['mouseEnabled'][axis]
@@ -1258,13 +1301,26 @@ class ViewBox(GraphicsWidget):
 
         self._resetTarget()
         self.scaleBy(s, center)
-        ev.accept()
+
+        if axis == ViewBox.XAxis:
+            self.sigXRangeChangedManually.emit(mask)
+        elif axis == ViewBox.YAxis:
+           self.sigYRangeChangedManually.emit(mask)
+        elif axis is None:
+           self.sigXRangeChangedManually.emit(mask)
+           self.sigYRangeChangedManually.emit(mask)
+           self.sigMouseWheel.emit(ev, axis)
         self.sigRangeChangedManually.emit(mask)
+
+        self.maybe_relay(ev)
 
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.MouseButton.RightButton and self.menuEnabled():
-            ev.accept()
             self.raiseContextMenu(ev)
+
+            # TODO: probably should just turn this into a
+            # method decorator.
+            self.maybe_relay(ev)
 
     def raiseContextMenu(self, ev):
         menu = self.getMenu(ev)
@@ -1280,7 +1336,9 @@ class ViewBox(GraphicsWidget):
 
     def mouseDragEvent(self, ev, axis=None):
         ## if axis is specified, event will only affect that axis.
-        ev.accept()  ## we accept all buttons
+        ## we accept all buttons
+
+        # print(f'drag: {self.name}')
 
         pos = ev.scenePos()
         dif = pos - ev.lastScenePos()
@@ -1318,6 +1376,7 @@ class ViewBox(GraphicsWidget):
                 if x is not None or y is not None:
                     self.translateBy(x=x, y=y)
                 self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+
         elif ev.button() & QtCore.Qt.MouseButton.RightButton:
             #print "vb.rightDrag"
             if self.state['aspectLocked'] is not False:
@@ -1339,6 +1398,8 @@ class ViewBox(GraphicsWidget):
             self.scaleBy(x=x, y=y, center=center)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
+        self.maybe_relay(ev)
+
     def keyPressEvent(self, ev):
         """
         This routine should capture key presses in the current view box.
@@ -1349,7 +1410,8 @@ class ViewBox(GraphicsWidget):
         ctrl-- : moves backward in the zooming stack (if it exists)
 
         """
-        ev.accept()
+        self.maybe_relay(ev)
+
         if ev.text() == '-':
             self.scaleHistory(-1)
         elif ev.text() in ['+', '=']:
