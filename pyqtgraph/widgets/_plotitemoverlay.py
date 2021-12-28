@@ -2,11 +2,30 @@ from ..Qt.QtWidgets import QGraphicsGridLayout
 from ..functions import connect_lambda
 # from ..graphicsItems.AxisItem import AxisItem
 # from ..graphicsItems.GraphicsObject import GraphicsObject
-# from ..graphicsItems.PlotDataItem import PlotDataItem
 from ..graphicsItems.PlotItem.PlotItem import PlotItem
 from ..graphicsItems.ViewBox import ViewBox
 from ..Qt.QtCore import QObject, Signal, Qt
 
+# Bugs TODO:
+# - figure out why per-axis drag clicking is halted
+#   after a single handler call - seems like it's a more serious
+#   bug in the depths of the viewbox handlers rat's nest XD
+
+# Unimplemented features TODO:
+# - 'A' (autobtn) should relay to all views
+# - layout unwind and re-pack for 'left' and 'top' axes
+# - add labels to layout if detected in source ``PlotItem``
+
+# UX nice-to-have TODO:
+# - optional "focussed" view box support for view boxes
+#   that have custom input handlers (eg. you might want to
+#   scale the view to some "focussed" data view and have overlayed
+#   viewboxes only respond to relayed events.)
+# - figure out how to deal with menu raise events for multi-viewboxes.
+#   (we might want to add a different menu which specs the name of the
+#   view box currently being handled?
+# - allow selection of a particular view box by interacting with its
+#   axis?
 
 __all__ = ["PlotItemOverlay"]
 
@@ -220,7 +239,7 @@ class PlotItemOverlay:
         ...
 
     # TODO: i guess we need this if you want to detach existing plots
-    # dynamically?
+    # dynamically? XXX: untested as of now.
     def _disconnect_all(
         self,
         plotitem: PlotItem,
