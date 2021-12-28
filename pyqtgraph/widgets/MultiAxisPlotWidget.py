@@ -37,6 +37,7 @@ class MultiAxisPlotWidget(PlotWidget):
         self.charts = {}
         self.plot_items = {}
         self._signalConnectionsByChart = {}
+        self._signalConnectionsByAxis = {}
 
     def addAxis(self, name, *args, axis=None, **kwargs):
         """Add a new axis (AxisItem) to the widget, will be shown and linked to a
@@ -66,9 +67,11 @@ class MultiAxisPlotWidget(PlotWidget):
         if axis is None:
             axis = AxisItem(*args, **kwargs)
         axis.name = name
-        axis.autorange = True
+        axis.autorange = False
         axis.charts = []
         self.axes[name] = axis
+        if axis.name not in self._signalConnectionsByAxis:
+            self._signalConnectionsByAxis[axis.name] = {}
         axis.showLabel(True)
         return axis
 
@@ -173,7 +176,9 @@ class MultiAxisPlotWidget(PlotWidget):
             self.layout.removeAt(0)
             self.scene().removeItem(item)
         for chart in self.charts.values():
-            self._disconnect_all(chart)
+            self._chart_disconnect_all(chart)
+        for axis in self.axes.values():
+            self._axis_disconnect_all(axis)
 
     def makeLayout(self, axes=None, charts=None):
         """Adds all given axes and charts to the widget.
@@ -210,7 +215,7 @@ class MultiAxisPlotWidget(PlotWidget):
         }
         for axis in [self.axes[axis_name] for axis_name in axes]:
             # add margin to the axis label to avoid overlap of other axis ticks
-            axis.setStyle(labelMargin=[5, 8])
+            axis.setStyle(labelMargin=[0, 0])
             lo[axis.orientation].append(axis)
         horizontal_axes_pos_x = len(lo["left"])
         vertical_axes_pos_y = 1 + len(lo["top"])
@@ -249,7 +254,6 @@ class MultiAxisPlotWidget(PlotWidget):
 
     def _connect_signals(self, chart):
         """Connects all signals related to this widget for the given chart given the top level one."""
-        self._disconnect_all(chart)
         chart_vb = self.plot_items[chart.name].vb
         signals = self._signalConnectionsByChart[chart.name]
         scene = self.scene()
@@ -257,52 +261,55 @@ class MultiAxisPlotWidget(PlotWidget):
             # link axis to view
             axis = self.axes[axis_name]
             # connect view changes to axis
-            # set axis main view link if not assigned
-            if axis.linkedView() is None:
-                axis._linkedView = weakref.ref(chart_vb)
             # FROM AxisItem.linkToView
             # connect view changes to axis changes
-            if axis.orientation in {"right", "left"}:
-                signals["propagate chart range to axis"] = chart_vb.sigYRangeChanged.connect(
-                    axis.linkedViewChanged)
-            elif axis.orientation in {"top", "bottom"}:
+            if axis.orientation in {"top", "bottom"}:
                 signals["propagate chart range to axis"] = chart_vb.sigXRangeChanged.connect(
+                    axis.linkedViewChanged)
+            elif axis.orientation in {"right", "left"}:
+                signals["propagate chart range to axis"] = chart_vb.sigYRangeChanged.connect(
                     axis.linkedViewChanged)
             signals["propagate chart resize to axis"] = chart_vb.sigResized.connect(
                 axis.linkedViewChanged)
-            axis_view = axis.linkedView()
-            if chart_vb is not axis_view:
+            # set axis main view link if not assigned
+            if axis.linkedView() is None:
+                axis._linkedView = weakref.ref(chart_vb)
+                axis_vb = chart_vb
+            else:
+                axis_vb = axis.linkedView()
                 # FROM ViewBox.linkView
                 # connext axis's view changes to view since axis acts just like a proxy to it
                 if axis.orientation in {"top", "bottom"}:
                     # connect axis main view changes to view
-                    chart_vb.state["linkedViews"][chart_vb.XAxis] = weakref.ref(axis_view)
+                    chart_vb.state["linkedViews"][chart_vb.XAxis] = weakref.ref(axis_vb)
                     # this signal is received multiple times when using mouse actions directly on the viewbox
                     # this causes the non top layer views to scroll more than the frontmost one
-                    signals["propagate axis range to chart"] = axis_view.sigXRangeChanged.connect(
+                    signals["propagate axis range to chart"] = axis_vb.sigXRangeChanged.connect(
                         chart_vb.linkedXChanged)
-                    signals["propagate axis resize to chart"] = axis_view.sigResized.connect(
+                    signals["propagate axis resize to chart"] = axis_vb.sigResized.connect(
                         chart_vb.linkedXChanged)
-                    # disable autorange on manual movements
-                    # using connect_lambda here as a workaround
-                    # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
-                    # signals["disable axis autorange on axis manual change"] =
-                    #     axis_view.sigXRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))  # THIS BREAKS GARBAGE COLLECTION
-                    signals["disable axis autorange on axis manual change"] = connect_lambda(axis_view.sigXRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
                 elif axis.orientation in {"right", "left"}:
                     # connect axis main view changes to view
-                    chart_vb.state["linkedViews"][chart_vb.YAxis] = weakref.ref(axis_view)
+                    chart_vb.state["linkedViews"][chart_vb.YAxis] = weakref.ref(axis_vb)
                     # this signal is received multiple times when using mouse actions directly on the viewbox
                     # this causes the non top layer views to scroll more than the frontmost one
-                    signals["propagate axis range to chart"] = axis_view.sigYRangeChanged.connect(chart_vb.linkedYChanged)
-                    signals["propagate axis resize to chart"] = axis_view.sigResized.connect(
+                    signals["propagate axis range to chart"] = axis_vb.sigYRangeChanged.connect(chart_vb.linkedYChanged)
+                    signals["propagate axis resize to chart"] = axis_vb.sigResized.connect(
                         chart_vb.linkedYChanged)
+            axis_signals = self._signalConnectionsByAxis[axis.name]
+            if "disable axis autorange on axis manual change" not in axis_signals:
+                if axis.orientation in {"top", "bottom"}:
                     # disable autorange on manual movements
                     # using connect_lambda here as a workaround
                     # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
-                    # signals["disable axis autorange on axis manual change"] =
-                    #     axis_view.sigYRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))  # THIS BREAKS GARBAGE COLLECTION
-                    signals["disable axis autorange on axis manual change"] = connect_lambda(axis_view.sigYRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
+                    # axis_signals["disable axis autorange on axis manual change"] = axis_vb.sigXRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))  # THIS BREAKS GARBAGE COLLECTION
+                    axis_signals["disable axis autorange on axis manual change"] = connect_lambda(axis_vb.sigXRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
+                elif axis.orientation in {"right", "left"}:
+                    # disable autorange on manual movements
+                    # using connect_lambda here as a workaround
+                    # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
+                    # axis_signals["disable axis autorange on axis manual change"] = axis_vb.sigYRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))  # THIS BREAKS GARBAGE COLLECTION
+                    axis_signals["disable axis autorange on axis manual change"] = connect_lambda(axis_vb.sigYRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
             chart_vb.sigStateChanged.emit(chart_vb)
         # resize plotitem according to the master one
         # resizing it's view doesn't work for some reason
@@ -314,10 +321,6 @@ class MultiAxisPlotWidget(PlotWidget):
             # using connect_lambda here as a workaround
             # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
             signals["propagate default vb resize to chart"] = connect_lambda(self.vb.sigResized, chart_pi, lambda chart_pi, vb: chart_pi.setGeometry(vb.sceneBoundingRect()))
-        # fix prepareForPaint by outofculture
-        signals["propagate default scene prepare_for_paint to chart"] = scene.sigPrepareForPaint.connect(
-            chart_vb.prepareForPaint)
-        if chart_vb is not self.vb:
             # FROM "https://github.com/pyqtgraph/pyqtgraph/pull/2010" by herodotus77
             # propagate mouse actions to charts "hidden" behind
             signals["propagate top level mouse drag interaction to chart"] = self.vb.sigMouseDragged.connect(
@@ -326,14 +329,21 @@ class MultiAxisPlotWidget(PlotWidget):
                 chart_vb.wheelEvent)
             signals["propagate top level history changes interaction to chart"] = self.vb.sigHistoryChanged.connect(
                 chart_vb.scaleHistory)
+        # fix prepareForPaint by outofculture
+        signals["propagate default scene prepare_for_paint to chart"] = scene.sigPrepareForPaint.connect(
+            chart_vb.prepareForPaint)
 
-    def _disconnect_all(self, chart):
+    def _chart_disconnect_all(self, chart):
         """Disconnects all signals related to this widget for the given chart."""
         signals = self._signalConnectionsByChart[chart.name]
-        for conn_name, conn in signals.items():
-            if conn is not None:
-                QObject.disconnect(conn)
-                signals[conn_name] = None
+        for conn_name in list(signals.keys()):
+            QObject.disconnect(signals.pop(conn_name))
+
+    def _axis_disconnect_all(self, axis):
+        """Disconnects all signals related to this widget for the given axis."""
+        signals = self._signalConnectionsByAxis[axis.name]
+        for conn_name in list(signals.keys()):
+            QObject.disconnect(signals.pop(conn_name))
 
     def clean(self):
         """Clears all charts' contents."""
