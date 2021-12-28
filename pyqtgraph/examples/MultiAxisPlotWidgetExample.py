@@ -26,22 +26,21 @@ ay1 = mpw.addAxis("sy1", "left", text="Data1", units="sy1")
 ay2 = mpw.addAxis("sy2", "left", text="Data2", units="sy2")
 ay3 = mpw.addAxis("sy3", "left", text="Data3", units="sy3")
 # CHARTS
-# c0, _ = mpw.addChart("Dataset 0")
+c0, _ = mpw.addChart("Dataset 0")
 c1, pi1 = mpw.addChart("Dataset 1", xAxisName="sx1", yAxisName="sy1")
 c2, pi2 = mpw.addChart("Dataset 2", xAxisName="sx2", yAxisName="sy1")
 c3, pi3 = mpw.addChart("Dataset 3", xAxisName="sx2", yAxisName="sy2")
 c4, pi4 = mpw.addChart("Dataset 4", xAxisName="sx3", yAxisName="sy3")
+c5, pi5 = mpw.addChart("Dataset 5")  # will create it's axes automatically
+c6, pi6 = mpw.addChart("Dataset 6")  # will not be displayed (not in the makeLayout's chart list)
 # make and display chart
-mpw.makeLayout()
+mpw.makeLayout(
+    axes=["sx2", "sx3", "sx1", "sy2", "sy3", "sy1", ],  # optional, selects and orders axes displayed
+    charts=["Dataset 0", "Dataset 1", "Dataset 2", "Dataset 3", "Dataset 4", "Dataset 5"]  # optional, selects charts displayed
+)
 
-data1 = np.array(np.sin(np.linspace(0, 2 * np.pi, num=1000)))
-c1.setData(data1)
-data2 = data1 * 2
-c2.setData(data2)
-data3 = np.array(np.sin(np.linspace(0, 4 * np.pi, num=500))) * 3
-c3.setData(data3)
-data4 = np.array(np.sin(np.linspace(0, 4 * np.pi, num=500))) * 3
-c4.setData(data4)
+for i, c in enumerate([c0, c1, c2, c3, c4, c5, c6, ]):
+    c.setData(np.array(np.sin(np.linspace(0, i * np.pi, num=1000))))
 
 mpw.update()
 

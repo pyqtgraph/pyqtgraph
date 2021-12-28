@@ -182,6 +182,9 @@ class MultiAxisPlotWidget(PlotWidget):
         ----------
         axes : list of str, optional
             The names associated with the axes to show.
+            Axes will be ordered from left-to-right and from top-to-bottom
+            following the given axes list order if given,
+            or the axis creation order otherwise.
         charts : list of PlotItems, optional
             The names associated with the charts to show.
         """
@@ -189,9 +192,8 @@ class MultiAxisPlotWidget(PlotWidget):
         _ = self._show_axes(axes)
         shown_charts = self._show_charts(charts)
         if len(shown_charts) != 0:
-            top_level = shown_charts[list(shown_charts)[-1]]
             for chart in self.charts.values():
-                self._connect_signals(top_level, chart)
+                self._connect_signals(chart)
         self.update()
 
     def _show_axes(self, axes=None):
@@ -245,10 +247,9 @@ class MultiAxisPlotWidget(PlotWidget):
             chart.show()
         return shown_charts
 
-    def _connect_signals(self, top_level, chart):
+    def _connect_signals(self, chart):
         """Connects all signals related to this widget for the given chart given the top level one."""
         self._disconnect_all(chart)
-        top_vb = self.plot_items[top_level.name].vb
         chart_vb = self.plot_items[chart.name].vb
         signals = self._signalConnectionsByChart[chart.name]
         scene = self.scene()
@@ -305,7 +306,10 @@ class MultiAxisPlotWidget(PlotWidget):
             chart_vb.sigStateChanged.emit(chart_vb)
         # resize plotitem according to the master one
         # resizing it's view doesn't work for some reason
-        if self.plot_items[chart.name].vb is not self.vb:
+        if chart_vb is not self.vb:
+            # make default vb always the top level one chart vb
+            chart_vb.setZValue(0)
+            self.vb.setZValue(9999)  # over 9thousand!
             chart_pi = self.plot_items[chart.name]
             # using connect_lambda here as a workaround
             # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
@@ -313,14 +317,14 @@ class MultiAxisPlotWidget(PlotWidget):
         # fix prepareForPaint by outofculture
         signals["propagate default scene prepare_for_paint to chart"] = scene.sigPrepareForPaint.connect(
             chart_vb.prepareForPaint)
-        if chart_vb is not top_vb:
+        if chart_vb is not self.vb:
             # FROM "https://github.com/pyqtgraph/pyqtgraph/pull/2010" by herodotus77
             # propagate mouse actions to charts "hidden" behind
-            signals["propagate top level mouse drag interaction to chart"] = top_vb.sigMouseDragged.connect(
+            signals["propagate top level mouse drag interaction to chart"] = self.vb.sigMouseDragged.connect(
                 chart_vb.mouseDragEvent)
-            signals["propagate top level mouse wheel interaction to chart"] = top_vb.sigMouseWheel.connect(
+            signals["propagate top level mouse wheel interaction to chart"] = self.vb.sigMouseWheel.connect(
                 chart_vb.wheelEvent)
-            signals["propagate top level history changes interaction to chart"] = top_vb.sigHistoryChanged.connect(
+            signals["propagate top level history changes interaction to chart"] = self.vb.sigHistoryChanged.connect(
                 chart_vb.scaleHistory)
 
     def _disconnect_all(self, chart):
