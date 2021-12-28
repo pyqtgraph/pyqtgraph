@@ -95,6 +95,8 @@ class ViewBox(GraphicsWidget):
     sigStateChanged = QtCore.Signal(object)
     sigTransformChanged = QtCore.Signal(object)
     sigResized = QtCore.Signal(object)
+    sigMouseDragged = QtCore.Signal(object, object)
+    sigMouseWheel = QtCore.Signal(object, object)
 
     ## mouse modes
     PanMode = 3
@@ -1302,16 +1304,10 @@ class ViewBox(GraphicsWidget):
         self._resetTarget()
         self.scaleBy(s, center)
 
-        if axis == ViewBox.XAxis:
-            self.sigXRangeChangedManually.emit(mask)
-        elif axis == ViewBox.YAxis:
-           self.sigYRangeChangedManually.emit(mask)
-        elif axis is None:
-           self.sigXRangeChangedManually.emit(mask)
-           self.sigYRangeChangedManually.emit(mask)
+        if axis is None:
            self.sigMouseWheel.emit(ev, axis)
-        self.sigRangeChangedManually.emit(mask)
 
+        self.sigRangeChangedManually.emit(mask)
         self.maybe_relay(ev)
 
     def mouseClickEvent(self, ev):
@@ -1338,6 +1334,7 @@ class ViewBox(GraphicsWidget):
         ## if axis is specified, event will only affect that axis.
         ## we accept all buttons
 
+        self.sigMouseDragged.emit(ev, axis)
         # print(f'drag: {self.name}')
 
         pos = ev.scenePos()
