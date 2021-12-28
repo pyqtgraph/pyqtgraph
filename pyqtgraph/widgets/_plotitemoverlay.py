@@ -5,7 +5,7 @@ from ..functions import connect_lambda
 # from ..graphicsItems.PlotDataItem import PlotDataItem
 from ..graphicsItems.PlotItem.PlotItem import PlotItem
 from ..graphicsItems.ViewBox import ViewBox
-from ..Qt.QtCore import QObject, Signal
+from ..Qt.QtCore import QObject, Signal, Qt
 
 
 __all__ = ["PlotItemOverlay"]
@@ -43,8 +43,9 @@ class PlotItemOverlay:
         root_plotitem: PlotItem
     ) -> None:
         self.root_plotitem: PlotItem = root_plotitem
+        root_plotitem.vb.allow_signal_relay
         self.overlays: list[PlotItem] = []
-        self._signal_relay: dict[str, Signal] = {}
+        self._relays: dict[str, Signal] = {}
 
     @property
     def layout(self) -> QGraphicsGridLayout:
@@ -54,15 +55,19 @@ class PlotItemOverlay:
         '''
         return self.root_plotitem.layout
 
-    # Add/Remove API which allows for dynamic mutation
-    # of the overlayed ``PlotItem`` collection.
     def add_plotitem(
         self,
         plotitem: PlotItem,
 
         # TODO: we could also put the ``ViewBox.XAxis``
         # style enum here?
-        link_axes: tuple[int] = (0,),
+        link_axes: tuple[int] = (),
+
+        # XXX: all the other optional inputs.
+        # should we enum or at least type check this?
+        # link_axes: tuple[int] = (0,),  # link x
+        # link_axes: tuple[int] = (1,),  # link y
+        # link_axes: tuple[int] = (0, 1),  # link both
 
     ) -> None:
 
@@ -71,67 +76,112 @@ class PlotItemOverlay:
         self.overlays.append(plotitem)
 
         vb: ViewBox = plotitem.vb
-        for dim in link_axes:
-            # link x and y axes to new view box such that the top level
-            # viewbox propagates to the root (and whatever other plotitem
-            # overlays that have been added).
-            vb.linkView(dim, root.vb)
 
-        # XXX: when would you ever want the y-axis for overlaid plots to
-        # be linked? Seems like nonsense presuming the whole point of
-        # overlays is disjoint co-domains?
-        # vb.linkView(1, root.vb)
+        # can't do this since only root will get
+        # menu event then..
+        # TODO: some sane way to allow menu event broadcast XD
+        # vb.setMenuEnabled(False)
+
+        # instruct all vbs to relay signals instead
+        # of consuming without relay
+        vb.allow_signal_relay = True
+
+        # TODO: move this into ``ViewBox`` as some kind of special
+        # linking method for full view box event relaying.
+        if not link_axes:
+            # TODO: there's still an issue with manually click-dragging
+            # axes - not sure what that's about but likely some bug
+            # inside the mangled mess of event handling that is the
+            # `ViewBox` core XD
+
+            # NOTE: for this to work the ``.allow_signal_relay`` patch
+            # made to ``ViewBox`` needs to exist to avoid events being
+            # consumed too early.
+            self._relays[plotitem] = root.vb.sigMouseDragged.connect(
+                vb.mouseDragEvent)
+            self._relays[plotitem] = root.vb.sigMouseWheel.connect(vb.wheelEvent)
+
+        else:
+            for dim in link_axes:
+                # link x and y axes to new view box such that the top level
+                # viewbox propagates to the root (and whatever other plotitem
+                # overlays that have been added).
+                # vb.linkView(dim, root.vb)
+                root.vb.linkView(dim, vb)
 
         # make overlaid viewbox impossible to focus since the top
         # level should handle all input and relay to overlays.
         # TODO: we will probably want to add a "focus" api such that
         # a new "top level" ``PlotItem`` can be selected dynamically
         # (and presumably the axes dynamically sorted to match).
-        vb.setFlag(vb.GraphicsItemFlag.ItemIsFocusable, False)
-
-        # breakpoint()
-        root.vb.setFocus()
+        vb.setFlag(
+            vb.GraphicsItemFlag.ItemIsFocusable,
+            False
+        )
+        vb.setFocusPolicy(Qt.NoFocus)
 
         # Add any axes in appropriate sequence to the top level layout
         # to avoid graphics collision.
         count = len(self.overlays)
         assert count
-        try:
-            for name, axis_info in plotitem.axes.items():
-                axis = axis_info['item']
 
-                # plotitem.hideAxis(name)
+        for name, axis_info in plotitem.axes.items():
+            axis = axis_info['item']
+            axis_view = axis.linkedView()
 
-                # Remove old axis
-                plotitem.layout.removeItem(axis)
-                axis.scene().removeItem(axis)
+            # Remove old axis
+            # plotitem.removeAxis(axis, unlink=False)
+            if not axis.isVisible():
+                continue
 
-                # XXX: DON'T unlink it since we the original ``ViewBox``
-                # to still drive it B)
-                # axis.unlinkFromView()
+            plotitem.removeAxis(axis, unlink=False)
 
-                # if not axis.isVisible():
-                # if name != 'right':
-                #     continue
+            # vb.linkView(0, "")
+            # vb.linkView(1, "")
+            # scene = axis.scene()
+            # if scene:
+            #     scene.removeItem(axis)
 
-                if name in ('top', 'bottom'):
-                    i_dim = 0
-                elif name in ('left', 'right'):
-                    i_dim = 1
+            # XXX: DON'T unlink it since we the original ``ViewBox``
+            # to still drive it B)
+            # axis.unlinkFromView()
 
-                # breakpoint()
-                index = list(_axes_layout_indices[name])
-                index[i_dim] = index[i_dim] + count
-                # breakpoint()
-                out = layout.addItem(axis, *index)
-                if out:
-                    breakpoint()
+            # if not axis.isVisible():
+            # if name != 'right':
+            #     continue
 
-        except Exception as _err:
-            err = _err
-            breakpoint()
+            if name in ('top', 'bottom'):
+                i_dim = 0
+            elif name in ('left', 'right'):
+                i_dim = 1
+
+            # TODO: increment logic for layout on 'top'/'left' axes
+            # sets.. looks like ther'es no way around an unwind and
+            # re-stack of the layout to include all labels, unless
+            # we use a different layout system (cough).
+
+            # if name in ('top', 'left'):
+            #     increment = -1
+            # elif name in ('right', 'bottom'):
+            #     increment = +1
+
+            increment = +count
+
+            index = list(_axes_layout_indices[name])
+            current = index[i_dim]
+            index[i_dim] = current + increment if current > 0 else 0
+
+            # layout re-stack logic avoid collision
+            # with existing indices.
+            item = layout.itemAt(*index)
+            while item:
+                index[i_dim] += 1
+                item = layout.itemAt(*index)
+
+            layout.addItem(axis, *index)
 
         # overlay plot item's view with parent
+        # yes, y'all were right we do need this B)
         plotitem.setGeometry(self.root_plotitem.vb.sceneBoundingRect())
         connect_lambda(
             root.vb.sigResized,
@@ -139,17 +189,18 @@ class PlotItemOverlay:
             lambda plotitem,
             vb: plotitem.setGeometry(vb.sceneBoundingRect())
         )
+        # ensure the overlayed view is redrawn on each cycle
+        root.scene().sigPrepareForPaint.connect(vb.prepareForPaint)
 
-        # TODO: move this into ``ViewBox`` as some kind of special
-        # linking method for full view box event relaying.
-        # if link_all_vbs:  # or wtv
-        #     # FROM "https://github.com/pyqtgraph/pyqtgraph/pull/2010" by
-        #     # herodotus77 propagate mouse actions to charts "hidden"
-        #     # behind
-        #     root.vb.sigMouseDragged.connect(vb.mouseDragEvent)
-        #     root.vb.sigMouseWheel.connect(vb.wheelEvent)
-        #     root.vb.sigHistoryChanged.connect(vb.scaleHistory)
+        # vb.sigStateChanged.emit(vb)
 
+        # focus state sanity
+        vb.clearFocus()
+        assert not vb.focusWidget()
+        root.vb.setFocus()
+        assert root.vb.focusWidget()
+
+    # XXX: do we need this? Why would you build then destroy?
     def remove_plotitem(self, plotItem: PlotItem) -> None:
         '''
         Remove this ``PlotItem`` from the overlayed set making not shown
@@ -158,6 +209,7 @@ class PlotItemOverlay:
         '''
         ...
 
+    # TODO: i think this would be super hot B)
     def focus_item(self, plotitem: PlotItem) -> PlotItem:
         '''
         Apply focus to a contained PlotItem thus making it the "top level"
@@ -167,13 +219,19 @@ class PlotItemOverlay:
         '''
         ...
 
-    def _disconnect_all(self, chart) -> None:
+    # TODO: i guess we need this if you want to detach existing plots
+    # dynamically?
+    def _disconnect_all(
+        self,
+        plotitem: PlotItem,
+    ) -> list[Signal]:
         '''
         Disconnects all signals related to this widget for the given chart.
 
         '''
-        signals = self._signalConnectionsByChart[chart.name]
-        for conn_name, conn in signals.items():
-            if conn is not None:
-                QObject.disconnect(conn)
-                signals[conn_name] = None
+        disconnected = []
+        for pi, sig in self._relays.items():
+            QObject.disconnect(sig)
+            disconnected.append(sig)
+
+        return disconnected
