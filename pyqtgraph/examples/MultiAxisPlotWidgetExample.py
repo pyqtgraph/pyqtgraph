@@ -4,7 +4,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt.QtWidgets import QMainWindow
 
 
-def mkStripedPen(colors, blending=0.0001, *args, **kwargs):
+def mkStripedPen(colors, blending=0.0001, span=[0, 15], orientation="horizontal", width=2):
     stops = []
     stops_colors = []
     previous = None
@@ -17,7 +17,7 @@ def mkStripedPen(colors, blending=0.0001, *args, **kwargs):
             stops.append(pos)
             stops_colors.append(color)
         previous = color
-    return pg.ColorMap(stops, stops_colors, mapping=pg.ColorMap.REPEAT).getPen(*args, **kwargs)
+    return pg.ColorMap(stops, stops_colors, mapping=pg.ColorMap.REPEAT).getPen(span=span, orientation=orientation, width=width)
 
 
 app = pg.mkQApp()
@@ -52,11 +52,11 @@ ay2.setPen(ay2c)
 c0, pi0 = mpw.addChart("Dataset 0")
 c0.setPen("black")
 c1, pi1 = mpw.addChart("Dataset 1", xAxisName="sx1", yAxisName="sy1")
-c1.setPen(mkStripedPen([ax1c, ay1c], orientation="horizontal", width=2))
+c1.setPen(mkStripedPen([ax1c, ay1c]))
 c2, pi2 = mpw.addChart("Dataset 2", xAxisName="sx2", yAxisName="sy1")
-c2.setPen(mkStripedPen([ax2c, ay1c], orientation="horizontal", width=2))
+c2.setPen(mkStripedPen([ax2c, ay1c]))
 c3, pi3 = mpw.addChart("Dataset 3", xAxisName="sx2", yAxisName="sy2")
-c3.setPen(mkStripedPen([ax2c, ay2c], orientation="horizontal", width=2))
+c3.setPen(mkStripedPen([ax2c, ay2c]))
 # make and display chart
 mpw.makeLayout(
     # optional, selects and orders axes displayed.
