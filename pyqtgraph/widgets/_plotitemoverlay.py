@@ -1,3 +1,5 @@
+from functools import partial
+
 from ..Qt.QtWidgets import QGraphicsGridLayout
 from ..functions import connect_lambda
 # from ..graphicsItems.AxisItem import AxisItem
@@ -61,8 +63,13 @@ class PlotItemOverlay:
         self,
         root_plotitem: PlotItem
     ) -> None:
+
         self.root_plotitem: PlotItem = root_plotitem
-        root_plotitem.vb.allow_signal_relay
+
+        vb = root_plotitem.vb
+        vb.is_beacon = True  # TODO: maybe change name?
+        vb.setZValue(1000)  # XXX: critical for scene layering/relaying
+
         self.overlays: list[PlotItem] = []
         self._relays: dict[str, Signal] = {}
 
@@ -78,58 +85,53 @@ class PlotItemOverlay:
         self,
         plotitem: PlotItem,
 
+        link_axes: tuple[int] = (),
+        # XXX: all the other optional inputs.
         # TODO: we could also put the ``ViewBox.XAxis``
         # style enum here?
-        link_axes: tuple[int] = (),
-
-        # XXX: all the other optional inputs.
-        # should we enum or at least type check this?
-        # link_axes: tuple[int] = (0,),  # link x
-        # link_axes: tuple[int] = (1,),  # link y
-        # link_axes: tuple[int] = (0, 1),  # link both
+        # (0,),  # link x
+        # (1,),  # link y
+        # (0, 1),  # link both
 
     ) -> None:
 
         root = self.root_plotitem
         layout: QGraphicsGridLayout = root.layout
         self.overlays.append(plotitem)
-
         vb: ViewBox = plotitem.vb
 
-        # can't do this since only root will get
-        # menu event then..
         # TODO: some sane way to allow menu event broadcast XD
         # vb.setMenuEnabled(False)
 
-        # instruct all vbs to relay signals instead
-        # of consuming without relay
-        vb.allow_signal_relay = True
+        # TODO: inside the `maybe_broadcast()` (soon to be) decorator
+        # we need have checks that consumers have been attached to
+        # these relay signals.
+        if link_axes != (0, 1):
+            sig = root.vb.sigMouseWheelRelay.connect(
+                vb.wheelEvent
+            )
+            sig = root.vb.sigMouseDraggedRelay.connect(
+                partial(
+                    vb.mouseDragEvent,
+                )
 
-        # TODO: move this into ``ViewBox`` as some kind of special
-        # linking method for full view box event relaying.
-        if not link_axes:
-            # TODO: there's still an issue with manually click-dragging
-            # axes - not sure what that's about but likely some bug
-            # inside the mangled mess of event handling that is the
-            # `ViewBox` core XD
+            )
 
-            # NOTE: for this to work the ``.allow_signal_relay`` patch
-            # made to ``ViewBox`` needs to exist to avoid events being
-            # consumed too early.
-            self._relays[plotitem] = root.vb.sigMouseDragged.connect(
-                vb.mouseDragEvent)
-            self._relays[plotitem] = root.vb.sigMouseWheel.connect(vb.wheelEvent)
-
-        else:
-            for dim in link_axes:
-                # link x and y axes to new view box such that the top level
-                # viewbox propagates to the root (and whatever other plotitem
-                # overlays that have been added).
-                # vb.linkView(dim, root.vb)
-                root.vb.linkView(dim, vb)
+        # link dim-axes to root if requested by user.
+        # TODO: solve more-then-wanted scaled panning on click drag
+        # which seems to be due to broadcast. So we probably need to
+        # disable broadcast when axes are linked in a particular
+        # dimension?
+        for dim in link_axes:
+            # link x and y axes to new view box such that the top level
+            # viewbox propagates to the root (and whatever other
+            # plotitem overlays that have been added).
+            vb.linkView(dim, root.vb)
 
         # make overlaid viewbox impossible to focus since the top
         # level should handle all input and relay to overlays.
+        # NOTE: this was solved with the `setZValue()` above!
+
         # TODO: we will probably want to add a "focus" api such that
         # a new "top level" ``PlotItem`` can be selected dynamically
         # (and presumably the axes dynamically sorted to match).
@@ -153,21 +155,9 @@ class PlotItemOverlay:
             if not axis.isVisible():
                 continue
 
-            plotitem.removeAxis(axis, unlink=False)
-
-            # vb.linkView(0, "")
-            # vb.linkView(1, "")
-            # scene = axis.scene()
-            # if scene:
-            #     scene.removeItem(axis)
-
             # XXX: DON'T unlink it since we the original ``ViewBox``
             # to still drive it B)
-            # axis.unlinkFromView()
-
-            # if not axis.isVisible():
-            # if name != 'right':
-            #     continue
+            plotitem.removeAxis(axis, unlink=False)
 
             if name in ('top', 'bottom'):
                 i_dim = 0
@@ -199,19 +189,21 @@ class PlotItemOverlay:
 
             layout.addItem(axis, *index)
 
-        # overlay plot item's view with parent
-        # yes, y'all were right we do need this B)
-        plotitem.setGeometry(self.root_plotitem.vb.sceneBoundingRect())
+        for plotitem in self.overlays:
+            # overlay plot item's view with parent
+            # yes, y'all were right we do need this B)
+            plotitem.setGeometry(root.vb.sceneBoundingRect())
+
+        # TODO: do we actually need this if we use a partial?
         connect_lambda(
             root.vb.sigResized,
             plotitem,
             lambda plotitem,
             vb: plotitem.setGeometry(vb.sceneBoundingRect())
         )
+
         # ensure the overlayed view is redrawn on each cycle
         root.scene().sigPrepareForPaint.connect(vb.prepareForPaint)
-
-        # vb.sigStateChanged.emit(vb)
 
         # focus state sanity
         vb.clearFocus()
