@@ -183,7 +183,6 @@ class ViewBox(GraphicsWidget):
         name=None,
         invertX=False,
         defaultPadding=0.02,
-        allow_signal_relay: bool = False,
     ):
         """
         =================  =============================================================
@@ -315,7 +314,6 @@ class ViewBox(GraphicsWidget):
         if name is None:
             self.updateViewLists()
 
-        self.allow_signal_relay: bool = allow_signal_relay
         self.is_beacon: bool = False
 
     def getAspectRatio(self):
