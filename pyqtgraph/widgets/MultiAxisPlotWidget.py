@@ -156,10 +156,10 @@ class MultiAxisPlotWidget(PlotWidget):
             chart = PlotDataItem(name=name)
         plotitem.addItem(chart)
         # keep plotitem inside chart
-        self.plot_items[chart.name] = plotitem
+        self.plot_items[chart.name()] = plotitem
         # keeptrack of connections
-        if chart.name not in self._signalConnectionsByChart:
-            self._signalConnectionsByChart[chart.name] = {}
+        if chart.name() not in self._signalConnectionsByChart:
+            self._signalConnectionsByChart[chart.name()] = {}
         # keep axis track
         chart.axes = [xAxisName, yAxisName]
         # keep chart
@@ -254,8 +254,8 @@ class MultiAxisPlotWidget(PlotWidget):
 
     def _connect_signals(self, chart):
         """Connects all signals related to this widget for the given chart given the top level one."""
-        chart_vb = self.plot_items[chart.name].vb
-        signals = self._signalConnectionsByChart[chart.name]
+        chart_vb = self.plot_items[chart.name()].vb
+        signals = self._signalConnectionsByChart[chart.name()]
         scene = self.scene()
         for axis_name in chart.axes:
             # link axis to view
@@ -317,7 +317,7 @@ class MultiAxisPlotWidget(PlotWidget):
             # make default vb always the top level one chart vb
             chart_vb.setZValue(0)
             self.vb.setZValue(9999)  # over 9thousand!
-            chart_pi = self.plot_items[chart.name]
+            chart_pi = self.plot_items[chart.name()]
             # using connect_lambda here as a workaround
             # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
             signals["propagate default vb resize to chart"] = connect_lambda(self.vb.sigResized, chart_pi, lambda chart_pi, vb: chart_pi.setGeometry(vb.sceneBoundingRect()))
@@ -335,7 +335,7 @@ class MultiAxisPlotWidget(PlotWidget):
 
     def _chart_disconnect_all(self, chart):
         """Disconnects all signals related to this widget for the given chart."""
-        signals = self._signalConnectionsByChart[chart.name]
+        signals = self._signalConnectionsByChart[chart.name()]
         for conn_name in list(signals.keys()):
             QObject.disconnect(signals.pop(conn_name))
 
@@ -369,7 +369,7 @@ class MultiAxisPlotWidget(PlotWidget):
         if name is None:
             return self.pi
         else:
-            return self.plot_items[self.charts[name].name]
+            return self.plot_items[self.charts[name].name()]
 
     def setAxisRange(self, axisName, axisRange=None, **kwargs):
         """Sets the axisRange of the axis with given name.
@@ -405,10 +405,10 @@ class MultiAxisPlotWidget(PlotWidget):
             charts = [self.charts[chart] for chart in axis.charts]
             if axis.orientation in {"top", "bottom"}:  # IS X AXIS
                 for chart in charts:
-                    self.plot_items[chart.name].vb.setXRange(*axisRange, **kwargs)
+                    self.plot_items[chart.name()].vb.setXRange(*axisRange, **kwargs)
             elif axis.orientation in {"left", "right"}:  # IS Y AXIS
                 for chart in charts:
-                    self.plot_items[chart.name].vb.setYRange(*axisRange, **kwargs)
+                    self.plot_items[chart.name()].vb.setYRange(*axisRange, **kwargs)
 
     def update(self):
         """Updates all charts' contents."""
@@ -422,7 +422,7 @@ class MultiAxisPlotWidget(PlotWidget):
                     bounds = [bound for bound in bounds if bound is not None]
                     if len(bounds) > 0:
                         for chart in charts:
-                            vb = self.plot_items[chart.name].vb
+                            vb = self.plot_items[chart.name()].vb
                             vb.setXRange(min(bounds), max(bounds))
                 elif axis.orientation in {"left", "right"}:  # IS Y AXIS
                     for chart in charts:
@@ -430,7 +430,7 @@ class MultiAxisPlotWidget(PlotWidget):
                     bounds = [bound for bound in bounds if bound is not None]
                     if len(bounds) > 0:
                         for chart in charts:
-                            vb = self.plot_items[chart.name].vb
+                            vb = self.plot_items[chart.name()].vb
                             vb.setYRange(min(bounds), max(bounds))
         super().update()
 
