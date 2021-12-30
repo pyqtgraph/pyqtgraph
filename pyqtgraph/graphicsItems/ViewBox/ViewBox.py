@@ -72,6 +72,66 @@ class ChildGroup(ItemGroup):
         return ret
 
 
+# TODO: make this a decorator so that sub-types
+# can get this behaviour while still using standard
+# method override techniques..
+def maybe_broadcast(
+    viewbox: 'ViewBox',
+    signal: 'Signal',
+    ev: 'MouseDragEvent',
+    axis: 'Optional[int]',
+    relayed_from: 'ViewBox',
+
+) -> None:
+    '''
+    (soon to be) Decorator which makes an event handler "broadcastable"
+    to overlayed ``GraphicsWidget``s.
+
+    Adds relay signals based on the decorated handler's name
+    and conducts a signal broadcast of the relay signal if there
+    are consumers registered.
+
+    '''
+    if relayed_from:
+        assert axis is None
+
+        # this is a relayed event and should be ignored (so it does not
+        # halt/short circuit the graphicscene loop). Further the
+        # surrounding handler for this signal must be allowed to execute
+        # and get processed by **this consumer**.
+        # print(f'{viewbox.name} rx relayed from {relayed_from.name}')
+        ev.ignore()
+        return
+
+    if axis is not None:
+        ev.accept()
+        return
+
+    elif (
+        relayed_from is None
+        and viewbox.is_beacon
+        and axis is None
+    ):
+        # broadcast case: this is a source event which will be
+        # relayed to attached consumers and accepted after all of
+        # their handling followed by this routine's processing.
+
+        # pre-relay to all consumers first before
+        # moving on (``.emit()`` blocks until all
+        # downstream consumers have run).
+        signal.emit(
+            ev,
+            axis,
+            # passing this demarks a broadcasted/relayed event
+            viewbox,
+        )
+        # accept event so no more relays
+        # are fired.
+        ev.accept()
+
+    # print(f'{viewbox.name} SOURCE event')
+
+
 class ViewBox(GraphicsWidget):
     """
     **Bases:** :class:`GraphicsWidget <pyqtgraph.GraphicsWidget>`
@@ -95,8 +155,9 @@ class ViewBox(GraphicsWidget):
     sigStateChanged = QtCore.Signal(object)
     sigTransformChanged = QtCore.Signal(object)
     sigResized = QtCore.Signal(object)
-    sigMouseDragged = QtCore.Signal(object, object)
-    sigMouseWheel = QtCore.Signal(object, object)
+
+    sigMouseDraggedRelay = QtCore.Signal(object, object, object)
+    sigMouseWheelRelay = QtCore.Signal(object, object, object)
 
     ## mouse modes
     PanMode = 3
@@ -255,24 +316,7 @@ class ViewBox(GraphicsWidget):
             self.updateViewLists()
 
         self.allow_signal_relay: bool = allow_signal_relay
-
-    # TODO: make this a decorator so that sub-types
-    # can get this behaviour while still using standard
-    # method override techniques..
-    def maybe_relay(self, ev: QEvent) -> bool:
-        '''
-        Depending on whether ``.allow_signal_relay`` is set
-        either consume or allow relay of ``ev: QEvent``.
-
-        Return a bool indicating if event was relayed.
-
-        '''
-        if self.allow_signal_relay:
-            ev.ignore()
-            return True
-        else:
-            ev.accept()
-            return False
+        self.is_beacon: bool = False
 
     def getAspectRatio(self):
         '''return the current aspect ratio'''
@@ -289,9 +333,9 @@ class ViewBox(GraphicsWidget):
         """
         Add this ViewBox to the registered list of views.
 
-        This allows users to manually link the axes of any other ViewBox to
-        this one. The specified *name* will appear in the drop-down lists for
-        axis linking in the context menus of all other views.
+        This allows users to manually link the axes of any other ViewBox
+        to this one. The specified *name* will appear in the drop-down
+        lists for axis linking in the context menus of all other views.
 
         The same can be accomplished by initializing the ViewBox with
         the *name* attribute.
@@ -1290,8 +1334,20 @@ class ViewBox(GraphicsWidget):
         """Return the bounding rect of the item in view coordinates"""
         return self.mapSceneToView(item.sceneBoundingRect()).boundingRect()
 
-    def wheelEvent(self, ev, axis=None):
-        print(self.name)
+    def wheelEvent(
+        self,
+        ev,
+        axis=None,
+        relayed_from=None,
+    ):
+        maybe_broadcast(
+            self,
+            self.sigMouseWheelRelay,
+            ev,
+            axis,
+            relayed_from,
+        )
+
         if axis in (0, 1):
             mask = [False, False]
             mask[axis] = self.state['mouseEnabled'][axis]
@@ -1304,11 +1360,8 @@ class ViewBox(GraphicsWidget):
         self._resetTarget()
         self.scaleBy(s, center)
 
-        if axis is None:
-           self.sigMouseWheel.emit(ev, axis)
-
         self.sigRangeChangedManually.emit(mask)
-        self.maybe_relay(ev)
+
 
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.MouseButton.RightButton and self.menuEnabled():
@@ -1316,7 +1369,7 @@ class ViewBox(GraphicsWidget):
 
             # TODO: probably should just turn this into a
             # method decorator.
-            self.maybe_relay(ev)
+            # self.maybe_relay(ev)
 
     def raiseContextMenu(self, ev):
         menu = self.getMenu(ev)
@@ -1330,12 +1383,21 @@ class ViewBox(GraphicsWidget):
     def getContextMenus(self, event):
         return self.menu.actions() if self.menuEnabled() else []
 
-    def mouseDragEvent(self, ev, axis=None):
-        ## if axis is specified, event will only affect that axis.
-        ## we accept all buttons
+    def mouseDragEvent(
+        self,
+        ev: 'MouseDragEvent',
+        axis: 'Optional[int]' = None,
+        relayed_from: 'ViewBox' = None,
 
-        self.sigMouseDragged.emit(ev, axis)
-        # print(f'drag: {self.name}')
+    ) -> 'None':
+
+        maybe_broadcast(
+            self,
+            self.sigMouseDraggedRelay,
+            ev,
+            axis,
+            relayed_from,
+        )
 
         pos = ev.scenePos()
         dif = pos - ev.lastScenePos()
@@ -1395,8 +1457,6 @@ class ViewBox(GraphicsWidget):
             self.scaleBy(x=x, y=y, center=center)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
-        self.maybe_relay(ev)
-
     def keyPressEvent(self, ev):
         """
         This routine should capture key presses in the current view box.
@@ -1407,7 +1467,7 @@ class ViewBox(GraphicsWidget):
         ctrl-- : moves backward in the zooming stack (if it exists)
 
         """
-        self.maybe_relay(ev)
+        # self.maybe_relay(ev)
 
         if ev.text() == '-':
             self.scaleHistory(-1)
