@@ -29,6 +29,7 @@ overlay = PlotItemOverlay(plot1)
 
 # for prints inside `ViewBox`
 plot1.vb.name = 'root'
+# plot1.setTitle(f'Dataset root')
 
 # XXX: this works now on each individual plot.
 # plot1.enableAutoRange(axis='y')
@@ -54,7 +55,13 @@ for i, (plot, data) in enumerate((
      data4),
 )):
     # TODO: get title stacking in the layout working
-    plot.setTitle(f'Dataset {i}')
+
+    # NOTE: if we add this it causes mouse wheel zoom
+    # to be offset in a wonky way..
+    # I'm hoping re-stacking labels in the top level layout
+    # will fix this.
+    # plot.setTitle(f'Dataset {i}')
+
     plot.hideButtons()  # see features notes in overlay module
     plot.plot().setData(data)
 
