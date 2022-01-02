@@ -67,7 +67,7 @@ class PlotItemOverlay:
         self.root_plotitem: PlotItem = root_plotitem
 
         vb = root_plotitem.vb
-        vb.is_beacon = True  # TODO: maybe change name?
+        vb.event_relay_source = vb  # TODO: maybe change name?
         vb.setZValue(1000)  # XXX: critical for scene layering/relaying
 
         self.overlays: list[PlotItem] = []
@@ -85,13 +85,12 @@ class PlotItemOverlay:
         self,
         plotitem: PlotItem,
 
-        link_axes: tuple[int] = (),
-        # XXX: all the other optional inputs.
         # TODO: we could also put the ``ViewBox.XAxis``
         # style enum here?
         # (0,),  # link x
         # (1,),  # link y
         # (0, 1),  # link both
+        link_axes: tuple[int] = (),
 
     ) -> None:
 
@@ -100,6 +99,10 @@ class PlotItemOverlay:
         self.overlays.append(plotitem)
         vb: ViewBox = plotitem.vb
 
+        # mark this consumer overlay as ready to expect relayed events
+        # from the root plotitem.
+        vb.event_relay_source = root.vb
+
         # TODO: some sane way to allow menu event broadcast XD
         # vb.setMenuEnabled(False)
 
@@ -107,15 +110,25 @@ class PlotItemOverlay:
         # we need have checks that consumers have been attached to
         # these relay signals.
         if link_axes != (0, 1):
-            sig = root.vb.sigMouseWheelRelay.connect(
-                vb.wheelEvent
-            )
-            sig = root.vb.sigMouseDraggedRelay.connect(
-                partial(
-                    vb.mouseDragEvent,
-                )
 
-            )
+            # wire up relay signals
+            for relay_signal_name, handler_name in vb.relays.items():
+                # print(handler_name)
+                # breakpoint()
+                # XXX: Signal class attrs are bound after instantiation
+                # of the defining type, so we need to access that bound
+                # version here.
+                sig = getattr(
+                    root.vb,
+                    relay_signal_name
+                ).connect(getattr(vb, handler_name))
+
+                # sig = root.vb.sigMouseDraggedRelay.connect(
+                #     partial(
+                #         vb.mouseDragEvent,
+                #     )
+
+                # )
 
         # link dim-axes to root if requested by user.
         # TODO: solve more-then-wanted scaled panning on click drag
@@ -189,10 +202,7 @@ class PlotItemOverlay:
 
             layout.addItem(axis, *index)
 
-        for plotitem in self.overlays:
-            # overlay plot item's view with parent
-            # yes, y'all were right we do need this B)
-            plotitem.setGeometry(root.vb.sceneBoundingRect())
+        plotitem.setGeometry(root.vb.sceneBoundingRect())
 
         # TODO: do we actually need this if we use a partial?
         connect_lambda(
