@@ -89,18 +89,29 @@ class PlotItem(GraphicsWidget):
         
     lastFileDir = None
     
-    def __init__(self, parent=None, name=None, labels=None, title=None, viewBox=None, axisItems=None, enableMenu=True, **kargs):
+    def __init__(
+        self,
+        parent=None,
+        name=None,
+        labels=None,
+        title=None,
+        viewBox=None,
+        axisItems=None,
+        default_axes=['left', 'bottom'],
+        enableMenu=True,
+        **kargs
+    ):
         """
         Create a new PlotItem. All arguments are optional.
         Any extra keyword arguments are passed to :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`.
-        
+
         ==============  ==========================================================================================
         **Arguments:**
         *title*         Title to display at the top of the item. Html is allowed.
         *labels*        A dictionary specifying the axis labels to display::
-                   
+
                             {'left': (args), 'bottom': (args), ...}
-                     
+
                         The name of each axis and the corresponding arguments are passed to 
                         :func:`PlotItem.setLabel() <pyqtgraph.PlotItem.setLabel>`
                         Optionally, PlotItem my also be initialized with the keyword arguments left,
@@ -112,11 +123,11 @@ class PlotItem(GraphicsWidget):
                         and the values must be instances of AxisItem (or at least compatible with AxisItem).
         ==============  ==========================================================================================
         """
-        
+
         GraphicsWidget.__init__(self, parent)
-        
+
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
-        
+
         ## Set up control buttons
         path = os.path.dirname(__file__)
         self.autoBtn = ButtonItem(icons.getGraphPixmap('auto'), 14, self)
@@ -124,7 +135,7 @@ class PlotItem(GraphicsWidget):
         self.autoBtn.clicked.connect(self.autoBtnClicked)
         self.buttonsHidden = False ## whether the user has requested buttons to be hidden
         self.mouseHovering = False
-        
+
         self.layout = QtWidgets.QGraphicsGridLayout()
         self.layout.setContentsMargins(1,1,1,1)
         self.setLayout(self.layout)
@@ -138,34 +149,37 @@ class PlotItem(GraphicsWidget):
 
         # Enable or disable plotItem menu
         self.setMenuEnabled(enableMenu, None)
-        
+
         if name is not None:
             self.vb.register(name)
         self.vb.sigRangeChanged.connect(self.sigRangeChanged)
         self.vb.sigXRangeChanged.connect(self.sigXRangeChanged)
         self.vb.sigYRangeChanged.connect(self.sigYRangeChanged)
-        
+
         self.layout.addItem(self.vb, 2, 1)
         self.alpha = 1.0
         self.autoAlpha = True
         self.spectrumMode = False
-        
+
         self.legend = None
-        
+
         # Initialize axis items
         self.axes = {}
-        self.setAxisItems(axisItems) #, add_to_layout=False)
-        
+        self.setAxisItems(
+            axisItems,
+            default_axes=default_axes,
+        )
+
         self.titleLabel = LabelItem('', size='11pt', parent=self)
         self.layout.addItem(self.titleLabel, 0, 1)
         self.setTitle(None)  ## hide
-        
+
         for i in range(4):
             self.layout.setRowPreferredHeight(i, 0)
             self.layout.setRowMinimumHeight(i, 0)
             self.layout.setRowSpacing(i, 0)
             self.layout.setRowStretchFactor(i, 1)
-            
+
         for i in range(3):
             self.layout.setColumnPreferredWidth(i, 0)
             self.layout.setColumnMinimumWidth(i, 0)
@@ -173,7 +187,7 @@ class PlotItem(GraphicsWidget):
             self.layout.setColumnStretchFactor(i, 1)
         self.layout.setRowStretchFactor(2, 100)
         self.layout.setColumnStretchFactor(1, 100)
-        
+
 
         self.items = []
         self.curves = []
@@ -186,12 +200,12 @@ class PlotItem(GraphicsWidget):
         self.avgShadowPen = fn.mkPen([0, 0, 0], width=4) # the previous default of [0,0,0,100] prevent fast drawing of the wide shadow line
 
         ### Set up context menu
-        
+
         w = QtWidgets.QWidget()
         self.ctrl = c = ui_template.Ui_Form()
         c.setupUi(w)
         dv = QtGui.QDoubleValidator(self)
-        
+
         menuItems = [
             (translate("PlotItem", 'Transforms'), c.transformGroup),
             (translate("PlotItem", 'Downsample'), c.decimateGroup),
@@ -200,10 +214,10 @@ class PlotItem(GraphicsWidget):
             (translate("PlotItem", 'Grid'), c.gridGroup),
             (translate("PlotItem", 'Points'), c.pointsGroup),
         ]
-        
-        
+
+
         self.ctrlMenu = QtWidgets.QMenu()
-        
+
         self.ctrlMenu.setTitle(translate("PlotItem", 'Plot Options'))
         self.subMenus = []
         for name, grp in menuItems:
@@ -213,7 +227,7 @@ class PlotItem(GraphicsWidget):
             sm.addAction(act)
             self.subMenus.append(sm)
             self.ctrlMenu.addMenu(sm)
-        
+
         self.stateGroup = WidgetGroup()
         for name, w in menuItems:
             self.stateGroup.autoAdd(w)
@@ -340,6 +354,7 @@ class PlotItem(GraphicsWidget):
         # XXX: yeah yeah, i know we can't use type annots like this yet.
         axisItems: Optional[dict[str, AxisItem]] = None,
         add_to_layout: bool = True,
+        default_axes: list[str] = ['left', 'bottom'],
     ):
         """
         Place axis items as given by `axisItems`. Initializes
@@ -364,7 +379,7 @@ class PlotItem(GraphicsWidget):
 
         # XXX: uhhh wat^ ..?
 
-        visibleAxes = list(axisItems.keys())
+        visibleAxes = list(default_axes) + list(axisItems.keys())
 
         # TODO: we should probably invert the loop
         # here to not loop the predefined "axis name set" and
@@ -397,6 +412,8 @@ class PlotItem(GraphicsWidget):
                             " and set[X/Y]Link.")
 
             else:
+                # Set up new axis
+
                 # XXX: ok but why do we want to add axes for all entries
                 # if not desired by the user? The only reason I can see
                 # adding this is without it there's some weird
@@ -423,7 +440,6 @@ class PlotItem(GraphicsWidget):
             axis.setFlag(
                 axis.GraphicsItemFlag.ItemNegativeZStacksBehindParent
             )
-            # lol, what is this api..
             if name in visibleAxes:
                 self.showAxis(name, True)
             else:
