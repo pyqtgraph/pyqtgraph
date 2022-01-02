@@ -18,7 +18,14 @@ def mk_axes(names: list[str] = ['right', 'bottom']):
     return {name: AxisItem(orientation=name) for name in names}
 
 
-pw = pg.PlotWidget(axisItems=mk_axes())
+pw = pg.PlotWidget(
+    axisItems=mk_axes(),
+    # XXX: this is needed here (and below) to avoid
+    # "default visible axes" from being displayed which
+    # not only hurts the overlayed axes performance but
+    # also results in placement of undesired axes..
+    default_axes=[],
+)
 mw.setCentralWidget(pw)
 mw.show()
 pw.addLegend(offset=(0, 0))
@@ -47,11 +54,20 @@ plot1.update()
 plot1.show()
 
 for i, (plot, data) in enumerate((
-    (pg.PlotItem(axisItems=mk_axes(), parent=plot1),
+    (pg.PlotItem(
+        axisItems=mk_axes(),
+        parent=plot1,
+        default_axes=[],),
      data2),
-    (pg.PlotItem(axisItems=mk_axes(), parent=plot1),
+    (pg.PlotItem(
+        axisItems=mk_axes(),
+        parent=plot1,
+        default_axes=[],),
      data3),
-    (pg.PlotItem(axisItems=mk_axes(), parent=plot1),
+    (pg.PlotItem(
+        axisItems=mk_axes(),
+        parent=plot1,
+        default_axes=[],),
      data4),
 )):
     # TODO: get title stacking in the layout working
