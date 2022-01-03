@@ -74,158 +74,6 @@ class ChildGroup(ItemGroup):
         return ret
 
 
-from typing import Callable, Optional
-
-
-class eventrelay:
-    '''
-    Method decorator which enables relay of a particular
-    ``QtCore.Signal`` from some chosen broadcaster widget to a set of
-    consumer widgets which should operate their event handlers normally
-    but instead of signals "relayed" from the broadcaster.
-
-    Mostly useful for overlaying widgets that handle user input
-    that you want to overlay graphically.
-
-    '''
-    def __init__(
-        self,
-        fn: Callable[
-                ['ViewBox',
-                 'QEvent',
-                 Optional['AxisItem']],
-                 None,
-        ]
-    ) -> None:
-        self.fn = fn
-
-    def __set_name__(
-        self,
-        owner: 'ViewBox',
-        name: str,
-
-    ) -> None:
-
-        func = self.fn
-        (
-            args,
-            varargs,
-            varkw,
-            defaults,
-            kwonlyargs,
-            kwonlydefaults,
-            annotations
-        ) = inspect.getfullargspec(func)
-
-        # XXX: generate a relay signal with 1 extra
-        # argument for a ``relayed_from`` kwarg. Since
-        # ``'self'`` is already ignored by signals we just need
-        # to count the arguments since we're adding only 1 (and
-        # ``args`` will capture that).
-        numargs = len(args + list(defaults))
-
-        signal = QtCore.Signal(*tuple(numargs * [object]))
-        signame = name + 'Relay'
-        setattr(owner, signame, signal)
-
-        # TODO: we might want to enabled some kind of manual flag to disable
-        # this method wrapping during type creation? As example a user could
-        # definitively decide **not** to enable broadcasting support by
-        # setting something like ``ViewBox.disable_relays = True``?
-        @wraps(func)
-        def maybe_broadcast(
-            vb: 'ViewBox',
-            ev: 'MouseDragEvent',
-            axis: 'Optional[int]' = None,
-            relayed_from: 'ViewBox' = None,
-
-        ) -> None:
-            '''
-            (soon to be) Decorator which makes an event handler
-            "broadcastable" to overlayed ``GraphicsWidget``s.
-
-            Adds relay signals based on the decorated handler's name
-            and conducts a signal broadcast of the relay signal if there
-            are consumers registered.
-
-            '''
-            # When no relay source has been set just bypass all
-            # the broadcast machinery.
-            if vb.event_relay_source is None:
-                ev.accept()
-                return func(
-                    vb,
-                    ev,
-                    axis=axis,
-                )
-
-            if relayed_from:
-                assert axis is None
-
-                # this is a relayed event and should be ignored (so it does not
-                # halt/short circuit the graphicscene loop). Further the
-                # surrounding handler for this signal must be allowed to execute
-                # and get processed by **this consumer**.
-                print(f'{vb.name} rx relayed from {relayed_from.name}')
-                ev.ignore()
-
-                return func(
-                    vb,
-                    ev,
-                    axis=axis,
-                )
-
-            if axis is not None:
-                print(f'{vb.name} handling axis event {name}')
-                ev.accept()
-                return func(
-                    vb,
-                    ev,
-                    axis=axis,
-                )
-
-            elif (
-                relayed_from is None
-                and vb.event_relay_source is vb  # we are the broadcaster
-                and axis is None
-            ):
-                # broadcast case: this is a source event which will be
-                # relayed to attached consumers and accepted after all
-                # consumers complete their own handling followed by this
-                # routine's processing.
-
-                print(f'{vb.name} emitting {signame}')
-                # pre-relay to all consumers first before
-                # moving on (``.emit()`` blocks until all
-                # downstream consumers have run).
-                signal = getattr(vb, signame)
-
-                # NOTE: we could also just bypass a "relay" signal
-                # entirely and instead call the handlers manually in
-                # a loop?
-                signal.emit(
-                    ev,
-                    axis,
-                    # passing this demarks a broadcasted/relayed event
-                    vb,
-                    vb,  # not entirely sure why both of these are required.
-                )
-                # accept event so no more relays are fired.
-                ev.accept()
-
-                # call underlying wrapped method with an extra ``relayed_from`` value
-                # to denote that this is a relayed event handling case.
-                return func(
-                    vb,
-                    ev,
-                    axis=axis,
-                )
-
-        # Register relay signal with target handler method name.
-        owner.relays[signame] = name
-        setattr(owner, name, maybe_broadcast)
-
-
 class ViewBox(GraphicsWidget):
     """
     **Bases:** :class:`GraphicsWidget <pyqtgraph.GraphicsWidget>`
@@ -255,8 +103,11 @@ class ViewBox(GraphicsWidget):
     sigTransformChanged = QtCore.Signal(object)
     sigResized = QtCore.Signal(object)
 
-    # sigMouseDraggedRelay = QtCore.Signal(object, object, object)
-    # sigMouseWheelRelay = QtCore.Signal(object, object, object)
+    # NOTE: these MUST be defined here (and can't be monkey patched
+    # on later) due to signal construction requiring refs to be
+    # in place during the run of meta-class machinery.
+    mouseDragEventRelay = QtCore.Signal(object, object, object)
+    wheelEventRelay = QtCore.Signal(object, object, object)
 
     ## mouse modes
     PanMode = 3
@@ -271,7 +122,7 @@ class ViewBox(GraphicsWidget):
     NamedViews = weakref.WeakValueDictionary()   # name: ViewBox
     AllViews = weakref.WeakKeyDictionary()       # ViewBox: None
 
-    event_relay_source: Optional['ViewBox'] = None
+    event_relay_source: 'Optional[ViewBox]' = None
     relays: dict[str, Signal] = {}
 
     def __init__(
@@ -1434,7 +1285,6 @@ class ViewBox(GraphicsWidget):
         """Return the bounding rect of the item in view coordinates"""
         return self.mapSceneToView(item.sceneBoundingRect()).boundingRect()
 
-    @eventrelay
     def wheelEvent(
         self,
         ev,
@@ -1460,10 +1310,6 @@ class ViewBox(GraphicsWidget):
         if ev.button() == QtCore.Qt.MouseButton.RightButton and self.menuEnabled():
             self.raiseContextMenu(ev)
 
-            # TODO: probably should just turn this into a
-            # method decorator.
-            # self.maybe_relay(ev)
-
     def raiseContextMenu(self, ev):
         menu = self.getMenu(ev)
         if menu is not None:
@@ -1476,7 +1322,6 @@ class ViewBox(GraphicsWidget):
     def getContextMenus(self, event):
         return self.menu.actions() if self.menuEnabled() else []
 
-    @eventrelay
     def mouseDragEvent(
         self,
         ev: 'MouseDragEvent',

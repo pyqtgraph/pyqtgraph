@@ -1,20 +1,16 @@
-from functools import partial
+# import inspect
+from typing import Callable, Optional
 
 from ..Qt.QtWidgets import QGraphicsGridLayout
-from ..functions import connect_lambda
-# from ..graphicsItems.AxisItem import AxisItem
-# from ..graphicsItems.GraphicsObject import GraphicsObject
-from ..graphicsItems.PlotItem.PlotItem import PlotItem
+from ..graphicsItems.AxisItem import AxisItem
 from ..graphicsItems.ViewBox import ViewBox
-from ..Qt.QtCore import QObject, Signal, Qt
-
-# Bugs TODO:
-# - figure out why per-axis drag clicking is halted
-#   after a single handler call - seems like it's a more serious
-#   bug in the depths of the viewbox handlers rat's nest XD
+from ..graphicsItems.GraphicsWidget import GraphicsWidget
+from ..graphicsItems.PlotItem.PlotItem import PlotItem
+from ..Qt.QtCore import QObject, Signal, Qt, QEvent
 
 # Unimplemented features TODO:
 # - 'A' (autobtn) should relay to all views
+# - context menu single handler + relay?
 # - layout unwind and re-pack for 'left' and 'top' axes
 # - add labels to layout if detected in source ``PlotItem``
 
@@ -51,6 +47,193 @@ _axes_layout_indices: dict[str] = {
 # is the "middle" (since 3 columns) and is where the plot/vb is placed.
 
 
+# TODO: we might want to enabled some kind of manual flag to disable
+# this method wrapping during type creation? As example a user could
+# definitively decide **not** to enable broadcasting support by
+# setting something like ``ViewBox.disable_relays = True``?
+def mk_relay_method(
+
+    signame: str,
+    slot: Callable[
+        [ViewBox,
+         'QEvent',
+         Optional[AxisItem]],
+        None,
+    ],
+
+) -> Callable[
+    [
+        ViewBox,
+        # lol, there isn't really a generic type thanks
+        # to the rewrite of Qt's event system XD
+        'QEvent',
+
+        'Optional[AxisItem]',
+        'Optional[ViewBox]',  # the ``relayed_from`` arg we provide
+    ],
+    None,
+]:
+
+    def maybe_broadcast(
+        vb: 'ViewBox',
+        ev: 'QEvent',
+        axis: 'Optional[int]' = None,
+        relayed_from: 'ViewBox' = None,
+
+    ) -> None:
+        '''
+        (soon to be) Decorator which makes an event handler
+        "broadcastable" to overlayed ``GraphicsWidget``s.
+
+        Adds relay signals based on the decorated handler's name
+        and conducts a signal broadcast of the relay signal if there
+        are consumers registered.
+
+        '''
+        # When no relay source has been set just bypass all
+        # the broadcast machinery.
+        if vb.event_relay_source is None:
+            ev.accept()
+            return slot(
+                vb,
+                ev,
+                axis=axis,
+            )
+
+        if relayed_from:
+            assert axis is None
+
+            # this is a relayed event and should be ignored (so it does not
+            # halt/short circuit the graphicscene loop). Further the
+            # surrounding handler for this signal must be allowed to execute
+            # and get processed by **this consumer**.
+            print(f'{vb.name} rx relayed from {relayed_from.name}')
+            ev.ignore()
+
+            return slot(
+                vb,
+                ev,
+                axis=axis,
+            )
+
+        if axis is not None:
+            print(f'{vb.name} handling axis event:\n{str(ev)}')
+            ev.accept()
+            return slot(
+                vb,
+                ev,
+                axis=axis,
+            )
+
+        elif (
+            relayed_from is None
+            and vb.event_relay_source is vb  # we are the broadcaster
+            and axis is None
+        ):
+            # Broadcast case: this is a source event which will be
+            # relayed to attached consumers and accepted after all
+            # consumers complete their own handling followed by this
+            # routine's processing. Sequence is,
+            # - pre-relay to all consumers *first* - ``.emit()`` blocks
+            #   until all downstream relay handlers have run.
+            # - run the source handler for **this** event and accept
+            #   the event
+
+            # Access the "bound signal" that is created
+            # on the widget type as part of instantiation.
+            signal = getattr(vb, signame)
+            print(f'{vb.name} emitting {signame}')
+
+            # TODO/NOTE: we could also just bypass a "relay" signal
+            # entirely and instead call the handlers manually in
+            # a loop? This probably is a lot simpler and also doesn't
+            # have any downside, and allows not touching target widget
+            # internals.
+            signal.emit(
+                ev,
+                axis,
+                # passing this demarks a broadcasted/relayed event
+                vb,
+            )
+            # accept event so no more relays are fired.
+            ev.accept()
+
+            # call underlying wrapped method with an extra ``relayed_from`` value
+            # to denote that this is a relayed event handling case.
+            return slot(
+                vb,
+                ev,
+                axis=axis,
+            )
+
+    return maybe_broadcast
+
+
+# XXX: :( can't define signals **after** class compile time
+# so this is not really useful.
+# def mk_relay_signal(
+#     func,
+#     name: str = None,
+
+# ) -> Signal:
+#     (
+#         args,
+#         varargs,
+#         varkw,
+#         defaults,
+#         kwonlyargs,
+#         kwonlydefaults,
+#         annotations
+#     ) = inspect.getfullargspec(func)
+
+#     # XXX: generate a relay signal with 1 extra
+#     # argument for a ``relayed_from`` kwarg. Since
+#     # ``'self'`` is already ignored by signals we just need
+#     # to count the arguments since we're adding only 1 (and
+#     # ``args`` will capture that).
+#     numargs = len(args + list(defaults))
+#     signal = Signal(*tuple(numargs * [object]))
+#     signame = name or func.__name__ + 'Relay'
+#     return signame, signal
+
+
+def enable_relays(
+    widget: GraphicsWidget,
+    handler_names: list[str],
+
+) -> list[Signal]:
+    '''
+    Method override helper which enables relay of a particular
+    ``Signal`` from some chosen broadcaster widget to a set of
+    consumer widgets which should operate their event handlers normally
+    but instead of signals "relayed" from the broadcaster.
+
+    Mostly useful for overlaying widgets that handle user input
+    that you want to overlay graphically. The target ``widget`` type must
+    define ``QtCore.Signal``s each with a `'Relay'` suffix for each
+    name provided in ``handler_names: list[str]``.
+
+    '''
+    signals = []
+    for name in handler_names:
+        handler = getattr(widget, name)
+        signame = name + 'Relay'
+        # ensure the target widget defines a relay signal
+        relay = getattr(widget, signame)
+        widget.relays[signame] = name
+        signals.append(relay)
+        method = mk_relay_method(signame, handler)
+        setattr(widget, name, method)
+
+    return signals
+
+
+enable_relays(
+    ViewBox,
+    ['wheelEvent', 'mouseDragEvent']
+)
+
+
 class PlotItemOverlay:
     '''
     A composite for managing overlaid ``PlotItem`` instances such that
@@ -66,6 +249,7 @@ class PlotItemOverlay:
 
         self.root_plotitem: PlotItem = root_plotitem
 
+        # method = mk_relay_method(relay_signal_name, handler)
         vb = root_plotitem.vb
         vb.event_relay_source = vb  # TODO: maybe change name?
         vb.setZValue(1000)  # XXX: critical for scene layering/relaying
@@ -114,14 +298,14 @@ class PlotItemOverlay:
             # wire up relay signals
             for relay_signal_name, handler_name in vb.relays.items():
                 # print(handler_name)
-                # breakpoint()
                 # XXX: Signal class attrs are bound after instantiation
                 # of the defining type, so we need to access that bound
                 # version here.
-                sig = getattr(
-                    root.vb,
-                    relay_signal_name
-                ).connect(getattr(vb, handler_name))
+                signal = getattr(root.vb, relay_signal_name)
+                handler = getattr(vb, handler_name)
+                # slot = mk_relay_method(relay_signal_name, handler)
+                # breakpoint()
+                signal.connect(handler)
 
                 # sig = root.vb.sigMouseDraggedRelay.connect(
                 #     partial(
@@ -161,7 +345,7 @@ class PlotItemOverlay:
 
         for name, axis_info in plotitem.axes.items():
             axis = axis_info['item']
-            axis_view = axis.linkedView()
+            # axis_view = axis.linkedView()
 
             # Remove old axis
             # plotitem.removeAxis(axis, unlink=False)
@@ -204,13 +388,10 @@ class PlotItemOverlay:
 
         plotitem.setGeometry(root.vb.sceneBoundingRect())
 
-        # TODO: do we actually need this if we use a partial?
-        connect_lambda(
-            root.vb.sigResized,
-            plotitem,
-            lambda plotitem,
-            vb: plotitem.setGeometry(vb.sceneBoundingRect())
-        )
+        def size_to_viewbox(vb: 'ViewBox'):
+            plotitem.setGeometry(vb.sceneBoundingRect())
+
+        root.vb.sigResized.connect(size_to_viewbox)
 
         # ensure the overlayed view is redrawn on each cycle
         root.scene().sigPrepareForPaint.connect(vb.prepareForPaint)
