@@ -205,6 +205,7 @@ class ViewBox(GraphicsWidget):
         self.borderRect.setPen(self.border)
 
         self.reScaleBox = None
+        self._add_rectangle_selection()
 
         ## show target rect for debugging
         self.target = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
@@ -347,7 +348,12 @@ class ViewBox(GraphicsWidget):
         if mode not in [ViewBox.PanMode, ViewBox.RectMode]:
             raise Exception("Mode must be ViewBox.PanMode or ViewBox.RectMode")
         self.state['mouseMode'] = mode
-        if self.reScaleBox is None and mode == ViewBox.RectMode:
+        self._add_rectangle_selection()
+
+        self.sigStateChanged.emit(self)
+
+    def _add_rectangle_selection(self):
+        if self.reScaleBox is None and self.state['mouseMode'] == ViewBox.RectMode:
             ## Make scale box that is shown when dragging on the view
             self.rbScaleBox = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
             self.rbScaleBox.setPen(fn.mkPen((255, 255, 100), width=1))
@@ -355,8 +361,6 @@ class ViewBox(GraphicsWidget):
             self.rbScaleBox.setZValue(1e9)
             self.rbScaleBox.hide()
             self.addItem(self.rbScaleBox, ignoreBounds=True)
-
-        self.sigStateChanged.emit(self)
 
     def setLeftButtonAction(self, mode='rect'):  ## for backward compatibility
         if mode.lower() == 'rect':
