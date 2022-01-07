@@ -204,7 +204,7 @@ class ViewBox(GraphicsWidget):
         self.borderRect.setZValue(1e3)
         self.borderRect.setPen(self.border)
 
-        self.reScaleBox = None
+        self.rbScaleBox = None
         self._add_rectangle_selection()
 
         ## show target rect for debugging
@@ -353,7 +353,7 @@ class ViewBox(GraphicsWidget):
         self.sigStateChanged.emit(self)
 
     def _add_rectangle_selection(self):
-        if self.reScaleBox is None and self.state['mouseMode'] == ViewBox.RectMode:
+        if self.rbScaleBox is None and self.state['mouseMode'] == ViewBox.RectMode:
             ## Make scale box that is shown when dragging on the view
             self.rbScaleBox = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
             self.rbScaleBox.setPen(fn.mkPen((255, 255, 100), width=1))
