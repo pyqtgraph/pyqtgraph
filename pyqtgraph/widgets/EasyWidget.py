@@ -173,7 +173,7 @@ class EasyWidget:
         return retWidget
 
     @classmethod
-    def fromPgParam(cls, param: Parameter=None, layout='H', **opts):
+    def fromParameter(cls, param: Parameter=None, layout='H', **opts):
         """
         Creates a form-style EasyWidget (name + edit widget) from pyqtgraph parameter options or a parameter directly.
 
