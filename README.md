@@ -127,5 +127,7 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [PyMeasure](https://github.com/pymeasure/pymeasure)
 * [Exo-Striker](https://github.com/3fon3fonov/exostriker)
 * [HussariX](https://github.com/sem-geologist/HussariX)
+* [EnMAP-Box](https://enmap-box.readthedocs.io)
+* [EO Time Series Viewer](https://eo-time-series-viewer.readthedocs.io)
 
 Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!
