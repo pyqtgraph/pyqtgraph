@@ -151,7 +151,8 @@ class PlotCurveItem(GraphicsObject):
             'connect': 'all',
             'mouseWidth': 8, # width of shape responding to mouse click
             'compositionMode': None,
-            'skipFiniteCheck': False
+            'skipFiniteCheck': False,
+            'segmentedLineMode': getConfigOption('segmentedLineMode'),
         }
         if 'pen' not in kargs:
             self.opts['pen'] = fn.mkPen('w')
@@ -624,7 +625,38 @@ class PlotCurveItem(GraphicsObject):
 
         return self.path
 
+    def setSegmentedLineMode(self, mode):
+        """
+        Sets the mode that decides whether or not lines are drawn as segmented lines. Drawing lines
+        as segmented lines is more performant than the standard drawing method with continuous
+        lines.
+
+        Parameters
+        ----------
+        mode : str
+               ``'auto'`` (default) segmented lines are drawn based upon the pen's width, style
+               and alpha as well whether anti-aliasing is enabled. See
+               :func:`_shouldUseDrawLineSegments
+               <pyqtgraph.PlotCurveItem._shouldUseDrawLineSegments>` for more details on the
+               criteria.
+
+               ``'on'`` lines are always drawn as segmented lines
+
+               ``'off'`` lines are never drawn as segmented lines, i.e. the drawing method with
+               continuous lines is used
+        """
+        if mode not in ('auto', 'on', 'off'):
+            raise ValueError('segmentedLineMode must be "auto", "on" or "off"')
+        self.opts['segmentedLineMode'] = mode
+        self.invalidateBounds()
+        self.update()
+
     def _shouldUseDrawLineSegments(self, pen):
+        mode = self.opts['segmentedLineMode']
+        if mode == 'on':
+            return True
+        if mode == 'off':
+            return False
         return (
             pen.widthF() > 1.0
             # non-solid pen styles need single polyline to be effective
@@ -634,6 +666,9 @@ class PlotCurveItem(GraphicsObject):
             and pen.isSolid()   # pen.brush().style() == Qt.BrushStyle.SolidPattern
             # ends of adjacent line segments overlapping is visible when not opaque
             and pen.color().alphaF() == 1.0
+            # anti-aliasing introduces transparent pixels and therefore also causes visible overlaps
+            # for adjacent line segments
+            and not self.opts['antialias']
         )
 
     def _getLineSegments(self):
