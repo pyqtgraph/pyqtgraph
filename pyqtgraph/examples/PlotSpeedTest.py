@@ -80,7 +80,8 @@ children = [
     dict(name='connect', type='list', limits=['all', 'pairs', 'finite', 'array'], value='all'),
     dict(name='fill', type='bool', value=False),
     dict(name='skipFiniteCheck', type='bool', value=False),
-    dict(name='plotMethod', title='Plot Method', type='list', limits=['pyqtgraph', 'drawPolyline'])
+    dict(name='plotMethod', title='Plot Method', type='list', limits=['pyqtgraph', 'drawPolyline']),
+    dict(name='segmentedLineMode', title='Segmented lines', type='list', limits=['auto', 'on', 'off'], value='auto'),
 ]
 
 params = ptree.Parameter.create(name='Parameters', type='group', children=children)
@@ -145,7 +146,7 @@ fpsLastUpdate = perf_counter()
 def update():
     global curve, data, ptr, elapsed, fpsLastUpdate
 
-    options = ['antialias', 'connect', 'skipFiniteCheck']
+    options = ['antialias', 'connect', 'skipFiniteCheck', 'segmentedLineMode']
     kwds = { k : params[k] for k in options }
     if kwds['connect'] == 'array':
         kwds['connect'] = connect_array

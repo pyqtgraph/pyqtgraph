@@ -424,49 +424,51 @@ class PlotCurveItem(GraphicsObject):
 
     def setData(self, *args, **kargs):
         """
-        =============== =================================================================
+        ================= =================================================================
         **Arguments:**
-        x, y            (numpy arrays) Data to display
-        pen             Pen to use when drawing. Any single argument accepted by
-                        :func:`mkPen <pyqtgraph.mkPen>` is allowed.
-        shadowPen       Pen for drawing behind the primary pen. Usually this
-                        is used to emphasize the curve by providing a
-                        high-contrast border. Any single argument accepted by
-                        :func:`mkPen <pyqtgraph.mkPen>` is allowed.
-        fillLevel       (float or None) Fill the area under the curve to
-                        the specified value.
-        fillOutline     (bool) If True, an outline surrounding the `fillLevel`
-                        area is drawn.
-        brush           Brush to use when filling. Any single argument accepted
-                        by :func:`mkBrush <pyqtgraph.mkBrush>` is allowed.
-        antialias       (bool) Whether to use antialiasing when drawing. This
-                        is disabled by default because it decreases performance.
-        stepMode        (str or None) If 'center', a step is drawn using the `x`
-                        values as boundaries and the given `y` values are
-                        associated to the mid-points between the boundaries of
-                        each step. This is commonly used when drawing
-                        histograms. Note that in this case, ``len(x) == len(y) + 1``
+        x, y              (numpy arrays) Data to display
+        pen               Pen to use when drawing. Any single argument accepted by
+                          :func:`mkPen <pyqtgraph.mkPen>` is allowed.
+        shadowPen         Pen for drawing behind the primary pen. Usually this
+                          is used to emphasize the curve by providing a
+                          high-contrast border. Any single argument accepted by
+                          :func:`mkPen <pyqtgraph.mkPen>` is allowed.
+        fillLevel         (float or None) Fill the area under the curve to
+                          the specified value.
+        fillOutline       (bool) If True, an outline surrounding the `fillLevel`
+                          area is drawn.
+        brush             Brush to use when filling. Any single argument accepted
+                          by :func:`mkBrush <pyqtgraph.mkBrush>` is allowed.
+        antialias         (bool) Whether to use antialiasing when drawing. This
+                          is disabled by default because it decreases performance.
+        stepMode          (str or None) If 'center', a step is drawn using the `x`
+                          values as boundaries and the given `y` values are
+                          associated to the mid-points between the boundaries of
+                          each step. This is commonly used when drawing
+                          histograms. Note that in this case, ``len(x) == len(y) + 1``
                         
-                        If 'left' or 'right', the step is drawn assuming that
-                        the `y` value is associated to the left or right boundary,
-                        respectively. In this case ``len(x) == len(y)``
-                        If not passed or an empty string or `None` is passed, the
-                        step mode is not enabled.
-        connect         Argument specifying how vertexes should be connected
-                        by line segments. 
+                          If 'left' or 'right', the step is drawn assuming that
+                          the `y` value is associated to the left or right boundary,
+                          respectively. In this case ``len(x) == len(y)``
+                          If not passed or an empty string or `None` is passed, the
+                          step mode is not enabled.
+        connect           Argument specifying how vertexes should be connected
+                          by line segments. 
                         
                             | 'all' (default) indicates full connection. 
                             | 'pairs' draws one separate line segment for each two points given.
                             | 'finite' omits segments attached to `NaN` or `Inf` values. 
                             | For any other connectivity, specify an array of boolean values.
-        compositionMode See :func:`setCompositionMode
-                        <pyqtgraph.PlotCurveItem.setCompositionMode>`.
-        skipFiniteCheck (bool, defaults to `False`) Optimization flag that can
-                        speed up plotting by not checking and compensating for
-                        `NaN` values.  If set to `True`, and `NaN` values exist, the
-                        data may not be displayed or the plot may take a
-                        significant performance hit.
-        =============== =================================================================
+        compositionMode   See :func:`setCompositionMode
+                          <pyqtgraph.PlotCurveItem.setCompositionMode>`.
+        skipFiniteCheck   (bool, defaults to `False`) Optimization flag that can
+                          speed up plotting by not checking and compensating for
+                          `NaN` values.  If set to `True`, and `NaN` values exist, the
+                          data may not be displayed or the plot may take a
+                          significant performance hit.
+        segmentedLineMode See :func:`setSegmentedLineMode
+                          <pyqtgraph.PlotCurveItem.setSegmentedLineMode>`.
+        ================= =================================================================
 
         If non-keyword arguments are used, they will be interpreted as
         ``setData(y)`` for a single argument and ``setData(x, y)`` for two
@@ -559,6 +561,8 @@ class PlotCurveItem(GraphicsObject):
             self.opts['antialias'] = kargs['antialias']
         if 'skipFiniteCheck' in kargs:
             self.opts['skipFiniteCheck'] = kargs['skipFiniteCheck']
+        if 'segmentedLineMode' in kargs:
+            self.setSegmentedLineMode(kargs['segmentedLineMode'])
 
         profiler('set')
         self.update()
@@ -634,11 +638,8 @@ class PlotCurveItem(GraphicsObject):
         Parameters
         ----------
         mode : str
-               ``'auto'`` (default) segmented lines are drawn based upon the pen's width, style
-               and alpha as well whether anti-aliasing is enabled. See
-               :func:`_shouldUseDrawLineSegments
-               <pyqtgraph.PlotCurveItem._shouldUseDrawLineSegments>` for more details on the
-               criteria.
+               ``'auto'`` (default) segmented lines are drawn if the pen's width > 1, pen style is a
+               solid line, the pen color is opaque and anti-aliasing is not enabled.
 
                ``'on'`` lines are always drawn as segmented lines
 
@@ -646,7 +647,7 @@ class PlotCurveItem(GraphicsObject):
                continuous lines is used
         """
         if mode not in ('auto', 'on', 'off'):
-            raise ValueError('segmentedLineMode must be "auto", "on" or "off"')
+            raise ValueError(f'segmentedLineMode must be "auto", "on" or "off", got {mode} instead')
         self.opts['segmentedLineMode'] = mode
         self.invalidateBounds()
         self.update()
