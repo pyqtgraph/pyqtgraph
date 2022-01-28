@@ -132,12 +132,16 @@ def onPenChanged(param, pen):
 def onFillChanged(param, enable):
     curve.setFillLevel(0.0 if enable else None)
 
+def onSegmentedLineModeChanged(param, mode):
+    curve.setSegmentedLineMode(mode)
+
 params.child('sigopts').sigTreeStateChanged.connect(makeData)
 params.child('useOpenGL').sigValueChanged.connect(onUseOpenGLChanged)
 params.child('enableExperimental').sigValueChanged.connect(onEnableExperimentalChanged)
 params.child('pen').sigValueChanged.connect(onPenChanged)
 params.child('fill').sigValueChanged.connect(onFillChanged)
 params.child('plotMethod').sigValueChanged.connect(curve.setMethod)
+params.child('segmentedLineMode').sigValueChanged.connect(onSegmentedLineModeChanged)
 params.sigTreeStateChanged.connect(resetTimings)
 
 makeData()
@@ -146,7 +150,7 @@ fpsLastUpdate = perf_counter()
 def update():
     global curve, data, ptr, elapsed, fpsLastUpdate
 
-    options = ['antialias', 'connect', 'skipFiniteCheck', 'segmentedLineMode']
+    options = ['antialias', 'connect', 'skipFiniteCheck']
     kwds = { k : params[k] for k in options }
     if kwds['connect'] == 'array':
         kwds['connect'] = connect_array
