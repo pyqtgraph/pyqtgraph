@@ -1065,12 +1065,11 @@ class PlotDataItem(GraphicsObject):
 
     def getData(self):
         """
-        Returns the displayed data as the tuple (`xData`, `yData`) after mapping and data reduction.         
+        Returns the data as the tuple (`xData`, `yData`).
         """
-        dataset = self.getDisplayDataset()
-        if dataset is None:
+        if self._dataset is None:
             return (None, None)
-        return dataset.x, dataset.y
+        return self._dataset.x, self._dataset.y
 
     # compatbility method for access to dataRect for full dataset:
     def dataRect(self):
