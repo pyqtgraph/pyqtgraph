@@ -946,10 +946,6 @@ class PlotDataItem(GraphicsObject):
 
             dataset = PlotDataset(x,y)
             dataset.containsNonfinite = self._dataset.containsNonfinite
-            
-            if True in self.opts['logMode']:
-                dataset.applyLogMapping( self.opts['logMode'] ) # Apply log scaling for x and/or y axis
-
             self._datasetMapped = dataset
         
         # apply processing that affects the on-screen display of data:
@@ -1057,6 +1053,8 @@ class PlotDataItem(GraphicsObject):
                             y = fn.clip_array(y, min_val, max_val)
                             self._drlLastClip = (min_val, max_val)
         self._datasetDisplay = PlotDataset( x,y )
+        if True in self.opts['logMode']:
+            self._datasetDisplay.applyLogMapping(self.opts['logMode'])  # Apply log scaling for x and/or y axis
         self._datasetDisplay.containsNonfinite = containsNonfinite
         self.setProperty('xViewRangeWasChanged', False)
         self.setProperty('yViewRangeWasChanged', False)
@@ -1067,7 +1065,7 @@ class PlotDataItem(GraphicsObject):
         """
         Returns the displayed data as the tuple (`xData`, `yData`) after mapping and data reduction.         
         """
-        dataset = self.getDisplayDataset()
+        dataset = self._datasetMapped
         if dataset is None:
             return (None, None)
         return dataset.x, dataset.y
