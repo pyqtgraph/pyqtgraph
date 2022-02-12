@@ -1,4 +1,7 @@
 """
+RemoteGraphicsView
+==================
+
 Very simple example demonstrating RemoteGraphicsView.
 
 This allows graphics to be rendered in a child process and displayed in the 

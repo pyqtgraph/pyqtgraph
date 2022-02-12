@@ -1,4 +1,7 @@
 """
+Non-Uniform Image
+=================
+
 Display a non-uniform image.
 This example displays 2-d data as an image with non-uniformly
 distributed sample points.

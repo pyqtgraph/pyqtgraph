@@ -20,7 +20,7 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
     import examples
     __package__ = "examples"
 
-from . import utils
+from . import _utils
 
 
 def buildFileList(examples, files=None):
@@ -37,8 +37,8 @@ def buildFileList(examples, files=None):
 
 
 path = os.path.abspath(os.path.dirname(__file__))
-files = [("Example App", "RunExampleApp.py")]
-for ex in [utils.examples_, utils.others]:
+files = [("Example App", "_RunExampleApp.py")]
+for ex in [_utils.examples_, _utils.others]:
     files = buildFileList(ex, files)
 files = sorted(set(files))
 frontends = {
@@ -77,7 +77,7 @@ conditionalExamples = {
 }
 
 openglExamples = ['GLViewWidget.py']
-openglExamples.extend(utils.examples_['3D Graphics'].values())
+openglExamples.extend(_utils.examples_['3D Graphics'].values())
 for key in openglExamples:
     conditionalExamples[key] = exceptionCondition(
         not darwin_opengl_broken,

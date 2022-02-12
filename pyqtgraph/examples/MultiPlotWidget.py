@@ -1,4 +1,8 @@
 #!/usr/bin/python
+"""
+MultiPlotWidget
+===============
+"""
 
 import numpy as np
 from numpy import linspace

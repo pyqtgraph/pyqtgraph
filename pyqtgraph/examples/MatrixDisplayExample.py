@@ -1,4 +1,7 @@
 """
+Matrix Display
+==============
+
 This example demonstrates ViewBox and AxisItem configuration to plot a correlation matrix.
 """
 

@@ -1,4 +1,7 @@
 """
+Context Menus
+=============
+
 Demonstrates adding a custom context menu to a GraphicsItem
 and extending the context menu of a ViewBox.
 

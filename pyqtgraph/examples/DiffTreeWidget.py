@@ -1,5 +1,7 @@
-
 """
+DiffTreeWidget
+==============
+
 Simple use of DiffTreeWidget to display differences between structures of 
 nested dicts, lists, and arrays.
 """

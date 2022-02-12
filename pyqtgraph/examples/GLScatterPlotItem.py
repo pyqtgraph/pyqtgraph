@@ -1,4 +1,7 @@
 """
+GLScatterPlotItem
+=================
+
 Demonstrates use of GLScatterPlotItem with rapidly-updating plots.
 """
 

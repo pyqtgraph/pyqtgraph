@@ -1,4 +1,7 @@
 """
+QtDesigner
+==========
+
 Simple example of loading UI template created with Qt Designer.
 
 This example uses uic.loadUiType to parse and load the ui at runtime. It is also

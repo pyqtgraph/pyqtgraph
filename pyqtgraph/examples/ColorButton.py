@@ -1,4 +1,7 @@
 """
+ColorButton
+===========
+
 Simple example demonstrating a button which displays a colored rectangle
 and allows the user to select a new color by clicking on the button.
 """

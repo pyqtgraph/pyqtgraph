@@ -1,5 +1,8 @@
 #!/usr/bin/python
 """
+MultiPlotSpeedTest
+==================
+
 Test the speed of rapidly updating multiple plot curves
 """
 

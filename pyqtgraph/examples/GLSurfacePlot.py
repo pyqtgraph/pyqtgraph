@@ -1,4 +1,7 @@
 """
+GLSurfacePlotItem
+=================
+
 This example demonstrates the use of GLSurfacePlotItem.
 """
 

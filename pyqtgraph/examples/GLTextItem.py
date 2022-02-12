@@ -1,6 +1,8 @@
 """
-Simple examples demonstrating the use of GLTextItem.
+GLTextItem
+==========
 
+Simple examples demonstrating the use of GLTextItem.
 """
 
 import pyqtgraph as pg

@@ -1,4 +1,7 @@
 """
+ScaleBar
+========
+
 Demonstrates ScaleBar
 """
 

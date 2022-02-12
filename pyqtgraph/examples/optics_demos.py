@@ -1,4 +1,7 @@
 """
+Optics Demo
+===========
+
 Optical system design demo
 """
 

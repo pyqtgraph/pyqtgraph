@@ -1,7 +1,9 @@
 """
+DateAxisItem
+============
+
 Demonstrates the usage of DateAxisItem to display properly-formatted 
 timestamps on x-axis which automatically adapt to current zoom level.
-
 """
 
 import time

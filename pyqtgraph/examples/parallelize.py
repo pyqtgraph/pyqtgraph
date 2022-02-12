@@ -1,3 +1,8 @@
+"""
+Parallelize
+===========
+"""
+
 import time
 
 import pyqtgraph as pg

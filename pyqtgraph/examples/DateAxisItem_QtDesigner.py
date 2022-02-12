@@ -1,4 +1,7 @@
 """
+DateAxisItem QtDesigner
+=======================
+
 Demonstrates the usage of DateAxisItem in a layout created with Qt Designer.
 
 The spotlight here is on the 'setAxisItems' method, without which

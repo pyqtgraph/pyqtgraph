@@ -1,4 +1,7 @@
 """
+Remote Speed Test
+=================
+
 This example demonstrates the use of RemoteGraphicsView to improve performance in
 applications with heavy load. It works by starting a second process to handle 
 all graphics rendering, thus freeing up the main process to do its work.

@@ -1,4 +1,7 @@
 """
+Isocurve
+========
+
 Tests use of IsoCurve item displayed with image
 """
 

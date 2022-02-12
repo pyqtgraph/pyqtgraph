@@ -1,4 +1,7 @@
 """
+Flowchart
+=========
+
 This example demonstrates a very basic use of flowcharts: filter data,
 displaying both the input and output of the filter. The behavior of
 the filter can be reprogrammed by the user.

@@ -10,10 +10,13 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import time
-import sys
 import os
+import sys
+import time
 from datetime import datetime
+
+import qtgallery
+from sphinx_gallery.sorting import ExampleTitleSortKey
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -30,7 +33,13 @@ import pyqtgraph
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.napoleon']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.napoleon',
+    'sphinx_gallery.gen_gallery',
+    'qtgallery',
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -100,6 +109,134 @@ autodoc_mock_imports = [
     "h5py",
     "matplotlib",
 ]
+
+runlist = [
+    "Arrow",
+    "BarGraphItem",
+    "beeswarm",
+    "CLIexample",
+    "ColorBarItem",
+    "ColorButton",
+    "ColorGradientPlots",
+    "colorMapsLinearized",
+    "colorMaps",
+    "ConsoleWidget",
+    "contextMenu",
+    "crosshair",
+    "customGraphicsItem",
+    "CustomGraphItem",
+    "customPlot",
+    "DataSlicing",
+    "DataTreeWidget",
+    "DateAxisItem",
+    #"DateAxisItem_QtDesigner",
+    #"designerExample",
+    "DiffTreeWidget",
+    "dockarea",
+    #"Draw",
+    "ErrorBarItem",
+    "FillBetweenItem",
+    "FlowchartCustomNode",
+    "Flowchart",
+    "fractal",
+    "GLBarGraphItem",
+    "GLGradientLegendItem",
+    "GLGraphItem",
+    #"GLImageItem",
+    "GLIsosurface",
+    "GLLinePlotItem",
+    #"GLMeshItem",
+    "GLPainterItem",
+    "GLScatterPlotItem",
+    "GLshaders",
+    "GLSurfacePlot",
+    "GLTextItem",
+    "GLViewWidget",
+    "GLVolumeItem",
+    "GradientEditor",
+    "GradientWidget",
+    "GraphicsLayout",
+    "GraphicsScene",
+    "GraphItem",
+    "hdf5.py",
+    "HistogramLUT",
+    #"histogram",
+    "imageAnalysis",
+    "ImageItem",
+    "ImageView",
+    "infiniteline_performance",
+    "InfiniteLine",
+    "isocurve",
+    "JoystickButton",
+    "Legend",
+    "linkedViews",
+    #"logAxis",
+    "LogPlotTest",
+    "MatrixDisplayExample",
+    "MouseSelection",
+    "MultiplePlotAxes",
+    "multiplePlotSpeedTest",
+    "MultiPlotSpeedTest",
+    "MultiPlotWidget",
+    #"multiprocess",
+    "NonUniformImage",
+    "optics_demos",
+    "PanningPlot",
+    #"parallelize",
+    "parametertree",
+    "PColorMeshItem",
+    "PlotAutoRange",
+    "PlotSpeedTest",
+    "Plotting",
+    "PlotWidget",
+    #"ProgressDialog",
+    "relativity_demo",
+    #"RemoteGraphicsView",
+    "RemoteSpeedTest",
+    "ROIExamples",
+    "ROItypes",
+    #"ScaleBar",
+    "ScatterPlot",
+    "ScatterPlotSpeedTest",
+    "ScatterPlotWidget",
+    "scrollingPlots",
+    "SimplePlot",
+    "SpinBox",
+    "Symbols",
+    "TableWidget",
+    "text",
+    "TreeWidget",
+    "verlet_chain_demo",
+    "VideoSpeedTest",
+    "ViewBoxFeatures",
+    "ViewBox",
+    "ViewLimits",
+]
+
+def reset_pg_config(gallery_conf, fname):
+    """sphinx-gallery reset callback to reset to default pg config"""
+    pyqtgraph.setConfigOptions(**pyqtgraph.DEFAULT_CONFIG_OPTIONS)
+
+def argv_handler(gallery_conf, script_vars):
+    if script_vars["src_file"].endswith("hdf5.py"):
+        return ["test.hdf5", "1000000"]
+    else:
+        return []
+
+# sphinx gallery config
+sphinx_gallery_conf = {
+    "examples_dirs": os.path.join(
+        os.path.dirname(__file__), "..", "..", "pyqtgraph", "examples"
+    ),
+    "gallery_dirs": "examples",
+    "image_scrapers": (qtgallery.qtscraper,),
+    "reset_modules": (qtgallery.reset_qapp, reset_pg_config),
+    "filename_pattern": r"/examples/" + r"|".join("({})".format(n) for n in runlist),
+    #"filename_pattern": r"/examples/.*[^/]",
+    "ignore_pattern": r"(/_)|(^_)|(setup)|(Template)|(template)|(test_examples)",
+    "within_subsection_order": ExampleTitleSortKey,
+    "reset_argv": argv_handler,
+}
 
 # -- Options for HTML output ---------------------------------------------------
 

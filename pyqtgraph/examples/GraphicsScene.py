@@ -1,3 +1,8 @@
+"""
+GraphicsScene
+=============
+"""
+
 import pyqtgraph as pg
 from pyqtgraph.GraphicsScene import GraphicsScene
 from pyqtgraph.Qt import QtCore, QtWidgets

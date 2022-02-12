@@ -1,5 +1,8 @@
 #!/usr/bin/python
 """
+Scatter Plot Speed Test
+=======================
+
 For testing rapid updates of ScatterPlotItem under various conditions.
 """
 

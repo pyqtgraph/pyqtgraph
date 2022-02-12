@@ -17,7 +17,7 @@ path = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, path)
 import importlib
 
-import utils
+import _utils
 
 ui_template = importlib.import_module(
     f'exampleLoaderTemplate_{QT_LIB.lower()}')
@@ -339,7 +339,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
         onComboChanged(self.ui.searchFiles.currentText())
 
         self.itemCache = []
-        self.populateTree(self.ui.exampleTree.invisibleRootItem(), utils.examples_)
+        self.populateTree(self.ui.exampleTree.invisibleRootItem(), _utils.examples_)
         self.ui.exampleTree.expandAll()
 
         self.resize(1000,500)
@@ -370,7 +370,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
 
     def filterByContent(self, text=None):
         # Don't filter very short strings
-        checkDict = unnestedDict(utils.examples_)
+        checkDict = unnestedDict(_utils.examples_)
         self.hl.searchText = text
         # Need to reapply to current document
         self.hl.setDocument(self.ui.codeView.document())
@@ -387,7 +387,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
 
     def getMatchingTitles(self, text, exDict=None, acceptAll=False):
         if exDict is None:
-            exDict = utils.examples_
+            exDict = _utils.examples_
         text = text.lower()
         titles = []
         for kk, vv in exDict.items():

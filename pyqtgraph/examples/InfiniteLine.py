@@ -1,4 +1,7 @@
 """
+InfiniteLine
+============
+
 This example demonstrates some of the plotting items available in pyqtgraph.
 """
 

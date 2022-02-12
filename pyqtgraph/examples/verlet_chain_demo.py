@@ -1,4 +1,7 @@
 """
+Verlet Chain Demo
+=================
+
 Mechanical simulation of a chain using verlet integration.
 
 Use the mouse to interact with one of the chains.

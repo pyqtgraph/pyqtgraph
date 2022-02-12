@@ -1,4 +1,7 @@
 """
+Video Speed Test
+================
+
 Tests the speed of image updates for an ImageItem and RawImageWidget.
 The speed will generally depend on the type of data being shown, whether
 it is being scaled and/or converted by lookup table, and whether OpenGL

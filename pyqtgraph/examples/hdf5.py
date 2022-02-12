@@ -1,4 +1,7 @@
 """
+HDF5
+====
+
 In this example we create a subclass of PlotCurveItem for displaying a very large 
 data set from an HDF5 file that does not fit in memory. 
 
@@ -99,14 +102,14 @@ class HDF5Plot(pg.PlotCurveItem):
         
 
 
-def createFile(finalSize=2000000000):
+def createFile(fileName="test.hdf5", finalSize=2000000000):
     """Create a large HDF5 data file for testing.
     Data consists of 1M random samples tiled through the end of the array.
     """
     
     chunk = np.random.normal(size=1000000).astype(np.float32)
     
-    f = h5py.File('test.hdf5', 'w')
+    f = h5py.File(fileName, 'w')
     f.create_dataset('data', data=chunk, chunks=True, maxshape=(None,))
     data = f['data']
 
@@ -126,6 +129,8 @@ def createFile(finalSize=2000000000):
     
 if len(sys.argv) > 1:
     fileName = sys.argv[1]
+    fileSize = int(sys.argv[2])
+    createFile(fileName, fileSize)
 else:
     fileName = 'test.hdf5'
     if not os.path.isfile(fileName):
@@ -133,7 +138,7 @@ else:
         if not ok:
             sys.exit(0)
         else:
-            createFile(int(size*1e9))
+            createFile(fileName, int(size*1e9))
         #raise Exception("No suitable HDF5 file found. Use createFile() to generate an example file.")
 
 f = h5py.File(fileName, 'r')

@@ -1,4 +1,7 @@
 """
+ImageView
+=========
+
 This example demonstrates the use of ImageView with 3-color image stacks.
 ImageView is a high-level widget for displaying and analyzing 2D and 3D data.
 ImageView provides:

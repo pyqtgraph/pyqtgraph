@@ -1,6 +1,8 @@
 """
-Demonstrate creation of a custom graphic (a candlestick plot)
+Custom GraphicsItem
+===================
 
+Demonstrate creation of a custom graphic (a candlestick plot)
 """
 
 import pyqtgraph as pg

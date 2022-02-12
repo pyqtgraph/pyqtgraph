@@ -1,4 +1,7 @@
 """
+Legend
+======
+
 Demonstrates basic use of LegendItem
 """
 

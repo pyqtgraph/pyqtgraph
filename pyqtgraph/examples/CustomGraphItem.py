@@ -1,4 +1,7 @@
 """
+Custom GraphItem
+================
+
 Simple example of subclassing GraphItem.
 """
 

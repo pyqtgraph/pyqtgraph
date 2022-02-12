@@ -1,4 +1,7 @@
 """
+ROI Examples
+============
+
 Demonstrates a variety of uses for ROI. This class provides a user-adjustable
 region of interest marker. It is possible to customize the layout and 
 function of the scale/rotate handles in very flexible ways. 

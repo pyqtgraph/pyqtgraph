@@ -1,4 +1,7 @@
 """
+GLImageItem
+===========
+
 Use GLImageItem to display image data on rectangular planes.
 
 In this example, the image data is sampled from a volume and the image planes 

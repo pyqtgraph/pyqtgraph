@@ -1,4 +1,7 @@
 """
+ScatterPlotWidget
+=================
+
 Demonstration of ScatterPlotWidget for exploring structure in tabular data.
 
 The widget consists of four components:

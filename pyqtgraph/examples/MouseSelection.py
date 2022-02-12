@@ -1,4 +1,7 @@
 """
+Mouse Selection
+===============
+
 Demonstrates selecting plot curves by mouse click
 """
 

@@ -53,7 +53,9 @@ CONFIG_OPTIONS = {
                                  # change in the future.
     'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
     'useNumba': False, # When True, use numba
-} 
+}
+
+DEFAULT_CONFIG_OPTIONS = CONFIG_OPTIONS.copy()
 
 
 def setConfigOption(opt, value):

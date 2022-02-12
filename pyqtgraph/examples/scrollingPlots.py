@@ -1,4 +1,7 @@
 """
+Scrolling Plots
+===============
+
 Various methods of drawing scrolling plots.
 """
 

@@ -1,4 +1,7 @@
 """
+GLGraphItem
+===========
+
 Demonstrates use of GLGraphItem
 """
 

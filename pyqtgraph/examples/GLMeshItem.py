@@ -1,4 +1,7 @@
 """
+GLMeshItem
+==========
+
 Simple examples demonstrating the use of GLMeshItem.
 """
 

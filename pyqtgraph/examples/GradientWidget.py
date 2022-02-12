@@ -1,4 +1,7 @@
 """
+GradientWidget
+==============
+
 Demonstrates the appearance / interactivity of GradientWidget
 (without actually doing anything useful with it)
 """
