@@ -73,6 +73,7 @@ class MultiAxisPlotWidget(PlotWidget):
         if axis.name not in self._signalConnectionsByAxis:
             self._signalConnectionsByAxis[axis.name] = {}
         axis.showLabel(True)
+        # self.makeLayout(axes=self.axes.keys(), charts=self.charts.keys())
         return axis
 
     def addChart(self, name, xAxisName="bottom", yAxisName="left", chart=None, *args, **kwargs):
@@ -115,34 +116,36 @@ class MultiAxisPlotWidget(PlotWidget):
         """
         if name is None:
             raise AssertionError("Chart name should not be None")
-        if xAxisName not in self.axes:
-            if xAxisName in {"bottom", "top"}:
-                # add default axis to the list of axes if requested
-                x_axis = self.addAxis(xAxisName, axis=self.pi.axes[xAxisName]["item"])
-            else:
-                x_axis = self.addAxis(xAxisName, "bottom")
-        else:
+        if xAxisName in self.axes:
             x_axis = self.axes[xAxisName]
-        if yAxisName not in self.axes:
-            if yAxisName in {"left", "right"}:
-                # add default axis to the list of axes if requested
-                y_axis = self.addAxis(yAxisName, yAxisName)
-            else:
-                y_axis = self.addAxis(yAxisName, "left")
+        elif xAxisName in {"bottom", "top"}:
+            # add default axis to the list of axes if requested
+            x_axis = self.addAxis(xAxisName, axis=self.pi.axes[xAxisName]["item"])
         else:
+            x_axis = self.addAxis(xAxisName, "bottom")
+        if yAxisName in self.axes:
             y_axis = self.axes[yAxisName]
+        elif yAxisName in {"left", "right"}:
+            # add default axis to the list of axes if requested
+            y_axis = self.addAxis(yAxisName, yAxisName)
+        else:
+            y_axis = self.addAxis(yAxisName, "left")
         if xAxisName in {"bottom", "top"} and yAxisName in {"left", "right"}:
             # use default plotitem if none provided
             plotitem = self.pi
         else:
             # VIEW
-            plotitem = PlotItem(parent=self.pi, name=name, *args,
-                                enableMenu=False, **kwargs)  # pass axisitems?
+            plotitem = PlotItem(parent=self.pi, name=name, *args, enableMenu=False, **kwargs)  # pass axisitems?
             # disable buttons (autoranging)
             plotitem.hideButtons()
             # fix parent legend not showing child charts
             plotitem.legend = self.pi.legend
-            for axis_orientation, pos, axis in [["left", [2, 0], y_axis], ["bottom", [3, 1], x_axis], ["right", [2, 2], y_axis], ["top", [1, 1], x_axis]]:
+            for axis_orientation, pos, axis in [
+                ["left", [2, 0], y_axis],
+                ["bottom", [3, 1], x_axis],
+                ["right", [2, 2], y_axis],
+                ["top", [1, 1], x_axis],
+            ]:
                 # # DO NOT USE, WILL MAKE AXIS UNMATCHED TO DATA
                 # # you can't add the new ones after, it doesn't work for some reason
                 # # hide them instead
@@ -167,6 +170,7 @@ class MultiAxisPlotWidget(PlotWidget):
         # create a mapping for this chart and his axis
         self.axes[xAxisName].charts.append(name)
         self.axes[yAxisName].charts.append(name)
+        # self.makeLayout(axes=self.axes.keys(), charts=self.charts.keys())
         return chart, plotitem
 
     def clearLayout(self):
@@ -194,7 +198,7 @@ class MultiAxisPlotWidget(PlotWidget):
             The names associated with the charts to show.
         """
         self.clearLayout()
-        _ = self._show_axes(axes)
+        self._show_axes(axes)
         shown_charts = self._show_charts(charts)
         if len(shown_charts) != 0:
             for chart in self.charts.values():
@@ -264,52 +268,44 @@ class MultiAxisPlotWidget(PlotWidget):
             # FROM AxisItem.linkToView
             # connect view changes to axis changes
             if axis.orientation in {"top", "bottom"}:
-                signals["propagate chart range to axis"] = chart_vb.sigXRangeChanged.connect(
-                    axis.linkedViewChanged)
+                signals["propagate chart range to axis"] = chart_vb.sigXRangeChanged.connect(axis.linkedViewChanged)
             elif axis.orientation in {"right", "left"}:
-                signals["propagate chart range to axis"] = chart_vb.sigYRangeChanged.connect(
-                    axis.linkedViewChanged)
-            signals["propagate chart resize to axis"] = chart_vb.sigResized.connect(
-                axis.linkedViewChanged)
+                signals["propagate chart range to axis"] = chart_vb.sigYRangeChanged.connect(axis.linkedViewChanged)
+            signals["propagate chart resize to axis"] = chart_vb.sigResized.connect(axis.linkedViewChanged)
             # set axis main view link if not assigned
             if axis.linkedView() is None:
                 axis._linkedView = weakref.ref(chart_vb)
                 axis_vb = chart_vb
             else:
                 axis_vb = axis.linkedView()
-                # FROM ViewBox.linkView
-                # connext axis's view changes to view since axis acts just like a proxy to it
-                if axis.orientation in {"top", "bottom"}:
-                    # connect axis main view changes to view
-                    chart_vb.state["linkedViews"][chart_vb.XAxis] = weakref.ref(axis_vb)
-                    # this signal is received multiple times when using mouse actions directly on the viewbox
-                    # this causes the non top layer views to scroll more than the frontmost one
-                    signals["propagate axis range to chart"] = axis_vb.sigXRangeChanged.connect(
-                        chart_vb.linkedXChanged)
-                    signals["propagate axis resize to chart"] = axis_vb.sigResized.connect(
-                        chart_vb.linkedXChanged)
-                elif axis.orientation in {"right", "left"}:
-                    # connect axis main view changes to view
-                    chart_vb.state["linkedViews"][chart_vb.YAxis] = weakref.ref(axis_vb)
-                    # this signal is received multiple times when using mouse actions directly on the viewbox
-                    # this causes the non top layer views to scroll more than the frontmost one
-                    signals["propagate axis range to chart"] = axis_vb.sigYRangeChanged.connect(chart_vb.linkedYChanged)
-                    signals["propagate axis resize to chart"] = axis_vb.sigResized.connect(
-                        chart_vb.linkedYChanged)
+            # FROM ViewBox.linkView
+            # connext axis's view changes to view since axis acts just like a proxy to it
+            if axis.orientation in {"top", "bottom"}:
+                # connect axis main view changes to view
+                chart_vb.state["linkedViews"][chart_vb.XAxis] = weakref.ref(axis_vb)
+                # this signal is received multiple times when using mouse actions directly on the viewbox
+                # this causes the non top layer views to scroll more than the frontmost one
+                signals["propagate axis range to chart"] = axis_vb.sigXRangeChanged.connect(chart_vb.linkedXChanged)
+                signals["propagate axis resize to chart"] = axis_vb.sigResized.connect(chart_vb.linkedXChanged)
+            elif axis.orientation in {"right", "left"}:
+                # connect axis main view changes to view
+                chart_vb.state["linkedViews"][chart_vb.YAxis] = weakref.ref(axis_vb)
+                # this signal is received multiple times when using mouse actions directly on the viewbox
+                # this causes the non top layer views to scroll more than the frontmost one
+                signals["propagate axis range to chart"] = axis_vb.sigYRangeChanged.connect(chart_vb.linkedYChanged)
+                signals["propagate axis resize to chart"] = axis_vb.sigResized.connect(chart_vb.linkedYChanged)
             axis_signals = self._signalConnectionsByAxis[axis.name]
             if "disable axis autorange on axis manual change" not in axis_signals:
                 if axis.orientation in {"top", "bottom"}:
                     # disable autorange on manual movements
-                    # using connect_lambda here as a workaround
-                    # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
-                    # axis_signals["disable axis autorange on axis manual change"] = axis_vb.sigXRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))  # THIS BREAKS GARBAGE COLLECTION
-                    axis_signals["disable axis autorange on axis manual change"] = connect_lambda(axis_vb.sigXRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
+                    axis_signals["disable axis autorange on axis manual change"] = connect_lambda(
+                        axis_vb.sigXRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name)
+                    )
                 elif axis.orientation in {"right", "left"}:
                     # disable autorange on manual movements
-                    # using connect_lambda here as a workaround
-                    # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
-                    # axis_signals["disable axis autorange on axis manual change"] = axis_vb.sigYRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))  # THIS BREAKS GARBAGE COLLECTION
-                    axis_signals["disable axis autorange on axis manual change"] = connect_lambda(axis_vb.sigYRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name))
+                    axis_signals["disable axis autorange on axis manual change"] = connect_lambda(
+                        axis_vb.sigYRangeChangedManually, self, lambda self, mask: self.disableAxisAutoRange(axis_name)
+                    )
             chart_vb.sigStateChanged.emit(chart_vb)
         # resize plotitem according to the master one
         # resizing it's view doesn't work for some reason
@@ -320,18 +316,24 @@ class MultiAxisPlotWidget(PlotWidget):
             chart_pi = self.plot_items[chart.name()]
             # using connect_lambda here as a workaround
             # refere to the documentation of connect_lambda in functions.py for an explaination of the issue
-            signals["propagate default vb resize to chart"] = connect_lambda(self.vb.sigResized, chart_pi, lambda chart_pi, vb: chart_pi.setGeometry(vb.sceneBoundingRect()))
+            signals["propagate default vb resize to chart"] = connect_lambda(
+                self.vb.sigResized, chart_pi, lambda chart_pi, vb: chart_pi.setGeometry(vb.sceneBoundingRect())
+            )
             # FROM "https://github.com/pyqtgraph/pyqtgraph/pull/2010" by herodotus77
             # propagate mouse actions to charts "hidden" behind
             signals["propagate top level mouse drag interaction to chart"] = self.vb.sigMouseDragged.connect(
-                chart_vb.mouseDragEvent)
+                chart_vb.mouseDragEvent
+            )
             signals["propagate top level mouse wheel interaction to chart"] = self.vb.sigMouseWheel.connect(
-                chart_vb.wheelEvent)
+                chart_vb.wheelEvent
+            )
             signals["propagate top level history changes interaction to chart"] = self.vb.sigHistoryChanged.connect(
-                chart_vb.scaleHistory)
+                chart_vb.scaleHistory
+            )
         # fix prepareForPaint by outofculture
         signals["propagate default scene prepare_for_paint to chart"] = scene.sigPrepareForPaint.connect(
-            chart_vb.prepareForPaint)
+            chart_vb.prepareForPaint
+        )
 
     def _chart_disconnect_all(self, chart):
         """Disconnects all signals related to this widget for the given chart."""

@@ -42,12 +42,18 @@ ax1.setPen(ax1c)
 ax2 = mpw.addAxis("sx2", "bottom", text="Samples2", units="sx2")
 ax2c = "green"
 ax2.setPen(ax2c)
+ax3 = mpw.addAxis("sx3", "bottom", text="Samples3", units="sx3")
+ax3c = "grey"
+ax3.setPen(ax3c)
 ay1 = mpw.addAxis("sy1", "left", text="Data1", units="sy1")
 ay1c = "cyan"
 ay1.setPen(ay1c)
 ay2 = mpw.addAxis("sy2", "left", text="Data2", units="sy2")
 ay2c = "magenta"
 ay2.setPen(ay2c)
+ay3 = mpw.addAxis("sy3", "left", text="Data3", units="sy3")
+ay3c = "yellow"
+ay3.setPen(ay3c)
 # CHARTS
 c0, pi0 = mpw.addChart("Dataset 0")
 c0.setPen("black")
@@ -55,19 +61,27 @@ c1, pi1 = mpw.addChart("Dataset 1", xAxisName="sx1", yAxisName="sy1")
 c1.setPen(mkStripedPen([ax1c, ay1c]))
 c2, pi2 = mpw.addChart("Dataset 2", xAxisName="sx2", yAxisName="sy1")
 c2.setPen(mkStripedPen([ax2c, ay1c]))
-c3, pi3 = mpw.addChart("Dataset 3", xAxisName="sx2", yAxisName="sy2")
-c3.setPen(mkStripedPen([ax2c, ay2c]))
+c3, pi3 = mpw.addChart("Dataset 3", xAxisName="sx2", yAxisName="sy3")
+c3.setPen(mkStripedPen([ax3c, ay3c]))
 # make and display chart
 mpw.makeLayout(
     # optional, selects and orders axes displayed.
     # remember to include the default axes if used.
-    axes=["bottom", "sx1", "sx2", "sy2", "sy1", "left"],
+    axes=["bottom", "sx1", "sx2", "sy2", "sy1", "left", "sx3", "sy3"],
+    # optional, selects charts displayed
+    charts=["Dataset 0", "Dataset 1", "Dataset 2", "Dataset 3"]
+)
+mpw.makeLayout(
+    # optional, selects and orders axes displayed.
+    # remember to include the default axes if used.
+    axes=["bottom", "sx1", "sx2", "sy2", "sy1", "left", "sx3", "sy3"],
     # optional, selects charts displayed
     charts=["Dataset 0", "Dataset 1", "Dataset 2", "Dataset 3"]
 )
 mpw.enableAxisAutoRange()
 
 for i, c in enumerate([c0, c1, c2, c3, ], start=1):
+# for i, c in enumerate([c0,  ], start=1):
     c.setData(np.array(np.sin(np.linspace(0, i * 2 * np.pi, num=1000))))
 
 mpw.update()
