@@ -3200,7 +3200,7 @@ def toposort(deps, nodes=None, seen=None, stack=None, depth=0):
     return sorted
 
 
-def disconnect(signal, slot):
+def disconnect(signal, slot, meta=None):
     """Disconnect a Qt signal from a slot.
 
     This method augments Qt's Signal.disconnect():
@@ -3214,6 +3214,9 @@ def disconnect(signal, slot):
             signal.disconnect(slot)
             return True
         except (TypeError, RuntimeError):
+            if meta is not None:
+                QtCore.QObject.disconnect(meta)
+                return True
             slot = reload.getPreviousVersion(slot)
             if slot is None:
                 return False
@@ -3239,7 +3242,7 @@ class SignalBlock(object):
             self.signal.connect(self.slot)
 
 
-def connect_lambda(bound_signal, self, func, **kwargs):
+def prep_lambda_for_connect(self, func):
     """Convenience function for connecting a function to a signal
     passing self as argument avoid lambda "leaks".
     from: `Kovid Goyal <https://riverbankcomputing.com/pipermail/pyqt/2018-July/040604.html>`_
@@ -3293,4 +3296,4 @@ def connect_lambda(bound_signal, self, func, **kwargs):
                 args = args[:num_signal_args]
             func(ctx, *args)
 
-    return bound_signal.connect(slot, **kwargs)
+    return slot

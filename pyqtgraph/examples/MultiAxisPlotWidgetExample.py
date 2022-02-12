@@ -63,21 +63,6 @@ c2, pi2 = mpw.addChart("Dataset 2", xAxisName="sx2", yAxisName="sy1")
 c2.setPen(mkStripedPen([ax2c, ay1c]))
 c3, pi3 = mpw.addChart("Dataset 3", xAxisName="sx2", yAxisName="sy3")
 c3.setPen(mkStripedPen([ax3c, ay3c]))
-# make and display chart
-mpw.makeLayout(
-    # optional, selects and orders axes displayed.
-    # remember to include the default axes if used.
-    axes=["bottom", "sx1", "sx2", "sy2", "sy1", "left", "sx3", "sy3"],
-    # optional, selects charts displayed
-    charts=["Dataset 0", "Dataset 1", "Dataset 2", "Dataset 3"]
-)
-mpw.makeLayout(
-    # optional, selects and orders axes displayed.
-    # remember to include the default axes if used.
-    axes=["bottom", "sx1", "sx2", "sy2", "sy1", "left", "sx3", "sy3"],
-    # optional, selects charts displayed
-    charts=["Dataset 0", "Dataset 1", "Dataset 2", "Dataset 3"]
-)
 mpw.enableAxisAutoRange()
 
 for i, c in enumerate([c0, c1, c2, c3, ], start=1):
