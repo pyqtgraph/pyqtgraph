@@ -50,7 +50,7 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
     def boundingRect(self):
         geometry = self.geometry()
         if geometry != self._geometry:
-            br = self.mapRectFromParent().normalized()
+            br = self.mapRectFromParent(geometry).normalized()
             self._br = br
             self._geometry = geometry
         else:
