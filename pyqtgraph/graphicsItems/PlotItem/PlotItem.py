@@ -1298,15 +1298,13 @@ class PlotItem(GraphicsWidget):
     def updateButtons(self):
         try:
             if self.extra_axes is None:
-                if self._exportOpts is False and self.mouseHovering and not self.buttonsHidden and not all(self.vb.autoRangeEnabled()):
-                    self.autoBtn.show()
-                else:
-                    self.autoBtn.hide()
+                any_lack_autorange = not all(self.vb.autoRangeEnabled())
             else:
-                if self._exportOpts is False and self.mouseHovering and not self.buttonsHidden and not all(axis.autorange for axis in self.extra_axes.values()):
-                    self.autoBtn.show()
-                else:
-                    self.autoBtn.hide()
+                any_lack_autorange = not all(axis.autorange for axis in self.extra_axes)
+            if self._exportOpts is False and self.mouseHovering and not self.buttonsHidden and any_lack_autorange:
+                self.autoBtn.show()
+            else:
+                self.autoBtn.hide()
         except RuntimeError:
             pass  # this can happen if the plot has been deleted.
             

@@ -31,6 +31,7 @@ __all__ = [
     'CIELabColor', 'colorCIELab', 'colorDistance',
     'colorTuple', 'colorStr', 'intColor', 'glColor',
     'makeArrowPath', 'eq',
+    'prep_lambda_for_connect',
     'affineSliceCoords', 'affineSlice',
     'interweaveArrays', 'interpolateArray', 'subArray',
     'transformToArray', 'transformCoordinates',

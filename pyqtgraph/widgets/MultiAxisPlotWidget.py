@@ -2,13 +2,13 @@ __all__ = ["MultiAxisPlotWidget"]
 
 import weakref
 from collections import namedtuple
+from typing import Dict, List
 
 from ..functions import disconnect, prep_lambda_for_connect
 from ..graphicsItems.AxisItem import AxisItem
 from ..graphicsItems.PlotDataItem import PlotDataItem
 from ..graphicsItems.PlotItem.PlotItem import PlotItem
 from ..graphicsItems.ViewBox import ViewBox
-from ..Qt.QtCore import QObject
 from ..widgets.PlotWidget import PlotWidget
 
 SigDisconnector = namedtuple("SigDisconnector", ["signal", "slot", "meta"])
@@ -19,43 +19,38 @@ class MultiAxisPlotWidget(PlotWidget):
         """PlotWidget but with support for multi axis.
         usage: you generally want to call in this order:
         .addAxis(...) as many times as axes needed,
-        .addChart(...) as many times as charts needed,
-        and then .makeLayout() once all the needed elements have been added.
+        .addChart(...) as many times as charts needed.
         Also consider calling .update() after updating the chart data.
-        Refer to the example named "MultiAxisPlotWidget example" under the "Widgets" section if needed"""
+        Refer to the example named :class:MultiAxisPlotWidgetExample."""
         super().__init__(enableMenu=False, **kargs)
         # plotitem shortcut
         self.pi = super().getPlotItem()
         # override autorange button behaviour
         self.pi.autoBtn.clicked.disconnect()
         self.pi.autoBtn.clicked.connect(
-            prep_lambda_for_connect(self, lambda self, button: (self.enableAxisAutoRange(), self.update()))
+            prep_lambda_for_connect(self, lambda widg, button: (widg.enableAxisAutoRange(), widg.update()))
         )
         # default vb from plotItem shortcut
         self.vb = self.pi.vb
         # layout shortcut
         self.layout = self.pi.layout
         # CHARTS
-        self.axes = {}
+        self.axes: List[AxisItem] = []
         # select custom behaviour
         self.pi.extra_axes = self.axes
-        self.charts = {}
-        self.plot_items = {}
-        self._signalConnectionsByChart = {}
-        self._signalConnectionsByAxis = {}
+        self.charts: List[PlotDataItem] = []
+        self.plot_items: Dict[PlotDataItem, PlotItem] = {}
+        self._signalConnectionsByChart: Dict[PlotDataItem, Dict] = {}
+        self._signalConnectionsByAxis: Dict[AxisItem, Dict] = {}
 
-    def addAxis(self, name, *args, axis=None, **kwargs):
+    def addAxis(self, *args, axis=None, **kwargs):
         """Add a new axis (AxisItem) to the widget, will be shown and linked to a
         chart when used in addChart().
 
         Parameters
         ----------
-        name : str
-            The name associated with this axis item, used to store and recall
-            the newly created axis. Also sets the AxisItem name parameter.
         axis : AxisItem, optional
-            The axis to be used. If left as None a new AxisItem will be created
-            and it's name parameter set.
+            The axis to be used. If left as None a new AxisItem will be created from args and kwargs.
         args : iterable, optional
             arguments to be passed to the newly created AxisItem
         kwargs : dict, optional
@@ -65,48 +60,39 @@ class MultiAxisPlotWidget(PlotWidget):
         Returns
         -------
         AxisItem
-            The newly created AxisItem.
         """
-        if name is None:
-            raise AssertionError("Axis name should not be None")
+        if axis in self.axes:
+            raise ValueError("Axis already added")
         if axis is None:
             axis = AxisItem(*args, **kwargs)
-        axis.name = name
         axis.autorange = False
         axis.charts = []
-        self.axes[name] = axis
-        if axis.name not in self._signalConnectionsByAxis:
-            self._signalConnectionsByAxis[axis.name] = {}
+        self.axes.append(axis)
+        if axis not in self._signalConnectionsByAxis:
+            self._signalConnectionsByAxis[axis] = {}
         axis.showLabel(True)
-        self.makeLayout(axes=self.axes.keys(), charts=self.charts.keys())
+        self.makeLayout(axes=self.axes, charts=self.charts)
         return axis
 
-    def addChart(self, name, xAxisName="bottom", yAxisName="left", chart=None, *args, **kwargs):
+    def addChart(self, xAxis=None, yAxis=None, chart=None, *args, **kwargs):
         """Add a new chart (PlotDataItem in a PlotItem) to the widget, will be
         shown when used in makeLayout().
 
         Parameters
         ----------
-        name : str
-            The name associated with this chart item, used to store and recall
-            the newly created chart. Also sets the PlotItem name parameter and
-            the PlotDataItem name parameter if no other chart is passed.
-        xAxisName : str, optional
+        xAxis : Union[AxisItem, str], optional
             one of the default PlotItem axis names ("top", "right", "bottom",
-            "left"), or the name of an axis previously created by calling
-            addAxis(). This axis will be set in the new PlotItem based on the
-            selected axis orientation. If omitted "bottom" will be used as
-            default.
-        yAxisName : str, optional
+            "left"), or any axis previously added by calling ``addAxis``. If
+            omitted "bottom" will be used as default.
+        yAxis : Union[AxisItem, str], optional
             one of the default PlotItem axis names ("top", "right", "bottom",
-            "left"), or the name of an axis previously created by calling
-            addAxis(). This axis will be set in the new PlotItem based on the
-            selected axis orientation. If omitted "left" will be used as default.
+            "left"), or any axis previously added by calling ``addAxis``. If
+            omitted "left" will be used as default.
         chart : PlotDataItem, optional
             The chart to be used inside the new PlotItem. If left as None a
-            new PlotDataItem will be created and it's name parameter set.
+            new PlotDataItem will be created.
         args : iterable, optional
-            Arugments to be passed to the newly created PlotItem. See
+            Arguments to be passed to the newly created PlotItem. See
             :class:`~pyqtgraph.PlotItem`
         kwargs : dict, optional
             Parameters to be passed to the newly created PlotItem. See
@@ -119,63 +105,62 @@ class MultiAxisPlotWidget(PlotWidget):
         PlotItem
             The newly created PlotItem.
         """
-        if name is None:
-            raise AssertionError("Chart name should not be None")
-        if xAxisName in self.axes:
-            x_axis = self.axes[xAxisName]
-        elif xAxisName in {"bottom", "top"}:
+        if chart in self.charts:
+            raise ValueError("Chart has already been added")
+        if xAxis is None:
+            xAxis = "bottom"
+        if isinstance(xAxis, str):
             # add default axis to the list of axes if requested
-            x_axis = self.addAxis(xAxisName, axis=self.pi.axes[xAxisName]["item"])
-        else:
-            x_axis = self.addAxis(xAxisName, "bottom")
-        if yAxisName in self.axes:
-            y_axis = self.axes[yAxisName]
-        elif yAxisName in {"left", "right"}:
+            xAxis = self.addAxis(orientation=xAxis)  #, axis=self.pi.axes[xAxis]["item"])  # TODO
+        elif xAxis not in self.axes:
+            self.addAxis(xAxis)
+        if yAxis is None:
+            yAxis = "left"
+        if isinstance(yAxis, str):
             # add default axis to the list of axes if requested
-            y_axis = self.addAxis(yAxisName, yAxisName)
-        else:
-            y_axis = self.addAxis(yAxisName, "left")
-        if xAxisName in {"bottom", "top"} and yAxisName in {"left", "right"}:
+            yAxis = self.addAxis(orientation=yAxis)  #, axis=self.pi.axes[yAxis]["item"])  # TODO
+        elif yAxis not in self.axes:
+            self.addAxis(yAxis)
+        if xAxis in {"bottom", "top"} and yAxis in {"left", "right"}:
             # use default plotitem if none provided
             plotitem = self.pi
         else:
             # VIEW
-            plotitem = PlotItem(parent=self.pi, name=name, *args, enableMenu=False, **kwargs)  # pass axisitems?
+            plotitem = PlotItem(parent=self.pi, *args, enableMenu=False, **kwargs,)
             # disable buttons (autoranging)
             plotitem.hideButtons()
             # fix parent legend not showing child charts
             plotitem.legend = self.pi.legend
-            for axis_orientation, pos, axis in [
-                ["left", [2, 0], y_axis],
-                ["bottom", [3, 1], x_axis],
-                ["right", [2, 2], y_axis],
-                ["top", [1, 1], x_axis],
-            ]:
-                # # DO NOT USE, WILL MAKE AXIS UNMATCHED TO DATA
-                # # you can't add the new ones after, it doesn't work for some reason
-                # # hide them instead
-                # plotitem.layout.removeItem(plotitem.layout.itemAt(*pos))
-                # hide all plotitem axis (they vould interfere with viewbox)
-                plotitem.hideAxis(axis_orientation)
-                if axis.orientation == axis_orientation:
-                    plotitem.axes[axis_orientation] = {"item": axis, "pos": pos}
+            layouts = {
+                "left": [2, 0],
+                "bottom": [3, 1],
+                "right": [2, 2],
+                "top": [1, 1],
+            }
+
+            # hide all existing axes:
+            for orientation in layouts:
+                plotitem.hideAxis(orientation)
+
+            plotitem.axes[xAxis.orientation] = {"item": xAxis, "pos": layouts[xAxis.orientation]}
+            plotitem.axes[yAxis.orientation] = {"item": yAxis, "pos": layouts[yAxis.orientation]}
         # CHART
         if chart is None:
-            chart = PlotDataItem(name=name)
+            chart = PlotDataItem()
         plotitem.addItem(chart)
         # keep plotitem inside chart
-        self.plot_items[chart.name()] = plotitem
-        # keeptrack of connections
-        if chart.name() not in self._signalConnectionsByChart:
-            self._signalConnectionsByChart[chart.name()] = {}
+        self.plot_items[chart] = plotitem
+        # keep track of connections
+        if chart not in self._signalConnectionsByChart:
+            self._signalConnectionsByChart[chart] = {}
         # keep axis track
-        chart.axes = [xAxisName, yAxisName]
+        chart.axes = [xAxis, yAxis]
         # keep chart
-        self.charts[name] = chart
+        self.charts.append(chart)
         # create a mapping for this chart and his axis
-        self.axes[xAxisName].charts.append(name)
-        self.axes[yAxisName].charts.append(name)
-        self.makeLayout(axes=self.axes.keys(), charts=self.charts.keys())
+        xAxis.charts.append(chart)
+        yAxis.charts.append(chart)
+        self.makeLayout(axes=self.axes, charts=self.charts)
         return chart, plotitem
 
     def clearLayout(self):
@@ -184,9 +169,9 @@ class MultiAxisPlotWidget(PlotWidget):
             item = self.layout.itemAt(0)
             self.layout.removeAt(0)
             self.scene().removeItem(item)
-        for chart in self.charts.values():
+        for chart in self.charts:
             self._chart_disconnect_all(chart)
-        for axis in self.axes.values():
+        for axis in self.axes:
             self._axis_disconnect_all(axis)
 
     def makeLayout(self, axes=None, charts=None):
@@ -194,27 +179,25 @@ class MultiAxisPlotWidget(PlotWidget):
 
         Parameters
         ----------
-        axes : list of str, optional
+        axes : List[AxisItem], optional
             The names associated with the axes to show.
             Axes will be ordered from left-to-right and from top-to-bottom
             following the given axes list order if given,
             or the axis creation order otherwise.
-        charts : list of PlotItems, optional
+        charts : List[PlotDataItems], optional
             The names associated with the charts to show.
         """
         self.clearLayout()
         self._show_axes(axes)
-        shown_charts = self._show_charts(charts)
-        if len(shown_charts) != 0:
-            for chart in self.charts.values():
-                self._connect_signals(chart)
+        self._show_charts(charts)
+        for chart in self.charts:
+            self._connect_signals(chart)
         self.update()
 
     def _show_axes(self, axes=None):
         """Shows all the selected axes."""
-        # SELECT AND ASSEMBLE AXES
         if axes is None:
-            axes = self.axes.keys()
+            axes = self.axes
         axes = list(dict.fromkeys(axes))
         lo = {
             "left": [],
@@ -222,58 +205,56 @@ class MultiAxisPlotWidget(PlotWidget):
             "top": [],
             "bottom": [],
         }
-        for axis in [self.axes[axis_name] for axis_name in axes]:
+        for axis in axes:
             # add margin to the axis label to avoid overlap of other axis ticks
             axis.setStyle(labelMargin=[0, 0])
             lo[axis.orientation].append(axis)
         horizontal_axes_pos_x = len(lo["left"])
         vertical_axes_pos_y = 1 + len(lo["top"])
         # ADD TITLE ON TOP
-        self.pi.titleLabel.show()
+        self.pi.titleLabel.show()  # TODO associate this with the toplevel layout, not a plotitem
         self.layout.addItem(self.pi.titleLabel, 0, horizontal_axes_pos_x)
         # ADD MAIN PLOTITEM
         self.vb.show()
         self.layout.addItem(self.vb, vertical_axes_pos_y, horizontal_axes_pos_x)
         # ADD AXIS
-        shown_axes = {"x": {}, "y": {}}
-        for axes_pos_x, axis in enumerate(lo["left"] + [None] + lo["right"]):
-            if axis is not None:
-                axis.show()
-                self.layout.addItem(axis, vertical_axes_pos_y, axes_pos_x)
-                shown_axes["x"][axis.name] = axis
-        for axes_pos_y, axis in enumerate(lo["top"] + [None] + lo["bottom"], start=1):
-            if axis is not None:
-                axis.show()
-                self.layout.addItem(axis, axes_pos_y, horizontal_axes_pos_x)
-                shown_axes["y"][axis.name] = axis
-        return shown_axes
+        for axes_pos_x, axis in enumerate(lo["left"]):
+            axis.show()
+            self.layout.addItem(axis, vertical_axes_pos_y, axes_pos_x)
+        for axes_pos_x, axis in enumerate(lo["right"], start=len(lo["left"]) + 2):
+            axis.show()
+            self.layout.addItem(axis, vertical_axes_pos_y, axes_pos_x)
+        for axes_pos_y, axis in enumerate(lo["top"], start=1):
+            axis.show()
+            self.layout.addItem(axis, axes_pos_y, horizontal_axes_pos_x)
+        for axes_pos_y, axis in enumerate(lo["bottom"], start=len(lo["top"]) + 3):
+            axis.show()
+            self.layout.addItem(axis, axes_pos_y, horizontal_axes_pos_x)
 
     def _show_charts(self, charts=None):
-        """Shows all the selected charts."""
-        # SELECT CHARTS
-        if charts is None:
-            charts = self.charts.keys()
-        charts = list(dict.fromkeys(charts))
-        for chart in [self.charts[chart_name] for chart_name in self.charts.keys() - set(charts)]:
-            chart.hide()
-        shown_charts = {chart_name: self.charts[chart_name] for chart_name in charts}
-        for chart_name, chart in shown_charts.items():
-            chart.show()
-        return shown_charts
+        """Shows all (and only) the selected charts.
 
-    def _connect_signals(self, chart):
+        charts : List[PlotDataItem], optional
+        """
+        if charts is None:
+            charts = self.charts
+        for chart in set(self.charts) - set(charts):
+            chart.hide()
+        for chart in charts:
+            chart.show()
+
+    def _connect_signals(self, chart: PlotDataItem):
         """Connects all signals related to this widget for the given chart given the top level one."""
-        chart_vb = self.plot_items[chart.name()].vb
-        signals = self._signalConnectionsByChart[chart.name()]
+        chart_vb = self.plot_items[chart].vb
+        signals = self._signalConnectionsByChart[chart]
         scene = self.scene()
 
         def connectify(holder, name, signal, slot):
             meta = signal.connect(slot)
             holder[name] = SigDisconnector(signal=signal, slot=slot, meta=meta)
 
-        for axis_name in chart.axes:
+        for axis in chart.axes:
             # link axis to view
-            axis = self.axes[axis_name]
             # connect view changes to axis
             # FROM AxisItem.linkToView
             # connect view changes to axis changes
@@ -289,12 +270,12 @@ class MultiAxisPlotWidget(PlotWidget):
             else:
                 axis_vb = axis.linkedView()
             # FROM ViewBox.linkView
-            # connext axis's view changes to view since axis acts just like a proxy to it
+            # connect axis's view changes to view since axis acts just like a proxy to it
             if axis.orientation in {"top", "bottom"}:
                 # connect axis main view changes to view
                 chart_vb.state["linkedViews"][chart_vb.XAxis] = weakref.ref(axis_vb)
                 # this signal is received multiple times when using mouse actions directly on the viewbox
-                # this causes the non top layer views to scroll more than the frontmost one
+                # this causes the non-top layer views to scroll more than the front-most one
                 connectify(signals, "propagate axis range to chart", axis_vb.sigXRangeChanged, chart_vb.linkedXChanged)
                 connectify(signals, "propagate axis resize to chart", axis_vb.sigResized, chart_vb.linkedXChanged)
             elif axis.orientation in {"right", "left"}:
@@ -304,7 +285,7 @@ class MultiAxisPlotWidget(PlotWidget):
                 # this causes the non top layer views to scroll more than the frontmost one
                 connectify(signals, "propagate axis range to chart", axis_vb.sigYRangeChanged, chart_vb.linkedYChanged)
                 connectify(signals, "propagate axis resize to chart", axis_vb.sigResized, chart_vb.linkedYChanged)
-            axis_signals = self._signalConnectionsByAxis[axis.name]
+            axis_signals = self._signalConnectionsByAxis[axis]
             if "disable axis autorange on axis manual change" not in axis_signals:
                 if axis.orientation in {"top", "bottom"}:
                     # disable autorange on manual movements
@@ -312,7 +293,7 @@ class MultiAxisPlotWidget(PlotWidget):
                         axis_signals,
                         "disable axis autorange on axis manual change",
                         axis_vb.sigXRangeChangedManually,
-                        prep_lambda_for_connect(self, lambda self, mask: self.disableAxisAutoRange(axis_name)),
+                        prep_lambda_for_connect(self, lambda widg, mask: widg.disableAxisAutoRange(axis)),
                     )
                 elif axis.orientation in {"right", "left"}:
                     # disable autorange on manual movements
@@ -320,7 +301,7 @@ class MultiAxisPlotWidget(PlotWidget):
                         axis_signals,
                         "disable axis autorange on axis manual change",
                         axis_vb.sigYRangeChangedManually,
-                        prep_lambda_for_connect(self, lambda self, mask: self.disableAxisAutoRange(axis_name)),
+                        prep_lambda_for_connect(self, lambda widg, mask: widg.disableAxisAutoRange(axis)),
                     )
             chart_vb.sigStateChanged.emit(chart_vb)
         # resize plotitem according to the master one
@@ -329,14 +310,14 @@ class MultiAxisPlotWidget(PlotWidget):
             # make default vb always the top level one chart vb
             chart_vb.setZValue(0)
             self.vb.setZValue(9999)  # over 9thousand!
-            chart_pi = self.plot_items[chart.name()]
+            chart_pi = self.plot_items[chart]
             # using connect_lambda here as a workaround
             # refer to the documentation of connect_lambda in functions.py for an explaination of the issue
             connectify(
                 signals,
                 "propagate default vb resize to chart",
                 self.vb.sigResized,
-                prep_lambda_for_connect(chart_pi, lambda chart_pi, vb: chart_pi.setGeometry(vb.sceneBoundingRect())),
+                prep_lambda_for_connect(chart_pi, lambda _pi, vb: _pi.setGeometry(vb.sceneBoundingRect())),
             )
             # FROM "https://github.com/pyqtgraph/pyqtgraph/pull/2010" by herodotus77
             # propagate mouse actions to charts "hidden" behind
@@ -368,14 +349,14 @@ class MultiAxisPlotWidget(PlotWidget):
 
     def _chart_disconnect_all(self, chart):
         """Disconnects all signals related to this widget for the given chart."""
-        signals = self._signalConnectionsByChart[chart.name()]
+        signals = self._signalConnectionsByChart[chart]
         for conn_name in list(signals.keys()):
             sig, slot, meta = signals.pop(conn_name)
             disconnect(sig, slot, meta)
 
     def _axis_disconnect_all(self, axis):
         """Disconnects all signals related to this widget for the given axis."""
-        signals = self._signalConnectionsByAxis[axis.name]
+        signals = self._signalConnectionsByAxis[axis]
         for conn_name in list(signals.keys()):
             sig, slot, meta = signals.pop(conn_name)
             disconnect(sig, slot, meta)
@@ -383,17 +364,17 @@ class MultiAxisPlotWidget(PlotWidget):
     def clean(self):
         """Clears all charts' contents."""
         # CLEAR PLOTS
-        for chart in self.charts.values():
+        for chart in self.charts:
             chart.clear()
         self.update()
 
-    def getPlotItem(self, name=None):
+    def getPlotItem(self, chart=None):
         """Get the PlotItem associated to the chart of given name.
 
         Parameters
         ----------
-        name : str, optional
-            The name of the chart to select.
+        chart : PlotDataItem, optional
+            The chart whose PlotItem we will select.
             If None the default one will be selected.
 
         Returns
@@ -401,18 +382,18 @@ class MultiAxisPlotWidget(PlotWidget):
         PlotItem
             The PlotItem associated to the selected chart.
         """
-        if name is None:
+        if chart is None:
             return self.pi
         else:
-            return self.plot_items[self.charts[name].name()]
+            return self.plot_items[chart]
 
-    def setAxisRange(self, axisName, axisRange=None, **kwargs):
+    def setAxisRange(self, axis, axisRange=None, **kwargs):
         """Sets the axisRange of the axis with given name.
 
         Parameters
         ----------
-        axisName : str
-            The name of the axis to select.
+        axis : AxisItem
+            The axis to change.
         axisRange : list of int or float, optional
             The axisRange to set to the axis to selected.
             If None: axisRutorange will be enabled.
@@ -433,23 +414,22 @@ class MultiAxisPlotWidget(PlotWidget):
         else:
             raise AttributeError("bad axisRange")
         if axisRange is None:
-            self.enableAxisAutoRange(axisName)
+            self.enableAxisAutoRange(axis)
         else:
-            self.disableAxisAutoRange(axisName)
-            axis = self.axes[axisName]
-            charts = [self.charts[chart] for chart in axis.charts]
+            self.disableAxisAutoRange(axis)
+            charts = axis.charts
             if axis.orientation in {"top", "bottom"}:  # IS X AXIS
                 for chart in charts:
-                    self.plot_items[chart.name()].vb.setXRange(*axisRange, **kwargs)
+                    self.plot_items[chart].vb.setXRange(*axisRange, **kwargs)
             elif axis.orientation in {"left", "right"}:  # IS Y AXIS
                 for chart in charts:
-                    self.plot_items[chart.name()].vb.setYRange(*axisRange, **kwargs)
+                    self.plot_items[chart].vb.setYRange(*axisRange, **kwargs)
 
     def update(self):
         """Updates all charts' contents."""
-        for axis in self.axes.values():
+        for axis in self.axes:
             if axis.autorange:
-                charts = [self.charts[chart] for chart in axis.charts]
+                charts = axis.charts
                 bounds = []
                 if axis.orientation in {"top", "bottom"}:  # IS X AXIS
                     for chart in charts:
@@ -457,7 +437,7 @@ class MultiAxisPlotWidget(PlotWidget):
                     bounds = [bound for bound in bounds if bound is not None]
                     if len(bounds) > 0:
                         for chart in charts:
-                            vb = self.plot_items[chart.name()].vb
+                            vb = self.plot_items[chart].vb
                             vb.setXRange(min(bounds), max(bounds))
                 elif axis.orientation in {"left", "right"}:  # IS Y AXIS
                     for chart in charts:
@@ -465,34 +445,35 @@ class MultiAxisPlotWidget(PlotWidget):
                     bounds = [bound for bound in bounds if bound is not None]
                     if len(bounds) > 0:
                         for chart in charts:
-                            vb = self.plot_items[chart.name()].vb
+                            vb = self.plot_items[chart].vb
                             vb.setYRange(min(bounds), max(bounds))
         super().update()
 
-    def enableAxisAutoRange(self, axisName=None):
+    # todo does this autorange stuff do anything?
+    def enableAxisAutoRange(self, axis=None):
         """Enables autorange for the axis with given name.
 
         Parameters
         ----------
-        axisName : str
-            The name of the axis to select.
+        axis : AxisItem, option
+            The axis for which to enable autorange, or all axes if None.
         """
-        if axisName is not None:
-            self.axes[axisName].autorange = True
+        if axis is not None:
+            axis.autorange = True
         else:
-            for axis in self.axes.values():
+            for axis in self.axes:
                 axis.autorange = True
 
-    def disableAxisAutoRange(self, axisName=None):
+    def disableAxisAutoRange(self, axis=None):
         """Disables autorange for the axis with given name.
 
         Parameters
         ----------
-        axisName : str
-            The name of the axis to select.
+        axis : AxisItem, option
+            The axis for which to disable autorange, or all axes if None.
         """
-        if axisName is not None:
-            self.axes[axisName].autorange = False
+        if axis is not None:
+            axis.autorange = False
         else:
-            for axis in self.axes.values():
+            for axis in self.axes:
                 axis.autorange = False
