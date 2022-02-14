@@ -15,6 +15,9 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
         """
         QtWidgets.QGraphicsWidget.__init__(self, *args, **kargs)
         GraphicsItem.__init__(self)
+
+        # cache bouding rect and geometry
+        self._br = self._geometry = None
         
         ## done by GraphicsItem init
         #GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
@@ -45,7 +48,14 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
         return self.geometry().width()
 
     def boundingRect(self):
-        br = self.mapRectFromParent(self.geometry()).normalized()
+        geometry = self.geometry()
+        if geometry != self._geometry:
+            br = self.mapRectFromParent().normalized()
+            self._br = br
+            self._geometry = geometry
+        else:
+            br = self._br
+
         #print "bounds:", br
         return br
         
