@@ -543,7 +543,6 @@ class ViewBox(GraphicsWidget):
             setRequested[1] = True
 
         if len(changes) == 0:
-            print(rect)
             raise Exception("Must specify at least one of rect, xRange, or yRange. (gave rect=%s)" % str(type(rect)))
 
         # Update axes one at a time
@@ -897,9 +896,10 @@ class ViewBox(GraphicsWidget):
             return
         self._updatingRange = True
         try:
-            targetRect = self.viewRange()
             if not any(self.state['autoRange']):
                 return
+
+            targetRect = self.viewRange()
 
             fractionVisible = self.state['autoRange'][:]
             for i in [0,1]:
