@@ -18,6 +18,7 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
 
         # cache bouding rect and geometry
         self._br = self._geometry = None
+        self._path = None
         
         ## done by GraphicsItem init
         #GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
@@ -50,6 +51,8 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
     def boundingRect(self):
         geometry = self.geometry()
         if geometry != self._geometry:
+            self._path = None
+            
             br = self.mapRectFromParent(geometry).normalized()
             self._br = br
             self._geometry = geometry
@@ -58,9 +61,13 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
 
         #print "bounds:", br
         return br
-        
+
     def shape(self):  ## No idea why this is necessary, but rotated items do not receive clicks otherwise.
-        p = QtGui.QPainterPath()
-        p.addRect(self.boundingRect())
-        #print "shape:", p.boundingRect()
+        p = self._path
+        if p is None:
+            p = QtGui.QPainterPath()
+            p.addRect(self.boundingRect())
+            self._path = p
+
+        # print "shape:", p.boundingRect()
         return p
