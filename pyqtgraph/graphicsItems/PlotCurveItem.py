@@ -812,10 +812,9 @@ class PlotCurveItem(GraphicsObject):
                     else:
                         p.drawPath(self.getPath())
 
-        if isinstance(self.opts.get('pen'), QtGui.QPen):
-            cp = self.opts['pen']
-        else:
-            cp = fn.mkPen(self.opts['pen'])
+        cp = self.opts['pen']
+        if not isinstance(cp, QtGui.QPen):
+            cp = fn.mkPen(cp)
 
         p.setPen(cp)
         if self._shouldUseDrawLineSegments(cp):
