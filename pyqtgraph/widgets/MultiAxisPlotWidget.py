@@ -15,14 +15,14 @@ SigDisconnector = namedtuple("SigDisconnector", ["signal", "slot", "meta"])
 
 
 class MultiAxisPlotWidget(PlotWidget):
-    def __init__(self, **kargs):
+    def __init__(self, **kwargs):
         """PlotWidget but with support for multi axis.
         usage: you generally want to call in this order:
         .addAxis(...) as many times as axes needed,
         .addChart(...) as many times as charts needed.
         Also consider calling .update() after updating the chart data.
         Refer to the example named :class:MultiAxisPlotWidgetExample."""
-        super().__init__(enableMenu=False, **kargs)
+        super().__init__(enableMenu=False, **kwargs)
         # plotitem shortcut
         self.pi = super().getPlotItem()
         # override autorange button behaviour
@@ -111,14 +111,14 @@ class MultiAxisPlotWidget(PlotWidget):
             xAxis = "bottom"
         if isinstance(xAxis, str):
             # add default axis to the list of axes if requested
-            xAxis = self.addAxis(orientation=xAxis)  #, axis=self.pi.axes[xAxis]["item"])  # TODO
+            xAxis = self.addAxis(orientation=xAxis)  # , axis=self.pi.axes[xAxis]["item"])  # TODO
         elif xAxis not in self.axes:
             self.addAxis(xAxis)
         if yAxis is None:
             yAxis = "left"
         if isinstance(yAxis, str):
             # add default axis to the list of axes if requested
-            yAxis = self.addAxis(orientation=yAxis)  #, axis=self.pi.axes[yAxis]["item"])  # TODO
+            yAxis = self.addAxis(orientation=yAxis)  # , axis=self.pi.axes[yAxis]["item"])  # TODO
         elif yAxis not in self.axes:
             self.addAxis(yAxis)
         if xAxis in {"bottom", "top"} and yAxis in {"left", "right"}:
@@ -282,7 +282,7 @@ class MultiAxisPlotWidget(PlotWidget):
                 # connect axis main view changes to view
                 chart_vb.state["linkedViews"][chart_vb.YAxis] = weakref.ref(axis_vb)
                 # this signal is received multiple times when using mouse actions directly on the viewbox
-                # this causes the non top layer views to scroll more than the frontmost one
+                # this causes the non-top layer views to scroll more than the front-most one
                 connectify(signals, "propagate axis range to chart", axis_vb.sigYRangeChanged, chart_vb.linkedYChanged)
                 connectify(signals, "propagate axis resize to chart", axis_vb.sigResized, chart_vb.linkedYChanged)
             axis_signals = self._signalConnectionsByAxis[axis]
@@ -305,14 +305,14 @@ class MultiAxisPlotWidget(PlotWidget):
                     )
             chart_vb.sigStateChanged.emit(chart_vb)
         # resize plotitem according to the master one
-        # resizing it's view doesn't work for some reason
+        # resizing its view doesn't work for some reason
         if chart_vb is not self.vb:
             # make default vb always the top level one chart vb
             chart_vb.setZValue(0)
             self.vb.setZValue(9999)  # over 9thousand!
             chart_pi = self.plot_items[chart]
             # using connect_lambda here as a workaround
-            # refer to the documentation of connect_lambda in functions.py for an explaination of the issue
+            # refer to the documentation of connect_lambda in functions.py for an explanation of the issue
             connectify(
                 signals,
                 "propagate default vb resize to chart",
@@ -320,7 +320,7 @@ class MultiAxisPlotWidget(PlotWidget):
                 prep_lambda_for_connect(chart_pi, lambda _pi, vb: _pi.setGeometry(vb.sceneBoundingRect())),
             )
             # FROM "https://github.com/pyqtgraph/pyqtgraph/pull/2010" by herodotus77
-            # propagate mouse actions to charts "hidden" behind
+            # propagate mouse actions to the charts "hidden" behind
             connectify(
                 signals,
                 "propagate top level mouse drag interaction to chart",
@@ -339,7 +339,6 @@ class MultiAxisPlotWidget(PlotWidget):
                 self.vb.sigHistoryChanged,
                 chart_vb.scaleHistory,
             )
-            # fix prepareForPaint by outofculture
             connectify(
                 signals,
                 "propagate default scene prepare_for_paint to chart",
@@ -396,7 +395,7 @@ class MultiAxisPlotWidget(PlotWidget):
             The axis to change.
         axisRange : list of int or float, optional
             The axisRange to set to the axis to selected.
-            If None: axisRutorange will be enabled.
+            If None: axisAutoRange will be enabled.
             If list of len 1: axisRange will be set between 0 and axisRange[0]
             If list of len 2: axisRange will be set between the two axisRange values
         kwargs : dict, optional
@@ -449,7 +448,7 @@ class MultiAxisPlotWidget(PlotWidget):
                             vb.setYRange(min(bounds), max(bounds))
         super().update()
 
-    # todo does this autorange stuff do anything?
+    # todo does this autorange stuff do anything? ah ha! it's used in PlotItem.
     def enableAxisAutoRange(self, axis=None):
         """Enables autorange for the axis with given name.
 

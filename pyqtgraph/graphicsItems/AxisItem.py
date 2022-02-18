@@ -582,11 +582,10 @@ class AxisItem(GraphicsWidget):
         """Unlink this axis from a ViewBox."""
         oldView = self.linkedView()
         self._linkedView = None
-        if self.orientation in ['right', 'left']:
-            if oldView is not None:
+        if oldView is not None:
+            if self.orientation in ['right', 'left']:
                 oldView.sigYRangeChanged.disconnect(self.linkedViewChanged)
-        else:
-            if oldView is not None:
+            else:
                 oldView.sigXRangeChanged.disconnect(self.linkedViewChanged)
 
         if oldView is not None:
