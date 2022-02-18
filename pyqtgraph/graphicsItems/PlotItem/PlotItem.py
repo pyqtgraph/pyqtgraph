@@ -3,6 +3,7 @@ import importlib
 import os
 import warnings
 import weakref
+from typing import Optional
 
 import numpy as np
 
@@ -88,18 +89,29 @@ class PlotItem(GraphicsWidget):
         
     lastFileDir = None
     
-    def __init__(self, parent=None, name=None, labels=None, title=None, viewBox=None, axisItems=None, enableMenu=True, **kargs):
+    def __init__(
+        self,
+        parent=None,
+        name=None,
+        labels=None,
+        title=None,
+        viewBox=None,
+        axisItems=None,
+        default_axes=['left', 'bottom'],
+        enableMenu=True,
+        **kargs
+    ):
         """
         Create a new PlotItem. All arguments are optional.
         Any extra keyword arguments are passed to :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`.
-        
+
         ==============  ==========================================================================================
         **Arguments:**
         *title*         Title to display at the top of the item. Html is allowed.
         *labels*        A dictionary specifying the axis labels to display::
-                   
+
                             {'left': (args), 'bottom': (args), ...}
-                     
+
                         The name of each axis and the corresponding arguments are passed to 
                         :func:`PlotItem.setLabel() <pyqtgraph.PlotItem.setLabel>`
                         Optionally, PlotItem my also be initialized with the keyword arguments left,
@@ -111,11 +123,11 @@ class PlotItem(GraphicsWidget):
                         and the values must be instances of AxisItem (or at least compatible with AxisItem).
         ==============  ==========================================================================================
         """
-        
+
         GraphicsWidget.__init__(self, parent)
-        
+
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
-        
+
         ## Set up control buttons
         path = os.path.dirname(__file__)
         self.autoBtn = ButtonItem(icons.getGraphPixmap('auto'), 14, self)
@@ -123,7 +135,7 @@ class PlotItem(GraphicsWidget):
         self.autoBtn.clicked.connect(self.autoBtnClicked)
         self.buttonsHidden = False ## whether the user has requested buttons to be hidden
         self.mouseHovering = False
-        
+
         self.layout = QtWidgets.QGraphicsGridLayout()
         self.layout.setContentsMargins(1,1,1,1)
         self.setLayout(self.layout)
@@ -137,34 +149,37 @@ class PlotItem(GraphicsWidget):
 
         # Enable or disable plotItem menu
         self.setMenuEnabled(enableMenu, None)
-        
+
         if name is not None:
             self.vb.register(name)
         self.vb.sigRangeChanged.connect(self.sigRangeChanged)
         self.vb.sigXRangeChanged.connect(self.sigXRangeChanged)
         self.vb.sigYRangeChanged.connect(self.sigYRangeChanged)
-        
+
         self.layout.addItem(self.vb, 2, 1)
         self.alpha = 1.0
         self.autoAlpha = True
         self.spectrumMode = False
-        
+
         self.legend = None
-        
+
         # Initialize axis items
         self.axes = {}
-        self.setAxisItems(axisItems)
-        
+        self.setAxisItems(
+            axisItems,
+            default_axes=default_axes,
+        )
+
         self.titleLabel = LabelItem('', size='11pt', parent=self)
         self.layout.addItem(self.titleLabel, 0, 1)
         self.setTitle(None)  ## hide
-        
+
         for i in range(4):
             self.layout.setRowPreferredHeight(i, 0)
             self.layout.setRowMinimumHeight(i, 0)
             self.layout.setRowSpacing(i, 0)
             self.layout.setRowStretchFactor(i, 1)
-            
+
         for i in range(3):
             self.layout.setColumnPreferredWidth(i, 0)
             self.layout.setColumnMinimumWidth(i, 0)
@@ -172,7 +187,7 @@ class PlotItem(GraphicsWidget):
             self.layout.setColumnStretchFactor(i, 1)
         self.layout.setRowStretchFactor(2, 100)
         self.layout.setColumnStretchFactor(1, 100)
-        
+
 
         self.items = []
         self.curves = []
@@ -185,12 +200,12 @@ class PlotItem(GraphicsWidget):
         self.avgShadowPen = fn.mkPen([0, 0, 0], width=4) # the previous default of [0,0,0,100] prevent fast drawing of the wide shadow line
 
         ### Set up context menu
-        
+
         w = QtWidgets.QWidget()
         self.ctrl = c = ui_template.Ui_Form()
         c.setupUi(w)
         dv = QtGui.QDoubleValidator(self)
-        
+
         menuItems = [
             (translate("PlotItem", 'Transforms'), c.transformGroup),
             (translate("PlotItem", 'Downsample'), c.decimateGroup),
@@ -199,10 +214,10 @@ class PlotItem(GraphicsWidget):
             (translate("PlotItem", 'Grid'), c.gridGroup),
             (translate("PlotItem", 'Points'), c.pointsGroup),
         ]
-        
-        
+
+
         self.ctrlMenu = QtWidgets.QMenu()
-        
+
         self.ctrlMenu.setTitle(translate("PlotItem", 'Plot Options'))
         self.subMenus = []
         for name, grp in menuItems:
@@ -212,7 +227,7 @@ class PlotItem(GraphicsWidget):
             sm.addAction(act)
             self.subMenus.append(sm)
             self.ctrlMenu.addMenu(sm)
-        
+
         self.stateGroup = WidgetGroup()
         for name, w in menuItems:
             self.stateGroup.autoAdd(w)
@@ -284,65 +299,157 @@ class PlotItem(GraphicsWidget):
                 return getattr(self.vb, name)(*args, **kwargs)
             method.__name__ = name
             return method
-        
+
         locals()[m] = _create_method(m)
-        
+
     del _create_method
-    
-    def setAxisItems(self, axisItems=None):
+
+    def removeAxis(
+        self,
+        name: str,
+        unlink: bool = True,
+
+    ) -> Optional[AxisItem]:
         """
-        Place axis items as given by `axisItems`. Initializes non-existing axis items.
-        
+        Remove an axis from the contained axis items
+        by ```name: str```.
+
+        This means the axis graphics object will be removed
+        from the ``.layout: QGraphicsGridLayout`` as well as unlinked
+        from the underlying associated ``ViewBox``.
+
+        If the ``unlink: bool`` is set to ``False`` then the axis will
+        stay linked to its view and will only be removed from the
+        layoutonly be removed from the layout.
+
+        If no axis with ``name: str`` is found then this is a noop.
+
+        Return the axis instance that was removed.
+
+        """
+        entry = self.axes.pop(name, None)
+
+        if not entry:
+            return
+
+        axis = entry['item']
+        self.layout.removeItem(axis)
+        axis.scene().removeItem(axis)
+        if unlink:
+            axis.unlinkFromView()
+
+        self.update()
+
+        return axis
+
+    # NOTE: seriously.. y'all
+    # Why do we need to always have all axes created? I don't understand
+    # this at all. Everything seems to work if you just always apply the
+    # set passed to this method **EXCEPT** for some super weird reason
+    # the view box geometry still computes as though the space for the
+    # `'bottom'` axis is always there **UNLESS** you always add that
+    # axis but hide it? Why in tf would this be the case!?!?
+    def setAxisItems(
+        self,
+        # XXX: yeah yeah, i know we can't use type annots like this yet.
+        axisItems: Optional[dict[str, AxisItem]] = None,
+        add_to_layout: bool = True,
+        default_axes: list[str] = ['left', 'bottom'],
+    ):
+        """
+        Place axis items as given by `axisItems`. Initializes
+        non-existing axis items.
+
         ==============  ==========================================================================================
         **Arguments:**
         *axisItems*     Optional dictionary instructing the PlotItem to use pre-constructed items
                         for its axes. The dict keys must be axis names ('left', 'bottom', 'right', 'top')
                         and the values must be instances of AxisItem (or at least compatible with AxisItem).
         ==============  ==========================================================================================
+
         """
-        
-        if axisItems is None:
-            axisItems = {}
-        
+        axisItems = axisItems or {}
+
+        # XXX: wth is is this even saying?!?
         # Array containing visible axis items
         # Also containing potentially hidden axes, but they are not touched so it does not matter
-        visibleAxes = ['left', 'bottom']
-        visibleAxes.extend(axisItems.keys()) # Note that it does not matter that this adds
-                                             # some values to visibleAxes a second time
-        
-        for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
-            if k in self.axes:
-                if k not in axisItems:
-                    continue # Nothing to do here
-                
-                # Remove old axis
-                oldAxis = self.axes[k]['item']
-                self.layout.removeItem(oldAxis)
-                oldAxis.scene().removeItem(oldAxis)
-                oldAxis.unlinkFromView()
-            
+        # visibleAxes = ['left', 'bottom']
+        # Note that it does not matter that this adds
+        # some values to visibleAxes a second time
+
+        # XXX: uhhh wat^ ..?
+
+        visibleAxes = list(default_axes) + list(axisItems.keys())
+
+        # TODO: we should probably invert the loop
+        # here to not loop the predefined "axis name set" and
+        # instead loop the `axisItems` input and lookup indices
+        # from a predefined map.
+        for name, pos in (
+            ('top', (1,1)),
+            ('bottom', (3,1)),
+            ('left', (2,0)),
+            ('right', (2,2))
+        ):
+            if name in self.axes and name in axisItems:
+                # we already have an axis entry for this name
+                # so remove the existing entry.
+                self.removeAxis(name)
+
+            # elif name not in axisItems:
+            #     # this axis entry is not provided in this call
+            #     # so remove any old/existing entry.
+            #     self.removeAxis(name)
+
             # Create new axis
-            if k in axisItems:
-                axis = axisItems[k]
+            if name in axisItems:
+                axis = axisItems[name]
                 if axis.scene() is not None:
-                    if k not in self.axes or axis != self.axes[k]["item"]:
+                    if name not in self.axes or axis != self.axes[name]["item"]:
                         raise RuntimeError(
                             "Can't add an axis to multiple plots. Shared axes"
                             " can be achieved with multiple AxisItem instances"
                             " and set[X/Y]Link.")
+
             else:
-                axis = AxisItem(orientation=k, parent=self)
-            
-            # Set up new axis
+                # Set up new axis
+
+                # XXX: ok but why do we want to add axes for all entries
+                # if not desired by the user? The only reason I can see
+                # adding this is without it there's some weird
+                # ``ViewBox`` geometry bug.. where a gap for the
+                # 'bottom' axis is somehow left in?
+                axis = AxisItem(orientation=name, parent=self)
+
             axis.linkToView(self.vb)
-            self.axes[k] = {'item': axis, 'pos': pos}
-            self.layout.addItem(axis, *pos)
-            # place axis above images at z=0, items that want to draw over the axes should be placed at z>=1:
-            axis.setZValue(0.5) 
-            axis.setFlag(axis.GraphicsItemFlag.ItemNegativeZStacksBehindParent)           
-            axisVisible = k in visibleAxes
-            self.showAxis(k, axisVisible)
-        
+
+            # XXX: shouldn't you already know the ``pos`` from the name?
+            # Oh right instead of a global map that would let you
+            # reasily look that up it's redefined over and over and over
+            # again in methods..
+            self.axes[name] = {'item': axis, 'pos': pos}
+
+            # NOTE: in the overlay case the axis may be added to some
+            # other layout and should not be added here.
+            if add_to_layout:
+                self.layout.addItem(axis, *pos)
+
+            # place axis above images at z=0, items that want to draw
+            # over the axes should be placed at z>=1:
+            axis.setZValue(0.5)
+            axis.setFlag(
+                axis.GraphicsItemFlag.ItemNegativeZStacksBehindParent
+            )
+            if name in visibleAxes:
+                self.showAxis(name, True)
+            else:
+                # why do we need to insert all axes to ``.axes`` and
+                # only hide the ones the user doesn't specify? It all
+                # seems to work fine without doing this except for this
+                # weird gap for the 'bottom' axis that always shows up
+                # in the view box geometry??
+                self.hideAxis(name)
+
     def setLogMode(self, x=None, y=None):
         """
         Set log scaling for `x` and/or `y` axes.
@@ -408,10 +515,17 @@ class PlotItem(GraphicsWidget):
         alpha = self.ctrl.gridAlphaSlider.value()
         x = alpha if self.ctrl.xGridCheck.isChecked() else False
         y = alpha if self.ctrl.yGridCheck.isChecked() else False
-        self.getAxis('top').setGrid(x)
-        self.getAxis('bottom').setGrid(x)
-        self.getAxis('left').setGrid(y)
-        self.getAxis('right').setGrid(y)
+        for name, dim in (
+            ('top', x),
+            ('bottom', x),
+            ('left', y), 
+            ('right',y)
+        ):
+            if name in self.axes:
+                self.getAxis(name).setGrid(dim)
+        # self.getAxis('bottom').setGrid(x)
+        # self.getAxis('left').setGrid(y)
+        # self.getAxis('right').setGrid(y)
 
     def viewGeometry(self):
         """Return the screen geometry of the viewbox"""
