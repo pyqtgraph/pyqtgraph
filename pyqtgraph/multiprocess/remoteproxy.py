@@ -246,12 +246,12 @@ class RemoteEventHandler(object):
                         if isinstance(arg, tuple) and len(arg) > 0 and arg[0] == '__byte_message__':
                             ind = arg[1]
                             dtype, shape = arg[2]
-                            fnargs[i] = np.fromstring(byteData[ind], dtype=dtype).reshape(shape)
+                            fnargs[i] = np.frombuffer(byteData[ind], dtype=dtype).reshape(shape)
                     for k,arg in fnkwds.items():
                         if isinstance(arg, tuple) and len(arg) > 0 and arg[0] == '__byte_message__':
                             ind = arg[1]
                             dtype, shape = arg[2]
-                            fnkwds[k] = np.fromstring(byteData[ind], dtype=dtype).reshape(shape)
+                            fnkwds[k] = np.frombuffer(byteData[ind], dtype=dtype).reshape(shape)
                 
                 if len(fnkwds) == 0:  ## need to do this because some functions do not allow keyword arguments.
                     try:
@@ -270,7 +270,7 @@ class RemoteEventHandler(object):
                 returnType = 'proxy'
             elif cmd == 'transferArray':
                 ## read array data from next message:
-                result = np.fromstring(byteData[0], dtype=opts['dtype']).reshape(opts['shape'])
+                result = np.frombuffer(byteData[0], dtype=opts['dtype']).reshape(opts['shape'])
                 returnType = 'proxy'
             elif cmd == 'import':
                 name = opts['module']
