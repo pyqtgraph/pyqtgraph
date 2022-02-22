@@ -235,6 +235,8 @@ class ViewBox(GraphicsWidget):
         if name is None:
             self.updateViewLists()
 
+        self._viewPixelSizeCache  = None
+
     def getAspectRatio(self):
         '''return the current aspect ratio'''
         rect = self.rect()
@@ -435,6 +437,7 @@ class ViewBox(GraphicsWidget):
 
     def resizeEvent(self, ev):
         if ev.oldSize() != ev.newSize():
+            self._viewPixelSizeCache  = None
             self._matrixNeedsUpdate = True
 
             self.linkedXChanged()
@@ -529,6 +532,8 @@ class ViewBox(GraphicsWidget):
         ================== =====================================================================
 
         """
+        self._viewPixelSizeCache  = None
+
         changes = {}   # axes
         setRequested = [False, False]
 
@@ -1238,9 +1243,13 @@ class ViewBox(GraphicsWidget):
 
     def viewPixelSize(self):
         """Return the (width, height) of a screen pixel in view coordinates."""
-        o = self.mapToView(Point(0,0))
-        px, py = [Point(self.mapToView(v) - o) for v in self.pixelVectors()]
-        return (px.length(), py.length())
+        if self._viewPixelSizeCache  is None:
+
+            o = self.mapToView(Point(0, 0))
+            px, py = [Point(self.mapToView(v) - o) for v in self.pixelVectors()]
+            self._viewPixelSizeCache  = (px.length(), py.length())
+
+        return self._viewPixelSizeCache 
 
     def itemBoundingRect(self, item):
         """Return the bounding rect of the item in view coordinates"""
