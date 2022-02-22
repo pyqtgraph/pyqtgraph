@@ -65,9 +65,7 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
     def shape(self):  ## No idea why this is necessary, but rotated items do not receive clicks otherwise.
         p = self._path
         if p is None:
-            p = QtGui.QPainterPath()
+            self._path = p = QtGui.QPainterPath()
             p.addRect(self.boundingRect())
-            self._path = p
 
-        # print "shape:", p.boundingRect()
         return p
