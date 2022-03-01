@@ -12,7 +12,6 @@ from ...Point import Point
 from ...Qt import QtCore, QtGui, QtWidgets, isQObjectAlive
 from ..GraphicsWidget import GraphicsWidget
 from ..ItemGroup import ItemGroup
-from .ViewBoxMenu import ViewBoxMenu
 
 __all__ = ['ViewBox']
 
@@ -88,6 +87,12 @@ class ViewBox(GraphicsWidget):
 
     """
 
+    sigKeyPressEvent = QtCore.Signal(int, object)
+    sigMouseClickEvent = QtCore.Signal(int, object)
+    sigMouseDragEvent = QtCore.Signal(int, object)
+    sigResizeEvent = QtCore.Signal(int, object)
+    sigWheelEvent = QtCore.Signal(int, object)
+
     sigYRangeChanged = QtCore.Signal(object, object)
     sigXRangeChanged = QtCore.Signal(object, object)
     sigRangeChangedManually = QtCore.Signal(object)
@@ -138,6 +143,11 @@ class ViewBox(GraphicsWidget):
         """
 
         GraphicsWidget.__init__(self, parent)
+        self.sigKeyPressEvent.connect(self.keyPressEventHandler)
+        self.sigMouseClickEvent.connect(self.mouseClickEventHandler)
+        self.sigMouseDragEvent.connect(self.mouseDragEventHandler)
+        self.sigResizeEvent.connect(self.resizeEventHandler)
+        self.sigWheelEvent.connect(self.wheelEventHandler)
         self.name = None
         self.linksBlocked = False
         self.addedItems = []
@@ -440,6 +450,9 @@ class ViewBox(GraphicsWidget):
             ch.setParentItem(None)
 
     def resizeEvent(self, ev):
+        self.sigResizeEvent.emit(id(self), ev)
+
+    def resizeEventHandler(self, eid, ev):
         if ev.oldSize() != ev.newSize():
             self._matrixNeedsUpdate = True
 
@@ -1249,7 +1262,10 @@ class ViewBox(GraphicsWidget):
         """Return the bounding rect of the item in view coordinates"""
         return self.mapSceneToView(item.sceneBoundingRect()).boundingRect()
 
-    def wheelEvent(self, ev, axis=None):
+    def wheelEvent(self, ev):
+        self.sigWheelEvent.emit(id(self), ev)
+
+    def wheelEventHandler(self, eid, ev, axis=None):
         if axis in (0, 1):
             mask = [False, False]
             mask[axis] = self.state['mouseEnabled'][axis]
@@ -1273,6 +1289,9 @@ class ViewBox(GraphicsWidget):
         self.sigRangeChangedManually.emit(mask)
 
     def mouseClickEvent(self, ev):
+        self.sigMouseClickEvent.emit(id(self), ev)
+
+    def mouseClickEventHandler(self, eid, ev):
         if ev.button() == QtCore.Qt.MouseButton.RightButton and self.menuEnabled():
             ev.accept()
             self.raiseContextMenu(ev)
@@ -1289,7 +1308,10 @@ class ViewBox(GraphicsWidget):
     def getContextMenus(self, event):
         return self.menu.actions() if self.menuEnabled() else []
 
-    def mouseDragEvent(self, ev, axis=None):
+    def mouseDragEvent(self, ev):
+        self.sigMouseDragEvent.emit(id(self), ev)
+
+    def mouseDragEventHandler(self, eid, ev, axis=None):
         # if axis is specified, event will only affect that axis.
         ev.accept()  # we accept all buttons
 
@@ -1368,6 +1390,9 @@ class ViewBox(GraphicsWidget):
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
     def keyPressEvent(self, ev):
+        self.sigKeyPressEvent.emit(id(self), ev)
+
+    def keyPressEventHandler(self, eid, ev):
         """
         This routine should capture key presses in the current view box.
         Key presses are used only when mouse mode is RectMode
@@ -1809,3 +1834,7 @@ class ViewBox(GraphicsWidget):
             return
         self.scene().removeItem(self.locateGroup)
         self.locateGroup = None
+
+
+if True:
+    from .ViewBoxMenu import ViewBoxMenu

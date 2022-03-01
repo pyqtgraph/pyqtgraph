@@ -81,6 +81,9 @@ class PlotItem(GraphicsWidget):
     ==================== =======================================================================
     """
 
+    sigHoverEvent = QtCore.Signal(int, object)
+    sigResizeEvent = QtCore.Signal(int, object)
+
     sigRangeChanged = QtCore.Signal(object, object)  # Emitted when the ViewBox range has changed
     sigYRangeChanged = QtCore.Signal(object, object)  # Emitted when the ViewBox Y range has changed
     sigXRangeChanged = QtCore.Signal(object, object)  # Emitted when the ViewBox X range has changed
@@ -112,6 +115,8 @@ class PlotItem(GraphicsWidget):
         """
 
         GraphicsWidget.__init__(self, parent)
+        self.sigHoverEvent.connect(self.hoverEventHandler)
+        self.sigResizeEvent.connect(self.resizeEventHandler)
 
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
 
@@ -1091,6 +1096,9 @@ class PlotItem(GraphicsWidget):
         return mode
 
     def resizeEvent(self, ev):
+        self.sigResizeEvent.emit(id(self), ev)
+
+    def resizeEventHandler(self, eid, ev):
         if self.autoBtn is None:  # already closed down
             return
         btnRect = self.mapRectFromItem(self.autoBtn, self.autoBtn.boundingRect())
@@ -1124,6 +1132,9 @@ class PlotItem(GraphicsWidget):
         return self._menuEnabled
 
     def hoverEvent(self, ev):
+        self.sigHoverEvent.emit(id(self), ev)
+
+    def hoverEventHandler(self, eid, ev):
         if ev.enter:
             self.mouseHovering = True
         if ev.exit:
