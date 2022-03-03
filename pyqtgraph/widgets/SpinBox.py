@@ -88,7 +88,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             
             'decimals': 6,
             
-            'format': "{prefix}{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}",
+            'format': "{prefix}{prefixGap}{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}",
             'regex': fn.FLOAT_REGEX,
             'evalFunc': decimal.Decimal,
             
@@ -148,6 +148,9 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        done with ``str.format()`` and makes use of several arguments:
                        
                          * *value* - the unscaled value of the spin box
+                         * *prefix* - the prefix string
+                         * *prefixGap* - a single space if a suffix is present, or an empty
+                           string otherwise
                          * *suffix* - the suffix string
                          * *scaledValue* - the scaled value to use when an SI prefix is present
                          * *siPrefix* - the SI prefix string (if any), or an empty string if
@@ -219,7 +222,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                 self.opts['minStep'] = ms
 
             if 'format' not in opts:
-                self.opts['format'] = "{value:d}{suffixGap}{suffix}"
+                self.opts['format'] = "{prefix}{prefixGap}{value:d}{suffixGap}{suffix}"
 
         if self.opts['dec']:
             if self.opts.get('minStep') is None:
@@ -470,6 +473,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             # no SI prefix /suffix requested; scale is 1
             parts = {'value': val, 'suffix': suffix, 'decimals': decimals, 'siPrefix': '', 'scaledValue': val, 'prefix':prefix}
 
+        parts['prefixGap'] = '' if parts['prefix'] == '' else ' '
         parts['suffixGap'] = '' if (parts['suffix'] == '' and parts['siPrefix'] == '') else ' '
         
         return self.opts['format'].format(**parts)
