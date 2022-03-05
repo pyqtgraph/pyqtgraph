@@ -15,19 +15,11 @@ jobs:
       matrix:
         os: [ubuntu-20.04 , windows-latest, macos-latest]
         qt-lib: [pyqt, pyside]
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10"]
         include:
-          - python-version: "3.7"
-            qt-lib: "pyqt"
-            qt-version: "PyQt5~=5.12.0"
-            numpy-version: "~=1.18.0"
-          - python-version: "3.7"
-            qt-lib: "pyside"
-            qt-version: "PySide2~=5.12.0"
-            numpy-version: "~=1.18.0"
           - python-version: "3.8"
             qt-lib: "pyqt"
-            qt-version: "PyQt5~=5.15.0"
+            qt-version: "PyQt5~=5.12.0"
             numpy-version: "~=1.19.0"
           - python-version: "3.8"
             qt-lib: "pyside"
@@ -35,11 +27,11 @@ jobs:
             numpy-version: "~=1.19.0"
           - python-version: "3.9"
             qt-lib: "pyqt"
-            qt-version: "PyQt6~=6.1.0"
+            qt-version: "PyQt5~=5.15.0"
             numpy-version: "~=1.22.0"
           - python-version: "3.9"
             qt-lib: "pyside"
-            qt-version: "PySide6~=6.1.0"
+            qt-version: "PySide2~=5.15.0"
             numpy-version: "~=1.22.0"
           - python-version: "3.10"
             qt-lib: "pyqt"
