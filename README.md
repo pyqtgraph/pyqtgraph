@@ -33,13 +33,13 @@ This project supports:
 
 Currently this means:
 
-* Python 3.7+
+* Python 3.8+
 * Qt 5.12-5.15, 6.1+
 * [PyQt5](https://www.riverbankcomputing.com/software/pyqt/),
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
   [PySide2](https://wiki.qt.io/Qt_for_Python), or
   [PySide6](https://wiki.qt.io/Qt_for_Python)
-* [`numpy`](https://github.com/numpy/numpy) 1.18+
+* [`numpy`](https://github.com/numpy/numpy) 1.19+
 
 ### Optional added functionalities
 
@@ -72,17 +72,18 @@ Qt Bindings Test Matrix
 
 The following table represents the python environments we test in our CI system.  Our CI system uses Ubuntu 20.04, Windows Server 2019, and macOS 10.15 base images.
 
-| Qt-Bindings    | Python 3.7         | Python 3.8         | Python 3.9         | Python 3.10        |
-| :------------- | :----------------: | :----------------: | :----------------: | :----------------: |
-| PySide2-5.12   | :white_check_mark: | :x:                | :x:                | :x:                |
-| PyQt5-5.12     | :white_check_mark: |                    | :x:                | :x:                |
-| PySide2-5.15   |                    | :white_check_mark: |                    |                    |
-| PyQt5-5.15     |                    | :white_check_mark: |                    |                    |
-| PySide6-6.2    |                    |                    | :white_check_mark: | :white_check_mark: |
-| PyQt6-6.2      |                    |                    | :white_check_mark: | :white_check_mark: |
+| Qt-Bindings    |Python 3.8              | Python 3.9         | Python 3.10        |
+| :------------- |:---------------------: | :----------------: | :----------------: |
+| PySide2-5.12   |:eight_spoked_asterisk: | :x:                | :x:                |
+| PyQt5-5.12     |:white_check_mark:      | :x:                | :x:                |
+| PySide2-5.15   |:white_check_mark:      | :white_check_mark: |                    |
+| PyQt5-5.15     |                        | :white_check_mark: |                    |
+| PySide6-6.2    |                        |                    | :white_check_mark: |
+| PyQt6-6.2      |                        |                    | :white_check_mark: |
 
 * :x: - Not compatible
 * :white_check_mark: - Tested
+* :eight_spoked_asterisk: - Requires `conda-forge` package, incompatible with `pip` package
 
 Support
 -------
