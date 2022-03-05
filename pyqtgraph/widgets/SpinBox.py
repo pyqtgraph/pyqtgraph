@@ -149,7 +149,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        
                          * *value* - the unscaled value of the spin box
                          * *prefix* - the prefix string
-                         * *prefixGap* - a single space if a suffix is present, or an empty
+                         * *prefixGap* - a single space if a prefix is present, or an empty
                            string otherwise
                          * *suffix* - the suffix string
                          * *scaledValue* - the scaled value to use when an SI prefix is present
