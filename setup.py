@@ -15,6 +15,7 @@ setupOpts = dict(
     license =  'MIT',
     url='http://www.pyqtgraph.org',
     project_urls={
+        'Documentation': 'https://pyqtgraph.readthedocs.io',
         'Source': 'https://github.com/pyqtgraph/pyqtgraph',
     },
     author='Luke Campagnola',
