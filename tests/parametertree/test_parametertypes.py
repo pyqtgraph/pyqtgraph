@@ -58,13 +58,11 @@ def test_types():
 
     # int
     types = ['int0', 'int', 'float', 'bigfloat', 'npfloat', 'npint', 'bool']
-    inttyps = int if sys.version[0] >= '3' else (int, long) 
-    check_param_types(param.child('int'), inttyps, int, 0, all_objs, types)
+    check_param_types(param.child('int'), int, int, 0, all_objs, types)
     
     # str  (should be able to make a string out of any type)
     types = all_objs.keys()
-    strtyp = str if sys.version[0] >= '3' else unicode
-    check_param_types(param.child('str'), strtyp, str, '', all_objs, types)
+    check_param_types(param.child('str'), str, str, '', all_objs, types)
     
     # bool  (should be able to make a boolean out of any type?)
     types = all_objs.keys()
