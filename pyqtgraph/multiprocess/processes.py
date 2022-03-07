@@ -6,11 +6,7 @@ import signal
 import subprocess
 import sys
 import time
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
+import pickle
 
 from ..Qt import QT_LIB, mkQApp
 from ..util import cprint  # color printing for debugging

@@ -5,15 +5,10 @@ import time
 import traceback
 import warnings
 import weakref
+import builtins
+import pickle
 
 import numpy as np
-
-try:
-    import __builtin__ as builtins
-    import cPickle as pickle
-except ImportError:
-    import builtins
-    import pickle
 
 # color printing for debugging
 from ..util import cprint
