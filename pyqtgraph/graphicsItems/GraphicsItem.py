@@ -152,10 +152,7 @@ class GraphicsItem(object):
         if view is None:
             return None
         if hasattr(view, 'implements') and view.implements('ViewBox'):
-            tr = self.itemTransform(view.innerSceneItem())
-            if isinstance(tr, tuple):
-                tr = tr[0]   ## difference between pyside and pyqt
-            return tr
+            return self.itemTransform(view.innerSceneItem())[0]
         else:
             return self.sceneTransform()
             #return self.deviceTransform(view.viewportTransform())
@@ -439,9 +436,7 @@ class GraphicsItem(object):
         if relativeItem is None:
             relativeItem = self.parentItem()
 
-        tr = self.itemTransform(relativeItem)
-        if isinstance(tr, tuple):  ## difference between pyside and pyqt
-            tr = tr[0]
+        tr = self.itemTransform(relativeItem)[0]
         vec = tr.map(QtCore.QLineF(0,0,1,0))
         return vec.angleTo(QtCore.QLineF(vec.p1(), vec.p1()+QtCore.QPointF(1,0)))
         
