@@ -75,7 +75,7 @@ class MultiAxisPlotWidget(PlotWidget):
         self.makeLayout(axes=self.axes.keys(), charts=self.charts.keys())
         return axis
 
-    def addChart(self, xAxis=None, yAxis=None, chart=None, *args, **kwargs):
+    def addChart(self, *args, xAxis=None, yAxis=None, chart=None, **kwargs):
         """Add a new chart (PlotDataItem in a PlotItem) to the widget, will be
         shown when used in makeLayout().
 
@@ -130,7 +130,7 @@ class MultiAxisPlotWidget(PlotWidget):
             plotitem = self.pi
         else:
             # VIEW
-            plotitem = PlotItem(parent=self.pi, *args, enableMenu=False, **kwargs,)  # TODO: pass axis on creation
+            plotitem = PlotItem(*args, parent=self.pi, enableMenu=False, **kwargs)  # TODO: pass axis on creation
             # disable buttons (autoranging)
             plotitem.hideButtons()
             # fix parent legend not showing child charts

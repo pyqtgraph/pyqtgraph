@@ -29,12 +29,12 @@ This project supports:
 
 * All minor versions of Python released 42 months prior to the project, and at minimum the two latest minor versions.
 * All minor versions of numpy released in the 24 months prior to the project, and at minimum the last three minor versions.
-* All Qt5 versions from 5.12-5.15, and Qt6 6.1
+* All Qt5 versions from 5.12-5.15, and Qt6 6.1+
 
 Currently this means:
 
 * Python 3.7+
-* Qt 5.12-5.15, 6.1
+* Qt 5.12-5.15, 6.1+
 * [PyQt5](https://www.riverbankcomputing.com/software/pyqt/),
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
   [PySide2](https://wiki.qt.io/Qt_for_Python), or
@@ -72,14 +72,14 @@ Qt Bindings Test Matrix
 
 The following table represents the python environments we test in our CI system.  Our CI system uses Ubuntu 20.04, Windows Server 2019, and macOS 10.15 base images.
 
-| Qt-Bindings    | Python 3.7         | Python 3.8         | Python 3.9         |
-| :------------- | :----------------: | :----------------: | :----------------: |
-| PySide2-5.12   | :white_check_mark: | :x:                | :x:                |
-| PyQt5-5.12     | :white_check_mark: |                    | :x:                |
-| PySide2-5.15   |                    | :white_check_mark: |                    |
-| PyQt5-5.15     |                    | :white_check_mark: |                    |
-| PySide6-6.1    |                    |                    | :white_check_mark: |
-| PyQt6-6.1      |                    |                    | :white_check_mark: |
+| Qt-Bindings    | Python 3.7         | Python 3.8         | Python 3.9         | Python 3.10        |
+| :------------- | :----------------: | :----------------: | :----------------: | :----------------: |
+| PySide2-5.12   | :white_check_mark: | :x:                | :x:                | :x:                |
+| PyQt5-5.12     | :white_check_mark: |                    | :x:                | :x:                |
+| PySide2-5.15   |                    | :white_check_mark: |                    |                    |
+| PyQt5-5.15     |                    | :white_check_mark: |                    |                    |
+| PySide6-6.2    |                    |                    | :white_check_mark: | :white_check_mark: |
+| PyQt6-6.2      |                    |                    | :white_check_mark: | :white_check_mark: |
 
 * :x: - Not compatible
 * :white_check_mark: - Tested
