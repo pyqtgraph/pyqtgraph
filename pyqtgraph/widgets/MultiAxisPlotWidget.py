@@ -43,7 +43,7 @@ class MultiAxisPlotWidget(PlotWidget):
         self._signalConnectionsByChart: Dict[PlotDataItem, Dict] = {}
         self._signalConnectionsByAxis: Dict[AxisItem, Dict] = {}
 
-    def addAxis(self, *args, axis=None, **kwargs):
+    def addAxis(self, *args, axis=None, makeLayout=True, **kwargs):
         """Add a new axis (AxisItem) to the widget, will be shown and linked to a
         chart when used in addChart().
 
@@ -51,6 +51,8 @@ class MultiAxisPlotWidget(PlotWidget):
         ----------
         axis : AxisItem, optional
             The axis to be used. If left as None a new AxisItem will be created from args and kwargs.
+        makeLayout : bool, optional
+            If set to True (default) makeLayout will called with no arguments before returning from this function. Set to False to disable.
         args : iterable, optional
             arguments to be passed to the newly created AxisItem
         kwargs : dict, optional
@@ -72,10 +74,11 @@ class MultiAxisPlotWidget(PlotWidget):
         if axis not in self._signalConnectionsByAxis:
             self._signalConnectionsByAxis[axis] = {}
         axis.showLabel(True)
-        self.makeLayout(axes=self.axes.keys(), charts=self.charts.keys())
+        if makeLayout:
+            self.makeLayout()
         return axis
 
-    def addChart(self, *args, xAxis=None, yAxis=None, chart=None, **kwargs):
+    def addChart(self, *args, xAxis=None, yAxis=None, chart=None, makeLayout=True, **kwargs):
         """Add a new chart (PlotDataItem in a PlotItem) to the widget, will be
         shown when used in makeLayout().
 
@@ -92,6 +95,8 @@ class MultiAxisPlotWidget(PlotWidget):
         chart : PlotDataItem, optional
             The chart to be used inside the new PlotItem. If left as None a
             new PlotDataItem will be created.
+        makeLayout : bool, optional
+            If set to True (default) makeLayout will called with no arguments before returning from this function. Set to False to disable.
         args : iterable, optional
             Arguments to be passed to the newly created PlotItem. See
             :class:`~pyqtgraph.PlotItem`
@@ -169,7 +174,8 @@ class MultiAxisPlotWidget(PlotWidget):
         # create a mapping for this chart and his axis
         xAxis.charts[chart] = None
         yAxis.charts[chart] = None
-        self.makeLayout(axes=self.axes.keys(), charts=self.charts.keys())
+        if makeLayout:
+            self.makeLayout()
         return chart, plotitem
 
     def clearLayout(self):
