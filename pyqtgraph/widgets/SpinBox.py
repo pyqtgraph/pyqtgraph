@@ -510,23 +510,12 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         
         self.errorBox.setVisible(not self.textValid)
         
-        ## support 2 different pyqt APIs. Bleh.
-        if hasattr(QtCore, 'QString'):
-            return (ret, pos)
-        else:
-            return (ret, strn, pos)
+        return (ret, strn, pos)
         
     def fixup(self, strn):
         # fixup is called when the spinbox loses focus with an invalid or intermediate string
         self.updateText()
-
-        # support both PyQt APIs (for Python 2 and 3 respectively)
-        # http://pyqt.sourceforge.net/Docs/PyQt4/python_v3.html#qvalidator
-        try:
-            strn.clear()
-            strn.append(self.lineEdit().text())
-        except AttributeError:
-            return self.lineEdit().text()
+        return self.lineEdit().text()
 
     def interpret(self):
         """Return value of text or False if text is invalid."""
