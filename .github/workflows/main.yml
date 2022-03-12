@@ -77,9 +77,18 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update -y
-        sudo apt-get install -y libxkbcommon-x11-0 x11-utils
-        sudo apt-get install --no-install-recommends -y libyaml-dev libegl1-mesa libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0
-        sudo apt-get install -y libopengl0
+        sudo apt-get install --no-install-recommends -y \
+          libxkbcommon-x11-0 \
+          x11-utils \
+          libyaml-dev \
+          libegl1-mesa \
+          libxcb-icccm4 \
+          libxcb-image0 \
+          libxcb-keysyms1 \
+          libxcb-randr0 \
+          libxcb-render-util0 \
+          libxcb-xinerama0 \
+          libopengl0
         python -m pip install pytest-xvfb
     - name: 'Debug Info'
       run: |
@@ -106,7 +115,7 @@ jobs:
     - name: Run Tests
       run: |
         mkdir $SCREENSHOT_DIR
-        pytest tests -v
+        pytest tests -v -n auto
         pytest pyqtgraph/examples -v -n auto
       shell: bash
     - name: Upload Screenshots
@@ -154,7 +163,7 @@ jobs:
         shell: cmd
       - name: Install Dependencies
         run: |
-          conda install -q pyside2 numpy scipy pyopengl numba pip pytest
+          conda install -q pyside2 numpy scipy pyopengl pip pytest
           pip install pytest-xdist
         shell: bash -l {0}
       - name: "Install Linux VirtualDisplay"
@@ -203,8 +212,8 @@ jobs:
       - name: Run Tests
         run: |
           mkdir $SCREENSHOT_DIR
-          pytest pyqtgraph/examples -v
-          pytest tests -v
+          pytest pyqtgraph/examples -v -n auto
+          pytest tests -v -n auto
         shell: bash -l {0}
         env:
           SCREENSHOT_DIR: ./screenshots
