@@ -1,10 +1,7 @@
-import pytest
-
 import pyqtgraph as pg
 
 app = pg.mkQApp()
 
-@pytest.mark.skip(reason="Test is hanging up on macos + conda builds")
 def test_plotscene(tmpdir):
     pg.setConfigOption('foreground', (0,0,0))
     w = pg.GraphicsLayoutWidget()
