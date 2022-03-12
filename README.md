@@ -72,29 +72,32 @@ Qt Bindings Test Matrix
 
 The following table represents the python environments we test in our CI system.  Our CI system uses Ubuntu 20.04, Windows Server 2019, and macOS 10.15 base images.
 
-| Qt-Bindings    |Python 3.8              | Python 3.9         | Python 3.10        |
-| :------------- |:---------------------: | :----------------: | :----------------: |
-| PySide2-5.12   |:eight_spoked_asterisk: | :x:                | :x:                |
-| PyQt5-5.12     |:white_check_mark:      | :x:                | :x:                |
-| PySide2-5.15   |:white_check_mark:      | :white_check_mark: |                    |
-| PyQt5-5.15     |                        | :white_check_mark: |                    |
-| PySide6-6.2    |                        |                    | :white_check_mark: |
-| PyQt6-6.2      |                        |                    | :white_check_mark: |
+| Qt-Bindings    |Python 3.8              | Python 3.9              | Python 3.10             |
+| :------------- |:---------------------: | :---------------------: | :---------------------: |
+| PySide2-5.12   |:eight_spoked_asterisk: | :eight_spoked_asterisk: | :eight_spoked_asterisk: |
+| PyQt5-5.12     |:white_check_mark:      | :x:                     | :x:                     |
+| PySide2-5.15   |                        | :white_check_mark:      |                         |
+| PyQt5-5.15     |                        | :white_check_mark:      |                         |
+| PySide6-6.2    |                        |                         | :white_check_mark:      |
+| PyQt6-6.2      |                        |                         | :white_check_mark:      |
 
 * :x: - Not compatible
 * :white_check_mark: - Tested
-* :eight_spoked_asterisk: - Requires `conda-forge` package, incompatible with `pip` package
+* :eight_spoked_asterisk: - Requires `conda-forge` PySide2 package
 
 Support
 -------
 
 * Report issues on the [GitHub issue tracker](https://github.com/pyqtgraph/pyqtgraph/issues)
-* Post questions to the [mailing list / forum](https://groups.google.com/forum/?fromgroups#!forum/pyqtgraph) or [StackOverflow](https://stackoverflow.com/questions/tagged/pyqtgraph)
+* Post questions to 
+  * [mailing list / forum](https://groups.google.com/forum/?fromgroups#!forum/pyqtgraph)
+  * [StackOverflow](https://stackoverflow.com/questions/tagged/pyqtgraph)
+  * [GitHub Discussions](https://github.com/pyqtgraph/pyqtgraph/discussions)
 
 Installation Methods
 --------------------
 
-* From PyPI:
+* From PyPI
   * Last released version: `pip install pyqtgraph`
   * Latest development version: `pip install git+https://github.com/pyqtgraph/pyqtgraph@master`
 * From conda
