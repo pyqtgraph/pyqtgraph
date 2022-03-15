@@ -36,9 +36,12 @@ setupOpts = dict(
 
 
 import distutils.dir_util
+import os
+import re
+import sys
 from distutils.command import build
-import os, sys, re
-from setuptools import setup, find_namespace_packages
+
+from setuptools import find_namespace_packages, setup
 from setuptools.command import install
 
 path = os.path.split(__file__)[0]
@@ -131,7 +134,7 @@ setup(
         ],
     },
     install_requires = [
-        'numpy>=1.17.0',
+        'numpy>=1.19.0',
     ],
     **setupOpts
 )
