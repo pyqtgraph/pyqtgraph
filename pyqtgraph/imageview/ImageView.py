@@ -11,7 +11,6 @@ Widget used for displaying 2D or 3D data. Features:
   - ROI plotting
   - Image normalization through a variety of methods
 """
-import importlib
 import os
 from math import log10
 from time import perf_counter
@@ -19,10 +18,9 @@ from time import perf_counter
 import numpy as np
 
 from .. import functions as fn
-from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
+from ..Qt import QtCore, QtGui, QtWidgets
 
-ui_template = importlib.import_module(
-    f'.ImageViewTemplate_{QT_LIB.lower()}', package=__package__)
+from . import ImageViewTemplate_generic as ui_template
 
 from .. import debug as debug
 from .. import getConfigOption
