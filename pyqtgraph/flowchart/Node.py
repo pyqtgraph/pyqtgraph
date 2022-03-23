@@ -462,6 +462,12 @@ class TextItem(QtWidgets.QGraphicsTextItem):
                 self.on_update()
                 return
         super().keyPressEvent(ev)
+        
+    def mousePressEvent(self, ev):
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
+            self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextEditorInteraction)
+        elif ev.button() == QtCore.Qt.MouseButton.RightButton:
+            self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
 
 
 #class NodeGraphicsItem(QtWidgets.QGraphicsItem):
@@ -492,7 +498,6 @@ class NodeGraphicsItem(GraphicsObject):
         self.nameItem = TextItem(self.node.name(), self, self.labelChanged)
         self.nameItem.setDefaultTextColor(QtGui.QColor(50, 50, 50))
         self.nameItem.moveBy(self.bounds.width()/2. - self.nameItem.boundingRect().width()/2., 0)
-        self.nameItem.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextEditorInteraction)
         self.updateTerminals()
         #self.setZValue(10)
 
