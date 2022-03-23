@@ -443,6 +443,10 @@ class ScatterPlotItem(GraphicsObject):
 
         #self.setCacheMode(self.DeviceCoordinateCache)
 
+        # track when the tooltip is cleared so we only clear it once
+        # this allows another item in the VB to set the tooltip
+        self._toolTipCleared = True
+
     def setData(self, *args, **kargs):
         """
         **Ordered Arguments:**
@@ -1217,12 +1221,17 @@ class ScatterPlotItem(GraphicsObject):
             # Show information about hovered points in a tool tip
             vb = self.getViewBox()
             if vb is not None and self.opts['tip'] is not None:
-                cutoff = 3
-                tip = [self.opts['tip'](x=pt.pos().x(), y=pt.pos().y(), data=pt.data())
-                       for pt in points[:cutoff]]
-                if len(points) > cutoff:
-                    tip.append('({} others...)'.format(len(points) - cutoff))
-                vb.setToolTip('\n\n'.join(tip))
+                if len(points) > 0:
+                    cutoff = 3
+                    tip = [self.opts['tip'](x=pt.pos().x(), y=pt.pos().y(), data=pt.data())
+                           for pt in points[:cutoff]]
+                    if len(points) > cutoff:
+                        tip.append('({} others...)'.format(len(points) - cutoff))
+                    vb.setToolTip('\n\n'.join(tip))
+                    self._toolTipCleared = False
+                elif not self._toolTipCleared:
+                    vb.setToolTip("")
+                    self._toolTipCleared = True
 
             self.sigHovered.emit(self, points, ev)
 
