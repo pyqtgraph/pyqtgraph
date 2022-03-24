@@ -467,7 +467,7 @@ class TextItem(QtWidgets.QGraphicsTextItem):
         if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextEditorInteraction)
         elif ev.button() == QtCore.Qt.MouseButton.RightButton:
-            self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
+            self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.NoTextInteraction)
 
 
 #class NodeGraphicsItem(QtWidgets.QGraphicsItem):
