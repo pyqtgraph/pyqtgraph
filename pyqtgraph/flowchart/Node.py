@@ -466,6 +466,7 @@ class TextItem(QtWidgets.QGraphicsTextItem):
     def mousePressEvent(self, ev):
         if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextEditorInteraction)
+            self.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)  # focus text label
         elif ev.button() == QtCore.Qt.MouseButton.RightButton:
             self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.NoTextInteraction)
 
