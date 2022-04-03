@@ -56,8 +56,8 @@ CONFIG_OPTIONS = {
     'useNumba': False, # When True, use numba
     'segmentedLineMode': 'auto',  # segmented line mode, controls if lines are plotted in segments or continuous
                                   # 'auto': whether lines are plotted in segments is automatically decided using pen properties and whether anti-aliasing is enabled
-                                  # 'on': lines are always plotted in segments
-                                  # 'off': lines are never plotted in segments
+                                  # 'on' or True: lines are always plotted in segments
+                                  # 'off' or False: lines are never plotted in segments
 }
 
 
