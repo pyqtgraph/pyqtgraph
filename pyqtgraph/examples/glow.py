@@ -43,7 +43,7 @@ splitter.show()
 
 # Add some noise on the curves
 noise  = 0.1
-noises: list=[]
+noises: list = np.random.rand(6, 100)*noise
 
 def update_plot():
     pw2.clear()
@@ -56,14 +56,11 @@ def update_plot():
     linewidth_stop  = params.child('linewidth_stop').value()
     nb_lines        = params.child('nb_lines').value()
 
-    if len(noises)<nb_lines:
-        noises.append(np.random.rand(100)*noise)
-
     xs = []
     ys = []
     for i in range(nb_lines):
         xs.append(np.linspace(0, 2*np.pi, 100)-i)
-        ys.append(np.sin(xs[-1])*xs[-1]*10-i/3+noises[i])
+        ys.append(np.sin(xs[-1])*xs[-1]-i/3+noises[i])
 
     # For each line we:
     # 1. Add a PlotDataItem with the pen and brush corresponding to the line
