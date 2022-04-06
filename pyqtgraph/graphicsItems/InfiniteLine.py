@@ -3,6 +3,7 @@ from math import atan2, degrees
 import numpy as np
 
 from .. import functions as fn
+from .. import getConfigOption
 from ..Point import Point
 from ..Qt import QtCore, QtGui
 from .GraphicsItem import GraphicsItem
@@ -72,6 +73,21 @@ class InfiniteLine(GraphicsObject):
         self._name = name
 
         GraphicsObject.__init__(self)
+
+        self.opts = {
+            'shadowPen': None,
+            'fillLevel': None,
+            'fillOutline': False,
+            'brush': None,
+            'stepMode': None,
+            'name': name,
+            'antialias': getConfigOption('antialias'),
+            'connect': 'all',
+            'mouseWidth': 8, # width of shape responding to mouse click
+            'compositionMode': None,
+            'skipFiniteCheck': False,
+            'pen': pen
+        }
 
         if bounds is None:              ## allowed value boundaries for orthogonal lines
             self.maxRange = [None, None]
