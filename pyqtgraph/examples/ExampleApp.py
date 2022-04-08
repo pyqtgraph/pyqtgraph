@@ -517,7 +517,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
 
     def keyPressEvent(self, event):
         ret = super().keyPressEvent(event)
-        if not QtCore.Qt.KeyboardModifier.ControlModifier & event.modifiers():
+        if int(QtCore.Qt.KeyboardModifier.ControlModifier) & int(event.modifiers()):
             return ret
         key = event.key()
         Key = QtCore.Qt.Key
