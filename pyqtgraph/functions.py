@@ -1218,9 +1218,10 @@ def clip_array(arr, vmin, vmax, out=None):
         return np.core.umath.maximum(arr, vmin, out=out)
     elif _win32_clip_workaround_needed:
         if out is None:
-            out = np.empty_like(arr)
+            out = np.empty(arr.shape, dtype=np.find_common_type([arr.dtype], [type(vmax)]))
         out = np.core.umath.minimum(arr, vmax, out=out)
         return np.core.umath.maximum(out, vmin, out=out)
+
     else:
         return np.core.umath.clip(arr, vmin, vmax, out=out)
 
