@@ -728,7 +728,7 @@ class ROI(GraphicsObject):
                 hover=True
                 
             for btn in [QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.MouseButton.RightButton, QtCore.Qt.MouseButton.MiddleButton]:
-                if (self.acceptedMouseButtons() & btn) and ev.acceptClicks(btn):
+                if (int(self.acceptedMouseButtons()) & btn) and ev.acceptClicks(btn):
                     hover=True
             if self.contextMenuEnabled():
                 ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)
@@ -814,7 +814,7 @@ class ROI(GraphicsObject):
             if ev.button() == QtCore.Qt.MouseButton.RightButton and self.contextMenuEnabled():
                 self.raiseContextMenu(ev)
                 ev.accept()
-            elif ev.button() & self.acceptedMouseButtons():
+            elif ev.button() & int(self.acceptedMouseButtons()):
                 ev.accept()
                 self.sigClicked.emit(self, ev)
             else:
@@ -1385,9 +1385,9 @@ class Handle(UIGraphicsItem):
     def setDeletable(self, b):
         self.deletable = b
         if b:
-            self.setAcceptedMouseButtons(self.acceptedMouseButtons() | QtCore.Qt.MouseButton.RightButton)
+            self.setAcceptedMouseButtons(int(self.acceptedMouseButtons()) | QtCore.Qt.MouseButton.RightButton)
         else:
-            self.setAcceptedMouseButtons(self.acceptedMouseButtons() & ~QtCore.Qt.MouseButton.RightButton)
+            self.setAcceptedMouseButtons(int(self.acceptedMouseButtons()) & ~QtCore.Qt.MouseButton.RightButton)
 
     def removeClicked(self):
         self.sigRemoveRequested.emit(self)
@@ -1398,7 +1398,7 @@ class Handle(UIGraphicsItem):
             if ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
                 hover=True
             for btn in [QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.MouseButton.RightButton, QtCore.Qt.MouseButton.MiddleButton]:
-                if (self.acceptedMouseButtons() & btn) and ev.acceptClicks(btn):
+                if (int(self.acceptedMouseButtons()) & btn) and ev.acceptClicks(btn):
                     hover=True
                     
         if hover:
@@ -1424,7 +1424,7 @@ class Handle(UIGraphicsItem):
                 self.isMoving = False  ## prevents any further motion
                 self.movePoint(self.startPos, finish=True)
                 ev.accept()
-            elif ev.button() & self.acceptedMouseButtons():
+            elif ev.button() & int(self.acceptedMouseButtons()):
                 ev.accept()
                 if ev.button() == QtCore.Qt.MouseButton.RightButton and self.deletable:
                     self.raiseContextMenu(ev)
@@ -1448,7 +1448,7 @@ class Handle(UIGraphicsItem):
         removeAllowed = all(r.checkRemoveHandle(self) for r in self.rois)
         self.removeAction.setEnabled(removeAllowed)
         pos = ev.screenPos()
-        menu.popup(QtCore.QPoint(pos.x(), pos.y()))    
+        menu.popup(QtCore.QPoint(int(pos.x()), int(pos.y())))
 
     def mouseDragEvent(self, ev):
         if ev.button() != QtCore.Qt.MouseButton.LeftButton:
