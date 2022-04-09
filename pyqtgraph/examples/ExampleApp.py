@@ -516,9 +516,9 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.loadFile(edited=True)
 
     def keyPressEvent(self, event):
-        ret = super().keyPressEvent(event)
+        super().keyPressEvent(event)
         if not (event.modifiers() & QtCore.Qt.KeyboardModifier.ControlModifier):
-            return ret
+            return
         key = event.key()
         Key = QtCore.Qt.Key
 
@@ -529,7 +529,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
             return
 
         if key not in [Key.Key_Plus, Key.Key_Minus, Key.Key_Underscore, Key.Key_Equal, Key.Key_0]:
-            return ret
+            return
         font = self.ui.codeView.font()
         oldSize = font.pointSize()
         if key == Key.Key_Plus or key == Key.Key_Equal:
