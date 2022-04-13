@@ -971,13 +971,15 @@ class PlotDataItem(GraphicsObject):
 
         if self.opts['autoDownsample']:
             # this option presumes that x-values have uniform spacing
-            if view_range is not None and len(x) > 1:
-                dx = float(x[-1]-x[0]) / (len(x)-1)
+
+            finite_x = x[np.isfinite(x)]  # ignore infinite and nan values
+            if view_range is not None and len(finite_x) > 1:
+                dx = float(finite_x[-1]-finite_x[0]) / (len(finite_x)-1)
                 if dx != 0.0:
-                    x0 = (view_range.left()-x[0]) / dx
-                    x1 = (view_range.right()-x[0]) / dx
+                    x0 = (view_range.left()-finite_x[0]) / dx
+                    x1 = (view_range.right()-finite_x[0]) / dx
                     width = self.getViewBox().width()
-                    if width != 0.0:
+                    if width*self.opts['autoDownsampleFactor'] != 0.0 and np.isfinite(x1-x0):
                         ds = int(max(1, int((x1-x0) / (width*self.opts['autoDownsampleFactor']))))
                     ## downsampling is expensive; delay until after clipping.
 
