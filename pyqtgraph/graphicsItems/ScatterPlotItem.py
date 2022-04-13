@@ -955,7 +955,7 @@ class ScatterPlotItem(GraphicsObject):
 
         #self.prepareGeometryChange()
         if self.data is None or len(self.data) == 0:
-            return (None, None)
+            return self.bounds[ax]
 
         if ax == 0:
             d = self.data['x']
@@ -972,16 +972,19 @@ class ScatterPlotItem(GraphicsObject):
             d2 = d2[mask]
 
             if d.size == 0:
-                return (None, None)
+                return self.bounds[ax]
 
         if frac >= 1.0:
-            self.bounds[ax] = (np.nanmin(d) - self._maxSpotWidth*0.7072, np.nanmax(d) + self._maxSpotWidth*0.7072)
+            if not np.all(np.isnan(d)):
+                self.bounds[ax] = (np.nanmin(d) - self._maxSpotWidth*0.7072, np.nanmax(d) + self._maxSpotWidth*0.7072)
             return self.bounds[ax]
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:
             mask = np.isfinite(d)
             d = d[mask]
+            if d.size == 0:  # nothing to show
+                return self.bounds[ax]
             return np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
 
     def pixelPadding(self):
