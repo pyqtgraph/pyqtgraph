@@ -991,8 +991,8 @@ class ScatterPlotItem(GraphicsObject):
         return self._maxSpotPxWidth*0.7072
 
     def boundingRect(self):
-        (xmn, xmx) = self.dataBounds(ax=0)
-        (ymn, ymx) = self.dataBounds(ax=1)
+        (xmn, xmx) = self.dataBounds(ax=0) or (None, None)
+        (ymn, ymx) = self.dataBounds(ax=1) or (None, None)
         if xmn is None or xmx is None:
             xmn = 0
             xmx = 0
