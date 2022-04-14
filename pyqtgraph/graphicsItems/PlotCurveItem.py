@@ -710,7 +710,7 @@ class PlotCurveItem(GraphicsObject):
             and isinstance(self.opts['fillLevel'], (int, float))
         )
 
-    def _getFillPathList(self):
+    def _getFillPathList(self, chunksize):
         if self._fillPathList is not None:
             return self._fillPathList
 
@@ -737,7 +737,6 @@ class PlotCurveItem(GraphicsObject):
 
         paths = self._fillPathList = []
         offset = 0
-        chunksize = 50          # determined empirically
         xybuf = np.empty((chunksize+3, 2))
         baseline = self.opts['fillLevel']
 
@@ -784,7 +783,8 @@ class PlotCurveItem(GraphicsObject):
 
         if do_fill:
             if self._shouldUseFillPathList():
-                paths = self._getFillPathList()
+                chunksize = 50 if not isinstance(widget, QtWidgets.QOpenGLWidget) else 5000
+                paths = self._getFillPathList(chunksize)
             else:
                 paths = [self._getFillPath()]
 
