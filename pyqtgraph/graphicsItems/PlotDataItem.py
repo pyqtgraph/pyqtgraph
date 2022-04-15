@@ -344,6 +344,7 @@ class PlotDataItem(GraphicsObject):
             'symbolPen': (200,200,200),
             'symbolBrush': (50, 50, 150),
             'pxMode': True,
+            'useCache': True,
 
             'antialias': getConfigOption('antialias'),
             'pointMode': None,
@@ -862,7 +863,8 @@ class PlotDataItem(GraphicsObject):
                 ('symbolSize', 'size'),
                 ('data', 'data'),
                 ('pxMode', 'pxMode'),
-                ('antialias', 'antialias')
+                ('antialias', 'antialias'),
+                ('useCache', 'useCache')
             ]:
                 if k in self.opts:
                     scatterArgs[v] = self.opts[k]

@@ -597,6 +597,8 @@ class ScatterPlotItem(GraphicsObject):
             self.opts['hoverable'] = bool(kargs['hoverable'])
         if 'tip' in kargs:
             self.opts['tip'] = kargs['tip']
+        if 'useCache' in kargs:
+            self.opts['useCache'] = kargs['useCache']
 
         ## Set any extra parameters provided in keyword arguments
         for k in ['pen', 'brush', 'symbol', 'size']:
