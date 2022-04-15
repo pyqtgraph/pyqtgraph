@@ -2043,14 +2043,20 @@ def _arrayToQPath_finite(x, y, isfinite=None):
     return path
 
 
-def arrayToQPath(x, y, connect='all', finiteCheck=True):
+def arrayToQPath(
+    x,
+    y,
+    connect='all',
+    finiteCheck=True,
+    path=None,
+):
     """
     Convert an array of x,y coordinates to QPainterPath as efficiently as
     possible. The *connect* argument may be 'all', indicating that each point
     should be connected to the next; 'pairs', indicating that each pair of
     points should be connected, or an array of int32 values (0 or 1) indicating
     connections.
-    
+
     Parameters
     ----------
     x : (N,) ndarray
@@ -2058,7 +2064,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     y : (N,) ndarray
         y-values to be plotted, must be same length as `x`
     connect : {'all', 'pairs', 'finite', (N,) ndarray}, optional
-        Argument detailing how to connect the points in the path. `all` will 
+        Argument detailing how to connect the points in the path. `all` will
         have sequential points being connected.  `pairs` generates lines
         between every other point.  `finite` only connects points that are
         finite.  If an ndarray is passed, containing int32 values of 0 or 1,
@@ -2067,12 +2073,12 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         When false, the check for finite values will be skipped, which can
         improve performance. If nonfinite values are present in `x` or `y`,
         an empty QPainterPath will be generated.
-    
+
     Returns
     -------
     QPainterPath
         QPainterPath object to be drawn
-    
+
     Raises
     ------
     ValueError
@@ -2091,7 +2097,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     1(i4)   x(f8)   y(f8)    <-- 1 means this vertex connects to the previous vertex
     ...
     cStart(i4)   fillRule(i4)
-    
+
     see: https://github.com/qt/qtbase/blob/dev/src/gui/painting/qpainterpath.cpp
 
     All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
@@ -2171,12 +2177,29 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     else:
         raise ValueError('connect argument must be "all", "pairs", "finite", or array')
 
-    path = QtGui.QPainterPath()
-    if hasattr(path, 'reserve'):    # Qt 5.13
-        path.reserve(n)
+    do_reserve = False
+    if path is None:
+        path = QtGui.QPainterPath()
+        if hasattr(path, 'reserve'):    # Qt 5.13
+            do_reserve = True
+
+    # XXX: not sure if this should be implicit?
+    # Does just rewriting get equal performance or
+    # must we clear in order to get the speedup?
+    # https://doc.qt.io/qt-6/qpainterpath.html#clear
+    # elif path.capacity():
+    #     path.clear()
 
     ds = QtCore.QDataStream(backstore)
     ds >> path
+
+    if do_reserve:
+        # NOTE: Reserve a path components size equivalent to the one
+        # generated. NB you may need a larger reservation if you plan to
+        # append to the intended path. See the docs:
+        # https://doc.qt.io/qt-6/qpainterpath.html#reserve
+        path.reserve(path.capacity())
+
     return path
 
 def ndarray_from_qpolygonf(polyline):
