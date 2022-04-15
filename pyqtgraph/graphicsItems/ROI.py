@@ -771,7 +771,7 @@ class ROI(GraphicsObject):
         menu = self.getMenu()
         menu = self.scene().addParentContextMenus(self, menu, ev)
         pos = ev.screenPos()
-        menu.popup(QtCore.QPoint(pos.x(), pos.y()))
+        menu.popup(QtCore.QPoint(int(pos.x()), int(pos.y())))
 
     def getMenu(self):
         if self.menu is None:
@@ -1426,7 +1426,7 @@ class Handle(UIGraphicsItem):
         removeAllowed = all(r.checkRemoveHandle(self) for r in self.rois)
         self.removeAction.setEnabled(removeAllowed)
         pos = ev.screenPos()
-        menu.popup(QtCore.QPoint(pos.x(), pos.y()))    
+        menu.popup(QtCore.QPoint(int(pos.x()), int(pos.y())))    
 
     def mouseDragEvent(self, ev):
         if ev.button() != QtCore.Qt.MouseButton.LeftButton:

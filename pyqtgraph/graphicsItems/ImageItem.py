@@ -1039,7 +1039,7 @@ class ImageItem(GraphicsObject):
             return False
         menu = self.scene().addParentContextMenus(self, menu, ev)
         pos = ev.screenPos()
-        menu.popup(QtCore.QPoint(pos.x(), pos.y()))
+        menu.popup(QtCore.QPoint(int(pos.x()), int(pos.y())))
         return True
 
     def getMenu(self):
