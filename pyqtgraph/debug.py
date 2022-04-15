@@ -535,7 +535,7 @@ class Profiler(object):
             pass
     _disabledProfiler = DisabledProfiler()
         
-    def __new__(cls, msg=None, disabled='env', delayed=True):
+    def __new__(cls, msg=None, disabled='env', delayed=True, gt: float = 0):
         """Optionally create a new profiler based on caller's qualname.
         """
         if disabled is True or (disabled == 'env' and len(cls._profilers) == 0):
@@ -561,6 +561,7 @@ class Profiler(object):
         obj._finished = False
         obj._firstTime = obj._lastTime = perf_counter()
         obj._newMsg("> Entering " + obj._name)
+        obj._gt = gt
         return obj
 
     def __call__(self, msg=None):
@@ -570,12 +571,13 @@ class Profiler(object):
             return
         if msg is None:
             msg = str(self._markCount)
+
         self._markCount += 1
         newTime = perf_counter()
-        self._newMsg("  %s: %0.4f ms", 
-                     msg, (newTime - self._lastTime) * 1000)
+        ms = (newTime - self._lastTime) * 1000
+        self._newMsg("  %s: %0.4f ms", msg, ms)
         self._lastTime = newTime
-        
+
     def mark(self, msg=None):
         self(msg)
 
@@ -589,21 +591,31 @@ class Profiler(object):
 
     def __del__(self):
         self.finish()
-    
+
     def finish(self, msg=None):
         """Add a final message; flush the message list if no parent profiler.
         """
         if self._finished or self.disable:
-            return        
+            return
+
         self._finished = True
         if msg is not None:
             self(msg)
-        self._newMsg("< Exiting %s, total time: %0.4f ms", 
-                     self._name, (perf_counter() - self._firstTime) * 1000)
+
+        tot_ms = (perf_counter() - self._firstTime) * 1000
+        self._newMsg(
+            "< Exiting %s, total time: %0.4f ms",
+            self._name,
+            tot_ms,
+        )
+        if tot_ms < self._gt:
+            # print(f'{tot_ms} < {self._gt}, clearing')
+            self._msgs.clear()
+
         type(self)._depth -= 1
         if self._depth < 1:
             self.flush()
-        
+
     def flush(self):
         if self._msgs:
             print("\n".join([m[0]%m[1] for m in self._msgs]))
