@@ -354,6 +354,7 @@ class ValueLabel(QtWidgets.QLabel):
                             the display value will appear to change more slowly and smoothly.
         format or formatStr (str) Formatting string used to generate the text shown. Formatting is
                             done with ``str.format()`` and makes use of several arguments:
+                            
                               * *prefix* - the prefix string
                               * *prefixGap* - a single space if a prefix is present, or an empty
                                 string otherwise
