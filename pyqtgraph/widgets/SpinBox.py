@@ -203,13 +203,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             
         ## sanity checks:
         if self.opts['int']:
-            if 'step' in opts:
-                step = opts['step']
-                ## not necessary..
-                #if int(step) != step:
-                    #raise Exception('Integer SpinBox must have integer step size.')
-            else:
-                self.opts['step'] = int(self.opts['step'])
+            self.opts['step'] = round(self.opts.get('step', 1))
             
             if 'minStep' in opts:
                 step = opts['minStep']
