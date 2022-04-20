@@ -261,7 +261,6 @@ class DockArea(Container, QtWidgets.QWidget, DockDrop):
 
     def buildFromState(self, state, docks, root, depth=0, missing='error'):
         typ, contents, state = state
-        pfx = "  " * depth
         if typ == 'dock':
             try:
                 obj = docks[contents]
@@ -280,7 +279,6 @@ class DockArea(Container, QtWidgets.QWidget, DockDrop):
             obj = self.makeContainer(typ)
             
         root.insert(obj, 'after')
-        #print pfx+"Add:", obj, " -> ", root
         
         if typ != 'dock':
             for o in contents:

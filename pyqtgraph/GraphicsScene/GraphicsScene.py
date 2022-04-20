@@ -405,19 +405,11 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         #tr = self.getViewWidget(event.widget()).transform()
         view = self.views()[0]
         tr = view.viewportTransform()
-        r = self._clickRadius
-        rect = view.mapToScene(QtCore.QRect(0, 0, 2*r, 2*r)).boundingRect()
         
-        seen = set()
         if hasattr(event, 'buttonDownScenePos'):
             point = event.buttonDownScenePos()
         else:
             point = event.scenePos()
-        w = rect.width()
-        h = rect.height()
-        rgn = QtCore.QRectF(point.x()-w, point.y()-h, 2*w, 2*h)
-        #self.searchRect.setRect(rgn)
-
 
         items = self.items(point, selMode, sortOrder, tr)
         
@@ -444,6 +436,14 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         items2.sort(key=absZValue, reverse=True)
         
         return items2
+
+        #seen = set()
+        #r = self._clickRadius
+        #rect = view.mapToScene(QtCore.QRect(0, 0, 2*r, 2*r)).boundingRect()
+        #w = rect.width()
+        #h = rect.height()
+        #rgn = QtCore.QRectF(point.x()-w, point.y()-h, 2*w, 2*h)
+        #self.searchRect.setRect(rgn)
         
         #for item in items:
             ##seen.add(item)

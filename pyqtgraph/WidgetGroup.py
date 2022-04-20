@@ -263,7 +263,6 @@ class WidgetGroup(QtCore.QObject):
         return val
 
     def setWidget(self, w, v):
-        v1 = v
         if self.scales[w] is not None:
             v *= self.scales[w]
         

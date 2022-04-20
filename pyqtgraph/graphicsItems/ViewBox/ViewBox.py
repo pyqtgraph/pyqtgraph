@@ -835,9 +835,6 @@ class ViewBox(GraphicsWidget):
 
         if axis is None:
             axis = ViewBox.XYAxes
-
-        needAutoRangeUpdate = False
-
         if axis == ViewBox.XYAxes or axis == 'xy':
             axes = [0, 1]
         elif axis == ViewBox.XAxis or axis == 'x':
@@ -1410,9 +1407,6 @@ class ViewBox(GraphicsWidget):
         profiler = debug.Profiler()
         if items is None:
             items = self.addedItems
-
-        ## measure pixel dimensions in view box
-        px, py = [v.length() if v is not None else 0 for v in self.childGroup.pixelVectors()]
 
         ## First collect all boundary information
         itemBounds = []

@@ -229,7 +229,7 @@ class SymbolAtlas(object):
         return self._maxWidth
 
     def rebuild(self, styles=None):
-        profiler = debug.Profiler()
+        profiler = debug.Profiler()  # noqa: profiler prints on GC
         if styles is None:
             data = []
         else:
@@ -353,7 +353,7 @@ class SymbolAtlas(object):
         return int(w), int(y + h)
 
     def _createPixmap(self):
-        profiler = debug.Profiler()
+        profiler = debug.Profiler()  # noqa: profiler prints on GC
         if self._data.size == 0:
             pm = QtGui.QPixmap(0, 0)
         else:
@@ -807,8 +807,7 @@ class ScatterPlotItem(GraphicsObject):
         self.invalidate()
 
     def updateSpots(self, dataSet=None):
-        profiler = debug.Profiler()
-
+        profiler = debug.Profiler()  # noqa: profiler prints on GC
         if dataSet is None:
             dataSet = self.data
 
@@ -969,7 +968,6 @@ class ScatterPlotItem(GraphicsObject):
         if orthoRange is not None:
             mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
             d = d[mask]
-            d2 = d2[mask]
 
             if d.size == 0:
                 return (None, None)
