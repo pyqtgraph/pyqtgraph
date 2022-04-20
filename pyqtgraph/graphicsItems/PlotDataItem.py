@@ -979,8 +979,10 @@ class PlotDataItem(GraphicsObject):
                     x0 = (view_range.left()-finite_x[0]) / dx
                     x1 = (view_range.right()-finite_x[0]) / dx
                     width = self.getViewBox().width()
-                    if width*self.opts['autoDownsampleFactor'] != 0.0 and np.isfinite(x1-x0):
-                        ds = int(max(1, int((x1-x0) / (width*self.opts['autoDownsampleFactor']))))
+                    if width * self.opts['autoDownsampleFactor'] != 0.0:
+                        ds_float = max(1.0, (x1 - x0) / (width * self.opts['autoDownsampleFactor']))
+                        if np.isfinite(ds_float):
+                            ds = int(ds_float)
                     ## downsampling is expensive; delay until after clipping.
 
         if self.opts['clipToView']:
