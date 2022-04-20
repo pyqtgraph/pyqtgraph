@@ -710,7 +710,7 @@ class PlotCurveItem(GraphicsObject):
             and isinstance(self.opts['fillLevel'], (int, float))
         )
 
-    def _getFillPathList(self):
+    def _getFillPathList(self, widget):
         if self._fillPathList is not None:
             return self._fillPathList
 
@@ -735,9 +735,16 @@ class PlotCurveItem(GraphicsObject):
         if len(x) < 2:
             return []
 
+        # Set suitable chunk size for current configuration:
+        #   * Without OpenGL split in small chunks
+        #   * With OpenGL split in rather big chunks
+        #     Note, the present code is used only if config option 'enableExperimental' is False,
+        #     otherwise the 'paintGL' method is used.
+        # Values were found using 'PlotSpeedTest.py' example, see #2257.
+        chunksize = 50 if not isinstance(widget, QtWidgets.QOpenGLWidget) else 5000
+
         paths = self._fillPathList = []
         offset = 0
-        chunksize = 50          # determined empirically
         xybuf = np.empty((chunksize+3, 2))
         baseline = self.opts['fillLevel']
 
@@ -784,7 +791,7 @@ class PlotCurveItem(GraphicsObject):
 
         if do_fill:
             if self._shouldUseFillPathList():
-                paths = self._getFillPathList()
+                paths = self._getFillPathList(widget)
             else:
                 paths = [self._getFillPath()]
 
