@@ -272,3 +272,25 @@ def test_LineROI_coords(p1, p2):
         got = lineroi.mapSceneToParent(scenepos)
         assert math.isclose(got.x(), expected[0])
         assert math.isclose(got.y(), expected[1])
+
+
+def _assert_point_match(a, b):
+    if not math.isclose(a[0], b[0]) or not math.isclose(a[1], b[1]):
+        raise AssertionError(f"({a[0]:.17g}, {a[1]:.17g}) should equal ({b[0]:.17g}, {b[1]:.17g})")
+
+
+def test_FreeHandle_move_coords():
+    pw = pg.plot()
+
+    roi = pg.LineROI([0, 0], [10, 10], width=0.5, pen="r")
+    pw.addItem(roi)
+
+    h = roi.addFreeHandle([0.5, 0.5])
+    idx = roi.indexOfHandle(h)
+    hinfo = roi.handles[idx]
+    roi.movePoint(h, [0, 0])
+    _assert_point_match(hinfo["pos"], [0, 0.5])
+    roi.movePoint(h, [5, 5])
+    _assert_point_match(hinfo["pos"], [0.5, 0.5])
+    roi.movePoint(h, [5, 10])
+    _assert_point_match(hinfo["pos"], [0.75, 0.5 + math.sqrt(50)])

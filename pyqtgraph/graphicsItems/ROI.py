@@ -839,7 +839,7 @@ class ROI(GraphicsObject):
         h = self.handles[index]
         p0 = self.mapToParent(h['pos'] * self.state['size'])
         p1 = Point(pos)
-        
+
         if coords == 'parent':
             pass
         elif coords == 'scene':
@@ -861,7 +861,8 @@ class ROI(GraphicsObject):
         elif h['type'] == 'f':
             newPos = self.mapFromParent(p1)
             h['item'].setPos(newPos)
-            h['pos'] = newPos
+            h["pos"] = self._mapToScaledRelativePosition(newPos)
+
             self.freeHandleMoved = True
             
         elif h['type'] == 's':
@@ -959,7 +960,7 @@ class ROI(GraphicsObject):
             
             if h['type'] == 'rf':
                 h['item'].setPos(self.mapFromScene(p1))  ## changes ROI coordinates of handle
-                h['pos'] = self.mapFromParent(p1)
+                h["pos"] = self._mapToScaledRelativePosition(self.mapFromParent(p1))
                 
         elif h['type'] == 'sr':
             try:
@@ -1004,7 +1005,16 @@ class ROI(GraphicsObject):
             self.setState(newState, update=False)
         
         self.stateChanged(finish=finish)
-    
+
+    def _mapToScaledRelativePosition(self, pos):
+        bound = self.boundingRect()
+        size = bound.size()
+        center = bound.center()
+        p = QtCore.QPointF(pos) - center
+        xrel = p.x() / size.width() + 0.5
+        yrel = p.y() / size.height() + 0.5
+        return Point(xrel, yrel)
+
     def stateChanged(self, finish=True):
         """Process changes to the state of the ROI.
         If there are any changes, then the positions of handles are updated accordingly
