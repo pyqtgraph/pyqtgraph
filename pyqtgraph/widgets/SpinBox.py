@@ -75,7 +75,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             'dec': False,   ## if true, does decimal stepping. ie from 1-10 it steps by 'step', from 10 to 100 it steps by 10*'step', etc. 
                             ## if true, minStep must be set in order to cross zero.
             
-            'int': False, ## Set True to force value to be integer. If True, 'step' is rounded to the nearest integer or is 1 if missing.
+            'int': False, ## Set True to force value to be integer. If True, 'step' is rounded to the nearest integer or defaults to 1.
             'finite': True,
             
             'prefix': '', ## string to be prepended to spin box value
@@ -94,6 +94,8 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             
             'compactHeight': True,  # manually remove extra margin outside of text
         }
+        if kwargs.get('int', False):
+            self.opts['step'] = 1
         
         self.decOpts = ['step', 'minStep']
         
@@ -131,7 +133,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        keyboard arrows while the widget has keyboard focus. Note that
                        the interpretation of this value is different when specifying
                        the 'dec' argument. If 'int' is True, 'step' is rounded to the nearest integer.
-                       Default is 0.01.
+                       Default is 0.01 if 'int' is False and 1 otherwise.
         dec            (bool) If True, then the step value will be adjusted to match 
                        the current size of the variable (for example, a value of 15
                        might step in increments of 1 whereas a value of 1500 would
@@ -141,7 +143,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        False.
         minStep        (float) When dec=True, this specifies the minimum allowable step size.
         int            (bool) If True, the value is forced to integer type.
-                       If True, 'step' is rounded to the nearest integer or is 1 if missing.
+                       If True, 'step' is rounded to the nearest integer or defaults to 1.
                        Default is False
         finite         (bool) When False and int=False, infinite values (nan, inf, -inf) are
                        permitted. Default is True.
