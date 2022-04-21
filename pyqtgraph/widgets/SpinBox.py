@@ -75,7 +75,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             'dec': False,   ## if true, does decimal stepping. ie from 1-10 it steps by 'step', from 10 to 100 it steps by 10*'step', etc. 
                             ## if true, minStep must be set in order to cross zero.
             
-            'int': False, ## Set True to force value to be integer
+            'int': False, ## Set True to force value to be integer. If True, 'step' is rounded to the nearest integer or is 1 if missing.
             'finite': True,
             
             'prefix': '', ## string to be prepended to spin box value
@@ -130,7 +130,8 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        down arrows, when rolling the mouse wheel, or when pressing 
                        keyboard arrows while the widget has keyboard focus. Note that
                        the interpretation of this value is different when specifying
-                       the 'dec' argument. Default is 0.01.
+                       the 'dec' argument. If 'int' is True, 'step' is rounded to the nearest integer.
+                       Default is 0.01.
         dec            (bool) If True, then the step value will be adjusted to match 
                        the current size of the variable (for example, a value of 15
                        might step in increments of 1 whereas a value of 1500 would
@@ -139,7 +140,9 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        'step' values when dec=True are 0.1, 0.2, 0.5, and 1.0. Default is
                        False.
         minStep        (float) When dec=True, this specifies the minimum allowable step size.
-        int            (bool) If True, the value is forced to integer type. Default is False
+        int            (bool) If True, the value is forced to integer type.
+                       If True, 'step' is rounded to the nearest integer or is 1 if missing.
+                       Default is False
         finite         (bool) When False and int=False, infinite values (nan, inf, -inf) are
                        permitted. Default is True.
         wrapping       (bool) If True and both bounds are not None, spin box has circular behavior.
