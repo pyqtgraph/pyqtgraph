@@ -9,7 +9,7 @@ from .Dock import Dock
 class Container(object):
     #sigStretchChanged = QtCore.Signal()  ## can't do this here; not a QObject.
     
-    def __init__(self, area):
+    def __init__(self, area=None, **kwargs):
         object.__init__(self)
         self.area = area
         self._container = None
@@ -70,11 +70,11 @@ class Container(object):
                 return
             self.container().insert(ch, 'before', self)
         #print "apoptose:", self
-        self.close()
+        self.close_()
         if propagate and cont is not None:
             cont.apoptose()
 
-    def close(self):
+    def close_(self):
         self.setParent(None)
         if self.area is not None and self.area.topContainer is self:
             self.area.topContainer = None
@@ -112,7 +112,7 @@ class Container(object):
         return self._stretch
             
 
-class SplitContainer(Container, QtWidgets.QSplitter):
+class SplitContainer(QtWidgets.QSplitter, Container):
     """Horizontal or vertical splitter with some changes:
      - save/restore works correctly
     """
@@ -222,7 +222,7 @@ class StackedWidget(QtWidgets.QStackedWidget):
         self.container.childEvent_(ev)
 
 
-class TContainer(Container, QtWidgets.QWidget):
+class TContainer(QtWidgets.QWidget, Container):
     sigStretchChanged = QtCore.Signal()
     def __init__(self, area):
         QtWidgets.QWidget.__init__(self)
