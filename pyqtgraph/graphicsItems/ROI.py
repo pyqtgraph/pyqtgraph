@@ -1196,9 +1196,6 @@ class ROI(GraphicsObject):
         See :meth:`~pyqtgraph.ROI.getArrayRegion` for a description of the
         arguments.
         """
-        br = self.boundingRect()
-        if br.width() > 1000:
-            raise Exception()
         if returnMappedCoords:
             sliced, mappedCoords = ROI.getArrayRegion(
                 self, data, img, axes, returnMappedCoords, fromBoundingRect=True, **kwds)
