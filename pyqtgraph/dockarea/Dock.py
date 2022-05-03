@@ -1,6 +1,6 @@
 import warnings
 
-from ..Qt import QtCore, QtGui, QtWidgets
+from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
 from ..widgets.VerticalLabel import VerticalLabel
 from .DockDrop import DockDrop
 
@@ -11,8 +11,12 @@ class Dock(QtWidgets.QWidget, DockDrop):
     sigClosed = QtCore.Signal(object)
 
     def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, label=None, **kargs):
-        QtWidgets.QWidget.__init__(self)
-        DockDrop.__init__(self)
+        allowedAreas = None
+        if QT_LIB.startswith('PyQt'):
+            QtWidgets.QWidget.__init__(self, allowedAreas=allowedAreas)
+        else:
+            QtWidgets.QWidget.__init__(self)
+            DockDrop.__init__(self, allowedAreas=allowedAreas)
         self._container = None
         self._name = name
         self.area = area
