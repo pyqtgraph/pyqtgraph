@@ -650,9 +650,9 @@ class PlotCurveItem(GraphicsObject):
 
     def _shouldUseDrawLineSegments(self, pen):
         mode = self.opts['segmentedLineMode']
-        if mode in ('on'):
+        if mode in ('on',):
             return True
-        if mode in ('off'):
+        if mode in ('off',):
             return False
         return (
             pen.widthF() > 1.0
