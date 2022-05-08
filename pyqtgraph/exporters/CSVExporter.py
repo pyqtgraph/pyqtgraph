@@ -9,7 +9,7 @@ __all__ = ['CSVExporter']
     
     
 class CSVExporter(Exporter):
-    Name = "CSV from plot data"
+    Name = "CSV of original plot data"
     windows = []
     def __init__(self, item):
         Exporter.__init__(self, item)
