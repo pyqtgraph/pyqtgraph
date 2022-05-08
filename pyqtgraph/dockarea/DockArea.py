@@ -1,6 +1,6 @@
 import weakref
 
-from ..Qt import QtWidgets
+from ..Qt import QT_LIB, QtWidgets
 from .Container import Container, HContainer, TContainer, VContainer
 from .Dock import Dock
 from .DockDrop import DockDrop
@@ -9,8 +9,12 @@ from .DockDrop import DockDrop
 class DockArea(Container, QtWidgets.QWidget, DockDrop):
     def __init__(self, parent=None, temporary=False, home=None):
         Container.__init__(self, self)
-        QtWidgets.QWidget.__init__(self, parent=parent)
-        DockDrop.__init__(self, allowedAreas=['left', 'right', 'top', 'bottom'])
+        allowedAreas=['left', 'right', 'top', 'bottom']
+        if QT_LIB.startswith('PyQt'):
+            QtWidgets.QWidget.__init__(self, parent=parent, allowedAreas=allowedAreas)
+        else:
+            QtWidgets.QWidget.__init__(self, parent=parent)
+            DockDrop.__init__(self, allowedAreas=allowedAreas)
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.setContentsMargins(0,0,0,0)
         self.layout.setSpacing(0)
@@ -261,7 +265,6 @@ class DockArea(Container, QtWidgets.QWidget, DockDrop):
 
     def buildFromState(self, state, docks, root, depth=0, missing='error'):
         typ, contents, state = state
-        pfx = "  " * depth
         if typ == 'dock':
             try:
                 obj = docks[contents]
@@ -280,7 +283,6 @@ class DockArea(Container, QtWidgets.QWidget, DockDrop):
             obj = self.makeContainer(typ)
             
         root.insert(obj, 'after')
-        #print pfx+"Add:", obj, " -> ", root
         
         if typ != 'dock':
             for o in contents:

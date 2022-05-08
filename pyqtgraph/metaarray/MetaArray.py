@@ -742,7 +742,7 @@ class MetaArray(object):
         frameSize = 1
         for ax in meta['info']:
             if 'values_len' in ax:
-                ax['values'] = np.fromstring(fd.read(ax['values_len']), dtype=ax['values_type'])
+                ax['values'] = np.frombuffer(fd.read(ax['values_len']), dtype=ax['values_type'])
                 frameSize *= ax['values_len']
                 del ax['values_len']
                 del ax['values_type']
@@ -753,7 +753,7 @@ class MetaArray(object):
         if mmap:
             subarr = np.memmap(fd, dtype=meta['type'], mode='r', shape=meta['shape'])
         else:
-            subarr = np.fromstring(fd.read(), dtype=meta['type'])
+            subarr = np.frombuffer(fd.read(), dtype=meta['type'])
             subarr.shape = meta['shape']
         self._data = subarr
             
@@ -770,7 +770,7 @@ class MetaArray(object):
                         raise Exception("MetaArray has more than one dynamic axis! (this is not allowed)")
                     dynAxis = i
                 else:
-                    ax['values'] = np.fromstring(fd.read(ax['values_len']), dtype=ax['values_type'])
+                    ax['values'] = np.frombuffer(fd.read(ax['values_len']), dtype=ax['values_type'])
                     frameSize *= ax['values_len']
                     del ax['values_len']
                     del ax['values_type']
@@ -788,7 +788,7 @@ class MetaArray(object):
                 if mmap:
                     subarr = np.memmap(fd, dtype=meta['type'], mode='r', shape=meta['shape'])
                 else:
-                    subarr = np.fromstring(fd.read(), dtype=meta['type'])
+                    subarr = np.frombuffer(fd.read(), dtype=meta['type'])
             subarr.shape = meta['shape']
         ## One axis is dynamic, read in a frame at a time
         else:
@@ -818,7 +818,7 @@ class MetaArray(object):
                 if meta['type'] == 'object':
                     data = pickle.loads(fd.read(inf['len']))
                 else:
-                    data = np.fromstring(fd.read(inf['len']), dtype=meta['type'])
+                    data = np.frombuffer(fd.read(inf['len']), dtype=meta['type'])
                 
                 if data.size != frameSize * inf['numFrames']:
                     #print data.size, frameSize, inf['numFrames']

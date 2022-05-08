@@ -78,6 +78,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             'int': False, ## Set True to force value to be integer
             'finite': True,
             
+            'prefix': '', ## string to be prepended to spin box value
             'suffix': '',
             'siPrefix': False,   ## Set to True to display numbers with SI prefix (ie, 100pA instead of 1e-10A)
             
@@ -87,7 +88,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             
             'decimals': 6,
             
-            'format': "{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}",
+            'format': "{prefix}{prefixGap}{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}",
             'regex': fn.FLOAT_REGEX,
             'evalFunc': decimal.Decimal,
             
@@ -124,6 +125,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        the value represents a dimensionless quantity that might span many
                        orders of magnitude, such as a Reynolds number, an SI
                        prefix is allowed with no suffix. Default is False.
+        prefix         (str) String to be prepended to the spin box value. Default is an empty string.
         step           (float) The size of a single step. This is used when clicking the up/
                        down arrows, when rolling the mouse wheel, or when pressing 
                        keyboard arrows while the widget has keyboard focus. Note that
@@ -146,6 +148,9 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        done with ``str.format()`` and makes use of several arguments:
                        
                          * *value* - the unscaled value of the spin box
+                         * *prefix* - the prefix string
+                         * *prefixGap* - a single space if a prefix is present, or an empty
+                           string otherwise
                          * *suffix* - the suffix string
                          * *scaledValue* - the scaled value to use when an SI prefix is present
                          * *siPrefix* - the SI prefix string (if any), or an empty string if
@@ -217,7 +222,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                 self.opts['minStep'] = ms
 
             if 'format' not in opts:
-                self.opts['format'] = "{value:d}{suffixGap}{suffix}"
+                self.opts['format'] = "{prefix}{prefixGap}{value:d}{suffixGap}{suffix}"
 
         if self.opts['dec']:
             if self.opts.get('minStep') is None:
@@ -450,6 +455,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         # get the number of decimal places to print
         decimals = self.opts['decimals']
         suffix = self.opts['suffix']
+        prefix = self.opts['prefix']
 
         # format the string 
         val = self.value()
@@ -461,12 +467,13 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                 (s, p) = fn.siScale(prev)
             else:
                 (s, p) = fn.siScale(val)
-            parts = {'value': val, 'suffix': suffix, 'decimals': decimals, 'siPrefix': p, 'scaledValue': s*val}
+            parts = {'value': val, 'suffix': suffix, 'decimals': decimals, 'siPrefix': p, 'scaledValue': s*val, 'prefix':prefix}
 
         else:
             # no SI prefix /suffix requested; scale is 1
-            parts = {'value': val, 'suffix': suffix, 'decimals': decimals, 'siPrefix': '', 'scaledValue': val}
+            parts = {'value': val, 'suffix': suffix, 'decimals': decimals, 'siPrefix': '', 'scaledValue': val, 'prefix':prefix}
 
+        parts['prefixGap'] = '' if parts['prefix'] == '' else ' '
         parts['suffixGap'] = '' if (parts['suffix'] == '' and parts['siPrefix'] == '') else ' '
         
         return self.opts['format'].format(**parts)
@@ -503,27 +510,21 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         
         self.errorBox.setVisible(not self.textValid)
         
-        ## support 2 different pyqt APIs. Bleh.
-        if hasattr(QtCore, 'QString'):
-            return (ret, pos)
-        else:
-            return (ret, strn, pos)
+        return (ret, strn, pos)
         
     def fixup(self, strn):
         # fixup is called when the spinbox loses focus with an invalid or intermediate string
         self.updateText()
-
-        # support both PyQt APIs (for Python 2 and 3 respectively)
-        # http://pyqt.sourceforge.net/Docs/PyQt4/python_v3.html#qvalidator
-        try:
-            strn.clear()
-            strn.append(self.lineEdit().text())
-        except AttributeError:
-            return self.lineEdit().text()
+        return self.lineEdit().text()
 
     def interpret(self):
         """Return value of text or False if text is invalid."""
         strn = self.lineEdit().text()
+        # strip prefix
+        try:
+            strn = strn.removeprefix(self.opts['prefix'])
+        except AttributeError:
+            strn = strn[len(self.opts['prefix']):]
         
         # tokenize into numerical value, si prefix, and suffix
         try:

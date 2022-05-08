@@ -180,7 +180,6 @@ class ProgressDialog(QtWidgets.QProgressDialog):
         #   2. the cancel button
         
         if self._nestableWidgets is None:
-            widgets = [ch for ch in self.children() if isinstance(ch, QtWidgets.QWidget)]
             label = [ch for ch in self.children() if isinstance(ch, QtWidgets.QLabel)][0]
             bar = [ch for ch in self.children() if isinstance(ch, QtWidgets.QProgressBar)][0]
             btn = [ch for ch in self.children() if isinstance(ch, QtWidgets.QPushButton)][0]

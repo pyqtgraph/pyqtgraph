@@ -49,7 +49,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         colorMap = pg.colormap.get("CET-D1")     # choose perceptually uniform, diverging color map
         # generate an adjustabled color bar, initially spanning -1 to 1:
-        bar = pg.ColorBarItem( values=(-1,1), cmap=colorMap) 
+        bar = pg.ColorBarItem( values=(-1,1), colorMap=colorMap)
         # link color bar and color map to correlogram, and show it in plotItem:
         bar.setImageItem(correlogram, insert_in=plotItem)    
 

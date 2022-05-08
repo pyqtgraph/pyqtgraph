@@ -67,7 +67,7 @@ class TargetItem(UIGraphicsItem):
             QPainterPath to use for drawing the target, should be centered at
             ``(0, 0)`` with ``max(width, height) == 1.0``.  Alternatively a string
             which can be any symbol accepted by
-            :func:`~pyqtgraph.ScatterPlotItem.setData`
+            :func:`~pyqtgraph.ScatterPlotItem.setSymbol`
         label : bool, str or callable, optional
             Text to be displayed in a label attached to the symbol, or None to
             show no label (default is None). May optionally include formatting

@@ -5,17 +5,10 @@ from time import perf_counter, perf_counter_ns
 from .. import debug as debug
 from .. import getConfigOption
 from ..Point import Point
-from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets, isQObjectAlive
+from ..Qt import QtCore, QtGui, QtWidgets, isQObjectAlive
 from .mouseEvents import HoverEvent, MouseClickEvent, MouseDragEvent
 
 getMillis = lambda: perf_counter_ns() // 10 ** 6
-
-
-if QT_LIB.startswith('PyQt'):
-    from ..Qt import sip
-    HAVE_SIP = True
-else:
-    HAVE_SIP = False
 
 
 __all__ = ['GraphicsScene']
@@ -404,18 +397,6 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.sigItemRemoved.emit(item)
         return ret
         
-    def items(self, *args):
-        items = QtWidgets.QGraphicsScene.items(self, *args)
-        return self.translateGraphicsItems(items)
-    
-    def selectedItems(self, *args):
-        items = QtWidgets.QGraphicsScene.selectedItems(self, *args)
-        return self.translateGraphicsItems(items)
-
-    def itemAt(self, *args):
-        item = QtWidgets.QGraphicsScene.itemAt(self, *args)
-        return self.translateGraphicsItem(item)
-
     def itemsNearEvent(self, event, selMode=QtCore.Qt.ItemSelectionMode.IntersectsItemShape, sortOrder=QtCore.Qt.SortOrder.DescendingOrder, hoverable=False):
         """
         Return an iterator that iterates first through the items that directly intersect point (in Z order)
@@ -424,19 +405,11 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         #tr = self.getViewWidget(event.widget()).transform()
         view = self.views()[0]
         tr = view.viewportTransform()
-        r = self._clickRadius
-        rect = view.mapToScene(QtCore.QRect(0, 0, 2*r, 2*r)).boundingRect()
         
-        seen = set()
         if hasattr(event, 'buttonDownScenePos'):
             point = event.buttonDownScenePos()
         else:
             point = event.scenePos()
-        w = rect.width()
-        h = rect.height()
-        rgn = QtCore.QRectF(point.x()-w, point.y()-h, 2*w, 2*h)
-        #self.searchRect.setRect(rgn)
-
 
         items = self.items(point, selMode, sortOrder, tr)
         
@@ -463,6 +436,14 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         items2.sort(key=absZValue, reverse=True)
         
         return items2
+
+        #seen = set()
+        #r = self._clickRadius
+        #rect = view.mapToScene(QtCore.QRect(0, 0, 2*r, 2*r)).boundingRect()
+        #w = rect.width()
+        #h = rect.height()
+        #rgn = QtCore.QRectF(point.x()-w, point.y()-h, 2*w, 2*h)
+        #self.searchRect.setRect(rgn)
         
         #for item in items:
             ##seen.add(item)
@@ -478,20 +459,6 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     def getViewWidget(self):
         return self.views()[0]
     
-    #def getViewWidget(self, widget):
-        ### same pyqt bug -- mouseEvent.widget() doesn't give us the original python object.
-        ### [[doesn't seem to work correctly]]
-        #if HAVE_SIP and isinstance(self, sip.wrapper):
-            #addr = sip.unwrapinstance(sip.cast(widget, QtWidgets.QWidget))
-            ##print "convert", widget, addr
-            #for v in self.views():
-                #addr2 = sip.unwrapinstance(sip.cast(v, QtWidgets.QWidget))
-                ##print "   check:", v, addr2
-                #if addr2 == addr:
-                    #return v
-        #else:
-            #return widget
-
     def addParentContextMenus(self, item, menu, event):
         """
         Can be called by any item in the scene to expand its context menu to include parent context menus.
@@ -557,19 +524,3 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             from . import exportDialog
             self.exportDialog = exportDialog.ExportDialog(self)
         self.exportDialog.show(self.contextMenuItem)
-
-    @staticmethod
-    def translateGraphicsItem(item):
-        # This function is intended as a workaround for a problem with older
-        # versions of PyQt (< 4.9?), where methods returning 'QGraphicsItem *'
-        # lose the type of the QGraphicsObject subclasses and instead return
-        # generic QGraphicsItem wrappers.
-        if HAVE_SIP and isinstance(item, sip.wrapper):
-            obj = item.toGraphicsObject()
-            if obj is not None:
-                item = obj
-        return item
-
-    @staticmethod
-    def translateGraphicsItems(items):
-        return list(map(GraphicsScene.translateGraphicsItem, items))

@@ -1196,6 +1196,13 @@ def clip_scalar(val, vmin, vmax):
     """ convenience function to avoid using np.clip for scalar values """
     return vmin if val < vmin else vmax if val > vmax else val
 
+# umath.clip was slower than umath.maximum(umath.minimum).
+# See https://github.com/numpy/numpy/pull/20134 for details.
+_win32_clip_workaround_needed = (
+    sys.platform == 'win32' and
+    tuple(map(int, np.__version__.split(".")[:2])) < (1, 22)
+)
+
 def clip_array(arr, vmin, vmax, out=None):
     # replacement for np.clip due to regression in
     # performance since numpy 1.17
@@ -1209,12 +1216,12 @@ def clip_array(arr, vmin, vmax, out=None):
         return np.core.umath.minimum(arr, vmax, out=out)
     elif vmax is None:
         return np.core.umath.maximum(arr, vmin, out=out)
-    elif sys.platform == 'win32':
-        # Windows umath.clip is slower than umath.maximum(umath.minimum)
+    elif _win32_clip_workaround_needed:
         if out is None:
-            out = np.empty_like(arr)
+            out = np.empty(arr.shape, dtype=np.find_common_type([arr.dtype], [type(vmax)]))
         out = np.core.umath.minimum(arr, vmax, out=out)
         return np.core.umath.maximum(out, vmin, out=out)
+
     else:
         return np.core.umath.clip(arr, vmin, vmax, out=out)
 
@@ -1347,7 +1354,7 @@ def makeRGBA(*args, **kwds):
     return makeARGB(*args, **kwds)
 
 
-def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None):
+def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=True, output=None):
     """
     Convert an array of values into an ARGB array suitable for building QImages,
     OpenGL textures, etc.
@@ -1385,6 +1392,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
                    The default is False, which returns in ARGB order for use with QImage 
                    (Note that 'ARGB' is a term used by the Qt documentation; the *actual* order 
                    is BGRA).
+    maskNans       Enable or disable masking NaNs as transparent.
     ============== ==================================================================================
     """
     cp = getCupy()
@@ -1440,7 +1448,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
 
     # awkward, but fastest numpy native nan evaluation
     nanMask = None
-    if data.dtype.kind == 'f' and xp.isnan(data.min()):
+    if maskNans and data.dtype.kind == 'f' and xp.isnan(data.min()):
         nanMask = xp.isnan(data)
         if data.ndim > 2:
             nanMask = xp.any(nanMask, axis=-1)

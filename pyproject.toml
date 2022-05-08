@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 88
-target-version = ['py37']
+target-version = ['py38']
 include = '\.pyi?$'
 exclude = '''
 
@@ -25,7 +25,7 @@ exclude = '''
 profile = "black"
 honor_noqa = true
 color_output = true
-py_version = 37
+py_version = 38
 src_paths = ["pyqtgraph", "tests"]
 skip_glob = ["**/*Template*.py", "**/colorama"]
 skip_gitignore = true

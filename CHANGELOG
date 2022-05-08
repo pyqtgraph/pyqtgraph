@@ -1,3 +1,68 @@
+pyqtgraph-0.12.4
+
+  Highlights:
+    - #2055 Jupyter Support via jupyter-rfb
+    - #2011 Experimental High Performance With Lines > 1px Thickness 
+    - #2059/#2153 Python 3.10 Support
+
+  New Features:
+    - #2041 Allow unsetting various options in PlotDataItem and PlotCurveItem
+    - #2052 PlotItem Average pen and shadow pen are now accessible
+    - #2090 More coninient methods for color maps and bars
+
+  Performance Enhancements:
+    - #2023 PColorMeshItem Performance Improvements
+    - #2032 Speed up PlotCurveItem fillLevel
+    - #2036 Speed up arrayToQPath for connect='all' with non-finite values
+    - #2111 PlotCurveItem OpenGL avoid automatic conversion from float64 to float32
+    - #2124 Go back to using np.clip on Windows with numpy 1.22 or newer
+    - #2131 Avoid PyOpenGL automatic array conversion
+    - #2198 Cache values used in GraphicsWidget .boundingRect() and .shape() methods
+    - #2199 Avoid unnecessary call to viewRange if autoRange is disabled
+    - #2202 Cachce ViewBox view pixel size
+
+  Bug Fixes:
+    - #2034 Fix Mouse Event possitioning issue with grid
+    - #2047 Fixed WidgetGroup Handling QSplitter
+    - #2054 Limit ViewBox based on double precision limitations
+    - #2085 Reverse coordinates when drawing on row-major images
+    - #2087 Fix broken imports in some examples
+    - #2089 Don't raise exception when close method of an already-closed dock is called
+    - #2101 Change GroupParameterItem palette to look ok in darkmode on macOS
+    - #2103 Fix stuck ColorBarItem
+    - #2132 Workaround for PySide6 6.2.2 breaking change 
+    - #2130 RangeColorMapItem derives from ColorMapParameter
+    - #2147 Fire correct signal for Checklist ParameterItem type
+    - #2148 Avoid comparing a string with a np.ndarray
+    - #2170 Fix formatting on minimum value of GradientLegend
+
+  API/Behavior Changes:
+    - #2081 Separate x and y flags for AxisItem.setLogMode
+    - #2086 ParameterTree PenParameter now uses GrouParameter instead of popup button
+    - #2097 Add a proxy delay to checklist ParameterItem changes via children edits
+    - #2192 Added option to makeARGB to disable masking NaNs
+
+  Other:
+    - #1915 Deprecate QtWidgets accessed through QtGui 
+    - #2002 isort and pycln prun over entire repo
+    - #2038 Fixed various deprecations
+    - #2045 Examples Directory moved inside project directory
+    - #2051 Implement Pickle Protocol for RemoteGraphicsView
+    - #2053 Disable unneeded call to ViewBox.prepareForPaint()
+    - #2057 Avoid re-dispatching mouse events from the AxisItem
+    - #2064 Add a quantization limit to ViewBox
+    - #2073 Implementing glInfo without PyOpenGL
+    - #2077 Improved error message for invalid PYQTGRAPH_QT_LIB
+    - #2083 Added check for ROI to make sure its in a GraphicsScene
+    - #2093 Add helpful exceptions for invalid inputs to some methods
+    - #2096 Be lazier about importing h5py
+    - #2098 Remove polluting import namespace using *
+    - #2099 Convert == None to is None checks
+    - #2100 Avoid re-using variables in nested loops
+    - #2124 Fixed variety of deprecation warnings
+    - #2154 Fix typos and formatting errors in comments/docstrings
+    - #2194 stop using deprecated numpy.fromstring and use numpy.frombuffer instead
+
 pyqtgraph-0.12.3
 
   Highlights:
