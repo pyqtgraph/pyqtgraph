@@ -267,7 +267,7 @@ class InteractiveFunction:
     wraps a normal function but can provide an external scope for accessing the hooked up parameter signals.
     """
 
-    def __init__(self, func, *, deferred=None, **extra):
+    def __init__(self, func, *, closures=None, **extra):
         """
         Wraps a callable function in a way that forwards Parameter arguments as keywords
 
@@ -275,7 +275,7 @@ class InteractiveFunction:
         ----------
         func: callable
             Function to wrap
-        deferred: dict[str, callable]
+        closures: dict[str, callable]
             Arguments that shouldn't be constant, but can't be represented as a parameter. See the rst docs for
             more information.
         extra: dict
@@ -284,9 +284,9 @@ class InteractiveFunction:
         super().__init__()
         self.params = []
         self.func = func
-        if deferred is None:
-            deferred = {}
-        self.deferred = deferred
+        if closures is None:
+            closures = {}
+        self.closures = closures
         self.__name__ = func.__name__
         self.__doc__ = func.__doc__
         functools.update_wrapper(self, func)
@@ -297,7 +297,7 @@ class InteractiveFunction:
 
     def __call__(self, **kwargs):
         """
-        Calls `self.func`. Extra, deferred, and parameter keywords as defined on init and through
+        Calls `self.func`. Extra, closures, and parameter keywords as defined on init and through
         :func:`InteractiveFunction.setParams` are forwarded during the call.
         """
         if self.propagateParamChanges:
@@ -305,7 +305,7 @@ class InteractiveFunction:
 
         runKwargs = self.extra.copy()
         runKwargs.update(self.paramKwargs)
-        for kk, vv in self.deferred.items():
+        for kk, vv in self.closures.items():
             runKwargs[kk] = vv()
         runKwargs.update(**kwargs)
         return self.func(**runKwargs)
@@ -471,10 +471,10 @@ def interact(func, *, ignores=None, runFunc=None, runOpts=RunOpts.PARAM_UNSET,
             toExec.interactiveRefs = [interactive]
         toExec = interactive
 
-    # Values can't come both from deferred and overrides/params, so ensure they don't get created
+    # Values can't come both from closures and overrides/params, so ensure they don't get created
     if ignores is None:
         ignores = []
-    ignores = list(ignores) + list(toExec.deferred)
+    ignores = list(ignores) + list(toExec.closures)
 
     # Recycle ignored content that is needed as a value
     recycleNames = set(overrides) & set(ignores) & set(chNames)
@@ -514,9 +514,9 @@ def _resolveParent(parent, nest, parentOpts, existOk):
 def _createFuncParamChild(parent, chDict, runOpts, existOk, toExec):
     name = chDict['name']
     # Make sure args without defaults have overrides
-    if chDict['value'] is RunOpts.PARAM_UNSET and name not in toExec.deferred and name not in toExec.extra:
+    if chDict['value'] is RunOpts.PARAM_UNSET and name not in toExec.closures and name not in toExec.extra:
         raise ValueError(f'Cannot interact with "{toExec} since it has required parameter "{name}"'
-                         f' with no default or deferred value provided.')
+                         f' with no default or closure value provided.')
     child = parent.addChild(chDict, existOk=existOk)
     if RunOpts.ON_CHANGED in runOpts:
         child.sigValueChanged.connect(toExec.runFromChangedOrChanging)

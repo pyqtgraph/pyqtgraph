@@ -89,7 +89,7 @@ def test_interact():
     assert testParam.opts['limits'] == [5,10]
 
     myval = 5
-    a_interact = InteractiveFunction(a, deferred=dict(x=lambda: myval))
+    a_interact = InteractiveFunction(a, closures=dict(x=lambda: myval))
     host = interact(a_interact)
     assert 'x' not in host.names
     host.child('Run').activate()

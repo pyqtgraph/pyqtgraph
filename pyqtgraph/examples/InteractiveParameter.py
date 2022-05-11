@@ -62,7 +62,7 @@ x = 5
 @printResult
 def accessVarInDifferentScope(x, y=10):
     return x + y
-func_interactive = InteractiveFunction(accessVarInDifferentScope, deferred={'x': lambda: x})
+func_interactive = InteractiveFunction(accessVarInDifferentScope, closures={'x': lambda: x})
 # Value is redeclared, but still bound
 x = 10
 interact(func_interactive, parent=host)

@@ -98,6 +98,7 @@ being interacted at once, and all should be with a “Run” button, simply
 use the provided context manager:
 
 .. code:: python
+
    from pyqtgraph.parametertree import interactDefaults
    # `runOpts` can be set to any combination of options as demonstrated above, too
    with interactDefaults.optsContext(runOpts=RunOpts.ON_BUTTON):
@@ -135,13 +136,13 @@ parameters and others should be hidden, use ``ignores``:
    # Only 'x' will show up in the parameter
    params = interact(a, ignores=['y'])
 
-``deferred``
+``closures``
 ^^^^^^^^^^^^
 
 Sometimes, values that should be passed to the ``interact``-ed function
-should come from a different scope, i.e. a variable definition that
+should come from a different scope (or "closure"), i.e. a variable definition that
 should be propagated from somewhere else. In these cases, wrap that
-argument in a function and pass it into ``deferred`` like so. Note that
+argument in a function and pass it into ``closures`` like so. Note that
 an ``InteractiveFunction`` object is needed as descibed in a later section.
 
 .. code:: python
@@ -160,7 +161,7 @@ an ``InteractiveFunction`` object is needed as descibed in a later section.
    view = pg.ImageView()
    # Simulate a grayscale image
    image = np.random.randint(0, 256, size=(512, 512))
-   dilate_interact = InteractiveFunction(dilateImage, deferred={'image': lambda: image})
+   dilate_interact = InteractiveFunction(dilateImage, closures={'image': lambda: image})
    params = interact(dilate_interact)
    # As the 'image' variable changes, the new value will be used during parameter interaction
    view.show()
@@ -253,7 +254,7 @@ unless ``existOk=True`` (the default).
 ^^^^^^^^^^^^^
 
 In all examples so far, additional parameter arguments such as
-``limits`` were ignored. Return to the `deferred <#>`__ example and
+``limits`` were ignored. Return to the `closures <#>`__ example and
 observe what happens when ``radius`` is < 0:
 
 ::
@@ -268,7 +269,7 @@ parameter:
 
    # Cannot go lower than 0
    # These are bound to the 'radius' parameter
-   params = interact(dilateImage, deferred={'image': lambda: image}, radius={'limits': [0, None]})
+   params = interact(dilateImage, closures={'image': lambda: image}, radius={'limits': [0, None]})
 
 Now, the user is unable to set the spinbox to a value < 0.
 
@@ -467,7 +468,7 @@ Docstring Limitations / Considerations
 
 Using ``InteractiveFunction``
 -----------------------------
-In all versions of ``interact`` described so far, it is not possible to temporarily stop an interacted function from triggering on parameter changes. Normally, one can ``disconnect`` the hooked-up signals, but since the actually connected functions are out of scope, this is not possible when using ``interact``. Additionally, it is not possible to change overrides or ``deferred`` arguments after the fact. Finally, it is not possible to easily call an interacted function with parameter arguments/defaults through normal `interact` use. If any of these needs arise, use an ``InteractiveFunction`` instead during registration. This provides ``disconnect()`` and ``reconnect()`` methods, and object accessors to ``deferred`` arguments.
+In all versions of ``interact`` described so far, it is not possible to temporarily stop an interacted function from triggering on parameter changes. Normally, one can ``disconnect`` the hooked-up signals, but since the actually connected functions are out of scope, this is not possible when using ``interact``. Additionally, it is not possible to change overrides or ``closures`` arguments after the fact. Finally, it is not possible to easily call an interacted function with parameter arguments/defaults through normal `interact` use. If any of these needs arise, use an ``InteractiveFunction`` instead during registration. This provides ``disconnect()`` and ``reconnect()`` methods, and object accessors to ``closures`` arguments.
 
 .. code:: python
 
