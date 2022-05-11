@@ -24,6 +24,7 @@ examples_ = OrderedDict([
     ('Remote Plotting', 'RemoteSpeedTest.py'),
     ('Scrolling plots', 'scrollingPlots.py'),
     ('HDF5 big data', 'hdf5.py'),
+    ('Glow', 'glow.py'),
     ('Demos', OrderedDict([
         ('Optics', 'optics_demos.py'),
         ('Special relativity', 'relativity_demo.py'),

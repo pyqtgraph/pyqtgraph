@@ -16,7 +16,6 @@ from pyqtgraph.parametertree import InteractiveFunction, interact
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 # defaults here result in the same configuration as the original PlotSpeedTest
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--noise', dest='noise', action='store_true')
 parser.add_argument('--no-noise', dest='noise', action='store_false')

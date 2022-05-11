@@ -1218,9 +1218,10 @@ def clip_array(arr, vmin, vmax, out=None):
         return np.core.umath.maximum(arr, vmin, out=out)
     elif _win32_clip_workaround_needed:
         if out is None:
-            out = np.empty_like(arr)
+            out = np.empty(arr.shape, dtype=np.find_common_type([arr.dtype], [type(vmax)]))
         out = np.core.umath.minimum(arr, vmax, out=out)
         return np.core.umath.maximum(out, vmin, out=out)
+
     else:
         return np.core.umath.clip(arr, vmin, vmax, out=out)
 
@@ -1353,7 +1354,7 @@ def makeRGBA(*args, **kwds):
     return makeARGB(*args, **kwds)
 
 
-def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None):
+def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=True, output=None):
     """
     Convert an array of values into an ARGB array suitable for building QImages,
     OpenGL textures, etc.
@@ -1391,6 +1392,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
                    The default is False, which returns in ARGB order for use with QImage 
                    (Note that 'ARGB' is a term used by the Qt documentation; the *actual* order 
                    is BGRA).
+    maskNans       Enable or disable masking NaNs as transparent.
     ============== ==================================================================================
     """
     cp = getCupy()
@@ -1446,7 +1448,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
 
     # awkward, but fastest numpy native nan evaluation
     nanMask = None
-    if data.dtype.kind == 'f' and xp.isnan(data.min()):
+    if maskNans and data.dtype.kind == 'f' and xp.isnan(data.min()):
         nanMask = xp.isnan(data)
         if data.ndim > 2:
             nanMask = xp.any(nanMask, axis=-1)

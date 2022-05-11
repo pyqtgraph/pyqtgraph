@@ -3,7 +3,7 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.12.3'
+__version__ = '0.12.4.dev0'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
@@ -54,7 +54,11 @@ CONFIG_OPTIONS = {
                                  # change in the future.
     'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
     'useNumba': False, # When True, use numba
-} 
+    'segmentedLineMode': 'auto',  # segmented line mode, controls if lines are plotted in segments or continuous
+                                  # 'auto': whether lines are plotted in segments is automatically decided using pen properties and whether anti-aliasing is enabled
+                                  # 'on' or True: lines are always plotted in segments
+                                  # 'off' or False: lines are never plotted in segments
+}
 
 
 def setConfigOption(opt, value):
@@ -62,6 +66,8 @@ def setConfigOption(opt, value):
         raise KeyError('Unknown configuration option "%s"' % opt)
     if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
         raise ValueError('imageAxisOrder must be either "row-major" or "col-major"')
+    if opt == 'segmentedLineMode' and value not in ('auto', 'on', 'off'):
+        raise ValueError('segmentedLineMode must be "auto", "on" or "off"')
     CONFIG_OPTIONS[opt] = value
 
 def setConfigOptions(**opts):

@@ -229,7 +229,7 @@ class SymbolAtlas(object):
         return self._maxWidth
 
     def rebuild(self, styles=None):
-        profiler = debug.Profiler()
+        profiler = debug.Profiler()  # noqa: profiler prints on GC
         if styles is None:
             data = []
         else:
@@ -353,7 +353,7 @@ class SymbolAtlas(object):
         return int(w), int(y + h)
 
     def _createPixmap(self):
-        profiler = debug.Profiler()
+        profiler = debug.Profiler()  # noqa: profiler prints on GC
         if self._data.size == 0:
             pm = QtGui.QPixmap(0, 0)
         else:
@@ -442,6 +442,10 @@ class ScatterPlotItem(GraphicsObject):
         profiler('setData')
 
         #self.setCacheMode(self.DeviceCoordinateCache)
+
+        # track when the tooltip is cleared so we only clear it once
+        # this allows another item in the VB to set the tooltip
+        self._toolTipCleared = True
 
     def setData(self, *args, **kargs):
         """
@@ -803,8 +807,7 @@ class ScatterPlotItem(GraphicsObject):
         self.invalidate()
 
     def updateSpots(self, dataSet=None):
-        profiler = debug.Profiler()
-
+        profiler = debug.Profiler()  # noqa: profiler prints on GC
         if dataSet is None:
             dataSet = self.data
 
@@ -965,7 +968,6 @@ class ScatterPlotItem(GraphicsObject):
         if orthoRange is not None:
             mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
             d = d[mask]
-            d2 = d2[mask]
 
             if d.size == 0:
                 return (None, None)
@@ -1217,12 +1219,17 @@ class ScatterPlotItem(GraphicsObject):
             # Show information about hovered points in a tool tip
             vb = self.getViewBox()
             if vb is not None and self.opts['tip'] is not None:
-                cutoff = 3
-                tip = [self.opts['tip'](x=pt.pos().x(), y=pt.pos().y(), data=pt.data())
-                       for pt in points[:cutoff]]
-                if len(points) > cutoff:
-                    tip.append('({} others...)'.format(len(points) - cutoff))
-                vb.setToolTip('\n\n'.join(tip))
+                if len(points) > 0:
+                    cutoff = 3
+                    tip = [self.opts['tip'](x=pt.pos().x(), y=pt.pos().y(), data=pt.data())
+                           for pt in points[:cutoff]]
+                    if len(points) > cutoff:
+                        tip.append('({} others...)'.format(len(points) - cutoff))
+                    vb.setToolTip('\n\n'.join(tip))
+                    self._toolTipCleared = False
+                elif not self._toolTipCleared:
+                    vb.setToolTip("")
+                    self._toolTipCleared = True
 
             self.sigHovered.emit(self, points, ev)
 

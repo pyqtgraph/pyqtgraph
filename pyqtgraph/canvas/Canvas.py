@@ -294,20 +294,9 @@ class Canvas(QtWidgets.QWidget):
         name = citem.opts['name']
         if name is None:
             name = 'item'
-        newname = name
 
-        ## If name already exists, append a number to the end
-        ## NAH. Let items have the same name if they really want.
-        #c=0
-        #while newname in self.items:
-            #c += 1
-            #newname = name + '_%03d' %c
-        #name = newname
-            
         ## find parent and add item to tree
         insertLocation = 0
-        #print "Inserting node:", name
-        
             
         ## determine parent list item where this item should be inserted
         parent = citem.parentItem()
