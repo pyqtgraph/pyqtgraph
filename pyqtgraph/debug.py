@@ -484,8 +484,6 @@ class GarbageWatcher(object):
     def __getitem__(self, item):
         return self.objs[item]
 
-    
-
 
 class Profiler(object):
     """Simple profiler allowing measurement of multiple time intervals.
@@ -519,39 +517,72 @@ class Profiler(object):
 
     _profilers = os.environ.get("PYQTGRAPHPROFILE", None)
     _profilers = _profilers.split(",") if _profilers is not None else []
-    
+
     _depth = 0
-    _msgs = []
-    disable = False  # set this flag to disable all or individual profilers at runtime
-    
+
+    # XXX: is this needed if the instance
+    # defines it?
+    # _msgs = []
+
+    # set this flag to disable all or individual profilers at runtime
+    disable = False
+
     class DisabledProfiler(object):
         def __init__(self, *args, **kwds):
             pass
+
         def __call__(self, *args):
             pass
+
         def finish(self):
             pass
+
         def mark(self, msg=None):
             pass
+
     _disabledProfiler = DisabledProfiler()
-        
-    def __new__(cls, msg=None, disabled='env', delayed=True, gt: float = 0):
+
+    def __new__(
+        cls,
+        msg=None,
+        disabled='env',
+        delayed=True,
+        ms_threshold: float = 0.0,
+    ):
         """Optionally create a new profiler based on caller's qualname.
+
+        ``ms_threshold`` can be set to value in ms for which, if the
+        total measured time  of the lifetime of this profiler is **less
+        than** this value, then no profiling messages will be printed.
+        Setting ``delayed=False`` disables this feature since messages
+        are emitted immediately.
+
         """
-        if disabled is True or (disabled == 'env' and len(cls._profilers) == 0):
+        if (
+            disabled is True
+            or (
+                disabled == 'env'
+                and len(cls._profilers) == 0
+            )
+        ):
             return cls._disabledProfiler
-                        
+
         # determine the qualified name of the caller function
         caller_frame = sys._getframe(1)
         try:
             caller_object_type = type(caller_frame.f_locals["self"])
-        except KeyError: # we are in a regular function
+
+        except KeyError:  # we are in a regular function
             qualifier = caller_frame.f_globals["__name__"].split(".", 1)[-1]
-        else: # we are in a method
+
+        else:  # we are in a method
             qualifier = caller_object_type.__name__
         func_qualname = qualifier + "." + caller_frame.f_code.co_name
-        if disabled == 'env' and func_qualname not in cls._profilers: # don't do anything
+
+        if disabled == 'env' and func_qualname not in cls._profilers:
+            # don't do anything
             return cls._disabledProfiler
+
         # create an actual profiling object
         cls._depth += 1
         obj = super(Profiler, cls).__new__(cls)
@@ -560,8 +591,9 @@ class Profiler(object):
         obj._markCount = 0
         obj._finished = False
         obj._firstTime = obj._lastTime = perf_counter()
+        obj._mt = ms_threshold
+        obj._msgs = []
         obj._newMsg("> Entering " + obj._name)
-        obj._gt = gt
         return obj
 
     def __call__(self, msg=None):
@@ -586,7 +618,6 @@ class Profiler(object):
         if self._delayed:
             self._msgs.append((msg, args))
         else:
-            self.flush()
             print(msg % args)
 
     def __del__(self):
@@ -608,18 +639,29 @@ class Profiler(object):
             self._name,
             tot_ms,
         )
-        if tot_ms < self._gt:
-            # print(f'{tot_ms} < {self._gt}, clearing')
+
+        # msgs = self._msgs
+
+        if tot_ms < self._mt:
+            # print(f'{tot_ms} < {self._mt}, clearing')
+            # NOTE: this list **must** be an instance var to avoid
+            # deleting common messages during GC I think?
             self._msgs.clear()
+        # else:
+        #     print(f'{tot_ms} > {self._mt}, not clearing')
+
+        # XXX: why is this needed?
+        # don't we **want to show** nested profiler messages?
+        if self._msgs: # and self._depth < 1:
+
+            # if self._msgs:
+            print("\n".join([m[0] % m[1] for m in self._msgs]))
+
+            # clear all entries
+            self._msgs.clear()
+            # type(self)._msgs = []
 
         type(self)._depth -= 1
-        if self._depth < 1:
-            self.flush()
-
-    def flush(self):
-        if self._msgs:
-            print("\n".join([m[0]%m[1] for m in self._msgs]))
-            type(self)._msgs = []
 
 
 def profile(code, name='profile_run', sort='cumulative', num=30):
@@ -630,11 +672,10 @@ def profile(code, name='profile_run', sort='cumulative', num=30):
     stats.sort_stats(sort)
     stats.print_stats(num)
     return stats
-        
-        
-  
-#### Code for listing (nearly) all objects in the known universe
-#### http://utcc.utoronto.ca/~cks/space/blog/python/GetAllObjects
+
+
+# Code for listing (nearly) all objects in the known universe
+# http://utcc.utoronto.ca/~cks/space/blog/python/GetAllObjects
 # Recursively expand slist's objects
 # into olist, using seen to track
 # already processed objects.
