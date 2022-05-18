@@ -501,18 +501,23 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                 menusToAdd.extend(subMenus)
             else:
                 menusToAdd.append(subMenus)
+        # Filter out options that were previously added
+        existingActions = menu.actions()
+        actsToAdd = []
+        for menuOrAct in menusToAdd:
+            if isinstance(menuOrAct, QtWidgets.QMenu):
+                menuOrAct = menuOrAct.menuAction()
+            elif not isinstance(menuOrAct, QtGui.QAction):
+                raise Exception(
+                    f"Cannot add object {menuOrAct} (type={type(menuOrAct)}) to QMenu."
+                )
+            if menuOrAct not in existingActions:
+                actsToAdd.append(menuOrAct)
 
-        if menusToAdd:
+        if actsToAdd:
             menu.addSeparator()
 
-        for m in menusToAdd:
-            if isinstance(m, QtWidgets.QMenu):
-                menu.addAction(m.menuAction())
-            elif isinstance(m, QtGui.QAction):
-                menu.addAction(m)
-            else:
-                raise Exception("Cannot add object %s (type=%s) to QMenu." % (str(m), str(type(m))))
-            
+        menu.addActions(actsToAdd)
         return menu
 
     def getContextMenus(self, event):
