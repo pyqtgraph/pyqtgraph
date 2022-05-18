@@ -162,3 +162,14 @@ def test_data_race():
     p.sigValueChanged.connect(override)
     pi.widget.setValue(2)
     assert p.value() == pi.widget.value() == 1
+
+def test_pen_settings():
+    # Option from constructor
+    p = pt.Parameter.create(name='test', type='pen', width=5)
+    assert p.pen.width() == 5
+    # Opts from dynamic update
+    p.setOpts(width=3)
+    assert p.pen.width() == 3
+    # Opts from changing child
+    p["width"] = 10
+    assert p.pen.width() == 10
