@@ -165,7 +165,7 @@ def test_data_race():
 
 def test_pen_settings():
     # Option from constructor
-    p = pt.Parameter.create(name='test', type='pen', width=5)
+    p = pt.Parameter.create(name='test', type='pen', width=5, additionalname='test')
     assert p.pen.width() == 5
     # Opts from dynamic update
     p.setOpts(width=3)
