@@ -1,4 +1,4 @@
-"""This module installs a wrapper around sys.excepthook which allows multiple
+"""This module installs a wrapper around sys.excepthook and threading.excepthook that allows multiple
 new exception handlers to be registered. 
 
 Optionally, the wrapper also stops exceptions from causing long-term storage 
@@ -9,9 +9,6 @@ of local stack frames. This has two major effects:
     until the next exception occurs. We would rather release this memory 
     as soon as possible.)
   - Some debuggers may have a hard time handling uncaught exceptions
- 
-The module also provides a callback mechanism allowing others to respond 
-to exceptions.
 """
 import sys
 import threading
