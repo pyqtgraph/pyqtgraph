@@ -1079,7 +1079,7 @@ class ScatterPlotItem(GraphicsObject):
 
         if self.opts['pxMode'] is True:
             # Cull points that are outside view
-            viewMask = self._maskAt(self.getViewBox().viewRect())
+            viewMask = self._maskAt(self.viewRect())
 
             # Map points using painter's world transform so they are drawn with pixel-valued sizes
             pts = np.vstack([self.data['x'], self.data['y']])
