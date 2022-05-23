@@ -229,6 +229,12 @@ class WidgetParameterItem(ParameterItem):
 
         if 'readonly' in opts:
             self.updateDefaultBtn()
+
+            if opts["readonly"]:
+                self.displayLabel.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+            else:
+                self.displayLabel.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse)
+
             if hasattr(self.widget, 'setReadOnly'):
                 self.widget.setReadOnly(opts['readonly'])
             else:
