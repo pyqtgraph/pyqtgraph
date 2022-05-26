@@ -275,7 +275,7 @@ class PlotCurveItem(GraphicsObject):
         ## Add pen width only if it is non-cosmetic.
         pen = self.opts['pen']
         spen = self.opts['shadowPen']
-        if not pen.isCosmetic():
+        if pen is not None and not pen.isCosmetic() and pen.style() != QtCore.Qt.PenStyle.NoPen:
             b = (b[0] - pen.widthF()*0.7072, b[1] + pen.widthF()*0.7072)
         if spen is not None and not spen.isCosmetic() and spen.style() != QtCore.Qt.PenStyle.NoPen:
             b = (b[0] - spen.widthF()*0.7072, b[1] + spen.widthF()*0.7072)
@@ -287,7 +287,7 @@ class PlotCurveItem(GraphicsObject):
         pen = self.opts['pen']
         spen = self.opts['shadowPen']
         w = 0
-        if pen.isCosmetic():
+        if  pen is not None and pen.isCosmetic() and pen.style() != QtCore.Qt.PenStyle.NoPen:
             w += pen.widthF()*0.7072
         if spen is not None and spen.isCosmetic() and spen.style() != QtCore.Qt.PenStyle.NoPen:
             w = max(w, spen.widthF()*0.7072)
