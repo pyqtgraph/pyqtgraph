@@ -16,29 +16,26 @@ from .GraphicsObject import GraphicsObject
 __all__ = ['PlotCurveItem']
 
 
-if Qt.QT_LIB.startswith('PyQt'):
-    wrapinstance = Qt.sip.wrapinstance
-else:
-    wrapinstance = Qt.shiboken.wrapInstance
-
-
 class LineSegments:
     def __init__(self):
+        self.use_sip_array = Qt.QT_LIB.startswith('PyQt') and hasattr(Qt.sip, 'array')
         self.alloc(0)
 
     def alloc(self, size):
-        self.arr = np.empty((size, 4), dtype=np.float64)
-        self.ptrs = list(map(wrapinstance,
-            itertools.count(self.arr.ctypes.data, self.arr.strides[0]),
-            itertools.repeat(QtCore.QLineF, self.arr.shape[0])))
+        if self.use_sip_array:
+            self.objs = Qt.sip.array(QtCore.QLineF, size)
+            vp = Qt.sip.voidptr(self.objs, len(self.objs)*4*8)
+            self.arr = np.frombuffer(vp, dtype=np.float64).reshape((-1, 4))
+        else:
+            self.arr = np.empty((size, 4), dtype=np.float64)
+            self.objs = list(map(Qt.compat.wrapinstance,
+                itertools.count(self.arr.ctypes.data, self.arr.strides[0]),
+                itertools.repeat(QtCore.QLineF, self.arr.shape[0])))
 
-    def array(self, size):
-        if size > self.arr.shape[0]:
-            self.alloc(size + 16)
-        return self.arr[:size]
-
-    def instances(self, size):
-        return self.ptrs[:size]
+    def get(self, size):
+        if size != self.arr.shape[0]:
+            self.alloc(size)
+        return self.objs, self.arr
 
     def arrayToLineSegments(self, x, y, connect, finiteCheck):
         # analogue of arrayToQPath taking the same parameters
@@ -79,21 +76,20 @@ class LineSegments:
         segs = []
 
         if connect in ['all', 'finite', 'array']:
-            memory = self.array(npts - 1)
+            segs, memory = self.get(npts - 1)
             memory[:, 0] = x[:-1]
             memory[:, 1] = y[:-1]
             memory[:, 2] = x[1:]
             memory[:, 3] = y[1:]
-            segs = self.instances(npts - 1)
             if connect_array is not None:
                 segs = list(itertools.compress(segs, connect_array.tolist()))
 
         elif connect in ['pairs']:
             npairs = npts // 2
-            memory = self.array(npairs).reshape((-1, 2))
+            segs, memory = self.get(npairs)
+            memory = memory.reshape((-1, 2))
             memory[:, 0] = x[:npairs * 2]
             memory[:, 1] = y[:npairs * 2]
-            segs = self.instances(npairs)
 
         return segs
 
