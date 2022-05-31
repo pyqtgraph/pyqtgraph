@@ -187,8 +187,13 @@ class ChecklistParameter(GroupParameter):
         else:
             return vals
 
-    def _onChildChanging(self, _ch, _val):
-        self.sigValueChanging.emit(self, self.childrenValue())
+    def _onChildChanging(self, child, value):
+        # When exclusive, ensure only this value is True
+        if self.opts['exclusive'] and value:
+            value = self.forward[child.name()]
+        else:
+            value = self.childrenValue()
+        self.sigValueChanging.emit(self, value)
 
     def updateLimits(self, _param, limits):
         oldOpts = self.names
@@ -216,11 +221,8 @@ class ChecklistParameter(GroupParameter):
 
     def _finishChildChanges(self, paramAndValue):
         param, value = paramAndValue
-        if self.opts['exclusive']:
-            val = self.reverse[0][self.reverse[1].index(param.name())]
-            return self.setValue(val)
         # Interpret value, fire sigValueChanged
-        return self.setValue(self.childrenValue())
+        return self.setValue(value)
 
     def optsChanged(self, param, opts):
         if 'exclusive' in opts:
