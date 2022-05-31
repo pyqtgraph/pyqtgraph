@@ -32,11 +32,8 @@ class ChecklistParameterItem(GroupParameterItem):
             self.metaBtnLayout.addWidget(btn)
             btn.clicked.connect(getattr(self, f'{title.lower()}AllClicked'))
 
-        self.metaBtns['default'] = WidgetParameterItem.makeDefaultButton(self)
+        self.metaBtns['default'] = self.makeDefaultButton()
         self.metaBtnLayout.addWidget(self.metaBtns['default'])
-
-    def defaultClicked(self):
-        self.param.setToDefault()
 
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
@@ -46,9 +43,13 @@ class ChecklistParameterItem(GroupParameterItem):
         tw.setItemWidget(self, 1, self.metaBtnWidget)
 
     def selectAllClicked(self):
+        # timer stop: see explanation on param.setToDefault()
+        self.param.valChangingProxy.timer.stop()
         self.param.setValue(self.param.reverse[0])
 
     def clearAllClicked(self):
+        # timer stop: see explanation on param.setToDefault()
+        self.param.valChangingProxy.timer.stop()
         self.param.setValue([])
 
     def insertChild(self, pos, item):
@@ -71,13 +72,31 @@ class ChecklistParameterItem(GroupParameterItem):
                 btn.setVisible(opts['expanded'])
         exclusive = opts.get('exclusive', param.opts['exclusive'])
         enabled = opts.get('enabled', param.opts['enabled'])
-        for btn in self.metaBtns.values():
-            btn.setDisabled(exclusive or (not enabled))
+        for name, btn in self.metaBtns.items():
+            if name != 'default':
+                btn.setDisabled(exclusive or (not enabled))
         self.btnGrp.setExclusive(exclusive)
+        # "Limits" will force update anyway, no need to duplicate if it's present
+        if 'limits' not in opts and ('enabled' in opts or 'readonly' in opts):
+            self.updateDefaultBtn()
 
     def expandedChangedEvent(self, expanded):
         for btn in self.metaBtns.values():
             btn.setVisible(expanded)
+
+    def valueChanged(self, param, val):
+        self.updateDefaultBtn()
+
+    def updateDefaultBtn(self):
+        self.metaBtns["default"].setEnabled(
+            not self.param.valueIsDefault()
+            and self.param.opts["enabled"]
+            and self.param.writable()
+        )
+        return
+
+    makeDefaultButton = WidgetParameterItem.makeDefaultButton
+    defaultClicked = WidgetParameterItem.defaultClicked
 
 class RadioParameterItem(BoolParameterItem):
     """
@@ -210,7 +229,7 @@ class ChecklistParameter(GroupParameter):
             self.updateLimits(None, self.opts.get('limits', []))
         if 'delay' in opts:
             self.valChangingProxy.setDelay(opts['delay'])
-    
+
     def setValue(self, value, blockSignal=None):
         self.targetValue = value
         exclusive = self.opts['exclusive']
@@ -230,6 +249,13 @@ class ChecklistParameter(GroupParameter):
             checked = chParam.name() in names
             chParam.setValue(checked, self._onChildChanging)
         super().setValue(self.childrenValue(), blockSignal)
+
+    def setToDefault(self):
+        # Since changing values are covered by a proxy, this method must be overridden
+        # to flush changes. Otherwise, setting to default while waiting for changes
+        # to finalize will override the request to take default values
+        self.valChangingProxy.timer.stop()
+        super().setToDefault()
 
     def saveState(self, filter=None):
         # Unlike the normal GroupParameter, child states shouldn't be separately
