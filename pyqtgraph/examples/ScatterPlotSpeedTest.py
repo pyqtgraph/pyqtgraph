@@ -1,37 +1,32 @@
 #!/usr/bin/python
 """
 For testing rapid updates of ScatterPlotItem under various conditions.
+
+(Scatter plots are still rather slow to draw; expect about 20fps)
 """
 
-from time import perf_counter
-
 import numpy as np
-
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
 import pyqtgraph.parametertree as ptree
-from pyqtgraph.Qt import QtCore, QtWidgets
+from pyqtgraph.parametertree import Parameter, RunOpts, interactDefaults
+import pyqtgraph.graphicsItems.ScatterPlotItem
+from time import perf_counter
+import re
+from contextlib import ExitStack
 
 translate = QtCore.QCoreApplication.translate
 
 app = pg.mkQApp()
-param = ptree.Parameter.create(name=translate('ScatterPlot', 'Parameters'), type='group', children=[
-    dict(name='paused', title=translate('ScatterPlot', 'Paused:    '), type='bool', value=False),
-    dict(name='count', title=translate('ScatterPlot', 'Count:    '), type='int', limits=[1, None], value=500, step=100),
-    dict(name='size', title=translate('ScatterPlot', 'Size:    '), type='int', limits=[1, None], value=10),
-    dict(name='randomize', title=translate('ScatterPlot', 'Randomize:    '), type='bool', value=False),
-    dict(name='pxMode', title='pxMode:    ', type='bool', value=True),
-    dict(name='useCache', title='useCache:    ', type='bool', value=True),
-    dict(name='mode', title=translate('ScatterPlot', 'Mode:    '), type='list', limits={translate('ScatterPlot', 'New Item'): 'newItem', translate('ScatterPlot', 'Reuse Item'): 'reuseItem', translate('ScatterPlot', 'Simulate Pan/Zoom'): 'panZoom', translate('ScatterPlot', 'Simulate Hover'): 'hover'}, value='reuseItem'),
-])
-for c in param.children():
-    c.setDefault(c.value())
 
 pt = ptree.ParameterTree(showHeader=False)
+param = Parameter.create(name=translate('ScatterPlot', 'Parameters'), type='group')
 pt.setParameters(param)
 p = pg.PlotWidget()
 splitter = QtWidgets.QSplitter()
 splitter.addWidget(pt)
 splitter.addWidget(p)
+splitter.setSizes([300, p.width()])
 splitter.show()
 
 data = {}
@@ -42,55 +37,76 @@ lastTime = perf_counter()
 fps = None
 timer = QtCore.QTimer()
 
+def fmt(name):
+    replace = r'\1 \2'
+    name = re.sub(r'(\w)([A-Z])', replace, name)
+    name = name.replace('_', ' ')
+    return translate('ScatterPlot', name.title().strip() + ':    ')
 
-def mkDataAndItem():
+oldOpts = interactDefaults.setOpts(title=fmt, nest=False)
+
+@param.interactDecorator()
+def mkDataAndItem(count=500, size=10):
+    """
+    [count.options]
+    limits = [1, None]
+    step=100
+
+    [size.options]
+    limits = [1, None]
+    """
     global data, fps
     scale = 100
     data = {
-        'pos': np.random.normal(size=(50, param['count']), scale=scale),
-        'pen': [pg.mkPen(x) for x in np.random.randint(0, 256, (param['count'], 3))],
-        'brush': [pg.mkBrush(x) for x in np.random.randint(0, 256, (param['count'], 3))],
-        'size': (np.random.random(param['count']) * param['size']).astype(int)
+        'pos': np.random.normal(size=(50, count), scale=scale),
+        'pen': [pg.mkPen(x) for x in np.random.randint(0, 256, (count, 3))],
+        'brush': [pg.mkBrush(x) for x in np.random.randint(0, 256, (count, 3))],
+        'size': (np.random.random(count) * size).astype(int)
     }
     data['pen'][0] = pg.mkPen('w')
-    data['size'][0] = param['size']
+    data['size'][0] = size
     data['brush'][0] = pg.mkBrush('b')
     bound = 5 * scale
     p.setRange(xRange=[-bound, bound], yRange=[-bound, bound])
     mkItem()
 
 
-def mkItem():
+@param.interactDecorator()
+def mkItem(pxMode=True, useCache=True):
     global item
-    item = pg.ScatterPlotItem(pxMode=param['pxMode'], **getData())
-    item.opts['useCache'] = param['useCache']
+    item = pg.ScatterPlotItem(pxMode=pxMode, **getData())
+    item.opts['useCache'] = useCache
     p.clear()
     p.addItem(item)
 
-
-def getData():
+@param.interactDecorator()
+def getData(randomize=False):
     pos = data['pos']
     pen = data['pen']
     size = data['size']
     brush = data['brush']
-    if not param['randomize']:
+    if not randomize:
         pen = pen[0]
         size = size[0]
         brush = brush[0]
     return dict(x=pos[ptr % 50], y=pos[(ptr + 1) % 50], pen=pen, brush=brush, size=size)
 
-
-def update():
+@param.interactDecorator()
+def update(mode='Reuse Item'):
+    """
+    [mode.options]
+    type = list
+    limits = ['New Item', 'Reuse Item', 'Simulate Pan/Zoom', 'Simulate Hover']
+    """
     global ptr, lastTime, fps
-    mode = param['mode']
-    if mode == 'newItem':
+    if mode == 'New Item':
         mkItem()
-    elif mode == 'reuseItem':
+    elif mode == 'Reuse Item':
         item.setData(**getData())
-    elif mode == 'panZoom':
+    elif mode == 'Simulate Pan/Zoom':
         item.viewTransformChanged()
         item.update()
-    elif mode == 'hover':
+    elif mode == 'Simulate Hover':
         pts = item.points()
         old = pts[(ptr - 1) % len(pts)]
         new = pts[ptr % len(pts)]
@@ -111,15 +127,16 @@ def update():
     p.repaint()
     # app.processEvents()  # force complete redraw for every plot
 
+@param.interactDecorator()
+def pausePlot(paused=False):
+    if paused:
+        timer.stop()
+    else:
+        timer.start()
 
 mkDataAndItem()
-for name in ['count', 'size']:
-    param.child(name).sigValueChanged.connect(mkDataAndItem)
-for name in ['useCache', 'pxMode', 'randomize']:
-    param.child(name).sigValueChanged.connect(mkItem)
-param.child('paused').sigValueChanged.connect(lambda _, v: timer.stop() if v else timer.start())
 timer.timeout.connect(update)
 timer.start(0)
-
+interactDefaults.setOpts(**oldOpts)
 if __name__ == '__main__':
     pg.exec()

@@ -7,6 +7,7 @@ examples_ = OrderedDict([
     ('Basic Plotting', Namespace(filename='Plotting.py', recommended=True)),
     ('ImageView', 'ImageView.py'),
     ('ParameterTree', 'parametertree.py'),
+    ('Parameter-Function Interaction', 'InteractiveParameter.py'),
     ('Crosshair / Mouse interaction', 'crosshair.py'),
     ('Data Slicing', 'DataSlicing.py'),
     ('Plot Customization', 'customPlot.py'),

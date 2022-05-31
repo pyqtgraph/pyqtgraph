@@ -12,3 +12,4 @@ Contents:
     parametertree
     parametertypes
     parameteritem
+    interactiveparameters

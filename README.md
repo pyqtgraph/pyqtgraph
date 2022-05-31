@@ -55,6 +55,7 @@ Through 3rd part libraries, additional functionality may be added to PyQtGraph, 
 | [`cupy`]       | <ul><li> CUDA-enhanced image processing </li><li> Note: On Windows, CUDA toolkit must be >= 11.1 </li></ul> |
 | [`numba`]      | <ul><li> Faster image processing </li></ul> |
 | [`jupyter_rfb`]| <ul><li> Jupyter Notebook support </li> <li> [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pyqtgraph/pyqtgraph/HEAD?labpath=pyqtgraph%2Fexamples%2Fnotebooks) </li> </ul> |
+| [`docstring-parser`] | <ul><li> Docstring parsing during Parameter-function interaction </li></ul> |
 
 [`scipy`]: https://github.com/scipy/scipy
 [`ndimage`]: https://docs.scipy.org/doc/scipy/reference/ndimage.html
@@ -66,6 +67,7 @@ Through 3rd part libraries, additional functionality may be added to PyQtGraph, 
 [`numba`]: https://github.com/numba/numba
 [`cupy`]: https://docs.cupy.dev/en/stable/install.html
 [`jupyter_rfb`]: https://github.com/vispy/jupyter_rfb
+[`docstring-parser`]: https://github.com/rr-/docstring_parser
 
 Qt Bindings Test Matrix
 -----------------------
