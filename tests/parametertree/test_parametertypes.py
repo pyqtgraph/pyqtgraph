@@ -173,3 +173,11 @@ def test_pen_settings():
     # Opts from changing child
     p["width"] = 10
     assert p.pen.width() == 10
+
+
+def test_recreate_from_savestate():
+    from pyqtgraph.examples import _buildParamTypes
+    created = _buildParamTypes.makeAllParamTypes()
+    state = created.saveState()
+    created2 = pt.Parameter.create(**state)
+    assert pg.eq(state, created2.saveState())
