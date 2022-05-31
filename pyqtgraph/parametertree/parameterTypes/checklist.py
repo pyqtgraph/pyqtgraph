@@ -136,6 +136,11 @@ class ChecklistParameter(GroupParameter):
     itemClass = ChecklistParameterItem
 
     def __init__(self, **opts):
+        # Child options are populated through values, not explicit "children"
+        if 'children' in opts:
+            raise ValueError(
+                "Cannot pass 'children' to ChecklistParameter. Pass a 'value' key only."
+            )
         self.targetValue = None
         limits = opts.setdefault('limits', [])
         self.forward, self.reverse = ListParameter.mapping(limits)
@@ -225,3 +230,27 @@ class ChecklistParameter(GroupParameter):
             checked = chParam.name() in names
             chParam.setValue(checked, self._onChildChanging)
         super().setValue(self.childrenValue(), blockSignal)
+
+    def saveState(self, filter=None):
+        # Unlike the normal GroupParameter, child states shouldn't be separately
+        # preserved
+        state = super().saveState(filter)
+        state.pop("children", None)
+        return state
+
+    def restoreState(
+        self,
+        state,
+        recursive=True,
+        addChildren=True,
+        removeChildren=True,
+        blockSignals=True
+    ):
+        # Child management shouldn't happen through state
+        return super().restoreState(
+            state,
+            recursive,
+            addChildren=False,
+            removeChildren=False,
+            blockSignals=blockSignals
+        )
