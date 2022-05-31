@@ -11,6 +11,7 @@ from pyqtgraph.parametertree.interactive import RunOpts, interact
 # Also define simple decorator to ease test registration
 TO_RUN = []
 
+
 def addToSuite(func):
     TO_RUN.append(func)
     return func
@@ -147,19 +148,20 @@ def rstFmt_noHeaders(x=5.0, y=6.0):
     return x, y
 
 
-@pytest.mark.parametrize('xyFunc', [rstFmt_noHeaders])
+@pytest.mark.parametrize("xyFunc", [rstFmt_noHeaders])
 def test_docparsing(xyFunc):
     def argCollector(x, y):
         assert x, y == (5.0, 6.0)
+
     param = interact(xyFunc, runOpts=RunOpts.ON_BUTTON, runFunc=argCollector)
-    param.child('Run').activate()
-    for name in 'y', 'x':
+    param.child("Run").activate()
+    for name in "y", "x":
         ch = param.child(name)
-        assert ch.opts['tip'] == f'The {name.upper()} parameter'
-        assert ch.opts['type'] == 'float'
-        assert ch.opts['step'] == 0.1
+        assert ch.opts["tip"] == f"The {name.upper()} parameter"
+        assert ch.opts["type"] == "float"
+        assert ch.opts["step"] == 0.1
     # ch is 'x'
-    assert ch.opts['limits'] == [0, 10]
+    assert ch.opts["limits"] == [0, 10]
 
 
 def test_docstringFailure():
@@ -173,9 +175,10 @@ def test_docstringFailure():
         """
         # Should still parse, but won't set the value
         return x
+
     param = interact(a)
-    assert param['x'] == 3
-    assert 'tip' not in param.child('x').opts
+    assert param["x"] == 3
+    assert "tip" not in param.child("x").opts
 
 
 def test_userOverride():
@@ -185,31 +188,33 @@ def test_userOverride():
         value = 6
         """
         return x
-    for extra in 9, {'value': 9}:
+
+    for extra in 9, {"value": 9}:
         param = interact(a, x=extra)
-        assert param['x'] == 9
+        assert param["x"] == 9
 
 
 def test_evalFallback():
-    def a(x='6'):
+    def a(x="6"):
         """
         [x.options]
         value = [5badname]
         """
+
     param = interact(a)
-    assert param['x'] == '[5badname]'
+    assert param["x"] == "[5badname]"
 
 
 def test_commonNumpyFuncs():
     for param in (
-            interact(np.ones, shape=[1,2], dtype={'type': 'str'}, ignores=['like']),
-            interact(np.linspace, start=1, stop=2, dtype={'type': 'str'})
+        interact(np.ones, shape=[1, 2], dtype={"type": "str"}, ignores=["like"]),
+        interact(np.linspace, start=1, stop=2, dtype={"type": "str"}),
     ):
         for ch in param.children():
-            assert ch.opts['tip']
+            assert ch.opts["tip"]
 
 
 def test_noDocstringParserFallback(monkeypatch):
-    monkeypatch.setitem(sys.modules, 'docstring_parser', None)
+    monkeypatch.setitem(sys.modules, "docstring_parser", None)
     for ch in interact(rstFmt_noHeaders):
-        assert 'tip' not in ch.opts
+        assert "tip" not in ch.opts

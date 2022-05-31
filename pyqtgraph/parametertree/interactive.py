@@ -8,25 +8,28 @@ import weakref
 
 from . import Parameter
 
+
 class RunOpts:
-    class PARAM_UNSET: pass
+    class PARAM_UNSET:
+        pass
+
     """Sentinel value for detecting parameters with unset values"""
 
-    ON_BUTTON = 'button'
+    ON_BUTTON = "button"
     """Indicator for `interactive` parameter which runs the function on pressing a button parameter"""
-    ON_CHANGED = 'changed'
+    ON_CHANGED = "changed"
     """
     Indicator for `interactive` parameter which runs the function every time one `sigValueChanged` is emitted from
     any of the parameters
     """
-    ON_CHANGING = 'changing'
+    ON_CHANGING = "changing"
     """
     Indicator for `interactive` parameter which runs the function every time one `sigValueChanging` is emitted from
     any of the parameters
     """
 
-class _InteractDefaults:
 
+class _InteractDefaults:
     def __init__(self):
         self.runOpts = RunOpts.ON_CHANGED
         self.parent = None
@@ -34,14 +37,14 @@ class _InteractDefaults:
         self.nest = True
         self.existOk = True
 
-        self.runButtonTemplate = dict(type='action', defaultName='Run')
+        self.runButtonTemplate = dict(type="action", defaultName="Run")
 
     def setOpts(self, **opts):
         oldOpts = vars(self).copy()
         allowed = set(oldOpts)
         errors = set(opts).difference(allowed)
         if errors:
-            raise KeyError(f'Unrecognized options: {errors}. Must be one of: {allowed}')
+            raise KeyError(f"Unrecognized options: {errors}. Must be one of: {allowed}")
 
         toReturn = {}
         toUse = {}
@@ -64,7 +67,9 @@ class _InteractDefaults:
     def __repr__(self):
         return str(self)
 
+
 interactDefaults = _InteractDefaults()
+
 
 def setRunButtonTemplate(template):
     """
@@ -75,18 +80,19 @@ def setRunButtonTemplate(template):
     """
     interactDefaults.runButtonTemplate = template
 
+
 def funcToParamDict(func, title=None, **overrides):
     """
     Converts a function into a list of child parameter dicts
     """
     children = []
-    out = dict(name=func.__name__, type='group', children=children)
+    out = dict(name=func.__name__, type="group", children=children)
     if title is not None:
-        out['title'] = _resolveTitle(func.__name__, title, forwardStrTitle=True)
+        out["title"] = _resolveTitle(func.__name__, title, forwardStrTitle=True)
 
     funcParams = inspect.signature(func).parameters
     parsedDoc = parseIniDocstring(func.__doc__)
-    out.setdefault('tip', parsedDoc.get('func-description'))
+    out.setdefault("tip", parsedDoc.get("func-description"))
 
     # Make pyqtgraph parameter dicts from each parameter
     # Use list instead of funcParams.items() so kwargs can add to the iterable
@@ -116,35 +122,37 @@ def createFuncParameter(name, signatureParam, docDict, overridesDict, title=None
     User overrides should be given the highest priority, i.e. not usurped by function doc values or parameter
     default information.
     """
-    if signatureParam is not None and signatureParam.default is not signatureParam.empty:
+    if (
+        signatureParam is not None
+        and signatureParam.default is not signatureParam.empty
+    ):
         # Maybe the user never specified type and value, since they can come directly from the default
         # Also, maybe override was a value without a type, so give a sensible default
         default = signatureParam.default
-        signatureDict = {'value': default,
-                         'type': type(default).__name__}
+        signatureDict = {"value": default, "type": type(default).__name__}
     else:
         signatureDict = {}
     # Doc takes precedence over signature for any value information
     pgDict = {**signatureDict, **docDict.get(name, {})}
     overrideInfo = overridesDict.get(name, {})
     if not isinstance(overrideInfo, dict):
-        overrideInfo = {'value': overrideInfo}
+        overrideInfo = {"value": overrideInfo}
     # Overrides take precedence over doc and signature
     pgDict.update(overrideInfo)
     # Name takes the highest precedence since it must be bindable to a function argument
-    pgDict['name'] = name
+    pgDict["name"] = name
     # Required function arguments with any override specifications can still be unfilled at this point
-    pgDict.setdefault('value', RunOpts.PARAM_UNSET)
+    pgDict.setdefault("value", RunOpts.PARAM_UNSET)
 
     # Anywhere a title is specified should take precedence over the default factory
     if title is not None:
-        pgDict.setdefault('title', _resolveTitle(name, title))
-    pgDict.setdefault('type', type(pgDict['value']).__name__)
+        pgDict.setdefault("title", _resolveTitle(name, title))
+    pgDict.setdefault("type", type(pgDict["value"]).__name__)
     # Handle helpText, pType from PrjParam style
-    if 'pType' in pgDict:
-        pgDict['type'] = pgDict['pType']
-    if 'helpText' in pgDict:
-        pgDict['tip'] = pgDict['helpText']
+    if "pType" in pgDict:
+        pgDict["type"] = pgDict["pType"]
+    if "helpText" in pgDict:
+        pgDict["tip"] = pgDict["helpText"]
     return pgDict
 
 
@@ -170,6 +178,7 @@ def parseIniDocstring(doc):
     """
     try:
         import docstring_parser
+
         return _parseIniDocstring_docstringParser(doc)
     except ImportError:
         return _parseIniDocstring_basic(doc)
@@ -181,22 +190,28 @@ def _parseIniDocstring_docstringParser(doc):
     and can handle more dynamic parsing cases
     """
     # Revert to basic method if ini headers are already present
-    if not doc or '.options]\n' in doc:
+    if not doc or ".options]\n" in doc:
         return _parseIniDocstring_basic(doc)
     import docstring_parser
+
     out = {}
     parsed = docstring_parser.parse(doc)
-    out['func-description'] = '\n'.join([desc for desc in [parsed.short_description, parsed.long_description]
-                                         if desc is not None])
+    out["func-description"] = "\n".join(
+        [
+            desc
+            for desc in [parsed.short_description, parsed.long_description]
+            if desc is not None
+        ]
+    )
     for param in parsed.params:
         # Construct mini ini file around each parameter
-        header = f'[{param.arg_name}.options]'
+        header = f"[{param.arg_name}.options]"
         miniDoc = param.description
         if header not in miniDoc:
-            miniDoc = f'{header}\n{miniDoc}'
+            miniDoc = f"{header}\n{miniDoc}"
         # top-level parameter no longer represents whole function
         update = _parseIniDocstring_basic(miniDoc)
-        update.pop('func-description', None)
+        update.pop("func-description", None)
         out.update(update)
     return out
 
@@ -204,19 +219,19 @@ def _parseIniDocstring_docstringParser(doc):
 def _parseIniDocstring_basic(doc):
     # Adding "[DEFAULT] to the beginning of the doc will consume non-parameter descriptions
     out = {}
-    doc = doc or '[DEFAULT]'
+    doc = doc or "[DEFAULT]"
     # Account for several things in commonly supported docstring formats:
     # Indentation nesting in numpy style
     # :param: in rst
     lines = []
     for line in doc.splitlines():
-        if line.startswith(':'):
+        if line.startswith(":"):
             # :param: style documentation violates ini standards
             line = line[1:]
         lines.append(line)
-    doc = textwrap.dedent('\n'.join(lines))
-    if not doc.startswith('[DEFAULT]'):
-        doc = '[DEFAULT]\n' + doc
+    doc = textwrap.dedent("\n".join(lines))
+    if not doc.startswith("[DEFAULT]"):
+        doc = "[DEFAULT]\n" + doc
     parser = configparser.ConfigParser(allow_no_value=True)
     # Save case sensitivity
     parser.optionxform = str
@@ -226,9 +241,9 @@ def _parseIniDocstring_basic(doc):
         # Many things can go wrong reading a badly-formatted docstring, so failsafe by returning early
         return out
     for kk, vv in parser.items():
-        if not kk.endswith('.options'):
+        if not kk.endswith(".options"):
             continue
-        paramName = kk.split('.')[0]
+        paramName = kk.split(".")[0]
         # vv is a section with options for the parameter, but each option must be literal eval'd for non-string
         # values
         paramValues = dict(vv)
@@ -239,8 +254,8 @@ def _parseIniDocstring_basic(doc):
             if paramV is None:
                 # Considered a tip of the current option
                 if backupTip is None:
-                    backupTip = ''
-                backupTip = f'{backupTip} {paramK}'
+                    backupTip = ""
+                backupTip = f"{backupTip} {paramK}"
                 # Remove this from the return value since it isn't really meaninful
                 del paramValues[paramK]
                 continue
@@ -251,12 +266,12 @@ def _parseIniDocstring_basic(doc):
                 # There are many reasons this can fail, a safe fallback is the original string value
                 pass
         if backupTip is not None:
-            paramValues.setdefault('tip', backupTip.strip())
+            paramValues.setdefault("tip", backupTip.strip())
         out[paramName] = paramValues
     # Since function documentation can be used as a description for whatever group parameter hosts these
     # parameters, store it in a name guaranteed not to collide with parameter names since its invalid
     # variable syntax (contains '-')
-    out['func-description'] = '\n'.join(parser.defaults())
+    out["func-description"] = "\n".join(parser.defaults())
     return out
 
 
@@ -390,6 +405,7 @@ class InteractiveFunction:
     def __str__(self):
         return self.func.__str__()
 
+
 def _resolveTitle(name, titleFormat, forwardStrTitle=False):
     isstr = isinstance(titleFormat, str)
     if titleFormat is None or (isstr and not forwardStrTitle):
@@ -399,9 +415,19 @@ def _resolveTitle(name, titleFormat, forwardStrTitle=False):
     # else: titleFormat should be callable
     return titleFormat(name)
 
-def interact(func, *, ignores=None, runFunc=None, runOpts=RunOpts.PARAM_UNSET,
-             parent=RunOpts.PARAM_UNSET, title=RunOpts.PARAM_UNSET, nest=RunOpts.PARAM_UNSET,
-             existOk=RunOpts.PARAM_UNSET, **overrides):
+
+def interact(
+    func,
+    *,
+    ignores=None,
+    runFunc=None,
+    runOpts=RunOpts.PARAM_UNSET,
+    parent=RunOpts.PARAM_UNSET,
+    title=RunOpts.PARAM_UNSET,
+    nest=RunOpts.PARAM_UNSET,
+    existOk=RunOpts.PARAM_UNSET,
+    **overrides,
+):
     """
     Interacts with a function by making Parameters for each argument.
 
@@ -455,8 +481,8 @@ def interact(func, *, ignores=None, runFunc=None, runOpts=RunOpts.PARAM_UNSET,
         existOk = interactDefaults.existOk
 
     funcDict = funcToParamDict(func, title=title, **overrides)
-    children = funcDict.pop('children', []) # type: list[dict]
-    chNames = [ch['name'] for ch in children]
+    children = funcDict.pop("children", [])  # type: list[dict]
+    chNames = [ch["name"] for ch in children]
     parent = _resolveParent(parent, nest, funcDict, existOk)
 
     toExec = runFunc or func
@@ -465,7 +491,7 @@ def interact(func, *, ignores=None, runFunc=None, runOpts=RunOpts.PARAM_UNSET,
         # "InteractiveFunction" instance prevents connected signals from firing
         # Use a list in case multiple interact() calls are made with the same function
         interactive = InteractiveFunction(toExec)
-        if hasattr(toExec, 'interactiveRefs'):
+        if hasattr(toExec, "interactiveRefs"):
             toExec.interactiveRefs.append(interactive)
         else:
             toExec.interactiveRefs = [interactive]
@@ -483,7 +509,7 @@ def interact(func, *, ignores=None, runFunc=None, runOpts=RunOpts.PARAM_UNSET,
 
     useParams = []
     for chDict in children:
-        name = chDict['name']
+        name = chDict["name"]
         if name in ignores:
             continue
         child = _createFuncParamChild(parent, chDict, runOpts, existOk, toExec)
@@ -493,7 +519,7 @@ def interact(func, *, ignores=None, runFunc=None, runOpts=RunOpts.PARAM_UNSET,
     ret = parent
     if RunOpts.ON_BUTTON in runOpts:
         # Add an extra button child which can activate the function
-        button = _makeRunButton(nest, funcDict.get('tip'), toExec)
+        button = _makeRunButton(nest, funcDict.get("tip"), toExec)
         # Return just the button if no other params were allowed
         if not parent.hasChildren():
             ret = button
@@ -501,6 +527,7 @@ def interact(func, *, ignores=None, runFunc=None, runOpts=RunOpts.PARAM_UNSET,
 
     # Keep reference to avoid `toExec` getting garbage collected and allow later access
     return ret
+
 
 def _resolveParent(parent, nest, parentOpts, existOk):
     if parent is None or nest:
@@ -511,12 +538,19 @@ def _resolveParent(parent, nest, parentOpts, existOk):
         parent = host
     return parent
 
+
 def _createFuncParamChild(parent, chDict, runOpts, existOk, toExec):
-    name = chDict['name']
+    name = chDict["name"]
     # Make sure args without defaults have overrides
-    if chDict['value'] is RunOpts.PARAM_UNSET and name not in toExec.closures and name not in toExec.extra:
-        raise ValueError(f'Cannot interact with "{toExec} since it has required parameter "{name}"'
-                         f' with no default or closure value provided.')
+    if (
+        chDict["value"] is RunOpts.PARAM_UNSET
+        and name not in toExec.closures
+        and name not in toExec.extra
+    ):
+        raise ValueError(
+            f'Cannot interact with "{toExec} since it has required parameter "{name}"'
+            f" with no default or closure value provided."
+        )
     child = parent.addChild(chDict, existOk=existOk)
     if RunOpts.ON_CHANGED in runOpts:
         child.sigValueChanged.connect(toExec.runFromChangedOrChanging)
@@ -524,16 +558,17 @@ def _createFuncParamChild(parent, chDict, runOpts, existOk, toExec):
         child.sigValueChanging.connect(toExec.runFromChangedOrChanging)
     return child
 
+
 def _makeRunButton(nest, tip, interactiveFunc):
     # Add an extra button child which can activate the function
     template = interactDefaults.runButtonTemplate
     createOpts = template.copy()
 
-    defaultName = template.get('defaultName', 'Run')
+    defaultName = template.get("defaultName", "Run")
     name = defaultName if nest else interactiveFunc.func.__name__
-    createOpts.setdefault('name', name)
+    createOpts.setdefault("name", name)
     if tip:
-        createOpts['tip'] = tip
+        createOpts["tip"] = tip
     child = Parameter.create(**createOpts)
     # A local function will avoid garbage collection by holding a reference to `toExec`
     child.sigActivated.connect(interactiveFunc.runFromButton)

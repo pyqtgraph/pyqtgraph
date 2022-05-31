@@ -5,7 +5,12 @@ import pytest
 from functools import wraps
 from pyqtgraph.parametertree import Parameter
 from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
-from pyqtgraph.parametertree import interact, RunOpts, InteractiveFunction, interactDefaults
+from pyqtgraph.parametertree import (
+    interact,
+    RunOpts,
+    InteractiveFunction,
+    interactDefaults,
+)
 
 
 def test_parameter_hasdefault():
@@ -60,16 +65,20 @@ def test_unpack_parameter():
     assert 'c' in result
     assert result['c'] == 3.0
 
+
 def test_interact():
     oldOpts = interactDefaults.setOpts(runOpts=RunOpts.ON_BUTTON)
     value = None
+
     def retain(func):
         """Retain result for post-call analysis"""
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             nonlocal value
             value = func(*args, **kwargs)
             return value
+
         return wrapper
 
     @retain
@@ -80,75 +89,81 @@ def test_interact():
         interact(a)
 
     host = interact(a, x=10)
-    for child in 'x', 'y':
+    for child in "x", "y":
         assert child in host.names
 
-    host = interact(a, x=10, y={'type': 'list', 'limits': [5, 10]})
-    testParam = host.child('y')
-    assert testParam.type() == 'list'
-    assert testParam.opts['limits'] == [5,10]
+    host = interact(a, x=10, y={"type": "list", "limits": [5, 10]})
+    testParam = host.child("y")
+    assert testParam.type() == "list"
+    assert testParam.opts["limits"] == [5, 10]
 
     myval = 5
     a_interact = InteractiveFunction(a, closures=dict(x=lambda: myval))
     host = interact(a_interact)
-    assert 'x' not in host.names
-    host.child('Run').activate()
+    assert "x" not in host.names
+    host.child("Run").activate()
     assert value == (5, 5)
     myval = 10
-    host.child('Run').activate()
+    host.child("Run").activate()
     assert value == (10, 5)
 
-    host = interact(a, x=10, y=50, ignores=['x'], runOpts=(RunOpts.ON_CHANGED, RunOpts.ON_CHANGING))
-    for child in 'x', 'Run':
+    host = interact(
+        a, x=10, y=50, ignores=["x"], runOpts=(RunOpts.ON_CHANGED, RunOpts.ON_CHANGING)
+    )
+    for child in "x", "Run":
         assert child not in host.names
 
-    host['y'] = 20
+    host["y"] = 20
     assert value == (10, 20)
-    host.child('y').sigValueChanging.emit(host.child('y'), 100)
+    host.child("y").sigValueChanging.emit(host.child("y"), 100)
     assert value == (10, 100)
 
     with interactDefaults.optsContext(title=str.upper):
-        host = interact(a, x={'title': 'different', 'value': 5})
+        host = interact(a, x={"title": "different", "value": 5})
         titles = [p.title() for p in host]
-        for ch in 'different', 'Y':
+        for ch in "different", "Y":
             assert ch in titles
 
-    with interactDefaults.optsContext(title='Group only'):
+    with interactDefaults.optsContext(title="Group only"):
         host = interact(a, x=1)
-        assert host.title() == 'Group only'
+        assert host.title() == "Group only"
         assert [p.title() is None for p in host]
 
     with interactDefaults.optsContext(runOpts=RunOpts.ON_CHANGED):
         host = interact(a, x=5)
-        host['y'] = 20
+        host["y"] = 20
         assert value == (5, 20)
 
     @retain
     def kwargTest(a, b=5, **c):
-        return a + b - c.get('test', None)
+        return a + b - c.get("test", None)
+
     host = interact(kwargTest, a=10, test=3)
-    for ch in 'a', 'b', 'test':
+    for ch in "a", "b", "test":
         assert ch in host.names
-    host.child('Run').activate()
+    host.child("Run").activate()
     assert value == 12
 
-    host = GP.create(name='test deco', type='group')
+    host = GP.create(name="test deco", type="group")
+
     @host.interactDecorator()
     @retain
     def a(x=5):
         return x
-    assert 'a' in host.names
-    assert 'x' in host.child('a').names
-    host.child('a', 'Run').activate()
+
+    assert "a" in host.names
+    assert "x" in host.child("a").names
+    host.child("a", "Run").activate()
     assert value == 5
 
     @host.interactDecorator(nest=False, runOpts=RunOpts.ON_CHANGED)
     @retain
     def b(y=6):
         return y
-    assert 'b' not in host.names
-    assert 'y' in host.names
-    host['y'] = 7
+
+    assert "b" not in host.names
+    assert "y" in host.names
+    host["y"] = 7
     assert value == 7
 
     def raw(x=5):
@@ -157,28 +172,34 @@ def test_interact():
     @retain
     def override(**kwargs):
         return raw(**kwargs)
+
     host = interact(raw, runFunc=override, runOpts=RunOpts.ON_CHANGED)
-    assert 'x' in host.names
-    host['x'] = 100
+    assert "x" in host.names
+    host["x"] = 100
     assert value == 100
 
     interactDefaults.setOpts(**oldOpts)
 
+
 def test_onlyRun():
     def a():
         return 5
+
     assert not isinstance(interact(a, runOpts=RunOpts.ON_BUTTON), GP)
+
 
 def test_interactiveFunc():
     value = 0
+
     def myfunc(a=5):
         nonlocal value
         value = a
         return a
+
     interactive = InteractiveFunction(myfunc)
     host = interact(interactive, runOpts=[])
 
-    host['a'] = 7
+    host["a"] = 7
     assert interactive.runFromButton() == 7
 
     interactive.disconnect()
@@ -189,18 +210,21 @@ def test_interactiveFunc():
     interactive.runFromButton(a=10)
     assert value == 10
 
+
 def test_badOptsContext():
     with pytest.raises(KeyError):
         with interactDefaults.optsContext(bad=4):
             pass
 
+
 def test_newRunButton():
     def a(_=1):
         pass
-    template = dict(defaultName='Test', type='action')
+
+    template = dict(defaultName="Test", type="action")
     with interactDefaults.optsContext(runButtonTemplate=template):
         x = interact(a, runOpts=RunOpts.ON_BUTTON)
-    assert 'Test' in x.names
+    assert "Test" in x.names
 
 
 def test_updateParamDuringRun():
@@ -210,15 +234,16 @@ def test_updateParamDuringRun():
     def func(a=1):
         nonlocal counter
         counter += a
+
     param = interact(func)
     func.propagateParamChanges = True
 
     func(a=3)
     # Ensure "test" was only run once
     assert counter == 3
-    assert param['a'] == 3
+    assert param["a"] == 3
 
     func.propagateParamChanges = False
     func(a=1)
     assert counter == 4
-    assert param['a'] == 3
+    assert param["a"] == 3

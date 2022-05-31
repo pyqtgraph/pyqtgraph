@@ -2,28 +2,45 @@ from functools import wraps
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
-from pyqtgraph.parametertree import Parameter, ParameterTree, RunOpts, InteractiveFunction, interact, interactDefaults
+from pyqtgraph.parametertree import (
+    Parameter,
+    ParameterTree,
+    RunOpts,
+    InteractiveFunction,
+    interact,
+    interactDefaults,
+)
 
 app = pg.mkQApp()
 
+
 class LAST_RESULT:
-  """Just for testing purposes"""
-  value = None
+    """Just for testing purposes"""
+
+    value = None
+
 
 def printResult(func):
-  @wraps(func)
-  def wrapper(*args, **kwargs):
-    LAST_RESULT.value = func(*args, **kwargs)
-    QtWidgets.QMessageBox.information(QtWidgets.QApplication.activeWindow(),
-                                      'Function Run!', f'Func result: {LAST_RESULT.value}')
-  return wrapper
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        LAST_RESULT.value = func(*args, **kwargs)
+        QtWidgets.QMessageBox.information(
+            QtWidgets.QApplication.activeWindow(),
+            "Function Run!",
+            f"Func result: {LAST_RESULT.value}",
+        )
 
-host = Parameter.create(name='Interactive Parameter Use', type='group')
+    return wrapper
+
+
+host = Parameter.create(name="Interactive Parameter Use", type="group")
+
 
 @host.interactDecorator()
 @printResult
 def easySample(a=5, b=6):
     return a + b
+
 
 @host.interactDecorator()
 @printResult
@@ -38,45 +55,59 @@ def hasTooltipInfo(a=4, b=6):
     """
     return a + b
 
+
 @host.interactDecorator()
 @printResult
-def stringParams(a='5', b='6'):
+def stringParams(a="5", b="6"):
     return a + b
+
 
 @host.interactDecorator(a=10)
 @printResult
 def requiredParam(a, b=10):
     return a + b
 
-@host.interactDecorator(ignores=['a'])
+
+@host.interactDecorator(ignores=["a"])
 @printResult
 def ignoredAParam(a=10, b=20):
-    return a*b
+    return a * b
+
 
 @host.interactDecorator(runOpts=RunOpts.ON_BUTTON)
 @printResult
 def runOnButton(a=10, b=20):
     return a + b
 
+
 x = 5
+
+
 @printResult
 def accessVarInDifferentScope(x, y=10):
     return x + y
-func_interactive = InteractiveFunction(accessVarInDifferentScope, closures={'x': lambda: x})
+
+
+func_interactive = InteractiveFunction(
+    accessVarInDifferentScope, closures={"x": lambda: x}
+)
 # Value is redeclared, but still bound
 x = 10
 interact(func_interactive, parent=host)
 
 
 with interactDefaults.optsContext(title=str.upper):
+
     @host.interactDecorator()
     @printResult
     def capslocknames(a=5):
         return a
 
-@host.interactDecorator(runOpts=(RunOpts.ON_CHANGED, RunOpts.ON_BUTTON),
-                         a={'type': 'list', 'limits': [5, 10, 20]}
-                         )
+
+@host.interactDecorator(
+    runOpts=(RunOpts.ON_CHANGED, RunOpts.ON_BUTTON),
+    a={"type": "list", "limits": [5, 10, 20]},
+)
 @printResult
 def runOnBtnOrChange_listOpts(a=5):
     return a
@@ -87,9 +118,10 @@ def runOnBtnOrChange_listOpts(a=5):
 def onlyTheArgumentsAppear(thisIsAFunctionArg=True):
     return thisIsAFunctionArg
 
+
 tree = ParameterTree()
 tree.setParameters(host)
 
 tree.show()
-if __name__ == '__main__':
+if __name__ == "__main__":
     pg.exec()

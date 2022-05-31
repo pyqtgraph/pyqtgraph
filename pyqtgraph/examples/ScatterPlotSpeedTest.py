@@ -20,7 +20,7 @@ translate = QtCore.QCoreApplication.translate
 app = pg.mkQApp()
 
 pt = ptree.ParameterTree(showHeader=False)
-param = Parameter.create(name=translate('ScatterPlot', 'Parameters'), type='group')
+param = Parameter.create(name=translate("ScatterPlot", "Parameters"), type="group")
 pt.setParameters(param)
 p = pg.PlotWidget()
 splitter = QtWidgets.QSplitter()
@@ -31,19 +31,22 @@ splitter.show()
 
 data = {}
 item = pg.ScatterPlotItem()
-hoverBrush = pg.mkBrush('y')
+hoverBrush = pg.mkBrush("y")
 ptr = 0
 lastTime = perf_counter()
 fps = None
 timer = QtCore.QTimer()
 
+
 def fmt(name):
-    replace = r'\1 \2'
-    name = re.sub(r'(\w)([A-Z])', replace, name)
-    name = name.replace('_', ' ')
-    return translate('ScatterPlot', name.title().strip() + ':    ')
+    replace = r"\1 \2"
+    name = re.sub(r"(\w)([A-Z])", replace, name)
+    name = name.replace("_", " ")
+    return translate("ScatterPlot", name.title().strip() + ":    ")
+
 
 oldOpts = interactDefaults.setOpts(title=fmt, nest=False)
+
 
 @param.interactDecorator()
 def mkDataAndItem(count=500, size=10):
@@ -58,14 +61,14 @@ def mkDataAndItem(count=500, size=10):
     global data, fps
     scale = 100
     data = {
-        'pos': np.random.normal(size=(50, count), scale=scale),
-        'pen': [pg.mkPen(x) for x in np.random.randint(0, 256, (count, 3))],
-        'brush': [pg.mkBrush(x) for x in np.random.randint(0, 256, (count, 3))],
-        'size': (np.random.random(count) * size).astype(int)
+        "pos": np.random.normal(size=(50, count), scale=scale),
+        "pen": [pg.mkPen(x) for x in np.random.randint(0, 256, (count, 3))],
+        "brush": [pg.mkBrush(x) for x in np.random.randint(0, 256, (count, 3))],
+        "size": (np.random.random(count) * size).astype(int),
     }
-    data['pen'][0] = pg.mkPen('w')
-    data['size'][0] = size
-    data['brush'][0] = pg.mkBrush('b')
+    data["pen"][0] = pg.mkPen("w")
+    data["size"][0] = size
+    data["brush"][0] = pg.mkBrush("b")
     bound = 5 * scale
     p.setRange(xRange=[-bound, bound], yRange=[-bound, bound])
     mkItem()
@@ -75,38 +78,40 @@ def mkDataAndItem(count=500, size=10):
 def mkItem(pxMode=True, useCache=True):
     global item
     item = pg.ScatterPlotItem(pxMode=pxMode, **getData())
-    item.opts['useCache'] = useCache
+    item.opts["useCache"] = useCache
     p.clear()
     p.addItem(item)
 
+
 @param.interactDecorator()
 def getData(randomize=False):
-    pos = data['pos']
-    pen = data['pen']
-    size = data['size']
-    brush = data['brush']
+    pos = data["pos"]
+    pen = data["pen"]
+    size = data["size"]
+    brush = data["brush"]
     if not randomize:
         pen = pen[0]
         size = size[0]
         brush = brush[0]
     return dict(x=pos[ptr % 50], y=pos[(ptr + 1) % 50], pen=pen, brush=brush, size=size)
 
+
 @param.interactDecorator()
-def update(mode='Reuse Item'):
+def update(mode="Reuse Item"):
     """
     [mode.options]
     type = list
     limits = ['New Item', 'Reuse Item', 'Simulate Pan/Zoom', 'Simulate Hover']
     """
     global ptr, lastTime, fps
-    if mode == 'New Item':
+    if mode == "New Item":
         mkItem()
-    elif mode == 'Reuse Item':
+    elif mode == "Reuse Item":
         item.setData(**getData())
-    elif mode == 'Simulate Pan/Zoom':
+    elif mode == "Simulate Pan/Zoom":
         item.viewTransformChanged()
         item.update()
-    elif mode == 'Simulate Hover':
+    elif mode == "Simulate Hover":
         pts = item.points()
         old = pts[(ptr - 1) % len(pts)]
         new = pts[ptr % len(pts)]
@@ -121,11 +126,12 @@ def update(mode='Reuse Item'):
     if fps is None:
         fps = 1.0 / dt
     else:
-        s = np.clip(dt * 3., 0, 1)
+        s = np.clip(dt * 3.0, 0, 1)
         fps = fps * (1 - s) + (1.0 / dt) * s
-    p.setTitle('%0.2f fps' % fps)
+    p.setTitle("%0.2f fps" % fps)
     p.repaint()
     # app.processEvents()  # force complete redraw for every plot
+
 
 @param.interactDecorator()
 def pausePlot(paused=False):
@@ -134,9 +140,10 @@ def pausePlot(paused=False):
     else:
         timer.start()
 
+
 mkDataAndItem()
 timer.timeout.connect(update)
 timer.start(0)
 interactDefaults.setOpts(**oldOpts)
-if __name__ == '__main__':
+if __name__ == "__main__":
     pg.exec()
