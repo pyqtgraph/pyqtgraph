@@ -44,7 +44,8 @@ class LineSegments:
 
         connect_array = None
         if isinstance(connect, np.ndarray):
-            connect_array, connect = connect, 'array'
+            # the last element is not used
+            connect_array, connect = np.asarray(connect[:-1], dtype=bool), 'array'
 
         all_finite = True
         if finiteCheck or connect == 'finite':
@@ -54,11 +55,13 @@ class LineSegments:
         if connect == 'all':
             if not all_finite:
                 # remove non-finite points, if any
-                x = x.compress(mask)
-                y = y.compress(mask)
+                x = x[mask]
+                y = y[mask]
 
         elif connect == 'finite':
-            if not all_finite:
+            if all_finite:
+                connect = 'all'
+            else:
                 # each non-finite point affects the segment before and after
                 connect_array = mask[:-1] & mask[1:]
 
@@ -69,27 +72,36 @@ class LineSegments:
                 x = x[backfill_idx]
                 y = y[backfill_idx]
 
-        npts = len(x)
-        if npts < 2:
-            return []
-
         segs = []
 
-        if connect in ['all', 'finite', 'array']:
-            segs, memory = self.get(npts - 1)
-            memory[:, 0] = x[:-1]
-            memory[:, 1] = y[:-1]
-            memory[:, 2] = x[1:]
-            memory[:, 3] = y[1:]
-            if connect_array is not None:
-                segs = list(itertools.compress(segs, connect_array.tolist()))
+        if connect == 'all':
+            nsegs = len(x) - 1
+            if nsegs:
+                segs, memory = self.get(nsegs)
+                memory[:, 0] = x[:-1]
+                memory[:, 2] = x[1:]
+                memory[:, 1] = y[:-1]
+                memory[:, 3] = y[1:]
 
-        elif connect in ['pairs']:
-            npairs = npts // 2
-            segs, memory = self.get(npairs)
-            memory = memory.reshape((-1, 2))
-            memory[:, 0] = x[:npairs * 2]
-            memory[:, 1] = y[:npairs * 2]
+        elif connect == 'pairs':
+            npairs = len(x) // 2
+            if npairs:
+                segs, memory = self.get(npairs)
+                memory = memory.reshape((-1, 2))
+                memory[:, 0] = x[:npairs * 2]
+                memory[:, 1] = y[:npairs * 2]
+
+        elif connect_array is not None:
+            # the following are handled here
+            # - 'array'
+            # - 'finite' with non-finite elements
+            nsegs = np.count_nonzero(connect_array)
+            if nsegs:
+                segs, memory = self.get(nsegs)
+                memory[:, 0] = x[:-1][connect_array]
+                memory[:, 2] = x[1:][connect_array]
+                memory[:, 1] = y[:-1][connect_array]
+                memory[:, 3] = y[1:][connect_array]
 
         return segs
 
@@ -757,8 +769,8 @@ class PlotCurveItem(GraphicsObject):
             if not mask.all():
                 # we are only supporting connect='all',
                 # so remove non-finite values
-                x = x.compress(mask)
-                y = y.compress(mask)
+                x = x[mask]
+                y = y[mask]
 
         if len(x) < 2:
             return []
