@@ -148,7 +148,7 @@ def rstFmt_noHeaders(x=5.0, y=6.0):
     return x, y
 
 
-@pytest.mark.parametrize("xyFunc", [rstFmt_noHeaders])
+@pytest.mark.parametrize("xyFunc", TO_RUN)
 def test_docparsing(xyFunc):
     def argCollector(x, y):
         assert x, y == (5.0, 6.0)

@@ -211,30 +211,79 @@ def _parseIniDocstring_docstringParser(doc):
     return out
 
 
-def _parseIniDocstring_basic(doc):
-    # Adding "[DEFAULT] to the beginning of the doc will consume non-parameter descriptions
-    out = {}
-    doc = doc or "[DEFAULT]"
-    # Account for several things in commonly supported docstring formats:
-    # Indentation nesting in numpy style
-    # :param: in rst
-    lines = []
-    for line in doc.splitlines():
-        if line.startswith(":"):
+def _stripNSpaces(string, n):
+    for ii in range(min(n, len(string))):
+        if not string[ii].isspace():
+            break
+    else:
+        ii = 0
+    return string[ii:]
+
+
+def _countStartingSpaces(line):
+    ii = 0
+    for ii in range(len(line)):
+        if line[ii].isspace():
+            ii += 1
+    return ii
+
+
+def _formatOptionsFromDoc(doc):
+    """
+    Dedents doc to [*.options] level for ConfigParser parsing and removes leading ":"
+    from each line if needed. These are both factors that complicate config parsing
+    later on
+    """
+    dedent = None
+    docLines = doc.splitlines()
+    defaultLine = -1
+    for ii, line in enumerate(docLines):
+        if dedent is None and ".options]" in line:
+            dedent = _countStartingSpaces(line)
+        stripped = line.strip()
+        if stripped.startswith(":"):
             # :param: style documentation violates ini standards
-            line = line[1:]
-        lines.append(line)
-    doc = textwrap.dedent("\n".join(lines))
-    if not doc.startswith("[DEFAULT]"):
-        doc = "[DEFAULT]\n" + doc
+            docLines[ii] = line.replace(":", "", 1)
+        elif stripped == "[DEFAULT]":
+            defaultLine = ii
+    if defaultLine > -1:
+        # Remove all lines before default if it's present, since they can't be parsed
+        docLines = docLines[defaultLine:]
+    if dedent is not None:
+        doc = "\n".join(_stripNSpaces(line, dedent) for line in docLines)
+    else:
+        doc = textwrap.dedent(doc)
+
+    # Now that wrapping ensures lines start without whitespace relative to options,
+    # default block can be added if needed
+    if defaultLine < 0:
+        doc = f"[DEFAULT]\n{doc}"
+
+    return doc
+
+
+def _parseIniDocstring_basic(doc):
+    """
+    Implements quite primitive parsing of parameter signatures. Looks for
+    ``[<param-name>.options]`` blocks in the config string and parses them with a
+    ConfigParser. Note that all ``*.options`` blocks are expected to start at the
+    same indentation level. Options shared across all parameters can be specified under
+    a ``[DEFAULT]`` block.
+    """
+    out = {}
+    # Adding "[DEFAULT] to the beginning of the doc will consume non-parameter descriptions
+    # Account for things in commonly supported docstring formats:
+    fmtDoc = _formatOptionsFromDoc(doc or "")
+
     parser = configparser.ConfigParser(allow_no_value=True)
     # Save case sensitivity
     parser.optionxform = str
     try:
-        parser.read_string(doc)
+        parser.read_string(fmtDoc)
     except configparser.Error:
         # Many things can go wrong reading a badly-formatted docstring, so failsafe by returning early
         return out
+    defaultKeys = set(parser.defaults())
     for kk, vv in parser.items():
         if not kk.endswith(".options"):
             continue
@@ -244,13 +293,13 @@ def _parseIniDocstring_basic(doc):
         paramValues = dict(vv)
         # Consolidate all non-valued key strings into a single tip since they likely belong to the argument
         # documentation. Since dict preserves order, it should come back out in the right order.
-        backupTip = None
+        backupTip = ""
         for paramK, paramV in list(paramValues.items()):
             if paramV is None:
-                # Considered a tip of the current option
-                if backupTip is None:
-                    backupTip = ""
-                backupTip = f"{backupTip} {paramK}"
+                # Considered a tip of the current option if no corresponding value
+                # and not a default option
+                if paramK not in defaultKeys:
+                    backupTip = f"{backupTip} {paramK}"
                 # Remove this from the return value since it isn't really meaninful
                 del paramValues[paramK]
                 continue
@@ -260,7 +309,7 @@ def _parseIniDocstring_basic(doc):
             except:
                 # There are many reasons this can fail, a safe fallback is the original string value
                 pass
-        if backupTip is not None:
+        if backupTip:
             paramValues.setdefault("tip", backupTip.strip())
         out[paramName] = paramValues
     # Since function documentation can be used as a description for whatever group parameter hosts these
