@@ -148,11 +148,6 @@ def createFuncParameter(name, signatureParam, docDict, overridesDict, title=None
     if title is not None:
         pgDict.setdefault("title", _resolveTitle(name, title))
     pgDict.setdefault("type", type(pgDict["value"]).__name__)
-    # Handle helpText, pType from PrjParam style
-    if "pType" in pgDict:
-        pgDict["type"] = pgDict["pType"]
-    if "helpText" in pgDict:
-        pgDict["tip"] = pgDict["helpText"]
     return pgDict
 
 
