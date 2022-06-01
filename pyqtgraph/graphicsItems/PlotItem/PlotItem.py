@@ -22,7 +22,6 @@ from ..PlotDataItem import PlotDataItem
 from ..ScatterPlotItem import ScatterPlotItem
 from ..ViewBox import ViewBox
 
-
 translate = QtCore.QCoreApplication.translate
 
 ui_template = importlib.import_module(
@@ -197,10 +196,9 @@ class PlotItem(GraphicsWidget):
             (translate("PlotItem", 'Grid'), c.gridGroup),
             (translate("PlotItem", 'Points'), c.pointsGroup),
         ]
-        
-        
+
         self.ctrlMenu = QtWidgets.QMenu()
-        
+
         self.ctrlMenu.setTitle(translate("PlotItem", 'Plot Options'))
         self.subMenus = []
         for name, grp in menuItems:
@@ -210,7 +208,9 @@ class PlotItem(GraphicsWidget):
             sm.addAction(act)
             self.subMenus.append(sm)
             self.ctrlMenu.addMenu(sm)
-        
+
+        self._configureTransformsSubmenu()
+
         self.stateGroup = WidgetGroup()
         for name, w in menuItems:
             self.stateGroup.autoAdd(w)
@@ -261,7 +261,24 @@ class PlotItem(GraphicsWidget):
         
         if len(kargs) > 0:
             self.plot(**kargs)        
-        
+
+    def _configureTransformsSubmenu(self):
+        submenu = self.ctrl.transformGroup
+        layout = self.ctrl.gridLayout
+        transforms = {
+            "fft": "Power Spectrum (FFT)",
+            "logX": "Log X",
+            "logY": "Log Y",
+            "derivative": "dx/dy",
+            "phasemap": "Y vs. Y'",
+        }
+        for row, name in enumerate(transforms):
+            check = QtWidgets.QCheckBox(submenu)
+            check.setObjectName(f"{name}Check")
+            check.setText(translate("Form", transforms[name]))
+            layout.addWidget(check, row, 0, 1, 1)
+            setattr(self.ctrl, f"{name}Check", check)
+
     def implements(self, interface=None):
         return interface in ['ViewBoxWrapper']
 
@@ -695,7 +712,7 @@ class PlotItem(GraphicsWidget):
         A call like `plot.addColorBar(img, colorMap='viridis')` is a convenient
         method to assign and show a color map.
         """
-        from ..ColorBarItem import ColorBarItem # avoid circular import
+        from ..ColorBarItem import ColorBarItem  # avoid circular import
         bar = ColorBarItem(**kargs)
         bar.setImageItem( image, insert_in=self )
         return bar

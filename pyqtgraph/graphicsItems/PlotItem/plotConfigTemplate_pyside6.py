@@ -104,30 +104,6 @@ class Ui_Form(object):
         self.gridLayout.setSpacing(0)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.logYCheck = QCheckBox(self.transformGroup)
-        self.logYCheck.setObjectName(u"logYCheck")
-
-        self.gridLayout.addWidget(self.logYCheck, 2, 0, 1, 1)
-
-        self.logXCheck = QCheckBox(self.transformGroup)
-        self.logXCheck.setObjectName(u"logXCheck")
-
-        self.gridLayout.addWidget(self.logXCheck, 1, 0, 1, 1)
-
-        self.fftCheck = QCheckBox(self.transformGroup)
-        self.fftCheck.setObjectName(u"fftCheck")
-
-        self.gridLayout.addWidget(self.fftCheck, 0, 0, 1, 1)
-
-        self.derivativeCheck = QCheckBox(self.transformGroup)
-        self.derivativeCheck.setObjectName(u"derivativeCheck")
-
-        self.gridLayout.addWidget(self.derivativeCheck, 3, 0, 1, 1)
-
-        self.phasemapCheck = QCheckBox(self.transformGroup)
-        self.phasemapCheck.setObjectName(u"phasemapCheck")
-
-        self.gridLayout.addWidget(self.phasemapCheck, 4, 0, 1, 1)
 
         self.pointsGroup = QGroupBox(Form)
         self.pointsGroup.setObjectName(u"pointsGroup")
@@ -237,11 +213,6 @@ class Ui_Form(object):
         self.downsampleSpin.setToolTip(QCoreApplication.translate("Form", u"Downsample data before plotting. (plot every Nth sample)", None))
 #endif // QT_CONFIG(tooltip)
         self.downsampleSpin.setSuffix(QCoreApplication.translate("Form", u"x", None))
-        self.logYCheck.setText(QCoreApplication.translate("Form", u"Log Y", None))
-        self.logXCheck.setText(QCoreApplication.translate("Form", u"Log X", None))
-        self.fftCheck.setText(QCoreApplication.translate("Form", u"Power Spectrum (FFT)", None))
-        self.derivativeCheck.setText(QCoreApplication.translate("Form", u"dy/dx", None))
-        self.phasemapCheck.setText(QCoreApplication.translate("Form", u"Y vs. Y'", None))
         self.pointsGroup.setTitle(QCoreApplication.translate("Form", u"Points", None))
         self.autoPointsCheck.setText(QCoreApplication.translate("Form", u"Auto", None))
         self.xGridCheck.setText(QCoreApplication.translate("Form", u"Show X Grid", None))
