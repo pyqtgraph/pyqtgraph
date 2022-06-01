@@ -209,7 +209,7 @@ class PlotItem(GraphicsWidget):
             self.subMenus.append(sm)
             self.ctrlMenu.addMenu(sm)
 
-        self._configureTransformsSubmenu()
+        self._setupTransformsSubmenu()
 
         self.stateGroup = WidgetGroup()
         for name, w in menuItems:
@@ -224,12 +224,6 @@ class PlotItem(GraphicsWidget):
         c.xGridCheck.toggled.connect(self.updateGrid)
         c.yGridCheck.toggled.connect(self.updateGrid)
         c.gridAlphaSlider.valueChanged.connect(self.updateGrid)
-
-        c.fftCheck.toggled.connect(self.updateSpectrumMode)
-        c.logXCheck.toggled.connect(self.updateLogMode)
-        c.logYCheck.toggled.connect(self.updateLogMode)
-        c.derivativeCheck.toggled.connect(self.updateDerivativeMode)
-        c.phasemapCheck.toggled.connect(self.updatePhasemapMode)
 
         c.downsampleSpin.valueChanged.connect(self.updateDownsampling)
         c.downsampleCheck.toggled.connect(self.updateDownsampling)
@@ -262,22 +256,46 @@ class PlotItem(GraphicsWidget):
         if len(kargs) > 0:
             self.plot(**kargs)        
 
-    def _configureTransformsSubmenu(self):
+    def _setupTransformsSubmenu(self):
+        # TODO decouple these maybe someday
+        self._logXCheckIsChecked = False
+        self._logYCheckIsChecked = False
+        # TODO grow this widget to match number of items; give it minimum a size
         submenu = self.ctrl.transformGroup
         layout = self.ctrl.gridLayout
-        transforms = {
-            "fft": "Power Spectrum (FFT)",
-            "logX": "Log X",
-            "logY": "Log Y",
-            "derivative": "dx/dy",
-            "phasemap": "Y vs. Y'",
+        self._transforms = {
+            "fft": {
+                "text": "Power Spectrum (FFT)",
+                "toggleCallback": self.updateSpectrumMode,
+                "checkbox": QtWidgets.QCheckBox(submenu),
+            },
+            "logX": {
+                "text": "Log X",
+                "toggleCallback": self.updateLogXMode,
+                "checkbox": QtWidgets.QCheckBox(submenu),
+            },
+            "logY": {
+                "text": "Log Y",
+                "toggleCallback": self.updateLogYMode,
+                "checkbox": QtWidgets.QCheckBox(submenu),
+            },
+            "derivative": {
+                "text": "dx/dy",
+                "toggleCallback": self.updateDerivativeMode,
+                "checkbox": QtWidgets.QCheckBox(submenu),
+            },
+            "phasemap": {
+                "text": "Y vs. Y'",
+                "toggleCallback": self.updatePhasemapMode,
+                "checkbox": QtWidgets.QCheckBox(submenu),
+            },
         }
-        for row, name in enumerate(transforms):
-            check = QtWidgets.QCheckBox(submenu)
+        for row, name in enumerate(self._transforms):
+            check = self._transforms[name]["checkbox"]
             check.setObjectName(f"{name}Check")
-            check.setText(translate("Form", transforms[name]))
+            check.setText(translate("Form", self._transforms[name]["text"]))
             layout.addWidget(check, row, 0, 1, 1)
-            setattr(self.ctrl, f"{name}Check", check)
+            check.toggled.connect(self._transforms[name]["toggleCallback"])
 
     def implements(self, interface=None):
         return interface in ['ViewBoxWrapper']
@@ -370,9 +388,9 @@ class PlotItem(GraphicsWidget):
         
         """
         if x is not None:
-            self.ctrl.logXCheck.setChecked(x)
+            self._transforms["logX"]["checkbox"].setChecked(x)
         if y is not None:
-            self.ctrl.logYCheck.setChecked(y)
+            self._transforms["logY"]["checkbox"].setChecked(y)
         
     def showGrid(self, x=None, y=None, alpha=None):
         """
@@ -922,20 +940,26 @@ class PlotItem(GraphicsWidget):
     def widgetGroupInterface(self):
         return (None, PlotItem.saveState, PlotItem.restoreState)
       
-    def updateSpectrumMode(self, b=None):
-        if b is None:
-            b = self.ctrl.fftCheck.isChecked()
+    def updateSpectrumMode(self, checked):
         for c in self.curves:
-            c.setFftMode(b)
+            c.setFftMode(checked)
         self.enableAutoRange()
         self.recomputeAverages()
             
-    def updateLogMode(self):
-        x = self.ctrl.logXCheck.isChecked()
-        y = self.ctrl.logYCheck.isChecked()
+    def updateLogXMode(self, checked):
+        self._logXCheckIsChecked = checked
+        y = self._logYCheckIsChecked
+        self._updateLogMode(checked, y)
+
+    def updateLogYMode(self, checked):
+        self._logYCheckIsChecked = checked
+        x = self._logXCheckIsChecked
+        self._updateLogMode(x, checked)
+
+    def _updateLogMode(self, x, y):
         for i in self.items:
             if hasattr(i, 'setLogMode'):
-                i.setLogMode(x,y)
+                i.setLogMode(x, y)
         self.getAxis('bottom').setLogMode(x, y)
         self.getAxis('top').setLogMode(x, y)
         self.getAxis('left').setLogMode(x, y)
@@ -943,19 +967,17 @@ class PlotItem(GraphicsWidget):
         self.enableAutoRange()
         self.recomputeAverages()
     
-    def updateDerivativeMode(self):
-        d = self.ctrl.derivativeCheck.isChecked()
+    def updateDerivativeMode(self, checked):
         for i in self.items:
             if hasattr(i, 'setDerivativeMode'):
-                i.setDerivativeMode(d)
+                i.setDerivativeMode(checked)
         self.enableAutoRange()
         self.recomputeAverages()
 
-    def updatePhasemapMode(self):
-        d = self.ctrl.phasemapCheck.isChecked()
+    def updatePhasemapMode(self, checked):
         for i in self.items:
             if hasattr(i, 'setPhasemapMode'):
-                i.setPhasemapMode(d)
+                i.setPhasemapMode(checked)
         self.enableAutoRange()
         self.recomputeAverages()
         
