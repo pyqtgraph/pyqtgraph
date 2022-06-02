@@ -30,6 +30,24 @@ ui_template = importlib.import_module(
 __all__ = ['PlotItem']
 
 
+
+def _fourierTransform(x, y):
+    ## Perform Fourier transform. If x values are not sampled uniformly,
+    ## then use np.interp to resample before taking fft.
+    dx = np.diff(x)
+    uniform = not np.any(np.abs(dx-dx[0]) > (abs(dx[0]) / 1000.))
+    if not uniform:
+        x2 = np.linspace(x[0], x[-1], len(x))
+        y = np.interp(x2, x, y)
+        x = x2
+    n = y.size
+    f = np.fft.rfft(y) / n
+    d = float(x[-1]-x[0]) / (len(x)-1)
+    x = np.fft.rfftfreq(n, d)
+    y = np.abs(f)
+    return x, y
+
+
 class PlotItem(GraphicsWidget):
     """GraphicsWidget implementing a standard 2D plotting area with axes.
 
@@ -263,31 +281,37 @@ class PlotItem(GraphicsWidget):
         # TODO grow this widget to match number of items; give it minimum a size
         submenu = self.ctrl.transformGroup
         layout = self.ctrl.gridLayout
+
         self._transforms = {
             "fft": {
                 "text": "Power Spectrum (FFT)",
                 "toggleCallback": self.updateSpectrumMode,
                 "checkbox": QtWidgets.QCheckBox(submenu),
+                "dataTransform": _fourierTransform,
             },
             "logX": {
                 "text": "Log X",
                 "toggleCallback": self.updateLogXMode,
                 "checkbox": QtWidgets.QCheckBox(submenu),
+                "dataTransform": lambda x, y: (x, y),
             },
             "logY": {
                 "text": "Log Y",
                 "toggleCallback": self.updateLogYMode,
                 "checkbox": QtWidgets.QCheckBox(submenu),
+                "dataTransform": lambda x, y: (x, y),
             },
             "derivative": {
                 "text": "dx/dy",
                 "toggleCallback": self.updateDerivativeMode,
                 "checkbox": QtWidgets.QCheckBox(submenu),
+                "dataTransform": lambda x, y: (x[:-1], np.diff(y) / np.diff(x)),
             },
             "phasemap": {
                 "text": "Y vs. Y'",
                 "toggleCallback": self.updatePhasemapMode,
                 "checkbox": QtWidgets.QCheckBox(submenu),
+                "dataTransform": lambda x, y: (y[:-1], np.diff(y) / np.diff(x)),
             },
         }
         for row, name in enumerate(self._transforms):
@@ -943,6 +967,11 @@ class PlotItem(GraphicsWidget):
     def updateSpectrumMode(self, checked):
         for c in self.curves:
             c.setFftMode(checked)
+            if hasattr(c, "addDataTransform"):
+                if checked:
+                    c.addDataTransform("fft", self._transforms["fft"]["dataTransform"])
+                else:
+                    c.removeDataTransform("fft")
         self.enableAutoRange()
         self.recomputeAverages()
             
@@ -960,6 +989,15 @@ class PlotItem(GraphicsWidget):
         for i in self.items:
             if hasattr(i, 'setLogMode'):
                 i.setLogMode(x, y)
+            if hasattr(i, "addDataTransform"):
+                if x:
+                    i.addDataTransform("logX", self._transforms["logX"]["dataTransform"])
+                else:
+                    i.removeDataTransform("logX")
+                if y:
+                    i.addDataTransform("logY", self._transforms["logY"]["dataTransform"])
+                else:
+                    i.removeDataTransform("logY")
         self.getAxis('bottom').setLogMode(x, y)
         self.getAxis('top').setLogMode(x, y)
         self.getAxis('left').setLogMode(x, y)
@@ -971,6 +1009,11 @@ class PlotItem(GraphicsWidget):
         for i in self.items:
             if hasattr(i, 'setDerivativeMode'):
                 i.setDerivativeMode(checked)
+            if hasattr(i, "addDataTransform"):
+                if checked:
+                    i.addDataTransform("derivative", self._transforms["derivative"]["dataTransform"])
+                else:
+                    i.removeDataTransform("derivative")
         self.enableAutoRange()
         self.recomputeAverages()
 
@@ -978,6 +1021,11 @@ class PlotItem(GraphicsWidget):
         for i in self.items:
             if hasattr(i, 'setPhasemapMode'):
                 i.setPhasemapMode(checked)
+            if hasattr(i, "addDataTransform"):
+                if checked:
+                    i.addDataTransform("phasemap", self._transforms["phasemap"]["dataTransform"])
+                else:
+                    i.removeDataTransform("phasemap")
         self.enableAutoRange()
         self.recomputeAverages()
         

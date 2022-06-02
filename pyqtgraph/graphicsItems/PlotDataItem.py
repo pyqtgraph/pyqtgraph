@@ -12,6 +12,7 @@ from .ScatterPlotItem import ScatterPlotItem
 
 __all__ = ['PlotDataItem']
 
+
 class PlotDataset(object):
     """
     :orphan:
@@ -118,7 +119,8 @@ class PlotDataset(object):
                 all_y_finite = True
         if all_x_finite and all_y_finite: 
             self.containsNonfinite = False # mark as False only if both axes were checked.
-        
+
+
 class PlotDataItem(GraphicsObject):
     """
     **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
@@ -301,6 +303,7 @@ class PlotDataItem(GraphicsObject):
         self._dataset        = None # will hold a PlotDataset for the original data
         self._datasetMapped  = None # will hold a PlotDataset for data after mapping transforms (e.g. log scale)
         self._datasetDisplay = None # will hold a PlotDataset for data downsampled and limited for display
+        self._transforms = {}
         self.curve = PlotCurveItem()
         self.scatter = ScatterPlotItem()
         self.curve.setParentItem(self)
@@ -406,6 +409,15 @@ class PlotDataItem(GraphicsObject):
         self.opts['alphaMode'] = auto
         self.setOpacity(alpha)
         #self.update()
+
+    def addDataTransform(self, name, func):
+        self._transforms[name] = func
+        self.noticeDataTransform()
+
+    def removeDataTransform(self, name):
+        if name in self._transforms:
+            del self._transforms[name]
+            self.noticeDataTransform()
 
     def noticeDataTransform(self):
         self._datasetMapped = None
@@ -913,8 +925,8 @@ class PlotDataItem(GraphicsObject):
             not (self.property('yViewRangeWasChanged') and self.opts['dynamicRangeLimit'] is not None)
         ):
             return self._datasetDisplay
-        
-        # Apply data mapping functions if mapped dataset is not yet available: 
+
+        # Apply data mapping functions if mapped dataset is not yet available:
         if self._datasetMapped is None:
             x = self._dataset.x
             y = self._dataset.y
@@ -923,14 +935,8 @@ class PlotDataItem(GraphicsObject):
             if x.dtype == bool:
                 x = x.astype(np.uint8)
 
-            if self.opts['fftMode']:
-                x, y = self._fourierTransform(x, y)
-            if self.opts['derivativeMode']:  # plot dV/dt
-                y = np.diff(self._dataset.y)/np.diff(self._dataset.x)
-                x = x[:-1]
-            if self.opts['phasemapMode']:  # plot dV/dt vs V
-                x = self._dataset.y[:-1]
-                y = np.diff(self._dataset.y)/np.diff(self._dataset.x)
+            for transform in self._transforms.values():
+                x, y = transform(x, y)
 
             dataset = PlotDataset(x, y)
             dataset.containsNonfinite = self._dataset.containsNonfinite
@@ -1161,22 +1167,7 @@ class PlotDataItem(GraphicsObject):
         if update_needed:
             self.updateItems(styleUpdate=False)
 
-    def _fourierTransform(self, x, y):
-        ## Perform Fourier transform. If x values are not sampled uniformly,
-        ## then use np.interp to resample before taking fft.
-        dx = np.diff(x)
-        uniform = not np.any(np.abs(dx-dx[0]) > (abs(dx[0]) / 1000.))
-        if not uniform:
-            x2 = np.linspace(x[0], x[-1], len(x))
-            y = np.interp(x2, x, y)
-            x = x2
-        n = y.size
-        f = np.fft.rfft(y) / n
-        d = float(x[-1]-x[0]) / (len(x)-1)
-        x = np.fft.rfftfreq(n, d)
-        y = np.abs(f)
-        return x, y
-        
+
 # helper functions:
 def dataType(obj):
     if hasattr(obj, '__len__') and len(obj) == 0:
