@@ -924,12 +924,7 @@ class PlotDataItem(GraphicsObject):
                 x = x.astype(np.uint8)
 
             if self.opts['fftMode']:
-                x,y = self._fourierTransform(x, y)
-                # Ignore the first bin for fft data if we have a logx scale
-                if self.opts['logMode'][0]:
-                    x=x[1:]
-                    y=y[1:]
-
+                x, y = self._fourierTransform(x, y)
             if self.opts['derivativeMode']:  # plot dV/dt
                 y = np.diff(self._dataset.y)/np.diff(self._dataset.x)
                 x = x[:-1]
