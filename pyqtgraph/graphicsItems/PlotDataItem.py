@@ -407,6 +407,12 @@ class PlotDataItem(GraphicsObject):
         self.setOpacity(alpha)
         #self.update()
 
+    def noticeDataTransform(self):
+        self._datasetMapped = None
+        self._datasetDisplay = None
+        self.updateItems(styleUpdate=False)
+        self.informViewBoundsChanged()
+
     def setFftMode(self, state):
         """
         ``state = True`` enables mapping the data by a fast Fourier transform.
@@ -416,10 +422,7 @@ class PlotDataItem(GraphicsObject):
         if self.opts['fftMode'] == state:
             return
         self.opts['fftMode'] = state
-        self._datasetMapped  = None
-        self._datasetDisplay = None
-        self.updateItems(styleUpdate=False)
-        self.informViewBoundsChanged()
+        self.noticeDataTransform()
 
     def setLogMode(self, xState, yState):
         """
@@ -431,10 +434,7 @@ class PlotDataItem(GraphicsObject):
         if self.opts['logMode'] == [xState, yState]:
             return
         self.opts['logMode'] = [xState, yState]
-        self._datasetMapped  = None  # invalidate mapped data
-        self._datasetDisplay = None  # invalidate display data
-        self.updateItems(styleUpdate=False)
-        self.informViewBoundsChanged()
+        self.noticeDataTransform()
 
     def setDerivativeMode(self, state):
         """
@@ -445,10 +445,7 @@ class PlotDataItem(GraphicsObject):
         if self.opts['derivativeMode'] == state:
             return
         self.opts['derivativeMode'] = state
-        self._datasetMapped  = None  # invalidate mapped data
-        self._datasetDisplay = None  # invalidate display data
-        self.updateItems(styleUpdate=False)
-        self.informViewBoundsChanged()
+        self.noticeDataTransform()
 
     def setPhasemapMode(self, state):
         """
@@ -460,10 +457,7 @@ class PlotDataItem(GraphicsObject):
         if self.opts['phasemapMode'] == state:
             return
         self.opts['phasemapMode'] = state
-        self._datasetMapped  = None  # invalidate mapped data
-        self._datasetDisplay = None  # invalidate display data
-        self.updateItems(styleUpdate=False)
-        self.informViewBoundsChanged()
+        self.noticeDataTransform()
 
     def setPointMode(self, state):
         # This does not seem to do anything, but PlotItem still seems to call it.
@@ -904,7 +898,6 @@ class PlotDataItem(GraphicsObject):
         else: # ...hide if not.
             self.scatter.hide()
 
-
     def getDisplayDataset(self):
         """
         Returns a :class:`PlotDataset <pyqtgraph.PlotDataset>` object that contains data suitable for display 
@@ -944,7 +937,7 @@ class PlotDataItem(GraphicsObject):
                 x = self._dataset.y[:-1]
                 y = np.diff(self._dataset.y)/np.diff(self._dataset.x)
 
-            dataset = PlotDataset(x,y)
+            dataset = PlotDataset(x, y)
             dataset.containsNonfinite = self._dataset.containsNonfinite
             
             if True in self.opts['logMode']:
