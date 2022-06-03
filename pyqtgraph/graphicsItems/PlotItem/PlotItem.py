@@ -30,41 +30,6 @@ ui_template = importlib.import_module(
 __all__ = ['PlotItem']
 
 
-def _logXTransform(x, y):
-    return _quietLogTransform(x), y
-
-
-def _logYTransform(x, y):
-    return x, _quietLogTransform(y)
-
-
-def _quietLogTransform(data):
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)  # divide-by-zero, invalid negatives
-        ret = np.log10(data)
-        nonfinites = ~np.isfinite(ret)
-        if nonfinites.any():
-            ret[nonfinites] = np.nan  # set all non-finite values to NaN
-        return ret
-
-
-def _fourierTransform(x, y):
-    # Perform Fourier transform. If x values are not sampled uniformly,
-    # then use np.interp to resample before taking fft.
-    dx = np.diff(x)
-    uniform = not np.any(np.abs(dx-dx[0]) > (abs(dx[0]) / 1000.))
-    if not uniform:
-        x2 = np.linspace(x[0], x[-1], len(x))
-        y = np.interp(x2, x, y)
-        x = x2
-    n = y.size
-    f = np.fft.rfft(y) / n
-    d = float(x[-1]-x[0]) / (len(x)-1)
-    x = np.fft.rfftfreq(n, d)
-    y = np.abs(f)
-    return x, y
-
-
 class PlotItem(GraphicsWidget):
     """GraphicsWidget implementing a standard 2D plotting area with axes.
 
@@ -121,7 +86,23 @@ class PlotItem(GraphicsWidget):
     sigXRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox X range has changed
         
     lastFileDir = None
-    
+    _defaultTransforms = {}
+
+    @classmethod
+    def addDefaultTransformOption(cls, name, text, dataTransform, updateAxisCallback=None):
+        """TODO"""
+        cls._defaultTransforms[name] = {
+            "text": text,
+            "dataTransform": dataTransform,
+            "updateAxisCallback": updateAxisCallback,
+        }
+
+    @classmethod
+    def removeDefaultTransformOption(cls, name):
+        """TODO"""
+        if name in cls._defaultTransforms:
+            del cls._defaultTransforms[name]
+
     def __init__(self, parent=None, name=None, labels=None, title=None, viewBox=None, axisItems=None, enableMenu=True, **kargs):
         """
         Create a new PlotItem. All arguments are optional.
@@ -205,8 +186,8 @@ class PlotItem(GraphicsWidget):
             self.layout.setColumnStretchFactor(i, 1)
         self.layout.setRowStretchFactor(2, 100)
         self.layout.setColumnStretchFactor(1, 100)
-        
 
+        self._transforms = {}
         self.items = []
         self.curves = []
         self.itemMeta = weakref.WeakKeyDictionary()
@@ -292,46 +273,32 @@ class PlotItem(GraphicsWidget):
             self.plot(**kargs)        
 
     def _setupTransformsSubmenu(self):
-        # TODO decouple these maybe someday
-        # TODO grow this widget to match number of items; give it minimum a size
+        # TODO grow this widget to match number of items; give it minimum size
         submenu = self.ctrl.transformGroup
         layout = self.ctrl.gridLayout
-
-        diff = lambda x, y: (x[:-1], np.diff(y) / np.diff(x))
-        self._transforms = {
-            "fft": {
-                "text": "Power Spectrum (FFT)",
-                "dataTransform": _fourierTransform,
-            },
-            "logX": {
-                "text": "Log X",
-                "dataTransform": _logXTransform,
-                "updateAxisCallback": lambda axis, checked: axis.setLogMode(checked, None)
-            },
-            "logY": {
-                "text": "Log Y",
-                "dataTransform": _logYTransform,
-                "updateAxisCallback": lambda axis, checked: axis.setLogMode(None, checked)
-            },
-            "derivative": {
-                "text": "dy/dx",
-                "dataTransform": diff,
-            },
-            "secondDerivative": {
-                "text": "d²y/dx²",
-                "dataTransform": lambda x, y: diff(*diff(x, y))
-            },
-            "phasemap": {
-                "text": "Y vs. Y'",
-                "dataTransform": lambda x, y: (y[:-1], np.diff(y) / np.diff(x)),
-            },
-        }
+        # TODO sort this out, hey
+        for name, kwargs in self._defaultTransforms.items():
+            self.addTransformOption(name, **kwargs)
         for row, name in enumerate(self._transforms):
             check = self._transforms[name]["checkbox"] = QtWidgets.QCheckBox(submenu)
             check.setObjectName(name)
             check.setText(translate("Form", self._transforms[name]["text"]))
             layout.addWidget(check, row, 0, 1, 1)
             check.toggled.connect(self._updateTransformMode)
+
+    def addTransformOption(self, name, text, dataTransform, updateAxisCallback=None):
+        """TODO"""
+        # TODO validate args at all?
+        self._transforms[name] = {
+            "text": text,
+            "dataTransform": dataTransform,
+            "updateAxisCallback": updateAxisCallback,
+        }
+
+    def removeTransformOption(self, name):
+        """TODO"""
+        if name in self._transforms:
+            del self._transforms[name]
 
     def implements(self, interface=None):
         return interface in ['ViewBoxWrapper']
@@ -990,7 +957,7 @@ class PlotItem(GraphicsWidget):
                     i.addDataTransform(name, self._transforms[name]["dataTransform"])
                 else:
                     i.removeDataTransform(name)
-        if "updateAxisCallback" in self._transforms[name]:
+        if self._transforms[name].get("updateAxisCallback", None) is not None:
             for axis in self.axes.values():
                 self._transforms[name]["updateAxisCallback"](axis["item"], checked)
         self.enableAutoRange()
@@ -1396,3 +1363,59 @@ class PlotItem(GraphicsWidget):
         self.fileDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         self.fileDialog.show()
         self.fileDialog.fileSelected.connect(handler)
+
+
+_diff = lambda x, y: (x[:-1], np.diff(y) / np.diff(x))
+
+
+def _logXTransform(x, y):
+    return _quietLogTransform(x), y
+
+
+def _logYTransform(x, y):
+    return x, _quietLogTransform(y)
+
+
+def _quietLogTransform(data):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)  # divide-by-zero, invalid negatives
+        ret = np.log10(data)
+        nonfinites = ~np.isfinite(ret)
+        if nonfinites.any():
+            ret[nonfinites] = np.nan  # set all non-finite values to NaN
+        return ret
+
+
+def _fourierTransform(x, y):
+    # Perform Fourier transform. If x values are not sampled uniformly,
+    # then use np.interp to resample before taking fft.
+    dx = np.diff(x)
+    uniform = not np.any(np.abs(dx-dx[0]) > (abs(dx[0]) / 1000.))
+    if not uniform:
+        x2 = np.linspace(x[0], x[-1], len(x))
+        y = np.interp(x2, x, y)
+        x = x2
+    n = y.size
+    f = np.fft.rfft(y) / n
+    d = float(x[-1]-x[0]) / (len(x)-1)
+    x = np.fft.rfftfreq(n, d)
+    y = np.abs(f)
+    return x, y
+
+
+PlotItem.addDefaultTransformOption("fft", "Power Spectrum (FFT)", _fourierTransform)
+PlotItem.addDefaultTransformOption(
+    "logX",
+    "Log X",
+    _logXTransform,
+    lambda axis, checked: axis.setLogMode(checked, None),
+)
+PlotItem.addDefaultTransformOption(
+    "logY",
+    "Log Y",
+    _logYTransform,
+    lambda axis, checked: axis.setLogMode(None, checked),
+)
+PlotItem.addDefaultTransformOption("derivative", "dy/dx", _diff)
+PlotItem.addDefaultTransformOption("secondDerivative", "d²y/dx²", lambda x, y: _diff(*_diff(x, y)))
+PlotItem.addDefaultTransformOption("phasemap", "Y vs Y'", lambda x, y: (y[:-1], np.diff(y) / np.diff(x)))
