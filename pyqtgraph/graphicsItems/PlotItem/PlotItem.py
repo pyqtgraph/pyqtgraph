@@ -89,10 +89,17 @@ class PlotItem(GraphicsWidget):
     _defaultTransforms = {}
 
     @classmethod
-    def addDefaultTransformOption(cls, name, text, dataTransform, updateAxisCallback=None):
-        """TODO"""
+    def addDefaultTransformOption(cls, name, dataTransform, updateAxisCallback=None):
+        """TODO
+        See Also
+        --------
+        PlotItem.addTransformOption : For a description of the parameters.
+
+        Notes
+        -----
+        This does not affect already-instantiated plots.
+        """
         cls._defaultTransforms[name] = {
-            "text": text,
             "dataTransform": dataTransform,
             "updateAxisCallback": updateAxisCallback,
         }
@@ -276,31 +283,45 @@ class PlotItem(GraphicsWidget):
         for name, kwargs in self._defaultTransforms.items():
             self.addTransformOption(name, **kwargs)
 
-    def addTransformOption(self, name, text, dataTransform, updateAxisCallback=None):
-        """TODO"""
-        # TODO validate args at all?
-        # TODO do cleanup if name in self._transforms
+    def addTransformOption(self, name, dataTransform, updateAxisCallback=None):
+        """TODO
+        Parameters
+        ----------
+        name : str
+            Unique name for this transform.
+        dataTransform : Callable[[np.ndarray, np.ndarray], [np.ndarray, np.ndarray]]
+            Function which transforms data. Should accept two arguments, `x` and `y`, and it should return the two new
+            data arrays (of equal length!) to be plotted. E.g.::
+                lambda x, y: (x[:-1], np.diff(y) / np.diff(x))
+        updateAxisCallback : Callable[[AxisItem, bool], None], optional
+            Function to call on every axis. First argument is the AxisItem being modified, second argument is whether
+            this particular transform is currently enabled. E.g.::
+                lambda axis, enabled: axis.setLogMode(y=enabled)
+        """
+        # TODO validate args
+        if name in self._transforms:
+            raise ValueError(f"A transform with name '{name}' is already present.")
         self._transforms[name] = {
-            "text": text,
             "dataTransform": dataTransform,
             "updateAxisCallback": updateAxisCallback,
         }
-        row = len(self._transforms)  # TODO Eep! brittle!
+        row = len(self._transforms) - 1  # TODO Eep! brittle!
         check = self._transforms[name]["checkbox"] = QtWidgets.QCheckBox(self.ctrl.transformGroup)
         check.setObjectName(name)
-        check.setText(translate("Form", self._transforms[name]["text"]))
+        check.setText(name)
         self.ctrl.gridLayout.addWidget(check, row, 0, 1, 1)
         check.toggled.connect(self._updateTransformMode)
-        check.setChecked(False)  # TODO verify this triggers the callback and that it's safe to run during __init__
+        check.toggled.emit(False)  # registers with all the data items and axes
 
     def removeTransformOption(self, name):
         """TODO"""
         if name in self._transforms:
             del self._transforms[name]
-        # TODO make sure checkboxes and callbacks get GC'd
+        # TODO make sure checkboxes and signal callbacks get GC'd
         # TODO rebuild menu without changing values
-        # TODO remove data transforms
-        # TODO de-axis-update?
+        # TODO de-register data transforms
+        # TODO de-axis-update
+        # TODO consider: maybe this is too expensive to build and not in spec anyway?
 
     def implements(self, interface=None):
         return interface in ['ViewBoxWrapper']
@@ -398,10 +419,12 @@ class PlotItem(GraphicsWidget):
             self.setLogYMode(y)
 
     def setLogXMode(self, enable):
-        self._transforms["logX"]["checkbox"].setChecked(enable)
+        # TODO deprecate?
+        self._transforms[translate("Form", "Log X")]["checkbox"].setChecked(enable)
 
     def setLogYMode(self, enable):
-        self._transforms["logY"]["checkbox"].setChecked(enable)
+        # TODO deprecate?
+        self._transforms[translate("Form", "Log Y")]["checkbox"].setChecked(enable)
 
     def showGrid(self, x=None, y=None, alpha=None):
         """
@@ -1400,24 +1423,35 @@ def _fourierTransform(x, y):
     n = y.size
     f = np.fft.rfft(y) / n
     d = float(x[-1]-x[0]) / (len(x)-1)
+    # TODO what if this errors?
     x = np.fft.rfftfreq(n, d)
     y = np.abs(f)
     return x, y
 
 
-PlotItem.addDefaultTransformOption("fft", "Power Spectrum (FFT)", _fourierTransform)
 PlotItem.addDefaultTransformOption(
-    "logX",
-    "Log X",
+    translate("Form", "Power Spectrum (FFT)"),
+    _fourierTransform,
+)
+PlotItem.addDefaultTransformOption(
+    translate("Form", "Log X"),
     _logXTransform,
-    lambda axis, checked: axis.setLogMode(checked, None),
+    lambda axis, checked: axis.setLogMode(x=checked),
 )
 PlotItem.addDefaultTransformOption(
-    "logY",
-    "Log Y",
+    translate("Form", "Log Y"),
     _logYTransform,
-    lambda axis, checked: axis.setLogMode(None, checked),
+    lambda axis, checked: axis.setLogMode(y=checked),
 )
-PlotItem.addDefaultTransformOption("derivative", "dy/dx", _diff)
-PlotItem.addDefaultTransformOption("secondDerivative", "d²y/dx²", lambda x, y: _diff(*_diff(x, y)))
-PlotItem.addDefaultTransformOption("phasemap", "Y vs Y'", lambda x, y: (y[:-1], np.diff(y) / np.diff(x)))
+PlotItem.addDefaultTransformOption(
+    translate("Form", "dy/dx"),
+    _diff,
+)
+PlotItem.addDefaultTransformOption(
+    translate("Form", "d²y/dx²"),
+    lambda x, y: _diff(*_diff(x, y)),
+)
+PlotItem.addDefaultTransformOption(
+    translate("Form", "Y vs Y'"),
+    lambda x, y: (y[:-1], np.diff(y) / np.diff(x)),
+)
