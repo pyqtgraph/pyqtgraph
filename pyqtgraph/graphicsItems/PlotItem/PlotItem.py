@@ -293,8 +293,6 @@ class PlotItem(GraphicsWidget):
 
     def _setupTransformsSubmenu(self):
         # TODO decouple these maybe someday
-        self._logXCheckIsChecked = False
-        self._logYCheckIsChecked = False
         # TODO grow this widget to match number of items; give it minimum a size
         submenu = self.ctrl.transformGroup
         layout = self.ctrl.gridLayout
@@ -989,7 +987,6 @@ class PlotItem(GraphicsWidget):
       
     def updateSpectrumMode(self, checked):
         for c in self.curves:
-            c.setFftMode(checked)
             if hasattr(c, "addDataTransform"):
                 if checked:
                     c.addDataTransform("fft", self._transforms["fft"]["dataTransform"])
@@ -999,37 +996,31 @@ class PlotItem(GraphicsWidget):
         self.recomputeAverages()
             
     def updateLogXMode(self, checked):
-        self._logXCheckIsChecked = checked
-        y = self._logYCheckIsChecked
-        self._updateLogMode(checked, y)
-
-    def updateLogYMode(self, checked):
-        self._logYCheckIsChecked = checked
-        x = self._logXCheckIsChecked
-        self._updateLogMode(x, checked)
-
-    def _updateLogMode(self, x, y):
         for i in self.items:
             if hasattr(i, "addDataTransform"):
-                if x:
+                if checked:
                     i.addDataTransform("logX", self._transforms["logX"]["dataTransform"])
                 else:
                     i.removeDataTransform("logX")
-                if y:
+        self.getAxis('bottom').setLogMode(checked)
+        self.getAxis('top').setLogMode(checked)
+        self.enableAutoRange()
+        self.recomputeAverages()
+
+    def updateLogYMode(self, checked):
+        for i in self.items:
+            if hasattr(i, "addDataTransform"):
+                if checked:
                     i.addDataTransform("logY", self._transforms["logY"]["dataTransform"])
                 else:
                     i.removeDataTransform("logY")
-        self.getAxis('bottom').setLogMode(x, y)
-        self.getAxis('top').setLogMode(x, y)
-        self.getAxis('left').setLogMode(x, y)
-        self.getAxis('right').setLogMode(x, y)
+        self.getAxis('left').setLogMode(checked)
+        self.getAxis('right').setLogMode(checked)
         self.enableAutoRange()
         self.recomputeAverages()
-    
+
     def updateDerivativeMode(self, checked):
         for i in self.items:
-            if hasattr(i, 'setDerivativeMode'):
-                i.setDerivativeMode(checked)
             if hasattr(i, "addDataTransform"):
                 if checked:
                     i.addDataTransform("derivative", self._transforms["derivative"]["dataTransform"])
@@ -1040,8 +1031,6 @@ class PlotItem(GraphicsWidget):
 
     def updatePhasemapMode(self, checked):
         for i in self.items:
-            if hasattr(i, 'setPhasemapMode'):
-                i.setPhasemapMode(checked)
             if hasattr(i, "addDataTransform"):
                 if checked:
                     i.addDataTransform("phasemap", self._transforms["phasemap"]["dataTransform"])
