@@ -49,8 +49,8 @@ def _quietLogTransform(data):
 
 
 def _fourierTransform(x, y):
-    ## Perform Fourier transform. If x values are not sampled uniformly,
-    ## then use np.interp to resample before taking fft.
+    # Perform Fourier transform. If x values are not sampled uniformly,
+    # then use np.interp to resample before taking fft.
     dx = np.diff(x)
     uniform = not np.any(np.abs(dx-dx[0]) > (abs(dx[0]) / 1000.))
     if not uniform:
@@ -297,46 +297,41 @@ class PlotItem(GraphicsWidget):
         submenu = self.ctrl.transformGroup
         layout = self.ctrl.gridLayout
 
+        diff = lambda x, y: (x[:-1], np.diff(y) / np.diff(x))
         self._transforms = {
             "fft": {
                 "text": "Power Spectrum (FFT)",
-                "toggleCallback": self.updateSpectrumMode,
-                "checkbox": QtWidgets.QCheckBox(submenu),
                 "dataTransform": _fourierTransform,
             },
             "logX": {
                 "text": "Log X",
-                "toggleCallback": self.updateLogXMode,
-                "checkbox": QtWidgets.QCheckBox(submenu),
                 "dataTransform": _logXTransform,
                 "updateAxisCallback": lambda axis, checked: axis.setLogMode(checked, None)
             },
             "logY": {
                 "text": "Log Y",
-                "toggleCallback": self.updateLogYMode,
-                "checkbox": QtWidgets.QCheckBox(submenu),
                 "dataTransform": _logYTransform,
                 "updateAxisCallback": lambda axis, checked: axis.setLogMode(None, checked)
             },
             "derivative": {
-                "text": "dx/dy",
-                "toggleCallback": self.updateDerivativeMode,
-                "checkbox": QtWidgets.QCheckBox(submenu),
-                "dataTransform": lambda x, y: (x[:-1], np.diff(y) / np.diff(x)),
+                "text": "dy/dx",
+                "dataTransform": diff,
+            },
+            "secondDerivative": {
+                "text": "d²y/dx²",
+                "dataTransform": lambda x, y: diff(*diff(x, y))
             },
             "phasemap": {
                 "text": "Y vs. Y'",
-                "toggleCallback": self.updatePhasemapMode,
-                "checkbox": QtWidgets.QCheckBox(submenu),
                 "dataTransform": lambda x, y: (y[:-1], np.diff(y) / np.diff(x)),
             },
         }
         for row, name in enumerate(self._transforms):
-            check = self._transforms[name]["checkbox"]
-            check.setObjectName(f"{name}Check")
+            check = self._transforms[name]["checkbox"] = QtWidgets.QCheckBox(submenu)
+            check.setObjectName(name)
             check.setText(translate("Form", self._transforms[name]["text"]))
             layout.addWidget(check, row, 0, 1, 1)
-            check.toggled.connect(self._transforms[name]["toggleCallback"])
+            check.toggled.connect(self._updateTransformMode)
 
     def implements(self, interface=None):
         return interface in ['ViewBoxWrapper']
@@ -987,7 +982,8 @@ class PlotItem(GraphicsWidget):
     def widgetGroupInterface(self):
         return (None, PlotItem.saveState, PlotItem.restoreState)
 
-    def _updateTransformMode(self, name, checked):
+    def _updateTransformMode(self, checked):
+        name = self.sender().objectName()
         for i in self.items:
             if hasattr(i, "addDataTransform"):
                 if checked:
@@ -999,21 +995,6 @@ class PlotItem(GraphicsWidget):
                 self._transforms[name]["updateAxisCallback"](axis["item"], checked)
         self.enableAutoRange()
         self.recomputeAverages()
-
-    def updateSpectrumMode(self, checked):
-        self._updateTransformMode("fft", checked)
-
-    def updateLogXMode(self, checked):
-        self._updateTransformMode("logX", checked)
-
-    def updateLogYMode(self, checked):
-        self._updateTransformMode("logY", checked)
-
-    def updateDerivativeMode(self, checked):
-        self._updateTransformMode("derivative", checked)
-
-    def updatePhasemapMode(self, checked):
-        self._updateTransformMode("phasemap", checked)
 
     def setDownsampling(self, ds=None, auto=None, mode=None):
         """
