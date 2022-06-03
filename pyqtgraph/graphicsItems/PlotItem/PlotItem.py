@@ -273,32 +273,34 @@ class PlotItem(GraphicsWidget):
             self.plot(**kargs)        
 
     def _setupTransformsSubmenu(self):
-        # TODO grow this widget to match number of items; give it minimum size
-        submenu = self.ctrl.transformGroup
-        layout = self.ctrl.gridLayout
-        # TODO sort this out, hey
         for name, kwargs in self._defaultTransforms.items():
             self.addTransformOption(name, **kwargs)
-        for row, name in enumerate(self._transforms):
-            check = self._transforms[name]["checkbox"] = QtWidgets.QCheckBox(submenu)
-            check.setObjectName(name)
-            check.setText(translate("Form", self._transforms[name]["text"]))
-            layout.addWidget(check, row, 0, 1, 1)
-            check.toggled.connect(self._updateTransformMode)
 
     def addTransformOption(self, name, text, dataTransform, updateAxisCallback=None):
         """TODO"""
         # TODO validate args at all?
+        # TODO do cleanup if name in self._transforms
         self._transforms[name] = {
             "text": text,
             "dataTransform": dataTransform,
             "updateAxisCallback": updateAxisCallback,
         }
+        row = len(self._transforms)  # TODO Eep! brittle!
+        check = self._transforms[name]["checkbox"] = QtWidgets.QCheckBox(self.ctrl.transformGroup)
+        check.setObjectName(name)
+        check.setText(translate("Form", self._transforms[name]["text"]))
+        self.ctrl.gridLayout.addWidget(check, row, 0, 1, 1)
+        check.toggled.connect(self._updateTransformMode)
+        check.setChecked(False)  # TODO verify this triggers the callback and that it's safe to run during __init__
 
     def removeTransformOption(self, name):
         """TODO"""
         if name in self._transforms:
             del self._transforms[name]
+        # TODO make sure checkboxes and callbacks get GC'd
+        # TODO rebuild menu without changing values
+        # TODO remove data transforms
+        # TODO de-axis-update?
 
     def implements(self, interface=None):
         return interface in ['ViewBoxWrapper']
