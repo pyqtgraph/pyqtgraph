@@ -11,6 +11,7 @@ import contextlib
 import cProfile
 import gc
 import inspect
+import logging
 import os
 import re
 import sys
@@ -37,6 +38,7 @@ if sys.version.startswith("3.8") and QT_LIB == "PySide2":
         )
 from .util.mutex import Mutex
 
+logger = logging.getLogger(__name__)
 
 # credit to Wolph: https://stackoverflow.com/a/17603000
 @contextlib.contextmanager
@@ -484,7 +486,94 @@ class GarbageWatcher(object):
     def __getitem__(self, item):
         return self.objs[item]
 
-    
+
+
+class Context:
+    SCOPE_ENTRY = "ENTRY"
+    SCOPE_EXIT = "EXIT"
+    PROFILE = "PROFILE"
+
+
+class DisabledProfiler:
+    def __init__(self, *args, **kwds):
+        pass
+
+    def __call__(self, *args):
+        pass
+
+    def finish(self):
+        pass
+
+    def mark(self, msg=None):
+        pass
+
+
+class LogFormatter(logging.Formatter):
+    formatMapping = {
+        Context.SCOPE_ENTRY: "> Entering {fn_name}",
+        Context.SCOPE_EXIT: "< Exiting {fn_name}, total time: {time_ms:0.4f}ms",
+        Context.PROFILE: "  {msg}: {time_ms:0.4f}ms",
+    }
+
+    def __init__(self, *args, **kwds):
+        super().__init__(*args, **kwds)
+
+    def format(self, record):
+        if hasattr(record, "context") and record.context in self.formatMapping:
+            spacePrefix = " " * (record.depth - 1)
+            record.msg = spacePrefix + self.formatMapping[record.context].format(
+                **record.__dict__
+            )
+        return super().format(record)
+
+
+class LogHandler(logging.StreamHandler):
+    def __init__(self, *args, **kwds):
+        super().__init__(*args, **kwds)
+        self.setFormatter(LogFormatter())
+
+
+class TimeFilter(logging.Filter):
+    def __init__(self, timeThresholdMs, minDepth=0, name=""):
+        super().__init__(name)
+        self.timeThresholdMs = timeThresholdMs
+        self.minDepth = minDepth
+        self._capturedRecords = []
+
+    def filter(self, record):
+        if (
+            hasattr(record, "force_log")
+            and record.force_log
+            or not hasattr(record, "context")
+            or record.depth < self.minDepth
+        ):
+            return super().filter(record)
+        if record.time_ms > self.timeThresholdMs:
+            # Finally guaranteed everything at this depth can be released
+            self.logCapturedRecords()
+            # Let the most recent record be logged as usual
+            return True
+        elif record.context == Context.SCOPE_EXIT:
+            # If we are exiting a scope, we can release everything at this depth
+            # since the time threshold failed
+            self.keepRecordsBelowDepth(record.depth)
+            return False
+        elif record.context == Context.SCOPE_ENTRY:
+            # Keep new entries until seeing their exit
+            # If nesting should be removed, we can remove cases of multiple entries
+            # in a row
+            self._capturedRecords.append(record)
+            return False
+
+    def logCapturedRecords(self):
+        for rec in self._capturedRecords:
+            if rec.context == Context.SCOPE_ENTRY:
+                rec.force_log = True
+                logger.handle(rec)
+        self._capturedRecords.clear()
+
+    def keepRecordsBelowDepth(self, depth):
+        self._capturedRecords = [r for r in self._capturedRecords if r.depth < depth]
 
 
 class Profiler(object):
@@ -517,41 +606,39 @@ class Profiler(object):
     only the initial "pyqtgraph." prefix from the module.
     """
 
+    _disabledProfiler = DisabledProfiler()
+
     _profilers = os.environ.get("PYQTGRAPHPROFILE", None)
     _profilers = _profilers.split(",") if _profilers is not None else []
-    
+
     _depth = 0
-    _msgs = []
     disable = False  # set this flag to disable all or individual profilers at runtime
-    
-    class DisabledProfiler(object):
-        def __init__(self, *args, **kwds):
-            pass
-        def __call__(self, *args):
-            pass
-        def finish(self):
-            pass
-        def mark(self, msg=None):
-            pass
-    _disabledProfiler = DisabledProfiler()
-        
-    def __new__(cls, msg=None, disabled='env', delayed=True):
-        """Optionally create a new profiler based on caller's qualname.
+    _msgs = []
+
+    handler = LogHandler()
+    logger.addHandler(handler)
+
+    def __new__(
+        cls,
+        msg=None,
+        disabled="env",
+        delayed=True,
+        timeThresholdMs=None,
+        scopeLogLevel=logging.DEBUG,
+        profileLogLevel=logging.INFO,
+    ):
         """
-        if disabled is True or (disabled == 'env' and len(cls._profilers) == 0):
+        Optionally create a new profiler based on caller's qualname.
+        """
+        if disabled is True or (disabled == "env" and len(cls._profilers) == 0):
             return cls._disabledProfiler
-                        
-        # determine the qualified name of the caller function
-        caller_frame = sys._getframe(1)
-        try:
-            caller_object_type = type(caller_frame.f_locals["self"])
-        except KeyError: # we are in a regular function
-            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[-1]
-        else: # we are in a method
-            qualifier = caller_object_type.__name__
-        func_qualname = qualifier + "." + caller_frame.f_code.co_name
-        if disabled == 'env' and func_qualname not in cls._profilers: # don't do anything
+
+        func_qualname = cls._getCallerName()
+        if (
+            disabled == "env" and func_qualname not in cls._profilers
+        ):  # don't do anything
             return cls._disabledProfiler
+
         # create an actual profiling object
         cls._depth += 1
         obj = super(Profiler, cls).__new__(cls)
@@ -560,54 +647,95 @@ class Profiler(object):
         obj._markCount = 0
         obj._finished = False
         obj._firstTime = obj._lastTime = perf_counter()
-        obj._newMsg("> Entering " + obj._name)
+
+        obj._scopeLogLevel = scopeLogLevel
+        obj._profileLogLevel = profileLogLevel
+        obj._timeThresholdFilter = None
+        if timeThresholdMs is not None:
+            # Can't filter out messages by time unless a delay is allowed
+            obj._timeThresholdFilter = TimeFilter(timeThresholdMs, obj._depth)
+            cls.handler.addFilter(obj._timeThresholdFilter)
+            obj._delayed = True
+
+        obj._logAndUpdateTime(context=Context.SCOPE_ENTRY)
         return obj
 
-    def __call__(self, msg=None):
-        """Register or print a new message with timing information.
+    @staticmethod
+    def _getCallerName(frame=2):
         """
-        if self.disable:
+        determine the qualified name of the caller function. "Frame" defaults to 2 since
+        this function is called by __new__
+        """
+        caller_frame = sys._getframe(frame)
+        try:
+            caller_object_type = type(caller_frame.f_locals["self"])
+        except KeyError:  # we are in a regular function
+            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[-1]
+        else:  # we are in a method
+            qualifier = caller_object_type.__name__
+        return qualifier + "." + caller_frame.f_code.co_name
+
+    def _logAndUpdateTime(self, msg=None, context=Context.PROFILE):
+        """
+        Logs a message with profile attributes such as object name & profiled time + context.
+        """
+        newTime = perf_counter()
+        cmpTime = self._firstTime if context == Context.SCOPE_EXIT else self._lastTime
+        extras = dict(
+            fn_name=self._name,
+            time_ms=(newTime - cmpTime) * 1000,
+            context=context,
+            depth=self._depth,
+        )
+        level = (
+            self._profileLogLevel if context == Context.PROFILE else self._scopeLogLevel
+        )
+        self._lastTime = newTime
+
+        # If we are delayed, msg must be put on the bottom of the message stacked. If we aren't
+        # delayed, the message will print anyway with the call to "flush" below
+        self._msgs.append((level, msg, extras))
+        if not self._delayed:
+            self.flush()
+
+    def __call__(self, msg=None):
+        """
+        Register or print a new message with timing information
+        """
+        if self._finished or self.disable:
             return
         if msg is None:
             msg = str(self._markCount)
         self._markCount += 1
-        newTime = perf_counter()
-        self._newMsg("  %s: %0.4f ms", 
-                     msg, (newTime - self._lastTime) * 1000)
-        self._lastTime = newTime
-        
-    def mark(self, msg=None):
-        self(msg)
+        self._logAndUpdateTime(msg)
 
-    def _newMsg(self, msg, *args):
-        msg = "  " * (self._depth - 1) + msg
-        if self._delayed:
-            self._msgs.append((msg, args))
-        else:
-            self.flush()
-            print(msg % args)
+    mark = __call__
+
+    def finish(self, msg=None):
+        """
+        Finish profiling and log the results.
+        """
+        if self._finished or self.disable:
+            return
+        self._finished = True
+        if msg is not None:
+            self._logAndUpdateTime(msg)
+        self._logAndUpdateTime(context=Context.SCOPE_EXIT)
+        type(self)._depth -= 1
+        self.flush()
+        # "None" will be ignored by the handler if no threshold was set
+        self.handler.removeFilter(self._timeThresholdFilter)
+
+    def flush(self):
+        """
+        Flush delayed messages.
+        """
+        for level, msg, extras in self._msgs:
+            logger.log(level, msg, extra=extras)
+        self._msgs.clear()
 
     def __del__(self):
         self.finish()
-    
-    def finish(self, msg=None):
-        """Add a final message; flush the message list if no parent profiler.
-        """
-        if self._finished or self.disable:
-            return        
-        self._finished = True
-        if msg is not None:
-            self(msg)
-        self._newMsg("< Exiting %s, total time: %0.4f ms", 
-                     self._name, (perf_counter() - self._firstTime) * 1000)
-        type(self)._depth -= 1
-        if self._depth < 1:
-            self.flush()
-        
-    def flush(self):
-        if self._msgs:
-            print("\n".join([m[0]%m[1] for m in self._msgs]))
-            type(self)._msgs = []
 
 
 def profile(code, name='profile_run', sort='cumulative', num=30):
