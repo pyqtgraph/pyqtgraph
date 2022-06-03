@@ -30,6 +30,23 @@ ui_template = importlib.import_module(
 __all__ = ['PlotItem']
 
 
+def _logXTransform(x, y):
+    return _quietLogTransform(x), y
+
+
+def _logYTransform(x, y):
+    return x, _quietLogTransform(y)
+
+
+def _quietLogTransform(data):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)  # divide-by-zero, invalid negatives
+        ret = np.log10(data)
+        nonfinites = ~np.isfinite(ret)
+        if nonfinites.any():
+            ret[nonfinites] = np.nan  # set all non-finite values to NaN
+        return ret
+
 
 def _fourierTransform(x, y):
     ## Perform Fourier transform. If x values are not sampled uniformly,
@@ -293,13 +310,13 @@ class PlotItem(GraphicsWidget):
                 "text": "Log X",
                 "toggleCallback": self.updateLogXMode,
                 "checkbox": QtWidgets.QCheckBox(submenu),
-                "dataTransform": lambda x, y: (x, y),
+                "dataTransform": _logXTransform,
             },
             "logY": {
                 "text": "Log Y",
                 "toggleCallback": self.updateLogYMode,
                 "checkbox": QtWidgets.QCheckBox(submenu),
-                "dataTransform": lambda x, y: (x, y),
+                "dataTransform": _logYTransform,
             },
             "derivative": {
                 "text": "dx/dy",
@@ -412,10 +429,16 @@ class PlotItem(GraphicsWidget):
         
         """
         if x is not None:
-            self._transforms["logX"]["checkbox"].setChecked(x)
+            self.setLogXMode(x)
         if y is not None:
-            self._transforms["logY"]["checkbox"].setChecked(y)
-        
+            self.setLogYMode(y)
+
+    def setLogXMode(self, enable):
+        self._transforms["logX"]["checkbox"].setChecked(enable)
+
+    def setLogYMode(self, enable):
+        self._transforms["logY"]["checkbox"].setChecked(enable)
+
     def showGrid(self, x=None, y=None, alpha=None):
         """
         Show or hide the grid for either axis.
@@ -987,8 +1010,6 @@ class PlotItem(GraphicsWidget):
 
     def _updateLogMode(self, x, y):
         for i in self.items:
-            if hasattr(i, 'setLogMode'):
-                i.setLogMode(x, y)
             if hasattr(i, "addDataTransform"):
                 if x:
                     i.addDataTransform("logX", self._transforms["logX"]["dataTransform"])

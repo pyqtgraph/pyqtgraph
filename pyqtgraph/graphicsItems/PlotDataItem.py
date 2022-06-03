@@ -44,7 +44,7 @@ class PlotDataset(object):
         
     def _updateDataRect(self):
         """ 
-        Finds bounds of plotable data and stores them as ``dataset._dataRect``, 
+        Finds bounds of plottable data and stores them as ``dataset._dataRect``,
         stores information about the presence of nonfinite data points.
             """
         if self.y is None or self.x is None:
@@ -83,42 +83,6 @@ class PlotDataset(object):
         if self._dataRect is None: 
             self._updateDataRect()
         return self._dataRect
-
-    def applyLogMapping(self, logMode):
-        """
-        Applies a logarithmic mapping transformation (base 10) if requested for the respective axis.
-        This replaces the internal data. Values of ``-inf`` resulting from zeros in the original dataset are
-        replaced by ``np.NaN``.
-        
-        Parameters
-        ----------
-        logmode: tuple or list of two bool
-            A `True` value requests log-scale mapping for the x and y axis (in this order).
-        """
-        all_x_finite = False
-        if logMode[0]:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", RuntimeWarning)
-                self.x = np.log10(self.x)
-            nonfinites = ~np.isfinite( self.x )
-            if nonfinites.any():
-                self.x[nonfinites] = np.nan # set all non-finite values to NaN
-                self.containsNonfinite = True
-            else:
-                all_x_finite = True
-        all_y_finite = False
-        if logMode[1]:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", RuntimeWarning)
-                self.y = np.log10(self.y)
-            nonfinites = ~np.isfinite( self.y )
-            if nonfinites.any():
-                self.y[nonfinites] = np.nan # set all non-finite values to NaN
-                self.containsNonfinite = True
-            else:
-                all_y_finite = True
-        if all_x_finite and all_y_finite: 
-            self.containsNonfinite = False # mark as False only if both axes were checked.
 
 
 class PlotDataItem(GraphicsObject):
@@ -940,12 +904,9 @@ class PlotDataItem(GraphicsObject):
 
             dataset = PlotDataset(x, y)
             dataset.containsNonfinite = self._dataset.containsNonfinite
-            
-            if True in self.opts['logMode']:
-                dataset.applyLogMapping( self.opts['logMode'] ) # Apply log scaling for x and/or y axis
 
             self._datasetMapped = dataset
-        
+
         # apply processing that affects the on-screen display of data:
         x = self._datasetMapped.x
         y = self._datasetMapped.y
