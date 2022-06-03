@@ -309,12 +309,14 @@ class PlotItem(GraphicsWidget):
                 "toggleCallback": self.updateLogXMode,
                 "checkbox": QtWidgets.QCheckBox(submenu),
                 "dataTransform": _logXTransform,
+                "updateAxisCallback": lambda axis, checked: axis.setLogMode(checked, None)
             },
             "logY": {
                 "text": "Log Y",
                 "toggleCallback": self.updateLogYMode,
                 "checkbox": QtWidgets.QCheckBox(submenu),
                 "dataTransform": _logYTransform,
+                "updateAxisCallback": lambda axis, checked: axis.setLogMode(None, checked)
             },
             "derivative": {
                 "text": "dx/dy",
@@ -984,62 +986,35 @@ class PlotItem(GraphicsWidget):
 
     def widgetGroupInterface(self):
         return (None, PlotItem.saveState, PlotItem.restoreState)
-      
-    def updateSpectrumMode(self, checked):
-        for c in self.curves:
-            if hasattr(c, "addDataTransform"):
-                if checked:
-                    c.addDataTransform("fft", self._transforms["fft"]["dataTransform"])
-                else:
-                    c.removeDataTransform("fft")
-        self.enableAutoRange()
-        self.recomputeAverages()
-            
-    def updateLogXMode(self, checked):
+
+    def _updateTransformMode(self, name, checked):
         for i in self.items:
             if hasattr(i, "addDataTransform"):
                 if checked:
-                    i.addDataTransform("logX", self._transforms["logX"]["dataTransform"])
+                    i.addDataTransform(name, self._transforms[name]["dataTransform"])
                 else:
-                    i.removeDataTransform("logX")
-        self.getAxis('bottom').setLogMode(checked)
-        self.getAxis('top').setLogMode(checked)
+                    i.removeDataTransform(name)
+        if "updateAxisCallback" in self._transforms[name]:
+            for axis in self.axes.values():
+                self._transforms[name]["updateAxisCallback"](axis["item"], checked)
         self.enableAutoRange()
         self.recomputeAverages()
+
+    def updateSpectrumMode(self, checked):
+        self._updateTransformMode("fft", checked)
+
+    def updateLogXMode(self, checked):
+        self._updateTransformMode("logX", checked)
 
     def updateLogYMode(self, checked):
-        for i in self.items:
-            if hasattr(i, "addDataTransform"):
-                if checked:
-                    i.addDataTransform("logY", self._transforms["logY"]["dataTransform"])
-                else:
-                    i.removeDataTransform("logY")
-        self.getAxis('left').setLogMode(checked)
-        self.getAxis('right').setLogMode(checked)
-        self.enableAutoRange()
-        self.recomputeAverages()
+        self._updateTransformMode("logY", checked)
 
     def updateDerivativeMode(self, checked):
-        for i in self.items:
-            if hasattr(i, "addDataTransform"):
-                if checked:
-                    i.addDataTransform("derivative", self._transforms["derivative"]["dataTransform"])
-                else:
-                    i.removeDataTransform("derivative")
-        self.enableAutoRange()
-        self.recomputeAverages()
+        self._updateTransformMode("derivative", checked)
 
     def updatePhasemapMode(self, checked):
-        for i in self.items:
-            if hasattr(i, "addDataTransform"):
-                if checked:
-                    i.addDataTransform("phasemap", self._transforms["phasemap"]["dataTransform"])
-                else:
-                    i.removeDataTransform("phasemap")
-        self.enableAutoRange()
-        self.recomputeAverages()
-        
-        
+        self._updateTransformMode("phasemap", checked)
+
     def setDownsampling(self, ds=None, auto=None, mode=None):
         """
         Changes the default downsampling mode for all :class:`~pyqtgraph.PlotDataItem` managed by this plot.
