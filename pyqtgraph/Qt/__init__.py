@@ -396,6 +396,8 @@ if QT_LIB in [PYQT5, PYQT6]:
     compat.unwrapinstance = sip.unwrapinstance
     compat.voidptr = sip.voidptr
 
+from . import internals
+
 # USE_XXX variables are deprecated
 USE_PYSIDE = QT_LIB == PYSIDE
 USE_PYQT4 = QT_LIB == PYQT4
