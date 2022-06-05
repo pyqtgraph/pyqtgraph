@@ -1,5 +1,8 @@
 # This Python file uses the following encoding: utf-8
 """
+Glow
+====
+
 This example demonstrates how to makes your plotDataItem glow.
 This is strongly inspired by this repository:
 https://github.com/dhaitz/mplcyberpunk
