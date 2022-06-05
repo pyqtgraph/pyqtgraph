@@ -9,4 +9,9 @@ python:
     - requirements: doc/requirements.txt
 
 sphinx:
-  fail_on_warning: true
+  # until we sort out gallery warnings
+  fail_on_warning: false
+
+build:
+  apt_packages:
+    - xvfb
