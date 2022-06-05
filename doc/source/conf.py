@@ -110,14 +110,16 @@ autodoc_mock_imports = [
     "matplotlib",
 ]
 
+# PyQt6 seems to work the best
+# C++ object deleted... msgs seem to be more warnings, renders usually look ok
 runlist = [
     "Arrow",
     "BarGraphItem",
     "beeswarm",
     "CLIexample",
-    "ColorBarItem",
+    "ColorBarItem",  # internal c++ object (viewbox) already deleted
     "ColorButton",
-    "ColorGradientPlots",
+    # "ColorGradientPlots",  # not a particularly good example, need to wait to scroll
     "colorMapsLinearized",
     "colorMaps",
     "ConsoleWidget",
@@ -125,34 +127,37 @@ runlist = [
     "crosshair",
     "customGraphicsItem",
     "CustomGraphItem",
-    "customPlot",
+    "customPlot",  # doesn't show the triangles along the x axis
     "DataSlicing",
-    "DataTreeWidget",
-    "DateAxisItem",
-    #"DateAxisItem_QtDesigner",
-    #"designerExample",
+    "DataTreeWidget",  # wrapped c/c++ object of type QComboBox has been deleted
+    # "DateAxisItem",  # can't use __file__
+    # "DateAxisItem_QtDesigner",  # can't use __file__
+    # "designerExample",  # can't use __file__
     "DiffTreeWidget",
     "dockarea",
-    #"Draw",
+    # "Draw",  # necessarily interactive
     "ErrorBarItem",
-    "FillBetweenItem",
+    # "FillBetweenItem",  # animated
     "FlowchartCustomNode",
     "Flowchart",
     "fractal",
-    "GLBarGraphItem",
-    "GLGradientLegendItem",
-    "GLGraphItem",
-    #"GLImageItem",
-    "GLIsosurface",
-    "GLLinePlotItem",
-    #"GLMeshItem",
-    "GLPainterItem",
-    "GLScatterPlotItem",
-    "GLshaders",
-    "GLSurfacePlot",
-    "GLTextItem",
-    "GLViewWidget",
-    "GLVolumeItem",
+
+    # some GL examples do seem to work, but others give GL errors
+    # "GLBarGraphItem",
+    # "GLGradientLegendItem",
+    # "GLGraphItem",
+    # "GLImageItem",
+    # "GLIsosurface",
+    # "GLLinePlotItem",
+    # "GLMeshItem",
+    # "GLPainterItem",
+    # "GLScatterPlotItem",
+    # "GLshaders",
+    # "GLSurfacePlot",
+    # "GLTextItem",
+    # "GLViewWidget",
+    # "GLVolumeItem",
+
     "GradientEditor",
     "GradientWidget",
     "GraphicsLayout",
@@ -160,7 +165,7 @@ runlist = [
     "GraphItem",
     "hdf5.py",
     "HistogramLUT",
-    #"histogram",
+    "histogram",
     "imageAnalysis",
     "ImageItem",
     "ImageView",
@@ -170,7 +175,7 @@ runlist = [
     "JoystickButton",
     "Legend",
     "linkedViews",
-    #"logAxis",
+    "logAxis",
     "LogPlotTest",
     "MatrixDisplayExample",
     "MouseSelection",
@@ -178,24 +183,24 @@ runlist = [
     "multiplePlotSpeedTest",
     "MultiPlotSpeedTest",
     "MultiPlotWidget",
-    #"multiprocess",
+    # "multiprocess",  # swallowed exception, not sure what's wrong
     "NonUniformImage",
     "optics_demos",
-    "PanningPlot",
-    #"parallelize",
+    # "PanningPlot",  # animated
+    # "parallelize",  # hangs
     "parametertree",
     "PColorMeshItem",
     "PlotAutoRange",
     "PlotSpeedTest",
     "Plotting",
     "PlotWidget",
-    #"ProgressDialog",
+    # "ProgressDialog",  # hangs
     "relativity_demo",
-    #"RemoteGraphicsView",
-    "RemoteSpeedTest",
+    # "RemoteGraphicsView",  # doesn't show any plot contents
+    # "RemoteSpeedTest",  # remoteproxy NoResultError
     "ROIExamples",
     "ROItypes",
-    #"ScaleBar",
+    "ScaleBar",
     "ScatterPlot",
     "ScatterPlotSpeedTest",
     "ScatterPlotWidget",
@@ -231,11 +236,15 @@ sphinx_gallery_conf = {
     "gallery_dirs": "examples",
     "image_scrapers": (qtgallery.qtscraper,),
     "reset_modules": (qtgallery.reset_qapp, reset_pg_config),
-    "filename_pattern": r"/examples/" + r"|".join("({})".format(n) for n in runlist),
+    "filename_pattern": r"/examples/\b(" + r"|".join("{}".format(n) for n in runlist) + r")\b",
     #"filename_pattern": r"/examples/.*[^/]",
-    "ignore_pattern": r"(/_)|(^_)|(setup)|(Template)|(template)|(test_examples)",
+    "ignore_pattern": r"(/_)|(^_)|(setup)|(Template)|(template)|(test_examples)|(py2exe)",
     "within_subsection_order": ExampleTitleSortKey,
     "reset_argv": argv_handler,
+}
+
+qtgallery_conf = {
+    "xvfb_size": (1280, 800),
 }
 
 # -- Options for HTML output ---------------------------------------------------
