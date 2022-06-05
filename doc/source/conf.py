@@ -241,6 +241,9 @@ sphinx_gallery_conf = {
     "ignore_pattern": r"(/_)|(^_)|(setup)|(Template)|(template)|(test_examples)|(py2exe)",
     "within_subsection_order": ExampleTitleSortKey,
     "reset_argv": argv_handler,
+    "reference_url": {
+        "pyqtgraph": None,
+    }
 }
 
 qtgallery_conf = {
