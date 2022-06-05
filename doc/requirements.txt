@@ -1,8 +1,9 @@
-PyQt6
+PyQt5
 numpy
 pyopengl
 h5py
 sphinx
 sphinx_rtd_theme
 sphinx-gallery
+pillow
 qtgallery>=0.1.0rc1
