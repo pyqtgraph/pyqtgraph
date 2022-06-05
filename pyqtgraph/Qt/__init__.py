@@ -130,7 +130,7 @@ def _loadUiType(uiFile):
 
     # fetch the base_class and form class based on their type in the xml from designer
     form_class = frame['Ui_%s'%form_class]
-    base_class = eval('QtGui.%s'%widget_class)
+    base_class = eval('QtWidgets.%s'%widget_class)
 
     return form_class, base_class
 
@@ -415,11 +415,12 @@ def mkQApp(name=None):
     ============== ========================================================
     """
     global QAPP
-    
+
     def onPaletteChange(palette):
-        color = palette.base().color().name()
+        color = palette.base().color()
         app = QtWidgets.QApplication.instance()
-        app.setProperty('darkMode', color.lower() != "#ffffff")
+        darkMode = color.lightnessF() < 0.5
+        app.setProperty('darkMode', darkMode)
 
     QAPP = QtWidgets.QApplication.instance()
     if QAPP is None:
@@ -434,6 +435,7 @@ def mkQApp(name=None):
         else:  # qt 5.12 and 5.13
             QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
             QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
+
         QAPP = QtWidgets.QApplication(sys.argv or ["pyqtgraph"])
         QAPP.paletteChanged.connect(onPaletteChange)
         QAPP.paletteChanged.emit(QAPP.palette())

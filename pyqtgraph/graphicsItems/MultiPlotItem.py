@@ -3,7 +3,6 @@ MultiPlotItem.py -  Graphics item used for displaying an array of PlotItems
 Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
-from ..metaarray import *
 from . import GraphicsLayout
 
 __all__ = ['MultiPlotItem']

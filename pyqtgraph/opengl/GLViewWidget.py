@@ -155,7 +155,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
     def setProjection(self, region=None):
         m = self.projectionMatrix(region)
         glMatrixMode(GL_PROJECTION)
-        glLoadMatrixf(m.data())
+        glLoadMatrixf(np.array(m.data(), dtype=np.float32))
 
     def projectionMatrix(self, region=None):
         if region is None:
@@ -183,7 +183,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
     def setModelview(self):
         m = self.viewMatrix()
         glMatrixMode(GL_MODELVIEW)
-        glLoadMatrixf(m.data())
+        glLoadMatrixf(np.array(m.data(), dtype=np.float32))
         
     def viewMatrix(self):
         tr = QtGui.QMatrix4x4()
@@ -267,8 +267,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
                 glPushMatrix()
                 try:
                     tr = i.transform()
-                    a = np.array(tr.copyDataTo()).reshape((4,4))
-                    glMultMatrixf(a.transpose())
+                    glMultMatrixf(np.array(tr.data(), dtype=np.float32))
                     self.drawItemTree(i, useItemNames=useItemNames)
                 finally:
                     glMatrixMode(GL_MODELVIEW)

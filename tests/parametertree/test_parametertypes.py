@@ -58,13 +58,11 @@ def test_types():
 
     # int
     types = ['int0', 'int', 'float', 'bigfloat', 'npfloat', 'npint', 'bool']
-    inttyps = int if sys.version[0] >= '3' else (int, long) 
-    check_param_types(param.child('int'), inttyps, int, 0, all_objs, types)
+    check_param_types(param.child('int'), int, int, 0, all_objs, types)
     
     # str  (should be able to make a string out of any type)
     types = all_objs.keys()
-    strtyp = str if sys.version[0] >= '3' else unicode
-    check_param_types(param.child('str'), strtyp, str, '', all_objs, types)
+    check_param_types(param.child('str'), str, str, '', all_objs, types)
     
     # bool  (should be able to make a boolean out of any type?)
     types = all_objs.keys()
@@ -164,3 +162,14 @@ def test_data_race():
     p.sigValueChanged.connect(override)
     pi.widget.setValue(2)
     assert p.value() == pi.widget.value() == 1
+
+def test_pen_settings():
+    # Option from constructor
+    p = pt.Parameter.create(name='test', type='pen', width=5, additionalname='test')
+    assert p.pen.width() == 5
+    # Opts from dynamic update
+    p.setOpts(width=3)
+    assert p.pen.width() == 3
+    # Opts from changing child
+    p["width"] = 10
+    assert p.pen.width() == 10

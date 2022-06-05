@@ -152,10 +152,7 @@ class GraphicsItem(object):
         if view is None:
             return None
         if hasattr(view, 'implements') and view.implements('ViewBox'):
-            tr = self.itemTransform(view.innerSceneItem())
-            if isinstance(tr, tuple):
-                tr = tr[0]   ## difference between pyside and pyqt
-            return tr
+            return self.itemTransform(view.innerSceneItem())[0]
         else:
             return self.sceneTransform()
             #return self.deviceTransform(view.viewportTransform())
@@ -299,7 +296,7 @@ class GraphicsItem(object):
         Return None if pixel size is not yet defined (usually because the item has not yet been displayed).
         """
         normV, orthoV = self.pixelVectors(direction)
-        if normV == None or orthoV == None:
+        if normV is None or orthoV is None:
             return None
         if ortho:
             return orthoV.length()
@@ -408,8 +405,7 @@ class GraphicsItem(object):
         return self.mapToView(self.mapFromParent(self.pos()))
     
     def parentItem(self):
-        ## PyQt bug -- some items are returned incorrectly.
-        return GraphicsScene.translateGraphicsItem(self._qtBaseClass.parentItem(self))
+        return self._qtBaseClass.parentItem(self)
         
     def setParentItem(self, parent):
         ## Workaround for Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
@@ -420,8 +416,7 @@ class GraphicsItem(object):
         return self._qtBaseClass.setParentItem(self, parent)
     
     def childItems(self):
-        ## PyQt bug -- some child items are returned incorrectly.
-        return list(map(GraphicsScene.translateGraphicsItem, self._qtBaseClass.childItems(self)))
+        return self._qtBaseClass.childItems(self)
 
 
     def sceneTransform(self):
@@ -441,9 +436,7 @@ class GraphicsItem(object):
         if relativeItem is None:
             relativeItem = self.parentItem()
 
-        tr = self.itemTransform(relativeItem)
-        if isinstance(tr, tuple):  ## difference between pyside and pyqt
-            tr = tr[0]
+        tr = self.itemTransform(relativeItem)[0]
         vec = tr.map(QtCore.QLineF(0,0,1,0))
         return vec.angleTo(QtCore.QLineF(vec.p1(), vec.p1()+QtCore.QPointF(1,0)))
         
@@ -580,7 +573,6 @@ class GraphicsItem(object):
     
     def childrenShape(self):
         """Return the union of the shapes of all descendants of this item in local coordinates."""
-        childs = self.allChildItems()
         shapes = [self.mapFromItem(c, c.shape()) for c in self.allChildItems()]
         return reduce(operator.add, shapes)
     

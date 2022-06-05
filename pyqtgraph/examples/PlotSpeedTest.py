@@ -83,7 +83,8 @@ children = [
     dict(name='connect', type='list', limits=['all', 'pairs', 'finite', 'array'], value='all'),
     dict(name='fill', type='bool', value=False),
     dict(name='skipFiniteCheck', type='bool', value=False),
-    dict(name='plotMethod', title='Plot Method', type='list', limits=['pyqtgraph', 'drawPolyline'])
+    dict(name='plotMethod', title='Plot Method', type='list', limits=['pyqtgraph', 'drawPolyline']),
+    dict(name='segmentedLineMode', title='Segmented lines', type='list', limits=['auto', 'on', 'off'], value='auto'),
 ]
 
 params = ptree.Parameter.create(name='Parameters', type='group', children=children)
@@ -134,12 +135,16 @@ def onPenChanged(param, pen):
 def onFillChanged(param, enable):
     curve.setFillLevel(0.0 if enable else None)
 
+def onSegmentedLineModeChanged(param, mode):
+    curve.setSegmentedLineMode(mode)
+
 params.child('sigopts').sigTreeStateChanged.connect(makeData)
 params.child('useOpenGL').sigValueChanged.connect(onUseOpenGLChanged)
 params.child('enableExperimental').sigValueChanged.connect(onEnableExperimentalChanged)
 params.child('pen').sigValueChanged.connect(onPenChanged)
 params.child('fill').sigValueChanged.connect(onFillChanged)
 params.child('plotMethod').sigValueChanged.connect(curve.setMethod)
+params.child('segmentedLineMode').sigValueChanged.connect(onSegmentedLineModeChanged)
 params.sigTreeStateChanged.connect(resetTimings)
 
 makeData()

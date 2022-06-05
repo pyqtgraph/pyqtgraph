@@ -51,15 +51,6 @@ class Vector(QtGui.QVector3D):
     def __len__(self):
         return 3
 
-    def __add__(self, b):
-        # workaround for pyside bug. see https://bugs.launchpad.net/pyqtgraph/+bug/1223173
-        if QT_LIB == 'PySide' and isinstance(b, QtGui.QVector3D):
-            b = Vector(b)
-        return QtGui.QVector3D.__add__(self, b)
-    
-    #def __reduce__(self):
-        #return (Point, (self.x(), self.y()))
-        
     def __getitem__(self, i):
         if i == 0:
             return self.x()

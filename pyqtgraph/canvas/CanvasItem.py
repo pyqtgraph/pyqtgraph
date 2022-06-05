@@ -1,3 +1,5 @@
+__all__ = ["CanvasItem", "GroupCanvasItem"]
+
 import importlib
 
 from .. import ItemGroup, SRTTransform

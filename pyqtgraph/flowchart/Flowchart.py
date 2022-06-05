@@ -1,9 +1,11 @@
+__init__ = ["Flowchart", "FlowchartGraphicsItem", "FlowchartNode"]
+
 import importlib
 from collections import OrderedDict
 
 from .. import DataTreeWidget, FileDialog
 from ..Qt import QT_LIB, QtCore, QtWidgets
-from .Node import *
+from .Node import Node
 
 FlowchartCtrlTemplate = importlib.import_module(
     f'.FlowchartCtrlTemplate_{QT_LIB.lower()}', package=__package__)
@@ -14,6 +16,7 @@ from .. import configfile as configfile
 from .. import dockarea as dockarea
 from .. import functions as fn
 from ..debug import printExc
+from ..graphicsItems.GraphicsObject import GraphicsObject
 from . import FlowchartGraphicsView
 from .library import LIBRARY
 from .Terminal import Terminal
@@ -112,7 +115,7 @@ class Flowchart(Node):
             opts['multi'] = False
             self.inputNode.sigTerminalAdded.disconnect(self.internalTerminalAdded)
             try:
-                term2 = self.inputNode.addTerminal(name, **opts)
+                self.inputNode.addTerminal(name, **opts)
             finally:
                 self.inputNode.sigTerminalAdded.connect(self.internalTerminalAdded)
                 
@@ -121,7 +124,7 @@ class Flowchart(Node):
             #opts['multi'] = False
             self.outputNode.sigTerminalAdded.disconnect(self.internalTerminalAdded)
             try:
-                term2 = self.outputNode.addTerminal(name, **opts)
+                self.outputNode.addTerminal(name, **opts)
             finally:
                 self.outputNode.sigTerminalAdded.connect(self.internalTerminalAdded)
         return term
@@ -431,7 +434,7 @@ class Flowchart(Node):
         conn = set()
         for n in self._nodes.values():
             terms = n.outputs()
-            for n, t in terms.items():
+            for t in terms.values():
                 for c in t.connections():
                     conn.add((t, c))
         return conn
@@ -647,8 +650,7 @@ class FlowchartCtrlWidget(QtWidgets.QWidget):
             
             
     def loadClicked(self):
-        newFile = self.chart.loadFile()
-        #self.setCurrentFile(newFile)
+        self.chart.loadFile()
         
     def fileSaved(self, fileName):
         self.setCurrentFile(fileName)
@@ -668,16 +670,12 @@ class FlowchartCtrlWidget(QtWidgets.QWidget):
     def saveAsClicked(self):
         try:
             if self.currentFileName is None:
-                newFile = self.chart.saveFile()
+                self.chart.saveFile()
             else:
-                newFile = self.chart.saveFile(suggestedFileName=self.currentFileName)
-            #self.ui.saveAsBtn.success("Saved.")
-            #print "Back to saveAsClicked."
+                self.chart.saveFile(suggestedFileName=self.currentFileName)
         except:
             self.ui.saveBtn.failure("Error")
             raise
-            
-        #self.setCurrentFile(newFile)
             
     def setCurrentFile(self, fileName):
         self.currentFileName = fileName

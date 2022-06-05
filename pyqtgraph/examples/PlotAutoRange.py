@@ -5,14 +5,14 @@ PlotAutoRange
 This example demonstrates the different auto-ranging capabilities of ViewBoxes
 """
 
+import time
+
 import numpy as np
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
 
 app = pg.mkQApp("Plot Auto Range Example")
-#mw = QtWidgets.QMainWindow()
-#mw.resize(800,800)
 
 win = pg.GraphicsLayoutWidget(show=True, title="Plot auto-range examples")
 win.resize(800,600)
@@ -27,12 +27,13 @@ p1.enableAutoRange('y', 0.95)
 p2 = win.addPlot(title="Auto Pan Only")
 p2.setAutoPan(y=True)
 curve = p2.plot()
+t0 = time.time()
+
 def update():
-    t = pg.time()
+    t = time.time() - t0
     
     data = np.ones(100) * np.sin(t)
     data[50:60] += np.sin(t)
-    global curve
     curve.setData(data)
     
 timer = QtCore.QTimer()

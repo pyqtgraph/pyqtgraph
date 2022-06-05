@@ -1,3 +1,5 @@
+__all__ = ["DockDrop"]
+
 from ..Qt import QtCore, QtGui, QtWidgets
 
 
@@ -102,8 +104,8 @@ class DropAreaOverlay(QtWidgets.QWidget):
             ## This works around a Qt bug--can't display transparent widgets over QGLWidget
             prgn = self.parent().rect()
             rgn = QtCore.QRect(prgn)
-            w = min(30, prgn.width()/3.)
-            h = min(30, prgn.height()/3.)
+            w = min(30, int(prgn.width() / 3))
+            h = min(30, int(prgn.height() / 3))
             
             if self.dropArea == 'left':
                 rgn.setWidth(w)
