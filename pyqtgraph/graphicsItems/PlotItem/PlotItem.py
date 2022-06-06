@@ -951,6 +951,7 @@ class PlotItem(GraphicsWidget):
         state = self.stateGroup.state()
         state['paramList'] = self.paramList.copy()
         state['view'] = self.vb.getState()
+        state["transforms"] = {k: v.copy() for k, v in self._transforms.items()}
         return state
         
     def restoreState(self, state):
@@ -958,13 +959,22 @@ class PlotItem(GraphicsWidget):
             self.paramList = state['paramList'].copy()
             
         self.stateGroup.setState(state)
-        self.updateSpectrumMode()
+
+        if "transforms" in state:
+            for missing in state["transforms"].keys() - self._transforms.keys():
+                self.addTransformOption(
+                    missing,
+                    state["transforms"][missing]["dataTransform"],
+                    state["transforms"][missing].get("updateAxisCallback", None),
+                )
+            # TODO completely remove any that aren't present
+            for name in state["dataTransforms"]:
+                self.setDataTransformState(name, state["dataTransforms"][name].get("enabled", False))
+
         self.updateDownsampling()
         self.updateAlpha()
         self.updateDecimation()
         
-        if 'powerSpectrumGroup' in state:
-            state['fftCheck'] = state['powerSpectrumGroup']
         if 'gridGroup' in state:
             state['xGridCheck'] = state['gridGroup']
             state['yGridCheck'] = state['gridGroup']
