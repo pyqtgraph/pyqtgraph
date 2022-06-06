@@ -968,7 +968,7 @@ class PlotItem(GraphicsWidget):
                     state["transforms"][missing].get("updateAxisCallback", None),
                 )
             # TODO completely remove any that aren't present
-            for name in state["dataTransforms"]:
+            for name in state["transforms"]:
                 self.setDataTransformState(name, state["dataTransforms"][name].get("enabled", False))
 
         self.updateDownsampling()
