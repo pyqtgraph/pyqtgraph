@@ -611,16 +611,18 @@ class PlotItem(GraphicsWidget):
             self.itemMeta[item] = params
             #item.setMeta(params)
             self.curves.append(item)
-            #self.addItem(c)
-            
-        if hasattr(item, 'setLogMode'):
-            item.setLogMode(self.ctrl.logXCheck.isChecked(), self.ctrl.logYCheck.isChecked())
-            
+
+        if hasattr(item, "addDataTransform"):
+            for transform in self._transforms:
+                if self._transforms[transform].get("enabled", False):
+                    item.addDataTransform(transform, self._transforms[transform]["dataTransform"])
+                else:
+                    item.removeDataTransform(transform)
+
         if isinstance(item, PlotDataItem):
             ## configure curve for this plot
             (alpha, auto) = self.alphaState()
             item.setAlpha(alpha, auto)
-            item.setFftMode(self.ctrl.fftCheck.isChecked())
             item.setDownsampling(*self.downsampleMode())
             item.setClipToView(self.clipToViewMode())
             item.setPointMode(self.pointMode())
