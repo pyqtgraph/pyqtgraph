@@ -969,7 +969,7 @@ class PlotItem(GraphicsWidget):
                 )
             # TODO completely remove any that aren't present
             for name in state["transforms"]:
-                self.setDataTransformState(name, state["dataTransforms"][name].get("enabled", False))
+                self.setDataTransformState(name, state["transforms"][name].get("enabled", False))
 
         self.updateDownsampling()
         self.updateAlpha()
