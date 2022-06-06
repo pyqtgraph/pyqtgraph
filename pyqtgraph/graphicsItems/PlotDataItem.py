@@ -395,7 +395,7 @@ class PlotDataItem(GraphicsObject):
         """
         warnings.warn(
             'PlotDataItem.setFftMode is deprecated and will be removed after 2023-01-01. '
-            'Use PlotItem.updateTransformMode("Power Spectrum (FFT)", state) instead.',
+            'Use PlotItem.setDataTransformState("Power Spectrum (FFT)", state) instead.',
             DeprecationWarning, stacklevel=2
         )
         if state:
@@ -414,7 +414,7 @@ class PlotDataItem(GraphicsObject):
         """
         warnings.warn(
             'PlotDataItem.setLogMode is deprecated and will be removed after 2023-01-01. '
-            'Use PlotItem.updateTransformMode("Log X", state) (and/or "Log Y") instead.',
+            'Use PlotItem.setDataTransformState("Log X", state) (and/or "Log Y") instead.',
             DeprecationWarning, stacklevel=2
         )
         if xState:
@@ -437,7 +437,7 @@ class PlotDataItem(GraphicsObject):
         """
         warnings.warn(
             'PlotDataItem.setDerivativeMode is deprecated and will be removed after 2023-01-01. '
-            'Use PlotItem.updateTransformMode("dy/dx", state) instead.',
+            'Use PlotItem.setDataTransformState("dy/dx", state) instead.',
             DeprecationWarning, stacklevel=2
         )
         if state:
@@ -456,7 +456,7 @@ class PlotDataItem(GraphicsObject):
         """
         warnings.warn(
             'PlotDataItem.setPhasemapMode is deprecated and will be removed after 2023-01-01. '
-            'Use PlotItem.updateTransformMode("Y v. Y\'", state) instead.',
+            'Use PlotItem.setDataTransformState("Y v. Y\'", state) instead.',
             DeprecationWarning, stacklevel=2
         )
         if state:

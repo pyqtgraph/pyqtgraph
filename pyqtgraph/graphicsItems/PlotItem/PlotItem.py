@@ -319,7 +319,7 @@ class PlotItem(GraphicsWidget):
         check.setObjectName(name)
         check.setText(name)
         self.ctrl.gridLayout.addWidget(check, row, 0, 1, 1)
-        check.toggled.connect(self._updateTransformMode)
+        check.toggled.connect(self._updateDataTransformMode)
         check.toggled.emit(False)  # registers with all the data items and axes
 
     def removeTransformOption(self, name):
@@ -985,21 +985,21 @@ class PlotItem(GraphicsWidget):
     def widgetGroupInterface(self):
         return (None, PlotItem.saveState, PlotItem.restoreState)
 
-    def _updateTransformMode(self, checked):
+    def _updateDataTransformMode(self, checked):
         name = self.sender().objectName()
-        self.updateTransformMode(name, checked)
+        self.setDataTransformState(name, checked)
 
-    def updateTransformMode(self, name, checked):
-        self._transforms[name]["enabled"] = checked
+    def setDataTransformState(self, name, enabled):
+        self._transforms[name]["enabled"] = enabled
         for i in self.items:
             if hasattr(i, "addDataTransform"):
-                if checked:
+                if enabled:
                     i.addDataTransform(name, self._transforms[name]["dataTransform"])
                 else:
                     i.removeDataTransform(name)
         if self._transforms[name].get("updateAxisCallback", None) is not None:
             for axis in self.axes.values():
-                self._transforms[name]["updateAxisCallback"](axis["item"], checked)
+                self._transforms[name]["updateAxisCallback"](axis["item"], enabled)
         self.enableAutoRange()
         self.recomputeAverages()
 
