@@ -232,7 +232,8 @@ class PlotItem(GraphicsWidget):
             self.subMenus.append(sm)
             self.ctrlMenu.addMenu(sm)
 
-        self._setupTransformsSubmenu()
+        for name, kwargs in self._defaultTransforms.items():
+            self.addTransformOption(name, **kwargs)
 
         self.stateGroup = WidgetGroup()
         for name, w in menuItems:
@@ -277,11 +278,7 @@ class PlotItem(GraphicsWidget):
             self.setTitle(title)
         
         if len(kargs) > 0:
-            self.plot(**kargs)        
-
-    def _setupTransformsSubmenu(self):
-        for name, kwargs in self._defaultTransforms.items():
-            self.addTransformOption(name, **kwargs)
+            self.plot(**kargs)
 
     def addTransformOption(self, name, dataTransform, updateAxisCallback=None):
         """TODO
@@ -297,6 +294,10 @@ class PlotItem(GraphicsWidget):
             Function to call on every axis. First argument is the AxisItem being modified, second argument is whether
             this particular transform is currently enabled. E.g.::
                 lambda axis, enabled: axis.setLogMode(y=enabled)
+
+        See Also
+        --------
+        PlotItem.addDefaultTransformOption
         """
         # TODO validate args
         if name in self._transforms:
@@ -976,6 +977,7 @@ class PlotItem(GraphicsWidget):
 
     def _updateTransformMode(self, checked):
         name = self.sender().objectName()
+        self._transforms[name]["enabled"] = checked
         for i in self.items:
             if hasattr(i, "addDataTransform"):
                 if checked:
