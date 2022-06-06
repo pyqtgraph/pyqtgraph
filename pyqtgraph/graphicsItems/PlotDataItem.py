@@ -10,6 +10,8 @@ from .GraphicsObject import GraphicsObject
 from .PlotCurveItem import PlotCurveItem
 from .ScatterPlotItem import ScatterPlotItem
 
+translate = QtCore.QCoreApplication.translate
+
 __all__ = ['PlotDataItem']
 
 
@@ -292,10 +294,6 @@ class PlotDataItem(GraphicsObject):
         self.opts = {
             'connect': 'auto', # defaults to 'all', unless overridden to 'finite' for log-scaling
             'skipFiniteCheck': False, 
-            'fftMode': False,
-            'logMode': [False, False],
-            'derivativeMode': False,
-            'phasemapMode': False,
             'alphaHint': 1.0,
             'alphaMode': False,
 
@@ -395,9 +393,16 @@ class PlotDataItem(GraphicsObject):
         If the `x` values are not equidistant, the data set is resampled at
         equal intervals. 
         """
-        if self.opts['fftMode'] == state:
-            return
-        self.opts['fftMode'] = state
+        warnings.warn(
+            'PlotDataItem.setFftMode is deprecated and will be removed after 2023-01-01. '
+            'Use PlotItem.updateTransformMode("Power Spectrum (FFT)", state) instead.',
+            DeprecationWarning, stacklevel=2
+        )
+        if state:
+            from .PlotItem.PlotItem import _fourierTransform
+            self.addDataTransform(translate("Form", "Power Spectrum (FFT)"), _fourierTransform)
+        else:
+            self.removeDataTransform(translate("Form", "Power Spectrum (FFT)"))
         self.noticeDataTransform()
 
     def setLogMode(self, xState, yState):
@@ -407,9 +412,21 @@ class PlotDataItem(GraphicsObject):
         is applied to the data. For negative or zero values, this results in a 
         `NaN` value.
         """
-        if self.opts['logMode'] == [xState, yState]:
-            return
-        self.opts['logMode'] = [xState, yState]
+        warnings.warn(
+            'PlotDataItem.setLogMode is deprecated and will be removed after 2023-01-01. '
+            'Use PlotItem.updateTransformMode("Log X", state) (and/or "Log Y") instead.',
+            DeprecationWarning, stacklevel=2
+        )
+        if xState:
+            from .PlotItem.PlotItem import _logXTransform
+            self.addDataTransform(translate("Form", "Log X"), _logXTransform)
+        else:
+            self.removeDataTransform(translate("Form", "Log X"))
+        if yState:
+            from .PlotItem.PlotItem import _logYTransform
+            self.addDataTransform(translate("Form", "Log Y"), _logYTransform)
+        else:
+            self.removeDataTransform(translate("Form", "Log Y"))
         self.noticeDataTransform()
 
     def setDerivativeMode(self, state):
@@ -418,9 +435,16 @@ class PlotDataItem(GraphicsObject):
         ``y_mapped = dy / dx`` is applied, with `dx` and `dy` representing the 
         differences between adjacent `x` and `y` values.
         """
-        if self.opts['derivativeMode'] == state:
-            return
-        self.opts['derivativeMode'] = state
+        warnings.warn(
+            'PlotDataItem.setDerivativeMode is deprecated and will be removed after 2023-01-01. '
+            'Use PlotItem.updateTransformMode("dy/dx", state) instead.',
+            DeprecationWarning, stacklevel=2
+        )
+        if state:
+            from .PlotItem.PlotItem import _diff
+            self.addDataTransform(translate("Form", "dy/dx"), _diff)
+        else:
+            self.removeDataTransform(translate("Form", "dy/dx"))
         self.noticeDataTransform()
 
     def setPhasemapMode(self, state):
@@ -430,9 +454,16 @@ class PlotDataItem(GraphicsObject):
         is applied, plotting the numerical derivative of the data over the 
         original `y` values.
         """
-        if self.opts['phasemapMode'] == state:
-            return
-        self.opts['phasemapMode'] = state
+        warnings.warn(
+            'PlotDataItem.setPhasemapMode is deprecated and will be removed after 2023-01-01. '
+            'Use PlotItem.updateTransformMode("Y v. Y\'", state) instead.',
+            DeprecationWarning, stacklevel=2
+        )
+        if state:
+            from .PlotItem.PlotItem import _phasemap
+            self.addDataTransform(translate("Form", "Y v. Y'"), _phasemap)
+        else:
+            self.removeDataTransform(translate("Form", "Y v. Y'"))
         self.noticeDataTransform()
 
     def setPointMode(self, state):

@@ -27,7 +27,15 @@ translate = QtCore.QCoreApplication.translate
 ui_template = importlib.import_module(
     f'.plotConfigTemplate_{QT_LIB.lower()}', package=__package__)
 
-__all__ = ['PlotItem']
+__all__ = [
+    'PlotItem',
+    # The following protected functions are exported for deprecated use in PlotDataItem:
+    "_diff",
+    "_fourierTransform",
+    "_logXTransform",
+    "_logYTransform",
+    "_phasemap",
+]
 
 
 class PlotItem(GraphicsWidget):
@@ -979,6 +987,9 @@ class PlotItem(GraphicsWidget):
 
     def _updateTransformMode(self, checked):
         name = self.sender().objectName()
+        self.updateTransformMode(name, checked)
+
+    def updateTransformMode(self, name, checked):
         self._transforms[name]["enabled"] = checked
         for i in self.items:
             if hasattr(i, "addDataTransform"):
@@ -1433,6 +1444,9 @@ def _fourierTransform(x, y):
     return x, y
 
 
+_phasemap = lambda x, y: (y[:-1], np.diff(y) / np.diff(x))
+
+
 PlotItem.addDefaultTransformOption(
     translate("Form", "Power Spectrum (FFT)"),
     _fourierTransform,
@@ -1457,5 +1471,5 @@ PlotItem.addDefaultTransformOption(
 )
 PlotItem.addDefaultTransformOption(
     translate("Form", "Y vs Y'"),
-    lambda x, y: (y[:-1], np.diff(y) / np.diff(x)),
+    _phasemap,
 )
