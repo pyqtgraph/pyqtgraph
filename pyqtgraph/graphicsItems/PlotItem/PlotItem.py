@@ -951,7 +951,12 @@ class PlotItem(GraphicsWidget):
         state = self.stateGroup.state()
         state['paramList'] = self.paramList.copy()
         state['view'] = self.vb.getState()
-        state["transforms"] = {k: v.copy() for k, v in self._transforms.items()}
+        state["transforms"] = {
+            k: {
+                "enabled": v["enabled"],
+            }
+            for k, v in self._transforms.items()
+        }
         return state
         
     def restoreState(self, state):
@@ -997,21 +1002,21 @@ class PlotItem(GraphicsWidget):
 
     def _updateDataTransformMode(self, checked):
         name = self.sender().objectName()
-        self.setDataTransformState(name, checked)
-
-    def setDataTransformState(self, name, enabled):
-        self._transforms[name]["enabled"] = enabled
+        self._transforms[name]["enabled"] = checked
         for i in self.items:
             if hasattr(i, "addDataTransform"):
-                if enabled:
+                if checked:
                     i.addDataTransform(name, self._transforms[name]["dataTransform"])
                 else:
                     i.removeDataTransform(name)
         if self._transforms[name].get("updateAxisCallback", None) is not None:
             for axis in self.axes.values():
-                self._transforms[name]["updateAxisCallback"](axis["item"], enabled)
+                self._transforms[name]["updateAxisCallback"](axis["item"], checked)
         self.enableAutoRange()
         self.recomputeAverages()
+
+    def setDataTransformState(self, name, enabled):
+        self._transforms[name]["checkbox"].setChecked(enabled)
 
     def setDownsampling(self, ds=None, auto=None, mode=None):
         """
