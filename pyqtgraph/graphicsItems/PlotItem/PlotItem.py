@@ -8,6 +8,7 @@ import numpy as np
 
 from ... import functions as fn
 from ... import icons
+from ...parametertree import Parameter, ParameterTree
 from ...Qt import QT_LIB, QtCore, QtWidgets
 from ...WidgetGroup import WidgetGroup
 from ...widgets.FileDialog import FileDialog
@@ -245,7 +246,9 @@ class PlotItem(GraphicsWidget):
 
         self.stateGroup = WidgetGroup()
         for name, w in menuItems:
-            self.stateGroup.autoAdd(w)
+            if w is not c.transformGroup:
+                # ParameterTrees don't get names, which autoAdd needs
+                self.stateGroup.autoAdd(w)
         
         self.fileDialog = None
         
@@ -288,20 +291,28 @@ class PlotItem(GraphicsWidget):
         if len(kargs) > 0:
             self.plot(**kargs)
 
-    def addTransformOption(self, name, dataTransform, updateAxisCallback=None):
-        """TODO
+    def addTransformOption(self, name, dataTransform, updateAxisCallback=None, params=None):
+        """TODO docs
         Parameters
         ----------
         name : str
             Unique name for this transform.
-        dataTransform : Callable[[np.ndarray, np.ndarray], [np.ndarray, np.ndarray]]
+        dataTransform : Callable[[np.ndarray, np.ndarray, ...], [np.ndarray, np.ndarray]]
             Function which transforms data. Should accept two arguments, `x` and `y`, and it should return the two new
             data arrays (of equal length!) to be plotted. E.g.::
                 lambda x, y: (x[:-1], np.diff(y) / np.diff(x))
-        updateAxisCallback : Callable[[AxisItem, bool], None], optional
+            If an `params` arg is passed to `addTransformOption`, this function can expect to have the parameters therein
+            described to be passed as named arguments here.
+        updateAxisCallback : Callable[[AxisItem, bool, ...], None], optional
             Function to call on every axis. First argument is the AxisItem being modified, second argument is whether
             this particular transform is currently enabled. E.g.::
                 lambda axis, enabled: axis.setLogMode(y=enabled)
+            If an `params` arg is passed to `addTransformOption`, this function can expect to have the parameters therein
+            described to be passed as named arguments here.
+        params : dict, optional
+            Pass in a parameter tree config (see: ParameterTree) to generate an additional UI for said parameters. These
+            parameters will then be passed into all invocations of the `dataTransform` and `updateAxisCallback`
+            functions as named parameters.
 
         See Also
         --------
@@ -313,12 +324,26 @@ class PlotItem(GraphicsWidget):
         self._transforms[name] = {
             "dataTransform": dataTransform,
             "updateAxisCallback": updateAxisCallback,
+            "params": params,
         }
-        row = len(self._transforms) - 1  # TODO Eep! brittle!
-        check = self._transforms[name]["checkbox"] = QtWidgets.QCheckBox(self.ctrl.transformGroup)
+        row = self.ctrl.gridLayout.rowCount()
+        check = QtWidgets.QCheckBox(self.ctrl.transformGroup)
+        self._transforms[name]["checkbox"] = check
         check.setObjectName(name)
         check.setText(name)
-        self.ctrl.gridLayout.addWidget(check, row, 0, 1, 1)
+        self.ctrl.gridLayout.addWidget(check, row, 0, 2, 1)
+        if params is not None:
+            paramsParams = Parameter.create(name=f"{name} params", type="group", children=params)
+            paramsParams.setObjectName(name)
+            paramsUi = ParameterTree(showHeader=False)
+            paramsUi.addParameters(paramsParams, showTop=False)
+            paramsUi.setFrameStyle(QtWidgets.QFrame.Raised | QtWidgets.QFrame.Panel)
+            self.ctrl.gridLayout.addWidget(paramsUi, row, 1, 1, 1)
+            paramsParams.sigTreeStateChanged.connect(self._handleTransformParamsUpdate)
+            self._transforms[name]["paramsParams"] = paramsParams
+            self._transforms[name]["paramsUi"] = paramsUi
+            self._transforms[name]["params"] = params
+            paramsParams.sigTreeStateChanged.emit(paramsParams, None)  # registers with all the data items
         check.toggled.connect(self._updateDataTransformMode)
         check.toggled.emit(False)  # registers with all the data items and axes
 
@@ -626,6 +651,8 @@ class PlotItem(GraphicsWidget):
                     item.addDataTransform(transform, self._transforms[transform]["dataTransform"])
                 else:
                     item.removeDataTransform(transform)
+                if self._transforms[transform].get("paramsParams", None) is not None:
+                    item.addDataTransformParams(transform, **(self._paramsForTransform(transform)))
 
         if isinstance(item, PlotDataItem):
             ## configure curve for this plot
@@ -951,12 +978,12 @@ class PlotItem(GraphicsWidget):
         state = self.stateGroup.state()
         state['paramList'] = self.paramList.copy()
         state['view'] = self.vb.getState()
-        state["transforms"] = {
-            k: {
-                "enabled": v["enabled"],
-            }
-            for k, v in self._transforms.items()
-        }
+        state["transforms"] = {}
+        for k, v in self._transforms.items():
+            state["transforms"][k] = {"enabled": v["enabled"]}
+            if "paramsParams" in v:
+                state["transforms"][k]["paramsState"] = v["paramsParams"].saveState()
+                state["transforms"][k]["paramsConfig"] = v["params"]
         return state
         
     def restoreState(self, state):
@@ -971,10 +998,12 @@ class PlotItem(GraphicsWidget):
                     missing,
                     state["transforms"][missing]["dataTransform"],
                     state["transforms"][missing].get("updateAxisCallback", None),
+                    state["transforms"][missing].get("paramsConfig", None),
                 )
             # TODO completely remove any that aren't present
             for name in state["transforms"]:
                 self.setDataTransformState(name, state["transforms"][name].get("enabled", False))
+                self.setDataTransformParams(name, **state["transforms"][name].get("paramsState", {}))
 
         self.updateDownsampling()
         self.updateAlpha()
@@ -1000,6 +1029,21 @@ class PlotItem(GraphicsWidget):
     def widgetGroupInterface(self):
         return (None, PlotItem.saveState, PlotItem.restoreState)
 
+    def _handleTransformParamsUpdate(self):
+        name = self.sender().objectName()
+        params = self._paramsForTransform(name)
+        for i in self.items:
+            if hasattr(i, "addDataTransformParams"):
+                i.addDataTransformParams(name, **params)
+
+    def _paramsForTransform(self, name):
+        if "paramsParams" in self._transforms[name]:
+            return {
+                pname: pval[0]
+                for pname, pval in self._transforms[name]["paramsParams"].getValues().items()
+            }
+        return {}
+
     def _updateDataTransformMode(self, checked):
         name = self.sender().objectName()
         self._transforms[name]["enabled"] = checked
@@ -1011,12 +1055,19 @@ class PlotItem(GraphicsWidget):
                     i.removeDataTransform(name)
         if self._transforms[name].get("updateAxisCallback", None) is not None:
             for axis in self.axes.values():
-                self._transforms[name]["updateAxisCallback"](axis["item"], checked)
+                self._transforms[name]["updateAxisCallback"](
+                    axis["item"], checked, **(self._paramsForTransform(name))
+                )
         self.enableAutoRange()
         self.recomputeAverages()
 
     def setDataTransformState(self, name, enabled):
         self._transforms[name]["checkbox"].setChecked(enabled)
+
+    def setDataTransformParams(self, name, **params):
+        for p in self._transforms[name].get("paramsParams", []):
+            if p.name in params:
+                p.setValue(params[p.name])
 
     def setDownsampling(self, ds=None, auto=None, mode=None):
         """

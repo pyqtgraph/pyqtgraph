@@ -270,6 +270,7 @@ class PlotDataItem(GraphicsObject):
         self._datasetMapped  = None # will hold a PlotDataset for data after mapping transforms (e.g. log scale)
         self._datasetDisplay = None # will hold a PlotDataset for data downsampled and limited for display
         self._transforms = {}
+        self._transformParams = {}
         self.curve = PlotCurveItem()
         self.scatter = ScatterPlotItem()
         self.curve.setParentItem(self)
@@ -374,6 +375,10 @@ class PlotDataItem(GraphicsObject):
 
     def addDataTransform(self, name, func):
         self._transforms[name] = func
+        self.noticeDataTransform()
+
+    def addDataTransformParams(self, name, **params):
+        self._transformParams[name] = params
         self.noticeDataTransform()
 
     def removeDataTransform(self, name):
@@ -930,8 +935,8 @@ class PlotDataItem(GraphicsObject):
             if x.dtype == bool:
                 x = x.astype(np.uint8)
 
-            for transform in self._transforms.values():
-                x, y = transform(x, y)
+            for name, transform in self._transforms.items():
+                x, y = transform(x, y, **self._transformParams.get(name, {}))
 
             dataset = PlotDataset(x, y)
             dataset.containsNonfinite = self._dataset.containsNonfinite
