@@ -96,3 +96,18 @@ def test_plotitem_menu_initialize():
     assert viewbox is not None
     assert viewbox.menu is None
     assert viewbox.menuEnabled() is False
+
+
+def test_data_transforms_restore():
+    item = pg.PlotItem()
+    item.addTransformOption("test", lambda x, y, foo: (x + foo, y), params=[{"name": "foo", "type": "float"}])
+    item.setDataTransformState("test", True)
+    item.setDataTransformParams("test", foo=1.3)
+    state = item.saveState()
+    item.setDataTransformState("test", False)
+    item.setDataTransformParams("test", foo=301)
+    assert not item._transforms["test"]["checkbox"].isChecked()
+    assert item._paramsForTransform("test")["foo"] == 301
+    item.restoreState(state)
+    assert item._transforms["test"]["checkbox"].isChecked()
+    assert item._paramsForTransform("test")["foo"] == 1.3

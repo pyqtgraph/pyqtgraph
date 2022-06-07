@@ -980,10 +980,11 @@ class PlotItem(GraphicsWidget):
         state['view'] = self.vb.getState()
         state["transforms"] = {}
         for k, v in self._transforms.items():
-            state["transforms"][k] = {"enabled": v["enabled"]}
-            if "paramsParams" in v:
-                state["transforms"][k]["paramsState"] = v["paramsParams"].saveState()
-                state["transforms"][k]["paramsConfig"] = v["params"]
+            state["transforms"][k] = {
+                "enabled": v["enabled"],
+                "paramsState": self._paramsForTransform(k),
+                "paramsConfig": v.get("params", None),
+            }
         return state
         
     def restoreState(self, state):
@@ -1066,8 +1067,8 @@ class PlotItem(GraphicsWidget):
 
     def setDataTransformParams(self, name, **params):
         for p in self._transforms[name].get("paramsParams", []):
-            if p.name in params:
-                p.setValue(params[p.name])
+            if p.name() in params:
+                p.setValue(params[p.name()])
 
     def setDownsampling(self, ds=None, auto=None, mode=None):
         """
