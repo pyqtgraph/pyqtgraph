@@ -98,14 +98,14 @@ class PlotItem(GraphicsWidget):
     _defaultTransforms = {}
 
     @classmethod
-    def addDefaultTransformOption(cls, name, dataTransform, updateAxisCallback=None, params=None):
+    def addDefaultDataTransformOption(cls, name, dataTransform, updateAxisCallback=None, params=None):
         """
         Add an option to the context menu of all subsequently created PlotItems for a custom data transform.
 
         See Also
         --------
-        PlotItem.addTransformOption : For a description of the parameters.
-        PlotItem.removeDefaultTransformOption : To remove default data transforms.
+        PlotItem.addDataTransformOption : For a description of the parameters and to add to a single plot.
+        PlotItem.removeDefaultDataTransformOption : To remove default data transforms.
 
         Notes
         -----
@@ -118,7 +118,7 @@ class PlotItem(GraphicsWidget):
         }
 
     @classmethod
-    def removeDefaultTransformOption(cls, name):
+    def removeDefaultDataTransformOption(cls, name):
         """
         Remove the named data transform from the context menu of all subsequently created PlotItems.
 
@@ -129,7 +129,7 @@ class PlotItem(GraphicsWidget):
 
         See Also
         --------
-        PlotItem.addDefaultTransformOption : To add default data transforms.
+        PlotItem.addDefaultDataTransformOption : To add default data transforms.
 
         Notes
         -----
@@ -261,7 +261,7 @@ class PlotItem(GraphicsWidget):
             self.ctrlMenu.addMenu(sm)
 
         for name, kwargs in self._defaultTransforms.items():
-            self.addTransformOption(name, **kwargs)
+            self.addDataTransformOption(name, **kwargs)
 
         self.stateGroup = WidgetGroup()
         for name, w in menuItems:
@@ -310,7 +310,7 @@ class PlotItem(GraphicsWidget):
         if len(kargs) > 0:
             self.plot(**kargs)
 
-    def addTransformOption(self, name, dataTransform, updateAxisCallback=None, params=None):
+    def addDataTransformOption(self, name, dataTransform, updateAxisCallback=None, params=None):
         """
         Add an option to the context menu for a custom data transform. This depends on the `addDataTransform` method
         of the items contained in this PlotItem, which has a standard implementation in PlotDataItem.
@@ -324,13 +324,13 @@ class PlotItem(GraphicsWidget):
             data arrays to be plotted. E.g.::
                 lambda x, y: (x[:-1], np.diff(y) / np.diff(x))
             Note that the return arrays must be of equal length as each other. If a `params` arg is passed to
-            `addTransformOption`, this function can expect to have the parameters therein described to be passed as
+            `addDataTransformOption`, this function can expect to have the parameters therein described to be passed as
             named arguments.
         updateAxisCallback : Callable[[AxisItem, bool, ...], None], optional
             Function to call on every axis. First argument is the AxisItem being modified, second argument is whether
             this particular transform is currently enabled. E.g.::
                 lambda axis, enabled: axis.setLogMode(y=enabled)
-            If a `params` arg is passed to `addTransformOption`, this function can expect to have the parameters
+            If a `params` arg is passed to `addDataTransformOption`, this function can expect to have the parameters
             therein described to be passed as named arguments.
         params : dict, optional
             Pass in a parameter tree config (see: ParameterTree) to generate an additional UI for said parameters. These
@@ -343,7 +343,7 @@ class PlotItem(GraphicsWidget):
 
         See Also
         --------
-        PlotItem.addDefaultTransformOption
+        PlotItem.addDefaultDataTransformOption
         """
         if name in self._transforms:
             raise ValueError(f"A transform with name '{name}' is already present.")
@@ -365,12 +365,12 @@ class PlotItem(GraphicsWidget):
             paramsUi.addParameters(paramsParams, showTop=False)
             paramsUi.setFrameStyle(QtWidgets.QFrame.Shadow.Raised | QtWidgets.QFrame.Shape.Panel)
             self.ctrl.gridLayout.addWidget(paramsUi, row, 1, 1, 1)
-            paramsParams.sigTreeStateChanged.connect(self._handleTransformParamsUpdate)
+            paramsParams.sigTreeStateChanged.connect(self._handleDataTransformParamsUpdate)
             self._transforms[name]["paramsParams"] = paramsParams
             self._transforms[name]["paramsUi"] = paramsUi
             self._transforms[name]["params"] = params
             paramsParams.sigTreeStateChanged.emit(paramsParams, None)  # registers with all the data items
-        check.toggled.connect(self._updateDataTransformMode)
+        check.toggled.connect(self._handleDataTransformChecked)
         check.toggled.emit(False)  # registers with all the data items and axes
 
     # :MC: removeTransformOption was left unimplemented. Here are the concerns it will need to cover:
@@ -673,7 +673,17 @@ class PlotItem(GraphicsWidget):
                 else:
                     item.removeDataTransform(transform)
                 if self._transforms[transform].get("paramsParams", None) is not None:
-                    item.addDataTransformParams(transform, **(self._paramsForTransform(transform)))
+                    item.addDataTransformParams(transform, **(self._paramsForDataTransform(transform)))
+        elif hasattr(item, 'setLogMode'):
+            warnings.warn(
+                'setLogMode is deprecated and will be removed in the future. '
+                'Implement addDataTransform instead',
+                DeprecationWarning, stacklevel=2
+            )
+            item.setLogMode(
+                self._transforms.get(translate("Form", "Log X"), {}).get("enabled", False),
+                self._transforms.get(translate("Form", "Log Y"), {}).get("enabled", False),
+            )
 
         if isinstance(item, PlotDataItem):
             ## configure curve for this plot
@@ -1003,7 +1013,7 @@ class PlotItem(GraphicsWidget):
         for k, v in self._transforms.items():
             state["transforms"][k] = {
                 "enabled": v["enabled"],
-                "paramsState": self._paramsForTransform(k),
+                "paramsState": self._paramsForDataTransform(k),
                 "paramsConfig": v.get("params", None),
             }
         return state
@@ -1017,8 +1027,8 @@ class PlotItem(GraphicsWidget):
         if "transforms" in state:
             for missing in state["transforms"].keys() - self._transforms.keys():
                 warnings.warn(
-                    f"The '{missing}' transform cannot be restored on this PlotItem; its transform function has "
-                    f"not been added."
+                    f"The '{missing}' transform cannot be restored on this PlotItem; its transform function needs "
+                    f"to be added via PlotItem.addDataTransformOption or PlotItem.addDefaultDataTransformOption."
                 )
                 # :MC: This could potentially be implemented, but it probably won't be a common issue.
             for name in state["transforms"]:
@@ -1049,14 +1059,16 @@ class PlotItem(GraphicsWidget):
     def widgetGroupInterface(self):
         return (None, PlotItem.saveState, PlotItem.restoreState)
 
-    def _handleTransformParamsUpdate(self):
+    def _handleDataTransformParamsUpdate(self):
         name = self.sender().objectName()
-        params = self._paramsForTransform(name)
+        params = self._paramsForDataTransform(name)
         for i in self.items:
             if hasattr(i, "addDataTransformParams"):
                 i.addDataTransformParams(name, **params)
+        self.enableAutoRange()
+        self.recomputeAverages()
 
-    def _paramsForTransform(self, name):
+    def _paramsForDataTransform(self, name):
         if "paramsParams" in self._transforms[name]:
             return {
                 pname: pval[0]
@@ -1064,7 +1076,7 @@ class PlotItem(GraphicsWidget):
             }
         return {}
 
-    def _updateDataTransformMode(self, checked):
+    def _handleDataTransformChecked(self, checked):
         name = self.sender().objectName()
         self._transforms[name]["enabled"] = checked
         for i in self.items:
@@ -1076,7 +1088,7 @@ class PlotItem(GraphicsWidget):
         if self._transforms[name].get("updateAxisCallback", None) is not None:
             for axis in self.axes.values():
                 self._transforms[name]["updateAxisCallback"](
-                    axis["item"], checked, **(self._paramsForTransform(name))
+                    axis["item"], checked, **(self._paramsForDataTransform(name))
                 )
         self.enableAutoRange()
         self.recomputeAverages()
@@ -1532,29 +1544,29 @@ def _fourierTransform(x, y):
 _phasemap = lambda x, y: (y[:-1], np.diff(y) / np.diff(x))
 
 
-PlotItem.addDefaultTransformOption(
+PlotItem.addDefaultDataTransformOption(
     translate("Form", "Power Spectrum (FFT)"),
     _fourierTransform,
 )
-PlotItem.addDefaultTransformOption(
+PlotItem.addDefaultDataTransformOption(
     translate("Form", "Log X"),
     _logXTransform,
     lambda axis, checked: axis.setLogMode(x=checked),
 )
-PlotItem.addDefaultTransformOption(
+PlotItem.addDefaultDataTransformOption(
     translate("Form", "Log Y"),
     _logYTransform,
     lambda axis, checked: axis.setLogMode(y=checked),
 )
-PlotItem.addDefaultTransformOption(
+PlotItem.addDefaultDataTransformOption(
     translate("Form", "dy/dx"),
     _diff,
 )
-PlotItem.addDefaultTransformOption(
+PlotItem.addDefaultDataTransformOption(
     translate("Form", "d²y/dx²"),
     lambda x, y: _diff(*_diff(x, y)),
 )
-PlotItem.addDefaultTransformOption(
+PlotItem.addDefaultDataTransformOption(
     translate("Form", "Y vs Y'"),
     _phasemap,
 )

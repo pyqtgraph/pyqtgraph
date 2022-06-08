@@ -29,7 +29,7 @@ def butter_transform(_x, _y, order, cutoff):
     return _x, lfilter(b, a, _y)
 
 
-pg.PlotItem.addDefaultTransformOption(
+pg.PlotItem.addDefaultDataTransformOption(
     "Butter Low-pass",
     butter_transform,
     params=[
@@ -37,7 +37,7 @@ pg.PlotItem.addDefaultTransformOption(
         {"name": "order", "type": "int", "min": 1, "value": 5},
     ],
 )
-pg.PlotItem.addDefaultTransformOption(
+pg.PlotItem.addDefaultDataTransformOption(
     "Gaussian Low-pass",
     lambda _x, _y, sigma: (_x, pg.gaussianFilter(_y, sigma)),
     params=[{"name": "sigma", "type": "float", "suffix": "", "min": 0, "value": 5}],

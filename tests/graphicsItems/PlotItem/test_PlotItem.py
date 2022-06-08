@@ -111,7 +111,7 @@ def test_data_transforms_restore():
     item.setDataTransformState("test", False)
     item.setDataTransformParams("test", foo=301)
     assert not item._transforms["test"]["checkbox"].isChecked()
-    assert item._paramsForTransform("test")["foo"] == 301
+    assert item._paramsForDataTransform("test")["foo"] == 301
     item.restoreState(state)
     assert item._transforms["test"]["checkbox"].isChecked()
-    assert item._paramsForTransform("test")["foo"] == 1.3
+    assert item._paramsForDataTransform("test")["foo"] == 1.3
