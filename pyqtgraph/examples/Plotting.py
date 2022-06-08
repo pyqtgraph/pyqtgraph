@@ -20,6 +20,29 @@ win.setWindowTitle('pyqtgraph example: Plotting')
 # Enable antialiasing for prettier plots
 pg.setConfigOptions(antialias=True)
 
+
+def butter_transform(_x, _y, order, cutoff):
+    from scipy.signal import butter, lfilter
+
+    sample_rate = abs(1 / (_x[1] - _x[0]))
+    b, a = butter(order, cutoff, fs=sample_rate, btype='low', analog=False)
+    return _x, lfilter(b, a, _y)
+
+
+pg.PlotItem.addDefaultTransformOption(
+    "Butter Low-pass",
+    butter_transform,
+    params=[
+        {"name": "cutoff", "type": "float", "suffix": "Hz", "min": 0, "value": 1},
+        {"name": "order", "type": "int", "min": 1, "value": 5},
+    ],
+)
+pg.PlotItem.addDefaultTransformOption(
+    "Gaussian Low-pass",
+    lambda _x, _y, sigma: (_x, pg.gaussianFilter(_y, sigma)),
+    params=[{"name": "sigma", "type": "float", "suffix": "", "min": 0, "value": 5}],
+)
+
 p1 = win.addPlot(title="Basic array plotting", y=np.random.normal(size=100))
 
 p2 = win.addPlot(title="Multiple curves")
@@ -49,7 +72,7 @@ y = y[mask]
 p5.plot(x, y, pen=None, symbol='t', symbolPen=None, symbolSize=10, symbolBrush=(100, 100, 255, 50))
 p5.setLabel('left', "Y Axis", units='A')
 p5.setLabel('bottom', "Y Axis", units='s')
-p5.setLogMode(x=True, y=False)
+p5.setDataTransformState("Log X", True)
 
 p6 = win.addPlot(title="Updating plot")
 curve = p6.plot(pen='y')
@@ -69,8 +92,9 @@ timer.start(50)
 win.nextRow()
 
 p7 = win.addPlot(title="Filled plot, axis disabled")
-y = np.sin(np.linspace(0, 10, 1000)) + np.random.normal(size=1000, scale=0.1)
-p7.plot(y, fillLevel=-0.3, brush=(50,50,200,100))
+x = np.linspace(0, 10, 1000)
+y = np.sin(x) + np.random.normal(size=1000, scale=0.1)
+p7.plot(x, y, fillLevel=-0.3, brush=(50, 50, 200, 100))
 p7.showAxis('bottom', False)
 
 
