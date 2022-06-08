@@ -16,9 +16,32 @@ from .GraphicsObject import GraphicsObject
 __all__ = ['PlotCurveItem']
 
 
+def have_native_drawlines_array():
+    size = 10
+    line = QtCore.QLineF(0, 0, size, size)
+    qimg = QtGui.QImage(size, size, QtGui.QImage.Format.Format_RGB32)
+    qimg.fill(QtCore.Qt.GlobalColor.transparent)
+    painter = QtGui.QPainter(qimg)
+    painter.setPen(QtCore.Qt.GlobalColor.white)
+
+    try:
+        painter.drawLines(line, 1)
+    except TypeError:
+        success = False
+    else:
+        success = True
+    finally:
+        painter.end()
+
+    return success
+
+_have_native_drawlines_array = Qt.QT_LIB.startswith('PySide') and have_native_drawlines_array()
+
+
 class LineSegments:
     def __init__(self):
         self.use_sip_array = Qt.QT_LIB.startswith('PyQt') and hasattr(Qt.sip, 'array')
+        self.use_native_drawlines = Qt.QT_LIB.startswith('PySide') and _have_native_drawlines_array
         self.alloc(0)
 
     def alloc(self, size):
@@ -26,6 +49,9 @@ class LineSegments:
             self.objs = Qt.sip.array(QtCore.QLineF, size)
             vp = Qt.sip.voidptr(self.objs, len(self.objs)*4*8)
             self.arr = np.frombuffer(vp, dtype=np.float64).reshape((-1, 4))
+        elif self.use_native_drawlines:
+            self.arr = np.empty((size, 4), dtype=np.float64)
+            self.objs = Qt.compat.wrapinstance(self.arr.ctypes.data, QtCore.QLineF)
         else:
             self.arr = np.empty((size, 4), dtype=np.float64)
             self.objs = list(map(Qt.compat.wrapinstance,
@@ -73,6 +99,7 @@ class LineSegments:
                 y = y[backfill_idx]
 
         segs = []
+        nsegs = 0
 
         if connect == 'all':
             nsegs = len(x) - 1
@@ -84,12 +111,12 @@ class LineSegments:
                 memory[:, 3] = y[1:]
 
         elif connect == 'pairs':
-            npairs = len(x) // 2
-            if npairs:
-                segs, memory = self.get(npairs)
+            nsegs = len(x) // 2
+            if nsegs:
+                segs, memory = self.get(nsegs)
                 memory = memory.reshape((-1, 2))
-                memory[:, 0] = x[:npairs * 2]
-                memory[:, 1] = y[:npairs * 2]
+                memory[:, 0] = x[:nsegs * 2]
+                memory[:, 1] = y[:nsegs * 2]
 
         elif connect_array is not None:
             # the following are handled here
@@ -103,7 +130,10 @@ class LineSegments:
                 memory[:, 1] = y[:-1][connect_array]
                 memory[:, 3] = y[1:][connect_array]
 
-        return segs
+        if nsegs and self.use_native_drawlines:
+            return segs, nsegs
+        else:
+            return segs,
 
 
 class PlotCurveItem(GraphicsObject):
@@ -850,7 +880,7 @@ class PlotCurveItem(GraphicsObject):
             if sp.style() != QtCore.Qt.PenStyle.NoPen:
                 p.setPen(sp)
                 if self._shouldUseDrawLineSegments(sp):
-                    p.drawLines(self._getLineSegments())
+                    p.drawLines(*self._getLineSegments())
                     if do_fill_outline:
                         p.drawLines(self._getClosingSegments())
                 else:
@@ -865,7 +895,7 @@ class PlotCurveItem(GraphicsObject):
 
         p.setPen(cp)
         if self._shouldUseDrawLineSegments(cp):
-            p.drawLines(self._getLineSegments())
+            p.drawLines(*self._getLineSegments())
             if do_fill_outline:
                 p.drawLines(self._getClosingSegments())
         else:
