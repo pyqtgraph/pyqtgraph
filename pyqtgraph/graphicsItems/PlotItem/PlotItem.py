@@ -98,11 +98,14 @@ class PlotItem(GraphicsWidget):
     _defaultTransforms = {}
 
     @classmethod
-    def addDefaultTransformOption(cls, name, dataTransform, updateAxisCallback=None):
-        """TODO
+    def addDefaultTransformOption(cls, name, dataTransform, updateAxisCallback=None, params=None):
+        """
+        Add an option to the context menu of all subsequently created PlotItems for a custom data transform.
+
         See Also
         --------
         PlotItem.addTransformOption : For a description of the parameters.
+        PlotItem.removeDefaultTransformOption : To remove default data transforms.
 
         Notes
         -----
@@ -116,7 +119,22 @@ class PlotItem(GraphicsWidget):
 
     @classmethod
     def removeDefaultTransformOption(cls, name):
-        """TODO"""
+        """
+        Remove the named data transform from the context menu of all subsequently created PlotItems.
+
+        Parameters
+        ----------
+        name : str
+            Name of the transform to be removed.
+
+        See Also
+        --------
+        PlotItem.addDefaultTransformOption : To add default data transforms.
+
+        Notes
+        -----
+        This does not affect already-instantiated plots.
+"""
         if name in cls._defaultTransforms:
             del cls._defaultTransforms[name]
 
@@ -293,33 +311,40 @@ class PlotItem(GraphicsWidget):
             self.plot(**kargs)
 
     def addTransformOption(self, name, dataTransform, updateAxisCallback=None, params=None):
-        """TODO docs
+        """
+        Add an option to the context menu for a custom data transform. This depends on the `addDataTransform` method
+        of the items contained in this PlotItem, which has a standard implementation in PlotDataItem.
+
         Parameters
         ----------
         name : str
-            Unique name for this transform.
+            Unique name for this transform. Will be displayed to the user.
         dataTransform : Callable[[np.ndarray, np.ndarray, ...], [np.ndarray, np.ndarray]]
             Function which transforms data. Should accept two arguments, `x` and `y`, and it should return the two new
-            data arrays (of equal length!) to be plotted. E.g.::
+            data arrays to be plotted. E.g.::
                 lambda x, y: (x[:-1], np.diff(y) / np.diff(x))
-            If an `params` arg is passed to `addTransformOption`, this function can expect to have the parameters therein
-            described to be passed as named arguments here.
+            Note that the return arrays must be of equal length as each other. If a `params` arg is passed to
+            `addTransformOption`, this function can expect to have the parameters therein described to be passed as
+            named arguments.
         updateAxisCallback : Callable[[AxisItem, bool, ...], None], optional
             Function to call on every axis. First argument is the AxisItem being modified, second argument is whether
             this particular transform is currently enabled. E.g.::
                 lambda axis, enabled: axis.setLogMode(y=enabled)
-            If an `params` arg is passed to `addTransformOption`, this function can expect to have the parameters therein
-            described to be passed as named arguments here.
+            If a `params` arg is passed to `addTransformOption`, this function can expect to have the parameters
+            therein described to be passed as named arguments.
         params : dict, optional
             Pass in a parameter tree config (see: ParameterTree) to generate an additional UI for said parameters. These
             parameters will then be passed into all invocations of the `dataTransform` and `updateAxisCallback`
-            functions as named parameters.
+            functions as named parameters. Only flat, non-nested parameters are currently supported.
+
+        Returns
+        -------
+        None
 
         See Also
         --------
         PlotItem.addDefaultTransformOption
         """
-        # TODO validate args
         if name in self._transforms:
             raise ValueError(f"A transform with name '{name}' is already present.")
         self._transforms[name] = {
@@ -348,15 +373,13 @@ class PlotItem(GraphicsWidget):
         check.toggled.connect(self._updateDataTransformMode)
         check.toggled.emit(False)  # registers with all the data items and axes
 
-    def removeTransformOption(self, name):
-        """TODO"""
-        if name in self._transforms:
-            del self._transforms[name]
-        # TODO make sure checkboxes and signal callbacks get GC'd
-        # TODO rebuild menu without changing values
-        # TODO de-register data transforms
-        # TODO de-axis-update
-        # TODO consider: maybe this is too expensive to build and not in spec anyway?
+    # :MC: removeTransformOption was left unimplemented. Here are the concerns it will need to cover:
+    #  * gridLayout.rowCount (which is used for formatting above) doesn't automatically update
+    #  * make sure checkboxes and signal callbacks get GC'd
+    #  * rebuild menu without changing values?
+    #  * restoreState should remove options to match
+    #  * de-register data transforms
+    #  * de-axis-update
 
     def implements(self, interface=None):
         return interface in ['ViewBoxWrapper']
@@ -448,18 +471,15 @@ class PlotItem(GraphicsWidget):
         with log coordinates.
         
         """
+        warnings.warn(
+            'PlotItem.setLogMode is deprecated and will be removed after 2023-01-01. '
+            'Use PlotItem.setDataTransformState("Log X", state) (and/or "Log Y") instead.',
+            DeprecationWarning, stacklevel=2
+        )
         if x is not None:
-            self.setLogXMode(x)
+            self.setDataTransformState(translate("Form", "Log X"), x)
         if y is not None:
-            self.setLogYMode(y)
-
-    def setLogXMode(self, enable):
-        # TODO deprecate?
-        self._transforms[translate("Form", "Log X")]["checkbox"].setChecked(enable)
-
-    def setLogYMode(self, enable):
-        # TODO deprecate?
-        self._transforms[translate("Form", "Log Y")]["checkbox"].setChecked(enable)
+            self.setDataTransformState(translate("Form", "Log Y"), y)
 
     def showGrid(self, x=None, y=None, alpha=None):
         """
@@ -996,13 +1016,11 @@ class PlotItem(GraphicsWidget):
 
         if "transforms" in state:
             for missing in state["transforms"].keys() - self._transforms.keys():
-                self.addTransformOption(
-                    missing,
-                    state["transforms"][missing]["dataTransform"],
-                    state["transforms"][missing].get("updateAxisCallback", None),
-                    state["transforms"][missing].get("paramsConfig", None),
+                warnings.warn(
+                    f"The '{missing}' transform cannot be restored on this PlotItem; its transform function has "
+                    f"not been added."
                 )
-            # TODO completely remove any that aren't present
+                # :MC: This could potentially be implemented, but it probably won't be a common issue.
             for name in state["transforms"]:
                 self.setDataTransformState(name, state["transforms"][name].get("enabled", False))
                 self.setDataTransformParams(name, **state["transforms"][name].get("paramsState", {}))
@@ -1506,7 +1524,6 @@ def _fourierTransform(x, y):
     n = y.size
     f = np.fft.rfft(y) / n
     d = float(x[-1]-x[0]) / (len(x)-1)
-    # TODO what if this errors?
     x = np.fft.rfftfreq(n, d)
     y = np.abs(f)
     return x, y
