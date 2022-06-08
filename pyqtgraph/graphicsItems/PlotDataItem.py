@@ -399,7 +399,7 @@ class PlotDataItem(GraphicsObject):
         equal intervals. 
         """
         warnings.warn(
-            'PlotDataItem.setFftMode is deprecated and will be removed after 2023-01-01. '
+            'PlotDataItem.setFftMode is deprecated and will be removed. '
             'Use PlotItem.setDataTransformState("Power Spectrum (FFT)", state) instead.',
             DeprecationWarning, stacklevel=2
         )
@@ -418,7 +418,7 @@ class PlotDataItem(GraphicsObject):
         `NaN` value.
         """
         warnings.warn(
-            'PlotDataItem.setLogMode is deprecated and will be removed after 2023-01-01. '
+            'PlotDataItem.setLogMode is deprecated and will be removed. '
             'Use PlotItem.setDataTransformState("Log X", state) (and/or "Log Y") instead.',
             DeprecationWarning, stacklevel=2
         )
@@ -441,7 +441,7 @@ class PlotDataItem(GraphicsObject):
         differences between adjacent `x` and `y` values.
         """
         warnings.warn(
-            'PlotDataItem.setDerivativeMode is deprecated and will be removed after 2023-01-01. '
+            'PlotDataItem.setDerivativeMode is deprecated and will be removed. '
             'Use PlotItem.setDataTransformState("dy/dx", state) instead.',
             DeprecationWarning, stacklevel=2
         )
@@ -460,7 +460,7 @@ class PlotDataItem(GraphicsObject):
         original `y` values.
         """
         warnings.warn(
-            'PlotDataItem.setPhasemapMode is deprecated and will be removed after 2023-01-01. '
+            'PlotDataItem.setPhasemapMode is deprecated and will be removed. '
             'Use PlotItem.setDataTransformState("Y v. Y\'", state) instead.',
             DeprecationWarning, stacklevel=2
         )
