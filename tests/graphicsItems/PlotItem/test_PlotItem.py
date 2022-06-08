@@ -100,7 +100,11 @@ def test_plotitem_menu_initialize():
 
 def test_data_transforms_restore():
     item = pg.PlotItem()
-    item.addTransformOption("test", lambda x, y, foo: (x + foo, y), params=[{"name": "foo", "type": "float"}])
+
+    def transform(x, y, foo):
+        return x + foo, y
+
+    item.addTransformOption("test", transform, params=[{"name": "foo", "type": "float"}])
     item.setDataTransformState("test", True)
     item.setDataTransformParams("test", foo=1.3)
     state = item.saveState()

@@ -111,6 +111,7 @@ class PlotItem(GraphicsWidget):
         cls._defaultTransforms[name] = {
             "dataTransform": dataTransform,
             "updateAxisCallback": updateAxisCallback,
+            "params": params,
         }
 
     @classmethod
@@ -337,7 +338,7 @@ class PlotItem(GraphicsWidget):
             paramsParams.setObjectName(name)
             paramsUi = ParameterTree(showHeader=False)
             paramsUi.addParameters(paramsParams, showTop=False)
-            paramsUi.setFrameStyle(QtWidgets.QFrame.Raised | QtWidgets.QFrame.Panel)
+            paramsUi.setFrameStyle(QtWidgets.QFrame.Shadow.Raised | QtWidgets.QFrame.Shape.Panel)
             self.ctrl.gridLayout.addWidget(paramsUi, row, 1, 1, 1)
             paramsParams.sigTreeStateChanged.connect(self._handleTransformParamsUpdate)
             self._transforms[name]["paramsParams"] = paramsParams
