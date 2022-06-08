@@ -60,8 +60,6 @@ CONFIG_OPTIONS = {
                                   # 'off' or False: lines are never plotted in segments
 }
 
-DEFAULT_CONFIG_OPTIONS = CONFIG_OPTIONS.copy()
-
 
 def setConfigOption(opt, value):
     if opt not in CONFIG_OPTIONS:

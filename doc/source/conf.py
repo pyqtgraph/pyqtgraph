@@ -219,15 +219,20 @@ runlist = [
     "ViewLimits",
 ]
 
+DEFAULT_CONFIG_OPTIONS = pyqtgraph.CONFIG_OPTIONS.copy()
+
+
 def reset_pg_config(gallery_conf, fname):
     """sphinx-gallery reset callback to reset to default pg config"""
-    pyqtgraph.setConfigOptions(**pyqtgraph.DEFAULT_CONFIG_OPTIONS)
+    pyqtgraph.setConfigOptions(**DEFAULT_CONFIG_OPTIONS)
+
 
 def argv_handler(gallery_conf, script_vars):
     if script_vars["src_file"].endswith("hdf5.py"):
         return ["test.hdf5", "1000000"]
     else:
         return []
+
 
 # sphinx gallery config
 sphinx_gallery_conf = {
@@ -238,7 +243,7 @@ sphinx_gallery_conf = {
     "image_scrapers": (qtgallery.qtscraper,),
     "reset_modules": (qtgallery.reset_qapp, reset_pg_config),
     "filename_pattern": r"/examples/\b(" + r"|".join("{}".format(n) for n in runlist) + r")\b",
-    #"filename_pattern": r"/examples/.*[^/]",
+    # "fhlename_pattern": r"/examples/.*[^/]",
     "ignore_pattern": r"(/_)|(^_)|(setup)|(Template)|(template)|(test_examples)|(py2exe)",
     "within_subsection_order": ExampleTitleSortKey,
     "reset_argv": argv_handler,
