@@ -269,8 +269,8 @@ class PlotDataItem(GraphicsObject):
         self._dataset        = None # will hold a PlotDataset for the original data
         self._datasetMapped  = None # will hold a PlotDataset for data after mapping transforms (e.g. log scale)
         self._datasetDisplay = None # will hold a PlotDataset for data downsampled and limited for display
-        self._transforms = {}
-        self._transformParams = {}
+        self._transforms = []  # List of tuples of (name, order, func)
+        self._transformParams = {}  # Optional params keyed by name
         self.curve = PlotCurveItem()
         self.scatter = ScatterPlotItem()
         self.curve.setParentItem(self)
@@ -373,8 +373,8 @@ class PlotDataItem(GraphicsObject):
         self.setOpacity(alpha)
         #self.update()
 
-    def addDataTransform(self, name, func):
-        self._transforms[name] = func
+    def addDataTransform(self, name, order, func):
+        self._transforms.append((name, order, func))
         self.noticeDataTransform()
 
     def addDataTransformParams(self, name, **params):
@@ -382,9 +382,8 @@ class PlotDataItem(GraphicsObject):
         self.noticeDataTransform()
 
     def removeDataTransform(self, name):
-        if name in self._transforms:
-            del self._transforms[name]
-            self.noticeDataTransform()
+        self._transforms = [(n, o, f) for n, o, f in self._transforms if n != name]
+        self.noticeDataTransform()
 
     def noticeDataTransform(self):
         self._datasetMapped = None
@@ -405,7 +404,7 @@ class PlotDataItem(GraphicsObject):
         )
         if state:
             from .PlotItem.PlotItem import _fourierTransform
-            self.addDataTransform(translate("Form", "Power Spectrum (FFT)"), _fourierTransform)
+            self.addDataTransform(translate("Form", "Power Spectrum (FFT)"), 80, _fourierTransform)
         else:
             self.removeDataTransform(translate("Form", "Power Spectrum (FFT)"))
         self.noticeDataTransform()
@@ -424,12 +423,12 @@ class PlotDataItem(GraphicsObject):
         )
         if xState:
             from .PlotItem.PlotItem import _logXTransform
-            self.addDataTransform(translate("Form", "Log X"), _logXTransform)
+            self.addDataTransform(translate("Form", "Log X"), 90, _logXTransform)
         else:
             self.removeDataTransform(translate("Form", "Log X"))
         if yState:
             from .PlotItem.PlotItem import _logYTransform
-            self.addDataTransform(translate("Form", "Log Y"), _logYTransform)
+            self.addDataTransform(translate("Form", "Log Y"), 90, _logYTransform)
         else:
             self.removeDataTransform(translate("Form", "Log Y"))
         self.noticeDataTransform()
@@ -447,7 +446,7 @@ class PlotDataItem(GraphicsObject):
         )
         if state:
             from .PlotItem.PlotItem import _diff
-            self.addDataTransform(translate("Form", "dy/dx"), _diff)
+            self.addDataTransform(translate("Form", "dy/dx"), 60, _diff)
         else:
             self.removeDataTransform(translate("Form", "dy/dx"))
         self.noticeDataTransform()
@@ -466,7 +465,7 @@ class PlotDataItem(GraphicsObject):
         )
         if state:
             from .PlotItem.PlotItem import _phasemap
-            self.addDataTransform(translate("Form", "Y v. Y'"), _phasemap)
+            self.addDataTransform(translate("Form", "Y v. Y'"), 70, _phasemap)
         else:
             self.removeDataTransform(translate("Form", "Y v. Y'"))
         self.noticeDataTransform()
@@ -935,7 +934,7 @@ class PlotDataItem(GraphicsObject):
             if x.dtype == bool:
                 x = x.astype(np.uint8)
 
-            for name, transform in self._transforms.items():
+            for name, order, transform in sorted(self._transforms, key=lambda v: v[1]):
                 x, y = transform(x, y, **self._transformParams.get(name, {}))
 
             dataset = PlotDataset(x, y)

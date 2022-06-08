@@ -3,6 +3,7 @@ import importlib
 import os
 import warnings
 import weakref
+from collections import OrderedDict
 
 import numpy as np
 
@@ -95,10 +96,10 @@ class PlotItem(GraphicsWidget):
     sigXRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox X range has changed
         
     lastFileDir = None
-    _defaultTransforms = {}
+    _defaultTransforms = OrderedDict()
 
     @classmethod
-    def addDefaultDataTransformOption(cls, name, dataTransform, updateAxisCallback=None, params=None):
+    def addDefaultDataTransformOption(cls, name, dataTransform, updateAxisCallback=None, params=None, order=50):
         """
         Add an option to the context menu of all subsequently created PlotItems for a custom data transform.
 
@@ -115,6 +116,7 @@ class PlotItem(GraphicsWidget):
             "dataTransform": dataTransform,
             "updateAxisCallback": updateAxisCallback,
             "params": params,
+            "order": order,
         }
 
     @classmethod
@@ -222,7 +224,7 @@ class PlotItem(GraphicsWidget):
         self.layout.setRowStretchFactor(2, 100)
         self.layout.setColumnStretchFactor(1, 100)
 
-        self._transforms = {}
+        self._transforms = OrderedDict()
         self.items = []
         self.curves = []
         self.itemMeta = weakref.WeakKeyDictionary()
@@ -260,7 +262,7 @@ class PlotItem(GraphicsWidget):
             self.subMenus.append(sm)
             self.ctrlMenu.addMenu(sm)
 
-        for name, kwargs in self._defaultTransforms.items():
+        for name, kwargs in sorted(self._defaultTransforms.items(), key=lambda v: v[1]["order"]):
             self.addDataTransformOption(name, **kwargs)
 
         self.stateGroup = WidgetGroup()
@@ -310,7 +312,7 @@ class PlotItem(GraphicsWidget):
         if len(kargs) > 0:
             self.plot(**kargs)
 
-    def addDataTransformOption(self, name, dataTransform, updateAxisCallback=None, params=None):
+    def addDataTransformOption(self, name, dataTransform, updateAxisCallback=None, params=None, order=50):
         """
         Add an option to the context menu for a custom data transform. This depends on the `addDataTransform` method
         of the items contained in this PlotItem, which has a standard implementation in PlotDataItem.
@@ -336,6 +338,9 @@ class PlotItem(GraphicsWidget):
             Pass in a parameter tree config (see: ParameterTree) to generate an additional UI for said parameters. These
             parameters will then be passed into all invocations of the `dataTransform` and `updateAxisCallback`
             functions as named parameters. Only flat, non-nested parameters are currently supported.
+        order : int, optional
+            Specify the order in which transforms should be applied. Default value is 50, which is before all the
+            default transforms. Should be in the 0-100 range. Ties resolve in the order they're added.
 
         Returns
         -------
@@ -351,6 +356,7 @@ class PlotItem(GraphicsWidget):
             "dataTransform": dataTransform,
             "updateAxisCallback": updateAxisCallback,
             "params": params,
+            "order": order,
         }
         row = self.ctrl.gridLayout.rowCount()
         check = QtWidgets.QCheckBox(self.ctrl.transformGroup)
@@ -669,7 +675,11 @@ class PlotItem(GraphicsWidget):
         if hasattr(item, "addDataTransform"):
             for transform in self._transforms:
                 if self._transforms[transform].get("enabled", False):
-                    item.addDataTransform(transform, self._transforms[transform]["dataTransform"])
+                    item.addDataTransform(
+                        transform,
+                        self._transforms[transform]["order"],
+                        self._transforms[transform]["dataTransform"],
+                    )
                 else:
                     item.removeDataTransform(transform)
                 if self._transforms[transform].get("paramsParams", None) is not None:
@@ -1082,7 +1092,9 @@ class PlotItem(GraphicsWidget):
         for i in self.items:
             if hasattr(i, "addDataTransform"):
                 if checked:
-                    i.addDataTransform(name, self._transforms[name]["dataTransform"])
+                    i.addDataTransform(
+                        name, self._transforms[name]["order"], self._transforms[name]["dataTransform"]
+                    )
                 else:
                     i.removeDataTransform(name)
         if self._transforms[name].get("updateAxisCallback", None) is not None:
@@ -1545,28 +1557,34 @@ _phasemap = lambda x, y: (y[:-1], np.diff(y) / np.diff(x))
 
 
 PlotItem.addDefaultDataTransformOption(
+    translate("Form", "dy/dx"),
+    _diff,
+    order=60,
+)
+PlotItem.addDefaultDataTransformOption(
+    translate("Form", "d²y/dx²"),
+    lambda x, y: _diff(*_diff(x, y)),
+    order=60,
+)
+PlotItem.addDefaultDataTransformOption(
+    translate("Form", "Y vs Y'"),
+    _phasemap,
+    order=70,
+)
+PlotItem.addDefaultDataTransformOption(
     translate("Form", "Power Spectrum (FFT)"),
     _fourierTransform,
+    order=80,
 )
 PlotItem.addDefaultDataTransformOption(
     translate("Form", "Log X"),
     _logXTransform,
     lambda axis, checked: axis.setLogMode(x=checked),
+    order=90,
 )
 PlotItem.addDefaultDataTransformOption(
     translate("Form", "Log Y"),
     _logYTransform,
     lambda axis, checked: axis.setLogMode(y=checked),
-)
-PlotItem.addDefaultDataTransformOption(
-    translate("Form", "dy/dx"),
-    _diff,
-)
-PlotItem.addDefaultDataTransformOption(
-    translate("Form", "d²y/dx²"),
-    lambda x, y: _diff(*_diff(x, y)),
-)
-PlotItem.addDefaultDataTransformOption(
-    translate("Form", "Y vs Y'"),
-    _phasemap,
+    order=90,
 )
