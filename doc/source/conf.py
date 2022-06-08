@@ -254,6 +254,7 @@ sphinx_gallery_conf = {
 
 qtgallery_conf = {
     "xvfb_size": (1280, 800),
+    "xfvb_extra_args": ["-ac", "+extension", "GLX", "+render"],
 }
 
 # -- Options for HTML output ---------------------------------------------------
