@@ -68,7 +68,6 @@ class Parameter(QtCore.QObject):
                                          The third argument can be any extra information about 
                                          the change
     sigTreeStateChanged(self, changes)   Emitted when any child in the tree changes state
-                                         (but only if monitorChildren() is called)
                                          the format of *changes* is [(param, change, info), ...]
     sigValueChanged(self, value)         Emitted when value is finished changing
     sigValueChanging(self, value)        Emitted immediately for all value changes, 
@@ -107,7 +106,6 @@ class Parameter(QtCore.QObject):
     sigStateChanged = QtCore.Signal(object, object, object) ## self, change, info
     
     ## emitted when any child in the tree changes state
-    ## (but only if monitorChildren() is called)
     sigTreeStateChanged = QtCore.Signal(object, object)  # self, changes
                                                          # changes = [(param, change, info), ...]
     sigContextMenu = QtCore.Signal(object, object)       # self, name
@@ -208,8 +206,7 @@ class Parameter(QtCore.QObject):
         self._parent = None
         self.treeStateChanges = []  ## cache of tree state changes to be delivered on next emit
         self.blockTreeChangeEmit = 0
-        #self.monitoringChildren = False  ## prevent calling monitorChildren more than once
-        
+
         if not isinstance(name, str):
             raise Exception("Parameter must have a string name specified in opts.")
         self.setName(name)
