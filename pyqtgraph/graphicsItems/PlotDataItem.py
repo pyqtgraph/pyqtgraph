@@ -266,9 +266,9 @@ class PlotDataItem(GraphicsObject):
         self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
         # Original data, mapped data, and data processed for display is now all held in PlotDataset objects.
         # The convention throughout PlotDataItem is that a PlotDataset is only instantiated if valid data is available.
-        self._dataset        = None # will hold a PlotDataset for the original data
+        self._dataset        = None # will hold a PlotDataset for the original data, accessed by getOriginalData()
         self._datasetMapped  = None # will hold a PlotDataset for data after mapping transforms (e.g. log scale)
-        self._datasetDisplay = None # will hold a PlotDataset for data downsampled and limited for display
+        self._datasetDisplay = None # will hold a PlotDataset for data downsampled and limited for display, accessed by getData()
         self._transforms = []  # List of tuples of (name, order, func)
         self._transformParams = {}  # Optional params keyed by name
         self.curve = PlotCurveItem()
@@ -909,6 +909,15 @@ class PlotDataItem(GraphicsObject):
         else: # ...hide if not.
             self.scatter.hide()
 
+    def getOriginalDataset(self):
+            """
+            Returns the original, unmapped data as the tuple (`xData`, `yData`).
+            """
+            dataset = self._dataset
+            if dataset is None:
+                return (None, None)
+            return dataset.x, dataset.y
+
     def getDisplayDataset(self):
         """
         Returns a :class:`PlotDataset <pyqtgraph.PlotDataset>` object that contains data suitable for display 
@@ -1055,7 +1064,7 @@ class PlotDataItem(GraphicsObject):
 
     def getData(self):
         """
-        Returns the displayed data as the tuple (`xData`, `yData`) after mapping and data reduction.         
+        Returns the displayed data as the tuple (`xData`, `yData`) after mapping and data reduction.
         """
         dataset = self.getDisplayDataset()
         if dataset is None:

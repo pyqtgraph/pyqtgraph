@@ -163,11 +163,7 @@ class GridItem(UIGraphicsItem):
 
                 bx = (ax+1) % 2
                 for x in range(0, int(nl[ax])):
-                    linePen.setCosmetic(False)
-                    if ax == 0:
-                        linePen.setWidthF(self.pixelWidth())
-                    else:
-                        linePen.setWidthF(self.pixelHeight())
+                    linePen.setCosmetic(True)
                     p.setPen(linePen)
                     p1 = np.array([0.,0.])
                     p2 = np.array([0.,0.])
