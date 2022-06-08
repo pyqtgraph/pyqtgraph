@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 
 import pyqtgraph as pg
@@ -17,25 +15,6 @@ def test_bool():
     xdata, ydata = pdi.getData()
     assert ydata.dtype == np.uint8
 
-
-def test_fft():
-    f = 20.
-    x = np.linspace(0, 1, 1000)
-    y = np.sin(2 * np.pi * f * x)
-    pd = pg.PlotDataItem(x, y)
-    pd.setFftMode(True)
-    x, y = pd.getData()
-    assert abs(x[np.argmax(y)] - f) < 0.03
-
-    x = np.linspace(0, 1, 1001)
-    y = np.sin(2 * np.pi * f * x)
-    pd.setData(x, y)
-    x, y = pd.getData()
-    assert abs(x[np.argmax(y)]- f) < 0.03
-
-    pd.setLogMode(True, False)
-    x, y = pd.getData()
-    assert abs(x[np.argmax(y)] - np.log10(f)) < 0.01
 
 def test_setData():
     pdi = pg.PlotDataItem()
@@ -74,31 +53,6 @@ def test_setData():
     assert pdi.xData is None
     assert pdi.yData is None
     
-def test_nonfinite():
-    def _assert_equal_arrays(a1, a2):
-        assert a1.shape == a2.shape
-        for ( xtest, xgood ) in zip( a1, a2 ):
-            assert( (xtest == xgood) or (np.isnan(xtest) and np.isnan(xgood) ) ) 
-        
-    x = np.array([-np.inf, 0.0, 1.0,  2.0  , np.nan,   4.0 , np.inf])
-    y = np.array([    1.0, 0.0,-1.0, np.inf,   2.0 , np.nan,   0.0 ])
-    pdi = pg.PlotDataItem(x, y)
-    dataset = pdi.getDisplayDataset()
-    _assert_equal_arrays( dataset.x, x )
-    _assert_equal_arrays( dataset.y, y )
-   
-    with warnings.catch_warnings(): 
-        warnings.simplefilter("ignore")
-        x_log = np.log10(x)
-        y_log = np.log10(y)
-    x_log[ ~np.isfinite(x_log) ] = np.nan
-    y_log[ ~np.isfinite(y_log) ] = np.nan
-
-    pdi.setLogMode(True, True)
-    dataset = pdi.getDisplayDataset()
-    _assert_equal_arrays( dataset.x, x_log )
-    _assert_equal_arrays( dataset.y, y_log )
-
 def test_opts():
     # test that curve and scatter plot properties get updated from PlotDataItem methods
     y = list(np.random.normal(size=100))

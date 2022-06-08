@@ -468,17 +468,19 @@ class PlotItem(GraphicsWidget):
         
     def setLogMode(self, x=None, y=None):
         """
+        DEPRECATED
+        Use `PlotItem.setDataTransformState("Log X", state)` (and/or `"Log Y"`) instead.
+
         Set log scaling for `x` and/or `y` axes.
         This informs PlotDataItems to transform logarithmically and switches
-        the axes to use log ticking. 
-        
+        the axes to use log ticking.
+
         Note that *no other items* in the scene will be affected by
         this; there is (currently) no generic way to redisplay a GraphicsItem
         with log coordinates.
-        
         """
         warnings.warn(
-            'PlotItem.setLogMode is deprecated and will be removed after 2023-01-01. '
+            'PlotItem.setLogMode is deprecated and will be removed. '
             'Use PlotItem.setDataTransformState("Log X", state) (and/or "Log Y") instead.',
             DeprecationWarning, stacklevel=2
         )

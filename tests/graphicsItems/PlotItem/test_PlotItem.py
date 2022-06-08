@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pytest
 
@@ -98,13 +100,63 @@ def test_plotitem_menu_initialize():
     assert viewbox.menuEnabled() is False
 
 
+def test_fft():
+    f = 20.
+    x = np.linspace(0, 1, 1000)
+    y = np.sin(2 * np.pi * f * x)
+    pi = pg.PlotItem()
+    pd = pi.plot(x, y)
+    # TODO remove all these deprecated calls (move this test up to PlotItem?)
+    pi.setDataTransformState("Power Spectrum (FFT)", True)
+    x, y = pd.getData()
+    assert abs(x[np.argmax(y)] - f) < 0.03
+
+    x = np.linspace(0, 1, 1001)
+    y = np.sin(2 * np.pi * f * x)
+    pd.setData(x, y)
+    x, y = pd.getData()
+    assert abs(x[np.argmax(y)] - f) < 0.03
+
+    pi.setDataTransformState("Log X", True)
+    x, y = pd.getData()
+    assert abs(x[np.argmax(y)] - np.log10(f)) < 0.01
+
+
+def test_nonfinite():
+    def _assert_equal_arrays(a1, a2):
+        assert a1.shape == a2.shape
+        for (xtest, xgood) in zip(a1, a2):
+            assert ((xtest == xgood) or (np.isnan(xtest) and np.isnan(xgood)))
+
+    x = np.array([-np.inf, 0.0, 1.0, 2.0, np.nan, 4.0, np.inf])
+    y = np.array([1.0, 0.0, -1.0, np.inf, 2.0, np.nan, 0.0])
+    pi = pg.PlotItem()
+    pdi = pi.plot(x, y)
+    dataset = pdi.getDisplayDataset()
+    _assert_equal_arrays(dataset.x, x)
+    _assert_equal_arrays(dataset.y, y)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        x_log = np.log10(x)
+        y_log = np.log10(y)
+    x_log[~np.isfinite(x_log)] = np.nan
+    y_log[~np.isfinite(y_log)] = np.nan
+
+    pi.setDataTransformState("Log X", True)
+    pi.setDataTransformState("Log Y", True)
+    dataset = pdi.getDisplayDataset()
+    _assert_equal_arrays(dataset.x, x_log)
+    _assert_equal_arrays(dataset.y, y_log)
+
+
 def test_data_transforms_restore():
     item = pg.PlotItem()
 
     def transform(x, y, foo):
         return x + foo, y
 
-    item.addTransformOption("test", transform, params=[{"name": "foo", "type": "float"}])
+    item.addDataTransformOption("test", transform, params=[{"name": "foo", "type": "float"}])
     item.setDataTransformState("test", True)
     item.setDataTransformParams("test", foo=1.3)
     state = item.saveState()
