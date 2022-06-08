@@ -1567,6 +1567,11 @@ PlotItem.addDefaultDataTransformOption(
     order=60,
 )
 PlotItem.addDefaultDataTransformOption(
+    translate("Form", "Cumulative Sum"),
+    lambda x, y: (x, np.cumsum(y)),
+    order=60,
+)
+PlotItem.addDefaultDataTransformOption(
     translate("Form", "Y vs Y'"),
     _phasemap,
     order=70,
