@@ -15,3 +15,9 @@ sphinx:
 build:
   apt_packages:
     - xvfb
+    - libglu1-mesa-dev
+    - libgl1-mesa-dev
+    - libxi-dev
+    - libglfw3-dev
+    - libgles2-mesa-dev
+    - mesa-utils
