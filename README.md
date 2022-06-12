@@ -93,6 +93,7 @@ Support
   * [mailing list / forum](https://groups.google.com/forum/?fromgroups#!forum/pyqtgraph)
   * [StackOverflow](https://stackoverflow.com/questions/tagged/pyqtgraph)
   * [GitHub Discussions](https://github.com/pyqtgraph/pyqtgraph/discussions)
+  * [Python Discord](https://discord.com/channels/267624335836053506/898139460821192724)
 
 Installation Methods
 --------------------

@@ -97,7 +97,8 @@ def renderSymbol(symbol, size, pen, brush, device=None):
     ## Render a spot with the given parameters to a pixmap
     penPxWidth = max(math.ceil(pen.widthF()), 1)
     if device is None:
-        device = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth), QtGui.QImage.Format.Format_ARGB32)
+        device = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth),
+            QtGui.QImage.Format.Format_ARGB32_Premultiplied)
         device.fill(QtCore.Qt.GlobalColor.transparent)
     p = QtGui.QPainter(device)
     try:
@@ -279,7 +280,7 @@ class SymbolAtlas(object):
         data = []
         for key, style in styles.items():
             img = renderSymbol(*style)
-            arr = fn.imageToArray(img, copy=False, transpose=False)
+            arr = fn.ndarray_from_qimage(img)
             images.append(img)  # keep these to delay garbage collection
             data.append((key, arr))
 
@@ -357,7 +358,8 @@ class SymbolAtlas(object):
         if self._data.size == 0:
             pm = QtGui.QPixmap(0, 0)
         else:
-            img = fn.makeQImage(self._data, copy=False, transpose=False)
+            img = fn.ndarray_to_qimage(self._data,
+                QtGui.QImage.Format.Format_ARGB32_Premultiplied)
             pm = QtGui.QPixmap(img)
         return pm
 
@@ -1079,7 +1081,7 @@ class ScatterPlotItem(GraphicsObject):
 
         if self.opts['pxMode'] is True:
             # Cull points that are outside view
-            viewMask = self._maskAt(self.getViewBox().viewRect())
+            viewMask = self._maskAt(self.viewRect())
 
             # Map points using painter's world transform so they are drawn with pixel-valued sizes
             pts = np.vstack([self.data['x'], self.data['y']])

@@ -41,7 +41,7 @@ class PenParameter(GroupParameter):
     itemClass = PenParameterItem
 
     def __init__(self, **opts):
-        self.pen = fn.mkPen()
+        self.pen = fn.mkPen(**opts)
         children = self._makeChildren(self.pen)
         if 'children' in opts:
             raise KeyError('Cannot set "children" argument in Pen Parameter opts')
