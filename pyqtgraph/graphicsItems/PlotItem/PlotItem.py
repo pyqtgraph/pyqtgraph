@@ -102,6 +102,9 @@ class PlotItem(GraphicsWidget):
     def addDefaultDataTransformOption(cls, name, dataTransform, updateAxisCallback=None, params=None, order=50):
         """
         Add an option to the context menu of all subsequently created PlotItems for a custom data transform.
+        Out of the box, PyQtGraph comes with dy/dx, d²y/dx², Cumulative Sum, Y vs Y' (phasemap), Power Spectrum (FFT),
+        Log X and Log Y transforms. The examples/Plotting.py example has reference implementations of a Butterworth and
+        Gaussian low-pass filter, as well, which both make use of the params argument.
 
         See Also
         --------
@@ -324,14 +327,16 @@ class PlotItem(GraphicsWidget):
         dataTransform : Callable[[np.ndarray, np.ndarray, ...], [np.ndarray, np.ndarray]]
             Function which transforms data. Should accept two arguments, `x` and `y`, and it should return the two new
             data arrays to be plotted. E.g.::
-                lambda x, y: (x[:-1], np.diff(y) / np.diff(x))
+            lambda x, y: (x[:-1], np.diff(y) / np.diff(x))
+
             Note that the return arrays must be of equal length as each other. If a `params` arg is passed to
             `addDataTransformOption`, this function can expect to have the parameters therein described to be passed as
             named arguments.
         updateAxisCallback : Callable[[AxisItem, bool, ...], None], optional
             Function to call on every axis. First argument is the AxisItem being modified, second argument is whether
             this particular transform is currently enabled. E.g.::
-                lambda axis, enabled: axis.setLogMode(y=enabled)
+            lambda axis, enabled: axis.setLogMode(y=enabled)
+
             If a `params` arg is passed to `addDataTransformOption`, this function can expect to have the parameters
             therein described to be passed as named arguments.
         params : dict, optional
