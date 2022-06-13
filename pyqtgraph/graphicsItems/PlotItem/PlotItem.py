@@ -113,7 +113,8 @@ class PlotItem(GraphicsWidget):
 
         Notes
         -----
-        This does not affect already-instantiated plots.
+        This does not affect already-instantiated plots. This will overwrite a previously configured transform with the
+        same name.
         """
         cls._defaultTransforms[name] = {
             "dataTransform": dataTransform,
@@ -681,6 +682,8 @@ class PlotItem(GraphicsWidget):
 
         if hasattr(item, "addDataTransform"):
             for transform in self._transforms:
+                params = self._paramsForDataTransform(transform)
+                item.addDataTransformParams(transform, **params)
                 if self._transforms[transform].get("enabled", False):
                     item.addDataTransform(
                         transform,
@@ -689,8 +692,6 @@ class PlotItem(GraphicsWidget):
                     )
                 else:
                     item.removeDataTransform(transform)
-                if self._transforms[transform].get("paramsParams", None) is not None:
-                    item.addDataTransformParams(transform, **(self._paramsForDataTransform(transform)))
         elif hasattr(item, 'setLogMode'):
             warnings.warn(
                 'setLogMode is deprecated and will be removed in the future. '

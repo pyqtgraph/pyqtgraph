@@ -24,7 +24,7 @@ pg.setConfigOptions(antialias=True)
 def butter_transform(_x, _y, order, cutoff):
     from scipy.signal import butter, lfilter
 
-    sample_rate = abs(1 / (_x[1] - _x[0]))
+    sample_rate = abs((len(_x) - 1) / (_x[-1] - _x[0]))
     b, a = butter(order, cutoff, fs=sample_rate, btype='low', analog=False)
     return _x, lfilter(b, a, _y)
 
