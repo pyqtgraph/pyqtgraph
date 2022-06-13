@@ -384,7 +384,7 @@ class PlotItem(GraphicsWidget):
         check.toggled.connect(self._handleDataTransformChecked)
         check.toggled.emit(False)  # registers with all the data items and axes
 
-    # :MC: removeTransformOption was left unimplemented. Here are the concerns it will need to cover:
+    # :MC: removeDataTransformOption was left unimplemented. Here are the concerns it will need to cover:
     #  * gridLayout.rowCount (which is used for formatting above) doesn't automatically update
     #  * make sure checkboxes and signal callbacks get GC'd
     #  * rebuild menu without changing values?
