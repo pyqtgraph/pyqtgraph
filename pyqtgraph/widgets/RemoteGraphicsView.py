@@ -1,15 +1,14 @@
 from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
 
-if QT_LIB.startswith('PyQt'):
-    from ..Qt import sip
-
 import atexit
+import enum
 import mmap
 import os
 import random
 import sys
 import tempfile
 
+from .. import Qt
 from .. import CONFIG_OPTIONS
 from .. import multiprocess as mp
 from .GraphicsView import GraphicsView
@@ -18,13 +17,14 @@ __all__ = ['RemoteGraphicsView']
 
 
 def serialize_mouse_enum(*args):
-    # PyQt6 can pickle enums and flags but cannot cast to int
+    # PySide6 (opt-in in 6.3.1) and PyQt6
+    # - implemented as python enums
+    # - can pickle enums and flags
+    # - PyQt6 cannot cast to int
     # PyQt5 5.12, PyQt5 5.15, PySide2 5.15, PySide6 can pickle enums but not flags
     # PySide2 5.12 cannot pickle enums nor flags
     # MouseButtons and KeyboardModifiers are flags
-    if QT_LIB != 'PyQt6':
-        args = [int(x) for x in args]
-    return args
+    return [x if isinstance(x, enum.Enum) else int(x) for x in args]
 
 
 class MouseEvent(QtGui.QMouseEvent):
@@ -53,9 +53,10 @@ class MouseEvent(QtGui.QMouseEvent):
     def __setstate__(self, state):
         typ, lpos, gpos, btn, btns, mods = state
         typ = QtCore.QEvent.Type(typ)
-        if QT_LIB != 'PyQt6':
-            btn = QtCore.Qt.MouseButton(btn)
+        btn = QtCore.Qt.MouseButton(btn)
+        if not isinstance(btns, enum.Enum):
             btns = QtCore.Qt.MouseButtons(btns)
+        if not isinstance(mods, enum.Enum):
             mods = QtCore.Qt.KeyboardModifiers(mods)
         super().__init__(typ, lpos, gpos, btn, btns, mods)
 
@@ -85,10 +86,11 @@ class WheelEvent(QtGui.QWheelEvent):
 
     def __setstate__(self, state):
         pos, gpos, pixdel, angdel, btns, mods, phase, inverted = state
-        if QT_LIB != 'PyQt6':
+        if not isinstance(btns, enum.Enum):
             btns = QtCore.Qt.MouseButtons(btns)
+        if not isinstance(mods, enum.Enum):
             mods = QtCore.Qt.KeyboardModifiers(mods)
-            phase = QtCore.Qt.ScrollPhase(phase)
+        phase = QtCore.Qt.ScrollPhase(phase)
         super().__init__(pos, gpos, pixdel, angdel, btns, mods, phase, inverted)
 
 
@@ -321,10 +323,10 @@ class Renderer(GraphicsView):
             
             ## render the scene directly to shared memory
 
-            # see functions.py::makeQImage() for rationale
+            # see functions.py::ndarray_to_qimage() for rationale
             if QT_LIB.startswith('PyQt'):
                 # PyQt5, PyQt6 >= 6.0.1
-                img_ptr = int(sip.voidptr(self.shm))
+                img_ptr = int(Qt.sip.voidptr(self.shm))
             else:
                 # PySide2, PySide6
                 img_ptr = self.shm
