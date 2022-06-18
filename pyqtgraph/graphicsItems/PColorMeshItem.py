@@ -205,9 +205,6 @@ class PColorMeshItem(GraphicsObject):
                          matplotlib.pyplot.pcolormesh.html>".
         """
 
-        # Prepare data
-        self._prepareData(args)
-
         # Has the view bounds changed
         shapeChanged = False
         if self.qpicture is None:
@@ -218,6 +215,10 @@ class PColorMeshItem(GraphicsObject):
         elif len(args)==3:
             if np.any(self.x != args[0]) or np.any(self.y != args[1]):
                 shapeChanged = True
+
+        # Prepare data
+        self._prepareData(args)
+
 
         self.qpicture = QtGui.QPicture()
         painter = QtGui.QPainter(self.qpicture)
