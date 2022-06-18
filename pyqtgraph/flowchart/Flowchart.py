@@ -219,7 +219,8 @@ class Flowchart(Node):
     def nodeRenamed(self, node, oldName):
         del self._nodes[oldName]
         self._nodes[node.name()] = node
-        self.widget().nodeRenamed(node, oldName)
+        if node is not self.inputNode and node is not self.outputNode:
+            self.widget().nodeRenamed(node, oldName)
         self.sigChartChanged.emit(self, 'rename', node)
         
     def arrangeNodes(self):
