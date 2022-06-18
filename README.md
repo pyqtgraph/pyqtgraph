@@ -134,5 +134,6 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [HussariX](https://github.com/sem-geologist/HussariX)
 * [EnMAP-Box](https://enmap-box.readthedocs.io)
 * [EO Time Series Viewer](https://eo-time-series-viewer.readthedocs.io)
+* [Atomize](https://github.com/Anatoly1010/Atomize)  
 
 Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!
