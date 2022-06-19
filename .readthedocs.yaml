@@ -3,11 +3,15 @@
 
 version: 2
 
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3"
+
 sphinx:
   fail_on_warning: true
   configuration: doc/source/conf.py
 
 python:
-  version: 3.8
   install:
     - requirements: doc/requirements.txt
