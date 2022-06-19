@@ -3,7 +3,9 @@ channels:
   - conda-forge
 dependencies:
   - pyside2
+  - qt-main
   - numpy
+  - nomkl
   - scipy
   - pyopengl
   - pytest
