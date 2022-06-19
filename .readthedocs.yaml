@@ -3,10 +3,11 @@
 
 version: 2
 
+sphinx:
+  fail_on_warning: true
+  configuration: doc/source/conf.py
+
 python:
   version: 3.8
   install:
     - requirements: doc/requirements.txt
-
-sphinx:
-  fail_on_warning: true
