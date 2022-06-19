@@ -1,4 +1,4 @@
-sphinx~=5.0
+sphinx==5.0.2
 sphinx_rtd_theme
 pyside2
 numpy
