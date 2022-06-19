@@ -8,6 +8,4 @@ dependencies:
   - nomkl
   - scipy
   - pyopengl
-  - pytest
-  - pytest-xdist
   - pip

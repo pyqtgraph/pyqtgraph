@@ -157,6 +157,8 @@ jobs:
           environment-file: ${{ matrix.environment-file }}
           auto-update-conda: false
           python-version: "3.8"
+      - name: "Install Test Framework"
+        run: pip install pytest pytest-xdist
       - name: "Install Windows-Mesa OpenGL DLL"
         if: runner.os == 'Windows'
         run: |
