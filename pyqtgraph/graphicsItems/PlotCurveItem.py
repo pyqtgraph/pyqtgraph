@@ -40,7 +40,14 @@ _have_native_drawlines_array = Qt.QT_LIB.startswith('PySide') and have_native_dr
 
 class LineSegments:
     def __init__(self):
-        self.use_sip_array = Qt.QT_LIB.startswith('PyQt') and hasattr(Qt.sip, 'array')
+        self.use_sip_array = (
+            Qt.QT_LIB.startswith('PyQt') and
+            hasattr(Qt.sip, 'array') and
+            (
+                (0x60301 <= QtCore.PYQT_VERSION) or
+                (0x50f07 <= QtCore.PYQT_VERSION < 0x60000)
+            )
+        )
         self.use_native_drawlines = Qt.QT_LIB.startswith('PySide') and _have_native_drawlines_array
         self.alloc(0)
 
