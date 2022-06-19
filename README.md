@@ -8,7 +8,7 @@ PyQtGraph
 [![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/context:python)
-
+[![Discord](https://img.shields.io/discord/946624673200893953.svg?label=PyQtGraph&logo=discord)](https://discord.gg/3Qxjz5BF)
 A pure-Python graphics library for PyQt5/PyQt6/PySide2/PySide6
 
 Copyright 2020 Luke Campagnola, University of North Carolina at Chapel Hill
@@ -39,7 +39,7 @@ Currently this means:
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
   [PySide2](https://wiki.qt.io/Qt_for_Python), or
   [PySide6](https://wiki.qt.io/Qt_for_Python)
-* [`numpy`](https://github.com/numpy/numpy) 1.19+
+* [`numpy`](https://github.com/numpy/numpy) 1.20+
 
 ### Optional added functionalities
 
@@ -76,14 +76,15 @@ The following table represents the python environments we test in our CI system.
 | :------------- |:---------------------: | :---------------------: | :---------------------: |
 | PySide2-5.12   |:eight_spoked_asterisk: | :eight_spoked_asterisk: | :eight_spoked_asterisk: |
 | PyQt5-5.12     |:white_check_mark:      | :x:                     | :x:                     |
-| PySide2-5.15   |                        | :white_check_mark:      |                         |
-| PyQt5-5.15     |                        | :white_check_mark:      |                         |
-| PySide6-6.2    |                        |                         | :white_check_mark:      |
-| PyQt6-6.2      |                        |                         | :white_check_mark:      |
+| PySide2-5.15   |:white_check_mark:      | :white_check_mark:      |                         |
+| PyQt5-5.15     |:white_check_mark:      | :white_check_mark:      |                         |
+| PySide6-6.3    |                        |                         | :white_check_mark:      |
+| PyQt6-6.3      |                        |                         | :white_check_mark:      |
 
 * :x: - Not compatible
 * :white_check_mark: - Tested
-* :eight_spoked_asterisk: - Requires `conda-forge` PySide2 package
+* :eight_spoked_asterisk: - only available with `conda-forge` package
+* No icon means supported configuration but we do not explicitely test it
 
 Support
 -------
