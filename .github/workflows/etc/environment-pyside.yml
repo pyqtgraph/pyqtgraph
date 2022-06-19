@@ -1,9 +1,7 @@
 name: test
 channels:
   - conda-forge
-  - defaults
 dependencies:
-  - python=3.8
   - pyside2
   - numpy
   - scipy

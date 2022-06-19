@@ -1,0 +1,11 @@
+name: test
+channels:
+  - conda-forge
+dependencies:
+  - pyqt
+  - numpy
+  - scipy
+  - pyopengl
+  - pytest
+  - pytest-xdist
+  - pip
