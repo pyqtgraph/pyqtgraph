@@ -1,5 +1,5 @@
 sphinx==5.0.2
+PyQt6==6.3.1
 sphinx_rtd_theme
-pyside2
 numpy
 pyopengl
