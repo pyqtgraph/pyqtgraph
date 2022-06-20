@@ -1,6 +1,11 @@
 name: main
 
-on: [push, pull_request]
+on:
+  push:
+    branches-ignore: "dependabot/**"
+  pull_request:
+    paths-ignore:
+      - '**.md'
 
 env:
   PIP_DISABLE_PIP_VERSION_CHECK: 1
@@ -236,6 +241,7 @@ jobs:
         run: |
           python -m pip install setuptools wheel
           python setup.py bdist_wheel
+  
   analyze:
     name: analyze
     runs-on: ubuntu-latest
