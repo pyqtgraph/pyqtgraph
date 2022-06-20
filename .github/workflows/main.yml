@@ -123,7 +123,7 @@ jobs:
         pytest pyqtgraph/examples -v -n 2
       shell: bash
     - name: Upload Screenshots
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Screenshots (Python ${{ matrix.python-version }} - Qt-Bindings ${{ matrix.qt-lib }} - OS ${{ matrix.os }})
         path: $SCREENSHOT_DIR
