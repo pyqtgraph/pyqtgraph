@@ -16,29 +16,59 @@ from .GraphicsObject import GraphicsObject
 __all__ = ['PlotCurveItem']
 
 
-if Qt.QT_LIB.startswith('PyQt'):
-    wrapinstance = Qt.sip.wrapinstance
-else:
-    wrapinstance = Qt.shiboken.wrapInstance
+def have_native_drawlines_array():
+    size = 10
+    line = QtCore.QLineF(0, 0, size, size)
+    qimg = QtGui.QImage(size, size, QtGui.QImage.Format.Format_RGB32)
+    qimg.fill(QtCore.Qt.GlobalColor.transparent)
+    painter = QtGui.QPainter(qimg)
+    painter.setPen(QtCore.Qt.GlobalColor.white)
+
+    try:
+        painter.drawLines(line, 1)
+    except TypeError:
+        success = False
+    else:
+        success = True
+    finally:
+        painter.end()
+
+    return success
+
+_have_native_drawlines_array = Qt.QT_LIB.startswith('PySide') and have_native_drawlines_array()
 
 
 class LineSegments:
     def __init__(self):
+        self.use_sip_array = (
+            Qt.QT_LIB.startswith('PyQt') and
+            hasattr(Qt.sip, 'array') and
+            (
+                (0x60301 <= QtCore.PYQT_VERSION) or
+                (0x50f07 <= QtCore.PYQT_VERSION < 0x60000)
+            )
+        )
+        self.use_native_drawlines = Qt.QT_LIB.startswith('PySide') and _have_native_drawlines_array
         self.alloc(0)
 
     def alloc(self, size):
-        self.arr = np.empty((size, 4), dtype=np.float64)
-        self.ptrs = list(map(wrapinstance,
-            itertools.count(self.arr.ctypes.data, self.arr.strides[0]),
-            itertools.repeat(QtCore.QLineF, self.arr.shape[0])))
+        if self.use_sip_array:
+            self.objs = Qt.sip.array(QtCore.QLineF, size)
+            vp = Qt.sip.voidptr(self.objs, len(self.objs)*4*8)
+            self.arr = np.frombuffer(vp, dtype=np.float64).reshape((-1, 4))
+        elif self.use_native_drawlines:
+            self.arr = np.empty((size, 4), dtype=np.float64)
+            self.objs = Qt.compat.wrapinstance(self.arr.ctypes.data, QtCore.QLineF)
+        else:
+            self.arr = np.empty((size, 4), dtype=np.float64)
+            self.objs = list(map(Qt.compat.wrapinstance,
+                itertools.count(self.arr.ctypes.data, self.arr.strides[0]),
+                itertools.repeat(QtCore.QLineF, self.arr.shape[0])))
 
-    def array(self, size):
-        if size > self.arr.shape[0]:
-            self.alloc(size + 16)
-        return self.arr[:size]
-
-    def instances(self, size):
-        return self.ptrs[:size]
+    def get(self, size):
+        if size != self.arr.shape[0]:
+            self.alloc(size)
+        return self.objs, self.arr
 
     def arrayToLineSegments(self, x, y, connect, finiteCheck):
         # analogue of arrayToQPath taking the same parameters
@@ -47,7 +77,8 @@ class LineSegments:
 
         connect_array = None
         if isinstance(connect, np.ndarray):
-            connect_array, connect = connect, 'array'
+            # the last element is not used
+            connect_array, connect = np.asarray(connect[:-1], dtype=bool), 'array'
 
         all_finite = True
         if finiteCheck or connect == 'finite':
@@ -57,11 +88,13 @@ class LineSegments:
         if connect == 'all':
             if not all_finite:
                 # remove non-finite points, if any
-                x = x.compress(mask)
-                y = y.compress(mask)
+                x = x[mask]
+                y = y[mask]
 
         elif connect == 'finite':
-            if not all_finite:
+            if all_finite:
+                connect = 'all'
+            else:
                 # each non-finite point affects the segment before and after
                 connect_array = mask[:-1] & mask[1:]
 
@@ -72,30 +105,42 @@ class LineSegments:
                 x = x[backfill_idx]
                 y = y[backfill_idx]
 
-        npts = len(x)
-        if npts < 2:
-            return []
-
         segs = []
+        nsegs = 0
 
-        if connect in ['all', 'finite', 'array']:
-            memory = self.array(npts - 1)
-            memory[:, 0] = x[:-1]
-            memory[:, 1] = y[:-1]
-            memory[:, 2] = x[1:]
-            memory[:, 3] = y[1:]
-            segs = self.instances(npts - 1)
-            if connect_array is not None:
-                segs = list(itertools.compress(segs, connect_array.tolist()))
+        if connect == 'all':
+            nsegs = len(x) - 1
+            if nsegs:
+                segs, memory = self.get(nsegs)
+                memory[:, 0] = x[:-1]
+                memory[:, 2] = x[1:]
+                memory[:, 1] = y[:-1]
+                memory[:, 3] = y[1:]
 
-        elif connect in ['pairs']:
-            npairs = npts // 2
-            memory = self.array(npairs).reshape((-1, 2))
-            memory[:, 0] = x[:npairs * 2]
-            memory[:, 1] = y[:npairs * 2]
-            segs = self.instances(npairs)
+        elif connect == 'pairs':
+            nsegs = len(x) // 2
+            if nsegs:
+                segs, memory = self.get(nsegs)
+                memory = memory.reshape((-1, 2))
+                memory[:, 0] = x[:nsegs * 2]
+                memory[:, 1] = y[:nsegs * 2]
 
-        return segs
+        elif connect_array is not None:
+            # the following are handled here
+            # - 'array'
+            # - 'finite' with non-finite elements
+            nsegs = np.count_nonzero(connect_array)
+            if nsegs:
+                segs, memory = self.get(nsegs)
+                memory[:, 0] = x[:-1][connect_array]
+                memory[:, 2] = x[1:][connect_array]
+                memory[:, 1] = y[:-1][connect_array]
+                memory[:, 3] = y[1:][connect_array]
+
+        if nsegs and self.use_native_drawlines:
+            return segs, nsegs
+        else:
+            return segs,
 
 
 class PlotCurveItem(GraphicsObject):
@@ -761,8 +806,8 @@ class PlotCurveItem(GraphicsObject):
             if not mask.all():
                 # we are only supporting connect='all',
                 # so remove non-finite values
-                x = x.compress(mask)
-                y = y.compress(mask)
+                x = x[mask]
+                y = y[mask]
 
         if len(x) < 2:
             return []
@@ -842,7 +887,7 @@ class PlotCurveItem(GraphicsObject):
             if sp.style() != QtCore.Qt.PenStyle.NoPen:
                 p.setPen(sp)
                 if self._shouldUseDrawLineSegments(sp):
-                    p.drawLines(self._getLineSegments())
+                    p.drawLines(*self._getLineSegments())
                     if do_fill_outline:
                         p.drawLines(self._getClosingSegments())
                 else:
@@ -857,7 +902,7 @@ class PlotCurveItem(GraphicsObject):
 
         p.setPen(cp)
         if self._shouldUseDrawLineSegments(cp):
-            p.drawLines(self._getLineSegments())
+            p.drawLines(*self._getLineSegments())
             if do_fill_outline:
                 p.drawLines(self._getClosingSegments())
         else:

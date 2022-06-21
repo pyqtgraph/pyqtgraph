@@ -3,14 +3,14 @@
 
 version: 2
 
-python:
-  version: 3.8
-  install:
-    - requirements: doc/requirements.txt
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3"
 
 sphinx:
-  # until we sort out gallery warnings
-  fail_on_warning: false
+  fail_on_warning: true
+  configuration: doc/source/conf.py
 
 build:
   apt_packages:
@@ -21,3 +21,7 @@ build:
     - libglfw3-dev
     - libgles2-mesa-dev
     - mesa-utils
+
+python:
+  install:
+    - requirements: doc/requirements.txt

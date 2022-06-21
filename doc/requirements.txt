@@ -1,8 +1,9 @@
-PyQt5
+<<<<<<< HEAD
+PyQt6==6.3.1
 numpy
 pyopengl
 h5py
-sphinx
+sphinx==5.0.2
 sphinx_rtd_theme
 sphinx-gallery
 pillow

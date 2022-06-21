@@ -1,13 +1,11 @@
 name: test
 channels:
   - conda-forge
-  - defaults
 dependencies:
-  - python=3.8
   - pyside2
+  - qt-main
   - numpy
+  - nomkl
   - scipy
   - pyopengl
-  - pytest
-  - pytest-xdist
   - pip
