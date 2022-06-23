@@ -131,3 +131,4 @@ class DropAreaOverlay(QtWidgets.QWidget):
         p.setBrush(QtGui.QBrush(QtGui.QColor(100, 100, 255, 50)))
         p.setPen(QtGui.QPen(QtGui.QColor(50, 50, 150), 3))
         p.drawRect(rgn)
+        p.end()
