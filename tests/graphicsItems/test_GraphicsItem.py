@@ -1,7 +1,13 @@
 import faulthandler
+import platform
 import weakref
 
+import pytest
+
 import pyqtgraph as pg
+
+if platform.python_implementation() == "PyPy":
+    pytest.skip("skipping liveness tests on PyPy", allow_module_level=True)
 
 faulthandler.enable()
 

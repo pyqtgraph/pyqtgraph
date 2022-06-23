@@ -1,4 +1,5 @@
 import os
+import platform
 import shutil
 import sys
 import time
@@ -30,6 +31,10 @@ def remove_cache(mod):
     if os.path.isdir(cachedir):
         shutil.rmtree(cachedir)
 
+@pytest.mark.skipif(
+    platform.python_implementation() == "PyPy",
+    reason="PyPy"
+)
 @pytest.mark.skipif(
     (
         (pg.Qt.QT_LIB == "PySide2" and pg.Qt.QtVersion.startswith("5.15"))
