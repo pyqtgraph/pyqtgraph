@@ -17,6 +17,7 @@ class MainWindow(pg.GraphicsLayoutWidget):
         # Example: Transformed display of ImageItem
 
         tr = QtGui.QTransform()  # prepare ImageItem transformation:
+        #Order of transforms are important here, you might want the other way around. 
         tr.scale(6.0, 3.0)       # scale horizontal and vertical axes
         tr.translate(-1.5, -1.5) # move 3x3 image to locate center at axis origin
 
