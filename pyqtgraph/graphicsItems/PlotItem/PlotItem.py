@@ -1089,6 +1089,7 @@ class PlotItem(GraphicsWidget):
         return mode
 
     def resizeEvent(self, ev):
+        ev.accept()
         self.sigResizeEvent.emit(id(self), ev)
 
     def resizeEventHandler(self, eid, ev):

@@ -23,10 +23,10 @@ class AxisItem(GraphicsWidget):
     If maxTickLength is negative, ticks point into the plot.
     """
 
-    sigMouseClickEvent = QtCore.Signal(int, object)
+    sigMouseClickEvent = QtCore.Signal(int, object, str)
     sigMouseDragEvent = QtCore.Signal(int, object, str)
     sigResizeEvent = QtCore.Signal(int, object)
-    sigWheelEvent = QtCore.Signal(int, object)
+    sigWheelEvent = QtCore.Signal(int, object, str)
 
     def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
         """
@@ -268,6 +268,7 @@ class AxisItem(GraphicsWidget):
         self.update()
 
     def resizeEvent(self, ev):
+        ev.accept()
         self.sigResizeEvent.emit(id(self), ev)
 
     def resizeEventHandler(self, eid=None, ev=None):
@@ -576,38 +577,38 @@ class AxisItem(GraphicsWidget):
         else:
             return self._linkedView()
 
-    def _linkToView_internal(self, view):
+    def _linkToView_internal(self, view, replace=True):
         # We need this code to be available without override,
         # even though DateAxisItem overrides the user-side linkToView method
-        self.unlinkFromView()
-
-        self._linkedView = weakref.ref(view)
+        if replace:
+            self.unlinkFromView()
+            self._linkedView = weakref.ref(view)
         if self.orientation in ['right', 'left']:
             view.sigYRangeChanged.connect(self.linkedViewChanged)
         else:
             view.sigXRangeChanged.connect(self.linkedViewChanged)
         view.sigResized.connect(self.linkedViewChanged)
-
         # passtrough event handlers
         self.sigMouseClickEvent.connect(view.axisMouseClickEventHandler)
         self.sigMouseDragEvent.connect(view.axisMouseDragEventHandler)
         self.sigWheelEvent.connect(view.axisWheelEventHandler)
 
-    def linkToView(self, view):
+    def linkToView(self, view, replace=True):
         """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
-        self._linkToView_internal(view)
+        self._linkToView_internal(view, replace=replace)
 
-    def unlinkFromView(self):
+    def unlinkFromView(self, view=None):
         """Unlink this axis from a ViewBox."""
-        oldView = self.linkedView()
-        self._linkedView = None
+        if view is None:
+            oldView = self.linkedView()
+            self._linkedView = None
+        else:
+            oldView = view
         if oldView is not None:
             if self.orientation in ['right', 'left']:
                 oldView.sigYRangeChanged.disconnect(self.linkedViewChanged)
             else:
                 oldView.sigXRangeChanged.disconnect(self.linkedViewChanged)
-
-        if oldView is not None:
             oldView.sigResized.disconnect(self.linkedViewChanged)
 
             # remove passtrough event handlers
@@ -1232,18 +1233,21 @@ class AxisItem(GraphicsWidget):
             self._updateHeight()
 
     def wheelEvent(self, ev):
+        ev.accept()
         self.sigWheelEvent.emit(id(self), ev, self.orientation)
 
     def wheelEventHandler(self, eid, ev, orientation):
         pass
 
     def mouseDragEvent(self, ev):
+        ev.accept()
         self.sigMouseDragEvent.emit(id(self), ev, self.orientation)
 
     def mouseDragEventHandler(self, eid, ev, orientation):
         pass
 
     def mouseClickEvent(self, ev):
+        ev.accept()
         self.sigMouseClickEvent.emit(id(self), ev, self.orientation)
 
     def mouseClickEventHandler(self, eid, ev, orientation):

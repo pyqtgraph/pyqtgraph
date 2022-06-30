@@ -102,8 +102,6 @@ class ViewBox(GraphicsWidget):
     sigStateChanged = QtCore.Signal(object)
     sigTransformChanged = QtCore.Signal(object)
     sigResized = QtCore.Signal(object)
-    sigMouseDragged = QtCore.Signal(object, object)
-    sigMouseWheel = QtCore.Signal(object, object)
     sigHistoryChanged = QtCore.Signal(object)
 
     # mouse modes
@@ -459,6 +457,7 @@ class ViewBox(GraphicsWidget):
             ch.setParentItem(None)
 
     def resizeEvent(self, ev):
+        ev.accept()
         self.sigResizeEvent.emit(id(self), ev)
 
     def resizeEventHandler(self, eid, ev):
@@ -1050,13 +1049,11 @@ class ViewBox(GraphicsWidget):
 
     def linkedXChanged(self):
         # called when x range of linked view has changed
-        view = self.linkedView(0)
-        self.linkedViewChanged(view, ViewBox.XAxis)
+        self.linkedViewChanged(self.linkedView(0), ViewBox.XAxis)
 
     def linkedYChanged(self):
         # called when y range of linked view has changed
-        view = self.linkedView(1)
-        self.linkedViewChanged(view, ViewBox.YAxis)
+        self.linkedViewChanged(self.linkedView(1), ViewBox.YAxis)
 
     def linkedView(self, ax):
         # Return the linked view for axis *ax*.
@@ -1276,6 +1273,7 @@ class ViewBox(GraphicsWidget):
         return self.mapSceneToView(item.sceneBoundingRect()).boundingRect()
 
     def wheelEvent(self, ev):
+        ev.accept()
         self.sigWheelEvent.emit(id(self), ev)
 
     def wheelEventHandler(self, eid, ev):
@@ -1286,11 +1284,9 @@ class ViewBox(GraphicsWidget):
 
         self._resetTarget()
         self.scaleBy(s, center)
-        ev.accept()
 
         self.sigXRangeChangedManually.emit(mask)
         self.sigYRangeChangedManually.emit(mask)
-        self.sigMouseWheel.emit(ev, None)
         self.sigRangeChangedManually.emit(mask)
 
     def axisWheelEventHandler(self, eid, ev, orientation):
@@ -1303,20 +1299,19 @@ class ViewBox(GraphicsWidget):
 
         self._resetTarget()
         self.scaleBy(s, center)
-        ev.accept()
         if axis == ViewBox.XAxis:
             self.sigXRangeChangedManually.emit(mask)
         elif axis == ViewBox.YAxis:
             self.sigYRangeChangedManually.emit(mask)
-        self.sigMouseWheel.emit(ev, axis)
         self.sigRangeChangedManually.emit(mask)
 
     def mouseClickEvent(self, ev):
+        if ev.button() == QtCore.Qt.MouseButton.RightButton and self.menuEnabled():
+            ev.accept()
         self.sigMouseClickEvent.emit(id(self), ev)
 
     def mouseClickEventHandler(self, eid, ev):
         if ev.button() == QtCore.Qt.MouseButton.RightButton and self.menuEnabled():
-            ev.accept()
             self.raiseContextMenu(ev)
 
     def axisMouseClickEventHandler(self, eid, ev, orientation):
@@ -1335,12 +1330,10 @@ class ViewBox(GraphicsWidget):
         return self.menu.actions() if self.menuEnabled() else []
 
     def mouseDragEvent(self, ev):
+        ev.accept()
         self.sigMouseDragEvent.emit(id(self), ev)
 
     def mouseDragEventHandler(self, eid, ev):
-        # if axis is specified, event will only affect that axis.
-        ev.accept()  # we accept all buttons
-
         pos = ev.pos()
         lastPos = ev.lastPos()
         dif = pos - lastPos
@@ -1358,7 +1351,6 @@ class ViewBox(GraphicsWidget):
                     self.rbScaleBox.hide()
                     ax = QtCore.QRectF(Point(ev.buttonDownPos(ev.button())), Point(pos))
                     ax = self.childGroup.mapRectFromParent(ax)
-                    self.sigMouseDragged.emit(ev, None)
                     self.showAxRect(ax)
                     self.axHistoryPointer += 1
                     self.axHistory = self.axHistory[:self.axHistoryPointer] + [ax]
@@ -1378,7 +1370,6 @@ class ViewBox(GraphicsWidget):
                     self.translateBy(x=x, y=y)
                 self.sigXRangeChangedManually.emit(mask)
                 self.sigYRangeChangedManually.emit(mask)
-                self.sigMouseDragged.emit(ev, None)
                 self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         elif ev.button() & QtCore.Qt.MouseButton.RightButton:
             # print "vb.rightDrag"
@@ -1401,13 +1392,10 @@ class ViewBox(GraphicsWidget):
             self.scaleBy(x=x, y=y, center=center)
             self.sigXRangeChangedManually.emit(self.state['mouseEnabled'])
             self.sigYRangeChangedManually.emit(self.state['mouseEnabled'])
-            self.sigMouseDragged.emit(ev, None)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
     def axisMouseDragEventHandler(self, eid, ev, orientation):
         # if axis is specified, event will only affect that axis.
-        ev.accept()  # we accept all buttons
-
         pos = ev.pos()
         lastPos = ev.lastPos()
         dif = pos - lastPos
@@ -1435,7 +1423,6 @@ class ViewBox(GraphicsWidget):
                 self.sigXRangeChangedManually.emit(mask)
             elif axis == ViewBox.YAxis:
                 self.sigYRangeChangedManually.emit(mask)
-            self.sigMouseDragged.emit(ev, axis)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         elif ev.button() & QtCore.Qt.MouseButton.RightButton:
             # print "vb.rightDrag"
@@ -1460,13 +1447,10 @@ class ViewBox(GraphicsWidget):
                 self.sigXRangeChangedManually.emit(self.state['mouseEnabled'])
             elif axis == ViewBox.YAxis:
                 self.sigYRangeChangedManually.emit(self.state['mouseEnabled'])
-            elif axis is None:
-                self.sigXRangeChangedManually.emit(self.state['mouseEnabled'])
-                self.sigYRangeChangedManually.emit(self.state['mouseEnabled'])
-                self.sigMouseDragged.emit(ev, axis)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
     def keyPressEvent(self, ev):
+        ev.accept()
         self.sigKeyPressEvent.emit(id(self), ev)
 
     def keyPressEventHandler(self, eid, ev):
@@ -1479,7 +1463,6 @@ class ViewBox(GraphicsWidget):
         ctrl-- : moves backward in the zooming stack (if it exists)
 
         """
-        ev.accept()
         if ev.text() == '-':
             self.scaleHistory(-1)
         elif ev.text() in ['+', '=']:
