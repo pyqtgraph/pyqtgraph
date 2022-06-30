@@ -3207,7 +3207,7 @@ def toposort(deps, nodes=None, seen=None, stack=None, depth=0):
     return sorted
 
 
-def disconnect(signal, slot, meta=None):
+def disconnect(signal, slot):
     """Disconnect a Qt signal from a slot.
 
     This method augments Qt's Signal.disconnect():
@@ -3221,9 +3221,6 @@ def disconnect(signal, slot, meta=None):
             signal.disconnect(slot)
             return True
         except (TypeError, RuntimeError):
-            if meta is not None:
-                QtCore.QObject.disconnect(meta)
-                return True
             slot = reload.getPreviousVersion(slot)
             if slot is None:
                 return False

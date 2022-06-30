@@ -120,7 +120,7 @@ class PlotItem(GraphicsWidget):
 
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
 
-        ## Set up control buttons
+        # Set up control buttons
         self.autoBtn = ButtonItem(icons.getGraphPixmap('auto'), 14, self)
         self.autoBtn.mode = 'auto'
         self.autoBtn.clicked.connect(self.autoBtnClicked)
@@ -756,7 +756,7 @@ class PlotItem(GraphicsWidget):
         rect = self.vb.viewRect()
         xRange = rect.left(), rect.right()
 
-        dx = max(rect.right(),0) - min(rect.left(),0)
+        dx = max(rect.right(), 0) - min(rect.left(), 0)
         ymn = min(rect.top(), rect.bottom())
         ymx = max(rect.top(), rect.bottom())
         dy = max(ymx, 0) - min(ymn, 0)

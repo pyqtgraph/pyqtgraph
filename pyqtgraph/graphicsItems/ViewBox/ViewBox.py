@@ -246,7 +246,7 @@ class ViewBox(GraphicsWidget):
         if name is None:
             self.updateViewLists()
 
-        self._viewPixelSizeCache  = None
+        self._viewPixelSizeCache = None
 
     def getAspectRatio(self):
         '''return the current aspect ratio'''
@@ -372,7 +372,7 @@ class ViewBox(GraphicsWidget):
 
     def _add_rectangle_selection(self):
         if self.rbScaleBox is None and self.state['mouseMode'] == ViewBox.RectMode:
-            ## Make scale box that is shown when dragging on the view
+            # Make scale box that is shown when dragging on the view
             self.rbScaleBox = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
             self.rbScaleBox.setPen(fn.mkPen((255, 255, 100), width=1))
             self.rbScaleBox.setBrush(fn.mkBrush(255, 255, 0, 100))
@@ -380,7 +380,7 @@ class ViewBox(GraphicsWidget):
             self.rbScaleBox.hide()
             self.addItem(self.rbScaleBox, ignoreBounds=True)
 
-    def setLeftButtonAction(self, mode='rect'):  ## for backward compatibility
+    def setLeftButtonAction(self, mode='rect'):  # for backward compatibility
         if mode.lower() == 'rect':
             self.setMouseMode(ViewBox.RectMode)
         elif mode.lower() == 'pan':
@@ -463,7 +463,7 @@ class ViewBox(GraphicsWidget):
 
     def resizeEventHandler(self, eid, ev):
         if ev.oldSize() != ev.newSize():
-            self._viewPixelSizeCache  = None
+            self._viewPixelSizeCache = None
             self._matrixNeedsUpdate = True
 
             self.linkedXChanged()
@@ -558,7 +558,7 @@ class ViewBox(GraphicsWidget):
         ================== =====================================================================
 
         """
-        self._viewPixelSizeCache  = None
+        self._viewPixelSizeCache = None
 
         changes = {}   # axes
         setRequested = [False, False]
@@ -1263,11 +1263,11 @@ class ViewBox(GraphicsWidget):
 
     def viewPixelSize(self):
         """Return the (width, height) of a screen pixel in view coordinates."""
-        if self._viewPixelSizeCache  is None:
+        if self._viewPixelSizeCache is None:
 
             o = self.mapToView(Point(0, 0))
             px, py = [Point(self.mapToView(v) - o) for v in self.pixelVectors()]
-            self._viewPixelSizeCache  = (px.length(), py.length())
+            self._viewPixelSizeCache = (px.length(), py.length())
 
         return self._viewPixelSizeCache
 
@@ -1352,7 +1352,7 @@ class ViewBox(GraphicsWidget):
                     self.axHistoryPointer += 1
                     self.axHistory = self.axHistory[:self.axHistoryPointer] + [ax]
                 else:
-                    ## update shape of scale box
+                    # update shape of scale box
                     self.updateScaleBox(ev.buttonDownPos(), ev.pos())
             else:
                 tr = self.childGroup.transform()
@@ -1471,7 +1471,7 @@ class ViewBox(GraphicsWidget):
         if items is None:
             items = self.addedItems
 
-        ## First collect all boundary information
+        # First collect all boundary information
         itemBounds = []
         for item in items:
             if not item.isVisible() or not item.scene() is self.scene():
