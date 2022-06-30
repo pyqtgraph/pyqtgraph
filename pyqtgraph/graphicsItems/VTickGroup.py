@@ -79,7 +79,6 @@ class VTickGroup(UIGraphicsItem):
             
     def rebuildTicks(self):
         self.path = QtGui.QPainterPath()
-        yrange = self.yRange()
         for x in self.xvals:
             self.path.moveTo(x, 0.)
             self.path.lineTo(x, 1.)

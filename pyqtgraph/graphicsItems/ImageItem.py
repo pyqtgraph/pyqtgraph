@@ -685,7 +685,6 @@ class ImageItem(GraphicsObject):
         # distinguish between lut for levels and colors
         levels_lut = None
         colors_lut = lut
-        lut = None
 
         eflsize = 2**(image.itemsize*8)
         if levels is None:
@@ -727,8 +726,6 @@ class ImageItem(GraphicsObject):
                     levels_lut = fn.rescaleData(ind, scale=effscale,
                                     offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
                     efflut = colors_lut[levels_lut]
-                    levels_lut = None
-                    colors_lut = None
                     self._effectiveLut = efflut
                 efflut = self._effectiveLut
 
@@ -1039,7 +1036,7 @@ class ImageItem(GraphicsObject):
             return False
         menu = self.scene().addParentContextMenus(self, menu, ev)
         pos = ev.screenPos()
-        menu.popup(QtCore.QPoint(pos.x(), pos.y()))
+        menu.popup(QtCore.QPoint(int(pos.x()), int(pos.y())))
         return True
 
     def getMenu(self):

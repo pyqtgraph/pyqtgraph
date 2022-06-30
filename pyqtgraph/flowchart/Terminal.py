@@ -371,7 +371,7 @@ class TerminalGraphicsItem(GraphicsObject):
         menu = self.getMenu()
         menu = self.scene().addParentContextMenus(self, menu, ev)
         pos = ev.screenPos()
-        menu.popup(QtCore.QPoint(pos.x(), pos.y()))
+        menu.popup(QtCore.QPoint(int(pos.x()), int(pos.y())))
         
     def getMenu(self):
         if self.menu is None:

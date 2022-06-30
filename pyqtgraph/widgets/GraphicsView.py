@@ -101,11 +101,6 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.sceneObj = GraphicsScene(parent=self)
         self.setScene(self.sceneObj)
         
-        ## Workaround for PySide crash
-        ## This ensures that the scene will outlive the view.
-        if QT_LIB == 'PySide':
-            self.sceneObj._view_ref_workaround = self
-        
         ## by default we set up a central widget with a grid layout.
         ## this can be replaced if needed.
         self.centralWidget = None

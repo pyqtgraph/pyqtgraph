@@ -5,15 +5,10 @@ import time
 import traceback
 import warnings
 import weakref
+import builtins
+import pickle
 
 import numpy as np
-
-try:
-    import __builtin__ as builtins
-    import cPickle as pickle
-except ImportError:
-    import builtins
-    import pickle
 
 # color printing for debugging
 from ..util import cprint
@@ -78,12 +73,11 @@ class RemoteEventHandler(object):
             'returnType': 'auto',    ## 'proxy', 'value', 'auto'
             'autoProxy': False,      ## bool
             'deferGetattr': False,   ## True, False
-            'noProxyTypes': [ type(None), str, int, float, tuple, list, dict, LocalObjectProxy, ObjectProxy ],
+            'noProxyTypes': [
+                type(None), str, bytes, int, float, tuple, list, dict,
+                LocalObjectProxy, ObjectProxy,
+            ],
         }
-        if int(sys.version[0]) < 3:
-            self.proxyOptions['noProxyTypes'].append(unicode)
-        else:
-            self.proxyOptions['noProxyTypes'].append(bytes)
         
         self.optsLock = threading.RLock()
         

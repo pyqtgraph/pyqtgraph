@@ -109,7 +109,7 @@ class MatplotlibExporter(Exporter):
                 fillcolor = fillBrush.color().getRgbF()
                 ax.fill_between(x=x, y1=y, y2=opts['fillLevel'], facecolor=fillcolor)
             
-            pl = ax.plot(x, y, marker=symbol, color=color, linewidth=pen.width(), 
+            ax.plot(x, y, marker=symbol, color=color, linewidth=pen.width(), 
                     linestyle=linestyle, markeredgecolor=markeredgecolor, markerfacecolor=markerfacecolor,
                     markersize=markersize)
 

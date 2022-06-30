@@ -319,7 +319,6 @@ class MeshData(object):
         self._vertexNormals = None
         for i in range(faces.shape[0]):
             face = faces[i]
-            inds = []
             for j in range(face.shape[0]):
                 pt = face[j]
                 pt2 = tuple([round(x*1e14) for x in pt])  ## quantize to be sure that nearly-identical points will be merged

@@ -53,7 +53,6 @@ if Image.VERSION == '1.1.6':
             else:
                 raise TypeError("Do not understand data.")
         ndmax = 4
-        bad_dims=0
         if mode in ['1','L','I','P','F']:
             ndmax = 2
         elif mode == 'RGB':

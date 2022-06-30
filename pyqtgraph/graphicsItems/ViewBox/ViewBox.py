@@ -220,13 +220,8 @@ class ViewBox(GraphicsWidget):
         self.borderRect.setZValue(1e3)
         self.borderRect.setPen(self.border)
 
-        # Make scale box that is shown when dragging on the view
-        self.rbScaleBox = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
-        self.rbScaleBox.setPen(fn.mkPen((255, 255, 100), width=1))
-        self.rbScaleBox.setBrush(fn.mkBrush(255, 255, 0, 100))
-        self.rbScaleBox.setZValue(1e9)
-        self.rbScaleBox.hide()
-        self.addItem(self.rbScaleBox, ignoreBounds=True)
+        self.rbScaleBox = None
+        self._add_rectangle_selection()
 
         # show target rect for debugging
         self.target = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
@@ -371,9 +366,21 @@ class ViewBox(GraphicsWidget):
         if mode not in [ViewBox.PanMode, ViewBox.RectMode]:
             raise Exception("Mode must be ViewBox.PanMode or ViewBox.RectMode")
         self.state['mouseMode'] = mode
+        self._add_rectangle_selection()
+
         self.sigStateChanged.emit(self)
 
-    def setLeftButtonAction(self, mode='rect'):  # for backward compatibility
+    def _add_rectangle_selection(self):
+        if self.rbScaleBox is None and self.state['mouseMode'] == ViewBox.RectMode:
+            ## Make scale box that is shown when dragging on the view
+            self.rbScaleBox = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
+            self.rbScaleBox.setPen(fn.mkPen((255, 255, 100), width=1))
+            self.rbScaleBox.setBrush(fn.mkBrush(255, 255, 0, 100))
+            self.rbScaleBox.setZValue(1e9)
+            self.rbScaleBox.hide()
+            self.addItem(self.rbScaleBox, ignoreBounds=True)
+
+    def setLeftButtonAction(self, mode='rect'):  ## for backward compatibility
         if mode.lower() == 'rect':
             self.setMouseMode(ViewBox.RectMode)
         elif mode.lower() == 'pan':
@@ -854,9 +861,6 @@ class ViewBox(GraphicsWidget):
 
         if axis is None:
             axis = ViewBox.XYAxes
-
-        needAutoRangeUpdate = False
-
         if axis == ViewBox.XYAxes or axis == 'xy':
             axes = [0, 1]
         elif axis == ViewBox.XAxis or axis == 'x':
@@ -1324,8 +1328,9 @@ class ViewBox(GraphicsWidget):
         # if axis is specified, event will only affect that axis.
         ev.accept()  # we accept all buttons
 
-        pos = ev.scenePos()
-        dif = pos - ev.lastScenePos()
+        pos = ev.pos()
+        lastPos = ev.lastPos()
+        dif = pos - lastPos
         dif = dif * -1
 
         # Ignore axes if mouse is disabled
@@ -1340,15 +1345,15 @@ class ViewBox(GraphicsWidget):
                 if ev.isFinish():  # This is the final move in the drag; change the view scale now
                     # print "finish"
                     self.rbScaleBox.hide()
-                    ax = QtCore.QRectF(Point(ev.buttonDownScenePos(ev.button())), Point(pos))
-                    ax = self.childGroup.mapRectFromScene(ax)
+                    ax = QtCore.QRectF(Point(ev.buttonDownPos(ev.button())), Point(pos))
+                    ax = self.childGroup.mapRectFromParent(ax)
                     self.sigMouseDragged.emit(ev, axis)
                     self.showAxRect(ax)
                     self.axHistoryPointer += 1
                     self.axHistory = self.axHistory[:self.axHistoryPointer] + [ax]
                 else:
-                    # update shape of scale box
-                    self.updateScaleBox(ev.buttonDownScenePos(), ev.scenePos())
+                    ## update shape of scale box
+                    self.updateScaleBox(ev.buttonDownPos(), ev.pos())
             else:
                 tr = self.childGroup.transform()
                 tr = fn.invertQTransform(tr)
@@ -1432,7 +1437,7 @@ class ViewBox(GraphicsWidget):
 
     def updateScaleBox(self, p1, p2):
         r = QtCore.QRectF(p1, p2)
-        r = self.childGroup.mapRectFromScene(r)
+        r = self.childGroup.mapRectFromParent(r)
         self.rbScaleBox.setPos(r.topLeft())
         tr = QtGui.QTransform.fromScale(r.width(), r.height())
         self.rbScaleBox.setTransform(tr)
@@ -1466,10 +1471,7 @@ class ViewBox(GraphicsWidget):
         if items is None:
             items = self.addedItems
 
-        # measure pixel dimensions in view box
-        px, py = [v.length() if v is not None else 0 for v in self.childGroup.pixelVectors()]
-
-        # First collect all boundary information
+        ## First collect all boundary information
         itemBounds = []
         for item in items:
             if not item.isVisible() or not item.scene() is self.scene():

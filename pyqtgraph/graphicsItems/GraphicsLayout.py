@@ -165,7 +165,8 @@ class GraphicsLayout(GraphicsWidget):
         del self.items[item]
 
         item.geometryChanged.disconnect(self._updateItemBorder)
-        del self.itemBorders[item]
+        itemBorder = self.itemBorders.pop(item)
+        self.scene().removeItem(itemBorder)
 
         self.update()
     

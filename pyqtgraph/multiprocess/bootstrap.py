@@ -7,12 +7,8 @@ import sys
 if __name__ == '__main__':
     if hasattr(os, 'setpgrp'):
         os.setpgrp()  ## prevents signals (notably keyboard interrupt) being forwarded from parent to this process
-    if sys.version[0] == '3':
-        #name, port, authkey, ppid, targetStr, path, pyside = pickle.load(sys.stdin.buffer)
-        opts = pickle.load(sys.stdin.buffer)
-    else:
-        #name, port, authkey, ppid, targetStr, path, pyside = pickle.load(sys.stdin)
-        opts = pickle.load(sys.stdin)
+    #name, port, authkey, ppid, targetStr, path, pyside = pickle.load(sys.stdin.buffer)
+    opts = pickle.load(sys.stdin.buffer)
     #print "key:",  ' '.join([str(ord(x)) for x in authkey])
     path = opts.pop('path', None)
     if path is not None:
@@ -26,15 +22,6 @@ if __name__ == '__main__':
                 sys.path.pop()
             sys.path.extend(path)
 
-    pyqtapis = opts.pop('pyqtapis', None)
-    if pyqtapis is not None:
-        try:
-            from PyQt5 import sip
-        except ImportError:
-            import sip
-            for k,v in pyqtapis.items():
-                sip.setapi(k, v)
-        
     qt_lib = opts.pop('qt_lib', None)
     if qt_lib is not None:
         globals()[qt_lib] = importlib.import_module(qt_lib)
