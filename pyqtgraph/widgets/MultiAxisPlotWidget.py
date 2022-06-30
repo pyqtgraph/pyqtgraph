@@ -11,7 +11,7 @@ from ..graphicsItems.PlotItem.PlotItem import PlotItem
 from ..graphicsItems.ViewBox import ViewBox
 from ..widgets.PlotWidget import PlotWidget
 
-SignalMetaHolder = namedtuple("SigDisconnector", ["signal", "slot", "meta"])
+SignalMetaHolder = namedtuple("SigDisconnector", ["signal", "slot"])
 
 
 class MultiAxisPlotWidget(PlotWidget):
@@ -265,7 +265,8 @@ class MultiAxisPlotWidget(PlotWidget):
 
     @staticmethod
     def connectify(holder, name, signal, slot):
-        holder[name] = SignalMetaHolder(signal=signal, slot=slot, meta=signal.connect(slot))
+        holder[name] = SignalMetaHolder(signal=signal, slot=slot)
+        signal.connect(slot)
 
     def _connect_signals(self, chart: PlotDataItem):  # TODO: make other chart types ok
         """Connects all signals related to this widget for the given chart given the top level one."""

@@ -24,7 +24,7 @@ class AxisItem(GraphicsWidget):
     """
 
     sigMouseClickEvent = QtCore.Signal(int, object)
-    sigMouseDragEvent = QtCore.Signal(int, object)
+    sigMouseDragEvent = QtCore.Signal(int, object, str)
     sigResizeEvent = QtCore.Signal(int, object)
     sigWheelEvent = QtCore.Signal(int, object)
 
@@ -588,6 +588,11 @@ class AxisItem(GraphicsWidget):
             view.sigXRangeChanged.connect(self.linkedViewChanged)
         view.sigResized.connect(self.linkedViewChanged)
 
+        # passtrough event handlers
+        self.sigMouseClickEvent.connect(view.axisMouseClickEventHandler)
+        self.sigMouseDragEvent.connect(view.axisMouseDragEventHandler)
+        self.sigWheelEvent.connect(view.axisWheelEventHandler)
+
     def linkToView(self, view):
         """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
         self._linkToView_internal(view)
@@ -604,6 +609,11 @@ class AxisItem(GraphicsWidget):
 
         if oldView is not None:
             oldView.sigResized.disconnect(self.linkedViewChanged)
+
+            # remove passtrough event handlers
+            self.sigMouseClickEvent.disconnect(oldView.axisMouseClickEventHandler)
+            self.sigMouseDragEvent.disconnect(oldView.axisMouseDragEventHandler)
+            self.sigWheelEvent.disconnect(oldView.axisWheelEventHandler)
 
     def linkedViewChanged(self, view, newRange=None):
         if self.orientation in ['right', 'left']:
@@ -1222,46 +1232,19 @@ class AxisItem(GraphicsWidget):
             self._updateHeight()
 
     def wheelEvent(self, ev):
-        self.sigWheelEvent.emit(id(self), ev)
+        self.sigWheelEvent.emit(id(self), ev, self.orientation)
 
-    def wheelEventHandler(self, eid, ev):
-        lv = self.linkedView()
-        if lv is None:
-            return
-        # Did the event occur inside the linked ViewBox (and not over the axis iteself)?
-        if lv.sceneBoundingRect().contains(ev.scenePos()):
-            ev.ignore()
-            return
-        else:
-            # pass event to linked viewbox with appropriate single axis zoom parameter
-            if self.orientation in ['left', 'right']:
-                lv.wheelEventHandler(id(self), ev, axis=1)
-            else:
-                lv.wheelEventHandler(id(self), ev, axis=0)
-        ev.accept()
+    def wheelEventHandler(self, eid, ev, orientation):
+        pass
 
     def mouseDragEvent(self, ev):
-        self.sigMouseDragEvent.emit(id(self), ev)
+        self.sigMouseDragEvent.emit(id(self), ev, self.orientation)
 
-    def mouseDragEventHandler(self, eif, ev):
-        lv = self.linkedView()
-        if lv is None:
-            return
-        # Did the mouse down event occur inside the linked ViewBox (and not the axis)?
-        if lv.sceneBoundingRect().contains(ev.buttonDownScenePos()):
-            ev.ignore()
-            return
-        # otherwise pass event to linked viewbox with appropriate single axis parameter
-        if self.orientation in ['left', 'right']:
-            return lv.mouseDragEventHandler(id(self), ev, axis=1)
-        else:
-            return lv.mouseDragEventHandler(id(self), ev, axis=0)
+    def mouseDragEventHandler(self, eid, ev, orientation):
+        pass
 
     def mouseClickEvent(self, ev):
-        self.sigMouseClickEvent.emit(id(self), ev)
+        self.sigMouseClickEvent.emit(id(self), ev, self.orientation)
 
-    def mouseClickEventHandler(self, eid, ev):
-        lv = self.linkedView()
-        if lv is None:
-            return
-        return lv.mouseClickEventHandler(id(self), ev)
+    def mouseClickEventHandler(self, eid, ev, orientation):
+        pass
