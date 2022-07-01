@@ -81,8 +81,8 @@ class PlotItem(GraphicsWidget):
     ==================== =======================================================================
     """
 
-    sigHoverEvent = QtCore.Signal(int, object)
-    sigResizeEvent = QtCore.Signal(int, object)
+    sigHoverEvent = QtCore.Signal(object, object)
+    sigResizeEvent = QtCore.Signal(object, object)
 
     sigRangeChanged = QtCore.Signal(object, object)  # Emitted when the ViewBox range has changed
     sigYRangeChanged = QtCore.Signal(object, object)  # Emitted when the ViewBox Y range has changed
@@ -1089,7 +1089,6 @@ class PlotItem(GraphicsWidget):
         return mode
 
     def resizeEvent(self, ev):
-        ev.accept()
         self.sigResizeEvent.emit(id(self), ev)
 
     def resizeEventHandler(self, eid, ev):

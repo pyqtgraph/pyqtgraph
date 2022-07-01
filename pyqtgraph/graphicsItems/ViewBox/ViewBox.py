@@ -87,11 +87,11 @@ class ViewBox(GraphicsWidget):
 
     """
 
-    sigKeyPressEvent = QtCore.Signal(int, object)
-    sigMouseClickEvent = QtCore.Signal(int, object)
-    sigMouseDragEvent = QtCore.Signal(int, object)
-    sigResizeEvent = QtCore.Signal(int, object)
-    sigWheelEvent = QtCore.Signal(int, object)
+    sigKeyPressEvent = QtCore.Signal(object, object)
+    sigMouseClickEvent = QtCore.Signal(object, object)
+    sigMouseDragEvent = QtCore.Signal(object, object)
+    sigResizeEvent = QtCore.Signal(object, object)
+    sigWheelEvent = QtCore.Signal(object, object)
 
     sigYRangeChanged = QtCore.Signal(object, object)
     sigXRangeChanged = QtCore.Signal(object, object)

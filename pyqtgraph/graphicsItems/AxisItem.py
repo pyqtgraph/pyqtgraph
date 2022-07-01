@@ -23,10 +23,10 @@ class AxisItem(GraphicsWidget):
     If maxTickLength is negative, ticks point into the plot.
     """
 
-    sigMouseClickEvent = QtCore.Signal(int, object, str)
-    sigMouseDragEvent = QtCore.Signal(int, object, str)
-    sigResizeEvent = QtCore.Signal(int, object)
-    sigWheelEvent = QtCore.Signal(int, object, str)
+    sigMouseClickEvent = QtCore.Signal(object, object, str)
+    sigMouseDragEvent = QtCore.Signal(object, object, str)
+    sigResizeEvent = QtCore.Signal(object, object)
+    sigWheelEvent = QtCore.Signal(object, object, str)
 
     def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
         """
@@ -268,10 +268,9 @@ class AxisItem(GraphicsWidget):
         self.update()
 
     def resizeEvent(self, ev):
-        ev.accept()
         self.sigResizeEvent.emit(id(self), ev)
 
-    def resizeEventHandler(self, eid=None, ev=None):
+    def resizeEventHandler(self, eid, ev):
         #s = self.size()
 
         # Set the position of the label
