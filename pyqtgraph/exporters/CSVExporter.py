@@ -9,7 +9,7 @@ __all__ = ['CSVExporter']
     
     
 class CSVExporter(Exporter):
-    Name = "CSV from plot data"
+    Name = "CSV of original plot data"
     windows = []
     def __init__(self, item):
         Exporter.__init__(self, item)
@@ -37,7 +37,10 @@ class CSVExporter(Exporter):
         appendAllX = self.params['columnMode'] == '(x,y) per plot'
 
         for i, c in enumerate(self.item.curves):
-            cd = c.getData()
+            if hasattr(c, 'getOriginalDataset'): # try to access unmapped, unprocessed data
+                cd = c.getOriginalDataset()
+            else:
+                cd = c.getData() # fall back to earlier access method
             if cd[0] is None:
                 continue
             data.append(cd)

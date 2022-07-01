@@ -83,7 +83,7 @@ class VerticalLabel(QtWidgets.QLabel):
 
 
 if __name__ == '__main__':
-    app = QtWidgets.QApplication([])
+    app = QtWidgets.QApplication([])  # noqa: qapplication must be stored to variable to avoid gc
     win = QtWidgets.QMainWindow()
     w = QtWidgets.QWidget()
     l = QtWidgets.QGridLayout()

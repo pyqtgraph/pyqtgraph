@@ -169,12 +169,12 @@ class ViewBox(GraphicsWidget):
             'wheelScaleFactor': -1.0 / 8.0,
 
             'background': None,
-            
+
             'logMode': [False, False],
 
             # Limits
             # maximum value of double float is 1.7E+308, but internal caluclations exceed this limit before the range reaches it.
-            'limits': { 
+            'limits': {
                 'xLimits': [-1E307, +1E307],   # Maximum and minimum visible X values
                 'yLimits': [-1E307, +1E307],   # Maximum and minimum visible Y values
                 'xRange': [None, None],   # Maximum and minimum X range
@@ -209,13 +209,8 @@ class ViewBox(GraphicsWidget):
         self.borderRect.setZValue(1e3)
         self.borderRect.setPen(self.border)
 
-        ## Make scale box that is shown when dragging on the view
-        self.rbScaleBox = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
-        self.rbScaleBox.setPen(fn.mkPen((255,255,100), width=1))
-        self.rbScaleBox.setBrush(fn.mkBrush(255,255,0,100))
-        self.rbScaleBox.setZValue(1e9)
-        self.rbScaleBox.hide()
-        self.addItem(self.rbScaleBox, ignoreBounds=True)
+        self.rbScaleBox = None
+        self._add_rectangle_selection()
 
         ## show target rect for debugging
         self.target = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
@@ -360,7 +355,19 @@ class ViewBox(GraphicsWidget):
         if mode not in [ViewBox.PanMode, ViewBox.RectMode]:
             raise Exception("Mode must be ViewBox.PanMode or ViewBox.RectMode")
         self.state['mouseMode'] = mode
+        self._add_rectangle_selection()
+
         self.sigStateChanged.emit(self)
+
+    def _add_rectangle_selection(self):
+        if self.rbScaleBox is None and self.state['mouseMode'] == ViewBox.RectMode:
+            ## Make scale box that is shown when dragging on the view
+            self.rbScaleBox = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
+            self.rbScaleBox.setPen(fn.mkPen((255, 255, 100), width=1))
+            self.rbScaleBox.setBrush(fn.mkBrush(255, 255, 0, 100))
+            self.rbScaleBox.setZValue(1e9)
+            self.rbScaleBox.hide()
+            self.addItem(self.rbScaleBox, ignoreBounds=True)
 
     def setLeftButtonAction(self, mode='rect'):  ## for backward compatibility
         if mode.lower() == 'rect':
@@ -496,7 +503,7 @@ class ViewBox(GraphicsWidget):
         # behavior (because the user is unaware of targetRange).
         if self.state['aspectLocked'] is False: # (interferes with aspect locking)
             self.state['targetRange'] = [self.state['viewRange'][0][:], self.state['viewRange'][1][:]]
-            
+
     def _effectiveLimits(self):
         # Determines restricted effective scaling range when in log mapping mode
         if self.state['logMode'][0]:
@@ -506,8 +513,8 @@ class ViewBox(GraphicsWidget):
             )
         else:
             xlimits = self.state['limits']['xLimits']
-        
-        if self.state['logMode'][1]: 
+
+        if self.state['logMode'][1]:
             ylimits = (# constrain to the +1.7E308 to 2.2E-308 range of double float values
                 max( self.state['limits']['yLimits'][0], -307.6 ),
                 min( self.state['limits']['yLimits'][1], +308.2 )
@@ -564,7 +571,7 @@ class ViewBox(GraphicsWidget):
             yOff = False if setRequested[1] else None
             self.enableAutoRange(x=xOff, y=yOff)
             changed.append(True)
-            
+
         limits = self._effectiveLimits()
         # print('rng:limits ', limits) # diagnostic output should reflect additional limit in log mode
         # limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
@@ -586,7 +593,7 @@ class ViewBox(GraphicsWidget):
             # Make sure that the range includes a usable number of quantization steps:
             #    approx. eps  : 3e-16
             #    * min. steps : 10
-            #    * mean value : (mn+mx)*0.5 
+            #    * mean value : (mn+mx)*0.5
             quantization_limit = (mn+mx) * 1.5e-15 # +/-10 discrete steps of double resolution
             if mx-mn < 2*quantization_limit:
                 mn -= quantization_limit
@@ -840,9 +847,6 @@ class ViewBox(GraphicsWidget):
 
         if axis is None:
             axis = ViewBox.XYAxes
-
-        needAutoRangeUpdate = False
-
         if axis == ViewBox.XYAxes or axis == 'xy':
             axes = [0, 1]
         elif axis == ViewBox.XAxis or axis == 'x':
@@ -971,7 +975,7 @@ class ViewBox(GraphicsWidget):
     def setYLink(self, view):
         """Link this view's Y axis to another view. (see LinkView)"""
         self.linkView(self.YAxis, view)
-        
+
     def setLogMode(self, axis, logMode):
         """Informs ViewBox that log mode is active for the specified axis, so that the view range cen be restricted"""
         if axis == 'x':
@@ -1254,7 +1258,7 @@ class ViewBox(GraphicsWidget):
             px, py = [Point(self.mapToView(v) - o) for v in self.pixelVectors()]
             self._viewPixelSizeCache  = (px.length(), py.length())
 
-        return self._viewPixelSizeCache 
+        return self._viewPixelSizeCache
 
     def itemBoundingRect(self, item):
         """Return the bounding rect of the item in view coordinates"""
@@ -1304,8 +1308,9 @@ class ViewBox(GraphicsWidget):
         ## if axis is specified, event will only affect that axis.
         ev.accept()  ## we accept all buttons
 
-        pos = ev.scenePos()
-        dif = pos - ev.lastScenePos()
+        pos = ev.pos()
+        lastPos = ev.lastPos()
+        dif = pos - lastPos
         dif = dif * -1
 
         ## Ignore axes if mouse is disabled
@@ -1320,15 +1325,15 @@ class ViewBox(GraphicsWidget):
                 if ev.isFinish():  ## This is the final move in the drag; change the view scale now
                     #print "finish"
                     self.rbScaleBox.hide()
-                    ax = QtCore.QRectF(Point(ev.buttonDownScenePos(ev.button())), Point(pos))
-                    ax = self.childGroup.mapRectFromScene(ax)
+                    ax = QtCore.QRectF(Point(ev.buttonDownPos(ev.button())), Point(pos))
+                    ax = self.childGroup.mapRectFromParent(ax)
                     self.sigMouseDragged.emit(ev, axis)
                     self.showAxRect(ax)
                     self.axHistoryPointer += 1
                     self.axHistory = self.axHistory[:self.axHistoryPointer] + [ax]
                 else:
                     ## update shape of scale box
-                    self.updateScaleBox(ev.buttonDownScenePos(), ev.scenePos())
+                    self.updateScaleBox(ev.buttonDownPos(), ev.pos())
             else:
                 tr = self.childGroup.transform()
                 tr = fn.invertQTransform(tr)
@@ -1409,7 +1414,7 @@ class ViewBox(GraphicsWidget):
 
     def updateScaleBox(self, p1, p2):
         r = QtCore.QRectF(p1, p2)
-        r = self.childGroup.mapRectFromScene(r)
+        r = self.childGroup.mapRectFromParent(r)
         self.rbScaleBox.setPos(r.topLeft())
         tr = QtGui.QTransform.fromScale(r.width(), r.height())
         self.rbScaleBox.setTransform(tr)
@@ -1442,9 +1447,6 @@ class ViewBox(GraphicsWidget):
         profiler = debug.Profiler()
         if items is None:
             items = self.addedItems
-
-        ## measure pixel dimensions in view box
-        px, py = [v.length() if v is not None else 0 for v in self.childGroup.pixelVectors()]
 
         ## First collect all boundary information
         itemBounds = []
@@ -1553,8 +1555,8 @@ class ViewBox(GraphicsWidget):
 
     # Including a prepareForPaint call is part of the Qt strategy to
     # defer expensive redraw opertions until requested by a 'sigPrepareForPaint' signal
-    # 
-    # However, as currently implemented, a call to prepareForPaint as part of the regular 
+    #
+    # However, as currently implemented, a call to prepareForPaint as part of the regular
     # 'update' call results in an undesired reset of pan/zoom:
     # https://github.com/pyqtgraph/pyqtgraph/issues/2029
     #
@@ -1575,7 +1577,7 @@ class ViewBox(GraphicsWidget):
         aspect = self.state['aspectLocked']  # size ratio / view ratio
         tr = self.targetRect()
         bounds = self.rect()
-        
+
         limits = self._effectiveLimits()
         # print('upd:limits ', limits) # diagnostic output should reflect additional limit in log mode
         minRng = [self.state['limits']['xRange'][0], self.state['limits']['yRange'][0]]

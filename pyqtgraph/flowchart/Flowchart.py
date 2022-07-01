@@ -115,7 +115,7 @@ class Flowchart(Node):
             opts['multi'] = False
             self.inputNode.sigTerminalAdded.disconnect(self.internalTerminalAdded)
             try:
-                term2 = self.inputNode.addTerminal(name, **opts)
+                self.inputNode.addTerminal(name, **opts)
             finally:
                 self.inputNode.sigTerminalAdded.connect(self.internalTerminalAdded)
                 
@@ -124,7 +124,7 @@ class Flowchart(Node):
             #opts['multi'] = False
             self.outputNode.sigTerminalAdded.disconnect(self.internalTerminalAdded)
             try:
-                term2 = self.outputNode.addTerminal(name, **opts)
+                self.outputNode.addTerminal(name, **opts)
             finally:
                 self.outputNode.sigTerminalAdded.connect(self.internalTerminalAdded)
         return term
@@ -219,7 +219,8 @@ class Flowchart(Node):
     def nodeRenamed(self, node, oldName):
         del self._nodes[oldName]
         self._nodes[node.name()] = node
-        self.widget().nodeRenamed(node, oldName)
+        if node is not self.inputNode and node is not self.outputNode:
+            self.widget().nodeRenamed(node, oldName)
         self.sigChartChanged.emit(self, 'rename', node)
         
     def arrangeNodes(self):
@@ -650,8 +651,7 @@ class FlowchartCtrlWidget(QtWidgets.QWidget):
             
             
     def loadClicked(self):
-        newFile = self.chart.loadFile()
-        #self.setCurrentFile(newFile)
+        self.chart.loadFile()
         
     def fileSaved(self, fileName):
         self.setCurrentFile(fileName)
@@ -671,16 +671,12 @@ class FlowchartCtrlWidget(QtWidgets.QWidget):
     def saveAsClicked(self):
         try:
             if self.currentFileName is None:
-                newFile = self.chart.saveFile()
+                self.chart.saveFile()
             else:
-                newFile = self.chart.saveFile(suggestedFileName=self.currentFileName)
-            #self.ui.saveAsBtn.success("Saved.")
-            #print "Back to saveAsClicked."
+                self.chart.saveFile(suggestedFileName=self.currentFileName)
         except:
             self.ui.saveBtn.failure("Error")
             raise
-            
-        #self.setCurrentFile(newFile)
             
     def setCurrentFile(self, fileName):
         self.currentFileName = fileName
