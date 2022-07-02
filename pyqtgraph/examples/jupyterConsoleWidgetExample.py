@@ -18,11 +18,13 @@ main_window_widget = QtWidgets.QMainWindow()
 main_window_widget.resize(800, 800)
 
 ## create JupyterConsoleWidget (and connect to kernel)
-jupyter_console_widget = JupyterConsoleWidget()
+input_variables_namespace_dict = {"i_put_this_variable_in_at_startup": True}
+jupyter_console_widget = JupyterConsoleWidget(namespace=input_variables_namespace_dict)
 main_window_widget.setCentralWidget(jupyter_console_widget)
 main_window_widget.setWindowTitle("pyqtgraph example: RichJupyterConsole")
 main_window_widget.show()
 
+jupyter_console_widget.execute_command("i_put_this_variable_in_at_startup")
 jupyter_console_widget.execute_command("import numpy as np ")
 jupyter_console_widget.execute_command("x = np.arange(0,2*np.pi,.1)")
 jupyter_console_widget.execute_command("print(x.shape)")
@@ -30,6 +32,19 @@ jupyter_console_widget.execute_command("print(x.shape)")
 jupyter_console_widget.execute_command("import matplotlib.pyplot as plt")
 jupyter_console_widget.execute_command("%matplotlib inline")
 jupyter_console_widget.execute_command("plt.plot(np.sin(x))")
+jupyter_console_widget.execute_command("print('----')")
+
+## Push variables into Console namespace with `jupyter_console_widget.push_variables(variables_dict)`
+
+
+variables_dict = {"this_is_an_int": 9, "this_is_a_string": "hello :D"}
+
+jupyter_console_widget.push_variables(variables_dict)
+
+jupyter_console_widget.execute_command("this_is_an_int")
+jupyter_console_widget.execute_command("this_is_a_string")
+
+jupyter_console_widget.execute_command("print('----')")
 
 jupyter_console_widget.execute_command('print("Good Luck; Have Fun! 😄✨")')
 jupyter_console_widget.execute_command("")
