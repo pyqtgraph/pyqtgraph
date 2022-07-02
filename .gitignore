@@ -110,3 +110,4 @@ asv.conf.json
 
 # jupyter notebooks
 .ipynb_checkpoints
+.venv
