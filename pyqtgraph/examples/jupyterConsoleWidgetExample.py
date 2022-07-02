@@ -20,7 +20,7 @@ main_window_widget.resize(800, 800)
 ## create JupyterConsoleWidget (and connect to kernel)
 jupyter_console_widget = JupyterConsoleWidget()
 main_window_widget.setCentralWidget(jupyter_console_widget)
-main_window_widget.setWindowTitle('pyqtgraph example: RichJupyterConsole')
+main_window_widget.setWindowTitle("pyqtgraph example: RichJupyterConsole")
 main_window_widget.show()
 
 jupyter_console_widget.execute_command("import numpy as np ")
@@ -31,10 +31,9 @@ jupyter_console_widget.execute_command("import matplotlib.pyplot as plt")
 jupyter_console_widget.execute_command("%matplotlib inline")
 jupyter_console_widget.execute_command("plt.plot(np.sin(x))")
 
-jupyter_console_widget.execute_command("print(\"Good Luck; Have Fun! 😄✨\")")
+jupyter_console_widget.execute_command('print("Good Luck; Have Fun! 😄✨")')
 jupyter_console_widget.execute_command("")
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     pg.exec()
