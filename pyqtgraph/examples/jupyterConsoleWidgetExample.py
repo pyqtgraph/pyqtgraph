@@ -5,7 +5,6 @@
  This widget was adapted from the implementation from - https://gitlab.com/yaq/yaqc-qtpy/-/blob/main/yaqc_qtpy/_main_widget.py
 
 """
-import time
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
