@@ -234,14 +234,19 @@ class ViewBox(GraphicsWidget):
     @property
     def rbScaleBox(self):
         if self._rbScaleBox is None:
-            ## Make scale box that is shown when dragging on the view
-            self._rbScaleBox = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
-            self._rbScaleBox.setPen(fn.mkPen((255, 255, 100), width=1))
-            self._rbScaleBox.setBrush(fn.mkBrush(255, 255, 0, 100))
-            self._rbScaleBox.setZValue(1e9)
-            self._rbScaleBox.hide()
-            self.addItem(self.rbScaleBox, ignoreBounds=True)
+            # call the setter with the default value
+            scaleBox = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
+            scaleBox.setPen(fn.mkPen((255, 255, 100), width=1))
+            scaleBox.setBrush(fn.mkBrush(255, 255, 0, 100))
+            scaleBox.setZValue(1e9)
+            scaleBox.hide()
+            self.rbScaleBox = scaleBox
         return self._rbScaleBox
+
+    @rbScaleBox.setter
+    def rbScaleBox(self, scaleBox):
+        self._rbScaleBox = scaleBox
+        self.addItem(self._rbScaleBox, ignoreBounds=True)
 
     def getAspectRatio(self):
         '''return the current aspect ratio'''
