@@ -204,8 +204,7 @@ class ViewBox(GraphicsWidget):
         self.borderRect.setZValue(1e3)
         self.borderRect.setPen(self.border)
 
-        self.rbScaleBox = None
-        self._add_rectangle_selection()
+        self._rbScaleBox = None
 
         ## show target rect for debugging
         self.target = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
@@ -231,6 +230,18 @@ class ViewBox(GraphicsWidget):
             self.updateViewLists()
 
         self._viewPixelSizeCache  = None
+
+    @property
+    def rbScaleBox(self):
+        if self._rbScaleBox is None:
+            ## Make scale box that is shown when dragging on the view
+            self._rbScaleBox = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
+            self._rbScaleBox.setPen(fn.mkPen((255, 255, 100), width=1))
+            self._rbScaleBox.setBrush(fn.mkBrush(255, 255, 0, 100))
+            self._rbScaleBox.setZValue(1e9)
+            self._rbScaleBox.hide()
+            self.addItem(self.rbScaleBox, ignoreBounds=True)
+        return self._rbScaleBox
 
     def getAspectRatio(self):
         '''return the current aspect ratio'''
@@ -349,20 +360,10 @@ class ViewBox(GraphicsWidget):
         """
         if mode not in [ViewBox.PanMode, ViewBox.RectMode]:
             raise Exception("Mode must be ViewBox.PanMode or ViewBox.RectMode")
+        if mode == ViewBox.PanMode:
+            self._rbScaleBox = None
         self.state['mouseMode'] = mode
-        self._add_rectangle_selection()
-
         self.sigStateChanged.emit(self)
-
-    def _add_rectangle_selection(self):
-        if self.rbScaleBox is None and self.state['mouseMode'] == ViewBox.RectMode:
-            ## Make scale box that is shown when dragging on the view
-            self.rbScaleBox = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
-            self.rbScaleBox.setPen(fn.mkPen((255, 255, 100), width=1))
-            self.rbScaleBox.setBrush(fn.mkBrush(255, 255, 0, 100))
-            self.rbScaleBox.setZValue(1e9)
-            self.rbScaleBox.hide()
-            self.addItem(self.rbScaleBox, ignoreBounds=True)
 
     def setLeftButtonAction(self, mode='rect'):  ## for backward compatibility
         if mode.lower() == 'rect':
