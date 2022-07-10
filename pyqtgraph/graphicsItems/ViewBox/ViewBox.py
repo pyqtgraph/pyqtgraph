@@ -231,6 +231,10 @@ class ViewBox(GraphicsWidget):
 
         self._viewPixelSizeCache  = None
 
+    # self.rbScaleBox should _always_ return a QRectF
+    #
+
+
     @property
     def rbScaleBox(self):
         if self._rbScaleBox is None:
@@ -240,16 +244,21 @@ class ViewBox(GraphicsWidget):
             scaleBox.setBrush(fn.mkBrush(255, 255, 0, 100))
             scaleBox.setZValue(1e9)
             scaleBox.hide()
-            self.rbScaleBox = scaleBox
+            self._rbScaleBox = scaleBox
         return self._rbScaleBox
 
     @rbScaleBox.setter
     def rbScaleBox(self, scaleBox):
+        if scaleBox is None:
+            self._rbScaleBox = None
+            return None
+        scaleBox.setZValue(1e9)
+        scaleBox.hide()
         self._rbScaleBox = scaleBox
-        self.addItem(self._rbScaleBox, ignoreBounds=True)
+        return None
 
     def getAspectRatio(self):
-        '''return the current aspect ratio'''
+        """return the current aspect ratio"""
         rect = self.rect()
         vr = self.viewRect()
         if rect.height() == 0 or vr.width() == 0 or vr.height() == 0:
