@@ -231,10 +231,6 @@ class ViewBox(GraphicsWidget):
 
         self._viewPixelSizeCache  = None
 
-    # self.rbScaleBox should _always_ return a QRectF
-    #
-
-
     @property
     def rbScaleBox(self):
         if self._rbScaleBox is None:
@@ -245,16 +241,19 @@ class ViewBox(GraphicsWidget):
             scaleBox.setZValue(1e9)
             scaleBox.hide()
             self._rbScaleBox = scaleBox
+            self.addItem(scaleBox, ignoreBounds=True)
         return self._rbScaleBox
 
     @rbScaleBox.setter
     def rbScaleBox(self, scaleBox):
+        if self._rbScaleBox is not None:
+            self.removeItem(self._rbScaleBox)
+        self._rbScaleBox = scaleBox
         if scaleBox is None:
-            self._rbScaleBox = None
             return None
         scaleBox.setZValue(1e9)
         scaleBox.hide()
-        self._rbScaleBox = scaleBox
+        self.addItem(scaleBox, ignoreBounds=True)
         return None
 
     def getAspectRatio(self):
