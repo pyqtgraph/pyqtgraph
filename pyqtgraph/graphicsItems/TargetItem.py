@@ -78,7 +78,7 @@ class TargetItem(UIGraphicsItem):
             A dict of keyword arguments to use when constructing the text
             label. See :class:`TargetLabel` and :class:`~pyqtgraph.TextItem`
         """
-        super().__init__(self)
+        super().__init__()
         self.movable = movable
         self.moving = False
         self._label = None
