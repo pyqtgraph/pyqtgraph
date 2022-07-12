@@ -1,3 +1,7 @@
+"""
+This stub file is to aid in the PyCharm auto-completion of the Qt imports.
+"""
+
 from typing import Union
 
 try:
@@ -27,8 +31,8 @@ except ImportError:
                 QtCore = QtCore
                 QtGui = QtGui
                 QtWidgets = QtWidgets
-            except ImportError:
-                raise Exception("No suitable qt binding found")
+            except ImportError as e:
+                raise ImportError("No suitable qt binding found") from e
 
 
 App: QtWidgets.QApplication
