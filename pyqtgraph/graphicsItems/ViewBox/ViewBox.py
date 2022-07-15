@@ -218,8 +218,7 @@ class ViewBox(GraphicsWidget):
         self.borderRect.setZValue(1e3)
         self.borderRect.setPen(self.border)
 
-        self.rbScaleBox = None
-        self._add_rectangle_selection()
+        self._rbScaleBox = None
 
         # show target rect for debugging
         self.target = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
@@ -246,8 +245,33 @@ class ViewBox(GraphicsWidget):
 
         self._viewPixelSizeCache = None
 
+    @property
+    def rbScaleBox(self):
+        if self._rbScaleBox is None:
+            # call the setter with the default value
+            scaleBox = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
+            scaleBox.setPen(fn.mkPen((255, 255, 100), width=1))
+            scaleBox.setBrush(fn.mkBrush(255, 255, 0, 100))
+            scaleBox.setZValue(1e9)
+            scaleBox.hide()
+            self._rbScaleBox = scaleBox
+            self.addItem(scaleBox, ignoreBounds=True)
+        return self._rbScaleBox
+
+    @rbScaleBox.setter
+    def rbScaleBox(self, scaleBox):
+        if self._rbScaleBox is not None:
+            self.removeItem(self._rbScaleBox)
+        self._rbScaleBox = scaleBox
+        if scaleBox is None:
+            return None
+        scaleBox.setZValue(1e9)
+        scaleBox.hide()
+        self.addItem(scaleBox, ignoreBounds=True)
+        return None
+
     def getAspectRatio(self):
-        '''return the current aspect ratio'''
+        """return the current aspect ratio"""
         rect = self.rect()
         vr = self.viewRect()
         if rect.height() == 0 or vr.width() == 0 or vr.height() == 0:
@@ -363,9 +387,9 @@ class ViewBox(GraphicsWidget):
         """
         if mode not in [ViewBox.PanMode, ViewBox.RectMode]:
             raise Exception("Mode must be ViewBox.PanMode or ViewBox.RectMode")
+        if mode == ViewBox.PanMode:
+            self._rbScaleBox = None
         self.state['mouseMode'] = mode
-        self._add_rectangle_selection()
-
         self.sigStateChanged.emit(self)
 
     def _add_rectangle_selection(self):
