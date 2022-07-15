@@ -1,8 +1,7 @@
 __all__ = ["MultiAxisPlotWidget"]
 
-import weakref
 from collections import namedtuple
-from typing import Dict, List
+from typing import Dict
 
 from ..functions import disconnect, prep_lambda_for_connect
 from ..graphicsItems.AxisItem import AxisItem
@@ -446,7 +445,7 @@ class MultiAxisPlotWidget(PlotWidget):
                     if len(bounds) > 0:
                         for chart in charts:
                             vb = self.plot_items[chart].vb
-                            vb.setXRange(min(bounds), max(bounds))
+                            vb.setXRange(min(bounds), max(bounds), padding=self.vb.suggestPadding(axis))  # make padding consistent with top vb
                 elif axis.orientation in {"left", "right"}:  # IS Y AXIS
                     for chart in charts:
                         bounds += chart.dataBounds(ViewBox.YAxis)
@@ -454,7 +453,7 @@ class MultiAxisPlotWidget(PlotWidget):
                     if len(bounds) > 0:
                         for chart in charts:
                             vb = self.plot_items[chart].vb
-                            vb.setYRange(min(bounds), max(bounds))
+                            vb.setYRange(min(bounds), max(bounds), padding=self.vb.suggestPadding(axis))  # make padding consistent with top vb
         super().update()
 
     # todo does this autorange stuff do anything? ah ha! it's used in PlotItem.

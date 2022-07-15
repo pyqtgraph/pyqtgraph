@@ -17,7 +17,7 @@ __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):
     """
     GraphicsItem showing a single plot axis with ticks, values, and label.
-    Can be configured to fit on any side of a plot,
+    Can be configured to fit on any side of a plot, 
     Can automatically synchronize its displayed scale with ViewBox items.
     Ticks can be extended to draw a grid.
     If maxTickLength is negative, ticks point into the plot.
@@ -65,28 +65,28 @@ class AxisItem(GraphicsWidget):
             self.label.setRotation(-90)
 
         self.style = {
-            'tickTextOffset': [5, 2],  # (horizontal, vertical) spacing between text and axis
-            'tickTextWidth': 30,  # space reserved for tick text
+            'tickTextOffset': [5, 2],  ## (horizontal, vertical) spacing between text and axis
+            'tickTextWidth': 30,  ## space reserved for tick text
             'tickTextHeight': 18,
-            'autoExpandTextSpace': True,  # automatically expand text space if needed
+            'autoExpandTextSpace': True,  ## automatically expand text space if needed
             'autoReduceTextSpace': True,
             'tickFont': None,
-            'stopAxisAtTick': (False, False),  # whether axis is drawn to edge of box or to last tick
-            'textFillLimits': [  # how much of the axis to fill up with tick text, maximally.
-                (0, 0.8),  # never fill more than 80% of the axis
-                (2, 0.6),  # If we already have 2 ticks with text, fill no more than 60% of the axis
-                (4, 0.4),  # If we already have 4 ticks with text, fill no more than 40% of the axis
-                (6, 0.2),  # If we already have 6 ticks with text, fill no more than 20% of the axis
-            ],
+            'stopAxisAtTick': (False, False),  ## whether axis is drawn to edge of box or to last tick
+            'textFillLimits': [  ## how much of the axis to fill up with tick text, maximally.
+                (0, 0.8),    ## never fill more than 80% of the axis
+                (2, 0.6),    ## If we already have 2 ticks with text, fill no more than 60% of the axis
+                (4, 0.4),    ## If we already have 4 ticks with text, fill no more than 40% of the axis
+                (6, 0.2),    ## If we already have 6 ticks with text, fill no more than 20% of the axis
+                ],
             'showValues': showValues,
             'tickLength': maxTickLength,
             'maxTickLevel': 2,
             'maxTextLevel': 2,
-            'tickAlpha': None,  # If not none, use this alpha for all ticks.
-            'labelMargin': [5, 0],  # label margin : [between label and axis ticks, between label and axis external edge]
+            'tickAlpha': None,  ## If not none, use this alpha for all ticks.
+            'labelMargin': [5, 0],  ## label margin : [between label and axis ticks, between label and axis external edge]
         }
 
-        self.textWidth = 30  # Keeps track of maximum width / height of tick text
+        self.textWidth = 30  ## Keeps track of maximum width / height of tick text
         self.textHeight = 18
 
         # If the user specifies a width / height, remember that setting
@@ -100,7 +100,7 @@ class AxisItem(GraphicsWidget):
         self.labelStyle = args
         self.logMode = False
 
-        self._tickLevels = None  # used to override the automatic ticking system with explicit ticks
+        self._tickLevels = None  ## used to override the automatic ticking system with explicit ticks
         self._tickSpacing = None  # used to override default tickSpacing method
         self.scale = 1.0
         self.autoSIPrefix = True
@@ -125,8 +125,8 @@ class AxisItem(GraphicsWidget):
             self._linkToView_internal(linkView)
 
         self.grid = False
-
-        # self.setCacheMode(self.DeviceCoordinateCache)
+        
+        #self.setCacheMode(self.DeviceCoordinateCache)
 
     def setStyle(self, **kwds):
         """
@@ -142,7 +142,7 @@ class AxisItem(GraphicsWidget):
         tickTextHeight      (int) Vertical space reserved for tick text in px
         autoExpandTextSpace (bool) Automatically expand text space if the tick
                             strings become too long.
-        autoReduceTextSpace (bool) Automatically shrink the axis if necessary
+        autoReduceTextSpace (bool) Automatically shrink the axis if necessary 
         tickFont            (QFont or None) Determines the font used for tick
                             values. Use None for the default font.
         stopAxisAtTick      (tuple: (bool min, bool max)) If True, the axis
@@ -167,15 +167,15 @@ class AxisItem(GraphicsWidget):
         showValues          (bool) indicates whether text is displayed adjacent
                             to ticks.
         tickAlpha           (float or int or None) If None, pyqtgraph will draw the
-                            ticks with the alpha it deems appropriate.  Otherwise,
-                            the alpha will be fixed at the value passed.  With int,
+                            ticks with the alpha it deems appropriate.  Otherwise, 
+                            the alpha will be fixed at the value passed.  With int, 
                             accepted values are [0..255].  With value of type
                             float, accepted values are from [0..1].
         =================== =======================================================
 
         Added in version 0.9.9
         """
-        for kwd, value in kwds.items():
+        for kwd,value in kwds.items():
             if kwd not in self.style:
                 raise NameError("%s is not a valid style argument." % kwd)
 
@@ -228,7 +228,7 @@ class AxisItem(GraphicsWidget):
 
         If an axis is set to log scale, ticks are displayed on a logarithmic scale
         and values are adjusted accordingly. (This is usually accessed by changing
-        the log mode of a :func:`PlotItem <pyqtgraph.PlotItem.setLogMode>`.) The
+        the log mode of a :func:`PlotItem <pyqtgraph.PlotItem.setLogMode>`.) The 
         linked ViewBox will be informed of the change.
         """
         if len(args) == 1:
@@ -244,12 +244,12 @@ class AxisItem(GraphicsWidget):
                 self.logMode = x
             if y is not None and self.orientation in ('left', 'right'):
                 self.logMode = y
-
+        
         if self._linkedView is not None:
-            if self.orientation in ('top', 'bottom'):
-                self._linkedView().setLogMode('x', self.logMode)
+            if self.orientation in ('top', 'bottom'):           
+                self._linkedView().setLogMode('x', self.logMode)    
             elif self.orientation in ('left', 'right'):
-                self._linkedView().setLogMode('y', self.logMode)
+                self._linkedView().setLogMode('y', self.logMode)    
 
         self.picture = None
 
@@ -257,13 +257,13 @@ class AxisItem(GraphicsWidget):
 
     def setTickFont(self, font):
         """
-        (QFont or None) Determines the font used for tick values.
+        (QFont or None) Determines the font used for tick values. 
         Use None for the default font.
         """
         self.style['tickFont'] = font
         self.picture = None
         self.prepareGeometryChange()
-        # Need to re-allocate space depending on font size?
+        ## Need to re-allocate space depending on font size?
 
         self.update()
 
@@ -277,7 +277,7 @@ class AxisItem(GraphicsWidget):
         if self.label is None:  # self.label is set to None on close, but resize events can still occur.
             self.picture = None
             return
-
+            
         br = self.label.boundingRect()
         p = QtCore.QPointF(0, 0)
         if self.orientation == 'left':
@@ -355,7 +355,7 @@ class AxisItem(GraphicsWidget):
             if not self.autoSIPrefix or self.autoSIPrefixScale == 1.0:
                 units = ''
             else:
-                units = '(x%g)' % (1.0 / self.autoSIPrefixScale)
+                units = '(x%g)' % (1.0/self.autoSIPrefixScale)
         else:
             units = '(%s%s)' % (self.labelUnitPrefix, self.labelUnits)
 
@@ -366,9 +366,9 @@ class AxisItem(GraphicsWidget):
         return "<span style='%s'>%s</span>" % (style, s)
 
     def _updateMaxTextSize(self, x):
-        # Informs that the maximum tick size orthogonal to the axis has
-        # changed; we use this to decide whether the item needs to be resized
-        # to accomodate.
+        ## Informs that the maximum tick size orthogonal to the axis has
+        ## changed; we use this to decide whether the item needs to be resized
+        ## to accomodate.
         if self.orientation in ['left', 'right']:
             if self.style["autoReduceTextSpace"]:
                 if x > self.textWidth or x < self.textWidth - 10:
@@ -379,7 +379,7 @@ class AxisItem(GraphicsWidget):
                     self.textWidth = mx
             if self.style['autoExpandTextSpace']:
                 self._updateWidth()
-
+        
         else:
             if self.style['autoReduceTextSpace']:
                 if x > self.textHeight or x < self.textHeight - 10:
@@ -477,7 +477,7 @@ class AxisItem(GraphicsWidget):
             self._pen = fn.mkPen(*args, **kwargs)
         else:
             self._pen = fn.mkPen(getConfigOption('foreground'))
-        self.labelStyle['color'] = self._pen.color().name()  # RRGGBB
+        self.labelStyle['color'] = self._pen.color().name() #   #RRGGBB
         self._updateLabel()
 
     def textPen(self):
@@ -495,7 +495,7 @@ class AxisItem(GraphicsWidget):
             self._textPen = fn.mkPen(*args, **kwargs)
         else:
             self._textPen = fn.mkPen(getConfigOption('foreground'))
-        self.labelStyle['color'] = self._textPen.color().name()  # RRGGBB
+        self.labelStyle['color'] = self._textPen.color().name() #   #RRGGBB
         self._updateLabel()
 
     def setScale(self, scale=None):
@@ -511,7 +511,7 @@ class AxisItem(GraphicsWidget):
             warnings.warn(
                 'AxisItem.setScale(None) is deprecated, will be removed in 0.13.0'
                 'instead use AxisItem.enableAutoSIPrefix(bool) to enable/disable'
-                'SI prefix scaling',
+                'SI prefix scaling',                
                 DeprecationWarning, stacklevel=2
             )
             scale = 1.0
@@ -545,8 +545,8 @@ class AxisItem(GraphicsWidget):
                 _range = 10**np.array(self.range)
             else:
                 _range = self.range
-            (scale, prefix) = fn.siScale(max(abs(_range[0] * self.scale), abs(_range[1] * self.scale)))
-            if self.labelUnits == '' and prefix in ['k', 'm']:  # If we are not showing units, wait until 1e6 before scaling.
+            (scale, prefix) = fn.siScale(max(abs(_range[0]*self.scale), abs(_range[1]*self.scale)))
+            if self.labelUnits == '' and prefix in ['k', 'm']:  ## If we are not showing units, wait until 1e6 before scaling.
                 scale = 1.0
                 prefix = ''
             self.autoSIPrefixScale = scale
@@ -595,7 +595,7 @@ class AxisItem(GraphicsWidget):
     def linkToView(self, view, replace=True):
         """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
         self._linkToView_internal(view, replace=replace)
-
+        
     def unlinkFromView(self, view=None):
         """Unlink this axis from a ViewBox."""
         if view is None:
@@ -635,17 +635,17 @@ class AxisItem(GraphicsWidget):
         linkedView = self.linkedView()
         if linkedView is None or self.grid is False:
             rect = self.mapRectFromParent(self.geometry())
-            # extend rect if ticks go in negative direction
-            # also extend to account for text that flows past the edges
+            ## extend rect if ticks go in negative direction
+            ## also extend to account for text that flows past the edges
             tl = self.style['tickLength']
             if self.orientation == 'left':
-                rect = rect.adjusted(0, -15, -min(0, tl), 15)
+                rect = rect.adjusted(0, -15, -min(0,tl), 15)
             elif self.orientation == 'right':
-                rect = rect.adjusted(min(0, tl), -15, 0, 15)
+                rect = rect.adjusted(min(0,tl), -15, 0, 15)
             elif self.orientation == 'top':
-                rect = rect.adjusted(-15, 0, 15, -min(0, tl))
+                rect = rect.adjusted(-15, 0, 15, -min(0,tl))
             elif self.orientation == 'bottom':
-                rect = rect.adjusted(-15, min(0, tl), 15, 0)
+                rect = rect.adjusted(-15, min(0,tl), 15, 0)
             return rect
         else:
             return self.mapRectFromParent(self.geometry()) | linkedView.mapRectToItem(self, linkedView.boundingRect())
@@ -666,7 +666,7 @@ class AxisItem(GraphicsWidget):
             finally:
                 painter.end()
             self.picture = picture
-        # p.setRenderHint(p.RenderHint.Antialiasing, False)   ## Sometimes we get a segfault here ???
+        #p.setRenderHint(p.RenderHint.Antialiasing, False)   ## Sometimes we get a segfault here ???
         #p.setRenderHint(p.RenderHint.TextAntialiasing, True)
         self.picture.play(p)
 
@@ -740,57 +740,57 @@ class AxisItem(GraphicsWidget):
         if dif == 0:
             return []
 
-        # decide optimal minor tick spacing in pixels (this is just aesthetics)
+        ## decide optimal minor tick spacing in pixels (this is just aesthetics)
         optimalTickCount = max(2., log(size))
 
-        # optimal minor tick spacing
+        ## optimal minor tick spacing
         optimalSpacing = dif / optimalTickCount
 
-        # the largest power-of-10 spacing which is smaller than optimal
+        ## the largest power-of-10 spacing which is smaller than optimal
         p10unit = 10 ** floor(log10(optimalSpacing))
 
-        # Determine major/minor tick spacings which flank the optimal spacing.
+        ## Determine major/minor tick spacings which flank the optimal spacing.
         intervals = np.array([1., 2., 10., 20., 100.]) * p10unit
         minorIndex = 0
-        while intervals[minorIndex + 1] <= optimalSpacing:
+        while intervals[minorIndex+1] <= optimalSpacing:
             minorIndex += 1
 
         levels = [
-            (intervals[minorIndex + 2], 0),
-            (intervals[minorIndex + 1], 0),
-            # (intervals[minorIndex], 0)    ## Pretty, but eats up CPU
+            (intervals[minorIndex+2], 0),
+            (intervals[minorIndex+1], 0),
+            #(intervals[minorIndex], 0)    ## Pretty, but eats up CPU
         ]
 
         if self.style['maxTickLevel'] >= 2:
-            # decide whether to include the last level of ticks
+            ## decide whether to include the last level of ticks
             minSpacing = min(size / 20., 30.)
             maxTickCount = size / minSpacing
             if dif / intervals[minorIndex] <= maxTickCount:
                 levels.append((intervals[minorIndex], 0))
-
+         
         return levels
-
-        # This does not work -- switching between 2/5 confuses the automatic text-level-selection
-        # Determine major/minor tick spacings which flank the optimal spacing.
+        
+        ##### This does not work -- switching between 2/5 confuses the automatic text-level-selection
+        ### Determine major/minor tick spacings which flank the optimal spacing.
         #intervals = np.array([1., 2., 5., 10., 20., 50., 100.]) * p10unit
         #minorIndex = 0
-        # while intervals[minorIndex+1] <= optimalSpacing:
-        #minorIndex += 1
+        #while intervals[minorIndex+1] <= optimalSpacing:
+            #minorIndex += 1
 
-        # make sure we never see 5 and 2 at the same time
-        # intIndexes = [
-        # [0,1,3],
-        # [0,2,3],
-        # [2,3,4],
-        # [3,4,6],
-        # [3,5,6],
-        # ][minorIndex]
+        ### make sure we never see 5 and 2 at the same time
+        #intIndexes = [
+            #[0,1,3],
+            #[0,2,3],
+            #[2,3,4],
+            #[3,4,6],
+            #[3,5,6],
+        #][minorIndex]
 
-        # return [
-        #(intervals[intIndexes[2]], 0),
-        #(intervals[intIndexes[1]], 0),
-        #(intervals[intIndexes[0]], 0)
-        # ]
+        #return [
+            #(intervals[intIndexes[2]], 0),
+            #(intervals[intIndexes[1]], 0),
+            #(intervals[intIndexes[0]], 0)
+        #]
 
     def tickValues(self, minVal, maxVal, size):
         """
@@ -817,36 +817,36 @@ class AxisItem(GraphicsWidget):
         for i in range(len(tickLevels)):
             spacing, offset = tickLevels[i]
 
-            # determine starting tick
-            start = (ceil((minVal - offset) / spacing) * spacing) + offset
+            ## determine starting tick
+            start = (ceil((minVal-offset) / spacing) * spacing) + offset
 
-            # determine number of ticks
-            num = int((maxVal - start) / spacing) + 1
+            ## determine number of ticks
+            num = int((maxVal-start) / spacing) + 1
             values = (np.arange(num) * spacing + start) / self.scale
-            # remove any ticks that were present in higher levels
-            # we assume here that if the difference between a tick value and a previously seen tick value
-            # is less than spacing/100, then they are 'equal' and we can ignore the new tick.
-            values = list(filter(lambda x: np.all(np.abs(allValues - x) > spacing / self.scale * 0.01), values))
+            ## remove any ticks that were present in higher levels
+            ## we assume here that if the difference between a tick value and a previously seen tick value
+            ## is less than spacing/100, then they are 'equal' and we can ignore the new tick.
+            values = list(filter(lambda x: np.all(np.abs(allValues-x) > spacing/self.scale*0.01), values))
             allValues = np.concatenate([allValues, values])
-            ticks.append((spacing / self.scale, values))
+            ticks.append((spacing/self.scale, values))
 
         if self.logMode:
             return self.logTickValues(minVal, maxVal, size, ticks)
 
-        #nticks = []
-        # for t in ticks:
-            #nvals = []
-            # for v in t[1]:
-            # nvals.append(v/self.scale)
-            # nticks.append((t[0]/self.scale,nvals))
-        #ticks = nticks
 
+        #nticks = []
+        #for t in ticks:
+            #nvals = []
+            #for v in t[1]:
+                #nvals.append(v/self.scale)
+            #nticks.append((t[0]/self.scale,nvals))
+        #ticks = nticks
         return ticks
 
     def logTickValues(self, minVal, maxVal, size, stdTicks):
 
-        # start with the tick spacing given by tickValues().
-        # Any level whose spacing is < 1 needs to be converted to log scale
+        ## start with the tick spacing given by tickValues().
+        ## Any level whose spacing is < 1 needs to be converted to log scale
 
         ticks = []
         for (spacing, t) in stdTicks:
@@ -861,7 +861,7 @@ class AxisItem(GraphicsWidget):
             minor = []
             for v in range(v1, v2):
                 minor.extend(v + np.log10(np.arange(1, 10)))
-            minor = [x for x in minor if x > minVal and x < maxVal]
+            minor = [x for x in minor if x>minVal and x<maxVal]
             ticks.append((None, minor))
         return ticks
 
@@ -881,7 +881,7 @@ class AxisItem(GraphicsWidget):
         if self.logMode:
             return self.logTickStrings(values, scale, spacing)
 
-        places = max(0, ceil(-log10(spacing * scale)))
+        places = max(0, ceil(-log10(spacing*scale)))
         strings = []
         for v in values:
             vs = v * scale
@@ -893,7 +893,7 @@ class AxisItem(GraphicsWidget):
         return strings
 
     def logTickStrings(self, values, scale, spacing):
-        estrings = ["%0.1g" % x for x in 10 ** np.array(values).astype(float) * np.array(scale)]
+        estrings = ["%0.1g"%x for x in 10 ** np.array(values).astype(float) * np.array(scale)]
         convdict = {"0": "⁰",
                     "1": "¹",
                     "2": "²",
@@ -963,9 +963,9 @@ class AxisItem(GraphicsWidget):
             axis = 1
         else:
             raise ValueError("self.orientation must be in ('left', 'right', 'top', 'bottom')")
-        # print tickStart, tickStop, span
+        #print tickStart, tickStop, span
 
-        # determine size of this item in pixels
+        ## determine size of this item in pixels
         points = list(map(self.mapToDevice, span))
         if None in points:
             return
@@ -978,7 +978,7 @@ class AxisItem(GraphicsWidget):
             tickLevels = self.tickValues(self.range[0], self.range[1], lengthInPixels)
             tickStrings = None
         else:
-            # parse self.tickLevels into the formats returned by tickLevels() and tickStrings()
+            ## parse self.tickLevels into the formats returned by tickLevels() and tickStrings()
             tickLevels = []
             tickStrings = []
             for level in self._tickLevels:
@@ -990,7 +990,7 @@ class AxisItem(GraphicsWidget):
                     values.append(val)
                     strings.append(strn)
 
-        # determine mapping between tick values and local coordinates
+        ## determine mapping between tick values and local coordinates
         dif = self.range[1] - self.range[0]
         if dif == 0:
             xScale = 1
@@ -1009,23 +1009,23 @@ class AxisItem(GraphicsWidget):
 
         profiler('init')
 
-        tickPositions = []  # remembers positions of previously drawn ticks
+        tickPositions = [] # remembers positions of previously drawn ticks
 
-        # compute coordinates to draw ticks
-        # draw three different intervals, long ticks first
+        ## compute coordinates to draw ticks
+        ## draw three different intervals, long ticks first
         tickSpecs = []
         for i in range(len(tickLevels)):
             tickPositions.append([])
             ticks = tickLevels[i][1]
 
-            # length of tick
-            tickLength = self.style['tickLength'] / ((i * 0.5) + 1.0)
-
+            ## length of tick
+            tickLength = self.style['tickLength'] / ((i*0.5)+1.0)
+                
             lineAlpha = self.style["tickAlpha"]
             if lineAlpha is None:
-                lineAlpha = 255 / (i + 1)
+                lineAlpha = 255 / (i+1)
                 if self.grid is not False:
-                    lineAlpha *= self.grid / 255. * fn.clip_scalar((0.05 * lengthInPixels / (len(ticks) + 1)), 0., 1.)
+                    lineAlpha *= self.grid/255. * fn.clip_scalar((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
             elif isinstance(lineAlpha, float):
                 lineAlpha *= 255
                 lineAlpha = max(0, int(round(lineAlpha)))
@@ -1037,9 +1037,9 @@ class AxisItem(GraphicsWidget):
                 raise TypeError("Line Alpha should be of type None, float or int")
 
             for v in ticks:
-                # determine actual position to draw this tick
+                ## determine actual position to draw this tick
                 x = (v * xScale) - offset
-                if x < xMin or x > xMax:  # last check to make sure no out-of-bounds ticks are drawn
+                if x < xMin or x > xMax:  ## last check to make sure no out-of-bounds ticks are drawn
                     tickPositions[i].append(None)
                     continue
                 tickPositions[i].append(x)
@@ -1049,7 +1049,7 @@ class AxisItem(GraphicsWidget):
                 p1[axis] = tickStart
                 p2[axis] = tickStop
                 if self.grid is False:
-                    p2[axis] += tickLength * tickDir
+                    p2[axis] += tickLength*tickDir
                 tickPen = self.pen()
                 color = tickPen.color()
                 color.setAlpha(int(lineAlpha))
@@ -1075,25 +1075,25 @@ class AxisItem(GraphicsWidget):
                 span[1].setX(stop)
         axisSpec = (self.pen(), span[0], span[1])
 
-        textOffset = self.style['tickTextOffset'][axis]  # spacing between axis and text
-        # if self.style['autoExpandTextSpace'] is True:
-        #textWidth = self.textWidth
-        #textHeight = self.textHeight
-        # else:
-        # textWidth = self.style['tickTextWidth'] ## space allocated for horizontal text
-        # textHeight = self.style['tickTextHeight'] ## space allocated for horizontal text
+        textOffset = self.style['tickTextOffset'][axis]  ## spacing between axis and text
+        #if self.style['autoExpandTextSpace'] is True:
+            #textWidth = self.textWidth
+            #textHeight = self.textHeight
+        #else:
+            #textWidth = self.style['tickTextWidth'] ## space allocated for horizontal text
+            #textHeight = self.style['tickTextHeight'] ## space allocated for horizontal text
 
         textSize2 = 0
         lastTextSize2 = 0
         textRects = []
-        textSpecs = []  # list of draw
+        textSpecs = []  ## list of draw
 
         # If values are hidden, return early
         if not self.style['showValues']:
             return (axisSpec, tickSpecs, textSpecs)
 
-        for i in range(min(len(tickLevels), self.style['maxTextLevel'] + 1)):
-            # Get the list of strings to display for this level
+        for i in range(min(len(tickLevels), self.style['maxTextLevel']+1)):
+            ## Get the list of strings to display for this level
             if tickStrings is None:
                 spacing, values = tickLevels[i]
                 strings = self.tickStrings(values, self.autoSIPrefixScale * self.scale, spacing)
@@ -1103,27 +1103,27 @@ class AxisItem(GraphicsWidget):
             if len(strings) == 0:
                 continue
 
-            # ignore strings belonging to ticks that were previously ignored
+            ## ignore strings belonging to ticks that were previously ignored
             for j in range(len(strings)):
                 if tickPositions[i][j] is None:
                     strings[j] = None
 
-            # Measure density of text; decide whether to draw this level
+            ## Measure density of text; decide whether to draw this level
             rects = []
             for s in strings:
                 if s is None:
                     rects.append(None)
                 else:
                     br = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignmentFlag.AlignCenter, s)
-                    # boundingRect is usually just a bit too large
-                    # (but this probably depends on per-font metrics?)
+                    ## boundingRect is usually just a bit too large
+                    ## (but this probably depends on per-font metrics?)
                     br.setHeight(br.height() * 0.8)
 
                     rects.append(br)
                     textRects.append(rects[-1])
 
             if len(textRects) > 0:
-                # measure all text, make sure there's enough room
+                ## measure all text, make sure there's enough room
                 if axis == 0:
                     textSize = np.sum([r.height() for r in textRects])
                     textSize2 = np.max([r.width() for r in textRects])
@@ -1134,10 +1134,10 @@ class AxisItem(GraphicsWidget):
                 textSize = 0
                 textSize2 = 0
 
-            if i > 0:  # always draw top level
-                # If the strings are too crowded, stop drawing text now.
-                # We use three different crowding limits based on the number
-                # of texts drawn so far.
+            if i > 0:  ## always draw top level
+                ## If the strings are too crowded, stop drawing text now.
+                ## We use three different crowding limits based on the number
+                ## of texts drawn so far.
                 textFillRatio = float(textSize) / lengthInPixels
                 finished = False
                 for nTexts, limit in self.style['textFillLimits']:
@@ -1146,7 +1146,7 @@ class AxisItem(GraphicsWidget):
                         break
                 if finished:
                     break
-
+            
             lastTextSize2 = textSize2
 
             #spacing, values = tickLevels[best]
@@ -1154,7 +1154,7 @@ class AxisItem(GraphicsWidget):
             # Determine exactly where tick text should be drawn
             for j in range(len(strings)):
                 vstr = strings[j]
-                if vstr is None:  # this tick was ignored because it is out of bounds
+                if vstr is None: ## this tick was ignored because it is out of bounds
                     continue
                 x = tickPositions[i][j]
                 #textRect = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignmentFlag.AlignCenter, vstr)
@@ -1162,28 +1162,28 @@ class AxisItem(GraphicsWidget):
                 height = textRect.height()
                 width = textRect.width()
                 #self.textHeight = height
-                offset = max(0, self.style['tickLength']) + textOffset
+                offset = max(0,self.style['tickLength']) + textOffset
 
                 if self.orientation == 'left':
-                    alignFlags = QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter
-                    rect = QtCore.QRectF(tickStop - offset - width, x - (height / 2), width, height)
+                    alignFlags = QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignVCenter
+                    rect = QtCore.QRectF(tickStop-offset-width, x-(height/2), width, height)
                 elif self.orientation == 'right':
-                    alignFlags = QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter
-                    rect = QtCore.QRectF(tickStop + offset, x - (height / 2), width, height)
+                    alignFlags = QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter
+                    rect = QtCore.QRectF(tickStop+offset, x-(height/2), width, height)
                 elif self.orientation == 'top':
-                    alignFlags = QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignBottom
-                    rect = QtCore.QRectF(x - width / 2., tickStop - offset - height, width, height)
+                    alignFlags = QtCore.Qt.AlignmentFlag.AlignHCenter|QtCore.Qt.AlignmentFlag.AlignBottom
+                    rect = QtCore.QRectF(x-width/2., tickStop-offset-height, width, height)
                 elif self.orientation == 'bottom':
-                    alignFlags = QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop
-                    rect = QtCore.QRectF(x - width / 2., tickStop + offset, width, height)
+                    alignFlags = QtCore.Qt.AlignmentFlag.AlignHCenter|QtCore.Qt.AlignmentFlag.AlignTop
+                    rect = QtCore.QRectF(x-width/2., tickStop+offset, width, height)
 
-                textFlags = alignFlags | QtCore.Qt.TextFlag.TextDontClip
-                # p.setPen(self.pen())
+                textFlags = alignFlags | QtCore.Qt.TextFlag.TextDontClip    
+                #p.setPen(self.pen())
                 #p.drawText(rect, textFlags, vstr)
                 textSpecs.append((rect, textFlags, vstr))
         profiler('compute text')
 
-        # update max text size if needed.
+        ## update max text size if needed.
         self._updateMaxTextSize(lastTextSize2)
 
         return (axisSpec, tickSpecs, textSpecs)
@@ -1194,13 +1194,13 @@ class AxisItem(GraphicsWidget):
         p.setRenderHint(p.RenderHint.Antialiasing, False)
         p.setRenderHint(p.RenderHint.TextAntialiasing, True)
 
-        # draw long line along axis
+        ## draw long line along axis
         pen, p1, p2 = axisSpec
         p.setPen(pen)
         p.drawLine(p1, p2)
         # p.translate(0.5,0)  ## resolves some damn pixel ambiguity
 
-        # draw ticks
+        ## draw ticks
         for pen, p1, p2 in tickSpecs:
             p.setPen(pen)
             p.drawLine(p1, p2)
