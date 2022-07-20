@@ -9,6 +9,7 @@ __version__ = '0.12.4.dev0'
 
 import os
 import sys
+import importlib
 
 import numpy  # # pyqtgraph requires numpy
 
@@ -276,7 +277,6 @@ from .widgets.GroupBox import GroupBox
 from .widgets.HistogramLUTWidget import *
 from .widgets.JoystickButton import *
 from .widgets.LayoutWidget import *
-from .widgets.MatplotlibWidget import *
 from .widgets.MultiPlotWidget import *
 from .widgets.PathButton import *
 from .widgets.PlotWidget import *
@@ -288,6 +288,10 @@ from .widgets.TableWidget import *
 from .widgets.TreeWidget import *
 from .widgets.ValueLabel import *
 from .widgets.VerticalLabel import *
+
+# Wrapped to prevent matplotlib becoming a hard dependency.
+if spec := importlib.util.find_spec('matplotlib') is not None:
+    from .widgets.MatplotlibWidget import *
 
 ##############################################################
 ## PyQt and PySide both are prone to crashing on exit. 

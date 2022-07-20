@@ -4,6 +4,7 @@ channels:
 dependencies:
   - pyqt
   - qt-main
+  - matplotlib
   - numpy
   - nomkl
   - scipy
