@@ -29,46 +29,65 @@ MIN_REGULAR_TIMESTAMP = (datetime(1, 1, 1) - datetime(1970,1,1)).total_seconds()
 MAX_REGULAR_TIMESTAMP = (datetime(9999, 1, 1) - datetime(1970,1,1)).total_seconds()
 SEC_PER_YEAR = 365.25*24*3600
 
+
+# The stepper functions provide
+#   'first' == True: The first tick value for 'val' being the minimum of the current view.
+#   'first' == False: The next tick value for 'val' being the previous tick value.
+
+
 def makeMSStepper(stepSize):
-    def stepper(val, n):
+    def stepper(val, n, first: bool):
         if val < MIN_REGULAR_TIMESTAMP or val > MAX_REGULAR_TIMESTAMP:
             return np.inf
-        
-        val *= 1000
-        f = stepSize * 1000
-        return (val // (n*f) + 1) * (n*f) / 1000.0
+
+        if first:
+            val *= 1000
+            f = stepSize * 1000
+            return (val // (n * f) + 1) * (n * f) / 1000.0
+        else:
+            return val + n * stepSize
+
     return stepper
+
 
 def makeSStepper(stepSize):
-    def stepper(val, n):
+    def stepper(val, n, first: bool):
         if val < MIN_REGULAR_TIMESTAMP or val > MAX_REGULAR_TIMESTAMP:
             return np.inf
-        
-        return (val // (n*stepSize) + 1) * (n*stepSize)
+
+        if first:
+            return (val // (n * stepSize) + 1) * (n * stepSize)
+        else:
+            return val + n * stepSize
+
     return stepper
+
 
 def makeMStepper(stepSize):
-    def stepper(val, n):
+    def stepper(val, n, first: bool):
         if val < MIN_REGULAR_TIMESTAMP or val > MAX_REGULAR_TIMESTAMP:
             return np.inf
-        
+
         d = utcfromtimestamp(val)
-        base0m = (d.month + n*stepSize - 1)
+        base0m = d.month + n * stepSize - 1
         d = datetime(d.year + base0m // 12, base0m % 12 + 1, 1)
         return (d - datetime(1970, 1, 1)).total_seconds()
+
     return stepper
 
+
 def makeYStepper(stepSize):
-    def stepper(val, n):
+    def stepper(val, n, first: bool):
         if val < MIN_REGULAR_TIMESTAMP or val > MAX_REGULAR_TIMESTAMP:
             return np.inf
-        
+
         d = utcfromtimestamp(val)
-        next_year = (d.year // (n*stepSize) + 1) * (n*stepSize)
+        next_year = (d.year // (n * stepSize) + 1) * (n * stepSize)
         if next_year > 9999:
             return np.inf
         next_date = datetime(next_year, 1, 1)
         return (next_date - datetime(1970, 1, 1)).total_seconds()
+
     return stepper
 
 class TickSpec:
@@ -100,10 +119,10 @@ class TickSpec:
     def makeTicks(self, minVal, maxVal, minSpc):
         ticks = []
         n = self.skipFactor(minSpc)
-        x = self.step(minVal, n)
+        x = self.step(minVal, n, first=True)
         while x <= maxVal:
             ticks.append(x)
-            x = self.step(x, n)
+            x = self.step(x, n, first=False)
         return (np.array(ticks), n)
 
     def skipFactor(self, minSpc):
