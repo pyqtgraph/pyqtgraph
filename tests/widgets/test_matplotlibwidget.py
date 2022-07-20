@@ -4,9 +4,13 @@ MatplotlibWidget test:
 Tests the creation of a MatplotlibWidget.
 """
 
+import pytest
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
 import numpy as np
+
+pytest.importorskip("matplotlib")
+import matplotlib
 
 pg.mkQApp()
 
