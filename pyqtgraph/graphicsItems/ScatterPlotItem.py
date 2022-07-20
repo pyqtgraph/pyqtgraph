@@ -500,6 +500,9 @@ class ScatterPlotItem(GraphicsObject):
         *hoverSize*            A single size to use for hovered spots. Set to -1 to keep size unchanged. Default is -1.
         *hoverPen*             A single pen to use for hovered spots. Set to None to keep pen unchanged. Default is None.
         *hoverBrush*           A single brush to use for hovered spots. Set to None to keep brush unchanged. Default is None.
+        *useCache*             (bool) By default, generated point graphics items are cached to
+                               improve performance. Setting this to False can improve image quality
+                               in certain situations.
         *antialias*            Whether to draw symbols with antialiasing. Note that if pxMode is True, symbols are
                                always rendered with antialiasing (since the rendered symbols can be cached, this
                                incurs very little performance cost)
@@ -614,6 +617,8 @@ class ScatterPlotItem(GraphicsObject):
             self.opts['hoverable'] = bool(kargs['hoverable'])
         if 'tip' in kargs:
             self.opts['tip'] = kargs['tip']
+        if 'useCache' in kargs:
+            self.opts['useCache'] = kargs['useCache']
 
         ## Set any extra parameters provided in keyword arguments
         for k in ['pen', 'brush', 'symbol', 'size']:
