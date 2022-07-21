@@ -7,19 +7,24 @@ import typing
 
 __all__ = ['MatplotlibWidget']
 
+
 class MatplotlibWidget(QtWidgets.QWidget):
     """
     Implements a Matplotlib figure inside a QWidget.
     Use getFigure() and redraw() to interact with matplotlib.
 
     Example::
-    
+
         mw = MatplotlibWidget()
         subplot = mw.getFigure().add_subplot(111)
         subplot.plot(x,y)
         mw.draw()
     """
-    
+
+    parent_default = None
+    figsize_default = (5.0, 4.0)
+    dpi_default = 100
+
     @typing.overload
     def __init__(self, figsize=(5.0, 4.0), dpi=100, parent=None):
         pass
@@ -29,18 +34,20 @@ class MatplotlibWidget(QtWidgets.QWidget):
         pass
 
     def __init__(self, *args, **kwargs):
-        if (
-            (args and not isinstance(args[0], QtWidgets.QWidget))
-            or
-            (kwargs and "figsize" in kwargs or "dpi" in kwargs)
-        ):
-            figsize = args[0] if len(args) > 0 else kwargs.get("figsize", (5.0, 4.0))
-            dpi = args[1] if len(args) > 1 else kwargs.get("dpi", 100)
-            parent = args[2] if len(args) > 2 else kwargs.get("parent", None)
+        if (args and not isinstance(args[0], QtWidgets.QWidget)):
+            figsize = args[0] if len(args) > 0 \
+                else kwargs.get("figsize", MatplotlibWidget.figsize_default)
+            dpi = args[1] if len(args) > 1 \
+                else kwargs.get("dpi", MatplotlibWidget.dpi_default)
+            parent = args[2] if len(args) > 2 \
+                else kwargs.get("parent", MatplotlibWidget.parent_default)
         else:
-            parent = args[0] if len(args) > 0 else kwargs.get("parent", None)
-            figsize = kwargs.get("figsize", (5.0, 4.0))
-            dpi = kwargs.get("dpi", 100)
+            parent = args[0] if len(args) > 0 \
+                else kwargs.get("parent", MatplotlibWidget.parent_default)
+            figsize = args[1] if len(args) > 1 \
+                else kwargs.get("figsize", MatplotlibWidget.figsize_default)
+            dpi = args[2] if len(args) > 2 \
+                else kwargs.get("dpi", MatplotlibWidget.dpi_default)
         super().__init__(parent)
 
         self.fig = Figure(figsize, dpi=dpi)
@@ -56,6 +63,6 @@ class MatplotlibWidget(QtWidgets.QWidget):
 
     def getFigure(self):
         return self.fig
-        
+ 
     def draw(self):
         self.canvas.draw()
