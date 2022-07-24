@@ -15,7 +15,7 @@ examples_ = OrderedDict([
     ('Matrix Display', 'MatrixDisplayExample.py'),
     ('ViewBox Features', Namespace(filename='ViewBoxFeatures.py', recommended=True)),
     ('Dock widgets', 'dockarea.py'),
-    ('Rich Jupyter Console', 'jupyter_console_example.py'),
+    ('Rich Jupyter Console',  Namespace(filename='jupyter_console_example.py', recommended=True)),
     ('Console', 'ConsoleWidget.py'),
     ('Histograms', 'histogram.py'),
     ('Beeswarm plot', 'beeswarm.py'),
