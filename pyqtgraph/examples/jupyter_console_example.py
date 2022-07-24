@@ -7,7 +7,10 @@ The `__main__` function shows an example that inputs the commands to plot simple
 
 Also shows the use of `whos`, which returns a list of the variables defined within the `ipython` kernel
 
-This method for creating a Jupyter console is based on the example here: https://github.com/jupyter/qtconsole/blob/b4e08f763ef1334d3560d8dac1d7f9095859545a/examples/embed_qtconsole.py#L19
+This method for creating a Jupyter console is based on the example(s) here:
+https://github.com/jupyter/qtconsole/tree/b4e08f763ef1334d3560d8dac1d7f9095859545a/examples
+especially-
+https://github.com/jupyter/qtconsole/blob/b4e08f763ef1334d3560d8dac1d7f9095859545a/examples/embed_qtconsole.py#L19
 
 """
 
@@ -66,10 +69,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # set dark mode
         if dark_mode:
+            # Set Dark bg color via this relatively roundabout method
             self.jupyter_console_widget.set_default_style(
                 "linux"
-            )  # Dark bg color.... only key to get it...
-
+            )
 
 if __name__ == "__main__":
     pg.mkQApp()
@@ -77,11 +80,16 @@ if __name__ == "__main__":
     main.show()
     main.jupyter_console_widget.execute('print("hello world :D ")')
 
-    # plot a sine/cosine waves by printing to console (as if you were typing the commands in manually)
+    # plot a sine/cosine waves by printing to console
+    # this is equivalent to typing the commands into the console manually
     main.jupyter_console_widget.execute("x = np.arange(0, 3 * np.pi, .1)")
     main.jupyter_console_widget.execute("pw.plotItem.plot(np.sin(x), pen='r')")
     main.jupyter_console_widget.execute(
-        "pw.plotItem.plot(np.cos(x), pen='cyan', symbol='o',symbolPen='m', symbolBrush=(0,0,255))"
+        "pw.plotItem.plot(np.cos(x),\
+         pen='cyan',\
+         symbol='o',\
+         symbolPen='m',\
+         symbolBrush=(0,0,255))"
     )
     main.jupyter_console_widget.execute("whos")
     main.jupyter_console_widget.execute("")
