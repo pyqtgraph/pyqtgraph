@@ -1,9 +1,7 @@
-import ast
-import configparser
 import contextlib
 import functools
 import inspect
-import textwrap
+import pydoc
 import weakref
 
 from . import Parameter
@@ -16,15 +14,15 @@ class RunOpts:
     """Sentinel value for detecting parameters with unset values"""
 
     ON_BUTTON = "button"
-    """Indicator for `interactive` parameter which runs the function on pressing a button parameter"""
+    """Indicator for ``interactive`` parameter which runs the function on pressing a button parameter"""
     ON_CHANGED = "changed"
     """
-    Indicator for `interactive` parameter which runs the function every time one `sigValueChanged` is emitted from
+    Indicator for ``interactive`` parameter which runs the function every time one ``sigValueChanged`` is emitted from
     any of the parameters
     """
     ON_CHANGING = "changing"
     """
-    Indicator for `interactive` parameter which runs the function every time one `sigValueChanging` is emitted from
+    Indicator for ``interactive`` parameter which runs the function every time one ``sigValueChanging`` is emitted from
     any of the parameters
     """
 
@@ -91,8 +89,12 @@ def funcToParamDict(func, title=None, **overrides):
         out["title"] = _resolveTitle(func.__name__, title, forwardStrTitle=True)
 
     funcParams = inspect.signature(func).parameters
-    parsedDoc = parseIniDocstring(func.__doc__)
-    out.setdefault("tip", parsedDoc.get("func-description"))
+    if func.__doc__:
+        # Reasonable "tip" default is the brief docstring description if it exists
+        # Look for blank line that separates
+        synopsis, _ = pydoc.splitdoc(func.__doc__)
+        if synopsis:
+            out.setdefault("tip", synopsis)
 
     # Make pyqtgraph parameter dicts from each parameter
     # Use list instead of funcParams.items() so kwargs can add to the iterable
@@ -108,19 +110,18 @@ def funcToParamDict(func, title=None, **overrides):
     for name in checkNames:
         # May be none if this is an override name after function accepted kwargs
         param = funcParams.get(name)
-        pgDict = createFuncParameter(name, param, parsedDoc, overrides, title)
+        pgDict = createFuncParameter(name, param, overrides, title)
         children.append(pgDict)
     return out
 
 
-def createFuncParameter(name, signatureParam, docDict, overridesDict, title=None):
+def createFuncParameter(name, signatureParam, overridesDict, title=None):
     """
     Constructs a dict ready for insertion into a group parameter based on the provided information in the
-    `inspect.signature` parameter, user-specified overrides, function doc info, and true parameter name.
+    `inspect.signature` parameter, user-specified overrides, and true parameter name.
 
     Parameter signature information is considered the most "overridable", followed by documentation specifications.
-    User overrides should be given the highest priority, i.e. not usurped by function doc values or parameter
-    default information.
+    User overrides should be given the highest priority, i.e. not usurped by parameter default information.
     """
     if (
         signatureParam is not None
@@ -133,7 +134,7 @@ def createFuncParameter(name, signatureParam, docDict, overridesDict, title=None
     else:
         signatureDict = {}
     # Doc takes precedence over signature for any value information
-    pgDict = {**signatureDict, **docDict.get(name, {})}
+    pgDict = signatureDict.copy()
     overrideInfo = overridesDict.get(name, {})
     if not isinstance(overrideInfo, dict):
         overrideInfo = {"value": overrideInfo}
@@ -149,174 +150,6 @@ def createFuncParameter(name, signatureParam, docDict, overridesDict, title=None
         pgDict.setdefault("title", _resolveTitle(name, title))
     pgDict.setdefault("type", type(pgDict["value"]).__name__)
     return pgDict
-
-
-def parseIniDocstring(doc):
-    """
-    Parses function documentation for relevant parameter definitions.
-
-    `doc` must be formatted like an .ini file, where each option's parameters are preceded by a [<arg>.options]
-    header. See the examples in tests/parametertree/test_docparser for valid configurations. Note that if the
-    `docstring_parser` module is available in the python environment, section headers as described above are
-    *not required* since they can be inferred from the properly formatted docstring.
-
-    The return value is a dict where each entry contains the found specifications of a given argument, i.e
-    {"param1": {"limits": [0, 10], "title": "hi"}, "param2": {...}}, etc.
-
-    Note that currently only literal evaluation with builtin objects is supported, i.e. the return result of
-    ast.literal_eval on the value string of each option.
-
-    Parameters
-    ----------
-    doc: str
-      Documentation to parse
-    """
-    try:
-        import docstring_parser
-
-        return _parseIniDocstring_docstringParser(doc)
-    except ImportError:
-        return _parseIniDocstring_basic(doc)
-
-
-def _parseIniDocstring_docstringParser(doc):
-    """
-    Use docstring_parser for a smarter version of the ini parser. Doesn't require [<arg>.options] headers
-    and can handle more dynamic parsing cases
-    """
-    # Revert to basic method if ini headers are already present
-    if not doc or ".options]\n" in doc:
-        return _parseIniDocstring_basic(doc)
-    import docstring_parser
-
-    out = {}
-    parsed = docstring_parser.parse(doc)
-    out["func-description"] = "\n".join(
-        [
-            desc
-            for desc in [parsed.short_description, parsed.long_description]
-            if desc is not None
-        ]
-    )
-    for param in parsed.params:
-        # Construct mini ini file around each parameter
-        header = f"[{param.arg_name}.options]"
-        miniDoc = param.description
-        if header not in miniDoc:
-            miniDoc = f"{header}\n{miniDoc}"
-        # top-level parameter no longer represents whole function
-        update = _parseIniDocstring_basic(miniDoc)
-        update.pop("func-description", None)
-        out.update(update)
-    return out
-
-
-def _stripNSpaces(string, n):
-    for ii in range(min(n, len(string))):
-        if not string[ii].isspace():
-            break
-    else:
-        ii = 0
-    return string[ii:]
-
-
-def _countStartingSpaces(line):
-    ii = 0
-    for ii in range(len(line)):
-        if line[ii].isspace():
-            ii += 1
-    return ii
-
-
-def _formatOptionsFromDoc(doc):
-    """
-    Dedents doc to [*.options] level for ConfigParser parsing and removes leading ":"
-    from each line if needed. These are both factors that complicate config parsing
-    later on
-    """
-    dedent = None
-    docLines = doc.splitlines()
-    defaultLine = -1
-    for ii, line in enumerate(docLines):
-        if dedent is None and ".options]" in line:
-            dedent = _countStartingSpaces(line)
-        stripped = line.strip()
-        if stripped.startswith(":"):
-            # :param: style documentation violates ini standards
-            docLines[ii] = line.replace(":", "", 1)
-        elif stripped == "[DEFAULT]":
-            defaultLine = ii
-    if defaultLine > -1:
-        # Remove all lines before default if it's present, since they can't be parsed
-        docLines = docLines[defaultLine:]
-    if dedent is not None:
-        doc = "\n".join(_stripNSpaces(line, dedent) for line in docLines)
-    else:
-        doc = textwrap.dedent(doc)
-
-    # Now that wrapping ensures lines start without whitespace relative to options,
-    # default block can be added if needed
-    if defaultLine < 0:
-        doc = f"[DEFAULT]\n{doc}"
-
-    return doc
-
-
-def _parseIniDocstring_basic(doc):
-    """
-    Implements quite primitive parsing of parameter signatures. Looks for
-    ``[<param-name>.options]`` blocks in the config string and parses them with a
-    ConfigParser. Note that all ``*.options`` blocks are expected to start at the
-    same indentation level. Options shared across all parameters can be specified under
-    a ``[DEFAULT]`` block.
-    """
-    out = {}
-    # Adding "[DEFAULT] to the beginning of the doc will consume non-parameter descriptions
-    # Account for things in commonly supported docstring formats:
-    fmtDoc = _formatOptionsFromDoc(doc or "")
-
-    parser = configparser.ConfigParser(allow_no_value=True)
-    # Save case sensitivity
-    parser.optionxform = str
-    try:
-        parser.read_string(fmtDoc)
-    except configparser.Error:
-        # Many things can go wrong reading a badly-formatted docstring, so failsafe by returning early
-        return out
-    defaultKeys = set(parser.defaults())
-    for kk, vv in parser.items():
-        if not kk.endswith(".options"):
-            continue
-        paramName = kk.split(".")[0]
-        # vv is a section with options for the parameter, but each option must be literal eval'd for non-string
-        # values
-        paramValues = dict(vv)
-        # Consolidate all non-valued key strings into a single tip since they likely belong to the argument
-        # documentation. Since dict preserves order, it should come back out in the right order.
-        backupTip = ""
-        for paramK, paramV in list(paramValues.items()):
-            if paramV is None:
-                # Considered a tip of the current option if no corresponding value
-                # and not a default option
-                if paramK not in defaultKeys:
-                    backupTip = f"{backupTip} {paramK}"
-                # Remove this from the return value since it isn't really meaninful
-                del paramValues[paramK]
-                continue
-            # noinspection PyBroadException
-            try:
-                paramValues[paramK] = ast.literal_eval(paramV)
-            except:
-                # There are many reasons this can fail, a safe fallback is the original string value
-                pass
-        if backupTip:
-            paramValues.setdefault("tip", backupTip.strip())
-        out[paramName] = paramValues
-    # Since function documentation can be used as a description for whatever group parameter hosts these
-    # parameters, store it in a name guaranteed not to collide with parameter names since its invalid
-    # variable syntax (contains '-')
-    out["func-description"] = "\n".join(parser.defaults())
-    return out
 
 
 class InteractiveFunction:
@@ -384,9 +217,6 @@ class InteractiveFunction:
         wasDisconnected = self.disconnect()
         try:
             for param in self.params:
-                param = param()
-                if param is None:
-                    continue
                 name = param.name()
                 if name in kwargs:
                     param.setValue(kwargs[name])
@@ -398,12 +228,20 @@ class InteractiveFunction:
         """
         Binds a new set of parameters to this function. If `clearOld` is *True* (default), previously bound parameters
         are disconnected.
+
+        Parameters
+        ----------
+        params: Sequence[Parameter]
+            New parameters to listen for updates and optionally propagate keywords
+            passed to :meth:`__call__`
+        clearOld: bool
+            If ``True``, previoulsy hooked up parameters will be removed first
         """
         if clearOld:
             self.removeParams()
         for param in params:
             # Weakref prevents elongating the life of parameters
-            self.params.append(weakref.ref(param))
+            self.params.append(param)
             param.sigValueChanged.connect(self.updateCachedParamValues)
             # Populate initial values
             self.paramKwargs[param.name()] = param.value()
@@ -414,10 +252,6 @@ class InteractiveFunction:
         values
         """
         for p in self.params:
-            p = p()
-            if p is None:
-                # Param already out of scope, no way for its signals to fire. Nothing to do
-                continue
             p.sigValueChanged.disconnect(self.updateCachedParamValues)
         # Disconnected all old signals, clear out and get ready for new ones
         self.params.clear()
@@ -464,7 +298,6 @@ def interact(
     func,
     *,
     ignores=None,
-    runFunc=None,
     runOpts=RunOpts.PARAM_UNSET,
     parent=RunOpts.PARAM_UNSET,
     title=RunOpts.PARAM_UNSET,
@@ -496,12 +329,9 @@ def interact(
     title: str or Callable
         Title of the group sub-parameter if one must be created (see `nest` behavior). If a function is supplied, it
         must be of the form (str) -> str and will be passed the function name as an input
-    runFunc: Callable
-        Simplifies the process of interacting with a wrapped function without requiring `functools`. See the
-        linked documentation for an example.
     nest: bool
         If *True*, the interacted function is given its own GroupParameter, and arguments to that function are
-        'nested' inside as its children. If *False*, function arguments are directly added to this paremeter
+        'nested' inside as its children. If *False*, function arguments are directly added to this parameter
         instead of being placed inside a child GroupParameter
     existOk: bool
         Whether it is OK for existing paramter names to bind to this function. See behavior during
@@ -529,58 +359,61 @@ def interact(
     chNames = [ch["name"] for ch in children]
     parent = _resolveParent(parent, nest, funcDict, existOk)
 
-    toExec = runFunc or func
-    if not isinstance(toExec, InteractiveFunction):
+    if not isinstance(func, InteractiveFunction):
         # If a reference isn't captured somewhere, garbage collection of the newly created
         # "InteractiveFunction" instance prevents connected signals from firing
         # Use a list in case multiple interact() calls are made with the same function
-        interactive = InteractiveFunction(toExec)
-        if hasattr(toExec, "interactiveRefs"):
-            toExec.interactiveRefs.append(interactive)
+        interactive = InteractiveFunction(func)
+        if hasattr(func, "interactiveRefs"):
+            func.interactiveRefs.append(interactive)
         else:
-            toExec.interactiveRefs = [interactive]
-        toExec = interactive
+            func.interactiveRefs = [interactive]
+        func = interactive
 
     # Values can't come both from closures and overrides/params, so ensure they don't get created
     if ignores is None:
         ignores = []
-    ignores = list(ignores) + list(toExec.closures)
+    ignores = list(ignores) + list(func.closures)
 
     # Recycle ignored content that is needed as a value
     recycleNames = set(overrides) & set(ignores) & set(chNames)
     extra = {key: overrides[key] for key in recycleNames}
-    toExec.extra.update(extra)
+    func.extra.update(extra)
 
     useParams = []
     for chDict in children:
         name = chDict["name"]
         if name in ignores:
             continue
-        child = _createFuncParamChild(parent, chDict, runOpts, existOk, toExec)
+        child = _createFuncParamChild(parent, chDict, runOpts, existOk, func)
         useParams.append(child)
 
-    toExec.hookupParams(useParams)
-    ret = parent
+    func.hookupParams(useParams)
+    # If no top-level parent and no nesting, return the list of child parameters
+    ret = parent or useParams
     if RunOpts.ON_BUTTON in runOpts:
         # Add an extra button child which can activate the function
-        button = _makeRunButton(nest, funcDict.get("tip"), toExec)
+        button = _makeRunButton(nest, funcDict.get("tip"), func)
         # Return just the button if no other params were allowed
         if not parent.hasChildren():
             ret = button
         parent.addChild(button, existOk=existOk)
 
-    # Keep reference to avoid `toExec` getting garbage collected and allow later access
+    # Keep reference to avoid `func` getting garbage collected and allow later access
     return ret
 
 
 def _resolveParent(parent, nest, parentOpts, existOk):
-    if parent is None or nest:
-        host = Parameter.create(**parentOpts)
-        if parent is not None:
-            # Parent was provided and nesting is enabled, so place created args inside the nested GroupParmeter
-            host = parent.addChild(host, existOk=existOk)
-        parent = host
-    return parent
+    """
+    Returns parent parameter that holds function children. May be ``None`` if
+    no top parent is provided and nesting is disabled.
+    """
+    funcGroup = parent
+    if nest:
+        funcGroup = Parameter.create(**parentOpts)
+    if parent and nest:
+        parent.addChild(funcGroup, existOk=existOk)
+    return funcGroup
 
 
 def _createFuncParamChild(parent, chDict, runOpts, existOk, toExec):
@@ -592,10 +425,12 @@ def _createFuncParamChild(parent, chDict, runOpts, existOk, toExec):
         and name not in toExec.extra
     ):
         raise ValueError(
-            f'Cannot interact with "{toExec} since it has required parameter "{name}"'
+            f"Cannot interact with `{toExec}` since it has required parameter `{name}`"
             f" with no default or closure value provided."
         )
-    child = parent.addChild(chDict, existOk=existOk)
+    child = Parameter.create(**chDict)
+    if parent:
+        parent.addChild(child, existOk=existOk)
     if RunOpts.ON_CHANGED in runOpts:
         child.sigValueChanged.connect(toExec.runFromChangedOrChanging)
     if RunOpts.ON_CHANGING in runOpts:

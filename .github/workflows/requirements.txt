@@ -16,9 +16,6 @@ pyopengl==3.1.6
 matplotlib==3.5.1
 h5py==3.6.0
 
-# For parsing signature docstrings during Parameter-function interaction
-docstring-parser==0.14.1
-
 # testing
 pytest==7.1.0
 pytest-xdist==2.5.0

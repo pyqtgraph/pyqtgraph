@@ -173,7 +173,7 @@ def test_interact():
     def override(**kwargs):
         return raw(**kwargs)
 
-    host = interact(raw, runFunc=override, runOpts=RunOpts.ON_CHANGED)
+    host = interact(wraps(raw)(override), runOpts=RunOpts.ON_CHANGED)
     assert "x" in host.names
     host["x"] = 100
     assert value == 100

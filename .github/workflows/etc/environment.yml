@@ -7,7 +7,6 @@ dependencies:
   - pyside2
   - numpy
   - scipy
-  - docstring_parser
   - pyopengl
   - pytest
   - pytest-xdist
