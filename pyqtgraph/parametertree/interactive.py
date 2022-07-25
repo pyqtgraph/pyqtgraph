@@ -258,10 +258,18 @@ class InteractiveFunction:
         if clearCache:
             self.paramKwargs.clear()
 
-    def runFromChangedOrChanging(self, _param, value):
+    def runFromChangedOrChanging(self, param, value):
         if self._disconnected:
             return
-        return self(**{_param.name(): value})
+        # Since this request came from a parameter, ensure it's not propagated back
+        # for efficiency and to avoid ``changing`` signals causing ``changed`` values
+        oldPropagate = self.propagateParamChanges
+        self.propagateParamChanges = False
+        try:
+            ret = self(**{param.name(): value})
+        finally:
+            self.propagateParamChanges = oldPropagate
+        return ret
 
     def runFromButton(self, **kwargs):
         if self._disconnected:
