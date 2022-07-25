@@ -6,6 +6,7 @@ import pydoc
 from . import Parameter
 from .. import functions as fn
 
+
 class RunOpts:
     class PARAM_UNSET:
         pass
@@ -139,7 +140,7 @@ class InteractiveFunction:
 
     def runFromChangedOrChanging(self, param, value):
         if self._disconnected:
-            return
+            return None
         # Since this request came from a parameter, ensure it's not propagated back
         # for efficiency and to avoid ``changing`` signals causing ``changed`` values
         oldPropagate = self.propagateParamChanges
@@ -152,7 +153,7 @@ class InteractiveFunction:
 
     def runFromButton(self, **kwargs):
         if self._disconnected:
-            return
+            return None
         return self(**kwargs)
 
     def disconnect(self):
@@ -370,11 +371,13 @@ class Interactor:
         kwargs
             Keyword arguments to pass to :meth:`interact`
         """
+
         def decorator(func):
             if not isinstance(func, InteractiveFunction):
                 func = InteractiveFunction(func)
             self.interact(func, **kwargs)
             return func
+
         return decorator
 
     def _nameToTitle(self, name, forwardStrTitle=False):

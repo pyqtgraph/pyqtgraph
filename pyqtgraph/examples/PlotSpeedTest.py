@@ -12,7 +12,6 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.functions as fn
 import pyqtgraph.parametertree as ptree
-from pyqtgraph.parametertree import InteractiveFunction, Interactor
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 # defaults here result in the same configuration as the original PlotSpeedTest
@@ -74,7 +73,7 @@ splitter.addWidget(pt)
 splitter.addWidget(pw)
 splitter.show()
 
-interactor = Interactor(parent=params, nest=False)
+interactor = ptree.Interactor(parent=params, nest=False)
 
 pw.setWindowTitle('pyqtgraph example: PlotSpeedTest')
 pw.setLabel('bottom', 'Index', units='B')
@@ -106,13 +105,9 @@ def makeData(noise=True, nsamples=5000, frames=50, fsample=1000.0, frequency=0.0
 
 params.child('makeData').setOpts(title='Plot Options')
 
-# @InteractiveFunction means that calling `update()` elsewhere recycles the values of the parameter tree
-# Instead of using default arguments
-
 @interactor.decorate(
     connect={'type': 'list', 'limits': ['all', 'pairs', 'finite', 'array']}
 )
-@InteractiveFunction
 def update(
     antialias=pg.getConfigOption('antialias'),
     connect='all',

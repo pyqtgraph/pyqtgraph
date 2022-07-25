@@ -9,7 +9,6 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtWidgets
 import pyqtgraph.parametertree as ptree
-from pyqtgraph.parametertree import Parameter, Interactor
 from time import perf_counter
 import re
 
@@ -18,7 +17,7 @@ translate = QtCore.QCoreApplication.translate
 app = pg.mkQApp()
 
 pt = ptree.ParameterTree(showHeader=False)
-param = Parameter.create(name=translate("ScatterPlot", "Parameters"), type="group")
+param = ptree.Parameter.create(name=translate("ScatterPlot", "Parameters"), type="group")
 pt.setParameters(param)
 p = pg.PlotWidget()
 splitter = QtWidgets.QSplitter()
@@ -43,7 +42,7 @@ def fmt(name):
     return translate("ScatterPlot", name.title().strip() + ":    ")
 
 
-interactor = Interactor(title=fmt, nest=False, parent=param)
+interactor = ptree.Interactor(title=fmt, nest=False, parent=param)
 
 
 @interactor.decorate(

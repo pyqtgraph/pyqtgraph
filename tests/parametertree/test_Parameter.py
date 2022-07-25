@@ -2,12 +2,7 @@ import pytest
 from functools import wraps
 from pyqtgraph.parametertree import Parameter
 from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
-from pyqtgraph.parametertree import (
-    RunOpts,
-    InteractiveFunction,
-    Interactor,
-    interact
-)
+from pyqtgraph.parametertree import RunOpts, InteractiveFunction, Interactor, interact
 
 
 def test_parameter_hasdefault():
@@ -219,6 +214,7 @@ def test_tips():
     assert param.opts['tip'] == a2.__doc__ and param.type() == "group"
     # Runs functions for 100% coverage in file :)
     a(), a2()
+
 
 def test_interactiveFunc():
     value = 0
