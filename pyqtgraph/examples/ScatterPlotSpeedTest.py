@@ -7,13 +7,11 @@ For testing rapid updates of ScatterPlotItem under various conditions.
 
 import numpy as np
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
+from pyqtgraph.Qt import QtCore, QtWidgets
 import pyqtgraph.parametertree as ptree
-from pyqtgraph.parametertree import Parameter, RunOpts, interactDefaults
-import pyqtgraph.graphicsItems.ScatterPlotItem
+from pyqtgraph.parametertree import Parameter, Interactor
 from time import perf_counter
 import re
-from contextlib import ExitStack
 
 translate = QtCore.QCoreApplication.translate
 
@@ -45,19 +43,14 @@ def fmt(name):
     return translate("ScatterPlot", name.title().strip() + ":    ")
 
 
-oldOpts = interactDefaults.setOpts(title=fmt, nest=False)
+interactor = Interactor(title=fmt, nest=False, parent=param)
 
 
-@param.interactDecorator()
+@interactor.decorate(
+    count=dict(limits=[1, None], step=100),
+    size=dict(limits=[1, None]),
+)
 def mkDataAndItem(count=500, size=10):
-    """
-    [count.options]
-    limits = [1, None]
-    step=100
-
-    [size.options]
-    limits = [1, None]
-    """
     global data, fps
     scale = 100
     data = {
@@ -74,7 +67,7 @@ def mkDataAndItem(count=500, size=10):
     mkItem()
 
 
-@param.interactDecorator()
+@interactor.decorate()
 def mkItem(pxMode=True, useCache=True):
     global item
     item = pg.ScatterPlotItem(pxMode=pxMode, **getData())
@@ -83,7 +76,7 @@ def mkItem(pxMode=True, useCache=True):
     p.addItem(item)
 
 
-@param.interactDecorator()
+@interactor.decorate()
 def getData(randomize=False):
     pos = data["pos"]
     pen = data["pen"]
@@ -96,13 +89,13 @@ def getData(randomize=False):
     return dict(x=pos[ptr % 50], y=pos[(ptr + 1) % 50], pen=pen, brush=brush, size=size)
 
 
-@param.interactDecorator()
+@interactor.decorate(
+    mode=dict(
+        type="list",
+        limits=["New Item", "Reuse Item", "Simulate Pan/Zoom", "Simulate Hover"],
+    ),
+)
 def update(mode="Reuse Item"):
-    """
-    [mode.options]
-    type = list
-    limits = ['New Item', 'Reuse Item', 'Simulate Pan/Zoom', 'Simulate Hover']
-    """
     global ptr, lastTime, fps
     if mode == "New Item":
         mkItem()
@@ -133,7 +126,7 @@ def update(mode="Reuse Item"):
     # app.processEvents()  # force complete redraw for every plot
 
 
-@param.interactDecorator()
+@interactor.decorate()
 def pausePlot(paused=False):
     if paused:
         timer.stop()
@@ -144,6 +137,5 @@ def pausePlot(paused=False):
 mkDataAndItem()
 timer.timeout.connect(update)
 timer.start(0)
-interactDefaults.setOpts(**oldOpts)
 if __name__ == "__main__":
     pg.exec()

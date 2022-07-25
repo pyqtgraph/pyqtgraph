@@ -99,9 +99,9 @@ use the provided context manager:
 
 .. code:: python
 
-    from pyqtgraph.parametertree import interactDefaults
+    from pyqtgraph.parametertree import interact
     # `runOpts` can be set to any combination of options as demonstrated above, too
-    with interactDefaults.optsContext(runOpts=RunOpts.ON_BUTTON):
+    with interact.optsContext(runOpts=RunOpts.ON_BUTTON):
         # All will have `runOpts` set to ON_BUTTON
         p1 = interact(aFunc)
         p2 = interact(bFunc)
@@ -111,14 +111,21 @@ use the provided context manager:
 If the default for all interaction should be changed, you can directly
 call ``interactDefaults.setOpts`` (but be warned - anyone who imports your
 module will have it modified for them, too. So use the context manager
-whenever possible). The previous options set will be returned for easy
-resetting after:
+whenever possible). Thus, it is *highly* advised to make your own ``Interactor``
+object in these cases. The previous options set will be returned for easy
+resetting afterward:
 
 .. code:: python
 
-    oldOpts = interactDefaults.setOpts(runOpts=RunOpts.ON_BUTTON)
+    from pyqtgraph.parametertree import Interactor
+    myInteractor = Interactor()
+    oldOpts = myInteractor.setOpts(runOpts=RunOpts.ON_BUTTON)
+    # Can also directly create interactor with these opts:
+    # myInteractor = Interactor(runOpts=RunOpts.ON_BUTTON)
+
     # ... do some things...
-    interactDefaults.setOpts(**oldOpts)
+    # Unset option
+    myInteractor.setOpts(**oldOpts)
 
 ``ignores``
 ^^^^^^^^^^^
@@ -208,7 +215,9 @@ should be directly inside the parent, use ``nest=False``:
     def a(x=5, y=6):
         return x + y
 
-    # 'x' and 'y' will be direct descendants of 'params', not nested inside another GroupParameter
+    # 'x' and 'y' will be returned in a list, not nested inside another GroupParameter
+    # If `parent=...` was specified in the `interact` call, `x` and `y` will be inserted
+    # directly as children of `parent`
     params = interact(a, nest=False)
 
 ``existOk``
@@ -248,9 +257,9 @@ parameter:
 
     # Cannot go lower than 0
     # These are bound to the 'radius' parameter
-    params = interact(dilateImage, closures={'image': lambda: image}, radius={'limits': [0, None]})
+    params = interact(dilate_interact, radius={'limits': [1, None]})
 
-Now, the user is unable to set the spinbox to a value < 0.
+Now, the user is unable to set the spinbox to a value < 1.
 
 Similar options can be provided when the parameter type doesn’t match
 the default value (``list`` is a common case):
@@ -299,19 +308,29 @@ same parameter, a decorator is provided:
 
 .. code:: python
 
+    from pyqtgraph.parametertree import Interactor, interact
     params = Parameter.create(name='Parameters', type='group')
+    interactor = Interactor(parent=params) # Same parent for all `interact` calls
 
-    @params.interactDecorator()
+    info = QtWidgets.QMessageBox.information
+
+    @interactor.decorate()
     def aFunc(x=5, y=6):
-        QtWidgets.QMessageBox.information(None, 'Hello World', f'X is {x}, Y is {y}')
+        info(None, 'Hello World', f'X is {x}, Y is {y}')
 
-    @params.interactDecorator()
+    @interactor.decorate()
     def bFunc(first=5, second=6):
-        QtWidgets.QMessageBox.information(None, 'Hello World', f'first is {first}, second is {second}')
+        info(None, 'Hello World', f'first is {first}, second is {second}')
 
-    @params.interactDecorator()
+    @interactor.decorate()
     def cFunc(uno=5, dos=6):
-        QtWidgets.QMessageBox.information(None, 'Hello World', f'uno is {uno}, dos is {dos}')
+        info(None, 'Hello World', f'uno is {uno}, dos is {dos}')
+
+    # Alternatively, the default interactor can be used if you don't need to
+    # make your own `Interactor` instance.
+    @interact.decorate(parent=params)
+    def anotherFunc(one="one"):
+        print(one)
 
     # All interactions are in the same parent
 
@@ -331,9 +350,8 @@ If functions should have formatted titles, specify this in the
     def titleFormat(name):
         return name.replace('_', ' ').title()
 
-    with interactDefaults.optsContext(title=titleFormat):
-        # The title in the parameter tree will be "My Snake Case Function"
-        params = interact(my_snake_case_function)
+    # The title in the parameter tree will be "My Snake Case Function"
+    params = interact(my_snake_case_function, title=titleFormat)
 
 Using ``InteractiveFunction``
 -----------------------------
@@ -355,7 +373,7 @@ and ``reconnect()`` methods, and object accessors to ``closures`` arguments.
         print(a)
 
     useFunc = InteractiveFunction(myfunc)
-    param = interact(useFunc, RunOpts.ON_CHANGED)
+    param = interact(useFunc, runOpts=RunOpts.ON_CHANGED)
     param['a'] = 6
     # Will print 6
     useFunc.disconnect()

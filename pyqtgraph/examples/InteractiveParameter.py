@@ -7,8 +7,7 @@ from pyqtgraph.parametertree import (
     ParameterTree,
     RunOpts,
     InteractiveFunction,
-    interact,
-    interactDefaults,
+    Interactor,
 )
 
 app = pg.mkQApp()
@@ -34,47 +33,34 @@ def printResult(func):
 
 
 host = Parameter.create(name="Interactive Parameter Use", type="group")
+interactor = Interactor(parent=host)
 
 
-@host.interactDecorator()
+@interactor.decorate()
 @printResult
 def easySample(a=5, b=6):
     return a + b
 
 
-@host.interactDecorator()
-@printResult
-def hasTooltipInfo(a=4, b=6):
-    """
-    [a.options]
-    tip=I'm the 'A' parameter
-    [b.options]
-    tip=My limits are from 0 to 10 incrementing by 2
-    limits=[0, 10]
-    step=2
-    """
-    return a + b
-
-
-@host.interactDecorator()
+@interactor.decorate()
 @printResult
 def stringParams(a="5", b="6"):
     return a + b
 
 
-@host.interactDecorator(a=10)
+@interactor.decorate(a=10)
 @printResult
 def requiredParam(a, b=10):
     return a + b
 
 
-@host.interactDecorator(ignores=["a"])
+@interactor.decorate(ignores=["a"])
 @printResult
 def ignoredAParam(a=10, b=20):
     return a * b
 
 
-@host.interactDecorator(runOpts=RunOpts.ON_BUTTON)
+@interactor.decorate(runOpts=RunOpts.ON_BUTTON)
 @printResult
 def runOnButton(a=10, b=20):
     return a + b
@@ -93,18 +79,18 @@ func_interactive = InteractiveFunction(
 )
 # Value is redeclared, but still bound
 x = 10
-interact(func_interactive, parent=host)
+interactor(func_interactive)
 
 
-with interactDefaults.optsContext(title=str.upper):
+with interactor.optsContext(title=str.upper):
 
-    @host.interactDecorator()
+    @interactor.decorate()
     @printResult
     def capslocknames(a=5):
         return a
 
 
-@host.interactDecorator(
+@interactor.decorate(
     runOpts=(RunOpts.ON_CHANGED, RunOpts.ON_BUTTON),
     a={"type": "list", "limits": [5, 10, 20]},
 )
@@ -113,7 +99,7 @@ def runOnBtnOrChange_listOpts(a=5):
     return a
 
 
-@host.interactDecorator(nest=False)
+@interactor.decorate(nest=False)
 @printResult
 def onlyTheArgumentsAppear(thisIsAFunctionArg=True):
     return thisIsAFunctionArg

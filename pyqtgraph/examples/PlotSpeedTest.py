@@ -12,7 +12,7 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.functions as fn
 import pyqtgraph.parametertree as ptree
-from pyqtgraph.parametertree import InteractiveFunction, interact
+from pyqtgraph.parametertree import InteractiveFunction, Interactor
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 # defaults here result in the same configuration as the original PlotSpeedTest
@@ -41,6 +41,7 @@ if args.use_opengl is not None:
 sfmt = QtGui.QSurfaceFormat()
 sfmt.setSwapInterval(0)
 QtGui.QSurfaceFormat.setDefaultFormat(sfmt)
+
 
 class MonkeyCurveItem(pg.PlotCurveItem):
     def __init__(self, *args, **kwds):
@@ -73,6 +74,8 @@ splitter.addWidget(pt)
 splitter.addWidget(pw)
 splitter.show()
 
+interactor = Interactor(parent=params, nest=False)
+
 pw.setWindowTitle('pyqtgraph example: PlotSpeedTest')
 pw.setLabel('bottom', 'Index', units='B')
 curve = MonkeyCurveItem(pen=default_pen, brush='b')
@@ -84,7 +87,8 @@ elapsed = deque(maxlen=rollingAverageSize)
 def resetTimings(*args):
     elapsed.clear()
 
-@params.interactDecorator(
+@interactor.decorate(
+    nest=True,
     nsamples={'limits': [0, None]},
     frames={'limits': [1, None]},
     fsample={'units': 'Hz'},
@@ -105,8 +109,7 @@ params.child('makeData').setOpts(title='Plot Options')
 # @InteractiveFunction means that calling `update()` elsewhere recycles the values of the parameter tree
 # Instead of using default arguments
 
-@params.interactDecorator(
-    nest=False,
+@interactor.decorate(
     connect={'type': 'list', 'limits': ['all', 'pairs', 'finite', 'array']}
 )
 @InteractiveFunction
@@ -135,8 +138,7 @@ def update(
         fps = 1 / average
         pw.setTitle('%0.2f fps - %0.1f ms avg' % (fps, average * 1_000))
 
-@params.interactDecorator(
-    nest=False,
+@interactor.decorate(
     useOpenGL={'readonly': not args.allow_opengl_toggle},
     plotMethod={'limits': ['pyqtgraph', 'drawPolyline'], 'type': 'list'},
     curvePen={'type': 'pen'}
