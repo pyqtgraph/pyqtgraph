@@ -18,33 +18,33 @@ you might do something like this:
 
 .. code:: python
 
-   from pyqtgraph.Qt import QtWidgets
-   import pyqtgraph as pg
-   from pyqtgraph.parametertree import Parameter, ParameterTree, parameterTypes as ptypes
+    from pyqtgraph.Qt import QtWidgets
+    import pyqtgraph as pg
+    from pyqtgraph.parametertree import Parameter, ParameterTree, parameterTypes as ptypes
 
-   def a(x=5, y=6):
+    def a(x=5, y=6):
        QtWidgets.QMessageBox.information(None, 'Hello World', f'X is {x}, Y is {y}')
 
-   # -----------
-   # discussion is from here:
-   params = Parameter.create(name='"a" parameters', type='group', children=[
+    # -----------
+    # discussion is from here:
+    params = Parameter.create(name='"a" parameters', type='group', children=[
        dict(name='x', type='int', value=5),
        dict(name='y', type='int', value=6)
-   ])
+    ])
 
-   def onChange(_param, _value):
+    def onChange(_param, _value):
        a(**params)
 
-   for child in params.children():
+    for child in params.children():
        child.sigValueChanged.connect(onChange)
-   # to here
-   # -----------
+    # to here
+    # -----------
 
-   app = pg.mkQApp()
-   tree = ParameterTree()
-   tree.setParameters(params)
-   tree.show()
-   pg.exec()
+    app = pg.mkQApp()
+    tree = ParameterTree()
+    tree.setParameters(params)
+    tree.show()
+    pg.exec()
 
 Notice in the ``-----`` comment block, lots of boilerplate and value
 duplication takes place. If an argument name changes, or the default
@@ -54,21 +54,21 @@ code below is functionally equivalent to above):
 
 .. code:: python
 
-   from pyqtgraph.Qt import QtWidgets
-   import pyqtgraph as pg
-   from pyqtgraph.parametertree import Parameter, ParameterTree, interact
+    from pyqtgraph.Qt import QtWidgets
+    import pyqtgraph as pg
+    from pyqtgraph.parametertree import Parameter, ParameterTree, interact
 
-   def a(x=5, y=6):
+    def a(x=5, y=6):
        QtWidgets.QMessageBox.information(None, 'Hello World', f'X is {x}, Y is {y}')
 
    # One line of code, no name/value duplication
-   params = interact(a)
+    params = interact(a)
 
-   app = pg.mkQApp()
-   tree = ParameterTree()
-   tree.setParameters(params)
-   tree.show()
-   pg.exec()
+    app = pg.mkQApp()
+    tree = ParameterTree()
+    tree.setParameters(params)
+    tree.show()
+    pg.exec()
 
 There are several caveats, but this is one of the most common scenarios
 for function interaction.
@@ -76,49 +76,49 @@ for function interaction.
 ``runOpts``
 ^^^^^^^^^^^
 
-Often, an ``interact``-ed function shouldn’t run until multiple
+Often, an ``interact``-ed function shouldn't run until multiple
 parameter values are changed. Or, the function should be run every time
 a value is *changing*, not just changed. In these cases, modify the
 ``runOpts`` parameter.
 
 .. code:: python
 
-   from pyqtgraph.parametertree import interact, RunOpts
+    from pyqtgraph.parametertree import interact, RunOpts
 
-   # Will add a button named "Run". When clicked, the function will run
-   params = interact(a, runOpts=RunOpts.ON_BUTTON)
-   # Will run on any `sigValueChanging` signal
-   params = interact(a, runOpts=RunOpts.ON_CHANGING)
-   # Runs on `sigValueChanged` or when "Run" is pressed
-   params = interact(a, runOpts=[RunOpts.ON_CHANGED, RunOpts.ON_BUTTON])
-   # Any combination of RUN_* options can be used
+    # Will add a button named "Run". When clicked, the function will run
+    params = interact(a, runOpts=RunOpts.ON_BUTTON)
+    # Will run on any `sigValueChanging` signal
+    params = interact(a, runOpts=RunOpts.ON_CHANGING)
+    # Runs on `sigValueChanged` or when "Run" is pressed
+    params = interact(a, runOpts=[RunOpts.ON_CHANGED, RunOpts.ON_BUTTON])
+    # Any combination of RUN_* options can be used
 
 The default run behavior can also be modified. If several functions are
-being interacted at once, and all should be with a “Run” button, simply
+being interacted at once, and all should be with a "Run" button, simply
 use the provided context manager:
 
 .. code:: python
 
-   from pyqtgraph.parametertree import interactDefaults
-   # `runOpts` can be set to any combination of options as demonstrated above, too
-   with interactDefaults.optsContext(runOpts=RunOpts.ON_BUTTON):
-       # All will have `runOpts` set to ON_BUTTON
-       p1 = interact(aFunc)
-       p2 = interact(bFunc)
-       p3 = interact(cFunc)
-   # After the context, `runOpts` is back to the previous default
+    from pyqtgraph.parametertree import interactDefaults
+    # `runOpts` can be set to any combination of options as demonstrated above, too
+    with interactDefaults.optsContext(runOpts=RunOpts.ON_BUTTON):
+        # All will have `runOpts` set to ON_BUTTON
+        p1 = interact(aFunc)
+        p2 = interact(bFunc)
+        p3 = interact(cFunc)
+    # After the context, `runOpts` is back to the previous default
 
 If the default for all interaction should be changed, you can directly
-call ``interactDefaults.setOpts`` (but be warned – anyone who imports your
+call ``interactDefaults.setOpts`` (but be warned - anyone who imports your
 module will have it modified for them, too. So use the context manager
 whenever possible). The previous options set will be returned for easy
 resetting after:
 
 .. code:: python
 
-   oldOpts = interactDefaults.setOpts(runOpts=RunOpts.ON_BUTTON)
-   # ... do some things...
-   interactDefaults.setOPts(**oldOpts)
+    oldOpts = interactDefaults.setOpts(runOpts=RunOpts.ON_BUTTON)
+    # ... do some things...
+    interactDefaults.setOpts(**oldOpts)
 
 ``ignores``
 ^^^^^^^^^^^
@@ -128,13 +128,13 @@ parameters and others should be hidden, use ``ignores``:
 
 .. code:: python
 
-   from pyqtgraph.parametertree import interact
+    from pyqtgraph.parametertree import interact
 
-   def a(x=5, y=6):
-       print(x, y)
+    def a(x=5, y=6):
+        print(x, y)
 
-   # Only 'x' will show up in the parameter
-   params = interact(a, ignores=['y'])
+    # Only 'x' will show up in the parameter
+    params = interact(a, ignores=['y'])
 
 ``closures``
 ^^^^^^^^^^^^
@@ -147,29 +147,29 @@ an ``InteractiveFunction`` object is needed as descibed in a later section.
 
 .. code:: python
 
-   from skimage import morphology as morph
-   import numpy as np
-   from pyqtgraph.parametertree import interact, InteractiveFunction, ParameterTree
-   import pyqtgraph as pg
+    from skimage import morphology as morph
+    import numpy as np
+    from pyqtgraph.parametertree import interact, InteractiveFunction, ParameterTree
+    import pyqtgraph as pg
 
 
-   def dilateImage(image, radius=3):
-       image = morph.dilation(image, morph.disk(radius))
-       view.setImage(image)
+    def dilateImage(image, radius=3):
+        image = morph.dilation(image, morph.disk(radius))
+        view.setImage(image)
 
-   app = pg.mkQApp()
-   view = pg.ImageView()
-   # Simulate a grayscale image
-   image = np.random.randint(0, 256, size=(512, 512))
-   dilate_interact = InteractiveFunction(dilateImage, closures={'image': lambda: image})
-   params = interact(dilate_interact)
-   # As the 'image' variable changes, the new value will be used during parameter interaction
-   view.show()
-   tree = ParameterTree()
-   tree.setParameters(params)
-   tree.show()
-   image = 255 - image # Even though 'image' is reassigned, it will be used by the parameter
-   pg.exec()
+    app = pg.mkQApp()
+    view = pg.ImageView()
+    # Simulate a grayscale image
+    image = np.random.randint(0, 256, size=(512, 512))
+    dilate_interact = InteractiveFunction(dilateImage, closures={'image': lambda: image})
+    params = interact(dilate_interact)
+    # As the 'image' variable changes, the new value will be used during parameter interaction
+    view.show()
+    tree = ParameterTree()
+    tree.setParameters(params)
+    tree.show()
+    image = 255 - image # Even though 'image' is reassigned, it will be used by the parameter
+    pg.exec()
 
 ``parent``
 ^^^^^^^^^^
@@ -177,44 +177,23 @@ an ``InteractiveFunction`` object is needed as descibed in a later section.
 Often, one parameter tree is used to represent several different
 interactive functions. When this is the case, specify the existing
 parameter as the ``parent``. In all but simple cases, it is usually
-easier to leverage the `decorator
-version <#the-decorator-version>`__
+easier to leverage the `decorator version <#the-decorator-version>`__.
 
 .. code:: python
 
-   from pyqtgraph.parametertree import Parameter
-   def aFunc(x=5, y=6):
-       QtWidgets.QMessageBox.information(None, 'Hello World', f'X is {x}, Y is {y}')
-   def bFunc(first=5, second=6):
-       QtWidgets.QMessageBox.information(None, 'Hello World', f'first is {first}, second is {second}')
-   def cFunc(uno=5, dos=6):
-       QtWidgets.QMessageBox.information(None, 'Hello World', f'uno is {uno}, dos is {dos}')
+    from pyqtgraph.parametertree import Parameter
+    def aFunc(x=5, y=6):
+        QtWidgets.QMessageBox.information(None, 'Hello World', f'X is {x}, Y is {y}')
+    def bFunc(first=5, second=6):
+        QtWidgets.QMessageBox.information(None, 'Hello World', f'first is {first}, second is {second}')
+    def cFunc(uno=5, dos=6):
+        QtWidgets.QMessageBox.information(None, 'Hello World', f'uno is {uno}, dos is {dos}')
 
-   params = Parameter.create(name='Parameters', type='group')
-   # All interactions are in the same parent
-   interact(aFunc, parent=params)
-   interact(bFunc, parent=params)
-   interact(cFunc, parent=params)
-
-``runFunc``
-^^^^^^^^^^^
-
-Often, override or decorator functions will use a definition only
-accepting kwargs and pass them to a different function. When this is the
-case, pass the raw, undecorated version to ``interact`` and pass the
-actual function to run here. I.e. use ``runFunc`` in the following
-scenario:
-
-.. code:: python
-
-   def a(x=5, y=6):
-       return x + y
-
-   def aWithLog(**kwargs):
-       print('Running A')
-       return a(**kwargs)
-
-   params = interact(a, runFunc=aWithLog)
+    params = Parameter.create(name='Parameters', type='group')
+    # All interactions are in the same parent
+    interact(aFunc, parent=params)
+    interact(bFunc, parent=params)
+    interact(cFunc, parent=params)
 
 ``nest``
 ^^^^^^^^
@@ -226,11 +205,11 @@ should be directly inside the parent, use ``nest=False``:
 
 .. code:: python
 
-   def a(x=5, y=6):
-       return x + y
+    def a(x=5, y=6):
+        return x + y
 
-   # 'x' and 'y' will be direct descendants of 'params', not nested inside another GroupParameter
-   params = interact(a, nest=False)
+    # 'x' and 'y' will be direct descendants of 'params', not nested inside another GroupParameter
+    params = interact(a, nest=False)
 
 ``existOk``
 ^^^^^^^^^^^
@@ -241,14 +220,14 @@ unless ``existOk=True`` (the default).
 
 .. code:: python
 
-   def a(x=5, y=6):
-       return x + y
-   def b(x=5, another=6):
-       return x + another
-   params = interact(a, nest=False)
+    def a(x=5, y=6):
+        return x + y
+    def b(x=5, another=6):
+        return x + another
+    params = interact(a, nest=False)
 
-   # Will raise an error, since 'x' was already in the parameter from interacting with 'a'
-   interact(b, nest=False, parent=params, existOk=False)
+    # Will raise an error, since 'x' was already in the parameter from interacting with 'a'
+    interact(b, nest=False, parent=params, existOk=False)
 
 ``overrides``
 ^^^^^^^^^^^^^
@@ -259,7 +238,7 @@ observe what happens when ``radius`` is < 0:
 
 ::
 
-   ValueError: All-zero footprint is not supported.
+    ValueError: All-zero footprint is not supported.
 
 To prevent such cases, ``overrides`` can contain additional parameter
 specifications (or default values) that will update the created
@@ -267,9 +246,9 @@ parameter:
 
 .. code:: python
 
-   # Cannot go lower than 0
-   # These are bound to the 'radius' parameter
-   params = interact(dilateImage, closures={'image': lambda: image}, radius={'limits': [0, None]})
+    # Cannot go lower than 0
+    # These are bound to the 'radius' parameter
+    params = interact(dilateImage, closures={'image': lambda: image}, radius={'limits': [0, None]})
 
 Now, the user is unable to set the spinbox to a value < 0.
 
@@ -278,10 +257,10 @@ the default value (``list`` is a common case):
 
 .. code:: python
 
-   def chooseOne(which='a'):
-       print(which)
+    def chooseOne(which='a'):
+        print(which)
 
-   params = interact(chooseOne, which={'type': 'list', 'limits': list('abc')})
+    params = interact(chooseOne, which={'type': 'list', 'limits': list('abc')})
 
 Any value accepted in ``Parameter.create`` can be used in the override
 for a parameter.
@@ -291,10 +270,10 @@ just the value should be adjusted or when there is no default:
 
 .. code:: python
 
-   def printAString(string):
-       print(string)
+    def printAString(string):
+        print(string)
 
-   params = interact(printAString, string='anything')
+    params = interact(printAString, string='anything')
 
 Functions with ``**kwargs``
 """""""""""""""""""""""""""
@@ -320,21 +299,21 @@ same parameter, a decorator is provided:
 
 .. code:: python
 
-   params = Parameter.create(name='Parameters', type='group')
+    params = Parameter.create(name='Parameters', type='group')
 
-   @params.interactDecorator()
-   def aFunc(x=5, y=6):
-       QtWidgets.QMessageBox.information(None, 'Hello World', f'X is {x}, Y is {y}')
+    @params.interactDecorator()
+    def aFunc(x=5, y=6):
+        QtWidgets.QMessageBox.information(None, 'Hello World', f'X is {x}, Y is {y}')
 
-   @params.interactDecorator()
-   def bFunc(first=5, second=6):
-       QtWidgets.QMessageBox.information(None, 'Hello World', f'first is {first}, second is {second}')
+    @params.interactDecorator()
+    def bFunc(first=5, second=6):
+        QtWidgets.QMessageBox.information(None, 'Hello World', f'first is {first}, second is {second}')
 
-   @params.interactDecorator()
-   def cFunc(uno=5, dos=6):
-       QtWidgets.QMessageBox.information(None, 'Hello World', f'uno is {uno}, dos is {dos}')
+    @params.interactDecorator()
+    def cFunc(uno=5, dos=6):
+        QtWidgets.QMessageBox.information(None, 'Hello World', f'uno is {uno}, dos is {dos}')
 
-   # All interactions are in the same parent
+    # All interactions are in the same parent
 
 Any value accepted by ``interact`` can be passed to the decorator.
 
@@ -346,19 +325,27 @@ If functions should have formatted titles, specify this in the
 
 .. code:: python
 
-   def my_snake_case_function(a=5):
-       print(a)
+    def my_snake_case_function(a=5):
+        print(a)
 
-   def titleFormat(name):
-       return name.replace('_', ' ').title()
+    def titleFormat(name):
+        return name.replace('_', ' ').title()
 
-   with interactDefaults.optsContext(title=titleFormat):
-       # The title in the parameter tree will be "My Snake Case Function"
-       params = interact(my_snake_case_function)
+    with interactDefaults.optsContext(title=titleFormat):
+        # The title in the parameter tree will be "My Snake Case Function"
+        params = interact(my_snake_case_function)
 
 Using ``InteractiveFunction``
 -----------------------------
-In all versions of ``interact`` described so far, it is not possible to temporarily stop an interacted function from triggering on parameter changes. Normally, one can ``disconnect`` the hooked-up signals, but since the actually connected functions are out of scope, this is not possible when using ``interact``. Additionally, it is not possible to change overrides or ``closures`` arguments after the fact. Finally, it is not possible to easily call an interacted function with parameter arguments/defaults through normal `interact` use. If any of these needs arise, use an ``InteractiveFunction`` instead during registration. This provides ``disconnect()`` and ``reconnect()`` methods, and object accessors to ``closures`` arguments.
+In all versions of ``interact`` described so far, it is not possible to temporarily
+stop an interacted function from triggering on parameter changes. Normally, one can
+``disconnect`` the hooked-up signals, but since the actually connected functions are
+out of scope, this is not possible when using ``interact``. Additionally, it is not
+possible to change overrides or ``closures`` arguments after the fact. Finally, it
+is not possible to easily call an interacted function with parameter arguments/defaults
+through normal `interact` use. If any of these needs arise, use an
+``InteractiveFunction`` instead during registration. This provides ``disconnect()``
+and ``reconnect()`` methods, and object accessors to ``closures`` arguments.
 
 .. code:: python
 
@@ -378,7 +365,8 @@ In all versions of ``interact`` described so far, it is not possible to temporar
     param['a'] = 10
     # Will print 10
 
-Note that in cases like these, where simple wrapping of a function must take place, you can use ``InteractiveFunction`` like a decorator:
+Note that in cases like these, where simple wrapping of a function must take place, you
+can use ``InteractiveFunction`` like a decorator:
 
 .. code:: python
 
@@ -397,7 +385,7 @@ Note that in cases like these, where simple wrapping of a function must take pla
     # will print '6' since this is the parameter value
 
 .. [1]
-   Functions defined in C or whose definitions cannot be parsed by
-   ``inspect.signature`` cannot be used here. However, in these cases a dummy function
-   can be wrapped and passed instead. Note that all values are passed
-   as keywords, so if positional arguments are expected it will not work.
+    Functions defined in C or whose definitions cannot be parsed by
+    ``inspect.signature`` cannot be used here. However, in these cases a dummy function
+    can be wrapped and passed instead. Note that all values are passed
+    as keywords, so if positional arguments are expected it will not work.
