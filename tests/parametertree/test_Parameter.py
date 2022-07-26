@@ -6,7 +6,7 @@ from pyqtgraph.parametertree import RunOpts, InteractiveFunction, Interactor, in
 
 
 def test_parameter_hasdefault():
-    opts = {'name': 'param', 'type': int, 'value': 1}
+    opts = {"name": "param", "type": int, "value": 1}
 
     # default unspecified
     p = Parameter(**opts)
@@ -26,36 +26,42 @@ def test_parameter_hasdefault():
     p = Parameter(default=None, **opts)
     assert not p.hasDefault()
 
+
 def test_add_child():
-    p = Parameter.create(name='test', type='group', children=[
-        dict(name='ch1', type='bool', value=True),
-        dict(name='ch2', type='bool', value=False),
-    ])
+    p = Parameter.create(
+        name="test",
+        type="group",
+        children=[
+            dict(name="ch1", type="bool", value=True),
+            dict(name="ch2", type="bool", value=False),
+        ],
+    )
     with pytest.raises(ValueError):
-        p.addChild(dict(name='ch1', type='int', value=0))
-    existing = p.child('ch1')
-    ch = p.addChild(dict(name='ch1', type='int', value=0), existOk=True)
+        p.addChild(dict(name="ch1", type="int", value=0))
+    existing = p.child("ch1")
+    ch = p.addChild(dict(name="ch1", type="int", value=0), existOk=True)
     assert ch is existing
 
-    ch = p.addChild(dict(name='ch1', type='int', value=0), autoIncrementName=True)
-    assert ch.name() == 'ch3'
+    ch = p.addChild(dict(name="ch1", type="int", value=0), autoIncrementName=True)
+    assert ch.name() == "ch3"
+
 
 def test_unpack_parameter():
     # test that **unpacking correctly returns child name/value maps
     params = [
-        dict(name='a', type='int', value=1),
-        dict(name='b', type='str', value='2'),
-        dict(name='c', type='float', value=3.0),
+        dict(name="a", type="int", value=1),
+        dict(name="b", type="str", value="2"),
+        dict(name="c", type="float", value=3.0),
     ]
-    p = Parameter.create(name='params', type='group', children=params)
+    p = Parameter.create(name="params", type="group", children=params)
     result = dict(**p)
 
-    assert 'a' in result
-    assert result['a'] == 1
-    assert 'b' in result
-    assert result['b'] == '2'
-    assert 'c' in result
-    assert result['c'] == 3.0
+    assert "a" in result
+    assert result["a"] == 1
+    assert "b" in result
+    assert result["b"] == "2"
+    assert "c" in result
+    assert result["c"] == 3.0
 
 
 def test_interact():
@@ -175,25 +181,30 @@ def test_interact():
 
 def test_run():
     def a():
-        return 5
-    interactor = Interactor()
+        """"""
+
+    interactor = Interactor(runOpts=RunOpts.ON_BUTTON)
 
     defaultRunBtn = Parameter.create(**interactor.runButtonTemplate, name="Run")
-    btn = interactor(a, runOpts=RunOpts.ON_BUTTON)
+    btn = interactor(a)
     assert btn.type() == defaultRunBtn.type()
-    # Runs function for 100% coverage in file :)
-    btn.activate()
 
     template = dict(defaultName="Test", type="action")
-    interactor = Interactor()
     with interactor.optsContext(runButtonTemplate=template):
-        x = interactor(a, runOpts=RunOpts.ON_BUTTON)
+        x = interactor(a)
     assert x.name() == "Test"
 
+    parent = Parameter.create(name="parent", type="group")
+    test2 = interactor(a, parent=parent, nest=False)
+    assert test2.parent() is parent
+
+    test2 = interactor(a, nest=False)
+    assert not test2.parent()
 
 def test_no_func_group():
     def inner(a=5, b=6):
         return a + b
+
     out = interact(inner, nest=False)
     assert isinstance(out, list)
 
@@ -201,19 +212,26 @@ def test_no_func_group():
 def test_tips():
     def a():
         """a simple tip"""
-        return 5
+
     interactor = Interactor()
 
     btn = interactor(a, runOpts=RunOpts.ON_BUTTON)
-    assert btn.opts['tip'] == a.__doc__
+    assert btn.opts["tip"] == a.__doc__
 
     def a2(x=5):
         """a simple tip"""
-        return x
+
+    def a3(x=5):
+        """
+        A long docstring with a newline
+        followed by more text won't result in a tooltip
+        """
+
     param = interactor(a2, runOpts=RunOpts.ON_BUTTON)
-    assert param.opts['tip'] == a2.__doc__ and param.type() == "group"
-    # Runs functions for 100% coverage in file :)
-    a(), a2()
+    assert param.opts["tip"] == a2.__doc__ and param.type() == "group"
+
+    param = interactor(a3)
+    assert "tip" not in param.opts
 
 
 def test_interactiveFunc():
@@ -289,3 +307,75 @@ def test_interactive_reprs():
 
     ifunc = InteractiveFunction(lambda x=5: x, closures=dict(x=lambda: 10))
     assert "closures=['x']" in repr(ifunc)
+
+
+def test_rm_without_clear_cache():
+    class RetainVal:
+        a = 1
+
+    host = Parameter.create(name="host", type="group")
+    interactor = Interactor(parent=host, nest=False)
+
+    @interactor.decorate(a=9)
+    def inner(a=4):
+        RetainVal.a = a
+
+    inner.removeParams(clearCache=False)
+    host["a"] = 6
+    assert RetainVal.a == 1
+
+    inner()
+    assert RetainVal.a == 9
+
+    inner.removeParams(clearCache=True)
+    inner()
+    assert RetainVal.a == 4
+
+
+def test_decorate_already_interactive():
+    @InteractiveFunction
+    def inner(a=4):
+        return a
+
+    in1 = inner
+    in2 = interact.decorate()(inner)
+    assert in1 is in2
+
+
+def test_update_non_param_kwarg():
+    class RetainVal:
+        a = 1
+
+    @InteractiveFunction
+    def a(x=3, **kwargs):
+        RetainVal.a = sum(kwargs.values()) + x
+        return RetainVal.a
+    a.propagateParamChanges = True
+
+    host = interact(a)
+    assert a(y=10) == 13
+    assert len(host.names) == 1 and host["x"] == 3
+
+    assert a() == 3
+
+    # Code path where "propagateParamChanges" shouldn't be reconnected if
+    # it's already disconnected
+    a.disconnect()
+    assert a(y=10) == 13
+    host["x"] = 5
+    assert RetainVal.a == 13
+
+    # But the cache should still be up-to-date
+    assert a() == 5
+
+def test_hookup_extra_params():
+    @InteractiveFunction
+    def a(x=5, **kwargs):
+        return x + sum(kwargs.values())
+    host = interact(a)
+
+    p2 = Parameter.create(name="p2", type="int", value=3)
+    a.hookupParams([p2], clearOld=False)
+
+    assert a() == 8
+
