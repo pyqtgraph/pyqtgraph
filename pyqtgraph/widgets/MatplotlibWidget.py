@@ -33,6 +33,14 @@ class MatplotlibWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         pass
 
+    @typing.overload
+    def __init__(self, figsize=(5.0, 4.0)):
+        pass
+
+    @typing.overload
+    def __init__(self, dpi=100):
+        pass
+
     def __init__(self, *args, **kwargs):
         if (args and not isinstance(args[0], QtWidgets.QWidget)):
             figsize = args[0] if len(args) > 0 \
