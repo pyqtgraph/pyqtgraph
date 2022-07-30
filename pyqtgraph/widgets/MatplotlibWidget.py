@@ -30,15 +30,7 @@ class MatplotlibWidget(QtWidgets.QWidget):
         pass
 
     @typing.overload
-    def __init__(self, parent=None):
-        pass
-
-    @typing.overload
-    def __init__(self, figsize=(5.0, 4.0)):
-        pass
-
-    @typing.overload
-    def __init__(self, dpi=100):
+    def __init__(self, parent=None, figsize=(5.0, 4.0)):
         pass
 
     def __init__(self, *args, **kwargs):
