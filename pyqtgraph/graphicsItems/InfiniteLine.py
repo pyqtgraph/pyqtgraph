@@ -301,14 +301,11 @@ class InfiniteLine(GraphicsObject):
         if vr is None:
             return QtCore.QRectF()
         
-        ## add a 4-pixel radius around the line for mouse interaction.
-        
         px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
         if px is None:
             px = 0
         pw = max(self.pen.width() / 2, self.hoverPen.width() / 2)
-        w = max(4, self._maxMarkerSize + pw) + 1
-        w = w * px
+        w = (self._maxMarkerSize + pw + 1) * px
         br = QtCore.QRectF(vr)
         br.setBottom(-w)
         br.setTop(w)
