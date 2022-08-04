@@ -205,6 +205,9 @@ class PlotDataItem(GraphicsObject):
         **Optimization keyword arguments:**
 
             ================= =======================================================================
+            useCache          (bool) By default, generated point graphics items are cached to
+                              improve performance. Setting this to False can improve image quality
+                              in certain situations.
             antialias         (bool) By default, antialiasing is disabled to improve performance.
                               Note that in some cases (in particular, when ``pxMode=True``), points
                               will be rendered antialiased even if this is set to `False`.
@@ -314,6 +317,7 @@ class PlotDataItem(GraphicsObject):
             'antialias': getConfigOption('antialias'),
             'pointMode': None,
 
+            'useCache': True,
             'downsample': 1,
             'autoDownsample': False,
             'downsampleMethod': 'peak',
@@ -867,7 +871,8 @@ class PlotDataItem(GraphicsObject):
                 ('symbolSize', 'size'),
                 ('data', 'data'),
                 ('pxMode', 'pxMode'),
-                ('antialias', 'antialias')
+                ('antialias', 'antialias'),
+                ('useCache', 'useCache')
             ]:
                 if k in self.opts:
                     scatterArgs[v] = self.opts[k]

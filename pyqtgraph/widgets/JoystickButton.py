@@ -79,6 +79,7 @@ class JoystickButton(QtWidgets.QPushButton):
             6,
             6
         )
+        p.end()
         
     def resizeEvent(self, ev):
         self.setState(*self.state)

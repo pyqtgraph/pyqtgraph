@@ -74,7 +74,7 @@ class Install(install.install):
     """
     def run(self):
         global path, version, initVersion, forcedVersion, installVersion
-        
+
         name = self.config_vars['dist_name']
         path = os.path.join(self.install_libbase, 'pyqtgraph')
         if os.path.exists(path):
@@ -122,7 +122,7 @@ setup(
         'style': helpers.StyleCommand
     },
     packages=find_namespace_packages(include=['pyqtgraph', 'pyqtgraph.*']),
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     package_dir={"pyqtgraph": "pyqtgraph"},
     package_data={
         'pyqtgraph.examples': ['optics/*.gz', 'relativity/presets/*.cfg'],
@@ -134,7 +134,7 @@ setup(
         ],
     },
     install_requires = [
-        'numpy>=1.19.0',
+        'numpy>=1.20.0',
     ],
     **setupOpts
 )
