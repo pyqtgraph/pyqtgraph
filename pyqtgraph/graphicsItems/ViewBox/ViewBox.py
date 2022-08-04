@@ -1622,8 +1622,13 @@ class ViewBox(GraphicsWidget):
                     changed[0] = True
                 viewRange[0] = rangeX
 
-
-        changed = [(viewRange[i][0] != self.state['viewRange'][i][0]) or (viewRange[i][1] != self.state['viewRange'][i][1]) for i in (0,1)]
+        # Consider only as 'changed' if the differences are larger than floating point inaccuracies
+        thresholds = [(viewRange[axis][1] - viewRange[axis][0]) * 1.0e-9 for axis in (0,1)]
+        changed = [
+            (abs(viewRange[axis][0] - self.state["viewRange"][axis][0]) > thresholds[axis])
+            or (abs(viewRange[axis][1] - self.state["viewRange"][axis][1]) > thresholds[axis])
+            for axis in (0, 1)
+        ]
         self.state['viewRange'] = viewRange
 
         if any(changed):
