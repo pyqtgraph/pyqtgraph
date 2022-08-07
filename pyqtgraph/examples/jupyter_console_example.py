@@ -23,7 +23,7 @@ from pyqtgraph.dockarea.DockArea import DockArea
 
 try:
     from qtconsole import inprocess
-except:
+except ImportError or NameError:
     print(
         "The example in `jupyter_console_example.py` requires `qtconsole` to run. Install with `pip install qtconsole` or equivalent."
     )
