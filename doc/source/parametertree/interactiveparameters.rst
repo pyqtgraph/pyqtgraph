@@ -61,7 +61,7 @@ code below is functionally equivalent to above):
     def a(x=5, y=6):
        QtWidgets.QMessageBox.information(None, 'Hello World', f'X is {x}, Y is {y}')
 
-   # One line of code, no name/value duplication
+    # One line of code, no name/value duplication
     params = interact(a)
 
     app = pg.mkQApp()
