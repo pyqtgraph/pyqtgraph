@@ -9,29 +9,31 @@ from .. import functions as fn
 
 class RunOpts:
     class PARAM_UNSET:
-        pass
-
-    """Sentinel value for detecting parameters with unset values"""
+        """Sentinel value for detecting parameters with unset values"""
 
     ON_BUTTON = "button"
-    """Indicator for ``interactive`` parameter which runs the function on pressing a button parameter"""
+    """
+    Indicator for ``interactive`` parameter which runs the function on pressing a
+    button parameter
+    """
     ON_CHANGED = "changed"
     """
-    Indicator for ``interactive`` parameter which runs the function every time one ``sigValueChanged`` is emitted from
-    any of the parameters
+    Indicator for ``interactive`` parameter which runs the function every time one
+    ``sigValueChanged`` is emitted from any of the parameters
     """
     ON_CHANGING = "changing"
     """
-    Indicator for ``interactive`` parameter which runs the function every time one ``sigValueChanging`` is emitted from
-    any of the parameters
+    Indicator for ``interactive`` parameter which runs the function every time one
+     ``sigValueChanging`` is emitted from any of the parameters
     """
 
 
 class InteractiveFunction:
     """
-    `interact` can be used with regular functions. However, when they are connected to changed or changing signals,
-    there is no way to access these connections later to i.e. disconnect them temporarily. This utility class
-    wraps a normal function but can provide an external scope for accessing the hooked up parameter signals.
+    ``interact`` can be used with regular functions. However, when they are connected to
+    changed or changing signals, there is no way to access these connections later to
+    i.e. disconnect them temporarily. This utility class wraps a normal function but
+    can provide an external scope for accessing the hooked up parameter signals.
     """
 
     def __init__(self, function, *, closures=None, **extra):
@@ -46,7 +48,7 @@ class InteractiveFunction:
             Arguments that shouldn't be constant, but can't be represented as a parameter.
             See the rst docs for more information.
         extra: dict
-            extra keyword arguments to pass to `function` when this wrapper is called
+            extra keyword arguments to pass to ``function`` when this wrapper is called
         """
         super().__init__()
         self.parameters = []
@@ -65,7 +67,7 @@ class InteractiveFunction:
 
     def __call__(self, **kwargs):
         """
-        Calls `self.function`. Extra, closures, and parameter keywords as defined on
+        Calls ``self.function``. Extra, closures, and parameter keywords as defined on
         init and through :func:`InteractiveFunction.setParams` are forwarded during the
         call.
         """
@@ -81,7 +83,7 @@ class InteractiveFunction:
 
     def updateCachedParameterValues(self, param, value):
         """
-        This function is connected to `sigChanged` of every parameter associated with
+        This function is connected to ``sigChanged`` of every parameter associated with
         it. This way, those parameters don't have to be queried for their value every
         time InteractiveFunction is __call__'ed
         """
@@ -109,8 +111,8 @@ class InteractiveFunction:
 
     def hookupParameters(self, params=None, clearOld=True):
         """
-        Binds a new set of parameters to this function. If `clearOld` is *True* (default), previously bound parameters
-        are disconnected.
+        Binds a new set of parameters to this function. If ``clearOld`` is *True* (
+        default), previously bound parameters are disconnected.
 
         Parameters
         ----------
@@ -118,12 +120,11 @@ class InteractiveFunction:
             New parameters to listen for updates and optionally propagate keywords
             passed to :meth:`__call__`
         clearOld: bool
-            If ``True``, previoulsy hooked up parameters will be removed first
+            If ``True``, previously hooked up parameters will be removed first
         """
         if clearOld:
             self.removeParameters()
         for param in params:
-            # Weakref prevents elongating the life of parameters
             self.parameters.append(param)
             param.sigValueChanged.connect(self.updateCachedParameterValues)
             # Populate initial values
@@ -131,8 +132,8 @@ class InteractiveFunction:
 
     def removeParameters(self, clearCache=True):
         """
-        Disconnects from all signals of parameters in `self.parameters`. Also, optionally
-        clears the old cache of param values
+        Disconnects from all signals of parameters in ``self.parameters``. Also,
+        optionally clears the old cache of param values
         """
         for p in self.parameters:
             self._disconnectParameter(p)
@@ -160,13 +161,15 @@ class InteractiveFunction:
         return self(**kwargs)
 
     def disconnect(self):
-        """Simulates disconnecting the runnable by turning `runFrom*` functions into no-ops"""
+        """
+        Simulates disconnecting the runnable by turning ``runFrom*`` functions into no-ops
+        """
         oldDisconnect = self._disconnected
         self._disconnected = True
         return oldDisconnect
 
     def reconnect(self):
-        """Simulates reconnecting the runnable by re-enabling `runFrom*` functions"""
+        """Simulates reconnecting the runnable by re-enabling ``runFrom*`` functions"""
         oldDisconnect = self._disconnected
         self._disconnected = False
         return oldDisconnect
@@ -262,39 +265,44 @@ class Interactor:
         """
         Interacts with a function by making Parameters for each argument.
 
-        There are several potential use cases and argument handling possibilities depending on which values are
-        passed to this function, so a more detailed explanation of several use cases is provided in
-        the "Interactive Parameters" doc.
+        There are several potential use cases and argument handling possibilities
+        depending on which values are passed to this function, so a more detailed
+        explanation of several use cases is provided in the "Interactive Parameters" doc.
 
-        if any non-defaults exist, a value must be
-        provided for them in `descrs`. If this value should *not* be made into a parameter, include its name in `ignores`.
+        if any non-defaults exist, a value must be provided for them in ``overrides``. If
+        this value should *not* be made into a parameter, include its name in ``ignores``.
 
         Parameters
         ----------
         function: Callable
             function with which to interact. Can also be a :class:`InteractiveFunction`,
             if a reference to the bound signals is required.
-        runOpts: `GroupParameter.<RUN_BUTTON, CHANGED, or CHANGING>` value
-            How the function should be run, i.e. when pressing a button, on sigValueChanged, and/or on sigValueChanging
+        runOpts: ``GroupParameter.<RUN_BUTTON, CHANGED, or CHANGING>`` value
+            How the function should be run, i.e. when pressing a button, on
+            sigValueChanged, and/or on sigValueChanging
         ignores: Sequence
             Names of function arguments which shouldn't have parameters created
         parent: GroupParameter
-            Parent in which to add arguemnt Parameters. If *None*, a new group parameter is created.
+            Parent in which to add argument Parameters. If *None*, a new group
+            parameter is created.
         title: str or Callable
-            Title of the group sub-parameter if one must be created (see `nest` behavior). If a function is supplied, it
-            must be of the form (str) -> str and will be passed the function name as an input
+            Title of the group sub-parameter if one must be created (see ``nest``
+            behavior). If a function is supplied, it must be of the form (str) -> str
+            and will be passed the function name as an input
         nest: bool
-            If *True*, the interacted function is given its own GroupParameter, and arguments to that function are
-            'nested' inside as its children. If *False*, function arguments are directly added to this parameter
+            If *True*, the interacted function is given its own GroupParameter,
+            and arguments to that function are 'nested' inside as its children.
+            If *False*, function arguments are directly added to this parameter
             instead of being placed inside a child GroupParameter
         existOk: bool
-            Whether it is OK for existing paramter names to bind to this function. See behavior during
-            'Parameter.insertChild'
+            Whether it is OK for existing parameter names to bind to this function.
+            See behavior during 'Parameter.insertChild'
         overrides:
-            Override descriptions to provide additional parameter options for each argument. Moreover,
-            extra parameters can be defined here if the original function uses ``**`` to consume additional keyword
-            arguments. Each override can be a value (e.g. 5) or a dict specification of a parameter
-            (e.g. dict(type='list', limits=[0, 10, 20]))
+            Override descriptions to provide additional parameter options for each
+            argument. Moreover, extra parameters can be defined here if the original
+            function uses ``**`` to consume additional keyword arguments. Each
+            override can be a value (e.g. 5) or a dict specification of a
+            parameter (e.g. dict(type='list', limits=[0, 10, 20]))
         """
         # Get every overridden default
         locs = locals()
@@ -375,20 +383,34 @@ class Interactor:
             Keyword arguments to pass to :meth:`interact`
         """
 
-        def decorator(func):
-            if not isinstance(func, InteractiveFunction):
-                func = InteractiveFunction(func)
-            self.interact(func, **kwargs)
-            return func
+        def decorator(function):
+            if not isinstance(function, InteractiveFunction):
+                function = InteractiveFunction(function)
+            self.interact(function, **kwargs)
+            return function
 
         return decorator
 
     def _nameToTitle(self, name, forwardStrTitle=False):
+        """
+        Converts a function name to a title based on ``self.title``.
+
+        Parameters
+        ----------
+        name: str
+            Name of the function
+        forwardStrTitle: bool
+            If ``self.title`` is a string and ``forwardStrTitle`` is True,
+            ``self.title`` will be used as the title. Otherwise, if ``self.title`` is
+            *None*, the name will be returned unchanged. Finally, if ``self.title`` is
+            a callable, it will be called with the name as an input and the output will
+            be returned
+        """
         titleFormat = self.title
-        isstr = isinstance(titleFormat, str)
-        if titleFormat is None or (isstr and not forwardStrTitle):
+        isString = isinstance(titleFormat, str)
+        if titleFormat is None or (isString and not forwardStrTitle):
             return name
-        elif isstr:
+        elif isString:
             return titleFormat
         # else: titleFormat should be callable
         return titleFormat(name)
@@ -457,7 +479,6 @@ class Interactor:
         funcParams = inspect.signature(function).parameters
         if function.__doc__:
             # Reasonable "tip" default is the brief docstring description if it exists
-            # Look for blank line that separates
             synopsis, _ = pydoc.splitdoc(function.__doc__)
             if synopsis:
                 out.setdefault("tip", synopsis)
@@ -467,9 +488,11 @@ class Interactor:
         checkNames = list(funcParams)
         isKwarg = [p.kind is p.VAR_KEYWORD for p in funcParams.values()]
         if any(isKwarg):
-            # Function accepts kwargs, so any overrides not already present as a function parameter should be accepted
+            # Function accepts kwargs, so any overrides not already present as a function
+            # parameter should be accepted
             # Remove the keyword parameter since it can't be parsed properly
-            # Only one kwarg can be in the signature, so there will be only one "True" index
+            # Only one kwarg can be in the signature, so there will be only one
+            # "True" index
             del checkNames[isKwarg.index(True)]
             notInSignature = [n for n in overrides if n not in checkNames]
             checkNames.extend(notInSignature)
@@ -482,11 +505,12 @@ class Interactor:
 
     def createFunctionParameter(self, name, signatureParameter, overridesInfo):
         """
-        Constructs a dict ready for insertion into a group parameter based on the provided information in the
-        `inspect.signature` parameter, user-specified overrides, and true parameter name.
-
-        Parameter signature information is considered the most "overridable", followed by documentation specifications.
-        User overrides should be given the highest priority, i.e. not usurped by parameter default information.
+        Constructs a dict ready for insertion into a group parameter based on the
+        provided information in the ``inspect.signature`` parameter, user-specified
+        overrides, and true parameter name. Parameter signature information is
+        considered the most "overridable", followed by documentation specifications.
+        User overrides should be given the highest priority, i.e. not usurped by
+        parameter default information.
 
         Parameters
         ----------
@@ -515,9 +539,11 @@ class Interactor:
             overridesInfo = {"value": overridesInfo}
         # Overrides take precedence over doc and signature
         pgDict.update(overridesInfo)
-        # Name takes the highest precedence since it must be bindable to a function argument
+        # Name takes the highest precedence since it must be bindable to a function
+        # argument
         pgDict["name"] = name
-        # Required function arguments with any override specifications can still be unfilled at this point
+        # Required function arguments with any override specifications can still be
+        # unfilled at this point
         pgDict.setdefault("value", RunOpts.PARAM_UNSET)
 
         # Anywhere a title is specified should take precedence over the default factory
