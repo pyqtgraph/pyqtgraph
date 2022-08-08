@@ -372,7 +372,7 @@ def test_hookup_extra_params():
     @InteractiveFunction
     def a(x=5, **kwargs):
         return x + sum(kwargs.values())
-    host = interact(a)
+    interact(a)
 
     p2 = Parameter.create(name="p2", type="int", value=3)
     a.hookupParameters([p2], clearOld=False)
