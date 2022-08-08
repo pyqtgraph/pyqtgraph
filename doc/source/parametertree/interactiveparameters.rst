@@ -86,11 +86,11 @@ a value is *changing*, not just changed. In these cases, modify the
     from pyqtgraph.parametertree import interact, RunOpts
 
     # Will add a button named "Run". When clicked, the function will run
-    params = interact(a, runOpts=RunOpts.ON_BUTTON)
+    params = interact(a, runOpts=RunOpts.ON_ACTION)
     # Will run on any `sigValueChanging` signal
     params = interact(a, runOpts=RunOpts.ON_CHANGING)
     # Runs on `sigValueChanged` or when "Run" is pressed
-    params = interact(a, runOpts=[RunOpts.ON_CHANGED, RunOpts.ON_BUTTON])
+    params = interact(a, runOpts=[RunOpts.ON_CHANGED, RunOpts.ON_ACTION])
     # Any combination of RUN_* options can be used
 
 The default run behavior can also be modified. If several functions are
@@ -101,8 +101,8 @@ use the provided context manager:
 
     from pyqtgraph.parametertree import interact
     # `runOpts` can be set to any combination of options as demonstrated above, too
-    with interact.optsContext(runOpts=RunOpts.ON_BUTTON):
-        # All will have `runOpts` set to ON_BUTTON
+    with interact.optsContext(runOpts=RunOpts.ON_ACTION):
+        # All will have `runOpts` set to ON_ACTION
         p1 = interact(aFunc)
         p2 = interact(bFunc)
         p3 = interact(cFunc)
@@ -119,9 +119,9 @@ resetting afterward:
 
     from pyqtgraph.parametertree import Interactor
     myInteractor = Interactor()
-    oldOpts = myInteractor.setOpts(runOpts=RunOpts.ON_BUTTON)
+    oldOpts = myInteractor.setOpts(runOpts=RunOpts.ON_ACTION)
     # Can also directly create interactor with these opts:
-    # myInteractor = Interactor(runOpts=RunOpts.ON_BUTTON)
+    # myInteractor = Interactor(runOpts=RunOpts.ON_ACTION)
 
     # ... do some things...
     # Unset option
@@ -396,7 +396,7 @@ can use ``InteractiveFunction`` like a decorator:
 
     # myfunc is now an InteractiveFunction that can be used as above
     # Also, calling `myfunc` will preserve parameter arguments
-    param = interact(myfunc, RunOpts.ON_BUTTON)
+    param = interact(myfunc, RunOpts.ON_ACTION)
     param['a'] = 6
 
     myfunc()

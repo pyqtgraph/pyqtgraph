@@ -11,10 +11,10 @@ class RunOpts:
     class PARAM_UNSET:
         """Sentinel value for detecting parameters with unset values"""
 
-    ON_BUTTON = "button"
+    ON_ACTION = "action"
     """
-    Indicator for ``interactive`` parameter which runs the function on pressing a
-    button parameter
+    Indicator for ``interactive`` parameter which adds an ``action`` parameter
+    and runs when ``sigActivated`` is emitted.
     """
     ON_CHANGED = "changed"
     """
@@ -155,7 +155,7 @@ class InteractiveFunction:
             self.parametersNeedRunKwargs = oldPropagate
         return ret
 
-    def runFromButton(self, **kwargs):
+    def runFromAction(self, **kwargs):
         if self._disconnected:
             return None
         return self(**kwargs)
@@ -192,9 +192,9 @@ class Interactor:
     title = None
     nest = True
     existOk = True
-    runButtonTemplate = dict(type="action", defaultName="Run")
+    runActionTemplate = dict(type="action", defaultName="Run")
 
-    _optNames = ["runOpts", "parent", "title", "nest", "existOk", "runButtonTemplate"]
+    _optNames = ["runOpts", "parent", "title", "nest", "existOk", "runActionTemplate"]
 
     def __init__(self, **kwargs):
         """
@@ -277,8 +277,8 @@ class Interactor:
         function: Callable
             function with which to interact. Can also be a :class:`InteractiveFunction`,
             if a reference to the bound signals is required.
-        runOpts: ``GroupParameter.<RUN_BUTTON, CHANGED, or CHANGING>`` value
-            How the function should be run, i.e. when pressing a button, on
+        runOpts: ``GroupParameter.<RUN_ACTION, CHANGED, or CHANGING>`` value
+            How the function should be run, i.e. when pressing an action, on
             sigValueChanged, and/or on sigValueChanging
         ignores: Sequence
             Names of function arguments which shouldn't have parameters created
@@ -306,7 +306,7 @@ class Interactor:
         """
         # Get every overridden default
         locs = locals()
-        # Everything until button template
+        # Everything until action template
         opts = {
             kk: locs[kk]
             for kk in self._optNames[:-1]
@@ -358,14 +358,14 @@ class Interactor:
         function.hookupParameters(useParams)
         # If no top-level parent and no nesting, return the list of child parameters
         ret = funcGroup or useParams
-        if RunOpts.ON_BUTTON in self.runOpts:
-            # Add an extra button child which can activate the function
-            button = self._makeRunButton(self.nest, funcDict.get("tip"), function)
-            # Return just the button if no other params were allowed
+        if RunOpts.ON_ACTION in self.runOpts:
+            # Add an extra action child which can activate the function
+            action = self._makeRunAction(self.nest, funcDict.get("tip"), function)
+            # Return just the action if no other params were allowed
             if not useParams:
-                ret = button
+                ret = action
             if funcGroup:
-                funcGroup.addChild(button, existOk=self.existOk)
+                funcGroup.addChild(action, existOk=self.existOk)
 
         self.setOpts(**oldOpts)
         return ret
@@ -454,9 +454,9 @@ class Interactor:
             child.sigValueChanging.connect(interactiveFunc.runFromChangedOrChanging)
         return child
 
-    def _makeRunButton(self, nest, tip, interactiveFunc):
-        # Add an extra button child which can activate the function
-        createOpts = self.runButtonTemplate.copy()
+    def _makeRunAction(self, nest, tip, interactiveFunc):
+        # Add an extra action child which can activate the function
+        createOpts = self.runActionTemplate.copy()
 
         defaultName = createOpts.get("defaultName", "Run")
         name = defaultName if nest else interactiveFunc.function.__name__
@@ -464,7 +464,7 @@ class Interactor:
         if tip:
             createOpts["tip"] = tip
         child = Parameter.create(**createOpts)
-        child.sigActivated.connect(interactiveFunc.runFromButton)
+        child.sigActivated.connect(interactiveFunc.runFromAction)
         return child
 
     def functionToParameterDict(self, function, **overrides):

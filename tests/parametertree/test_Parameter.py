@@ -65,7 +65,7 @@ def test_unpack_parameter():
 
 
 def test_interact():
-    interactor = Interactor(runOpts=RunOpts.ON_BUTTON)
+    interactor = Interactor(runOpts=RunOpts.ON_ACTION)
     value = None
 
     def retain(func):
@@ -183,14 +183,14 @@ def test_run():
     def a():
         """"""
 
-    interactor = Interactor(runOpts=RunOpts.ON_BUTTON)
+    interactor = Interactor(runOpts=RunOpts.ON_ACTION)
 
-    defaultRunBtn = Parameter.create(**interactor.runButtonTemplate, name="Run")
+    defaultRunBtn = Parameter.create(**interactor.runActionTemplate, name="Run")
     btn = interactor(a)
     assert btn.type() == defaultRunBtn.type()
 
     template = dict(defaultName="Test", type="action")
-    with interactor.optsContext(runButtonTemplate=template):
+    with interactor.optsContext(runActionTemplate=template):
         x = interactor(a)
     assert x.name() == "Test"
 
@@ -215,7 +215,7 @@ def test_tips():
 
     interactor = Interactor()
 
-    btn = interactor(a, runOpts=RunOpts.ON_BUTTON)
+    btn = interactor(a, runOpts=RunOpts.ON_ACTION)
     assert btn.opts["tip"] == a.__doc__
 
     def a2(x=5):
@@ -227,7 +227,7 @@ def test_tips():
         followed by more text won't result in a tooltip
         """
 
-    param = interactor(a2, runOpts=RunOpts.ON_BUTTON)
+    param = interactor(a2, runOpts=RunOpts.ON_ACTION)
     assert param.opts["tip"] == a2.__doc__ and param.type() == "group"
 
     param = interactor(a3)
@@ -246,14 +246,14 @@ def test_interactiveFunc():
     host = interact(interactive, runOpts=[])
 
     host["a"] = 7
-    assert interactive.runFromButton() == 7
+    assert interactive.runFromAction() == 7
 
     interactive.disconnect()
-    interactive.runFromButton(a=10)
+    interactive.runFromAction(a=10)
     assert value == 7
 
     interactive.reconnect()
-    interactive.runFromButton(a=10)
+    interactive.runFromAction(a=10)
     assert value == 10
 
 

@@ -60,7 +60,7 @@ def ignoredAParam(a=10, b=20):
     return a * b
 
 
-@interactor.decorate(runOpts=RunOpts.ON_BUTTON)
+@interactor.decorate(runOpts=RunOpts.ON_ACTION)
 @printResult
 def runOnButton(a=10, b=20):
     return a + b
@@ -91,7 +91,7 @@ with interactor.optsContext(title=str.upper):
 
 
 @interactor.decorate(
-    runOpts=(RunOpts.ON_CHANGED, RunOpts.ON_BUTTON),
+    runOpts=(RunOpts.ON_CHANGED, RunOpts.ON_ACTION),
     a={"type": "list", "limits": [5, 10, 20]},
 )
 @printResult
