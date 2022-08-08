@@ -271,14 +271,14 @@ def test_updateParamDuringRun():
         counter += a
 
     param = interact(func)
-    func.propagateParamChanges = True
+    func.parametersNeedRunKwargs = True
 
     func(a=3)
     # Ensure "test" was only run once
     assert counter == 3
     assert param["a"] == 3
 
-    func.propagateParamChanges = False
+    func.parametersNeedRunKwargs = False
     func(a=1)
     assert counter == 4
     assert param["a"] == 3
@@ -296,7 +296,7 @@ def test_remove_params():
     host["a"] = 5
     assert RetainVal.a == 5
 
-    inner.removeParams()
+    inner.removeParameters()
     host["a"] = 6
     assert RetainVal.a == 5
 
@@ -320,14 +320,14 @@ def test_rm_without_clear_cache():
     def inner(a=4):
         RetainVal.a = a
 
-    inner.removeParams(clearCache=False)
+    inner.removeParameters(clearCache=False)
     host["a"] = 6
     assert RetainVal.a == 1
 
     inner()
     assert RetainVal.a == 9
 
-    inner.removeParams(clearCache=True)
+    inner.removeParameters(clearCache=True)
     inner()
     assert RetainVal.a == 4
 
@@ -350,7 +350,7 @@ def test_update_non_param_kwarg():
     def a(x=3, **kwargs):
         RetainVal.a = sum(kwargs.values()) + x
         return RetainVal.a
-    a.propagateParamChanges = True
+    a.parametersNeedRunKwargs = True
 
     host = interact(a)
     assert a(y=10) == 13
@@ -375,7 +375,7 @@ def test_hookup_extra_params():
     host = interact(a)
 
     p2 = Parameter.create(name="p2", type="int", value=3)
-    a.hookupParams([p2], clearOld=False)
+    a.hookupParameters([p2], clearOld=False)
 
     assert a() == 8
 
