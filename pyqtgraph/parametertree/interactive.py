@@ -382,8 +382,9 @@ class Interactor:
         self.setOpts(**oldOpts)
         return ret
 
-    # Alias since class name is descriptive enough
-    __call__ = interact
+    @functools.wraps(interact)
+    def __call__(self, function, **kwargs):
+        return self.interact(function, **kwargs)
 
     def decorate(self, **kwargs):
         """
