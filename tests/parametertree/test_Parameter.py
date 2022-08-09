@@ -256,6 +256,9 @@ def test_interactiveFunc():
     interactive.runFromAction(a=10)
     assert value == 10
 
+    assert not interactive.setDisconnected(True)
+    assert interactive.setDisconnected(False)
+
 
 def test_badOptsContext():
     with pytest.raises(KeyError):

@@ -171,6 +171,15 @@ class InteractiveFunction:
         self._disconnected = True
         return oldDisconnect
 
+    def setDisconnected(self, disconnected):
+        """
+        Sets the disconnected state of the runnable, see :meth:`disconnect` and
+        :meth:`reconnect` for more information
+        """
+        oldDisconnect = self._disconnected
+        self._disconnected = disconnected
+        return oldDisconnect
+
     def reconnect(self):
         """Simulates reconnecting the runnable by re-enabling ``runFrom*`` functions"""
         oldDisconnect = self._disconnected
