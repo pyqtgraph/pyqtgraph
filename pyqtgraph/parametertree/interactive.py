@@ -104,6 +104,9 @@ class InteractiveFunction:
             if not wasDisconnected:
                 self.reconnect()
 
+        for extraKey in set(kwargs) & set(self.extra):
+            self.extra[extraKey] = kwargs[extraKey]
+
     def _disconnectParameter(self, param):
         param.sigValueChanged.disconnect(self.updateCachedParameterValues)
         for signal in (param.sigValueChanging, param.sigValueChanged):

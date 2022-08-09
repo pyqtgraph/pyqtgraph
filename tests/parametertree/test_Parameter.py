@@ -266,17 +266,18 @@ def test_updateParamDuringRun():
     counter = 0
 
     @InteractiveFunction
-    def func(a=1):
+    def func(a=1, ignored=2):
         nonlocal counter
         counter += a
 
-    param = interact(func)
+    param = interact(func, ignores=["ignored"])
     func.parametersNeedRunKwargs = True
 
-    func(a=3)
+    func(a=3, ignored=4)
     # Ensure "test" was only run once
     assert counter == 3
     assert param["a"] == 3
+    assert func.extra["ignored"] == 4
 
     func.parametersNeedRunKwargs = False
     func(a=1)
