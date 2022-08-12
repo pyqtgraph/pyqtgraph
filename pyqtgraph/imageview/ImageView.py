@@ -819,12 +819,10 @@ class ImageView(QtWidgets.QWidget):
             self.imageItem.save(fileName)
             
     def exportClicked(self):
-        fileName = QtWidgets.QFileDialog.getSaveFileName()
-        if isinstance(fileName, tuple):
-            fileName = fileName[0]  # Qt4/5 API difference
-        if fileName == '':
+        fileName, _ = QtWidgets.QFileDialog.getSaveFileName()
+        if not fileName:
             return
-        self.export(str(fileName))
+        self.export(fileName)
         
     def buildMenu(self):
         self.menu = QtWidgets.QMenu()

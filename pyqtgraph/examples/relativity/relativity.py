@@ -162,21 +162,17 @@ class RelativityGUI(QtWidgets.QWidget):
         self.setAnimation(self.params['Animate'])
         
     def save(self):
-        filename = pg.QtWidgets.QFileDialog.getSaveFileName(self, "Save State..", "untitled.cfg", "Config Files (*.cfg)")
-        if isinstance(filename, tuple):
-            filename = filename[0]  # Qt4/5 API difference
-        if filename == '':
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save State..", "untitled.cfg", "Config Files (*.cfg)")
+        if not filename:
             return
         state = self.params.saveState()
-        configfile.writeConfigFile(state, str(filename)) 
+        configfile.writeConfigFile(state, filename)
         
     def load(self):
-        filename = pg.QtWidgets.QFileDialog.getOpenFileName(self, "Save State..", "", "Config Files (*.cfg)")
-        if isinstance(filename, tuple):
-            filename = filename[0]  # Qt4/5 API difference
-        if filename == '':
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Save State..", "", "Config Files (*.cfg)")
+        if not filename:
             return
-        state = configfile.readConfigFile(str(filename)) 
+        state = configfile.readConfigFile(filename)
         self.loadState(state)
         
     def loadPreset(self, param, preset):
