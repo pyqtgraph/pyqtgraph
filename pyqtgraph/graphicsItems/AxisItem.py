@@ -21,7 +21,7 @@ class AxisItem(GraphicsWidget):
     If maxTickLength is negative, ticks point into the plot.
     """
 
-    def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
+    def __init__(self, orientation, pen=None, textPen=None, tickPen = None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
         """
         =============== ===============================================================
         **Arguments:**
@@ -31,8 +31,9 @@ class AxisItem(GraphicsWidget):
         linkView        (ViewBox) causes the range of values displayed in the axis
                         to be linked to the visible range of a ViewBox.
         showValues      (bool) Whether to display values adjacent to ticks
-        pen             (QPen) Pen used when drawing ticks.
+        pen             (QPen) Pen used when drawing axis and (by default) ticks
         textPen         (QPen) Pen used when drawing tick labels.
+        tickPen         (QPen) Pen used when drawing ticks.
         text            The text (excluding units) to display on the label for this
                         axis.
         units           The units for this axis. Units should generally be given
@@ -107,6 +108,11 @@ class AxisItem(GraphicsWidget):
             self.setTextPen()
         else:
             self.setTextPen(pen)
+            
+        if tickPen is None:
+            self.setTickPen()
+        else:
+            self.setTickPen(tickPen)
 
         self._linkedView = None
         if linkView is not None:
@@ -481,6 +487,25 @@ class AxisItem(GraphicsWidget):
             self._textPen = fn.mkPen(getConfigOption('foreground'))
         self.labelStyle['color'] = self._textPen.color().name() #   #RRGGBB
         self._updateLabel()
+        
+    def tickPen(self):
+        if self._tickPen is None:
+            return self.pen() # Default to the main pen
+        else:
+            return fn.mkPen(self._tickPen)
+        
+    def setTickPen(self, *args, **kwargs):
+        """
+        Set the pen used for drawing tick marks.
+        If no arguments are given, the default pen will be used.
+        """
+        self.picture = None
+        if args or kwargs:
+            self._tickPen = fn.mkPen(*args, **kwargs)
+        else:
+            self._tickPen = None
+
+        self._updateLabel()        
 
     def setScale(self, scale=None):
         """
@@ -1027,7 +1052,7 @@ class AxisItem(GraphicsWidget):
                 p2[axis] = tickStop
                 if self.grid is False:
                     p2[axis] += tickLength*tickDir
-                tickPen = self.pen()
+                tickPen = self.tickPen()
                 color = tickPen.color()
                 color.setAlpha(int(lineAlpha))
                 tickPen.setColor(color)
