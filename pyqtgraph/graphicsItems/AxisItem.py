@@ -107,7 +107,7 @@ class AxisItem(GraphicsWidget):
         if textPen is None:
             self.setTextPen()
         else:
-            self.setTextPen(pen)
+            self.setTextPen(textPen)
             
         if tickPen is None:
             self.setTickPen()
