@@ -9,6 +9,7 @@ __version__ = '0.12.4.dev0'
 
 import os
 import sys
+import importlib
 
 import numpy  # # pyqtgraph requires numpy
 
@@ -54,7 +55,11 @@ CONFIG_OPTIONS = {
                                  # change in the future.
     'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
     'useNumba': False, # When True, use numba
-} 
+    'segmentedLineMode': 'auto',  # segmented line mode, controls if lines are plotted in segments or continuous
+                                  # 'auto': whether lines are plotted in segments is automatically decided using pen properties and whether anti-aliasing is enabled
+                                  # 'on' or True: lines are always plotted in segments
+                                  # 'off' or False: lines are never plotted in segments
+}
 
 
 def setConfigOption(opt, value):
@@ -62,6 +67,8 @@ def setConfigOption(opt, value):
         raise KeyError('Unknown configuration option "%s"' % opt)
     if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
         raise ValueError('imageAxisOrder must be either "row-major" or "col-major"')
+    if opt == 'segmentedLineMode' and value not in ('auto', 'on', 'off'):
+        raise ValueError('segmentedLineMode must be "auto", "on" or "off"')
     CONFIG_OPTIONS[opt] = value
 
 def setConfigOptions(**opts):
@@ -281,6 +288,10 @@ from .widgets.TableWidget import *
 from .widgets.TreeWidget import *
 from .widgets.ValueLabel import *
 from .widgets.VerticalLabel import *
+
+# Wrapped to prevent matplotlib becoming a hard dependency.
+if spec := importlib.util.find_spec('matplotlib') is not None:
+    from .widgets.MatplotlibWidget import *
 
 ##############################################################
 ## PyQt and PySide both are prone to crashing on exit. 

@@ -222,8 +222,6 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
     try:
         ## Get top-level group for this item
         g1 = doc.getElementsByTagName('g')[0]
-        ## get list of sub-groups
-        g2 = [n for n in g1.childNodes if isinstance(n, xml.Element) and n.tagName == 'g']
         
         defs = doc.getElementsByTagName('defs')
         if len(defs) > 0:

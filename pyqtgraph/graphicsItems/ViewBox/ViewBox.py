@@ -204,13 +204,7 @@ class ViewBox(GraphicsWidget):
         self.borderRect.setZValue(1e3)
         self.borderRect.setPen(self.border)
 
-        ## Make scale box that is shown when dragging on the view
-        self.rbScaleBox = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
-        self.rbScaleBox.setPen(fn.mkPen((255,255,100), width=1))
-        self.rbScaleBox.setBrush(fn.mkBrush(255,255,0,100))
-        self.rbScaleBox.setZValue(1e9)
-        self.rbScaleBox.hide()
-        self.addItem(self.rbScaleBox, ignoreBounds=True)
+        self._rbScaleBox = None
 
         ## show target rect for debugging
         self.target = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
@@ -237,8 +231,33 @@ class ViewBox(GraphicsWidget):
 
         self._viewPixelSizeCache  = None
 
+    @property
+    def rbScaleBox(self):
+        if self._rbScaleBox is None:
+            # call the setter with the default value
+            scaleBox = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
+            scaleBox.setPen(fn.mkPen((255, 255, 100), width=1))
+            scaleBox.setBrush(fn.mkBrush(255, 255, 0, 100))
+            scaleBox.setZValue(1e9)
+            scaleBox.hide()
+            self._rbScaleBox = scaleBox
+            self.addItem(scaleBox, ignoreBounds=True)
+        return self._rbScaleBox
+
+    @rbScaleBox.setter
+    def rbScaleBox(self, scaleBox):
+        if self._rbScaleBox is not None:
+            self.removeItem(self._rbScaleBox)
+        self._rbScaleBox = scaleBox
+        if scaleBox is None:
+            return None
+        scaleBox.setZValue(1e9)
+        scaleBox.hide()
+        self.addItem(scaleBox, ignoreBounds=True)
+        return None
+
     def getAspectRatio(self):
-        '''return the current aspect ratio'''
+        """return the current aspect ratio"""
         rect = self.rect()
         vr = self.viewRect()
         if rect.height() == 0 or vr.width() == 0 or vr.height() == 0:
@@ -354,6 +373,8 @@ class ViewBox(GraphicsWidget):
         """
         if mode not in [ViewBox.PanMode, ViewBox.RectMode]:
             raise Exception("Mode must be ViewBox.PanMode or ViewBox.RectMode")
+        if mode == ViewBox.PanMode:
+            self._rbScaleBox = None
         self.state['mouseMode'] = mode
         self.sigStateChanged.emit(self)
 
@@ -835,9 +856,6 @@ class ViewBox(GraphicsWidget):
 
         if axis is None:
             axis = ViewBox.XYAxes
-
-        needAutoRangeUpdate = False
-
         if axis == ViewBox.XYAxes or axis == 'xy':
             axes = [0, 1]
         elif axis == ViewBox.XAxis or axis == 'x':
@@ -1410,9 +1428,6 @@ class ViewBox(GraphicsWidget):
         profiler = debug.Profiler()
         if items is None:
             items = self.addedItems
-
-        ## measure pixel dimensions in view box
-        px, py = [v.length() if v is not None else 0 for v in self.childGroup.pixelVectors()]
 
         ## First collect all boundary information
         itemBounds = []

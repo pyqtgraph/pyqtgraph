@@ -411,7 +411,7 @@ class ImageView(QtWidgets.QWidget):
 
     def autoRange(self):
         """Auto scale and pan the view around the image such that the image fills the view."""
-        image = self.getProcessedImage()
+        self.getProcessedImage()
         self.view.autoRange()
         
     def getProcessedImage(self):
@@ -778,7 +778,6 @@ class ImageView(QtWidgets.QWidget):
         else:
             if len(xv) < 2:
                 return (0,0)
-            totTime = xv[-1] + (xv[-1]-xv[-2])
             inds = np.argwhere(xv <= t)
             if len(inds) < 1:
                 return (0,t)
@@ -820,12 +819,10 @@ class ImageView(QtWidgets.QWidget):
             self.imageItem.save(fileName)
             
     def exportClicked(self):
-        fileName = QtWidgets.QFileDialog.getSaveFileName()
-        if isinstance(fileName, tuple):
-            fileName = fileName[0]  # Qt4/5 API difference
-        if fileName == '':
+        fileName, _ = QtWidgets.QFileDialog.getSaveFileName()
+        if not fileName:
             return
-        self.export(str(fileName))
+        self.export(fileName)
         
     def buildMenu(self):
         self.menu = QtWidgets.QMenu()

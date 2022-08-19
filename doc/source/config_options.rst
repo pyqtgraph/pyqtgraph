@@ -40,6 +40,10 @@ enableExperimental bool                False              Enable experimental fe
                                                             * Only a very limited subset of the full options of PlotCurveItem is implemented.
                                                             * Single precision is used. This may cause drawing artifacts.
 crashWarning       bool                False              If True, print warnings about situations that may result in a crash.
+segmentedLineMode  str                 'auto'             For 'on', lines are always plotted in segments. For 'off', lines are never 
+                                                          plotted in segments. For 'auto', whether lines are plotted in segments is 
+                                                          automatically decided based on pen poperties and whether anti-aliasing is 
+                                                          enabled. 
 ================== =================== ================== ================================================================================
 
 

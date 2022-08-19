@@ -893,7 +893,6 @@ class ObjTracker(object):
         
     def findTypes(self, refs, regex):
         allObjs = get_all_objects()
-        ids = {}
         objs = []
         r = re.compile(regex)
         for k in refs:
@@ -1057,10 +1056,8 @@ def walkQObjectTree(obj, counts=None, verbose=False, depth=0):
     
     if verbose:
         print("  "*depth + typeStr(obj))
-    report = False
     if counts is None:
         counts = {}
-        report = True
     typ = str(type(obj))
     try:
         counts[typ] += 1

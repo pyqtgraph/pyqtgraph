@@ -405,19 +405,11 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         #tr = self.getViewWidget(event.widget()).transform()
         view = self.views()[0]
         tr = view.viewportTransform()
-        r = self._clickRadius
-        rect = view.mapToScene(QtCore.QRect(0, 0, 2*r, 2*r)).boundingRect()
         
-        seen = set()
         if hasattr(event, 'buttonDownScenePos'):
             point = event.buttonDownScenePos()
         else:
             point = event.scenePos()
-        w = rect.width()
-        h = rect.height()
-        rgn = QtCore.QRectF(point.x()-w, point.y()-h, 2*w, 2*h)
-        #self.searchRect.setRect(rgn)
-
 
         items = self.items(point, selMode, sortOrder, tr)
         
@@ -444,6 +436,14 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         items2.sort(key=absZValue, reverse=True)
         
         return items2
+
+        #seen = set()
+        #r = self._clickRadius
+        #rect = view.mapToScene(QtCore.QRect(0, 0, 2*r, 2*r)).boundingRect()
+        #w = rect.width()
+        #h = rect.height()
+        #rgn = QtCore.QRectF(point.x()-w, point.y()-h, 2*w, 2*h)
+        #self.searchRect.setRect(rgn)
         
         #for item in items:
             ##seen.add(item)
@@ -501,18 +501,23 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                 menusToAdd.extend(subMenus)
             else:
                 menusToAdd.append(subMenus)
+        # Filter out options that were previously added
+        existingActions = menu.actions()
+        actsToAdd = []
+        for menuOrAct in menusToAdd:
+            if isinstance(menuOrAct, QtWidgets.QMenu):
+                menuOrAct = menuOrAct.menuAction()
+            elif not isinstance(menuOrAct, QtGui.QAction):
+                raise Exception(
+                    f"Cannot add object {menuOrAct} (type={type(menuOrAct)}) to QMenu."
+                )
+            if menuOrAct not in existingActions:
+                actsToAdd.append(menuOrAct)
 
-        if menusToAdd:
+        if actsToAdd:
             menu.addSeparator()
 
-        for m in menusToAdd:
-            if isinstance(m, QtWidgets.QMenu):
-                menu.addAction(m.menuAction())
-            elif isinstance(m, QtGui.QAction):
-                menu.addAction(m)
-            else:
-                raise Exception("Cannot add object %s (type=%s) to QMenu." % (str(m), str(type(m))))
-            
+        menu.addActions(actsToAdd)
         return menu
 
     def getContextMenus(self, event):

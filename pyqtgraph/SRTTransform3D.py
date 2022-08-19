@@ -230,7 +230,7 @@ if __name__ == '__main__':
 
     from . import widgets
     from .functions import *
-    app = pg.mkQApp()
+    app = pg.mkQApp()  # noqa: qapp must be stored to avoid gc
     win = QtWidgets.QMainWindow()
     win.show()
     cw = GraphicsView.GraphicsView()
