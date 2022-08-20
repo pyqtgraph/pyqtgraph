@@ -383,3 +383,22 @@ def test_hookup_extra_params():
 
     assert a() == 8
 
+
+def test_class_interact():
+    parent = Parameter.create(name="parent", type="group")
+    interactor = Interactor(parent=parent, nest=False)
+
+    class A:
+        def a(self, x=5):
+            return x
+
+        @classmethod
+        def b(cls, y=5):
+            return y
+
+    a = A()
+    ai = interactor.decorate()(a.a)
+    assert ai() == a.a()
+
+    bi = interactor.decorate()(A.b)
+    assert bi() == A.b()

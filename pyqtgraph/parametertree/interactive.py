@@ -450,10 +450,11 @@ class Interactor:
         # "InteractiveFunction" instance prevents connected signals from firing
         # Use a list in case multiple interact() calls are made with the same function
         interactive = InteractiveFunction(function)
-        if hasattr(function, "interactiveRefs"):
-            function.interactiveRefs.append(interactive)
+        refOwner = function if not inspect.ismethod(function) else function.__func__
+        if hasattr(refOwner, "interactiveRefs"):
+            refOwner.interactiveRefs.append(interactive)
         else:
-            function.interactiveRefs = [interactive]
+            refOwner.interactiveRefs = [interactive]
         return interactive
 
     def resolveAndHookupParameterChild(self, funcGroup, childOpts, interactiveFunc):
