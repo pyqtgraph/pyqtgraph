@@ -121,7 +121,7 @@ class AxisItem(GraphicsWidget):
         """
         Set various style options.
 
-        ===========================================================================
+        ===================== =======================================================
         Keyword Arguments:
         tickLength            (int) The maximum length of ticks in pixels.
                               Positive values point toward the text; negative
@@ -163,7 +163,7 @@ class AxisItem(GraphicsWidget):
                               the alpha will be fixed at the value passed.  With int,
                               accepted values are [0..255].  With value of type
                               float, accepted values are from [0..1].
-        ============================================================================
+        ===================== =======================================================
 
         Added in version 0.9.9
         """
