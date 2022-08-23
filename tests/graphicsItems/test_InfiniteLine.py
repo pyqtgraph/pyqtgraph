@@ -46,7 +46,7 @@ def test_InfiniteLine():
     pos = oline.mapToScene(pg.Point(2, 0))
     assert br.containsPoint(pos, QtCore.Qt.FillRule.OddEvenFill)
     px = pg.Point(-0.5, -1.0 / 3**0.5)
-    assert br.containsPoint(pos + 2 * px, QtCore.Qt.FillRule.OddEvenFill)
+    assert br.containsPoint(pos + 1 * px, QtCore.Qt.FillRule.OddEvenFill)
     assert not br.containsPoint(pos + 3 * px, QtCore.Qt.FillRule.OddEvenFill)
     plt.close()
 
