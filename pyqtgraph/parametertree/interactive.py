@@ -51,7 +51,7 @@ class InteractiveFunction:
             extra keyword arguments to pass to ``function`` when this wrapper is called
         """
         super().__init__()
-        self.parameters = []
+        self.parameters = {}
         self.extra = extra
         self.function = function
         if closures is None:
@@ -96,10 +96,8 @@ class InteractiveFunction:
         # Ensure updates don't cause firing of self's function
         wasDisconnected = self.disconnect()
         try:
-            for param in self.parameters:
-                name = param.name()
-                if name in kwargs:
-                    param.setValue(kwargs[name])
+            for kwarg in set(kwargs).intersection(self.parameters):
+                self.parameters[kwarg].setValue(kwargs[kwarg])
         finally:
             if not wasDisconnected:
                 self.reconnect()
@@ -128,7 +126,7 @@ class InteractiveFunction:
         if clearOld:
             self.removeParameters()
         for param in params:
-            self.parameters.append(param)
+            self.parameters[param.name()] = param
             param.sigValueChanged.connect(self.updateCachedParameterValues)
             # Populate initial values
             self.parameterCache[param.name()] = param.value()
@@ -138,7 +136,7 @@ class InteractiveFunction:
         Disconnects from all signals of parameters in ``self.parameters``. Also,
         optionally clears the old cache of param values
         """
-        for p in self.parameters:
+        for p in self.parameters.values():
             self._disconnectParameter(p)
         # Disconnected all old signals, clear out and get ready for new ones
         self.parameters.clear()
