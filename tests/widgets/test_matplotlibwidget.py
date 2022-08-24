@@ -11,11 +11,13 @@ import numpy as np
 
 pytest.importorskip("matplotlib")
 
+from pyqtgraph.widgets.MatplotlibWidget import MatplotlibWidget
+
 pg.mkQApp()
 
 default_parent = None
-default_figsize = pg.MatplotlibWidget.figsize_default
-default_dpi = pg.MatplotlibWidget.dpi_default
+default_figsize = MatplotlibWidget.figsize_default
+default_dpi = MatplotlibWidget.dpi_default
 
 
 def assert_widget_fields(mplw, parent, figsize, dpi):
@@ -31,7 +33,7 @@ def test_init_with_qwidget_arguments():
     """
     win = QtWidgets.QMainWindow()
 
-    mplw = pg.MatplotlibWidget(win)
+    mplw = MatplotlibWidget(win)
 
     assert_widget_fields(mplw, win, default_figsize, default_dpi)
 
@@ -43,13 +45,13 @@ def test_init_with_matplotlib_arguments():
     """
     figsize = (1.0, 3.0)
     dpi = 256
-    mplw = pg.MatplotlibWidget(figsize, dpi)
+    mplw = MatplotlibWidget(figsize, dpi)
 
     assert_widget_fields(mplw, default_parent, figsize, dpi)
 
 
 def test_init_with_no_arguments():
-    mplw = pg.MatplotlibWidget()
+    mplw = MatplotlibWidget()
 
     assert_widget_fields(mplw, default_parent, default_figsize, default_dpi)
 
@@ -66,20 +68,20 @@ def test_init_sanity():
     assert figsize != default_figsize
     assert dpi != default_dpi
 
-    mplw = pg.MatplotlibWidget(parent, figsize=figsize)
+    mplw = MatplotlibWidget(parent, figsize=figsize)
     assert_widget_fields(mplw, parent, figsize, default_dpi)
 
-    mplw = pg.MatplotlibWidget(parent, dpi=dpi)
+    mplw = MatplotlibWidget(parent, dpi=dpi)
     assert_widget_fields(mplw, parent, default_figsize, dpi)
 
-    mplw = pg.MatplotlibWidget(parent, figsize, dpi)
+    mplw = MatplotlibWidget(parent, figsize, dpi)
     assert_widget_fields(mplw, parent, figsize, dpi)
 
-    mplw = pg.MatplotlibWidget(figsize, dpi)
+    mplw = MatplotlibWidget(figsize, dpi)
     assert_widget_fields(mplw, default_parent, figsize, dpi)
 
-    mplw = pg.MatplotlibWidget(figsize, dpi, parent)
+    mplw = MatplotlibWidget(figsize, dpi, parent)
     assert_widget_fields(mplw, parent, figsize, dpi)
 
-    mplw = pg.MatplotlibWidget(dpi=dpi, parent=parent)
+    mplw = MatplotlibWidget(dpi=dpi, parent=parent)
     assert_widget_fields(mplw, parent, default_figsize, dpi)
