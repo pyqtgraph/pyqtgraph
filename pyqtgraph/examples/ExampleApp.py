@@ -8,19 +8,17 @@ from collections import OrderedDict
 from functools import lru_cache
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QT_LIB, QtCore, QtGui, QtWidgets
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 app = pg.mkQApp()
 
 
 path = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, path)
-import importlib
 
 import utils
 
-ui_template = importlib.import_module(
-    f'exampleLoaderTemplate_{QT_LIB.lower()}')
+import exampleLoaderTemplate_generic as ui_template
 
 
 # based on https://github.com/art1415926535/PyQt5-syntax-highlighting
