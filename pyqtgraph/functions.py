@@ -241,9 +241,9 @@ def mkColor(*args):
      float           greyscale, 0.0-1.0
      int             see :func:`intColor() <pyqtgraph.intColor>`
      (int, hues)     see :func:`intColor() <pyqtgraph.intColor>`
-     "#RGB"          hexadecimal strings prefixed with '#'
-     "#RGBA"         previously allowed use without prefix is deprecated and 
-     "#RRGGBB"       will be removed in 0.13
+     "#RGB"         
+     "#RGBA"         
+     "#RRGGBB"       
      "#RRGGBBAA"     
      QColor          QColor instance; makes a copy.
     ================ ================================================
@@ -270,11 +270,7 @@ def mkColor(*args):
             if c[0] == '#':
                 c = c[1:]
             else:
-                warnings.warn(
-                    "Parsing of hex strings that do not start with '#' is"
-                    "deprecated and support will be removed in 0.13",
-                    DeprecationWarning, stacklevel=2
-                )
+                raise ValueError(f"Unable to convert {c} to QColor")
             if len(c) == 3:
                 r = int(c[0]*2, 16)
                 g = int(c[1]*2, 16)

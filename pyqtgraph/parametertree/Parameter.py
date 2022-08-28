@@ -755,24 +755,6 @@ class Parameter(QtCore.QObject):
     def __repr__(self):
         return "<%s '%s' at 0x%x>" % (self.__class__.__name__, self.name(), id(self))
        
-    def __getattr__(self, attr):
-        ## Leaving this undocumented because I might like to remove it in the future..
-        #print type(self), attr
-        warnings.warn(
-            'Use of Parameter.subParam is deprecated and will be removed in 0.13 '
-            'Use Parameter.param(name) instead.',
-            DeprecationWarning, stacklevel=2
-        )          
-        if 'names' not in self.__dict__:
-            raise AttributeError(attr)
-        if attr in self.names:
-            import traceback
-            traceback.print_stack()
-            print("Warning: Use of Parameter.subParam is deprecated. Use Parameter.param(name) instead.")
-            return self.param(attr)
-        else:
-            raise AttributeError(attr)
-       
     def _renameChild(self, child, name):
         ## Only to be called from Parameter.rename
         if name in self.names:

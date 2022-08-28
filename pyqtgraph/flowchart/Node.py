@@ -190,22 +190,6 @@ class Node(QtCore.QObject):
             self._graphicsItem = NodeGraphicsItem(self)
         return self._graphicsItem
     
-    ## this is just bad planning. Causes too many bugs.
-    def __getattr__(self, attr):
-        """Return the terminal with the given name"""
-        warnings.warn(
-            "Use of note.terminalName is deprecated, use node['terminalName'] instead"
-            "Will be removed from 0.13.0",
-            DeprecationWarning, stacklevel=2
-        )
-        
-        if attr not in self.terminals:
-            raise AttributeError(attr)
-        else:
-            import traceback
-            traceback.print_stack()
-            print("Warning: use of node.terminalName is deprecated; use node['terminalName'] instead.")
-            return self.terminals[attr]
             
     def __getitem__(self, item):
         #return getattr(self, item)

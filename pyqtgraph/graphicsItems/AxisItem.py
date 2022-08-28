@@ -515,17 +515,6 @@ class AxisItem(GraphicsWidget):
         the view coordinate system were scaled. By default, the axis scaling is
         1.0.
         """
-        # Deprecated usage, kept for backward compatibility
-        if scale is None:
-            warnings.warn(
-                'AxisItem.setScale(None) is deprecated, will be removed in 0.13.0'
-                'instead use AxisItem.enableAutoSIPrefix(bool) to enable/disable'
-                'SI prefix scaling',                
-                DeprecationWarning, stacklevel=2
-            )
-            scale = 1.0
-            self.enableAutoSIPrefix(True)
-
         if scale != self.scale:
             self.scale = scale
             self._updateLabel()

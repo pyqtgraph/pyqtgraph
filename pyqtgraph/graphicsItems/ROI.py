@@ -30,7 +30,7 @@ translate = QtCore.QCoreApplication.translate
 
 __all__ = [
     'ROI', 
-    'TestROI', 'RectROI', 'EllipseROI', 'CircleROI', 'PolygonROI', 
+    'TestROI', 'RectROI', 'EllipseROI', 'CircleROI', 
     'LineROI', 'MultiLineROI', 'MultiRectROI', 'LineSegmentROI', 'PolyLineROI', 
     'CrosshairROI','TriangleROI'
 ]
@@ -1933,54 +1933,6 @@ class CircleROI(EllipseROI):
         
     def _addHandles(self):
         self.addScaleHandle([0.5*2.**-0.5 + 0.5, 0.5*2.**-0.5 + 0.5], [0.5, 0.5])
-
-
-class PolygonROI(ROI):
-   
-    def __init__(self, positions, pos=None, **args):
-        warnings.warn(
-            'PolygonROI has been deprecated, will be removed in 0.13'
-            'use PolyLineROI instead',
-            DeprecationWarning, stacklevel=2
-        )
-
-        if pos is None:
-            pos = [0,0]
-        ROI.__init__(self, pos, [1,1], **args)
-        for p in positions:
-            self.addFreeHandle(p)
-        self.setZValue(1000)
-            
-    def listPoints(self):
-        return [p['item'].pos() for p in self.handles]
-            
-    def paint(self, p, *args):
-        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-        p.setPen(self.currentPen)
-        for i in range(len(self.handles)):
-            h1 = self.handles[i]['item'].pos()
-            h2 = self.handles[i-1]['item'].pos()
-            p.drawLine(h1, h2)
-        
-    def boundingRect(self):
-        r = QtCore.QRectF()
-        for h in self.handles:
-            r |= self.mapFromItem(h['item'], h['item'].boundingRect()).boundingRect()   ## |= gives the union of the two QRectFs
-        return r
-    
-    def shape(self):
-        p = QtGui.QPainterPath()
-        p.moveTo(self.handles[0]['item'].pos())
-        for i in range(len(self.handles)):
-            p.lineTo(self.handles[i]['item'].pos())
-        return p
-    
-    def stateCopy(self):
-        sc = {}
-        sc['pos'] = Point(self.state['pos'])
-        sc['size'] = Point(self.state['size'])
-        sc['angle'] = self.state['angle']
-        return sc
 
 
 class PolyLineROI(ROI):

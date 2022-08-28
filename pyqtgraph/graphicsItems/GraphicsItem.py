@@ -48,7 +48,7 @@ class GraphicsItem(object):
     """
     _pixelVectorGlobalCache = LRU(100)
 
-    def __init__(self, register=None):
+    def __init__(self):
         if not hasattr(self, '_qtBaseClass'):
             for b in self.__class__.__bases__:
                 if issubclass(b, QtWidgets.QGraphicsItem):
@@ -63,11 +63,7 @@ class GraphicsItem(object):
         self._connectedView = None
         self._exportOpts = False   ## If False, not currently exporting. Otherwise, contains dict of export options.
         self._cachedView = None
-        if register is not None and register:
-            warnings.warn(
-                "'register' argument is deprecated and does nothing, will be removed in 0.13",
-                DeprecationWarning, stacklevel=2
-            )
+
 
     def getViewWidget(self):
         """

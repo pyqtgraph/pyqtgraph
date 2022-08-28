@@ -109,15 +109,6 @@ def renderSymbol(symbol, size, pen, brush, device=None):
         p.end()
     return device
 
-def makeSymbolPixmap(size, pen, brush, symbol):
-    warnings.warn(
-        "This is an internal function that is no longer being used. "
-        "Will be removed in 0.13",
-        DeprecationWarning, stacklevel=2
-    )
-    img = renderSymbol(symbol, size, pen, brush)
-    return QtGui.QPixmap(img)
-
 
 def _mkPen(*args, **kwargs):
     """
@@ -512,12 +503,6 @@ class ScatterPlotItem(GraphicsObject):
                                generating LegendItem entries and by some exporters.
         ====================== ===============================================================================================
         """
-        if 'identical' in kargs:
-            warnings.warn(
-                "The *identical* functionality is handled automatically now. "
-                "Will be removed in 0.13.",
-                DeprecationWarning, stacklevel=2
-            )
         oldData = self.data  ## this causes cached pixmaps to be preserved while new data is registered.
         self.clear()  ## clear out all old data
         self.addPoints(*args, **kargs)
@@ -650,14 +635,6 @@ class ScatterPlotItem(GraphicsObject):
 
     def getData(self):
         return self.data['x'], self.data['y']
-
-    def setPoints(self, *args, **kargs):
-        warnings.warn(
-            "ScatterPlotItem.setPoints is deprecated, use ScatterPlotItem.setData "
-            "instead.  Will be removed in 0.13",
-            DeprecationWarning, stacklevel=2
-        )
-        return self.setData(*args, **kargs)
 
     def implements(self, interface=None):
         ints = ['plotData']
@@ -909,58 +886,6 @@ class ScatterPlotItem(GraphicsObject):
                 else:
                     yield size + pen.widthF(), 0
 
-    def getSpotOpts(self, recs, scale=1.0):
-        warnings.warn(
-            "This is an internal method that is no longer being used.  Will be "
-            "removed in 0.13",
-            DeprecationWarning, stacklevel=2
-        )
-        if recs.ndim == 0:
-            rec = recs
-            symbol = rec['symbol']
-            if symbol is None:
-                symbol = self.opts['symbol']
-            size = rec['size']
-            if size < 0:
-                size = self.opts['size']
-            pen = rec['pen']
-            if pen is None:
-                pen = self.opts['pen']
-            brush = rec['brush']
-            if brush is None:
-                brush = self.opts['brush']
-            return (symbol, size*scale, fn.mkPen(pen), fn.mkBrush(brush))
-        else:
-            recs = recs.copy()
-            recs['symbol'][np.equal(recs['symbol'], None)] = self.opts['symbol']
-            recs['size'][np.equal(recs['size'], -1)] = self.opts['size']
-            recs['size'] *= scale
-            recs['pen'][np.equal(recs['pen'], None)] = fn.mkPen(self.opts['pen'])
-            recs['brush'][np.equal(recs['brush'], None)] = fn.mkBrush(self.opts['brush'])
-            return recs
-
-    def measureSpotSizes(self, dataSet):
-        warnings.warn(
-            "This is an internal method that is no longer being used. "
-            "Will be removed in 0.13.",
-            DeprecationWarning, stacklevel=2
-        )
-        for size, pen in zip(*self._style(['size', 'pen'], data=dataSet)):
-            ## keep track of the maximum spot size and pixel size
-            width = 0
-            pxWidth = 0
-            if self.opts['pxMode']:
-                pxWidth = size + pen.widthF()
-            else:
-                width = size
-                if pen.isCosmetic():
-                    pxWidth += pen.widthF()
-                else:
-                    width += pen.widthF()
-            self._maxSpotWidth = max(self._maxSpotWidth, width)
-            self._maxSpotPxWidth = max(self._maxSpotPxWidth, pxWidth)
-        self.bounds = [None, None]
-
     def clear(self):
         """Remove all spots from the scatter plot"""
         #self.clearItems()
@@ -1044,44 +969,6 @@ class ScatterPlotItem(GraphicsObject):
     def setExportMode(self, *args, **kwds):
         GraphicsObject.setExportMode(self, *args, **kwds)
         self.invalidate()
-
-    def mapPointsToDevice(self, pts):
-        warnings.warn(
-            "This is an internal method that is no longer being used. "
-            "Will be removed in 0.13",
-            DeprecationWarning, stacklevel=2
-        )
-        # Map point locations to device
-        tr = self.deviceTransform()
-        if tr is None:
-            return None
-
-        pts = fn.transformCoordinates(tr, pts)
-        pts -= self.data['sourceRect']['w'] / 2
-        pts = np.clip(pts, -2**30, 2**30) ## prevent Qt segmentation fault.
-
-        return pts
-
-    def getViewMask(self, pts):
-        warnings.warn(
-            "This is an internal method that is no longer being used. "
-            "Will be removed in 0.13",
-            DeprecationWarning, stacklevel=2
-        )
-        # Return bool mask indicating all points that are within viewbox
-        # pts is expressed in *device coordiantes*
-        vb = self.getViewBox()
-        if vb is None:
-            return None
-        viewBounds = vb.mapRectToDevice(vb.boundingRect())
-        w = self.data['sourceRect']['w'] / 2
-        mask = ((pts[0] + w > viewBounds.left()) &
-                (pts[0] - w < viewBounds.right()) &
-                (pts[1] + w > viewBounds.top()) &
-                (pts[1] - w < viewBounds.bottom())) ## remove out of view points
-
-        mask &= self.data['visible']
-        return mask
 
     @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, *args):

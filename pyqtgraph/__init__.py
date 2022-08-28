@@ -7,9 +7,9 @@ __version__ = '0.12.4.dev0'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
+import importlib
 import os
 import sys
-import importlib
 
 import numpy  # # pyqtgraph requires numpy
 
@@ -243,7 +243,6 @@ from .graphicsItems.VTickGroup import *
 
 # indirect imports used within library
 from .GraphicsScene import GraphicsScene
-from .graphicsWindows import *
 from .imageview import *
 
 # indirect imports known to be used outside of the library
@@ -288,7 +287,6 @@ from .widgets.TableWidget import *
 from .widgets.TreeWidget import *
 from .widgets.ValueLabel import *
 from .widgets.VerticalLabel import *
-
 
 ##############################################################
 ## PyQt and PySide both are prone to crashing on exit. 
