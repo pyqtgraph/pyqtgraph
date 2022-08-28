@@ -387,16 +387,6 @@ class ImageTester(QtWidgets.QWidget):
         self.lastKey = 'f'
 
 
-def getTestDataRepo():
-    warnings.warn(
-        "Test data data repo has been merged with the main repo"
-        "use getTestDataDirectory() instead, this method will be removed"
-        "in a future version of pyqtgraph",
-        DeprecationWarning, stacklevel=2
-    )
-    return getTestDataDirectory()
-
-
 def getTestDataDirectory():
     dataPath = Path(__file__).absolute().parent / "images"
     return dataPath.as_posix()

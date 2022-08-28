@@ -83,13 +83,6 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     _addressCache = weakref.WeakValueDictionary()
     
     ExportDirectory = None
-    
-    @classmethod
-    def registerObject(cls, obj):
-        warnings.warn(
-            "'registerObject' is deprecated and does nothing.",
-            DeprecationWarning, stacklevel=2
-        )
 
     def __init__(self, clickRadius=2, moveDistance=5, parent=None):
         QtWidgets.QGraphicsScene.__init__(self, parent)

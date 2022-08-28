@@ -539,7 +539,6 @@ class PlotItem(GraphicsWidget):
             item.setFftMode(self.ctrl.fftCheck.isChecked())
             item.setDownsampling(*self.downsampleMode())
             item.setClipToView(self.clipToViewMode())
-            item.setPointMode(self.pointMode())
             
             ## Hide older plots if needed
             self.updateDecimation()

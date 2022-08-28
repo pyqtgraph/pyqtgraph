@@ -10,7 +10,6 @@ win.show()
 class Obj(QtWidgets.QGraphicsObject):
     def __init__(self):
         QtWidgets.QGraphicsObject.__init__(self)
-        GraphicsScene.registerObject(self)
         
     def paint(self, p, *args):
         p.setPen(pg.mkPen(200,200,200))

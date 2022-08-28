@@ -470,17 +470,6 @@ class PlotDataItem(GraphicsObject):
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
-    def setPointMode(self, state):
-        # This does not seem to do anything, but PlotItem still seems to call it.
-        # warnings.warn(
-        #     'setPointMode has been deprecated, and has no effect. It will be removed from the library in the first release following April, 2022.',
-        #     DeprecationWarning, stacklevel=2
-        # )
-        if self.opts['pointMode'] == state:
-            return
-        self.opts['pointMode'] = state
-        self.update()
-
     def setPen(self, *args, **kargs):
         """
         Sets the pen used to draw lines between points.
