@@ -29,12 +29,12 @@ This project supports:
 
 * All minor versions of Python released 42 months prior to the project, and at minimum the two latest minor versions.
 * All minor versions of numpy released in the 24 months prior to the project, and at minimum the last three minor versions.
-* All Qt5 versions from 5.12-5.15, and Qt6 6.1+
+* Qt5 5.15, and Qt6 6.2+
 
 Currently this means:
 
 * Python 3.8+
-* Qt 5.12-5.15, 6.1+
+* Qt 5.15, 6.2+
 * [PyQt5](https://www.riverbankcomputing.com/software/pyqt/),
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
   [PySide2](https://wiki.qt.io/Qt_for_Python), or
@@ -74,16 +74,15 @@ The following table represents the python environments we test in our CI system.
 
 | Qt-Bindings    |Python 3.8              | Python 3.9              | Python 3.10             |
 | :------------- |:---------------------: | :---------------------: | :---------------------: |
-| PySide2-5.12   |:eight_spoked_asterisk: | :eight_spoked_asterisk: | :eight_spoked_asterisk: |
-| PyQt5-5.12     |:white_check_mark:      | :x:                     | :x:                     |
-| PySide2-5.15   |:white_check_mark:      | :white_check_mark:      |                         |
-| PyQt5-5.15     |:white_check_mark:      | :white_check_mark:      |                         |
+| PySide2-5.15   | :white_check_mark:     | :white_check_mark:      |                         |
+| PyQt5-5.15     | :white_check_mark:     | :white_check_mark:      |                         |
+| PySide6-6.2    |                        | :white_check_mark:      |                         |
+| PyQt6-6.2      |                        | :white_check_mark:      |                         |
 | PySide6-6.3    |                        |                         | :white_check_mark:      |
 | PyQt6-6.3      |                        |                         | :white_check_mark:      |
 
 * :x: - Not compatible
 * :white_check_mark: - Tested
-* :eight_spoked_asterisk: - only available with `conda-forge` package
 * No icon means supported configuration but we do not explicitely test it
 
 Support
