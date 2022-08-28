@@ -112,7 +112,6 @@ others = dict([
     ('GradientEditor', 'GradientEditor.py'),
     ('GLViewWidget', 'GLViewWidget.py'),
     ('DiffTreeWidget', 'DiffTreeWidget.py'),
-    ('MultiPlotWidget', 'MultiPlotWidget.py'),
     ('RemoteGraphicsView', 'RemoteGraphicsView.py'),
     ('contextMenu', 'contextMenu.py'),
     ('designerExample', 'designerExample.py'),
