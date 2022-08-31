@@ -325,6 +325,9 @@ class ExampleLoader(QtWidgets.QMainWindow):
             if self.curListener is not None:
                 self.curListener.disconnect()
             self.curListener = textFil.textChanged
+            # In case the regex was invalid before switching to title search,
+            # ensure the "invalid" color is reset
+            self.ui.exampleFilter.setStyleSheet('')
             if searchType == 'Content Search':
                 self.curListener.connect(self.filterByContent)
             else:
