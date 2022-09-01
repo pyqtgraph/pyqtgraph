@@ -24,19 +24,19 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         qt-lib: [pyqt, pyside]
         python-version: ["3.8", "3.9", "3.10"]
-        exclude:
-          - qt-lib: pyside
-            python-version: "3.8"
         include:
           - python-version: "3.8"
             qt-lib: "pyqt"
-            qt-version: "PyQt5~=5.12.0"
-          - python-version: "3.9"
-            qt-lib: "pyqt"
             qt-version: "PyQt5~=5.15.0"
-          - python-version: "3.9"
+          - python-version: "3.8"
             qt-lib: "pyside"
             qt-version: "PySide2~=5.15.0"
+          - python-version: "3.9"
+            qt-lib: "pyqt"
+            qt-version: "PyQt6~=6.2.0 PyQt6-Qt6~=6.2.0"
+          - python-version: "3.9"
+            qt-lib: "pyside"
+            qt-version: "PySide6~=6.2.0"
           - python-version: "3.10"
             qt-lib: "pyqt"
             qt-version: "PyQt6"
@@ -161,7 +161,7 @@ jobs:
           miniforge-variant: Mambaforge
           environment-file: ${{ matrix.environment-file }}
           auto-update-conda: false
-          python-version: "3.8"
+          python-version: "3.9"
       - name: "Install Test Framework"
         run: pip install pytest pytest-xdist
       - name: "Install Windows-Mesa OpenGL DLL"

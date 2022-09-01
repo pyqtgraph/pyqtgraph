@@ -1,4 +1,3 @@
-import warnings
 from collections.abc import Callable, Sequence
 from os import listdir, path
 
@@ -391,11 +390,6 @@ class ColorMap(object):
             the colors assigned to 0 and 1 for all values below or above this range, respectively.
         """
         self.name = name # storing a name helps identify ColorMaps sampled by Palette
-        if mode is not None:
-            warnings.warn(
-                "'mode' argument is deprecated and does nothing.",
-                DeprecationWarning, stacklevel=2
-        )
         if pos is None:
             order = range(len(color))
             self.pos = np.linspace(0.0, 1.0, num=len(color))

@@ -1,15 +1,14 @@
 import math
-import warnings
 import weakref
 
 import numpy as np
 
+from .. import colormap
 from .. import functions as fn
 from ..Qt import QtCore
 from .ImageItem import ImageItem
 from .LinearRegionItem import LinearRegionItem
 from .PlotItem import PlotItem
-from .. import colormap 
 
 __all__ = ['ColorBarItem']
 
@@ -72,13 +71,6 @@ class ColorBarItem(PlotItem):
             Sets the color of movable center region when hovered over.
         """
         super().__init__()
-        if cmap is not None: 
-            warnings.warn(
-                "The parameter 'cmap' has been renamed to 'colorMap' for clarity. "
-                "The old name will no longer be available in any version of PyQtGraph released after July 2022.",
-                DeprecationWarning, stacklevel=2
-            )
-            colorMap = cmap
         self.img_list  = [] # list of controlled ImageItems
         self.values    = values
         self._colorMap = None
@@ -193,15 +185,6 @@ class ColorBarItem(PlotItem):
                 insert_in.layout.setColumnFixedWidth(4, 5) # enforce some space to axis on the left
         self._update_items( update_cmap = True )
 
-    # Maintain compatibility for old name of color bar setting method.
-    def setCmap(self, cmap):
-        warnings.warn(
-            "The method 'setCmap' has been renamed to 'setColorMap' for clarity. "
-            "The old name will no longer be available in any version of PyQtGraph released after July 2022.",
-            DeprecationWarning, stacklevel=2
-        )
-        self.setColorMap(cmap)
-
     def setColorMap(self, colorMap):
         """
         Sets a color map to determine the ColorBarItem's look-up table. The same
@@ -219,14 +202,6 @@ class ColorBarItem(PlotItem):
         """
         Returns the assigned ColorMap object.
         """
-        return self._colorMap
-        
-    @property
-    def cmap(self):
-        warnings.warn(
-            "Direct access to ColorMap.cmap is deprecated and will no longer be available in any "
-            "version of PyQtGraph released after July 2022. Please use 'ColorMap.colorMap()' instead.",
-            DeprecationWarning, stacklevel=2)
         return self._colorMap
 
     def setLevels(self, values=None, low=None, high=None ):
