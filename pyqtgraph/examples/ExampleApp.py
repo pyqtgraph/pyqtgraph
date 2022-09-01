@@ -325,6 +325,9 @@ class ExampleLoader(QtWidgets.QMainWindow):
             if self.curListener is not None:
                 self.curListener.disconnect()
             self.curListener = textFil.textChanged
+            # In case the regex was invalid before switching to title search,
+            # ensure the "invalid" color is reset
+            self.ui.exampleFilter.setStyleSheet('')
             if searchType == 'Content Search':
                 self.curListener.connect(self.filterByContent)
             else:
@@ -367,7 +370,21 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.hl.setDocument(self.ui.codeView.document())
 
     def filterByContent(self, text=None):
-        # Don't filter very short strings
+        # If the new text isn't valid regex, fail early and highlight the search filter red to indicate a problem
+        # to the user
+        validRegex = True
+        try:
+            re.compile(text)
+            self.ui.exampleFilter.setStyleSheet('')
+        except re.error:
+            colors = DarkThemeColors if app.property('darkMode') else LightThemeColors
+            errorColor = pg.mkColor(colors.Red)
+            validRegex = False
+            errorColor.setAlpha(100)
+            # Tuple prints nicely :)
+            self.ui.exampleFilter.setStyleSheet(f'background: rgba{errorColor.getRgb()}')
+        if not validRegex:
+            return
         checkDict = unnestedDict(utils.examples_)
         self.hl.searchText = text
         # Need to reapply to current document
