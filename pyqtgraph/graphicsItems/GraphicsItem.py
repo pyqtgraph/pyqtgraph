@@ -1,5 +1,4 @@
 import operator
-import warnings
 import weakref
 from collections import OrderedDict
 from functools import reduce

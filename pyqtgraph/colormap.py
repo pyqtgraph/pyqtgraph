@@ -1,4 +1,3 @@
-import warnings
 from collections.abc import Callable, Sequence
 from os import listdir, path
 

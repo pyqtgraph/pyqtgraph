@@ -1,4 +1,3 @@
-import warnings
 import weakref
 from math import ceil, floor, isfinite, log, log10
 

@@ -1,4 +1,3 @@
-import warnings
 from math import atan2, degrees
 
 import numpy as np

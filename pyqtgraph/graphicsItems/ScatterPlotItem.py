@@ -1,6 +1,5 @@
 import itertools
 import math
-import warnings
 import weakref
 from collections import OrderedDict
 

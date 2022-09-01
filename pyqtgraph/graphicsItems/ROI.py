@@ -12,7 +12,6 @@ of how to build an ROI at the bottom of the file.
 """
 
 import sys
-import warnings
 from math import atan2, cos, degrees, hypot, sin
 
 import numpy as np

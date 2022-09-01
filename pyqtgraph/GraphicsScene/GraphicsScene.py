@@ -1,4 +1,3 @@
-import warnings
 import weakref
 from time import perf_counter, perf_counter_ns
 

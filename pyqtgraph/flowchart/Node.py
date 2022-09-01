@@ -1,7 +1,6 @@
 __all__ = ["Node", "NodeGraphicsItem"]
 
 import sys
-import warnings
 from collections import OrderedDict
 
 from .. import functions as fn

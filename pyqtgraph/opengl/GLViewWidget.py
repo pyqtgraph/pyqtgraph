@@ -1,6 +1,5 @@
 from OpenGL.GL import *  # noqa
 import OpenGL.GL.framebufferobjects as glfbo  # noqa
-import warnings
 from math import cos, radians, sin, tan
 
 import numpy as np
