@@ -82,7 +82,7 @@ x = 10
 interactor(func_interactive)
 
 
-with interactor.optsContext(title=str.upper):
+with interactor.optsContext(titleFormat=str.upper):
 
     @interactor.decorate()
     @printResult

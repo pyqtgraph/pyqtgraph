@@ -116,13 +116,13 @@ def test_interact():
     host.child("y").sigValueChanging.emit(host.child("y"), 100)
     assert value == (10, 100)
 
-    with interactor.optsContext(title=str.upper):
+    with interactor.optsContext(titleFormat=str.upper):
         host = interactor(a, x={"title": "different", "value": 5})
         titles = [p.title() for p in host]
         for ch in "different", "Y":
             assert ch in titles
 
-    with interactor.optsContext(title="Group only"):
+    with interactor.optsContext(titleFormat="Group only"):
         host = interactor(a, x=1)
         assert host.title() == "Group only"
         assert [p.title() is None for p in host]
