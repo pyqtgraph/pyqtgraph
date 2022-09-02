@@ -61,9 +61,9 @@ class InteractiveFunction:
         self.parametersNeedRunKwargs = False
         self.parameterCache = {}
 
-        self.__name__ = function.__name__
-        self.__doc__ = function.__doc__
-        functools.update_wrapper(self, function)
+        # No need for wrapper __dict__ to function as function.__dict__, since
+        # Only __doc__, __name__, etc. attributes are required
+        functools.update_wrapper(self, function, updated=())
 
     def __call__(self, **kwargs):
         """
