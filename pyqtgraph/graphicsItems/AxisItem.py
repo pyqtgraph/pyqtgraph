@@ -59,6 +59,7 @@ class AxisItem(GraphicsWidget):
             'tickTextHeight': 18,
             'autoExpandTextSpace': True,  ## automatically expand text space if needed
             'autoReduceTextSpace': True,
+            'hideOverlappingLabels': True,
             'tickFont': None,
             'stopAxisAtTick': (False, False),  ## whether axis is drawn to edge of box or to last tick
             'textFillLimits': [  ## how much of the axis to fill up with tick text, maximally.
@@ -125,46 +126,49 @@ class AxisItem(GraphicsWidget):
         """
         Set various style options.
 
-        =================== =======================================================
+        ===================== =======================================================
         Keyword Arguments:
-        tickLength          (int) The maximum length of ticks in pixels.
-                            Positive values point toward the text; negative
-                            values point away.
-        tickTextOffset      (int) reserved spacing between text and axis in px
-        tickTextWidth       (int) Horizontal space reserved for tick text in px
-        tickTextHeight      (int) Vertical space reserved for tick text in px
-        autoExpandTextSpace (bool) Automatically expand text space if the tick
-                            strings become too long.
-        autoReduceTextSpace (bool) Automatically shrink the axis if necessary 
-        tickFont            (QFont or None) Determines the font used for tick
-                            values. Use None for the default font.
-        stopAxisAtTick      (tuple: (bool min, bool max)) If True, the axis
-                            line is drawn only as far as the last tick.
-                            Otherwise, the line is drawn to the edge of the
-                            AxisItem boundary.
-        textFillLimits      (list of (tick #, % fill) tuples). This structure
-                            determines how the AxisItem decides how many ticks
-                            should have text appear next to them. Each tuple in
-                            the list specifies what fraction of the axis length
-                            may be occupied by text, given the number of ticks
-                            that already have text displayed. For example::
+        tickLength            (int) The maximum length of ticks in pixels.
+                              Positive values point toward the text; negative
+                              values point away.
+        tickTextOffset        (int) reserved spacing between text and axis in px
+        tickTextWidth         (int) Horizontal space reserved for tick text in px
+        tickTextHeight        (int) Vertical space reserved for tick text in px
+        autoExpandTextSpace   (bool) Automatically expand text space if the tick
+                              strings become too long.
+        autoReduceTextSpace   (bool) Automatically shrink the axis if necessary
+        hideOverlappingLabels (bool) Hide tick labels which overlap the AxisItems'
+                              geometry rectangle. If False, labels might be drawn
+                              overlapping with tick labels from neighboring plots.
+        tickFont              (QFont or None) Determines the font used for tick
+                              values. Use None for the default font.
+        stopAxisAtTick        (tuple: (bool min, bool max)) If True, the axis
+                              line is drawn only as far as the last tick.
+                              Otherwise, the line is drawn to the edge of the
+                              AxisItem boundary.
+        textFillLimits        (list of (tick #, % fill) tuples). This structure
+                              determines how the AxisItem decides how many ticks
+                              should have text appear next to them. Each tuple in
+                              the list specifies what fraction of the axis length
+                              may be occupied by text, given the number of ticks
+                              that already have text displayed. For example::
 
-                                [(0, 0.8), # Never fill more than 80% of the axis
-                                 (2, 0.6), # If we already have 2 ticks with text,
-                                           # fill no more than 60% of the axis
-                                 (4, 0.4), # If we already have 4 ticks with text,
-                                           # fill no more than 40% of the axis
-                                 (6, 0.2)] # If we already have 6 ticks with text,
-                                           # fill no more than 20% of the axis
+                                  [(0, 0.8), # Never fill more than 80% of the axis
+                                   (2, 0.6), # If we already have 2 ticks with text,
+                                             # fill no more than 60% of the axis
+                                   (4, 0.4), # If we already have 4 ticks with text,
+                                             # fill no more than 40% of the axis
+                                   (6, 0.2)] # If we already have 6 ticks with text,
+                                             # fill no more than 20% of the axis
 
-        showValues          (bool) indicates whether text is displayed adjacent
-                            to ticks.
-        tickAlpha           (float or int or None) If None, pyqtgraph will draw the
-                            ticks with the alpha it deems appropriate.  Otherwise, 
-                            the alpha will be fixed at the value passed.  With int, 
-                            accepted values are [0..255].  With value of type
-                            float, accepted values are from [0..1].
-        =================== =======================================================
+        showValues            (bool) indicates whether text is displayed adjacent
+                              to ticks.
+        tickAlpha             (float or int or None) If None, pyqtgraph will draw the
+                              ticks with the alpha it deems appropriate.  Otherwise,
+                              the alpha will be fixed at the value passed.  With int,
+                              accepted values are [0..255].  With value of type
+                              float, accepted values are from [0..1].
+        ===================== =======================================================
 
         Added in version 0.9.9
         """
@@ -620,6 +624,7 @@ class AxisItem(GraphicsWidget):
                 self.setRange(*newRange)
 
     def boundingRect(self):
+        m = 0 if self.style['hideOverlappingLabels'] else 15
         linkedView = self.linkedView()
         if linkedView is None or self.grid is False:
             rect = self.mapRectFromParent(self.geometry())
@@ -627,13 +632,13 @@ class AxisItem(GraphicsWidget):
             ## also extend to account for text that flows past the edges
             tl = self.style['tickLength']
             if self.orientation == 'left':
-                rect = rect.adjusted(0, -15, -min(0,tl), 15)
+                rect = rect.adjusted(0, -m, -min(0,tl), m)
             elif self.orientation == 'right':
-                rect = rect.adjusted(min(0,tl), -15, 0, 15)
+                rect = rect.adjusted(min(0,tl), -m, 0, m)
             elif self.orientation == 'top':
                 rect = rect.adjusted(-15, 0, 15, -min(0,tl))
             elif self.orientation == 'bottom':
-                rect = rect.adjusted(-15, min(0,tl), 15, 0)
+                rect = rect.adjusted(-m, min(0,tl), m, 0)
             return rect
         else:
             return self.mapRectFromParent(self.geometry()) | linkedView.mapRectToItem(self, linkedView.boundingRect())
@@ -1156,6 +1161,7 @@ class AxisItem(GraphicsWidget):
                 #self.textHeight = height
                 offset = max(0,self.style['tickLength']) + textOffset
 
+                rect = QtCore.QRectF()
                 if self.orientation == 'left':
                     alignFlags = QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignVCenter
                     rect = QtCore.QRectF(tickStop-offset-width, x-(height/2), width, height)
@@ -1172,6 +1178,11 @@ class AxisItem(GraphicsWidget):
                 textFlags = alignFlags | QtCore.Qt.TextFlag.TextDontClip    
                 #p.setPen(self.pen())
                 #p.drawText(rect, textFlags, vstr)
+
+                br = self.boundingRect()
+                if not br.contains(rect):
+                    continue
+
                 textSpecs.append((rect, textFlags, vstr))
         profiler('compute text')
 
