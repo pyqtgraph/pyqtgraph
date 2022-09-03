@@ -42,7 +42,7 @@ def fmt(name):
     return translate("ScatterPlot", name.title().strip() + ":    ")
 
 
-interactor = ptree.Interactor(title=fmt, nest=False, parent=param)
+interactor = ptree.Interactor(titleFormat=fmt, nest=False, parent=param)
 
 
 @interactor.decorate(

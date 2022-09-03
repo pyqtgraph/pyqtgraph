@@ -61,9 +61,9 @@ class InteractiveFunction:
         self.parametersNeedRunKwargs = False
         self.parameterCache = {}
 
-        self.__name__ = function.__name__
-        self.__doc__ = function.__doc__
-        functools.update_wrapper(self, function)
+        # No need for wrapper __dict__ to function as function.__dict__, since
+        # Only __doc__, __name__, etc. attributes are required
+        functools.update_wrapper(self, function, updated=())
 
     def __call__(self, **kwargs):
         """
@@ -199,12 +199,12 @@ class InteractiveFunction:
 class Interactor:
     runOpts = RunOpts.ON_CHANGED
     parent = None
-    title = None
+    titleFormat = None
     nest = True
     existOk = True
     runActionTemplate = dict(type="action", defaultName="Run")
 
-    _optNames = ["runOpts", "parent", "title", "nest", "existOk", "runActionTemplate"]
+    _optNames = ["runOpts", "parent", "titleFormat", "nest", "existOk", "runActionTemplate"]
 
     def __init__(self, **kwargs):
         """
@@ -267,7 +267,7 @@ class Interactor:
         ignores=None,
         runOpts=RunOpts.PARAM_UNSET,
         parent=RunOpts.PARAM_UNSET,
-        title=RunOpts.PARAM_UNSET,
+        titleFormat=RunOpts.PARAM_UNSET,
         nest=RunOpts.PARAM_UNSET,
         existOk=RunOpts.PARAM_UNSET,
         **overrides,
@@ -295,8 +295,8 @@ class Interactor:
         parent: GroupParameter
             Parent in which to add argument Parameters. If *None*, a new group
             parameter is created.
-        title: str or Callable
-            Title of the group sub-parameter if one must be created (see ``nest``
+        titleFormat: str or Callable
+            title of the group sub-parameter if one must be created (see ``nest``
             behavior). If a function is supplied, it must be of the form (str) -> str
             and will be passed the function name as an input
         nest: bool
@@ -324,7 +324,7 @@ class Interactor:
         }
         oldOpts = self.setOpts(**opts)
         # Delete explicitly since correct values are now ``self`` attributes
-        del runOpts, title, nest, existOk, parent
+        del runOpts, titleFormat, nest, existOk, parent
 
         funcDict = self.functionToParameterDict(function, **overrides)
         children = funcDict.pop("children", [])  # type: list[dict]
@@ -404,20 +404,20 @@ class Interactor:
 
     def _nameToTitle(self, name, forwardStrTitle=False):
         """
-        Converts a function name to a title based on ``self.title``.
+        Converts a function name to a title based on ``self.titleFormat``.
 
         Parameters
         ----------
         name: str
             Name of the function
         forwardStrTitle: bool
-            If ``self.title`` is a string and ``forwardStrTitle`` is True,
-            ``self.title`` will be used as the title. Otherwise, if ``self.title`` is
-            *None*, the name will be returned unchanged. Finally, if ``self.title`` is
-            a callable, it will be called with the name as an input and the output will
-            be returned
+            If ``self.titleFormat`` is a string and ``forwardStrTitle`` is True,
+            ``self.titleFormat`` will be used as the title. Otherwise, if
+            ``self.titleFormat`` is *None*, the name will be returned unchanged.
+            Finally, if ``self.titleFormat`` is a callable, it will be called with
+            the name as an input and the output will be returned
         """
-        titleFormat = self.title
+        titleFormat = self.titleFormat
         isString = isinstance(titleFormat, str)
         if titleFormat is None or (isString and not forwardStrTitle):
             return name
@@ -485,7 +485,7 @@ class Interactor:
         """
         children = []
         out = dict(name=function.__name__, type="group", children=children)
-        if self.title is not None:
+        if self.titleFormat is not None:
             out["title"] = self._nameToTitle(function.__name__, forwardStrTitle=True)
 
         funcParams = inspect.signature(function).parameters
@@ -559,7 +559,7 @@ class Interactor:
         pgDict.setdefault("value", RunOpts.PARAM_UNSET)
 
         # Anywhere a title is specified should take precedence over the default factory
-        if self.title is not None:
+        if self.titleFormat is not None:
             pgDict.setdefault("title", self._nameToTitle(name))
         pgDict.setdefault("type", type(pgDict["value"]).__name__)
         return pgDict

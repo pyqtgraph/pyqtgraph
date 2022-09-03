@@ -340,7 +340,7 @@ Title Formatting
 ----------------
 
 If functions should have formatted titles, specify this in the
-``title`` parameter:
+``titleFormat`` parameter:
 
 .. code:: python
 
@@ -351,7 +351,7 @@ If functions should have formatted titles, specify this in the
         return name.replace('_', ' ').title()
 
     # The title in the parameter tree will be "My Snake Case Function"
-    params = interact(my_snake_case_function, title=titleFormat)
+    params = interact(my_snake_case_function, titleFormat=titleFormat)
 
 Using ``InteractiveFunction``
 -----------------------------
