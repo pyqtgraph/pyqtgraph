@@ -258,6 +258,12 @@ if QT_LIB in [PYQT6, PYSIDE6]:
 
     if not isinstance(QtOpenGLWidgets, FailedImport):
         QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
+
+    # PySide6 incorrectly placed QFileSystemModel inside QtWidgets
+    if QT_LIB == PYSIDE6 and hasattr(QtWidgets, 'QFileSystemModel'):
+        module = getattr(QtWidgets, "QFileSystemModel")
+        setattr(QtGui, "QFileSystemModel", module)
+
 else:
     # Shim Qt5 namespace to match Qt6
     module_whitelist = [
