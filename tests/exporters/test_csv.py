@@ -68,7 +68,6 @@ def test_CSVExporter_with_ErrorBarItem():
         bottom=bottom_error
     )
     plt.addItem(err)
-    plt.plot(x, y)
     ex = pg.exporters.CSVExporter(plt.plotItem)
     with tempfile.NamedTemporaryFile(mode="w+t", suffix='.csv', encoding="utf-8", delete=False) as tf:
         ex.export(fileName=tf.name)
@@ -76,7 +75,7 @@ def test_CSVExporter_with_ErrorBarItem():
 
     header = lines.pop(0)
 
-    assert header == ['x0000', 'y0000', 'y_min_error_0000', 'y_max_error_0000']
+    assert header == ['x0000_error', 'y0000_error', 'y_min_error_0000', 'y_max_error_0000']
     for i, values in enumerate(lines):
         assert pytest.approx(float(values[0])) == x[i]
         assert pytest.approx(float(values[1])) == y[i]

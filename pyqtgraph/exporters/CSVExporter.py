@@ -29,44 +29,20 @@ class CSVExporter(Exporter):
             }
         ])
 
+        self.index_counter = itertools.count(start=0)
+        self.header = []
+        self.data = []
+
     def parameters(self):
         return self.params
 
-    def export(self, fileName=None):
-        
-        if not isinstance(self.item, PlotItem):
-            raise TypeError("Must have a PlotItem selected for CSV export.")
+    def _exportErrorBarItem(self, errorBarItem: ErrorBarItem) -> None:
+        error_data = []
+        index = next(self.index_counter)
 
-        if fileName is None:
-            self.fileSaveDialog(filter=["*.csv", "*.tsv"])
-            return
-
-        data = []
-        header = []
-
-        appendAllX = self.params['columnMode'] == '(x,y) per plot'
-
-        # grab curve information
-        for i, c in enumerate(self.item.curves):
-            if hasattr(c, 'getOriginalDataset'): # try to access unmapped, unprocessed data
-                cd = c.getOriginalDataset()
-            else:
-                cd = c.getData() # fall back to earlier access method
-            if cd[0] is None:
-                continue
-            data.append(cd)
-            if hasattr(c, 'implements') and c.implements('plotData') and c.name() is not None:
-                name = c.name().replace('"', '""') + '_'
-                xName = f"{name}x"
-                yName = f"{name}y"
-            else:
-                xName = 'x%04d' % i
-                yName = 'y%04d' % i
-
-            if appendAllX or i == 0:
-                header.extend([xName, yName])
-            else:
-                header.extend([yName])
+        # make sure the plot actually has data:
+        if errorBarItem.opts['x'] is None or errorBarItem.opts['y'] is None:
+            return None
 
         header_naming_map = {
             "left": "x_min_error",
@@ -75,24 +51,66 @@ class CSVExporter(Exporter):
             "top": "y_max_error"
         }
 
-        # if there is an error-bar item grab the error bar info
-        for i, c in enumerate(self.item.items):
-            if not isinstance(c, ErrorBarItem):
-                continue
-            error_data = []
-            for error_direction, header_label in header_naming_map.items():
-                if (error := c.opts[error_direction]) is not None:
-                    header.extend([f'{header_label}_{i:04}'])
-                    error_data.append(error)
-            if error_data:
-                data.append(tuple(error_data))
-        sep = "," if self.params['separator'] == 'comma' else "\t"
+        # grab the base-points
+        self.header.extend([f'x{index:04}_error', f'y{index:04}_error'])
+        error_data.extend([errorBarItem.opts['x'], errorBarItem.opts['y']])
 
+        # grab the error bars
+        for error_direction, header_label in header_naming_map.items():
+            if (error := errorBarItem.opts[error_direction]) is not None:
+                self.header.extend([f'{header_label}_{index:04}'])
+                error_data.append(error)
+
+        self.data.append(tuple(error_data))
+        return None
+
+    def _exportPlotDataItem(self, plotDataItem) -> None:
+        if hasattr(plotDataItem, 'getOriginalDataset'):
+            # try to access unmapped, unprocessed data
+            cd = plotDataItem.getOriginalDataset()
+        else:
+             # fall back to earlier access method
+            cd = plotDataItem.getData()
+        if cd[0] is None:
+            # no data found, break out...
+            return None
+        self.data.append(cd)
+
+        index = next(self.index_counter)
+        if plotDataItem.name() is not None:
+            name = plotDataItem.name().replace('"', '""') + '_'
+            xName = f"{name}x"
+            yName = f"{name}y"
+        else:
+            xName = f'x{index:04}'
+            yName = f'y{index:04}'
+        appendAllX = self.params['columnMode'] == '(x,y) per plot'
+        if appendAllX or index == 0:
+            self.header.extend([xName, yName])
+        else:
+            self.header.extend([yName])
+        return None
+
+    def export(self, fileName=None):
+        if not isinstance(self.item, PlotItem):
+            raise TypeError("Must have a PlotItem selected for CSV export.")
+
+        if fileName is None:
+            self.fileSaveDialog(filter=["*.csv", "*.tsv"])
+            return
+
+        for item in self.item.items:
+            if isinstance(item, ErrorBarItem):
+                self._exportErrorBarItem(item)
+            elif hasattr(item, 'implements') and item.implements('plotData'):
+                self._exportPlotDataItem(item)
+
+        sep = "," if self.params['separator'] == 'comma' else "\t"
         # we want to flatten the nested arrays of data into columns
-        columns = [column for dataset in data for column in dataset]
+        columns = [column for dataset in self.data for column in dataset]
         with open(fileName, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=sep, quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(header)
+            writer.writerow(self.header)
             for row in itertools.zip_longest(*columns, fillvalue=""):
                 row_to_write = [
                     item if isinstance(item, str) 
@@ -102,5 +120,8 @@ class CSVExporter(Exporter):
                     for item in row
                 ]
                 writer.writerow(row_to_write)
+
+        self.header.clear()
+        self.data.clear()
 
 CSVExporter.register()
