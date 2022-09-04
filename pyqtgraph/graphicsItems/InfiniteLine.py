@@ -301,7 +301,8 @@ class InfiniteLine(GraphicsObject):
         if vr is None:
             return QtCore.QRectF()
         
-        px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
+        # get pixel length orthogonal to the line
+        px = self.pixelLength(direction=Point(0, 1))
         if px is None:
             px = 0
         pw = max(self.pen.width() / 2, self.hoverPen.width() / 2)
