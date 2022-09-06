@@ -11,7 +11,6 @@ Widget used for displaying 2D or 3D data. Features:
   - ROI plotting
   - Image normalization through a variety of methods
 """
-import importlib
 import os
 from math import log10
 from time import perf_counter
@@ -19,11 +18,6 @@ from time import perf_counter
 import numpy as np
 
 from .. import ImageItem, ViewBox
-from ..Qt import QT_LIB
-
-ui_template = importlib.import_module(
-    f'.ImageViewTemplate_{QT_LIB.lower()}', package=__package__)
-
 from .. import debug as debug
 from .. import functions as fn
 from .. import getConfigOption
@@ -42,11 +36,6 @@ try:
     from bottleneck import nanmax, nanmin
 except ImportError:
     from numpy import nanmax, nanmin
-
-import importlib
-
-ui_template = importlib.import_module(
-    f'.ImageViewTemplate_{QT_LIB.lower()}', package=__package__)
 
 translate = QtCore.QCoreApplication.translate
 
