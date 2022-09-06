@@ -190,7 +190,8 @@ class ImageView(QtWidgets.QWidget):
         self.keysPressed = {}
         self.playTimer = QtCore.QTimer()
         self.playRate = 0
-        self.fps = 1 # 1 Hz by default
+        self._pausedPlayRate = None
+        self.fps = 1  # 1 Hz by default
         self.lastPlayTime = 0
         
         self.normRgn = LinearRegionItem()
@@ -412,7 +413,9 @@ class ImageView(QtWidgets.QWidget):
         """Begin automatically stepping frames forward at the given rate (in fps).
         This can also be accessed by pressing the spacebar."""
         if rate is None:
-            rate = self.fps
+            rate = self._pausedPlayRate or self.fps
+        if rate == 0 and self.playRate not in (None, 0):
+            self._pausedPlayRate = self.playRate
         self.playRate = rate
 
         if rate == 0:
@@ -422,6 +425,18 @@ class ImageView(QtWidgets.QWidget):
         self.lastPlayTime = perf_counter()
         if not self.playTimer.isActive():
             self.playTimer.start(abs(int(1000/rate)))
+
+    def togglePause(self):
+        if self.playTimer.isActive():
+            self.play(0)
+        elif self.playRate == 0:
+            if self._pausedPlayRate is not None:
+                fps = self._pausedPlayRate
+            else:
+                fps = (self.nframes - 1) / (self.tVals[-1] - self.tVals[0])
+            self.play(fps)
+        else:
+            self.play(self.playRate)
 
     def setHistogramLabel(self, text=None, **kwargs):
         """
@@ -489,13 +504,7 @@ class ImageView(QtWidgets.QWidget):
             return
 
         if ev.key() == QtCore.Qt.Key.Key_Space:
-            if self.playTimer.isActive():
-                self.play(0)
-            elif self.playRate == 0:
-                fps = (self.nframes-1) / (self.tVals[-1] - self.tVals[0])
-                self.play(fps)
-            else:
-                self.play(self.playRate)
+            self.togglePause()
             ev.accept()
         elif ev.key() == QtCore.Qt.Key.Key_Home:
             self.setCurrentIndex(0)

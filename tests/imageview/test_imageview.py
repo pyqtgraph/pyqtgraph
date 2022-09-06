@@ -22,11 +22,20 @@ def test_timeslide_snap():
     iv.setImage(frames, xvals=(np.linspace(0., 1., count)))
     iv.show()
     assert iv.nframes == count
-    iv.play(count / 2)
+    speed = count / 2
+    iv.play(speed)
+    assert iv.playRate == speed
     iv.timeLine.setPos(0.51)
+    assert iv.playRate == 0
     ind, val = iv.timeIndex(iv.timeLine)
     assert ind == count // 2
     assert val == 0.5
+    iv.togglePause()
+    assert iv.playRate == speed
+    iv.togglePause()
+    assert iv.playRate == 0
+    iv.play()
+    assert iv.playRate == speed
 
 
 def test_init_with_mode_and_imageitem():
