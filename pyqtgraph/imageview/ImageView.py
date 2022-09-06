@@ -108,6 +108,7 @@ class ImageView(QtWidgets.QWidget):
             :class:`ViewBox <pyqtgraph.ViewBox>`, :class:`PlotItem <pyqtgraph.PlotItem>`, or other compatible object is
             acceptable. Note: to display axis ticks inside the ImageView, instantiate it with a PlotItem instance as its
             view::
+
                 pg.ImageView(view=pg.PlotItem())
         imageItem : ImageItem
             If specified, this object will be used to display the image. Must be an instance of ImageItem or other
@@ -121,7 +122,7 @@ class ImageView(QtWidgets.QWidget):
         self._imageLevels = None  # [(min, max), ...] per channel image metrics
         self.levelMin = None    # min / max levels across all channels
         self.levelMax = None
-        
+
         self.name = name
         self.image = None
         self.axes = {}
