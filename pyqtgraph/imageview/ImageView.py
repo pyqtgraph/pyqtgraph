@@ -251,35 +251,40 @@ class ImageView(QtWidgets.QWidget):
     ):
         """
         Set the image to be displayed in the widget.
-        
-        ================== ===========================================================================
-        **Arguments:**
-        img                (numpy array) the image to be displayed. See :func:`ImageItem.setImage` and
-                           *notes* below.
-        autoRange          (bool) whether to scale/pan the view to fit the image.
-        autoLevels         (bool) whether to update the white/black levels to fit the image.
-        levels             (min, max); the white and black level values to use.
-        axes               Dictionary indicating the interpretation for each axis.
-                           This is only needed to override the default guess. Format is::
-                       
-                               {'t':0, 'x':1, 'y':2, 'c':3};
-        
-        xvals              (numpy array) 1D array of values corresponding to the first axis in a 3D
-                           image. For video, this array should contain the time of each frame.
-        pos                Change the position of the displayed image
-        scale              Change the scale of the displayed image
-        transform          Set the transform of the displayed image. This option overrides *pos*
-                           and *scale*.
-        autoHistogramRange If True, the histogram y-range is automatically scaled to fit the
-                           image data.
-        levelMode          If specified, this sets the user interaction mode for setting image 
-                           levels. Options are 'mono', which provides a single level control for
-                           all image channels, and 'rgb' or 'rgba', which provide individual
-                           controls for each channel.
-        ================== ===========================================================================
 
-        **Notes:**        
-        
+        Parameters
+        ----------
+        img : ndarray
+            The image to be displayed. See :func:`ImageItem.setImage` and *notes* below.
+        autoRange : bool
+            Whether to scale/pan the view to fit the image.
+        autoLevels : bool
+            Whether to update the white/black levels to fit the image.
+        levels : (min, max)
+            The white and black level values to use.
+        axes : dict
+            Dictionary indicating the interpretation for each axis. This is only needed to override the default guess.
+            Format is::
+
+                {'t':0, 'x':1, 'y':2, 'c':3};
+        xvals : ndarray
+            1D array of values corresponding to the first axis in a 3D image. For video, this array should contain
+            the time of each frame.
+        pos
+            Change the position of the displayed image
+        scale
+            Change the scale of the displayed image
+        transform
+            Set the transform of the displayed image. This option overrides *pos* and *scale*.
+        autoHistogramRange : bool
+            If True, the histogram y-range is automatically scaled to fit the image data.
+        levelMode : str
+            If specified, this sets the user interaction mode for setting image levels. Options are 'mono',
+            which provides a single level control for all image channels, and 'rgb' or 'rgba', which provide
+            individual controls for each channel.
+
+        Notes
+        -----
         For backward compatibility, image data is assumed to be in column-major order (column, row).
         However, most image data is stored in row-major order (row, column) and will need to be
         transposed before calling setImage()::
@@ -288,30 +293,29 @@ class ImageView(QtWidgets.QWidget):
             
         This requirement can be changed by the ``imageAxisOrder``
         :ref:`global configuration option <apiref_config>`.
-        
         """
         profiler = debug.Profiler()
 
         if hasattr(img, 'implements') and img.implements('MetaArray'):
             img = img.asarray()
-        
+
         if not isinstance(img, np.ndarray):
             required = ['dtype', 'max', 'min', 'ndim', 'shape', 'size']
             if not all(hasattr(img, attr) for attr in required):
                 raise TypeError("Image must be NumPy array or any object "
                                 "that provides compatible attributes/methods:\n"
                                 "  %s" % str(required))
-        
+
         self.image = img
         self.imageDisp = None
         if levelMode is not None:
             self.ui.histogram.setLevelMode(levelMode)
-        
+
         profiler()
-        
+
         if axes is None:
             x,y = (0, 1) if self.imageItem.axisOrder == 'col-major' else (1, 0)
-            
+
             if img.ndim == 2:
                 self.axes = {'t': None, 'x': x, 'y': y, 'c': None}
             elif img.ndim == 3:
@@ -903,11 +907,10 @@ class ImageView(QtWidgets.QWidget):
     def setColorMap(self, colormap):
         """Set the color map. 
 
-        ============= =========================================================
-        **Arguments**
-        colormap      (A ColorMap() instance) The ColorMap to use for coloring 
-                      images.
-        ============= =========================================================
+        Parameters
+        ----------
+        colormap : ColorMap
+            The ColorMap to use for coloring images.
         """
         self.ui.histogram.gradient.setColorMap(colormap)
 
