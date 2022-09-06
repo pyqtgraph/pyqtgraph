@@ -425,7 +425,7 @@ class ImageView(QtWidgets.QWidget):
 
     def setHistogramLabel(self, text=None, **kwargs):
         """
-        Set the label text of the histogram axis similar to 
+        Set the label text of the histogram axis similar to
         :func:`AxisItem.setLabel() <pyqtgraph.AxisItem.setLabel>`
         """
         a = self.ui.histogram.axis
