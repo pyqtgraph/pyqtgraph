@@ -59,18 +59,6 @@ def getGraphPixmap(name, size=(20, 20)):
     return icon.pixmap(*size)
 
 
-def getPixmap(name, size=(20, 20)):
-    """Historic `getPixmap` function
-
-    (eg. getPixmap('auto') loads pyqtgraph/icons/auto.png)
-    """
-    warnings.warn(
-        "'getPixmap' is deprecated and will be removed soon, "
-        "please use `getGraphPixmap` in the future",
-        DeprecationWarning, stacklevel=2)
-    return getGraphPixmap(name, size=size)
-
-
 # Note: List all graph icons here ...
 auto = GraphIcon("auto.png")
 ctrl = GraphIcon("ctrl.png")

@@ -3,9 +3,8 @@ from ...Qt import QtWidgets
 from ...SignalProxy import SignalProxy
 from ..ParameterItem import ParameterItem
 from . import BoolParameterItem, SimpleParameter
-from .basetypes import GroupParameter, GroupParameterItem, WidgetParameterItem
+from .basetypes import Emitter, GroupParameter, GroupParameterItem, WidgetParameterItem
 from .list import ListParameter
-from .slider import Emitter
 
 
 class ChecklistParameterItem(GroupParameterItem):

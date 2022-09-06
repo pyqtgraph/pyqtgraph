@@ -1,12 +1,11 @@
 """
 CSV export test
 """
-from __future__ import absolute_import, division, print_function
-
 import csv
 import tempfile
 
 import numpy as np
+import pytest
 
 import pyqtgraph as pg
 
@@ -54,3 +53,31 @@ def test_CSVExporter():
 
             assert (i >= len(x3) and vals[4] == '') or approxeq(float(vals[4]), x3[i])
             assert (i >= len(y3) and vals[5] == '') or approxeq(float(vals[5]), y3[i])
+
+def test_CSVExporter_with_ErrorBarItem():
+    plt = pg.plot()
+    x=np.arange(5)
+    y=np.array([1, 2, 3, 2, 1])
+    top_error = np.array([2, 3, 3, 3, 2])
+    bottom_error = np.array([-2.5, -2.5, -2.5, -2.5, -1.5])
+
+    err = pg.ErrorBarItem(
+        x=x,
+        y=y,
+        top=top_error,
+        bottom=bottom_error
+    )
+    plt.addItem(err)
+    ex = pg.exporters.CSVExporter(plt.plotItem)
+    with tempfile.NamedTemporaryFile(mode="w+t", suffix='.csv', encoding="utf-8", delete=False) as tf:
+        ex.export(fileName=tf.name)
+        lines = [line for line in csv.reader(tf)]
+
+    header = lines.pop(0)
+
+    assert header == ['x0000_error', 'y0000_error', 'y_min_error_0000', 'y_max_error_0000']
+    for i, values in enumerate(lines):
+        assert pytest.approx(float(values[0])) == x[i]
+        assert pytest.approx(float(values[1])) == y[i]
+        assert pytest.approx(float(values[2])) == bottom_error[i]
+        assert pytest.approx(float(values[3])) == top_error[i]

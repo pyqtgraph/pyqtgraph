@@ -1,5 +1,4 @@
 import re
-import warnings
 import weakref
 from collections import OrderedDict
 
@@ -117,7 +116,7 @@ class Parameter(QtCore.QObject):
         #except KeyError:
             #pass
         #return QtCore.QObject.__new__(cls, *args, **opts)
-    
+
     @staticmethod
     def create(**opts):
         """
@@ -569,14 +568,14 @@ class Parameter(QtCore.QObject):
         return itemClass(self, depth)
 
 
-    def addChild(self, child, autoIncrementName=None):
+    def addChild(self, child, autoIncrementName=None, existOk=False):
         """
         Add another parameter to the end of this parameter's child list.
         
-        See insertChild() for a description of the *autoIncrementName* 
-        argument.
+        See insertChild() for a description of the *autoIncrementName* and *existOk*
+        arguments.
         """
-        return self.insertChild(len(self.childs), child, autoIncrementName=autoIncrementName)
+        return self.insertChild(len(self.childs), child, autoIncrementName=autoIncrementName, existOk=existOk)
 
     def addChildren(self, children):
         """
@@ -596,9 +595,8 @@ class Parameter(QtCore.QObject):
         for chOpts in children:
             #print self, "Add child:", type(chOpts), id(chOpts)
             self.addChild(chOpts)
-        
-        
-    def insertChild(self, pos, child, autoIncrementName=None):
+
+    def insertChild(self, pos, child, autoIncrementName=None, existOk=False):
         """
         Insert a new child at pos.
         If pos is a Parameter, then insert at the position of that Parameter.
@@ -609,6 +607,9 @@ class Parameter(QtCore.QObject):
         the name will be adjusted to avoid prior name collisions. This 
         behavior may be overridden by specifying the *autoIncrementName* 
         argument. This argument was added in version 0.9.9.
+
+        If 'autoIncrementName' is *False*, an error is raised when the inserted child already exists. However, if
+        'existOk' is *True*, the existing child will be returned instead, and this child will *not* be inserted.
         """
         if isinstance(child, dict):
             child = Parameter.create(**child)
@@ -618,8 +619,10 @@ class Parameter(QtCore.QObject):
             if autoIncrementName is True or (autoIncrementName is None and child.opts.get('autoIncrementName', False)):
                 name = self.incrementName(name)
                 child.setName(name)
+            elif existOk:
+                return self.names[name]
             else:
-                raise Exception("Already have child named %s" % str(name))
+                raise ValueError("Already have child named %s" % str(name))
         if isinstance(pos, Parameter):
             pos = self.childs.index(pos)
             
@@ -684,7 +687,7 @@ class Parameter(QtCore.QObject):
 
     def incrementName(self, name):
         ## return an unused name by adding a number to the name given
-        base, num = re.match(r'(.*)(\d*)', name).groups()
+        base, num = re.match(r'([^\d]*)(\d*)', name).groups()
         numLen = len(num)
         if numLen == 0:
             num = 2
@@ -747,24 +750,6 @@ class Parameter(QtCore.QObject):
 
     def __repr__(self):
         return "<%s '%s' at 0x%x>" % (self.__class__.__name__, self.name(), id(self))
-       
-    def __getattr__(self, attr):
-        ## Leaving this undocumented because I might like to remove it in the future..
-        #print type(self), attr
-        warnings.warn(
-            'Use of Parameter.subParam is deprecated and will be removed in 0.13 '
-            'Use Parameter.param(name) instead.',
-            DeprecationWarning, stacklevel=2
-        )          
-        if 'names' not in self.__dict__:
-            raise AttributeError(attr)
-        if attr in self.names:
-            import traceback
-            traceback.print_stack()
-            print("Warning: Use of Parameter.subParam is deprecated. Use Parameter.param(name) instead.")
-            return self.param(attr)
-        else:
-            raise AttributeError(attr)
        
     def _renameChild(self, child, name):
         ## Only to be called from Parameter.rename
@@ -841,7 +826,6 @@ class Parameter(QtCore.QObject):
             if len(changes) > 0:
                 self.sigTreeStateChanged.emit(self, changes)
 
-
 class SignalBlocker(object):
     def __init__(self, enterFn, exitFn):
         self.enterFn = enterFn
@@ -852,6 +836,4 @@ class SignalBlocker(object):
         
     def __exit__(self, exc_type, exc_value, tb):
         self.exitFn()
-    
-    
     
