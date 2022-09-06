@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 MetaArray.py -  Class encapsulating ndarray with meta data
 Copyright 2010  Luke Campagnola
@@ -10,12 +9,12 @@ new methods for slicing and indexing the array based on this meta data.
 More info at http://www.scipy.org/Cookbook/MetaArray
 """
 
-import types, copy, threading, os, re
+import copy
+import os
 import pickle
-import numpy as np
-from ..python2_3 import basestring
 import warnings
 
+import numpy as np
 
 ## By default, the library will use HDF5 when writing files.
 ## This can be overridden by setting USE_HDF5 = False
@@ -121,7 +120,7 @@ class MetaArray(object):
     defaultCompression = None
     
     ## Types allowed as axis or column names
-    nameTypes = [basestring, tuple]
+    nameTypes = [str, tuple]
     @staticmethod
     def isNameType(var):
         return any(isinstance(var, t) for t in MetaArray.nameTypes)
@@ -132,6 +131,11 @@ class MetaArray(object):
   
     def __init__(self, data=None, info=None, dtype=None, file=None, copy=False, **kwargs):
         object.__init__(self)
+        warnings.warn(
+            'MetaArray is deprecated and will be removed in 0.14. '
+            'Available though https://pypi.org/project/MetaArray/ as its own package.',
+            DeprecationWarning, stacklevel=2
+        )    
         self._isHDF = False
         
         if file is not None:
@@ -319,17 +323,6 @@ class MetaArray(object):
             return self.asarray()
         else:
             return self.asarray().astype(dtype)
-            
-    def view(self, typ):
-        warnings.warn(
-            'MetaArray.view is deprecated and will be removed in 0.13. '
-            'Use MetaArray.asarray() instead.',
-            DeprecationWarning, stacklevel=2
-        )    
-        if typ is np.ndarray:
-            return self.asarray()
-        else:
-            raise Exception('invalid view type: %s' % str(typ))
   
     def axisValues(self, axis):
         """Return the list of values for an axis"""
@@ -407,8 +400,10 @@ class MetaArray(object):
         if type(axis) == int:
             ind = [slice(None)]*axis
             ind.append(order)
-        elif isinstance(axis, basestring):
+        elif isinstance(axis, str):
             ind = (slice(axis, order),)
+        else:
+            raise TypeError("axis must be type (int, str)")
         return self[tuple(ind)]
   
     def append(self, val, axis):
@@ -464,7 +459,7 @@ class MetaArray(object):
         return tuple(nInd)
       
     def _interpretAxis(self, axis):
-        if isinstance(axis, basestring) or isinstance(axis, tuple):
+        if isinstance(axis, (str, tuple)):
             return self._getAxis(axis)
         else:
             return axis
@@ -736,7 +731,7 @@ class MetaArray(object):
         frameSize = 1
         for ax in meta['info']:
             if 'values_len' in ax:
-                ax['values'] = np.fromstring(fd.read(ax['values_len']), dtype=ax['values_type'])
+                ax['values'] = np.frombuffer(fd.read(ax['values_len']), dtype=ax['values_type'])
                 frameSize *= ax['values_len']
                 del ax['values_len']
                 del ax['values_type']
@@ -747,7 +742,7 @@ class MetaArray(object):
         if mmap:
             subarr = np.memmap(fd, dtype=meta['type'], mode='r', shape=meta['shape'])
         else:
-            subarr = np.fromstring(fd.read(), dtype=meta['type'])
+            subarr = np.frombuffer(fd.read(), dtype=meta['type'])
             subarr.shape = meta['shape']
         self._data = subarr
             
@@ -764,7 +759,7 @@ class MetaArray(object):
                         raise Exception("MetaArray has more than one dynamic axis! (this is not allowed)")
                     dynAxis = i
                 else:
-                    ax['values'] = np.fromstring(fd.read(ax['values_len']), dtype=ax['values_type'])
+                    ax['values'] = np.frombuffer(fd.read(ax['values_len']), dtype=ax['values_type'])
                     frameSize *= ax['values_len']
                     del ax['values_len']
                     del ax['values_type']
@@ -782,7 +777,7 @@ class MetaArray(object):
                 if mmap:
                     subarr = np.memmap(fd, dtype=meta['type'], mode='r', shape=meta['shape'])
                 else:
-                    subarr = np.fromstring(fd.read(), dtype=meta['type'])
+                    subarr = np.frombuffer(fd.read(), dtype=meta['type'])
             subarr.shape = meta['shape']
         ## One axis is dynamic, read in a frame at a time
         else:
@@ -812,7 +807,7 @@ class MetaArray(object):
                 if meta['type'] == 'object':
                     data = pickle.loads(fd.read(inf['len']))
                 else:
-                    data = np.fromstring(fd.read(inf['len']), dtype=meta['type'])
+                    data = np.frombuffer(fd.read(inf['len']), dtype=meta['type'])
                 
                 if data.size != frameSize * inf['numFrames']:
                     #print data.size, frameSize, inf['numFrames']
@@ -901,8 +896,9 @@ class MetaArray(object):
         
         if proc == False:
             raise Exception('remote read failed')
-        if proc == None:
+        if proc is None:
             from .. import multiprocess as mp
+
             #print "new process"
             proc = mp.Process(executable='/usr/bin/python')
             proc.setProxyOptions(deferGetattr=True)
@@ -932,7 +928,7 @@ class MetaArray(object):
             val = root.attrs[k]
             if isinstance(val, bytes):
                 val = val.decode()
-            if isinstance(val, basestring):  ## strings need to be re-evaluated to their original types
+            if isinstance(val, str):  ## strings need to be re-evaluated to their original types
                 try:
                     val = eval(val)
                 except:

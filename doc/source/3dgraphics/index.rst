@@ -19,6 +19,7 @@ Contents:
     glviewwidget
 
     glgriditem
+    glgraphitem
     glsurfaceplotitem
     glvolumeitem
     glimageitem
@@ -28,4 +29,3 @@ Contents:
     glgraphicsitem
     glscatterplotitem
     meshdata
-

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 import pytest
 
@@ -52,6 +51,18 @@ def test_PlotItem_maxTraces():
     item.ctrl.forgetTracesCheck.setChecked(True)
     assert curve2 in item.curves, "curve2 should be in the item's curves"
     assert curve1 not in item.curves, "curve1 should not be in the item's curves"
+
+
+def test_PlotItem_preserve_external_visibility_control():
+    item = pg.PlotItem()
+    curve1 = pg.PlotDataItem(np.random.normal(size=10))
+    curve2 = pg.PlotDataItem(np.random.normal(size=10))
+    item.addItem(curve1)
+    curve1.hide()
+    item.addItem(curve2)
+    assert not curve1.isVisible()
+    item.removeItem(curve2)
+    assert not curve1.isVisible()
 
 
 def test_plotitem_menu_initialize():

@@ -1,8 +1,10 @@
-from ..widgets.FileDialog import FileDialog
-from ..Qt import QtGui, QtCore, QtSvg
-from ..python2_3 import asUnicode, basestring
+import os
+import re
+
 from ..GraphicsScene import GraphicsScene
-import os, re
+from ..Qt import QtCore, QtWidgets
+from ..widgets.FileDialog import FileDialog
+
 LastExportDirectory = None
 
 
@@ -45,10 +47,10 @@ class Exporter(object):
         if opts is None:
             opts = {}
         self.fileDialog = FileDialog()
-        self.fileDialog.setFileMode(QtGui.QFileDialog.FileMode.AnyFile)
-        self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptMode.AcceptSave)
+        self.fileDialog.setFileMode(QtWidgets.QFileDialog.FileMode.AnyFile)
+        self.fileDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         if filter is not None:
-            if isinstance(filter, basestring):
+            if isinstance(filter, str):
                 self.fileDialog.setNameFilter(filter)
             elif isinstance(filter, list):
                 self.fileDialog.setNameFilters(filter)
@@ -62,13 +64,12 @@ class Exporter(object):
         return
         
     def fileSaveFinished(self, fileName):
-        fileName = asUnicode(fileName)
         global LastExportDirectory
         LastExportDirectory = os.path.split(fileName)[0]
         
         ## If file name does not match selected extension, append it now
         ext = os.path.splitext(fileName)[1].lower().lstrip('.')
-        selectedExt = re.search(r'\*\.(\w+)\b', asUnicode(self.fileDialog.selectedNameFilter()))
+        selectedExt = re.search(r'\*\.(\w+)\b', self.fileDialog.selectedNameFilter())
         if selectedExt is not None:
             selectedExt = selectedExt.groups()[0].lower()
             if ext != selectedExt:
@@ -118,7 +119,7 @@ class Exporter(object):
             root = self.item
         preItems = []
         postItems = []
-        if isinstance(root, QtGui.QGraphicsScene):
+        if isinstance(root, QtWidgets.QGraphicsScene):
             childs = [i for i in root.items() if i.parentItem() is None]
             rootItem = []
         else:

@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 from math import atan2, degrees
-from ..Qt import QtGui, QtCore
+
+import numpy as np
+
+from .. import functions as fn
 from ..Point import Point
-from .GraphicsObject import GraphicsObject
+from ..Qt import QtCore, QtGui
 from .GraphicsItem import GraphicsItem
+from .GraphicsObject import GraphicsObject
 from .TextItem import TextItem
 from .ViewBox import ViewBox
-from .. import functions as fn
-import numpy as np
-import weakref
-
 
 __all__ = ['InfiniteLine', 'InfLineLabel']
 
@@ -302,14 +301,11 @@ class InfiniteLine(GraphicsObject):
         if vr is None:
             return QtCore.QRectF()
         
-        ## add a 4-pixel radius around the line for mouse interaction.
-        
         px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
         if px is None:
             px = 0
         pw = max(self.pen.width() / 2, self.hoverPen.width() / 2)
-        w = max(4, self._maxMarkerSize + pw) + 1
-        w = w * px
+        w = (self._maxMarkerSize + pw + 1) * px
         br = QtCore.QRectF(vr)
         br.setBottom(-w)
         br.setTop(w)
@@ -449,11 +445,11 @@ class InfLineLabel(TextItem):
     
     This class extends TextItem with the following features:
     
-    * Automatically positions adjacent to the line at a fixed position along
-      the line and within the view box.
-    * Automatically reformats text when the line value has changed.
-    * Can optionally be dragged to change its location along the line.
-    * Optionally aligns to its parent line.
+      * Automatically positions adjacent to the line at a fixed position along
+        the line and within the view box.
+      * Automatically reformats text when the line value has changed.
+      * Can optionally be dragged to change its location along the line.
+      * Optionally aligns to its parent line.
 
     =============== ==================================================================
     **Arguments:**
@@ -618,6 +614,5 @@ class InfLineLabel(TextItem):
         pt1, pt2 = self.getEndpoints()
         if pt1 is None:
             return 0
-        view = self.getViewBox()
         pos = self.mapToParent(pos)
         return (pos.x() - pt1.x()) / (pt2.x()-pt1.x())

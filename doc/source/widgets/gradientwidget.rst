@@ -5,4 +5,3 @@ GradientWidget
     :members:
 
     .. automethod:: pyqtgraph.GradientWidget.__init__
-

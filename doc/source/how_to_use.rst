@@ -24,7 +24,7 @@ Further examples::
     pw = pg.plot(xVals, yVals, pen='r')  # plot x vs y in red
     pw.plot(xVals, yVals2, pen='b')
     
-    win = pg.GraphicsWindow()  # Automatically generates grids with multiple items
+    win = pg.GraphicsLayoutWidget()  # Automatically generates grids with multiple items
     win.addPlot(data1, row=0, col=0)
     win.addPlot(data2, row=0, col=1)
     win.addPlot(data3, row=1, col=0, colspan=2)
@@ -101,7 +101,7 @@ Embedding PyQtGraph as a sub-package of a larger project
 
 When writing applications or python packages that make use of pyqtgraph, it is most common to install pyqtgraph system-wide (or within a virtualenv) and simply call `import pyqtgraph` from within your application. The main benefit to this is that pyqtgraph is configured independently of your application and thus you (or your users) are free to install newer versions of pyqtgraph without changing anything in your application. This is standard practice when developing with python.
 
-Occasionally, a specific program needs to be kept in working order for an extended amount of time after development has been completed. This is often the case for single-purpose scientific applications. If we want to ensure that the software will still work ten years later, then it is preferrable to tie it to a very specific version of pyqtgraph and *avoid* importing the system-installed version, which may be much newer and potentially incompatible. This is especially true when the application requires site-specific modifications to the pyqtgraph package. 
+Occasionally, a specific program needs to be kept in working order for an extended amount of time after development has been completed. This is often the case for single-purpose scientific applications. If we want to ensure that the software will still work ten years later, then it is preferable to tie it to a very specific version of pyqtgraph and *avoid* importing the system-installed version, which may be much newer and potentially incompatible. This is especially true when the application requires site-specific modifications to the pyqtgraph package. 
 
 To support such a separate local installation, all internal import statements in pyqtgraph are relative. That means that pyqtgraph never refers to itself internally as 'pyqtgraph'. This allows the package to be renamed or used as a sub-package without any naming conflicts with other versions of pyqtgraph on the system.
 

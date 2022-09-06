@@ -1,14 +1,14 @@
 from math import hypot
-from ..Qt import QtGui, QtCore, mkQApp
 
+from ..Qt import QtCore, QtGui, QtWidgets, mkQApp
 
 __all__ = ['JoystickButton']
 
-class JoystickButton(QtGui.QPushButton):
+class JoystickButton(QtWidgets.QPushButton):
     sigStateChanged = QtCore.Signal(object, object)  ## self, state
     
     def __init__(self, parent=None):
-        QtGui.QPushButton.__init__(self, parent)
+        QtWidgets.QPushButton.__init__(self, parent)
         self.radius = 200
         self.setCheckable(True)
         self.state = None
@@ -79,6 +79,7 @@ class JoystickButton(QtGui.QPushButton):
             6,
             6
         )
+        p.end()
         
     def resizeEvent(self, ev):
         self.setState(*self.state)
@@ -88,7 +89,7 @@ class JoystickButton(QtGui.QPushButton):
         
 if __name__ == '__main__':
     app = mkQApp()
-    w = QtGui.QMainWindow()
+    w = QtWidgets.QMainWindow()
     b = JoystickButton()
     w.setCentralWidget(b)
     w.show()

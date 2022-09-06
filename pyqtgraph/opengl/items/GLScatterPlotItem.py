@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
-from OpenGL.GL import *
-from OpenGL.arrays import vbo
-from .. GLGraphicsItem import GLGraphicsItem
-from .. import shaders
+from OpenGL.GL import *  # noqa
+import numpy as np
+
 from ... import functions as fn
 from ...Qt import QtGui
-import numpy as np
+from .. import shaders
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLScatterPlotItem']
 
@@ -13,14 +12,13 @@ class GLScatterPlotItem(GLGraphicsItem):
     """Draws points at a list of 3D positions."""
     
     def __init__(self, **kwds):
-        GLGraphicsItem.__init__(self)
+        super().__init__()
         glopts = kwds.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
         self.pos = None
         self.size = 10
         self.color = [1.0,1.0,1.0,0.5]
         self.pxMode = True
-        #self.vbo = {}      ## VBO does not appear to improve performance very much.
         self.setData(**kwds)
         self.shader = None
     
@@ -47,11 +45,19 @@ class GLScatterPlotItem(GLGraphicsItem):
             if k not in args:
                 raise Exception('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
             
-        args.remove('pxMode')
-        for arg in args:
-            if arg in kwds:
-                setattr(self, arg, kwds[arg])
-                #self.vbo.pop(arg, None)
+        if 'pos' in kwds:
+            pos = kwds.pop('pos')
+            self.pos = np.ascontiguousarray(pos, dtype=np.float32)
+        if 'color' in kwds:
+            color = kwds.pop('color')
+            if isinstance(color, np.ndarray):
+                color = np.ascontiguousarray(color, dtype=np.float32)
+            self.color = color
+        if 'size' in kwds:
+            size = kwds.pop('size')
+            if isinstance(size, np.ndarray):
+                size = np.ascontiguousarray(size, dtype=np.float32)
+            self.size = size
                 
         self.pxMode = kwds.get('pxMode', self.pxMode)
         self.update()
@@ -78,11 +84,6 @@ class GLScatterPlotItem(GLGraphicsItem):
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pData.shape[0], pData.shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, pData)
         
         self.shader = shaders.getShaderProgram('pointSprite')
-        
-    #def getVBO(self, name):
-        #if name not in self.vbo:
-            #self.vbo[name] = vbo.VBO(getattr(self, name).astype('f'))
-        #return self.vbo[name]
         
     #def setupGLState(self):
         #"""Prepare OpenGL state for drawing. This function is called immediately before painting."""
@@ -134,26 +135,29 @@ class GLScatterPlotItem(GLGraphicsItem):
                     glEnableClientState(GL_COLOR_ARRAY)
                     glColorPointerf(self.color)
                 else:
-                    if isinstance(self.color, QtGui.QColor):
-                        glColor4f(*fn.glColor(self.color))
-                    else:
-                        glColor4f(*self.color)
+                    color = self.color
+                    if isinstance(color, QtGui.QColor):
+                        color = color.getRgbF()
+                    glColor4f(*color)
                 
                 if not self.pxMode or isinstance(self.size, np.ndarray):
                     glEnableClientState(GL_NORMAL_ARRAY)
-                    norm = np.empty(pos.shape)
+                    norm = np.zeros(pos.shape, dtype=np.float32)
                     if self.pxMode:
                         norm[...,0] = self.size
                     else:
                         gpos = self.mapToView(pos.transpose()).transpose()
-                        pxSize = self.view().pixelSize(gpos)
+                        if self.view():
+                            pxSize = self.view().pixelSize(gpos)
+                        else:
+                            pxSize = self.parentItem().view().pixelSize(gpos)
                         norm[...,0] = self.size / pxSize
-                    
+        
                     glNormalPointerf(norm)
                 else:
                     glNormal3f(self.size, 0, 0)  ## vertex shader uses norm.x to determine point size
                     #glPointSize(self.size)
-                glDrawArrays(GL_POINTS, 0, int(pos.size / pos.shape[-1]))
+                glDrawArrays(GL_POINTS, 0, pos.shape[0])
             finally:
                 glDisableClientState(GL_NORMAL_ARRAY)
                 glDisableClientState(GL_VERTEX_ARRAY)

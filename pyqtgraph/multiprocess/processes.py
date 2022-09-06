@@ -1,14 +1,22 @@
-import subprocess, atexit, os, sys, time, random, socket, signal, inspect
+import atexit
+import inspect
 import multiprocessing.connection
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
+import os
+import signal
+import subprocess
+import sys
+import time
+import pickle
 
-from .remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
 from ..Qt import QT_LIB, mkQApp
 from ..util import cprint  # color printing for debugging
-
+from .remoteproxy import (
+    ClosedError,
+    LocalObjectProxy,
+    NoResultError,
+    ObjectProxy,
+    RemoteEventHandler,
+)
 
 __all__ = ['Process', 'QtProcess', 'ForkedProcess', 'ClosedError', 'NoResultError']
 
@@ -61,8 +69,9 @@ class Process(RemoteEventHandler):
                         for a python bug: http://bugs.python.org/issue3905
                         but has the side effect that child output is significantly
                         delayed relative to the parent output.
-        pyqtapis        Optional dictionary of PyQt API version numbers to set before
-                        importing pyqtgraph in the remote process.
+        pyqtapis        Formerly optional dictionary of PyQt API version numbers to set
+                        before importing pyqtgraph in the remote process.
+                        No longer has any effect.
         ==============  =============================================================
         """
         if target is None:
@@ -122,18 +131,28 @@ class Process(RemoteEventHandler):
         targetStr = pickle.dumps(target)  ## double-pickle target so that child has a chance to 
                                           ## set its sys.path properly before unpickling the target
         pid = os.getpid() # we must send pid to child because windows does not have getppid
-        
+
+        # When running in a venv on Windows platform, since Python >= 3.7.3, the launched
+        # subprocess is a grandchild instead of a child, leading to self.proc.pid not being
+        # the pid of the launched subprocess.
+        # https://bugs.python.org/issue38905
+        #
+        # As a workaround, when we detect such a situation, we perform exchange of pids via
+        # the multiprocessing connection. Technically, only the launched subprocess needs to
+        # send its pid back. Practically, we hijack the ppid parameter to indicate to the
+        # subprocess that pid exchange is needed.
+        xchg_pids = sys.platform == 'win32' and os.getenv('VIRTUAL_ENV') is not None
+
         ## Send everything the remote process needs to start correctly
         data = dict(
             name=name+'_child', 
             port=port, 
             authkey=authkey, 
-            ppid=pid, 
+            ppid=pid if not xchg_pids else None,
             targetStr=targetStr, 
             path=sysPath, 
             qt_lib=QT_LIB,
             debug=procDebug,
-            pyqtapis=pyqtapis,
             )
         pickle.dump(data, self.proc.stdin)
         self.proc.stdin.close()
@@ -150,7 +169,14 @@ class Process(RemoteEventHandler):
                 else:
                     raise
 
-        RemoteEventHandler.__init__(self, conn, name+'_parent', pid=self.proc.pid, debug=self.debug)
+        child_pid = self.proc.pid
+        if xchg_pids:
+            # corresponding code is in:
+            #   remoteproxy.py::RemoteEventHandler.__init__()
+            conn.send(pid)
+            child_pid = conn.recv()
+
+        RemoteEventHandler.__init__(self, conn, name+'_parent', pid=child_pid, debug=self.debug)
         self.debugMsg('Connected to child process.')
         
         atexit.register(self.join)
@@ -216,21 +242,21 @@ class ForkedProcess(RemoteEventHandler):
     
     However, fork() comes with some caveats and limitations:
 
-    - fork() is not available on Windows.
-    - It is not possible to have a QApplication in both parent and child process
-      (unless both QApplications are created _after_ the call to fork())
-      Attempts by the forked process to access Qt GUI elements created by the parent
-      will most likely cause the child to crash.
-    - Likewise, database connections are unlikely to function correctly in a forked child.
-    - Threads are not copied by fork(); the new process 
-      will have only one thread that starts wherever fork() was called in the parent process.
-    - Forked processes are unceremoniously terminated when join() is called; they are not 
-      given any opportunity to clean up. (This prevents them calling any cleanup code that
-      was only intended to be used by the parent process)
-    - Normally when fork()ing, open file handles are shared with the parent process, 
-      which is potentially dangerous. ForkedProcess is careful to close all file handles 
-      that are not explicitly needed--stdout, stderr, and a single pipe to the parent 
-      process.
+      - fork() is not available on Windows.
+      - It is not possible to have a QApplication in both parent and child process
+        (unless both QApplications are created _after_ the call to fork())
+        Attempts by the forked process to access Qt GUI elements created by the parent
+        will most likely cause the child to crash.
+      - Likewise, database connections are unlikely to function correctly in a forked child.
+      - Threads are not copied by fork(); the new process
+        will have only one thread that starts wherever fork() was called in the parent process.
+      - Forked processes are unceremoniously terminated when join() is called; they are not
+        given any opportunity to clean up. (This prevents them calling any cleanup code that
+        was only intended to be used by the parent process)
+      - Normally when fork()ing, open file handles are shared with the parent process,
+        which is potentially dangerous. ForkedProcess is careful to close all file handles
+        that are not explicitly needed--stdout, stderr, and a single pipe to the parent
+        process.
       
     """
     
@@ -369,7 +395,7 @@ class RemoteQtEventHandler(RemoteEventHandler):
         RemoteEventHandler.__init__(self, *args, **kwds)
         
     def startEventTimer(self):
-        from ..Qt import QtGui, QtCore
+        from ..Qt import QtCore
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.processRequests)
         self.timer.start(10)
@@ -378,8 +404,8 @@ class RemoteQtEventHandler(RemoteEventHandler):
         try:
             RemoteEventHandler.processRequests(self)
         except ClosedError:
-            from ..Qt import QtGui, QtCore
-            QtGui.QApplication.instance().quit()
+            from ..Qt import QtWidgets
+            QtWidgets.QApplication.instance().quit()
             self.timer.stop()
             #raise SystemExit
 
@@ -387,20 +413,20 @@ class QtProcess(Process):
     """
     QtProcess is essentially the same as Process, with two major differences:
     
-    - The remote process starts by running startQtEventLoop() which creates a 
-      QApplication in the remote process and uses a QTimer to trigger
-      remote event processing. This allows the remote process to have its own 
-      GUI.
-    - A QTimer is also started on the parent process which polls for requests
-      from the child process. This allows Qt signals emitted within the child 
-      process to invoke slots on the parent process and vice-versa. This can 
-      be disabled using processRequests=False in the constructor.
+      - The remote process starts by running startQtEventLoop() which creates a
+        QApplication in the remote process and uses a QTimer to trigger
+        remote event processing. This allows the remote process to have its own
+        GUI.
+      - A QTimer is also started on the parent process which polls for requests
+        from the child process. This allows Qt signals emitted within the child
+        process to invoke slots on the parent process and vice-versa. This can
+        be disabled using processRequests=False in the constructor.
       
     Example::
     
         proc = QtProcess()            
         rQtGui = proc._import('PyQt4.QtGui')
-        btn = rQtGui.QPushButton('button on child process')
+        btn = rQtWidgets.QPushButton('button on child process')
         btn.show()
         
         def slot():
@@ -411,15 +437,17 @@ class QtProcess(Process):
     def __init__(self, **kwds):
         if 'target' not in kwds:
             kwds['target'] = startQtEventLoop
-        from ..Qt import QtGui  ## avoid module-level import to keep bootstrap snappy.
+        from ..Qt import (  # # avoid module-level import to keep bootstrap snappy.
+            QtWidgets,
+        )
         self._processRequests = kwds.pop('processRequests', True)
-        if self._processRequests and QtGui.QApplication.instance() is None:
+        if self._processRequests and QtWidgets.QApplication.instance() is None:
             raise Exception("Must create QApplication before starting QtProcess, or use QtProcess(processRequests=False)")
         Process.__init__(self, **kwds)
         self.startEventTimer()
         
     def startEventTimer(self):
-        from ..Qt import QtCore  ## avoid module-level import to keep bootstrap snappy.
+        from ..Qt import QtCore  # # avoid module-level import to keep bootstrap snappy.
         self.timer = QtCore.QTimer()
         if self._processRequests:
             self.startRequestProcessing()
@@ -447,8 +475,8 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
     conn = multiprocessing.connection.Client(('localhost', int(port)), authkey=authkey)
     if debug:
         cprint.cout(debug, '[%d] connected; starting remote proxy.\n' % os.getpid(), -1)
-    from ..Qt import QtGui, QtCore
-    app = QtGui.QApplication.instance()
+    from ..Qt import QtWidgets
+    app = QtWidgets.QApplication.instance()
     #print app
     if app is None:
         app = mkQApp()
@@ -461,6 +489,8 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
     app.exec() if hasattr(app, 'exec') else app.exec_()
 
 import threading
+
+
 class FileForwarder(threading.Thread):
     """
     Background thread that forwards data from one pipe to another. 

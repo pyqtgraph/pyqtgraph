@@ -5,4 +5,3 @@ GLViewWidget
     :members:
 
     .. automethod:: pyqtgraph.opengl.GLViewWidget.__init__
-

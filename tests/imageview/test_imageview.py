@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
-import pyqtgraph as pg
 import numpy as np
+
+import pyqtgraph as pg
 
 app = pg.mkQApp()
 
@@ -28,3 +28,10 @@ def test_timeslide_snap():
     # :TODO: this val isn't what I expect, nor did I expect the `- 1` in the next statement.
     assert ind == (count / 2) - 1
     # assert val == 0.5
+
+
+def test_init_with_mode_and_imageitem():
+    data = np.random.randint(256, size=(256, 256, 3))
+    imgitem = pg.ImageItem(data)
+    pg.ImageView(imageItem=imgitem, levelMode="rgba")
+    assert(pg.image is not None)

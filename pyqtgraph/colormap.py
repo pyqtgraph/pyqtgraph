@@ -1,9 +1,12 @@
-import numpy as np
-from .Qt import QtGui, QtCore
-from .functions import mkColor, eq, colorDistance
-from os import path, listdir
 from collections.abc import Callable, Sequence
-import warnings
+from os import listdir, path
+
+import numpy as np
+
+from .functions import clip_array, clip_scalar, colorDistance, eq, mkColor
+from .Qt import QtCore, QtGui
+
+__all__ = ['ColorMap']
 
 _mapCache = {}
 
@@ -16,10 +19,10 @@ def listMaps(source=None):
     Parameters
     ----------
     source: str, optional
-        Color map source. If omitted, locally stored maps are listed. Otherwise
+        Color map source. If omitted, locally stored maps are listed. Otherwise:
 
-        - 'matplotlib' lists maps that can be imported from Matplotlib
-        - 'colorcet' lists maps that can be imported from ColorCET
+          - 'matplotlib' lists maps that can be imported from Matplotlib
+          - 'colorcet' lists maps that can be imported from ColorCET
 
     Returns
     -------
@@ -31,7 +34,7 @@ def listMaps(source=None):
         files = listdir( pathname )
         list_of_maps = []
         for filename in files:
-            if filename[-4:] == '.csv':
+            if filename[-4:] == '.csv' or filename[-4:] == '.hex':
                 list_of_maps.append(filename[:-4])
         return list_of_maps
     elif source.lower() == 'matplotlib':
@@ -66,10 +69,10 @@ def get(name, source=None, skipCache=False):
         be a path to a file in the local folder. See the files in the
         ``pyqtgraph/colors/maps/`` folder for examples of the format.
     source: str, optional
-        If omitted, a locally stored map is returned. Otherwise
+        If omitted, a locally stored map is returned. Otherwise:
 
-        - 'matplotlib' imports a map defined by Matplotlib.
-        - 'colorcet' imports a map defined by ColorCET.
+          - 'matplotlib' imports a map defined by Matplotlib.
+          - 'colorcet' imports a map defined by ColorCET.
 
     skipCache: bool, optional
         If `skipCache=True`, the internal cache is skipped and a new
@@ -93,16 +96,15 @@ def _getFromFile(name):
         filename = path.join(dirname, 'colors/maps/'+filename)
     if not path.isfile( filename ): # try suffixes if file is not found:
         if   path.isfile( filename+'.csv' ): filename += '.csv'
-        elif path.isfile( filename+'.txt' ): filename += '.txt'
+        elif path.isfile( filename+'.hex' ): filename += '.hex'
     with open(filename,'r') as fh:
         idx = 0
         color_list = []
-        if filename[-4:].lower() != '.txt':
+        if filename[-4:].lower() != '.hex':
             csv_mode = True
         else:
             csv_mode = False
         for line in fh:
-            name = None
             line = line.strip()
             if len(line) == 0: continue # empty line
             if line[0] == ';': continue # comment
@@ -121,18 +123,21 @@ def _getFromFile(name):
                 elif len(hex_str) == 4: # parse as abbreviated RGBA
                     hex_str = 2*hex_str[0] + 2*hex_str[1] + 2*hex_str[2] + 2*hex_str[3]
                 if len(hex_str) < 6: continue # not enough information
-                color_tuple = tuple( bytes.fromhex( hex_str ) )
+                try:
+                    color_tuple = tuple( bytes.fromhex( hex_str ) )
+                except ValueError as e:
+                    raise ValueError(f"failed to convert hexadecimal value '{hex_str}'.") from e
             color_list.append( color_tuple )
             idx += 1
         # end of line reading loop
     # end of open
-    cm = ColorMap(
+    cmap = ColorMap( name=name,
         pos=np.linspace(0.0, 1.0, len(color_list)),
         color=color_list) #, names=color_names)
-    if cm is not None:
-        cm.name = name
-        _mapCache[name] = cm
-    return cm
+    if cmap is not None:
+        cmap.name = name
+        _mapCache[name] = cmap
+    return cmap
 
 def getFromMatplotlib(name):
     """ 
@@ -145,11 +150,11 @@ def getFromMatplotlib(name):
         import matplotlib.pyplot as mpl_plt
     except ModuleNotFoundError:
         return None
-    cm = None
+    cmap = None
     col_map = mpl_plt.get_cmap(name)
     if hasattr(col_map, '_segmentdata'): # handle LinearSegmentedColormap
         data = col_map._segmentdata
-        if ('red' in data) and isinstance(data['red'], Sequence):
+        if ('red' in data) and isinstance(data['red'], (Sequence, np.ndarray)):
             positions = set() # super-set of handle positions in individual channels
             for key in ['red','green','blue']:
                 for tup in data[key]:
@@ -163,21 +168,22 @@ def getFromMatplotlib(name):
                     positions[idx2] = tup[0]
                     comp_vals[idx2] = tup[1] # these are sorted in the raw data
                 col_data[:,idx] = np.interp(col_data[:,3], positions, comp_vals)
-            cm = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
+            cmap = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
         # some color maps (gnuplot in particular) are defined by RGB component functions:
         elif ('red' in data) and isinstance(data['red'], Callable):
             col_data = np.zeros((64, 4))
             col_data[:,-1] = np.linspace(0., 1., 64)
             for idx, key in enumerate(['red','green','blue']):
                 col_data[:,idx] = np.clip( data[key](col_data[:,-1]), 0, 1)
-            cm = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
+            cmap = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
     elif hasattr(col_map, 'colors'): # handle ListedColormap
         col_data = np.array(col_map.colors)
-        cm = ColorMap(pos=np.linspace(0.0, 1.0, col_data.shape[0]), color=255*col_data[:,:3]+0.5 )
-    if cm is not None:
-        cm.name = name
-        _mapCache[name] = cm
-    return cm
+        cmap = ColorMap( name=name,
+            pos = np.linspace(0.0, 1.0, col_data.shape[0]), color=255*col_data[:,:3]+0.5 )
+    if cmap is not None:
+        cmap.name = name
+        _mapCache[name] = cmap
+    return cmap
 
 def getFromColorcet(name):
     """ Generates a ColorMap object from a colorcet definition. Same as ``colormap.get(name, source='colorcet')``. """
@@ -190,20 +196,65 @@ def getFromColorcet(name):
     for hex_str in color_strings:
         if hex_str[0] != '#': continue
         if len(hex_str) != 7:
-            raise ValueError('Invalid color string '+str(hex_str)+' in colorcet import.')
+            raise ValueError(f"Invalid color string '{hex_str}' in colorcet import.")
         color_tuple = tuple( bytes.fromhex( hex_str[1:] ) )
         color_list.append( color_tuple )
     if len(color_list) == 0:
         return None
-    cm = ColorMap(
-        pos=np.linspace(0.0, 1.0, len(color_list)),
+    cmap = ColorMap( name=name,
+        pos=np.linspace(0.0, 1.0, len(color_list)), 
         color=color_list) #, names=color_names)
-    if cm is not None:
-        cm.name = name
-        _mapCache[name] = cm
-    return cm
+    if cmap is not None:
+        cmap.name = name
+        _mapCache[name] = cmap
+    return cmap
     
-def makeMonochrome(color='green'):
+def makeHslCycle( hue=0.0, saturation=1.0, lightness=0.5, steps=36 ):
+    """
+    Returns a ColorMap object that traces a circular or spiraling path around the HSL color space.
+
+    Parameters
+    ----------
+    hue : float or tuple of floats
+        Starting point or (start, end) for hue. Values can lie outside the [0 to 1] range 
+        to realize multiple cycles. For a single value, one full hue cycle is generated.
+        The default starting hue is 0.0 (red). 
+    saturation : float or tuple of floats, optional
+        Saturation value for the colors in the cycle, in the range of [0 to 1]. 
+        If a (start, end) tuple is given, saturation gradually changes between these values.
+        The default saturation is 1.0.
+    lightness : float or tuple of floats, optional
+        Lightness value for the colors in the cycle, in the range of [0 to 1]. 
+        If a (start, end) tuple is given, lightness gradually changes between these values.
+        The default lightness is 1.0.
+    steps: int, optional
+        Number of steps in the cycle. Between these steps, the color map will interpolate in RGB space.
+        The default number of steps is 36, generating a color map with 37 stops.
+    """
+    if isinstance( hue, (tuple, list) ):
+        hueA, hueB = hue
+    else:
+        hueA = hue
+        hueB = hueA + 1.0
+    if isinstance( saturation, (tuple, list) ):
+        satA, satB = saturation
+    else:
+        satA = satB = saturation
+    if isinstance( lightness, (tuple, list) ):
+        lgtA, lgtB = lightness
+    else:
+        lgtA = lgtB = lightness
+    hue_vals = np.linspace(hueA, hueB, num=steps+1)
+    sat_vals = np.linspace(satA, satB, num=steps+1)
+    lgt_vals = np.linspace(lgtA, lgtB, num=steps+1)
+    color_list = []
+    for hue, sat, lgt in zip( hue_vals, sat_vals, lgt_vals):
+        qcol = QtGui.QColor.fromHslF( hue%1.0, sat, lgt )
+        color_list.append( qcol )
+    name = f'Hue {hueA:0.2f}-{hueB:0.2f}'
+    return ColorMap( None, color_list, name=name )
+
+def makeMonochrome(color='neutral'):
     """
     Returns a ColorMap object with a dark to bright ramp and adjustable tint.
     
@@ -256,11 +307,10 @@ def makeMonochrome(color='green'):
             h_val, s_val, l_min, l_max = color
         else:
             raise ValueError(f"Invalid color descriptor '{color}'")
-    l_vals = np.linspace(l_min, l_max, num=10)
+    l_vals = np.linspace(l_min, l_max, num=16)
     color_list = []
     for l_val in l_vals:
-        qcol = QtGui.QColor()
-        qcol.setHslF( h_val, s_val, l_val )
+        qcol = QtGui.QColor.fromHslF( h_val, s_val, l_val )
         color_list.append( qcol )
     return ColorMap( None, color_list, name=name, linearize=True )
 
@@ -281,7 +331,7 @@ def modulatedBarData(length=768, width=32):
     data = np.zeros( (length, width) )
     for idx in range(width):
         data[:,idx] = gradient + (idx/(width-1)) * modulation
-    np.clip(data, 0.0, 1.0)
+    clip_array(data, 0.0, 1.0, out=data)
     return data
 
 class ColorMap(object):
@@ -340,11 +390,6 @@ class ColorMap(object):
             the colors assigned to 0 and 1 for all values below or above this range, respectively.
         """
         self.name = name # storing a name helps identify ColorMaps sampled by Palette
-        if mode is not None:
-            warnings.warn(
-                "'mode' argument is deprecated and does nothing.",
-                DeprecationWarning, stacklevel=2
-        )
         if pos is None:
             order = range(len(color))
             self.pos = np.linspace(0.0, 1.0, num=len(color))
@@ -388,8 +433,9 @@ class ColorMap(object):
         if mapping in [self.CLIP, self.REPEAT, self.DIVERGING, self.MIRROR]:
             self.mapping_mode = mapping # only allow defined values
         else:
-            raise ValueError("Undefined mapping type '{:s}'".format(str(mapping)) )
-            
+            raise ValueError(f"Undefined mapping type '{mapping}'")
+        self.stopsCache = {}
+    
     def __str__(self):
         """ provide human-readable identifier """
         if self.name is None:
@@ -426,6 +472,73 @@ class ColorMap(object):
         self.pos = 1.0 - np.flip( self.pos )
         self.color = np.flip( self.color, axis=0 )
         self.stopsCache = {}
+        
+    def getSubset(self, start, span):
+        """
+        Returns a new ColorMap object that extracts the subset specified by 'start' and 'length' 
+        to the full 0.0 to 1.0 range. A negative length results in a color map that is reversed 
+        relative to the original.
+        
+        Parameters
+        ----------
+        start : float (0.0 to 1.0)
+                Starting value that defines the 0.0 value of the new color map.
+        span  : float (-1.0 to 1.0)
+                span of the extracted region. The orignal color map will be trated as cyclical
+                if the extracted interval exceeds the 0.0 to 1.0 range. 
+        """
+        pos, col = self.getStops( mode=ColorMap.FLOAT )
+        start = clip_scalar(start, 0.0, 1.0)
+        span  = clip_scalar(span, -1.0, 1.0)
+        
+        if span == 0.0:
+            raise ValueError("'length' needs to be non-zero")
+        stop = (start + span)
+        if stop > 1.0 or stop < 0.0: stop = stop % 1.0
+        # find indices *inside* range, start and end will be added by sampling later
+        if span > 0:
+            ref_pos = start # lowest position value at start
+            idxA = np.searchsorted( pos, start, side='right' )
+            idxB = np.searchsorted( pos, stop , side='left'  ) # + 1 # right-side element of interval
+            wraps = bool( stop < start ) # wraps around?
+        else:
+            ref_pos = stop # lowest position value at stop
+            idxA = np.searchsorted( pos, stop , side='right')
+            idxB = np.searchsorted( pos, start, side='left' ) # + 1 # right-side element of interval
+            wraps = bool( stop > start ) # wraps around?
+        
+        if wraps: # wraps around:
+            length1 = (len(pos)-idxA) # before wrap
+            length2 = idxB            # after wrap
+            new_length = length1 + length2 + 2 # combined; plus edge elements
+            new_pos = np.zeros( new_length )
+            new_col = np.zeros( (new_length, 4) )
+            new_pos[ 1:length1+1] = (0 + pos[idxA:] - ref_pos) / span # starting point lie in 0 to 1 range
+            new_pos[length1+1:-1] = (1 + pos[:idxB] - ref_pos) / span # end point wrapped to -1 to 0 range
+            new_pos[length1] -= np.copysign(1e-6, span) # breaks degeneracy of shifted 0.0 and 1.0 values
+            new_col[ 1:length1+1] = col[idxA:]
+            new_col[length1+1:-1] = col[:idxB]
+        else: # does not wrap around:
+            new_length = (idxB - idxA) + 2 # two additional edge values will be added 
+            new_pos = np.zeros( new_length )
+            new_col = np.zeros( (new_length, 4) )
+            new_pos[1:-1] = (pos[idxA:idxB] - ref_pos) / span
+            new_col[1:-1] = col[idxA:idxB]
+
+        if span < 0: # for reversed subsets, positions now progress 0 to -1 and need to be flipped
+            new_pos += 1.0
+            new_pos = np.flip( new_pos)
+            new_col = np.flip( new_col, axis=0 )
+
+        new_pos[ 0] = 0.0
+        new_col[ 0] = self.mapToFloat(start)
+        new_pos[-1] = 1.0
+        new_col[-1] = self.mapToFloat(stop)
+
+        cmap = ColorMap( pos=new_pos, color=255.*new_col )
+        cmap.name = f"{self.name}[{start:.2f}({span:+.2f})]"
+        return cmap
+
 
     def map(self, data, mode=BYTE):
         """
@@ -442,9 +555,9 @@ class ColorMap(object):
         mode: str or int, optional
             Determines return format:
 
-            - `ColorMap.BYTE` or 'byte': Colors are returned as 0-255 unsigned bytes. (default)
-            - `ColorMap.FLOAT` or 'float': Colors are returned as 0.0-1.0 floats.
-            - `ColorMap.QCOLOR` or 'qcolor': Colors are returned as QColor objects.
+              - `ColorMap.BYTE` or 'byte': Colors are returned as 0-255 unsigned bytes. (default)
+              - `ColorMap.FLOAT` or 'float': Colors are returned as 0.0-1.0 floats.
+              - `ColorMap.QCOLOR` or 'qcolor': Colors are returned as QColor objects.
 
         Returns
         -------
@@ -461,7 +574,7 @@ class ColorMap(object):
             mode = self.enumMap[mode.lower()]
 
         if mode == self.QCOLOR:
-            pos, color = self.getStops(self.BYTE)
+            pos, color = self.getStops(self.FLOAT)
         else:
             pos, color = self.getStops(mode)
 
@@ -486,9 +599,9 @@ class ColorMap(object):
         # Convert to QColor if requested
         if mode == self.QCOLOR:
             if np.isscalar(data):
-                return QtGui.QColor(*interp)
+                return QtGui.QColor.fromRgbF(*interp)
             else:
-                return [QtGui.QColor(*x) for x in interp]
+                return [QtGui.QColor.fromRgbF(*x.tolist()) for x in interp]
         else:
             return interp
 
@@ -515,6 +628,9 @@ class ColorMap(object):
 
         When no parameters are given for `p1` and `p2`, the gradient is mapped to the
         `y` coordinates 0 to 1, unless the color map is defined for a more limited range.
+        
+        This is a somewhat expensive operation, and it is recommended to store and reuse the returned
+        gradient instead of repeatedly regenerating it.
 
         Parameters
         ----------
@@ -530,8 +646,7 @@ class ColorMap(object):
             p2 = QtCore.QPointF(self.pos.max()-self.pos.min(),0)
         grad = QtGui.QLinearGradient(p1, p2)
 
-        pos, color = self.getStops(mode=self.BYTE)
-        color = [QtGui.QColor(*x) for x in color]
+        pos, color = self.getStops(mode=self.QCOLOR)
         if self.mapping_mode == self.MIRROR:
             pos_n = (1. - np.flip(pos)) / 2
             col_n = np.flip( color, axis=0 )
@@ -549,20 +664,22 @@ class ColorMap(object):
         Returns a QBrush painting with the color map applied over the selected span of plot values.
         When the mapping mode is set to `ColorMap.MIRROR`, the selected span includes the color map twice,
         first in reversed order and then normal.
+        
+        It is recommended to store and reuse this gradient brush instead of regenerating it repeatedly.
 
         Parameters
         ----------
         span : tuple (min, max), default (0.0, 1.0)
             Span of data values covered by the gradient:
 
-            - Color map value 0.0 will appear at `min`,
-            - Color map value 1.0 will appear at `max`.
+              - Color map value 0.0 will appear at `min`,
+              - Color map value 1.0 will appear at `max`.
 
         orientation : str, default 'vertical'
             Orientiation of the gradient:
 
-            - 'vertical': `span` corresponds to the `y` coordinate.
-            - 'horizontal': `span` corresponds to the `x` coordinate.
+              - 'vertical': `span` corresponds to the `y` coordinate.
+              - 'horizontal': `span` corresponds to the `x` coordinate.
         """
         if orientation == 'vertical':
             grad = self.getGradient( p1=QtCore.QPointF(0.,span[0]), p2=QtCore.QPointF(0.,span[1]) )
@@ -575,20 +692,23 @@ class ColorMap(object):
     def getPen(self, span=(0.,1.), orientation='vertical', width=1.0):
         """
         Returns a QPen that draws according to the color map based on vertical or horizontal position.
+        
+        It is recommended to store and reuse this gradient pen instead of regenerating it repeatedly.
+
 
         Parameters
         ----------
         span : tuple (min, max), default (0.0, 1.0)
             Span of the data values covered by the gradient:
 
-            - Color map value 0.0 will appear at `min`.
-            - Color map value 1.0 will appear at `max`.
+              - Color map value 0.0 will appear at `min`.
+              - Color map value 1.0 will appear at `max`.
 
         orientation : str, default 'vertical'
             Orientiation of the gradient:
 
-            - 'vertical' creates a vertical gradient, where `span` corresponds to the `y` coordinate.
-            - 'horizontal' creates a horizontal gradient, where `span` correspnds to the `x` coordinate.
+              - 'vertical' creates a vertical gradient, where `span` corresponds to the `y` coordinate.
+              - 'horizontal' creates a horizontal gradient, where `span` correspnds to the `x` coordinate.
 
         width : int or float
             Width of the pen in pixels on screen.
@@ -598,32 +718,47 @@ class ColorMap(object):
         pen.setCosmetic(True)
         return pen
 
-    def getColors(self, mode=None):
-        """Returns a list of all color stops, converted to the specified mode.
-        If `mode` is None, no conversion is performed.
+    def getColors(self, mode=BYTE):
+        """
+        Returns a list of the colors associated with the stops of the color map.
+        
+        The parameter `mode` can be one of
+            - `ColorMap.BYTE` or 'byte' to return colors as RGBA tuples in byte format (0 to 255)
+            - `ColorMap.FLOAT` or 'float' to return colors as RGBA tuples in float format (0.0 to 1.0)
+            - `ColorMap.QCOLOR` or 'qcolor' to return a list of QColors
+            
+        The default is byte format.
+        """
+        stops, color = self.getStops(mode=mode)
+        return color
+
+    def getStops(self, mode=BYTE):
+        """
+        Returns a tuple (stops, colors) containing a list of all stops (ranging 0.0 to 1.0)
+        and a list of the associated colors.
+        
+        The parameter `mode` can be one of
+            - `ColorMap.BYTE` or 'byte' to return colors as RGBA tuples in byte format (0 to 255)
+            - `ColorMap.FLOAT` or 'float' to return colors as RGBA tuples in float format (0.0 to 1.0)
+            - `ColorMap.QCOLOR` or 'qcolor' to return a list of QColors
+
+        The default is byte format.
         """
         if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
 
-        color = self.color
-        if mode in [self.BYTE, self.QCOLOR] and color.dtype.kind == 'f':
-            color = (color * 255).astype(np.ubyte)
-        elif mode == self.FLOAT and color.dtype.kind != 'f':
-            color = color.astype(float) / 255.
-
-        if mode == self.QCOLOR:
-            color = [QtGui.QColor(*x) for x in color]
-
-        return color
-
-    def getStops(self, mode):
-        ## Get fully-expanded set of RGBA stops in either float or byte mode.
         if mode not in self.stopsCache:
             color = self.color
             if mode == self.BYTE and color.dtype.kind == 'f':
                 color = (color*255).astype(np.ubyte)
             elif mode == self.FLOAT and color.dtype.kind != 'f':
                 color = color.astype(float) / 255.
+            elif mode == self.QCOLOR:
+                if color.dtype.kind == 'f':
+                    factory = QtGui.QColor.fromRgbF
+                else:
+                    factory = QtGui.QColor.fromRgb
+                color = [factory(*x.tolist()) for x in color]
             self.stopsCache[mode] = (self.pos, color)
         return self.stopsCache[mode]
 

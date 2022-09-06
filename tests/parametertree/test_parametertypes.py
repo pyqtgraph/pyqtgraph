@@ -1,10 +1,11 @@
 import sys
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph.parametertree as pt
-import pyqtgraph as pg
-from pyqtgraph.python2_3 import asUnicode
-from pyqtgraph.functions import eq
+
 import numpy as np
+
+import pyqtgraph as pg
+import pyqtgraph.parametertree as pt
+from pyqtgraph.functions import eq
+from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp()
 
@@ -31,8 +32,8 @@ def test_types():
         dict(name='float', type='float'),
         dict(name='int', type='int'),
         dict(name='str', type='str'),
-        dict(name='list', type='list', values=['x','y','z']),
-        dict(name='dict', type='list', values={'x':1, 'y':3, 'z':7}),
+        dict(name='list', type='list', limits=['x','y','z']),
+        dict(name='dict', type='list', limits={'x':1, 'y':3, 'z':7}),
         dict(name='bool', type='bool'),
         dict(name='color', type='color'),
     ]
@@ -44,7 +45,7 @@ def test_types():
     all_objs = {
         'int0': 0, 'int':7, 'float': -0.35, 'bigfloat': 1e129, 'npfloat': np.float64(5), 
         'npint': np.int64(5),'npinf': np.inf, 'npnan': np.nan, 'bool': True, 
-        'complex': 5+3j, 'str': '#xxx', 'unicode': asUnicode('µ'), 
+        'complex': 5+3j, 'str': '#xxx', 'unicode': 'µ', 
         'list': [1,2,3], 'dict': {'1': 2}, 'color': pg.mkColor('k'), 
         'brush': pg.mkBrush('k'), 'pen': pg.mkPen('k'), 'none': None
     }
@@ -57,13 +58,11 @@ def test_types():
 
     # int
     types = ['int0', 'int', 'float', 'bigfloat', 'npfloat', 'npint', 'bool']
-    inttyps = int if sys.version[0] >= '3' else (int, long) 
-    check_param_types(param.child('int'), inttyps, int, 0, all_objs, types)
+    check_param_types(param.child('int'), int, int, 0, all_objs, types)
     
     # str  (should be able to make a string out of any type)
     types = all_objs.keys()
-    strtyp = str if sys.version[0] >= '3' else unicode
-    check_param_types(param.child('str'), strtyp, asUnicode, '', all_objs, types)
+    check_param_types(param.child('str'), str, str, '', all_objs, types)
     
     # bool  (should be able to make a boolean out of any type?)
     types = all_objs.keys()
@@ -129,8 +128,8 @@ def test_limits_enforcement():
     p = pt.Parameter.create(name='params', type='group', children=[
         dict(name='float', type='float', limits=[0, 1]),
         dict(name='int', type='int', bounds=[0, 1]),
-        dict(name='list', type='list', values=['x', 'y']),
-        dict(name='dict', type='list', values={'x': 1, 'y': 2}),
+        dict(name='list', type='list', limits=['x', 'y']),
+        dict(name='dict', type='list', limits={'x': 1, 'y': 2}),
     ])
     t = pt.ParameterTree()
     t.setParameters(p)
@@ -163,3 +162,14 @@ def test_data_race():
     p.sigValueChanged.connect(override)
     pi.widget.setValue(2)
     assert p.value() == pi.widget.value() == 1
+
+def test_pen_settings():
+    # Option from constructor
+    p = pt.Parameter.create(name='test', type='pen', width=5, additionalname='test')
+    assert p.pen.width() == 5
+    # Opts from dynamic update
+    p.setOpts(width=3)
+    assert p.pen.width() == 3
+    # Opts from changing child
+    p["width"] = 10
+    assert p.pen.width() == 10

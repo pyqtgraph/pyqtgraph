@@ -1,7 +1,9 @@
-from collections import OrderedDict
-import numpy as np
 import copy
+from collections import OrderedDict
 from math import log2
+
+import numpy as np
+
 from .. import functions as fn
 
 
@@ -52,16 +54,17 @@ class SystemSolver(object):
     1) The *defaultState* class attribute: This is a dict containing a 
        description of the variables in the system--their default values,
        data types, and the ways they can be constrained. The format is::
-       
+
            { name: [value, type, constraint, allowed_constraints], ...}
-       
-       * *value* is the default value. May be None if it has not been specified
-         yet.
-       * *type* may be float, int, bool, np.ndarray, ...
-       * *constraint* may be None, single value, or (min, max)
-            * None indicates that the value is not constrained--it may be 
-              automatically generated if the value is requested.
-       * *allowed_constraints* is a string composed of (n)one, (f)ixed, and (r)ange. 
+
+       Where:
+         * *value* is the default value. May be None if it has not been specified
+           yet.
+         * *type* may be float, int, bool, np.ndarray, ...
+         * *constraint* may be None, single value, or (min, max)
+              * None indicates that the value is not constrained--it may be
+                automatically generated if the value is requested.
+         * *allowed_constraints* is a string composed of (n)one, (f)ixed, and (r)ange.
        
        Note: do not put mutable objects inside defaultState!
        

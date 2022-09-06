@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file 'pyqtgraph/canvas/TransformGuiTemplate.ui'
 #
@@ -52,4 +51,3 @@ class Ui_Form(object):
         self.scaleLabel.setText(_translate("Form", "Scale:"))
         self.mirrorImageBtn.setText(_translate("Form", "Mirror"))
         self.reflectImageBtn.setText(_translate("Form", "Reflect"))
-

@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
-from ..Node import Node
-from ...Qt import QtGui, QtCore, QtWidgets
-import numpy as np
-import sys
-from .common import *
-from ...SRTTransform import SRTTransform
-from ...Point import Point
-from ...widgets.TreeWidget import TreeWidget
-from ...graphicsItems.LinearRegionItem import LinearRegionItem
 
+import numpy as np
+
+from ...graphicsItems.LinearRegionItem import LinearRegionItem
+from ...Qt import QtCore, QtWidgets
+from ...widgets.TreeWidget import TreeWidget
+from ..Node import Node
 from . import functions
+from .common import CtrlNode
+
 
 class ColumnSelectNode(Node):
     """Select named columns from a record array or MetaArray."""
@@ -17,7 +15,7 @@ class ColumnSelectNode(Node):
     def __init__(self, name):
         Node.__init__(self, name, terminals={'In': {'io': 'in'}})
         self.columns = set()
-        self.columnList = QtGui.QListWidget()
+        self.columnList = QtWidgets.QListWidget()
         self.axis = 0
         self.columnList.itemChanged.connect(self.itemChanged)
         
@@ -62,7 +60,7 @@ class ColumnSelectNode(Node):
         self.columnList.blockSignals(True)
         self.columnList.clear()
         for c in cols:
-            item = QtGui.QListWidgetItem(c)
+            item = QtWidgets.QListWidgetItem(c)
             item.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled|QtCore.Qt.ItemFlag.ItemIsUserCheckable)
             if c in self.columns:
                 item.setCheckState(QtCore.Qt.CheckState.Checked)
@@ -179,7 +177,7 @@ class TextEdit(QtWidgets.QTextEdit):
         self.lastText = None
 
     def focusOutEvent(self, ev):
-        text = str(self.toPlainText())
+        text = self.toPlainText()
         if text != self.lastText:
             self.lastText = text
             self.on_update()
@@ -201,8 +199,8 @@ class EvalNode(Node):
             },
             allowAddInput=True, allowAddOutput=True)
         
-        self.ui = QtGui.QWidget()
-        self.layout = QtGui.QGridLayout()
+        self.ui = QtWidgets.QWidget()
+        self.layout = QtWidgets.QGridLayout()
         self.text = TextEdit(self.update)
         self.text.setTabStopWidth(30)
         self.text.setPlainText("# Access inputs as args['input_name']\nreturn {'output': None} ## one key per output terminal")
@@ -236,26 +234,23 @@ class EvalNode(Node):
         l.update(args)
         ## try eval first, then exec
         try:  
-            text = str(self.text.toPlainText()).replace('\n', ' ')
+            text = self.text.toPlainText().replace('\n', ' ')
             output = eval(text, globals(), l)
         except SyntaxError:
             fn = "def fn(**args):\n"
             run = "\noutput=fn(**args)\n"
-            text = fn + "\n".join(["    "+l for l in str(self.text.toPlainText()).split('\n')]) + run
-            if sys.version_info.major == 2:
-                exec(text)
-            elif sys.version_info.major == 3:
-                ldict = locals()
-                exec(text, globals(), ldict)
-                output = ldict['output']
+            text = fn + "\n".join(["    "+l for l in self.text.toPlainText().split('\n')]) + run
+            ldict = locals()
+            exec(text, globals(), ldict)
+            output = ldict['output']
         except:
-            print("Error processing node: %s" % self.name())
+            print(f"Error processing node: {self.name()}")
             raise
         return output
         
     def saveState(self):
         state = Node.saveState(self)
-        state['text'] = str(self.text.toPlainText())
+        state['text'] = self.text.toPlainText()
         #state['terminals'] = self.saveTerminals()
         return state
         
@@ -277,13 +272,13 @@ class ColumnJoinNode(Node):
         
         #self.items = []
         
-        self.ui = QtGui.QWidget()
-        self.layout = QtGui.QGridLayout()
+        self.ui = QtWidgets.QWidget()
+        self.layout = QtWidgets.QGridLayout()
         self.ui.setLayout(self.layout)
         
         self.tree = TreeWidget()
-        self.addInBtn = QtGui.QPushButton('+ Input')
-        self.remInBtn = QtGui.QPushButton('- Input')
+        self.addInBtn = QtWidgets.QPushButton('+ Input')
+        self.remInBtn = QtWidgets.QPushButton('- Input')
         
         self.layout.addWidget(self.tree, 0, 0, 1, 2)
         self.layout.addWidget(self.addInBtn, 1, 0)
@@ -300,7 +295,7 @@ class ColumnJoinNode(Node):
         #print "ColumnJoinNode.addInput called."
         term = Node.addInput(self, 'input', renamable=True, removable=True, multiable=True)
         #print "Node.addInput returned. term:", term
-        item = QtGui.QTreeWidgetItem([term.name()])
+        item = QtWidgets.QTreeWidgetItem([term.name()])
         item.term = term
         term.joinItem = item
         #self.items.append((term, item))
@@ -355,7 +350,7 @@ class ColumnJoinNode(Node):
         self.tree.clear()
         for name in order:
             term = self[name]
-            item = QtGui.QTreeWidgetItem([name])
+            item = QtWidgets.QTreeWidgetItem([name])
             item.term = term
             term.joinItem = item
             #self.items.append((term, item))
@@ -481,4 +476,3 @@ class AsType(CtrlNode):
     def processData(self, data):
         s = self.stateGroup.state()
         return data.astype(s['dtype'])
-

@@ -2,10 +2,11 @@ from warnings import warn
 
 from .. import getConfigOption
 
+
 def getNumbaFunctions():
     if getConfigOption("useNumba"):
         try:
-            import numba
+            import numba  # noqa
         except ImportError:
             warn("numba library could not be loaded, but 'useNumba' is set.")
             return None

@@ -1,4 +1,4 @@
-from ..Qt import QtGui, QtCore
+from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['ButtonItem']
@@ -15,7 +15,7 @@ class ButtonItem(GraphicsObject):
         elif pixmap is not None:
             self.setPixmap(pixmap)
             
-        if width is not None:
+        if width is not None and self.pixmap.width():
             s = float(width) / self.pixmap.width()
             self.setScale(s)
         if parentItem is not None:

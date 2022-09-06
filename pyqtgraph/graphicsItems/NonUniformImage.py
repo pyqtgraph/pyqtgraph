@@ -1,11 +1,14 @@
-from ..Qt import QtGui, QtCore
 import math
-import numpy as np
-from ..colormap import ColorMap
-from .GraphicsObject import GraphicsObject
-from .. import mkBrush, mkPen
-from .. import functions as fn
 
+import numpy as np
+
+from .. import functions as fn
+from .. import mkBrush, mkPen
+from ..colormap import ColorMap
+from ..Qt import QtCore, QtGui
+from .GraphicsObject import GraphicsObject
+
+__all__ = ['NonUniformImage']
 
 class NonUniformImage(GraphicsObject):
     """

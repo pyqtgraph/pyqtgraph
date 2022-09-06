@@ -1,5 +1,6 @@
-# -*- coding: utf-8 -*-
-from .Qt import QtCore, QtGui
+from .Qt import QtCore
+
+__all__ = ['ThreadsafeTimer']
 
 class ThreadsafeTimer(QtCore.QObject):
     """

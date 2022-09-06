@@ -5,4 +5,3 @@ GLMeshItem
     :members:
 
     .. automethod:: pyqtgraph.opengl.GLMeshItem.__init__
-

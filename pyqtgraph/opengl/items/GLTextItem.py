@@ -1,8 +1,9 @@
-from OpenGL.GL import *
+from OpenGL.GL import *  # noqa
 import numpy as np
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
-import pyqtgraph.functions as fn
+
+from ... import functions as fn
+from ...Qt import QtCore, QtGui
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLTextItem']
 
@@ -39,7 +40,7 @@ class GLTextItem(GLGraphicsItem):
         args = ['pos', 'color', 'text', 'font']
         for k in kwds.keys():
             if k not in args:
-                raise ArgumentError('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
+                raise ValueError('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
         for arg in args:
             if arg in kwds:
                 value = kwds[arg]
@@ -65,18 +66,17 @@ class GLTextItem(GLGraphicsItem):
 
         modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
         projection = glGetDoublev(GL_PROJECTION_MATRIX)
-        viewport = glGetIntegerv(GL_VIEWPORT)
 
+        viewport = [0, 0, self.view().width(), self.view().height()]
         text_pos = self.__project(self.pos, modelview, projection, viewport)
-        text_pos[1] = viewport[3] - text_pos[1]
 
-        text_pos /= self.view().devicePixelRatio()
+        text_pos.setY(viewport[3] - text_pos.y())
 
         painter = QtGui.QPainter(self.view())
         painter.setPen(self.color)
         painter.setFont(self.font)
         painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
-        painter.drawText(text_pos[0], text_pos[1], self.text)
+        painter.drawText(text_pos, self.text)
         painter.end()
 
     def __project(self, obj_pos, modelview, projection, viewport):
@@ -86,12 +86,11 @@ class GLTextItem(GLGraphicsItem):
         proj_vec = np.matmul(projection.T, view_vec)
 
         if proj_vec[3] == 0.0:
-            return
+            return QtCore.QPointF(0, 0)
 
         proj_vec[0:3] /= proj_vec[3]
 
-        return np.array([
-            viewport[0] + (1.0 + proj_vec[0]) * viewport[2] / 2.0,
-            viewport[1] + (1.0 + proj_vec[1]) * viewport[3] / 2.0,
-            (1.0 + proj_vec[2]) / 2.0
-        ])
+        return QtCore.QPointF(
+            viewport[0] + (1.0 + proj_vec[0]) * viewport[2] / 2,
+            viewport[1] + (1.0 + proj_vec[1]) * viewport[3] / 2
+        )

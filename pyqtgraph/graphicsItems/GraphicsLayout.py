@@ -1,32 +1,34 @@
-from ..Qt import QtGui, QtCore
 from .. import functions as fn
+from ..Qt import QtWidgets
 from .GraphicsWidget import GraphicsWidget
+from .LabelItem import LabelItem
+from .PlotItem import PlotItem
+
 ## Must be imported at the end to avoid cyclic-dependency hell:
 from .ViewBox import ViewBox
-from .PlotItem import PlotItem
-from .LabelItem import LabelItem
 
 __all__ = ['GraphicsLayout']
 class GraphicsLayout(GraphicsWidget):
     """
     Used for laying out GraphicsWidgets in a grid.
-    This is usually created automatically as part of a :class:`GraphicsWindow <pyqtgraph.GraphicsWindow>` or :class:`GraphicsLayoutWidget <pyqtgraph.GraphicsLayoutWidget>`.
+    This is usually created automatically as part of a :class:`GraphicsLayoutWidget <pyqtgraph.GraphicsLayoutWidget>`.
     """
-
 
     def __init__(self, parent=None, border=None):
         GraphicsWidget.__init__(self, parent)
         if border is True:
             border = (100,100,100)
+        elif border is False:
+            border = None  
         self.border = border
-        self.layout = QtGui.QGraphicsGridLayout()
+        self.layout = QtWidgets.QGraphicsGridLayout()
         self.setLayout(self.layout)
         self.items = {}  ## item: [(row, col), (row, col), ...]  lists all cells occupied by the item
         self.rows = {}   ## row: {col1: item1, col2: item2, ...}    maps cell location to item
-        self.itemBorders = {}  ## {item1: QtGui.QGraphicsRectItem, ...} border rects
+        self.itemBorders = {}  ## {item1: QtWidgets.QGraphicsRectItem, ...} border rects
         self.currentRow = 0
         self.currentCol = 0
-        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Expanding))
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding))
     
     #def resizeEvent(self, ev):
         #ret = GraphicsWidget.resizeEvent(self, ev)
@@ -123,7 +125,7 @@ class GraphicsLayout(GraphicsWidget):
                 self.rows[row2][col2] = item
                 self.items[item].append((row2, col2))
 
-        borderRect = QtGui.QGraphicsRectItem()
+        borderRect = QtWidgets.QGraphicsRectItem()
 
         borderRect.setParentItem(self)
         borderRect.setZValue(1e3)
@@ -163,7 +165,8 @@ class GraphicsLayout(GraphicsWidget):
         del self.items[item]
 
         item.geometryChanged.disconnect(self._updateItemBorder)
-        del self.itemBorders[item]
+        itemBorder = self.itemBorders.pop(item)
+        self.scene().removeItem(itemBorder)
 
         self.update()
     

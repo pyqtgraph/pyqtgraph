@@ -301,4 +301,3 @@ Thanks
 | Oscar Lesta for valuable fix to stop ANSI chars being sent to non-tty output.
 | Roger Binns, for many suggestions, valuable feedback, & bug reports.
 | Tim Golden for thought and much appreciated feedback on the initial idea.
-

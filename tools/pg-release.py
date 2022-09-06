@@ -167,16 +167,16 @@ def build(args):
 
     ======== Build complete. =========
 
-    * Source package:     built
-    * Pip install test:   {pip_test}
-    * Debian packages:    {deb_status}
-    * Windows installers: {exe_status}
-    * Package files in    {pkg_dir}
+      * Source package:     built
+      * Pip install test:   {pip_test}
+      * Debian packages:    {deb_status}
+      * Windows installers: {exe_status}
+      * Package files in    {pkg_dir}
 
     Next steps to publish:
     
-    * Test all packages
-    * Run script again with --publish
+      * Test all packages
+      * Run script again with --publish
 
     """).format(**args.__dict__))
 

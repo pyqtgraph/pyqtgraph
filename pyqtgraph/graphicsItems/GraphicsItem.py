@@ -1,14 +1,15 @@
-import warnings
-from math import hypot
+import operator
+import weakref
 from collections import OrderedDict
 from functools import reduce
-from ..Qt import QtGui, QtCore, isQObjectAlive
+from math import hypot
+
+from .. import functions as fn
 from ..GraphicsScene import GraphicsScene
 from ..Point import Point
-from .. import functions as fn
-import weakref
-import operator
+from ..Qt import QtCore, QtWidgets, isQObjectAlive
 
+__all__ = ['GraphicsItem']
 
 # Recipe from https://docs.python.org/3.8/library/collections.html#collections.OrderedDict
 # slightly adapted for Python 3.7 compatibility
@@ -46,10 +47,10 @@ class GraphicsItem(object):
     """
     _pixelVectorGlobalCache = LRU(100)
 
-    def __init__(self, register=None):
+    def __init__(self):
         if not hasattr(self, '_qtBaseClass'):
             for b in self.__class__.__bases__:
-                if issubclass(b, QtGui.QGraphicsItem):
+                if issubclass(b, QtWidgets.QGraphicsItem):
                     self.__class__._qtBaseClass = b
                     break
         if not hasattr(self, '_qtBaseClass'):
@@ -61,11 +62,7 @@ class GraphicsItem(object):
         self._connectedView = None
         self._exportOpts = False   ## If False, not currently exporting. Otherwise, contains dict of export options.
         self._cachedView = None
-        if register is not None and register:
-            warnings.warn(
-                "'register' argument is deprecated and does nothing, will be removed in 0.13",
-                DeprecationWarning, stacklevel=2
-            )
+
 
     def getViewWidget(self):
         """
@@ -150,10 +147,7 @@ class GraphicsItem(object):
         if view is None:
             return None
         if hasattr(view, 'implements') and view.implements('ViewBox'):
-            tr = self.itemTransform(view.innerSceneItem())
-            if isinstance(tr, tuple):
-                tr = tr[0]   ## difference between pyside and pyqt
-            return tr
+            return self.itemTransform(view.innerSceneItem())[0]
         else:
             return self.sceneTransform()
             #return self.deviceTransform(view.viewportTransform())
@@ -297,7 +291,7 @@ class GraphicsItem(object):
         Return None if pixel size is not yet defined (usually because the item has not yet been displayed).
         """
         normV, orthoV = self.pixelVectors(direction)
-        if normV == None or orthoV == None:
+        if normV is None or orthoV is None:
             return None
         if ortho:
             return orthoV.length()
@@ -406,8 +400,7 @@ class GraphicsItem(object):
         return self.mapToView(self.mapFromParent(self.pos()))
     
     def parentItem(self):
-        ## PyQt bug -- some items are returned incorrectly.
-        return GraphicsScene.translateGraphicsItem(self._qtBaseClass.parentItem(self))
+        return self._qtBaseClass.parentItem(self)
         
     def setParentItem(self, parent):
         ## Workaround for Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
@@ -418,8 +411,7 @@ class GraphicsItem(object):
         return self._qtBaseClass.setParentItem(self, parent)
     
     def childItems(self):
-        ## PyQt bug -- some child items are returned incorrectly.
-        return list(map(GraphicsScene.translateGraphicsItem, self._qtBaseClass.childItems(self)))
+        return self._qtBaseClass.childItems(self)
 
 
     def sceneTransform(self):
@@ -439,9 +431,7 @@ class GraphicsItem(object):
         if relativeItem is None:
             relativeItem = self.parentItem()
 
-        tr = self.itemTransform(relativeItem)
-        if isinstance(tr, tuple):  ## difference between pyside and pyqt
-            tr = tr[0]
+        tr = self.itemTransform(relativeItem)[0]
         vec = tr.map(QtCore.QLineF(0,0,1,0))
         return vec.angleTo(QtCore.QLineF(vec.p1(), vec.p1()+QtCore.QPointF(1,0)))
         
@@ -458,7 +448,7 @@ class GraphicsItem(object):
             #if ch2.scene() is not scene:
                 #print "item", ch2, "has different scene:", ch2.scene(), scene
                 #scene.addItem(ch2)
-                #QtGui.QApplication.processEvents()
+                #QtWidgets.QApplication.processEvents()
                 #print "   --> ", ch2.scene()
             #self.setChildScene(ch2)
 
@@ -534,7 +524,6 @@ class GraphicsItem(object):
     def viewChanged(self, view, oldView):
         """Called when this item's view has changed
         (ie, the item has been added to or removed from a ViewBox)"""
-        pass
         
     def _replaceView(self, oldView, item=None):
         if item is None:
@@ -555,7 +544,6 @@ class GraphicsItem(object):
         """
         # when this is called, _cachedView is not invalidated.
         # this means that for functions overriding viewRangeChanged, viewRect() may be stale.
-        pass
     
     def viewTransformChanged(self):
         """
@@ -580,7 +568,6 @@ class GraphicsItem(object):
     
     def childrenShape(self):
         """Return the union of the shapes of all descendants of this item in local coordinates."""
-        childs = self.allChildItems()
         shapes = [self.mapFromItem(c, c.shape()) for c in self.allChildItems()]
         return reduce(operator.add, shapes)
     

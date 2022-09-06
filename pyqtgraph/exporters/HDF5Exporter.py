@@ -1,14 +1,13 @@
-from ..Qt import QtGui, QtCore
-from .Exporter import Exporter
-from ..parametertree import Parameter
-from .. import PlotItem
+import importlib.util
 
-import numpy 
-try:
-    import h5py
-    HAVE_HDF5 = True
-except ImportError:
-    HAVE_HDF5 = False
+import numpy
+
+from .. import PlotItem
+from ..parametertree import Parameter
+from ..Qt import QtCore
+from .Exporter import Exporter
+
+HAVE_HDF5 = importlib.util.find_spec("h5py") is not None
 
 translate = QtCore.QCoreApplication.translate
 
@@ -25,7 +24,7 @@ class HDF5Exporter(Exporter):
         self.params = Parameter(name='params', type='group', children=[
             {'name': 'Name', 'title': translate("Exporter", 'Name'), 'type': 'str', 'value': 'Export', },
             {'name': 'columnMode', 'title': translate("Exporter", 'columnMode'), 'type': 'list',
-             'values': ['(x,y) per plot', '(x,y,y,y) for all plots']},
+             'limits': ['(x,y) per plot', '(x,y,y,y) for all plots']},
         ])
         
     def parameters(self):
@@ -36,6 +35,8 @@ class HDF5Exporter(Exporter):
             raise RuntimeError("This exporter requires the h5py package, "
                                "but it was not importable.")
         
+        import h5py
+
         if not isinstance(self.item, PlotItem):
             raise Exception("Must have a PlotItem selected for HDF5 export.")
         
@@ -57,7 +58,7 @@ class HDF5Exporter(Exporter):
                 d = c.getData()
                 fdata = numpy.array([d[0], d[1]]).astype('double')
                 cname = c.name() if c.name() is not None else str(i)
-                dset = dgroup.create_dataset(cname, data=fdata)
+                dgroup.create_dataset(cname, data=fdata)
         else:
             for i, c in enumerate(self.item.curves):
                 d = c.getData()
@@ -66,7 +67,7 @@ class HDF5Exporter(Exporter):
                 data.append(d[1])
 
             fdata = numpy.array(data).astype('double')
-            dset = fd.create_dataset(dsname, data=fdata)
+            fd.create_dataset(dsname, data=fdata)
 
         fd.close()
 

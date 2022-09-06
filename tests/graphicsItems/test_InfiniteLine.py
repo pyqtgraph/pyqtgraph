@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore, QtTest
+from pyqtgraph.Qt import QtCore, QtGui, QtTest
 from tests.ui_testing import mouseDrag, mouseMove
+
 pg.mkQApp()
 
 
@@ -46,8 +46,8 @@ def test_InfiniteLine():
     pos = oline.mapToScene(pg.Point(2, 0))
     assert br.containsPoint(pos, QtCore.Qt.FillRule.OddEvenFill)
     px = pg.Point(-0.5, -1.0 / 3**0.5)
-    assert br.containsPoint(pos + 5 * px, QtCore.Qt.FillRule.OddEvenFill)
-    assert not br.containsPoint(pos + 7 * px, QtCore.Qt.FillRule.OddEvenFill)
+    assert br.containsPoint(pos + 1 * px, QtCore.Qt.FillRule.OddEvenFill)
+    assert not br.containsPoint(pos + 3 * px, QtCore.Qt.FillRule.OddEvenFill)
     plt.close()
 
 def test_mouseInteraction():

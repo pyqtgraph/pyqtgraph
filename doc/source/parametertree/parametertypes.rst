@@ -1,3 +1,7 @@
+..
+  This file is auto-generated from pyqtgraph/tools/rebuildPtreeRst.py. Do not modify by hand! Instead, rerun the
+  generation script with `python pyqtgraph/tools/rebuildPtreeRst.py`.
+
 Built-in Parameter Types
 ========================
 
@@ -6,7 +10,25 @@ Built-in Parameter Types
 Parameters
 ----------
 
-.. autoclass:: SimpleParameter
+.. autoclass:: ActionParameter
+   :members:
+
+.. autoclass:: CalendarParameter
+   :members:
+
+.. autoclass:: ChecklistParameter
+   :members:
+
+.. autoclass:: ColorMapParameter
+   :members:
+
+.. autoclass:: ColorParameter
+   :members:
+
+.. autoclass:: FileParameter
+   :members:
+
+.. autoclass:: FontParameter
    :members:
 
 .. autoclass:: GroupParameter
@@ -15,16 +37,46 @@ Parameters
 .. autoclass:: ListParameter
    :members:
 
-.. autoclass:: TextParameter
+.. autoclass:: PenParameter
    :members:
 
-.. autoclass:: ActionParameter
+.. autoclass:: ProgressBarParameter
+   :members:
+
+.. autoclass:: SimpleParameter
+   :members:
+
+.. autoclass:: SliderParameter
+   :members:
+
+.. autoclass:: TextParameter
    :members:
 
 ParameterItems
 --------------
 
-.. autoclass:: WidgetParameterItem
+.. autoclass:: ActionParameterItem
+   :members:
+
+.. autoclass:: BoolParameterItem
+   :members:
+
+.. autoclass:: CalendarParameterItem
+   :members:
+
+.. autoclass:: ChecklistParameterItem
+   :members:
+
+.. autoclass:: ColorMapParameterItem
+   :members:
+
+.. autoclass:: ColorParameterItem
+   :members:
+
+.. autoclass:: FileParameterItem
+   :members:
+
+.. autoclass:: FontParameterItem
    :members:
 
 .. autoclass:: GroupParameterItem
@@ -33,8 +85,20 @@ ParameterItems
 .. autoclass:: ListParameterItem
    :members:
 
-.. autoclass:: TextParameterItem
+.. autoclass:: NumericParameterItem
    :members:
 
-.. autoclass:: ActionParameterItem
+.. autoclass:: PenParameterItem
+   :members:
+
+.. autoclass:: ProgressBarParameterItem
+   :members:
+
+.. autoclass:: SliderParameterItem
+   :members:
+
+.. autoclass:: StrParameterItem
+   :members:
+
+.. autoclass:: TextParameterItem
    :members:

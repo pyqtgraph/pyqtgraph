@@ -5,4 +5,3 @@ PlotDataItem
     :members:
 
     .. automethod:: pyqtgraph.PlotDataItem.__init__
-

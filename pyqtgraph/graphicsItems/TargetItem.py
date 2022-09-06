@@ -1,15 +1,16 @@
-from math import atan2
-from ..Qt import QtGui, QtCore
-from ..Point import Point
-from .. import functions as fn
-from .GraphicsObject import GraphicsObject
-from .UIGraphicsItem import UIGraphicsItem
-from .TextItem import TextItem
-from .ScatterPlotItem import Symbols, makeCrosshair
-from .ViewBox import ViewBox
 import string
-import warnings
+from math import atan2
 
+from .. import functions as fn
+from ..Point import Point
+from ..Qt import QtCore, QtGui
+from .GraphicsObject import GraphicsObject
+from .ScatterPlotItem import Symbols
+from .TextItem import TextItem
+from .UIGraphicsItem import UIGraphicsItem
+from .ViewBox import ViewBox
+
+__all__ = ['TargetItem', 'TargetLabel']
 
 class TargetItem(UIGraphicsItem):
     """Draws a draggable target symbol (circle plus crosshair).
@@ -25,7 +26,6 @@ class TargetItem(UIGraphicsItem):
         self,
         pos=None,
         size=10,
-        radii=None,
         symbol="crosshair",
         pen=None,
         hoverPen=None,
@@ -42,8 +42,6 @@ class TargetItem(UIGraphicsItem):
             Initial position of the symbol.  Default is (0, 0)
         size : int
             Size of the symbol in pixels.  Default is 10.
-        radii : tuple of int
-            Deprecated.  Gives size of crosshair in screen pixels.
         pen : QPen, tuple, list or str
             Pen to use when drawing line. Can be any arguments that are valid
             for :func:`~pyqtgraph.mkPen`. Default pen is transparent yellow.
@@ -65,7 +63,7 @@ class TargetItem(UIGraphicsItem):
             QPainterPath to use for drawing the target, should be centered at
             ``(0, 0)`` with ``max(width, height) == 1.0``.  Alternatively a string
             which can be any symbol accepted by
-            :func:`~pyqtgraph.ScatterPlotItem.setData`
+            :func:`~pyqtgraph.ScatterPlotItem.setSymbol`
         label : bool, str or callable, optional
             Text to be displayed in a label attached to the symbol, or None to
             show no label (default is None). May optionally include formatting
@@ -76,21 +74,11 @@ class TargetItem(UIGraphicsItem):
             A dict of keyword arguments to use when constructing the text
             label. See :class:`TargetLabel` and :class:`~pyqtgraph.TextItem`
         """
-        super().__init__(self)
+        super().__init__()
         self.movable = movable
         self.moving = False
         self._label = None
         self.mouseHovering = False
-
-        if radii is not None:
-            warnings.warn(
-                "'radii' is now deprecated, and will be removed in 0.13.0. Use 'size' "
-                "parameter instead",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            symbol = makeCrosshair(*radii)
-            size = 1
 
         if pen is None:
             pen = (255, 255, 0)
@@ -132,39 +120,27 @@ class TargetItem(UIGraphicsItem):
         self.setPath(self._path)
         self.setLabel(label, labelOpts)
 
-    @property
-    def sigDragged(self):
-        warnings.warn(
-            "'sigDragged' has been deprecated and will be removed in 0.13.0.  Use "
-            "`sigPositionChanged` instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.sigPositionChangeFinished
-
-    def setPos(self, pos):
+    def setPos(self, *args):
         """Method to set the position to ``(x, y)`` within the plot view
 
         Parameters
         ----------
-        pos : tuple, list, QPointF, QPoint, or pg.Point
-            Container that consists of ``(x, y)`` representation of where the
+        args : tuple, list, QPointF, QPoint, pg.Point, or two floats
+            Two float values or a container that specifies ``(x, y)`` position where the
             TargetItem should be placed
 
         Raises
         ------
         TypeError
-            If the type of ``pos`` does not match the known types to extract
-            coordinate info from, a TypeError is raised
+            If args cannot be used to instantiate a pg.Point
         """
-        if isinstance(pos, Point):
-            newPos = pos
-        elif isinstance(pos, (tuple, list)):
-            newPos = Point(pos)
-        elif isinstance(pos, (QtCore.QPointF, QtCore.QPoint)):
-            newPos = Point(pos.x(), pos.y())
-        else:
-            raise TypeError
+        try:
+            newPos = Point(*args)
+        except TypeError:
+            raise
+        except Exception:
+            raise TypeError(f"Could not make Point from arguments: {args!r}")
+
         if self._pos != newPos:
             self._pos = newPos
             super().setPos(self._pos)
@@ -346,24 +322,13 @@ class TargetItem(UIGraphicsItem):
                 self._label.scene().removeItem(self._label)
             self._label = TargetLabel(self, text=text, **labelOpts)
 
-    def setLabelAngle(self, angle):
-        warnings.warn(
-            "TargetItem.setLabelAngle is deprecated and will be removed in 0.13.0."
-            "Use TargetItem.label().setAngle() instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if self.label() is not None and angle != self.label().angle:
-            self.label().setAngle(angle)
-        return None
-
 
 class TargetLabel(TextItem):
     """A TextItem that attaches itself to a TargetItem.
 
     This class extends TextItem with the following features :
-    * Automatically positions adjacent to the symbol at a fixed position.
-    * Automatically reformats text when the symbol location has changed.
+      * Automatically positions adjacent to the symbol at a fixed position.
+      * Automatically reformats text when the symbol location has changed.
 
     Parameters
     ----------
@@ -379,7 +344,7 @@ class TargetLabel(TextItem):
         the target in pixels, by default it is (20, 0).
     anchor : tuple, list, QPointF or QPoint
         Position to rotate the TargetLabel about, and position to set the
-        offset value to see :class:`~pyqtgraph.TextItem` for more inforation.
+        offset value to see :class:`~pyqtgraph.TextItem` for more information.
     kwargs : dict of arguments that are passed on to
         :class:`~pyqtgraph.TextItem` constructor, excluding text parameter
     """

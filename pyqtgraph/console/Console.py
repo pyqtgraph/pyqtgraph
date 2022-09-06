@@ -1,34 +1,36 @@
-# -*- coding: utf-8 -*-
-import sys, re, os, time, traceback, subprocess
+import importlib
 import pickle
+import re
+import subprocess
+import sys
+import traceback
 
-from ..Qt import QtCore, QtGui, QT_LIB
-from ..python2_3 import basestring
 from .. import exceptionHandling as exceptionHandling
 from .. import getConfigOption
 from ..functions import SignalBlock
-import importlib
+from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
+
 ui_template = importlib.import_module(
     f'.template_{QT_LIB.lower()}', package=__package__)
 
 
-class ConsoleWidget(QtGui.QWidget):
+class ConsoleWidget(QtWidgets.QWidget):
     """
     Widget displaying console output and accepting command input.
     Implements:
         
-    - eval python expressions / exec python statements
-    - storable history of commands
-    - exception handling allowing commands to be interpreted in the context of any level in the exception stack frame
+      - eval python expressions / exec python statements
+      - storable history of commands
+      - exception handling allowing commands to be interpreted in the context of any level in the exception stack frame
     
     Why not just use python in an interactive shell (or ipython) ? There are a few reasons:
        
-    - pyside does not yet allow Qt event processing and interactive shell at the same time
-    - on some systems, typing in the console _blocks_ the qt event loop until the user presses enter. This can 
-      be baffling and frustrating to users since it would appear the program has frozen.
-    - some terminals (eg windows cmd.exe) have notoriously unfriendly interfaces
-    - ability to add extra features like exception stack introspection
-    - ability to have multiple interactive prompts, including for spawned sub-processes
+      - pyside does not yet allow Qt event processing and interactive shell at the same time
+      - on some systems, typing in the console _blocks_ the qt event loop until the user presses enter. This can
+        be baffling and frustrating to users since it would appear the program has frozen.
+      - some terminals (eg windows cmd.exe) have notoriously unfriendly interfaces
+      - ability to add extra features like exception stack introspection
+      - ability to have multiple interactive prompts, including for spawned sub-processes
     """
     _threadException = QtCore.Signal(object)
     
@@ -45,7 +47,7 @@ class ConsoleWidget(QtGui.QWidget):
                             editorCommand --loadfile {fileName} --gotoline {lineNum}
         ==============  =============================================================================
         """
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         if namespace is None:
             namespace = {}
         namespace['__console__'] = self
@@ -454,7 +456,7 @@ class ConsoleWidget(QtGui.QWidget):
         if filterStr != '':
             if isinstance(exc, Exception):
                 msg = traceback.format_exception_only(type(exc), exc)
-            elif isinstance(exc, basestring):
+            elif isinstance(exc, str):
                 msg = exc
             else:
                 msg = repr(exc)

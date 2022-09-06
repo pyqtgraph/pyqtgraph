@@ -1,11 +1,13 @@
-# -*- coding: utf-8 -*-
+import math
+import platform
+
 import numpy as np
 import pytest
+
 import pyqtgraph as pg
-import platform
 from pyqtgraph.Qt import QtCore, QtGui, QtTest
 from tests.image_testing import assertImageApproved
-from tests.ui_testing import mouseMove, mouseDrag, mouseClick, resizeWindow
+from tests.ui_testing import mouseClick, mouseDrag, mouseMove, resizeWindow
 
 app = pg.mkQApp()
 pg.setConfigOption("mouseRateLimit", 0)
@@ -251,4 +253,22 @@ def test_PolyLineROI():
         assert len(r.getState()['points']) == 3
     
     plt.hide()
-    
+
+
+@pytest.mark.parametrize("p1,p2", [
+    ((1, 1), (2, 5)),
+    ((0.1, 0.1), (-1, 5)),
+    ((3, -1), (5, -6)),
+    ((-2, 1), (-4, -8)),
+])
+def test_LineROI_coords(p1, p2):
+    pw = pg.plot()
+
+    lineroi = pg.LineROI(p1, p2, width=0.5, pen="r")
+    pw.addItem(lineroi)
+
+    # first two handles are the scale-rotate handles positioned by pos1, pos2
+    for expected, (name, scenepos) in zip([p1, p2], lineroi.getSceneHandlePositions()):
+        got = lineroi.mapSceneToParent(scenepos)
+        assert math.isclose(got.x(), expected[0])
+        assert math.isclose(got.y(), expected[1])

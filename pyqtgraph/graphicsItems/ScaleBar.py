@@ -1,11 +1,10 @@
-from ..Qt import QtGui, QtCore
-from .GraphicsObject import *
-from .GraphicsWidgetAnchor import *
-from .TextItem import TextItem
-import numpy as np
 from .. import functions as fn
 from .. import getConfigOption
 from ..Point import Point
+from ..Qt import QtCore, QtWidgets
+from .GraphicsObject import *
+from .GraphicsWidgetAnchor import *
+from .TextItem import TextItem
 
 __all__ = ['ScaleBar']
 
@@ -25,11 +24,11 @@ class ScaleBar(GraphicsObject, GraphicsWidgetAnchor):
         self.pen = fn.mkPen(pen)
         self._width = width
         self.size = size
-        if offset == None:
+        if offset is None:
             offset = (0,0)
         self.offset = offset
         
-        self.bar = QtGui.QGraphicsRectItem()
+        self.bar = QtWidgets.QGraphicsRectItem()
         self.bar.setPen(self.pen)
         self.bar.setBrush(self.brush)
         self.bar.setParentItem(self)
@@ -67,5 +66,3 @@ class ScaleBar(GraphicsObject, GraphicsWidgetAnchor):
             anchor = (anchorx, anchory)
             self.anchor(itemPos=anchor, parentPos=anchor, offset=offset)
         return ret
-
-

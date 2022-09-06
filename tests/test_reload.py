@@ -1,7 +1,11 @@
-import os, sys, shutil, time
-import pyqtgraph as pg
+import os
+import shutil
+import sys
+import time
+
 import pytest
 
+import pyqtgraph as pg
 
 pgpath = os.path.join(os.path.dirname(pg.__file__), '..')
 pgpath_repr = repr(pgpath)
@@ -30,8 +34,7 @@ def remove_cache(mod):
     (
         (pg.Qt.QT_LIB == "PySide2" and pg.Qt.QtVersion.startswith("5.15"))
         or (pg.Qt.QT_LIB == "PySide6")
-    ) and (sys.version_info > (3, 9))
-    or (sys.version_info >= (3, 10)),
+    ) and (sys.version_info >= (3, 9)),
     reason="Unknown Issue"
 )
 @pytest.mark.usefixtures("tmp_module")
@@ -83,4 +86,3 @@ def test_reload(tmp_module):
     assert cfn2.__self__ is c
 
     pg.functions.disconnect(c.sig, c.fn)
-

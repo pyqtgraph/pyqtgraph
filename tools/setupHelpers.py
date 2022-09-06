@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from contextlib import suppress
 
 import json
@@ -10,7 +9,7 @@ import sys
 from distutils import core
 from typing import Dict, Any
 
-from generateChangelog import generateDebianChangelog
+from .generateChangelog import generateDebianChangelog
 
 # Maximum allowed repository size difference (in kB) following merge.
 # This is used to prevent large files from being inappropriately added to
@@ -325,17 +324,6 @@ def mergeTests():
     return ret
 
 
-def listAllPackages(pkgroot):
-    path = os.getcwd()
-    n = len(path.split(os.path.sep))
-    subdirs = [
-        i[0].split(os.path.sep)[n:]
-        for i in os.walk(os.path.join(path, pkgroot))
-        if '__init__.py' in i[2]
-    ]
-    return ['.'.join(p) for p in subdirs]
-
-
 def getInitVersion(pkgroot):
     """Return the version string defined in __init__.py"""
     path = os.getcwd()
@@ -425,10 +413,10 @@ def getVersionStrings(pkg):
     """
     Returns 4 version strings:
 
-    * the version string to use for this build,
-    * version string requested with --force-version (or None)
-    * version string that describes the current git checkout (or None).
-    * version string in the pkg/__init__.py,
+      * the version string to use for this build,
+      * version string requested with --force-version (or None)
+      * version string that describes the current git checkout (or None).
+      * version string in the pkg/__init__.py,
 
     The first return value is (forceVersion or gitVersion or initVersion).
     """

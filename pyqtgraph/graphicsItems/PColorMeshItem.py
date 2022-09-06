@@ -1,22 +1,54 @@
-from __future__ import division
+import itertools
+import warnings
 
-from ..Qt import QtGui, QtCore
 import numpy as np
-from .. import functions as fn
-from .. import debug as debug
-from .GraphicsObject import GraphicsObject
-from ..Point import Point
-from .. import getConfigOption
-from .GradientEditorItem import Gradients # List of colormaps
-from ..colormap import ColorMap
 
-try:
-    from collections.abc import Callable
-except ImportError:
-    # fallback for python < 3.3
-    from collections import Callable
+from .. import Qt, colormap
+from .. import functions as fn
+from ..Qt import QtCore, QtGui
+from .GradientEditorItem import Gradients  # List of colormaps
+from .GraphicsObject import GraphicsObject
 
 __all__ = ['PColorMeshItem']
+
+
+if Qt.QT_LIB.startswith('PyQt'):
+    wrapinstance = Qt.sip.wrapinstance
+else:
+    wrapinstance = Qt.shiboken.wrapInstance
+
+
+class QuadInstances:
+    def __init__(self):
+        self.polys = []
+
+    def alloc(self, size):
+        self.polys.clear()
+
+        # 2 * (size + 1) vertices, (x, y)
+        arr = np.empty((2 * (size + 1), 2), dtype=np.float64)
+        ptrs = list(map(wrapinstance,
+            itertools.count(arr.ctypes.data, arr.strides[0]),
+            itertools.repeat(QtCore.QPointF, arr.shape[0])))
+
+        # arrange into 2 rows, (size + 1) vertices
+        points = [ptrs[:len(ptrs)//2], ptrs[len(ptrs)//2:]]
+        self.arr = arr.reshape((2, -1, 2))
+
+        # pre-create quads from those 2 rows of QPointF(s)
+        for j in range(size):
+            bl, tl = points[0][j:j+2]
+            br, tr = points[1][j:j+2]
+            poly = (bl, br, tr, tl)
+            self.polys.append(poly)
+
+    def array(self, size):
+        if size != len(self.polys):
+            self.alloc(size)
+        return self.arr
+
+    def instances(self):
+        return self.polys
 
 
 class PColorMeshItem(GraphicsObject):
@@ -41,7 +73,7 @@ class PColorMeshItem(GraphicsObject):
         x, y : np.ndarray, optional, default None
             2D array containing the coordinates of the polygons
         z : np.ndarray
-            2D array containing the value which will be maped into the polygons
+            2D array containing the value which will be mapped into the polygons
             colors.
             If x and y is None, the polygons will be displaced on a grid
             otherwise x and y will be used as polygons vertices coordinates as::
@@ -54,7 +86,7 @@ class PColorMeshItem(GraphicsObject):
 
             "ASCII from: <https://matplotlib.org/3.2.1/api/_as_gen/
                          matplotlib.pyplot.pcolormesh.html>".
-        cmap : str, default 'viridis
+        colorMap : pg.ColorMap, default pg.colormap.get('viridis')
             Colormap used to map the z value to colors.
         edgecolors : dict, default None
             The color of the edges of the polygons.
@@ -72,27 +104,39 @@ class PColorMeshItem(GraphicsObject):
         GraphicsObject.__init__(self)
 
         self.qpicture = None  ## rendered picture for display
+        self.x = None
+        self.y = None
+        self.z = None
         
-        self.axisOrder = getConfigOption('imageAxisOrder')
-
-        if 'edgecolors' in kwargs.keys():
-            self.edgecolors = kwargs['edgecolors']
-        else:
-            self.edgecolors = None
-
-        if 'antialiasing' in kwargs.keys():
-            self.antialiasing = kwargs['antialiasing']
-        else:
-            self.antialiasing = False
+        self.edgecolors = kwargs.get('edgecolors', None)
+        self.antialiasing = kwargs.get('antialiasing', False)
         
-        if 'cmap' in kwargs.keys():
-            if kwargs['cmap'] in Gradients.keys():
-                self.cmap = kwargs['cmap']
-            else:
+        if 'colorMap' in kwargs:
+            cmap = kwargs.get('colorMap')
+            if not isinstance(cmap, colormap.ColorMap):
+                raise ValueError('colorMap argument must be a ColorMap instance')
+            self.cmap = cmap
+        elif 'cmap' in kwargs:
+            # legacy unadvertised argument for backwards compatibility.
+            # this will only use colormaps from Gradients.
+            # Note that the colors will be wrong for the hsv colormaps.
+            warnings.warn(
+                "The parameter 'cmap' will be removed in a version of PyQtGraph released after Nov 2022.",
+                DeprecationWarning, stacklevel=2
+            )
+            cmap = kwargs.get('cmap')
+            if not isinstance(cmap, str) or cmap not in Gradients:
                 raise NameError('Undefined colormap, should be one of the following: '+', '.join(['"'+i+'"' for i in Gradients.keys()])+'.')
+            pos, color = zip(*Gradients[cmap]['ticks'])
+            self.cmap = colormap.ColorMap(pos, color)
         else:
-            self.cmap = 'viridis'
-        
+            self.cmap = colormap.get('viridis')
+
+        lut_qcolor = self.cmap.getLookupTable(nPts=256, mode=self.cmap.QCOLOR)
+        self.lut_qbrush = [QtGui.QBrush(x) for x in lut_qcolor]
+
+        self.quads = QuadInstances()
+
         # If some data have been sent we directly display it
         if len(args)>0:
             self.setData(*args)
@@ -146,7 +190,7 @@ class PColorMeshItem(GraphicsObject):
         x, y : np.ndarray, optional, default None
             2D array containing the coordinates of the polygons
         z : np.ndarray
-            2D array containing the value which will be maped into the polygons
+            2D array containing the value which will be mapped into the polygons
             colors.
             If x and y is None, the polygons will be displaced on a grid
             otherwise x and y will be used as polygons vertices coordinates as::
@@ -161,9 +205,6 @@ class PColorMeshItem(GraphicsObject):
                          matplotlib.pyplot.pcolormesh.html>".
         """
 
-        # Prepare data
-        cd = self._prepareData(args)
-
         # Has the view bounds changed
         shapeChanged = False
         if self.qpicture is None:
@@ -175,48 +216,55 @@ class PColorMeshItem(GraphicsObject):
             if np.any(self.x != args[0]) or np.any(self.y != args[1]):
                 shapeChanged = True
 
+        # Prepare data
+        self._prepareData(args)
+
+
         self.qpicture = QtGui.QPicture()
-        p = QtGui.QPainter(self.qpicture)
+        painter = QtGui.QPainter(self.qpicture)
         # We set the pen of all polygons once
         if self.edgecolors is None:
-            p.setPen(fn.mkPen(QtGui.QColor(0, 0, 0, 0)))
+            painter.setPen(QtCore.Qt.PenStyle.NoPen)
         else:
-            p.setPen(fn.mkPen(self.edgecolors))
+            painter.setPen(fn.mkPen(self.edgecolors))
             if self.antialiasing:
-                p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+                painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
                 
 
         ## Prepare colormap
         # First we get the LookupTable
-        pos   = [i[0] for i in Gradients[self.cmap]['ticks']]
-        color = [i[1] for i in Gradients[self.cmap]['ticks']]
-        cmap  = ColorMap(pos, color)
-        lut   = cmap.getLookupTable(0.0, 1.0, 256)
+        lut = self.lut_qbrush
         # Second we associate each z value, that we normalize, to the lut
-        norm  = self.z - self.z.min()
-        norm = norm/norm.max()
-        norm  = (norm*(len(lut)-1)).astype(int)
-        
+        scale = len(lut) - 1
+        z_min = self.z.min()
+        z_max = self.z.max()
+        rng = z_max - z_min
+        if rng == 0:
+            rng = 1
+        norm = fn.rescaleData(self.z, scale / rng, z_min,
+            dtype=int, clip=(0, len(lut)-1))
+
+        if Qt.QT_LIB.startswith('PyQt'):
+            drawConvexPolygon = lambda x : painter.drawConvexPolygon(*x)
+        else:
+            drawConvexPolygon = painter.drawConvexPolygon
+
+        memory = self.quads.array(self.z.shape[1])
+        polys = self.quads.instances()
+
         # Go through all the data and draw the polygons accordingly
-        for xi in range(self.z.shape[0]):
-            for yi in range(self.z.shape[1]):
-                
-                # Set the color of the polygon first
-                c = lut[norm[xi][yi]]
-                p.setBrush(fn.mkBrush(QtGui.QColor(c[0], c[1], c[2])))
+        for i in range(self.z.shape[0]):
+            # populate 2 rows of values into points
+            memory[..., 0] = self.x[i:i+2, :]
+            memory[..., 1] = self.y[i:i+2, :]
 
-                polygon = QtGui.QPolygonF(
-                    [QtCore.QPointF(self.x[xi][yi],     self.y[xi][yi]),
-                     QtCore.QPointF(self.x[xi+1][yi],   self.y[xi+1][yi]),
-                     QtCore.QPointF(self.x[xi+1][yi+1], self.y[xi+1][yi+1]),
-                     QtCore.QPointF(self.x[xi][yi+1],   self.y[xi][yi+1])]
-                )
+            brushes = [lut[z] for z in norm[i].tolist()]
 
-                # DrawConvexPlygon is faster
-                p.drawConvexPolygon(polygon)
+            for brush, poly in zip(brushes, polys):
+                painter.setBrush(brush)
+                drawConvexPolygon(poly)
 
-
-        p.end()
+        painter.end()
         self.update()
 
         self.prepareGeometryChange()

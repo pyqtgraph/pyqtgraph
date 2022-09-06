@@ -1,6 +1,10 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui, QtWidgets
+__all__ = ["Container", "HContainer", "VContainer", "TContainer"]
+
 import weakref
+
+from ..Qt import QtCore, QtWidgets
+from .Dock import Dock
+
 
 class Container(object):
     #sigStretchChanged = QtCore.Signal()  ## can't do this here; not a QObject.
@@ -108,14 +112,14 @@ class Container(object):
         return self._stretch
             
 
-class SplitContainer(Container, QtGui.QSplitter):
+class SplitContainer(Container, QtWidgets.QSplitter):
     """Horizontal or vertical splitter with some changes:
      - save/restore works correctly
     """
     sigStretchChanged = QtCore.Signal()
     
     def __init__(self, area, orientation):
-        QtGui.QSplitter.__init__(self)
+        QtWidgets.QSplitter.__init__(self)
         self.setOrientation(orientation)
         Container.__init__(self, area)
         #self.splitterMoved.connect(self.restretchChildren)
@@ -218,18 +222,18 @@ class StackedWidget(QtWidgets.QStackedWidget):
         self.container.childEvent_(ev)
 
 
-class TContainer(Container, QtGui.QWidget):
+class TContainer(Container, QtWidgets.QWidget):
     sigStretchChanged = QtCore.Signal()
     def __init__(self, area):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         Container.__init__(self, area)
-        self.layout = QtGui.QGridLayout()
+        self.layout = QtWidgets.QGridLayout()
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0,0,0,0)
         self.setLayout(self.layout)
         
-        self.hTabLayout = QtGui.QHBoxLayout()
-        self.hTabBox = QtGui.QWidget()
+        self.hTabLayout = QtWidgets.QHBoxLayout()
+        self.hTabBox = QtWidgets.QWidget()
         self.hTabBox.setLayout(self.hTabLayout)
         self.hTabLayout.setSpacing(2)
         self.hTabLayout.setContentsMargins(0,0,0,0)
@@ -245,7 +249,7 @@ class TContainer(Container, QtGui.QWidget):
 
 
     def _insertItem(self, item, index):
-        if not isinstance(item, Dock.Dock):
+        if not isinstance(item, Dock):
             raise Exception("Tab containers may hold only docks, not other containers.")
         self.stack.insertWidget(index, item)
         self.hTabLayout.insertWidget(index, item.label)
@@ -288,5 +292,3 @@ class TContainer(Container, QtGui.QWidget):
             x = max(x, wx)
             y = max(y, wy)
         self.setStretch(x, y)
-        
-from . import Dock

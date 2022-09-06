@@ -16,20 +16,17 @@ Procedure for unit-testing with images:
     environment variable PYQTGRAPH_AUDIT_ALL=1.
 """
 
-import time
+import inspect
 import os
 import sys
-import inspect
-import warnings
-import numpy as np
-
+import time
 from pathlib import Path
 
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph import functions as fn
-from pyqtgraph import GraphicsLayoutWidget
-from pyqtgraph import ImageItem, TextItem
+import numpy as np
 
+from pyqtgraph import GraphicsLayoutWidget, ImageItem, TextItem
+from pyqtgraph import functions as fn
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 tester = None
 
@@ -68,7 +65,7 @@ def getTester():
 def getImageFromWidget(widget):
 
     # just to be sure the widget size is correct (new window may be resized):
-    QtGui.QApplication.processEvents()
+    QtWidgets.QApplication.processEvents()
 
     qimg = QtGui.QImage(widget.size(), QtGui.QImage.Format.Format_ARGB32)
     qimg.fill(QtCore.Qt.GlobalColor.transparent)
@@ -77,7 +74,7 @@ def getImageFromWidget(widget):
     painter.end()
 
     qimg = qimg.convertToFormat(QtGui.QImage.Format.Format_RGBA8888)
-    return fn.qimage_to_ndarray(qimg).copy()
+    return fn.ndarray_from_qimage(qimg).copy()
 
 
 def assertImageApproved(image, standardFile, message=None, **kwargs):
@@ -105,9 +102,9 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
     Extra keyword arguments are used to set the thresholds for automatic image
     comparison (see ``assertImageMatch()``).
     """
-    if isinstance(image, QtGui.QWidget):
+    if isinstance(image, QtWidgets.QWidget):
         # just to be sure the widget size is correct (new window may be resized):
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
         graphstate = scenegraphState(image, standardFile)
         image = getImageFromWidget(image)
@@ -126,7 +123,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
     else:
         qimg = QtGui.QImage(stdFileName)
         qimg = qimg.convertToFormat(QtGui.QImage.Format.Format_RGBA8888)
-        stdImage = fn.qimage_to_ndarray(qimg).copy()
+        stdImage = fn.ndarray_from_qimage(qimg).copy()
         del qimg
 
     # If the test image does not match, then we go to audit if requested.
@@ -292,30 +289,30 @@ def makeDiffImage(im1, im2):
     return diff
 
 
-class ImageTester(QtGui.QWidget):
+class ImageTester(QtWidgets.QWidget):
     """Graphical interface for auditing image comparison tests.
     """
     def __init__(self):
         self.lastKey = None
         
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.resize(1200, 800)
         #self.showFullScreen()
         
-        self.layout = QtGui.QGridLayout()
+        self.layout = QtWidgets.QGridLayout()
         self.setLayout(self.layout)
         
         self.view = GraphicsLayoutWidget()
         self.layout.addWidget(self.view, 0, 0, 1, 2)
 
-        self.label = QtGui.QLabel()
+        self.label = QtWidgets.QLabel()
         self.layout.addWidget(self.label, 1, 0, 1, 2)
         self.label.setWordWrap(True)
         font = QtGui.QFont("monospace", 14, QtGui.QFont.Weight.Bold)
         self.label.setFont(font)
 
-        self.passBtn = QtGui.QPushButton('Pass')
-        self.failBtn = QtGui.QPushButton('Fail')
+        self.passBtn = QtWidgets.QPushButton('Pass')
+        self.failBtn = QtWidgets.QPushButton('Fail')
         self.layout.addWidget(self.passBtn, 2, 0)
         self.layout.addWidget(self.failBtn, 2, 1)
         self.passBtn.clicked.connect(self.passTest)
@@ -363,7 +360,7 @@ class ImageTester(QtGui.QWidget):
         self.views[0].autoRange()
 
         while True:
-            QtGui.QApplication.processEvents()
+            QtWidgets.QApplication.processEvents()
             lastKey = self.lastKey
             
             self.lastKey = None
@@ -387,16 +384,6 @@ class ImageTester(QtGui.QWidget):
 
     def failTest(self):
         self.lastKey = 'f'
-
-
-def getTestDataRepo():
-    warnings.warn(
-        "Test data data repo has been merged with the main repo"
-        "use getTestDataDirectory() instead, this method will be removed"
-        "in a future version of pyqtgraph",
-        DeprecationWarning, stacklevel=2
-    )
-    return getTestDataDirectory()
 
 
 def getTestDataDirectory():

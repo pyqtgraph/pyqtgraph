@@ -1,6 +1,8 @@
-import pyqtgraph as pg
-import numpy as np
 from collections import OrderedDict
+
+import numpy as np
+
+import pyqtgraph as pg
 
 app = pg.mkQApp()
 
@@ -112,7 +114,7 @@ def test_TableWidget():
         if isinstance(item.value, float):
             return "%d %f" % (item.index, item.value)
         else:
-            return pg.asUnicode(item.value)
+            return str(item.value)
     w.setFormat(fmt)
     assert isinstance(item.value, float)
     assert isinstance(item.index, int)

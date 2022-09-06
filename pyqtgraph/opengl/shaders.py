@@ -1,9 +1,10 @@
+from OpenGL.GL import *  # noqa
+from OpenGL.GL import shaders  # noqa
 try:
     from OpenGL import NullFunctionError
 except ImportError:
     from OpenGL.error import NullFunctionError
-from OpenGL.GL import *
-from OpenGL.GL import shaders
+import numpy as np
 import re
 
 ## For centralizing and managing vertex/fragment shader programs.
@@ -322,7 +323,7 @@ class ShaderProgram(object):
                     loc = self.uniform(uniformName)
                     if loc == -1:
                         raise Exception('Could not find uniform variable "%s"' % uniformName)
-                    glUniform1fv(loc, len(data), data)
+                    glUniform1fv(loc, len(data), np.array(data, dtype=np.float32))
                     
                 ### bind buffer data to program blocks
                 #if len(self.blockData) > 0:

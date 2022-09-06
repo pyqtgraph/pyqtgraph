@@ -1,9 +1,8 @@
-from ..Qt import QtGui, QtCore
 from .. import functions as fn
+from .. import getConfigOption
+from ..Qt import QtCore, QtWidgets, QtGui
 from .GraphicsWidget import GraphicsWidget
 from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
-from .. import getConfigOption
-
 
 __all__ = ['LabelItem']
 
@@ -19,7 +18,7 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
     def __init__(self, text=' ', parent=None, angle=0, **args):
         GraphicsWidget.__init__(self, parent)
         GraphicsWidgetAnchor.__init__(self)
-        self.item = QtGui.QGraphicsTextItem(self)
+        self.item = QtWidgets.QGraphicsTextItem(self)
         self.opts = {
             'color': None,
             'justify': 'center'
@@ -56,7 +55,7 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
         if color is None:
             color = getConfigOption('foreground')
         color = fn.mkColor(color)
-        optlist.append('color: #' + fn.colorStr(color)[:6])
+        optlist.append('color: ' + color.name(QtGui.QColor.NameFormat.HexArgb))
         if 'size' in opts:
             optlist.append('font-size: ' + opts['size'])
         if 'bold' in opts and opts['bold'] in [True, False]:

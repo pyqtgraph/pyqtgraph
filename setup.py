@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 DESCRIPTION = """\
 PyQtGraph is a pure-python graphics and GUI library built on PyQt5/PySide2 and
 numpy. 
@@ -15,6 +14,10 @@ setupOpts = dict(
     long_description=DESCRIPTION,
     license =  'MIT',
     url='http://www.pyqtgraph.org',
+    project_urls={
+        'Documentation': 'https://pyqtgraph.readthedocs.io',
+        'Source': 'https://github.com/pyqtgraph/pyqtgraph',
+    },
     author='Luke Campagnola',
     author_email='luke.campagnola@gmail.com',
     classifiers = [
@@ -28,41 +31,21 @@ setupOpts = dict(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Scientific/Engineering :: Visualization",
         "Topic :: Software Development :: User Interfaces",
-        ],
+    ],
 )
 
 
 import distutils.dir_util
+import os
+import re
+import sys
 from distutils.command import build
-import os, sys, re
-try:
-    import setuptools
-    from setuptools import setup
-    from setuptools.command import install
-except ImportError:
-    sys.stderr.write("Warning: could not import setuptools; falling back to distutils.\n")
-    from distutils.core import setup
-    from distutils.command import install
 
-
-# Work around mbcs bug in distutils.
-# http://bugs.python.org/issue10945
-import codecs
-try:
-    codecs.lookup('mbcs')
-except LookupError:
-    ascii = codecs.lookup('ascii')
-    func = lambda name, enc=ascii: {True: enc}.get(name=='mbcs')
-    codecs.register(func)
-
+from setuptools import find_namespace_packages, setup
+from setuptools.command import install
 
 path = os.path.split(__file__)[0]
-sys.path.insert(0, os.path.join(path, 'tools'))
-import setupHelpers as helpers
-
-## generate list of all sub-packages
-allPackages = (helpers.listAllPackages(pkgroot='pyqtgraph') + 
-               ['pyqtgraph.'+x for x in helpers.listAllPackages(pkgroot='examples')])
+import tools.setupHelpers as helpers
 
 ## Decide what version string to use in the build
 version, forcedVersion, gitVersion, initVersion = helpers.getVersionStrings(pkg='pyqtgraph')
@@ -80,7 +63,6 @@ class Build(build.build):
         buildPath = os.path.join(path, self.build_lib)
         if os.path.isdir(buildPath):
             distutils.dir_util.remove_tree(buildPath)
-    
         build.build.run(self)
         
 
@@ -92,7 +74,7 @@ class Install(install.install):
     """
     def run(self):
         global path, version, initVersion, forcedVersion, installVersion
-        
+
         name = self.config_vars['dist_name']
         path = os.path.join(self.install_libbase, 'pyqtgraph')
         if os.path.exists(path):
@@ -127,26 +109,32 @@ class Install(install.install):
     
         return rval
 
-
 setup(
     version=version,
-    cmdclass={'build': Build, 
-              'install': Install,
-              'deb': helpers.DebCommand, 
-              'test': helpers.TestCommand,
-              'debug': helpers.DebugCommand,
-              'mergetest': helpers.MergeTestCommand,
-              'asv_config': helpers.ASVConfigCommand,
-              'style': helpers.StyleCommand},
-    packages=allPackages,
-    python_requires=">=3.7",
-    package_dir={'pyqtgraph.examples': 'examples'},  ## install examples along with the rest of the source
-    package_data={'pyqtgraph.examples': ['optics/*.gz', 'relativity/presets/*.cfg'],
-                  "pyqtgraph.icons": ["*.svg", "*.png"],
-                  "pyqtgraph": ["colors/maps/*.csv", "colors/maps/*.txt"],
-                  },
-    install_requires = [
-        'numpy>=1.17.0',
+    cmdclass={
+        'build': Build, 
+        'install': Install,
+        'deb': helpers.DebCommand, 
+        'test': helpers.TestCommand,
+        'debug': helpers.DebugCommand,
+        'mergetest': helpers.MergeTestCommand,
+        'asv_config': helpers.ASVConfigCommand,
+        'style': helpers.StyleCommand
+    },
+    packages=find_namespace_packages(include=['pyqtgraph', 'pyqtgraph.*']),
+    python_requires=">=3.8",
+    package_dir={"pyqtgraph": "pyqtgraph"},
+    package_data={
+        'pyqtgraph.examples': ['optics/*.gz', 'relativity/presets/*.cfg'],
+        "pyqtgraph.icons": ["*.svg", "*.png"],
+        "pyqtgraph": [
+            "colors/maps/*.csv",
+            "colors/maps/*.txt",
+            "colors/maps/*.hex",
         ],
+    },
+    install_requires = [
+        'numpy>=1.20.0',
+    ],
     **setupOpts
 )

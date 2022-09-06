@@ -1,7 +1,6 @@
-from OpenGL.GL import *
-from .. GLGraphicsItem import GLGraphicsItem
-from ...Qt import QtGui
+from OpenGL.GL import *  # noqa
 import numpy as np
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLImageItem']
 
@@ -60,7 +59,8 @@ class GLImageItem(GLGraphicsItem):
         if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
             raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
         
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, shape[0], shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, self.data.transpose((1,0,2)))
+        data = np.ascontiguousarray(self.data.transpose((1,0,2)))
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, shape[0], shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, data)
         glDisable(GL_TEXTURE_2D)
         
         #self.lists = {}
@@ -99,5 +99,5 @@ class GLImageItem(GLGraphicsItem):
         glTexCoord2f(0,1)
         glVertex3f(0, self.data.shape[1], 0)
         glEnd()
-        glDisable(GL_TEXTURE_3D)
+        glDisable(GL_TEXTURE_2D)
                 

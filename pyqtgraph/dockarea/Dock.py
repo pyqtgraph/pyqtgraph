@@ -1,44 +1,49 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui
+import warnings
 
-from .DockDrop import *
+from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
 from ..widgets.VerticalLabel import VerticalLabel
-from ..python2_3 import asUnicode
+from .DockDrop import DockDrop
 
 
-class Dock(QtGui.QWidget, DockDrop):
+class Dock(QtWidgets.QWidget, DockDrop):
 
     sigStretchChanged = QtCore.Signal()
     sigClosed = QtCore.Signal(object)
 
-    def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, closable=False, fontSize="12px"):
-        QtGui.QWidget.__init__(self)
-        DockDrop.__init__(self)
+    def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, label=None, **kargs):
+        allowedAreas = None
+        if QT_LIB.startswith('PyQt'):
+            QtWidgets.QWidget.__init__(self, allowedAreas=allowedAreas)
+        else:
+            QtWidgets.QWidget.__init__(self)
+            DockDrop.__init__(self, allowedAreas=allowedAreas)
         self._container = None
         self._name = name
         self.area = area
-        self.label = DockLabel(name, self, closable, fontSize)
-        if closable:
+        self.label = label
+        if self.label is None:
+            self.label = DockLabel(name, **kargs)
+        self.label.dock = self
+        if self.label.isClosable():
             self.label.sigCloseClicked.connect(self.close)
         self.labelHidden = False
         self.moveLabel = True  ## If false, the dock is no longer allowed to move the label.
         self.autoOrient = autoOrientation
         self.orientation = 'horizontal'
         #self.label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
-        self.topLayout = QtGui.QGridLayout()
+        self.topLayout = QtWidgets.QGridLayout()
         self.topLayout.setContentsMargins(0, 0, 0, 0)
         self.topLayout.setSpacing(0)
         self.setLayout(self.topLayout)
         self.topLayout.addWidget(self.label, 0, 1)
-        self.widgetArea = QtGui.QWidget()
+        self.widgetArea = QtWidgets.QWidget()
         self.topLayout.addWidget(self.widgetArea, 1, 1)
-        self.layout = QtGui.QGridLayout()
+        self.layout = QtWidgets.QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
         self.widgetArea.setLayout(self.layout)
-        self.widgetArea.setSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Expanding)
+        self.widgetArea.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.widgets = []
-        self._container = None
         self.currentRow = 0
         #self.titlePos = 'top'
         self.raiseOverlay()
@@ -125,7 +130,7 @@ class Dock(QtGui.QWidget, DockDrop):
         """
         Gets the text displayed in the title bar for this dock.
         """
-        return asUnicode(self.label.text())
+        return self.label.text()
 
     def setTitle(self, text):
         """
@@ -230,8 +235,12 @@ class Dock(QtGui.QWidget, DockDrop):
 
     def close(self):
         """Remove this dock from the DockArea it lives inside."""
+        if self._container is None:
+            warnings.warn(f"Cannot close dock {self} because it is not open.", RuntimeWarning, stacklevel=2)
+            return
+
         self.setParent(None)
-        QtGui.QLabel.close(self.label)
+        QtWidgets.QLabel.close(self.label)
         self.label.setParent(None)
         self._container.apoptose()
         self._container = None
@@ -260,22 +269,22 @@ class DockLabel(VerticalLabel):
     sigClicked = QtCore.Signal(object, object)
     sigCloseClicked = QtCore.Signal()
 
-    def __init__(self, text, dock, showCloseButton, fontSize):
+    def __init__(self, text, closable=False, fontSize="12px"):
         self.dim = False
         self.fixedWidth = False
         self.fontSize = fontSize
         VerticalLabel.__init__(self, text, orientation='horizontal', forceWidth=False)
         self.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop|QtCore.Qt.AlignmentFlag.AlignHCenter)
-        self.dock = dock
+        self.dock = None
         self.updateStyle()
         self.setAutoFillBackground(False)
         self.mouseMoved = False
 
         self.closeButton = None
-        if showCloseButton:
-            self.closeButton = QtGui.QToolButton(self)
+        if closable:
+            self.closeButton = QtWidgets.QToolButton(self)
             self.closeButton.clicked.connect(self.sigCloseClicked)
-            self.closeButton.setIcon(QtGui.QApplication.style().standardIcon(QtGui.QStyle.StandardPixmap.SP_TitleBarCloseButton))
+            self.closeButton.setIcon(QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_TitleBarCloseButton))
 
     def updateStyle(self):
         r = '3px'
@@ -328,6 +337,9 @@ class DockLabel(VerticalLabel):
         VerticalLabel.setOrientation(self, o)
         self.updateStyle()
 
+    def isClosable(self):
+        return self.closeButton is not None
+
     def mousePressEvent(self, ev):
         lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
         self.pressPos = lpos
@@ -337,7 +349,7 @@ class DockLabel(VerticalLabel):
     def mouseMoveEvent(self, ev):
         if not self.mouseMoved:
             lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
-            self.mouseMoved = (lpos - self.pressPos).manhattanLength() > QtGui.QApplication.startDragDistance()
+            self.mouseMoved = (lpos - self.pressPos).manhattanLength() > QtWidgets.QApplication.startDragDistance()
 
         if self.mouseMoved and ev.buttons() == QtCore.Qt.MouseButton.LeftButton:
             self.dock.startDrag()

@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 import pytest
+
 import pyqtgraph as pg
 
 pg.mkQApp()
@@ -24,14 +24,14 @@ def test_SpinBox_defaults():
     (1.45e-3, '1.45 mPSI', dict(int=False, decimals=6, suffix='PSI', siPrefix=True)),
     (-2500.3427, '$-2500.34', dict(int=False, format='${value:0.02f}')),
     (1000, '1 k', dict(siPrefix=True, suffix="")),
+    (1.45e-9, 'i = 1.45e-09 A', dict(int=False, decimals=6, suffix='A', siPrefix=False, prefix='i =')),
 ])
 def test_SpinBox_formatting(value, expected_text, opts):
     sb = pg.SpinBox(**opts)
     sb.setValue(value)
 
     assert sb.value() == value
-    assert pg.asUnicode(sb.text()) == expected_text
-
+    assert sb.text() == expected_text
 
 @pytest.mark.parametrize("suffix", ["", "V"])
 def test_SpinBox_gui_set_value(suffix):

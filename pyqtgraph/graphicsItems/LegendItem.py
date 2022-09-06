@@ -1,16 +1,15 @@
-# -*- coding: utf-8 -*-
 import math
 
-from .GraphicsWidget import GraphicsWidget
-from .LabelItem import LabelItem
-from ..Qt import QtGui, QtCore
 from .. import functions as fn
 from ..icons import invisibleEye
 from ..Point import Point
-from .ScatterPlotItem import ScatterPlotItem, drawSymbol
-from .PlotDataItem import PlotDataItem
-from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
+from ..Qt import QtCore, QtGui, QtWidgets
 from .BarGraphItem import BarGraphItem
+from .GraphicsWidget import GraphicsWidget
+from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
+from .LabelItem import LabelItem
+from .PlotDataItem import PlotDataItem
+from .ScatterPlotItem import ScatterPlotItem, drawSymbol
 
 __all__ = ['LegendItem', 'ItemSample']
 
@@ -66,7 +65,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         GraphicsWidget.__init__(self)
         GraphicsWidgetAnchor.__init__(self)
         self.setFlag(self.GraphicsItemFlag.ItemIgnoresTransformations)
-        self.layout = QtGui.QGraphicsGridLayout()
+        self.layout = QtWidgets.QGraphicsGridLayout()
         self.layout.setVerticalSpacing(verSpacing)
         self.layout.setHorizontalSpacing(horSpacing)
 
@@ -269,6 +268,18 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         except IndexError:
             return None
 
+    def _removeItemFromLayout(self, *args):
+        for item in args:
+            self.layout.removeItem(item)
+            item.close()
+            # Normally, the item is automatically removed from
+            # its scene when it gets destroyed.
+            # this doesn't happen on current versions of
+            # PySide (5.15.x, 6.3.x) and results in a leak.
+            scene = item.scene()
+            if scene:
+                scene.removeItem(item)
+
     def removeItem(self, item):
         """Removes one item from the legend.
 
@@ -280,20 +291,14 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         for sample, label in self.items:
             if sample.item is item or label.text == item:
                 self.items.remove((sample, label))  # remove from itemlist
-                self.layout.removeItem(sample)  # remove from layout
-                sample.close()  # remove from drawing
-                self.layout.removeItem(label)
-                label.close()
-                self.updateSize()  # redraq box
+                self._removeItemFromLayout(sample, label)
+                self.updateSize()  # redraw box
                 return  # return after first match
 
     def clear(self):
         """Remove all items from the legend."""
         for sample, label in self.items:
-            self.layout.removeItem(sample)
-            sample.close()
-            self.layout.removeItem(label)
-            label.close()
+            self._removeItemFromLayout(sample, label)
 
         self.items = []
         self.updateSize()

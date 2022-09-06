@@ -1,4 +1,5 @@
 import numpy as np
+
 import pyqtgraph as pg
 from tests.image_testing import assertImageApproved
 
@@ -28,6 +29,7 @@ def test_PlotCurveItem():
 
     c.setData(data, connect='finite', skipFiniteCheck=True)
     assertImageApproved(p, 'plotcurveitem/connectfinite', "Plot curve with finite points connected using QPolygonF.")
+    c.setSkipFiniteCheck(False)
     
     c.setData(data, connect=np.array([1,1,1,0,1,1,0,0,1,0,0,0,1,1,0,0]))
     assertImageApproved(p, 'plotcurveitem/connectarray', "Plot curve with connection array.")

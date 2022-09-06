@@ -1,5 +1,7 @@
-import pyqtgraph as pg
 from math import isclose
+import pytest
+
+import pyqtgraph as pg
 
 app = pg.mkQApp()
 
@@ -145,3 +147,31 @@ def test_AxisItem_label_visibility():
     assert axis.labelText == ''
     assert axis.labelUnits == 'V'
     assert axis.label.isVisible()
+
+@pytest.mark.parametrize(
+    "orientation,x,y,expected",
+    [
+       ('top', False, True, False),
+       ('top', True, False, True),
+       ('left', False, True, True),
+       ('left', True, False, False),
+    ],
+)
+def test_AxisItem_setLogMode_two_args(orientation, x, y, expected):
+    axis = pg.AxisItem(orientation)
+    axis.setLogMode(x, y)
+    assert axis.logMode == expected
+
+@pytest.mark.parametrize(
+    "orientation,log,expected",
+    [
+       ('top', True, True),
+       ('left', True, True),
+       ('top', False, False),
+       ('left', False, False),
+    ],
+)
+def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
+    axis = pg.AxisItem(orientation)
+    axis.setLogMode(log)
+    assert axis.logMode == expected
