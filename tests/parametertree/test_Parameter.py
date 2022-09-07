@@ -2,7 +2,12 @@ import pytest
 from functools import wraps
 from pyqtgraph.parametertree import Parameter
 from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
-from pyqtgraph.parametertree import RunOpts, InteractiveFunction, Interactor, interact
+from pyqtgraph.parametertree import (
+    RunOptions,
+    InteractiveFunction,
+    Interactor,
+    interact,
+)
 
 
 def test_parameter_hasdefault():
@@ -65,7 +70,7 @@ def test_unpack_parameter():
 
 
 def test_interact():
-    interactor = Interactor(runOpts=RunOpts.ON_ACTION)
+    interactor = Interactor(runOptions=RunOptions.ON_ACTION)
     value = None
 
     def retain(func):
@@ -106,7 +111,11 @@ def test_interact():
     assert value == (10, 5)
 
     host = interactor(
-        a, x=10, y=50, ignores=["x"], runOpts=(RunOpts.ON_CHANGED, RunOpts.ON_CHANGING)
+        a,
+        x=10,
+        y=50,
+        ignores=["x"],
+        runOptions=(RunOptions.ON_CHANGED, RunOptions.ON_CHANGING),
     )
     for child in "x", "Run":
         assert child not in host.names
@@ -127,7 +136,7 @@ def test_interact():
         assert host.title() == "Group only"
         assert [p.title() is None for p in host]
 
-    with interactor.optsContext(runOpts=RunOpts.ON_CHANGED):
+    with interactor.optsContext(runOptions=RunOptions.ON_CHANGED):
         host = interactor(a, x=5)
         host["y"] = 20
         assert value == (5, 20)
@@ -156,7 +165,7 @@ def test_interact():
     host.child("a", "Run").activate()
     assert value == 5
 
-    @interactor.decorate(nest=False, runOpts=RunOpts.ON_CHANGED)
+    @interactor.decorate(nest=False, runOptions=RunOptions.ON_CHANGED)
     @retain
     def b(y=6):
         return y
@@ -173,7 +182,7 @@ def test_interact():
     def override(**kwargs):
         return raw(**kwargs)
 
-    host = interactor(wraps(raw)(override), runOpts=RunOpts.ON_CHANGED)
+    host = interactor(wraps(raw)(override), runOptions=RunOptions.ON_CHANGED)
     assert "x" in host.names
     host["x"] = 100
     assert value == 100
@@ -183,7 +192,7 @@ def test_run():
     def a():
         """"""
 
-    interactor = Interactor(runOpts=RunOpts.ON_ACTION)
+    interactor = Interactor(runOptions=RunOptions.ON_ACTION)
 
     defaultRunBtn = Parameter.create(**interactor.runActionTemplate, name="Run")
     btn = interactor(a)
@@ -201,6 +210,7 @@ def test_run():
     test2 = interactor(a, nest=False)
     assert not test2.parent()
 
+
 def test_no_func_group():
     def inner(a=5, b=6):
         return a + b
@@ -215,7 +225,7 @@ def test_tips():
 
     interactor = Interactor()
 
-    btn = interactor(a, runOpts=RunOpts.ON_ACTION)
+    btn = interactor(a, runOptions=RunOptions.ON_ACTION)
     assert btn.opts["tip"] == a.__doc__
 
     def a2(x=5):
@@ -227,7 +237,7 @@ def test_tips():
         followed by more text won't result in a tooltip
         """
 
-    param = interactor(a2, runOpts=RunOpts.ON_ACTION)
+    param = interactor(a2, runOptions=RunOptions.ON_ACTION)
     assert param.opts["tip"] == a2.__doc__ and param.type() == "group"
 
     param = interactor(a3)
@@ -243,7 +253,7 @@ def test_interactiveFunc():
         return a
 
     interactive = InteractiveFunction(myfunc)
-    host = interact(interactive, runOpts=[])
+    host = interact(interactive, runOptions=[])
 
     host["a"] = 7
     assert interactive.runFromAction() == 7
@@ -354,6 +364,7 @@ def test_update_non_param_kwarg():
     def a(x=3, **kwargs):
         RetainVal.a = sum(kwargs.values()) + x
         return RetainVal.a
+
     a.parametersNeedRunKwargs = True
 
     host = interact(a)
@@ -372,10 +383,12 @@ def test_update_non_param_kwarg():
     # But the cache should still be up-to-date
     assert a() == 5
 
+
 def test_hookup_extra_params():
     @InteractiveFunction
     def a(x=5, **kwargs):
         return x + sum(kwargs.values())
+
     interact(a)
 
     p2 = Parameter.create(name="p2", type="int", value=3)
