@@ -437,7 +437,8 @@ class HistogramLUTItem(GraphicsWidget):
 
         # force this because calling self.setLevels might not set the imageItem
         # levels if there was no change to the region item
-        self.imageItem().setLevels(self.getLevels())
+        if self.imageItem() is not None:
+            self.imageItem().setLevels(self.getLevels())
 
         self.imageChanged()
         self.update()
