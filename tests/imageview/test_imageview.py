@@ -18,10 +18,10 @@ def test_timeslide_snap():
     count = 31
     frames = np.ones((count, 10, 10))
     iv = pg.ImageView(discreteTimeLine=True)
-    assert iv.nframes == 0
+    assert iv.nframes() == 0
     iv.setImage(frames, xvals=(np.linspace(0., 1., count)))
     iv.show()
-    assert iv.nframes == count
+    assert iv.nframes() == count
     speed = count / 2
     iv.play(speed)
     assert iv.playRate == speed

@@ -433,7 +433,7 @@ class ImageView(QtWidgets.QWidget):
             if self._pausedPlayRate is not None:
                 fps = self._pausedPlayRate
             else:
-                fps = (self.nframes - 1) / (self.tVals[-1] - self.tVals[0])
+                fps = (self.nframes() - 1) / (self.tVals[-1] - self.tVals[0])
             self.play(fps)
         else:
             self.play(self.playRate)
@@ -449,7 +449,6 @@ class ImageView(QtWidgets.QWidget):
             a.showLabel(False)
         self.ui.histogram.setMinimumWidth(135)
 
-    @property
     def nframes(self):
         """
         Returns
@@ -511,7 +510,7 @@ class ImageView(QtWidgets.QWidget):
             self.play(0)
             ev.accept()
         elif ev.key() == QtCore.Qt.Key.Key_End:
-            self.setCurrentIndex(self.nframes-1)
+            self.setCurrentIndex(self.nframes()-1)
             self.play(0)
             ev.accept()
         elif ev.key() in self.noRepeatKeys:
@@ -579,7 +578,7 @@ class ImageView(QtWidgets.QWidget):
         
     def setCurrentIndex(self, ind):
         """Set the currently displayed frame index."""
-        index = fn.clip_scalar(ind, 0, self.nframes-1)
+        index = fn.clip_scalar(ind, 0, self.nframes()-1)
         self.currentIndex = index
         self.updateImage()
         self.ignoreTimeLine = True
