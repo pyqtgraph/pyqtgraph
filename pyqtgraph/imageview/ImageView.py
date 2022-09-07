@@ -842,7 +842,7 @@ class ImageView(QtWidgets.QWidget):
             The time value of the slider.
         """
         if not self.hasTimeAxis():
-            return 0, 0
+            return 0, 0.0
 
         t = slider.value()
 
@@ -851,7 +851,7 @@ class ImageView(QtWidgets.QWidget):
             ind = int(t)
         else:
             if len(xv) < 2:
-                return 0, 0
+                return 0, 0.0
             inds = np.argwhere(xv <= t)
             if len(inds) < 1:
                 return 0, t

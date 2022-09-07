@@ -25,14 +25,14 @@ def test_timeslide_snap():
     speed = count / 2
     iv.play(speed)
     assert iv.playRate == speed
-    iv.timeLine.setPos(0.51)
+    iv.timeLine.setPos(0.51)  # side effect: also pauses playback
     assert iv.playRate == 0
     ind, val = iv.timeIndex(iv.timeLine)
     assert ind == count // 2
     assert val == 0.5
-    iv.togglePause()
+    iv.togglePause()  # restarts playback
     assert iv.playRate == speed
-    iv.togglePause()
+    iv.togglePause()  # pauses playback
     assert iv.playRate == 0
     iv.play()
     assert iv.playRate == speed
