@@ -326,11 +326,11 @@ class Interactor:
         # Delete explicitly since correct values are now ``self`` attributes
         del runOpts, titleFormat, nest, existOk, parent
 
-        funcDict = self.functionToParameterDict(function, **overrides)
+        function = self._toInteractiveFunction(function)
+        funcDict = self.functionToParameterDict(function.function, **overrides)
         children = funcDict.pop("children", [])  # type: list[dict]
         chNames = [ch["name"] for ch in children]
         funcGroup = self._resolveFunctionGroup(funcDict)
-        function = self._toInteractiveFunction(function)
 
         # Values can't come both from closures and overrides/params, so ensure they don't
         # get created

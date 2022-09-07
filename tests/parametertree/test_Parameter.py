@@ -388,6 +388,13 @@ def test_class_interact():
     parent = Parameter.create(name="parent", type="group")
     interactor = Interactor(parent=parent, nest=False)
 
+    def outside_class_deco(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
     class A:
         def a(self, x=5):
             return x
@@ -396,9 +403,16 @@ def test_class_interact():
         def b(cls, y=5):
             return y
 
+        @outside_class_deco
+        def c(self, z=5):
+            return z
+
     a = A()
     ai = interactor.decorate()(a.a)
     assert ai() == a.a()
 
     bi = interactor.decorate()(A.b)
     assert bi() == A.b()
+
+    ci = interactor.decorate()(a.c)
+    assert ci() == a.c()
