@@ -17,12 +17,8 @@ from time import perf_counter
 
 import numpy as np
 
-from .. import functions as fn
-from ..Qt import QtCore, QtGui, QtWidgets
-
-from . import ImageViewTemplate_generic as ui_template
-
 from .. import debug as debug
+from .. import functions as fn
 from .. import getConfigOption
 from ..graphicsItems.GradientEditorItem import addGradientListToDocstring
 from ..graphicsItems.ImageItem import *
@@ -31,7 +27,9 @@ from ..graphicsItems.LinearRegionItem import *
 from ..graphicsItems.ROI import *
 from ..graphicsItems.ViewBox import *
 from ..graphicsItems.VTickGroup import VTickGroup
+from ..Qt import QtCore, QtGui, QtWidgets
 from ..SignalProxy import SignalProxy
+from . import ImageViewTemplate_generic as ui_template
 
 try:
     from bottleneck import nanmax, nanmin
@@ -850,7 +848,7 @@ class ImageView(QtWidgets.QWidget):
 
     @addGradientListToDocstring()
     def setPredefinedGradient(self, name):
-        """Set one of the gradients defined in :class:`GradientEditorItem <pyqtgraph.graphicsItems.GradientEditorItem>`.
+        """Set one of the gradients defined in :class:`GradientEditorItem`.
         Currently available gradients are:   
         """
         self.ui.histogram.gradient.loadPreset(name)

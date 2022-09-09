@@ -10,9 +10,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import time
-import sys
 import os
+import sys
+import time
 from datetime import datetime
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -30,13 +30,27 @@ import pyqtgraph
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.napoleon']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.napoleon', 'sphinx_qt_documentation']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
+
+# Set Qt Documentation Variable
+qt_documentation = "Qt6"
+
+extensions += ["sphinx.ext.intersphinx"]
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'numpy': ('https://numpy.org/doc/stable/', None)
+}
+
+napoleon_preprocess_types = True
+napoleon_type_aliases = {
+    "callable": ":class:`collections.abc.Callable`"
+}
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'

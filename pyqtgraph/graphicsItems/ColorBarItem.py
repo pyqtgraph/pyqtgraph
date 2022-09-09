@@ -25,9 +25,10 @@ class ColorBarItem(PlotItem):
     A labeled axis is displayed directly next to the gradient to help identify values.
     Handles included in the color bar allow for interactive adjustment.
 
-    A ColorBarItem can be assigned one or more :class:`~pyqtgraph.ImageItem`s that will be displayed 
-    according to the selected color map and levels. The ColorBarItem can be used as a separate
-    element in a :class:`~pyqtgraph.GraphicsLayout` or added to the layout of a 
+    A ColorBarItem can be assigned one or more :class:`~pyqtgraph.ImageItem` s 
+    that will be displayed according to the selected color map and levels. The
+    ColorBarItem can be used as a separate element in a 
+    :class:`~pyqtgraph.GraphicsLayout` or added to the layout of a 
     :class:`~pyqtgraph.PlotItem` used to display image data with coordinate axes.
 
     =============================  =============================================

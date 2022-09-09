@@ -16,3 +16,4 @@ Contents:
     dockarea
     graphicsscene/index
     flowchart/index
+    point
