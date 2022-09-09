@@ -3,4 +3,4 @@ from .Parameter import Parameter, registerParameterItemType, registerParameterTy
 from .ParameterItem import ParameterItem
 from .ParameterSystem import ParameterSystem, SystemSolver
 from .ParameterTree import ParameterTree
-from .interactive import RunOpts, interact, InteractiveFunction, Interactor
+from .interactive import RunOptions, interact, InteractiveFunction, Interactor

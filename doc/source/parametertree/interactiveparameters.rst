@@ -73,24 +73,24 @@ code below is functionally equivalent to above):
 There are several caveats, but this is one of the most common scenarios
 for function interaction.
 
-``runOpts``
-^^^^^^^^^^^
+``runOptions``
+^^^^^^^^^^^^^^
 
 Often, an ``interact``-ed function shouldn't run until multiple
 parameter values are changed. Or, the function should be run every time
 a value is *changing*, not just changed. In these cases, modify the
-``runOpts`` parameter.
+``runOptions`` parameter.
 
 .. code:: python
 
-    from pyqtgraph.parametertree import interact, RunOpts
+    from pyqtgraph.parametertree import interact, RunOptions
 
     # Will add a button named "Run". When clicked, the function will run
-    params = interact(a, runOpts=RunOpts.ON_ACTION)
+    params = interact(a, runOptions=RunOptions.ON_ACTION)
     # Will run on any `sigValueChanging` signal
-    params = interact(a, runOpts=RunOpts.ON_CHANGING)
+    params = interact(a, runOptions=RunOptions.ON_CHANGING)
     # Runs on `sigValueChanged` or when "Run" is pressed
-    params = interact(a, runOpts=[RunOpts.ON_CHANGED, RunOpts.ON_ACTION])
+    params = interact(a, runOptions=[RunOptions.ON_CHANGED, RunOptions.ON_ACTION])
     # Any combination of RUN_* options can be used
 
 The default run behavior can also be modified. If several functions are
@@ -100,13 +100,13 @@ use the provided context manager:
 .. code:: python
 
     from pyqtgraph.parametertree import interact
-    # `runOpts` can be set to any combination of options as demonstrated above, too
-    with interact.optsContext(runOpts=RunOpts.ON_ACTION):
-        # All will have `runOpts` set to ON_ACTION
+    # `runOptions` can be set to any combination of options as demonstrated above, too
+    with interact.optsContext(runOptions=RunOptions.ON_ACTION):
+        # All will have `runOptions` set to ON_ACTION
         p1 = interact(aFunc)
         p2 = interact(bFunc)
         p3 = interact(cFunc)
-    # After the context, `runOpts` is back to the previous default
+    # After the context, `runOptions` is back to the previous default
 
 If the default for all interaction should be changed, you can directly
 call ``interactDefaults.setOpts`` (but be warned - anyone who imports your
@@ -119,9 +119,9 @@ resetting afterward:
 
     from pyqtgraph.parametertree import Interactor
     myInteractor = Interactor()
-    oldOpts = myInteractor.setOpts(runOpts=RunOpts.ON_ACTION)
+    oldOpts = myInteractor.setOpts(runOptions=RunOptions.ON_ACTION)
     # Can also directly create interactor with these opts:
-    # myInteractor = Interactor(runOpts=RunOpts.ON_ACTION)
+    # myInteractor = Interactor(runOptions=RunOptions.ON_ACTION)
 
     # ... do some things...
     # Unset option
@@ -367,13 +367,13 @@ and ``reconnect()`` methods, and object accessors to ``closures`` arguments.
 
 .. code:: python
 
-    from pyqtgraph.parametertree import InteractiveFunction, interact, Parameter, RunOpts
+    from pyqtgraph.parametertree import InteractiveFunction, interact, Parameter, RunOptions
 
     def myfunc(a=5):
         print(a)
 
     useFunc = InteractiveFunction(myfunc)
-    param = interact(useFunc, runOpts=RunOpts.ON_CHANGED)
+    param = interact(useFunc, runOptions=RunOptions.ON_CHANGED)
     param['a'] = 6
     # Will print 6
     useFunc.disconnect()
@@ -388,7 +388,7 @@ can use ``InteractiveFunction`` like a decorator:
 
 .. code:: python
 
-    from pyqtgraph.parametertree import InteractiveFunction, interact, Parameter, RunOpts
+    from pyqtgraph.parametertree import InteractiveFunction, interact, Parameter, RunOptions
 
     @InteractiveFunction
     def myfunc(a=5):
@@ -396,7 +396,7 @@ can use ``InteractiveFunction`` like a decorator:
 
     # myfunc is now an InteractiveFunction that can be used as above
     # Also, calling `myfunc` will preserve parameter arguments
-    param = interact(myfunc, RunOpts.ON_ACTION)
+    param = interact(myfunc, RunOptions.ON_ACTION)
     param['a'] = 6
 
     myfunc()

@@ -7,9 +7,11 @@ from . import Parameter
 from .. import functions as fn
 
 
-class RunOpts:
-    class PARAM_UNSET:
-        """Sentinel value for detecting parameters with unset values"""
+class PARAM_UNSET:
+    """Sentinel value for detecting parameters with unset values"""
+
+
+class RunOptions:
 
     ON_ACTION = "action"
     """
@@ -197,14 +199,21 @@ class InteractiveFunction:
 
 
 class Interactor:
-    runOpts = RunOpts.ON_CHANGED
+    runOptions = RunOptions.ON_CHANGED
     parent = None
     titleFormat = None
     nest = True
     existOk = True
     runActionTemplate = dict(type="action", defaultName="Run")
 
-    _optNames = ["runOpts", "parent", "titleFormat", "nest", "existOk", "runActionTemplate"]
+    _optNames = [
+        "runOptions",
+        "parent",
+        "titleFormat",
+        "nest",
+        "existOk",
+        "runActionTemplate",
+    ]
 
     def __init__(self, **kwargs):
         """
@@ -265,11 +274,11 @@ class Interactor:
         function,
         *,
         ignores=None,
-        runOpts=RunOpts.PARAM_UNSET,
-        parent=RunOpts.PARAM_UNSET,
-        titleFormat=RunOpts.PARAM_UNSET,
-        nest=RunOpts.PARAM_UNSET,
-        existOk=RunOpts.PARAM_UNSET,
+        runOptions=PARAM_UNSET,
+        parent=PARAM_UNSET,
+        titleFormat=PARAM_UNSET,
+        nest=PARAM_UNSET,
+        existOk=PARAM_UNSET,
         **overrides,
     ):
         """
@@ -287,7 +296,7 @@ class Interactor:
         function: Callable
             function with which to interact. Can also be a :class:`InteractiveFunction`,
             if a reference to the bound signals is required.
-        runOpts: ``GroupParameter.<RUN_ACTION, CHANGED, or CHANGING>`` value
+        runOptions: ``GroupParameter.<RUN_ACTION, CHANGED, or CHANGING>`` value
             How the function should be run, i.e. when pressing an action, on
             sigValueChanged, and/or on sigValueChanging
         ignores: Sequence
@@ -318,19 +327,17 @@ class Interactor:
         locs = locals()
         # Everything until action template
         opts = {
-            kk: locs[kk]
-            for kk in self._optNames[:-1]
-            if locs[kk] is not RunOpts.PARAM_UNSET
+            kk: locs[kk] for kk in self._optNames[:-1] if locs[kk] is not PARAM_UNSET
         }
         oldOpts = self.setOpts(**opts)
         # Delete explicitly since correct values are now ``self`` attributes
-        del runOpts, titleFormat, nest, existOk, parent
+        del runOptions, titleFormat, nest, existOk, parent
 
-        funcDict = self.functionToParameterDict(function, **overrides)
+        function = self._toInteractiveFunction(function)
+        funcDict = self.functionToParameterDict(function.function, **overrides)
         children = funcDict.pop("children", [])  # type: list[dict]
         chNames = [ch["name"] for ch in children]
         funcGroup = self._resolveFunctionGroup(funcDict)
-        function = self._toInteractiveFunction(function)
 
         # Values can't come both from closures and overrides/params, so ensure they don't
         # get created
@@ -342,13 +349,13 @@ class Interactor:
         recycleNames = set(ignores) & set(chNames)
         for name in recycleNames:
             value = children[chNames.index(name)]["value"]
-            if name not in function.extra and value is not RunOpts.PARAM_UNSET:
+            if name not in function.extra and value is not PARAM_UNSET:
                 function.extra[name] = value
 
         missingChildren = [
             ch["name"]
             for ch in children
-            if ch["value"] is RunOpts.PARAM_UNSET
+            if ch["value"] is PARAM_UNSET
             and ch["name"] not in function.closures
             and ch["name"] not in function.extra
         ]
@@ -368,7 +375,7 @@ class Interactor:
         function.hookupParameters(useParams)
         # If no top-level parent and no nesting, return the list of child parameters
         ret = funcGroup or useParams
-        if RunOpts.ON_ACTION in self.runOpts:
+        if RunOptions.ON_ACTION in self.runOptions:
             # Add an extra action child which can activate the function
             action = self._makeRunAction(self.nest, funcDict.get("tip"), function)
             # Return just the action if no other params were allowed
@@ -460,9 +467,9 @@ class Interactor:
             child = Parameter.create(**childOpts)
         else:
             child = funcGroup.addChild(childOpts, existOk=self.existOk)
-        if RunOpts.ON_CHANGED in self.runOpts:
+        if RunOptions.ON_CHANGED in self.runOptions:
             child.sigValueChanged.connect(interactiveFunc.runFromChangedOrChanging)
-        if RunOpts.ON_CHANGING in self.runOpts:
+        if RunOptions.ON_CHANGING in self.runOptions:
             child.sigValueChanging.connect(interactiveFunc.runFromChangedOrChanging)
         return child
 
@@ -556,7 +563,7 @@ class Interactor:
         pgDict["name"] = name
         # Required function arguments with any override specifications can still be
         # unfilled at this point
-        pgDict.setdefault("value", RunOpts.PARAM_UNSET)
+        pgDict.setdefault("value", PARAM_UNSET)
 
         # Anywhere a title is specified should take precedence over the default factory
         if self.titleFormat is not None:
