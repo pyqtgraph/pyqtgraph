@@ -49,7 +49,10 @@ intersphinx_mapping = {
 
 napoleon_preprocess_types = True
 napoleon_type_aliases = {
-    "callable": ":class:`collections.abc.Callable`"
+    "callable": ":class:`collections.abc.Callable`",
+    "np.ndarray": ":class:`numpy.ndarray`",
+    'array_like': ':term:`array_like`',
+    'color_like': ':func:`pyqtgraph.mkColor`'
 }
 
 # The encoding of source files.

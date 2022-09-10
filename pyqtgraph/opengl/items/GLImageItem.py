@@ -1,12 +1,13 @@
 from OpenGL.GL import *  # noqa
 import numpy as np
+
 from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLImageItem']
 
 class GLImageItem(GLGraphicsItem):
     """
-    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`
     
     Displays image data as a textured quad.
     """

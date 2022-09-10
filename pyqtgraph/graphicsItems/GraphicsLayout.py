@@ -153,7 +153,7 @@ class GraphicsLayout(GraphicsWidget):
 
         Parameters
         ----------
-        item : pyqtgraph.Qt.QtWidgets.QGraphicsLayoutItem
+        item : QGraphicsLayoutItem
             Item to query the index position of
 
         Returns

@@ -505,8 +505,8 @@ class PlotItem(GraphicsWidget):
     def addItem(self, item, *args, **kargs):
         """
         Add a graphics item to the view box. 
-        If the item has plot data (:class:`~pyqtgrpah.PlotDataItem`, 
-        :class:`~pyqtgraph.PlotCurveItem`, :class:`~pyqtgraph.ScatterPlotItem`), 
+        If the item has plot data (:class:`PlotDataItem <pyqtgraph.PlotDataItem>` , 
+        :class:`~pyqtgraph.PlotCurveItem` , :class:`~pyqtgraph.ScatterPlotItem` ), 
         it may be included in analysis performed by the PlotItem.
         """
         if item in self.items:
@@ -556,7 +556,7 @@ class PlotItem(GraphicsWidget):
             self.legend.addItem(item, name=name)            
 
     def listDataItems(self):
-        """Return a list of all data items (:class:`~pyqtgrpah.PlotDataItem` , 
+        """Return a list of all data items (:class:`PlotDataItem <pyqtgraph.PlotDataItem>`, 
         :class:`~pyqtgraph.PlotCurveItem` , :class:`~pyqtgraph.ScatterPlotItem` , etc)
         contained in this PlotItem."""
         return self.dataItems[:]

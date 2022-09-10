@@ -135,7 +135,7 @@ class GLGraphicsItem(QtCore.QObject):
         
     def setTransform(self, tr):
         """Set the local transform for this object.
-        Must be a :class:`Transform3D <pyqtgraph.Transform3D>` instance. This transform
+        Must be a :class:`Transform3D <pyqtgraph.Transform3D.Transform3D>` instance. This transform
         determines how the local coordinate system of the item is mapped to the coordinate
         system of its parent."""
         self.__transform = Transform3D(tr)

@@ -35,7 +35,7 @@ class GLGraphItem(GLGraphicsItem):
             2D array of shape (M, 2) of connection data, each row contains
             indexes of two nodes that are connected.  Dtype must be integer
             or unsigned.
-        edgeColor: QtGui.QColor | array-like, optional
+        edgeColor: color_like, optional
             The color to draw edges. Accepts the same arguments as 
             :func:`~pyqtgraph.mkColor()`.  If None, no edges will be drawn.
             Default is (1.0, 1.0, 1.0, 0.5).
@@ -44,12 +44,12 @@ class GLGraphItem(GLGraphicsItem):
         nodePositions : np.ndarray
             2D array of shape (N, 3), where each row represents the x, y, z
             coordinates for each node
-        nodeColor : np.ndarray | QColor | str | array-like
+        nodeColor : np.ndarray or float or color_like, optional
             2D array of shape (N, 4) of dtype float32, where each row represents
-            the R, G, B, A vakues in range of 0-1, or for the same color for all
+            the R, G, B, A values in range of 0-1, or for the same color for all
             nodes, provide either QColor type or input for 
             :func:`~pyqtgraph.mkColor()`
-        nodeSize : np.ndarray | float | int
+        nodeSize : np.ndarray or float or int
             Either 2D numpy array of shape (N, 1) where each row represents the
             size of each node, or if a scalar, apply the same size to all nodes
         **kwds

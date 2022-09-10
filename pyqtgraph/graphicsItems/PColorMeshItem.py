@@ -85,10 +85,10 @@ class PColorMeshItem(GraphicsObject):
                     (x[i, j], y[i, j])           (x[i, j+1], y[i, j+1])
 
             "ASCII from: <https://matplotlib.org/3.2.1/api/_as_gen/matplotlib.pyplot.pcolormesh.html>".
-        colorMap : pg.ColorMap
+        colorMap : pyqtgraph.ColorMap
             Colormap used to map the z value to colors.
-            default ``pg.colormap.get('viridis')``
-        edgecolors : dict, default None
+            default ``pyqtgraph.colormap.get('viridis')``
+        edgecolors : dict, optional
             The color of the edges of the polygons.
             Default None means no edges.
             The dict may contains any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`.

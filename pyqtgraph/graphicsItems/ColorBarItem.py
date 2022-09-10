@@ -52,23 +52,23 @@ class ColorBarItem(PlotItem):
             Determines the color map displayed and applied to assigned ImageItem(s).
         values: tuple of float
             The range of image levels covered by the color bar, as ``(min, max)``.
-        width: float, default=25
+        width: float, default=25.0
             The width of the displayed color bar.
         label: str, optional
             Label applied to the color bar axis.
         interactive: bool, default=True
             If `True`, handles are displayed to interactively adjust the level range.
-        limits: `None` or `tuple of float`
+        limits: `tuple of float`, optional
             Limits the adjustment range to `(low, high)`, `None` disables the limit.
         rounding: float, default=1
             Adjusted range values are rounded to multiples of this value.
         orientation: str, default 'vertical'
             'horizontal' or 'h' gives a horizontal color bar instead of the default vertical bar
-        pen: :class:`Qpen` or argument to :func:`~pyqtgraph.mkPen`
+        pen: :class:`QPen` or color_like
             Sets the color of adjustment handles in interactive mode.
-        hoverPen: :class:`QPen` or argument to :func:`~pyqtgraph.mkPen`
-            Sets the color of adjustement handles when hovered over.
-        hoverBrush: :class:`QBrush` or argument to :func:`~pyqtgraph.mkBrush`
+        hoverPen: :class:`QPen` or color_like
+            Sets the color of adjustment handles when hovered over.
+        hoverBrush: :class:`QBrush` or color_like
             Sets the color of movable center region when hovered over.
         """
         super().__init__()

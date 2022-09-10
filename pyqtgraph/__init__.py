@@ -393,7 +393,7 @@ QAPP = None
 
 def plot(*args, **kargs):
     """
-    Create and return a :class:`PlotWidget <pyqtgraph.PlotWinPlotWidgetdow>` 
+    Create and return a :class:`PlotWidget <pyqtgraph.PlotWidget>` 
     Accepts a *title* argument to set the title of the window.
     All other arguments are used to plot data. (see :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`)
     """

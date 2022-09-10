@@ -64,11 +64,11 @@ class HistogramLUTItem(GraphicsWidget):
 
     Attributes
     ----------
-    sigLookupTableChanged : signal
+    sigLookupTableChanged : QtCore.Signal
         Emits the HistogramLUTItem itself when the gradient changes
-    sigLevelsChanged : signal
+    sigLevelsChanged : QtCore.Signal
         Emits the HistogramLUTItem itself while the movable region is changing
-    sigLevelChangeFinished : signal
+    sigLevelChangeFinished : QtCore.Signal
         Emits the HistogramLUTItem itself when the movable region is finished changing
 
     See Also
@@ -195,7 +195,7 @@ class HistogramLUTItem(GraphicsWidget):
         level : float, optional
             Set the fill level. See :meth:`PlotCurveItem.setFillLevel
             <pyqtgraph.PlotCurveItem.setFillLevel>`. Only used if ``fill`` is True.
-        color : color, optional
+        color : color_like, optional
             Color to use for the fill when the histogram ``levelMode == "mono"``. See
             :meth:`PlotCurveItem.setBrush <pyqtgraph.PlotCurveItem.setBrush>`.
         """
