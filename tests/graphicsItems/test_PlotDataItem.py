@@ -61,6 +61,29 @@ def test_setData():
     pdi.setData()
     assert pdi.xData is None
     assert pdi.yData is None
+    
+    #test appending y data
+    y1 = np.random.normal(size=3)
+    y2 = np.random.normal(size=3)
+    xtest = np.arange(6)
+    pdi.setData()
+    pdi.setData( y1, append=True )
+    pdi.setData( y2, append=True )
+    assert np.array_equal(pdi.xData, xtest) # continuous x-values?
+    assert np.array_equal(pdi.yData[:3], y1)
+    assert np.array_equal(pdi.yData[3:], y2)
+    
+    #test appending x,y data
+    x1 = np.random.normal(size=3)
+    x2 = np.random.normal(size=3)
+    y1 = np.random.normal(size=3)
+    y2 = np.random.normal(size=3)
+    pdi.setData( x1, y1 )
+    pdi.setData( x2, y2, append=True )
+    assert np.array_equal(pdi.xData[:3], x1)
+    assert np.array_equal(pdi.xData[3:], x2)
+    assert np.array_equal(pdi.yData[:3], y1)
+    assert np.array_equal(pdi.yData[3:], y2)
 
     #test dict of x, y list
     y += list(np.random.normal(size=50))
@@ -73,6 +96,23 @@ def test_setData():
     pdi.setData([],[])
     assert pdi.xData is None
     assert pdi.yData is None
+    
+def test_append():
+    x = np.random.normal(size=3)
+    y = np.random.normal(size=3)
+    pdi = pg.PlotDataItem()
+    pdi.appendData(x[0], y[0])
+    pdi.appendData(x[1], y[1])
+    pdi.appendData(x[2], y[2])
+    assert np.array_equal(pdi.xData, x)
+    assert np.array_equal(pdi.yData, y)
+
+    pdi.appendData(y)
+    assert np.array_equal(pdi.yData[:3], y) # y: first half matches test data?
+    assert np.array_equal(pdi.yData[3:], y) # y: second half repeats test data?
+    assert np.array_equal(pdi.xData[:3], x) # x: first hald matches test data?
+    x_assert = x[-1] + np.array([1,2,3]) #     x: second half is enumerated correctly?
+    assert np.array_equal(pdi.xData[3:], x_assert)
     
 def test_nonfinite():
     def _assert_equal_arrays(a1, a2):

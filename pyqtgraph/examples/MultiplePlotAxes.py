@@ -8,7 +8,6 @@ Demonstrates a way to put multiple axes around a single plot.
 import pyqtgraph as pg
 
 pg.mkQApp()
-
 pw = pg.PlotWidget()
 pw.show()
 pw.setWindowTitle('pyqtgraph example: MultiplePlotAxes')

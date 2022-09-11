@@ -1,5 +1,6 @@
 import math
 import warnings
+from contextlib import suppress
 
 import numpy as np
 
@@ -12,6 +13,8 @@ from .PlotCurveItem import PlotCurveItem
 from .ScatterPlotItem import ScatterPlotItem
 
 __all__ = ['PlotDataItem']
+
+
 
 class PlotDataset(object):
     """
@@ -32,13 +35,18 @@ class PlotDataset(object):
         Parameters
         ----------
         x: array
-            x coordinates of data points. 
+            x coordinates of data points. `None` creates an enumeration matching the number of y values.
         y: array
             y coordinates of data points. 
         """
         super().__init__()
-        self.x = x
+        if x is None: 
+            self.x = np.arange(len(y))
+        else:
+            self.x = x
         self.y = y
+        self._append_buffer_x = None # will be assigned on first use of append function
+        self._append_buffer_y = None
         self._dataRect = None
         self.containsNonfinite = None
         
@@ -74,6 +82,29 @@ class PlotDataset(object):
             self.containsNonfinite = not (all_x_are_finite and all_y_are_finite) # This always yields a definite True/False answer
         self._dataRect = QtCore.QRectF( QtCore.QPointF(xmin,ymin), QtCore.QPointF(xmax,ymax) )
         
+    def append(self, x, y):
+        """
+        Appends additional data. The first call to append creates oversized buffers to reduce the number of times 
+        memory needs to allocated for future calls to append. `x` and `y` are recreated as numpy views of the buffers.
+        If `x` is `None`, an enumeration is created, incrementing by one over the last previously defined `x` element
+        for each appended `y` value.
+        """
+        old_length = len(self.y)
+        append_length = len(y)
+        new_length = old_length + append_length
+        if x is None: # try to continue existing enumberation
+            start_x = self.x[-1] + 1.0
+            x = np.arange(start_x, start_x + append_length)
+
+        if self._append_buffer_y is None or new_length > len(self._append_buffer_y):
+            new_buffer_length = int( (3 * new_length) // 2 + 50 ) # over-allocate by 50% plus 50 additional elements 
+            self._append_buffer_x = np.resize(self.x, new_buffer_length)
+            self._append_buffer_y = np.resize(self.y, new_buffer_length)
+        self.x = self._append_buffer_x[:new_length] # set data as view of first elements in buffer
+        self.y = self._append_buffer_y[:new_length]
+        self.x[old_length:] = x # fill in the appended data, this also affects the buffer
+        self.y[old_length:] = y
+
     def dataRect(self):
         """
         Returns a bounding rectangle (as :class:`QtCore.QRectF`) for the finite subset of data.
@@ -149,8 +180,6 @@ class PlotDataItem(GraphicsObject):
     sigClicked = QtCore.Signal(object, object)
     sigPointsClicked = QtCore.Signal(object, object, object)
     sigPointsHovered = QtCore.Signal(object, object, object)
-
-#        **(x,y data only)**
 
     def __init__(self, *args, **kargs):
         """
@@ -669,10 +698,15 @@ class PlotDataItem(GraphicsObject):
 
     def setData(self, *args, **kargs):
         """
-        Clear any data displayed by this item and display new data.
+        Set displayed data. New data replaces previous, unless append = True is specified.
         See :func:`__init__() <pyqtgraph.PlotDataItem.__init__>` for details; it accepts the same arguments.
+        
+        ============== ===================================================================
+        **Arguments:**
+        append         (boolean) If true, data is appended after the last existing point.
+                       The default is to replace all existing data.
+        ============== ===================================================================
         """
-        #self.clear()
         if kargs.get("stepMode", None) is True:
             warnings.warn(
                 'stepMode=True is deprecated and will result in an error after October 2022. Use stepMode="center" instead.',
@@ -683,7 +717,6 @@ class PlotDataItem(GraphicsObject):
                 'The decimate keyword has been deprecated. It has no effect and may result in an error in releases after October 2022. ',
                 DeprecationWarning, stacklevel=2
             )
-        
         if 'identical' in kargs.keys():
             warnings.warn(
                 'The identical keyword has been deprecated. It has no effect may result in an error in releases after October 2022. ',
@@ -790,6 +823,8 @@ class PlotDataItem(GraphicsObject):
             #if k in kargs:
                 #self.opts[k] = kargs[k]
             #scatterArgs[v] = self.opts[k]
+            
+        append = ('append' in kargs and kargs['append'])
 
         if y is None or len(y) == 0: # empty data is represented as None
             yData = None
@@ -797,8 +832,6 @@ class PlotDataItem(GraphicsObject):
             if not isinstance(y, np.ndarray):
                 y = np.array(y)
             yData = y.view(np.ndarray)
-            if x is None:
-                x = np.arange(len(y))
                 
         if x is None or len(x)==0: # empty data is represented as None
             xData = None
@@ -806,11 +839,16 @@ class PlotDataItem(GraphicsObject):
             if not isinstance(x, np.ndarray):
                 x = np.array(x)
             xData = x.view(np.ndarray)  # one last check to make sure there are no MetaArrays getting by
-
-        if xData is None or yData is None:
-            self._dataset = None
-        else:
-            self._dataset = PlotDataset( xData, yData )
+            
+        if not append or self._dataset is None: # Assign new data if not in append mode, or if no data is available yet
+            if yData is None: # PlotDataset fills in missing x data by enumerating the y data
+                self._dataset = None
+            else:
+                self._dataset = PlotDataset( xData, yData )
+        else: # add data to the buffer managed by the dataset object. Missing x data is again filled in by enumeration
+            if self._dataset is not None:
+                self._dataset.append(x, y)
+            
         self._datasetMapped  = None  # invalidata mapped data , will be generated in getData() / getDisplayDataset()
         self._datasetDisplay = None  # invalidate display data, will be generated in getData() / getDisplayDataset()
 
@@ -821,7 +859,6 @@ class PlotDataItem(GraphicsObject):
         profiler('update items')
 
         self.informViewBoundsChanged()
-
         self.sigPlotChanged.emit(self)
         profiler('emit')
 
@@ -1137,7 +1174,23 @@ class PlotDataItem(GraphicsObject):
         self.scatter.clear()
 
     def appendData(self, *args, **kargs):
-        pass
+        """
+        Append to displayed data.
+        See :func:`__init__() <pyqtgraph.PlotDataItem.__init__>` for details; it accepts the same arguments.
+        In addition to the listed data formats, appendData also accepts single numerical values as 
+        ==========================  ======================================
+        appendData(xValue, yValue)  x and y values may be int or float
+        appendData(yValue)          y value may be int or float
+        ==========================  ======================================
+        """
+        arg_list = list(args)
+        for idx, arg in enumerate(args):
+            if idx == 2: # only convert the first two arguments
+                break 
+            with suppress(TypeError): # TypeError occurs for data that does not need conversion
+                arg_list[idx] = np.full(1, float(arg))
+        kargs['append'] = True
+        self.setData(*arg_list, **kargs)
 
     def curveClicked(self, curve, ev):
         self.sigClicked.emit(self, ev)
