@@ -17,9 +17,10 @@ p1 = w.addPlot(0,1, title="X Semilog")
 p2 = w.addPlot(1,0, title="Y Semilog")
 p3 = w.addPlot(1,1, title="XY Log")
 # configure logarithmic axis scaling:
-p1.setLogMode(True, False)
-p2.setLogMode(False, True)
-p3.setLogMode(True, True)
+p1.setDataTransformState("Log X", True)
+p2.setDataTransformState("Log Y", True)
+p3.setDataTransformState("Log X", True)
+p3.setDataTransformState("Log Y", True)
 
 # 1000 points from 0.1 to 10, chosen to give a compatible range of values across curves:
 x = np.logspace(-1, 1, 1000) 
