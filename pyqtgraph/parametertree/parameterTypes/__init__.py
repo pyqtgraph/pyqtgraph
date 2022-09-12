@@ -1,5 +1,6 @@
 from ..Parameter import registerParameterItemType, registerParameterType
 from .action import ActionParameter, ActionParameterItem
+from .actiongroup import ActionGroup, ActionGroupParameterItem
 from .basetypes import (
     GroupParameter,
     GroupParameterItem,
@@ -12,7 +13,6 @@ from .checklist import ChecklistParameter, ChecklistParameterItem
 from .color import ColorParameter, ColorParameterItem
 from .colormap import ColorMapParameter, ColorMapParameterItem
 from .file import FileParameter, FileParameterItem
-from .functiongroup import FunctionGroupParameter, FunctionGroupParameterItem
 from .font import FontParameter, FontParameterItem
 from .list import ListParameter, ListParameterItem
 from .numeric import NumericParameterItem
@@ -28,8 +28,9 @@ registerParameterItemType('float', NumericParameterItem, SimpleParameter, overri
 registerParameterItemType('int',   NumericParameterItem, SimpleParameter, override=True)
 registerParameterItemType('str',   StrParameterItem,     SimpleParameter, override=True)
 
-registerParameterType('group',         GroupParameter,         override=True)
-registerParameterType('functiongroup', FunctionGroupParameter, override=True)
+registerParameterType('group',         GroupParameter, override=True)
+# Keep actiongroup private for now, mainly useful for Interactor but not externally
+registerParameterType('_actiongroup',  ActionGroup,    override=True)
 
 registerParameterType('action',    ActionParameter,      override=True)
 registerParameterType('calendar',  CalendarParameter,    override=True)

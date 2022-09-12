@@ -5,7 +5,7 @@ from ..ParameterItem import ParameterItem
 from ...Qt import QtCore
 
 
-class FunctionGroupParameterItem(GroupParameterItem):
+class ActionGroupParameterItem(GroupParameterItem):
     """
     Wraps a :class:`GroupParameterItem` to manage ``bool`` parameter children. Also provides convenience buttons to
     select or clear all values at once. Note these conveniences are disabled when ``exclusive`` is *True*.
@@ -34,8 +34,8 @@ class FunctionGroupParameterItem(GroupParameterItem):
         super().optsChanged(param, opts)
 
 
-class FunctionGroupParameter(GroupParameter):
-    itemClass = FunctionGroupParameterItem
+class ActionGroup(GroupParameter):
+    itemClass = ActionGroupParameterItem
 
     sigActivated = QtCore.Signal()
 

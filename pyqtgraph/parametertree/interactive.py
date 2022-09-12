@@ -4,7 +4,7 @@ import inspect
 import pydoc
 
 from . import Parameter
-from .parameterTypes import FunctionGroupParameter
+from .parameterTypes import ActionGroup
 from .. import functions as fn
 
 
@@ -483,7 +483,7 @@ class Interactor:
         return child
 
     def _resolveRunAction(self, interactiveFunction, functionGroup, functionTip):
-        if isinstance(functionGroup, FunctionGroupParameter):
+        if isinstance(functionGroup, ActionGroup):
             functionGroup.setButtonOpts(visible=True)
             child = None
         else:
@@ -514,7 +514,7 @@ class Interactor:
         children = []
         name = function.__name__
         btnOpts = dict(**self._makePopulatedActionTemplate(name), visible=False)
-        out = dict(name=name, type="functiongroup", children=children, button=btnOpts)
+        out = dict(name=name, type="_actiongroup", children=children, button=btnOpts)
         if self.titleFormat is not None:
             out["title"] = self._nameToTitle(name, forwardStringTitle=True)
 

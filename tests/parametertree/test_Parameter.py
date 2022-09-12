@@ -230,7 +230,7 @@ def test_tips():
     interactor = Interactor()
 
     group = interactor(a, runOptions=RunOptions.ON_ACTION)
-    assert group.opts["tip"] == a.__doc__ and group.type() == "functiongroup"
+    assert group.opts["tip"] == a.__doc__ and group.type() == "_actiongroup"
 
     params = interactor(a, runOptions=RunOptions.ON_ACTION, nest=False)
     assert len(params) == 1 and params[0].opts["tip"] == a.__doc__
