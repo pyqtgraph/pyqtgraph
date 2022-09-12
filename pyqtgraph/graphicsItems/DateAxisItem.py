@@ -168,7 +168,9 @@ class ZoomLevel:
             # reposition tick labels to local time coordinates
             ticks += self.utcOffset
             # remove any ticks that were present in higher levels
-            tick_list = [x for x in ticks.tolist() if x not in allTicks]
+            # we assume here that if the difference between a tick value and a previously seen tick value
+            # is less than min-spacing/100, then they are 'equal' and we can ignore the new tick.
+            tick_list = list(filter(lambda x: np.all(np.abs(np.array(allTicks)-x) > minSpc*0.01), ticks))
             allTicks.extend(tick_list)
             valueSpecs.append((spec.spacing, tick_list))
             # if we're skipping ticks on the current level there's no point in
