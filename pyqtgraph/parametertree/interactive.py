@@ -529,16 +529,23 @@ class Interactor:
         # Make pyqtgraph parameter dicts from each parameter
         # Use list instead of funcParams.items() so kwargs can add to the iterable
         checkNames = list(funcParams)
-        isKwarg = [p.kind is p.VAR_KEYWORD for p in funcParams.values()]
-        if any(isKwarg):
+        parameterKinds = [p.kind for p in funcParams.values()]
+        _positional = inspect.Parameter.VAR_POSITIONAL
+        _keyword = inspect.Parameter.VAR_KEYWORD
+        if _keyword in parameterKinds:
             # Function accepts kwargs, so any overrides not already present as a function
             # parameter should be accepted
             # Remove the keyword parameter since it can't be parsed properly
-            # Only one kwarg can be in the signature, so there will be only one
-            # "True" index
-            del checkNames[isKwarg.index(True)]
+            # Kwargs must appear at the end of the parameter list
+            del checkNames[-1]
             notInSignature = [n for n in overrides if n not in checkNames]
             checkNames.extend(notInSignature)
+        if _positional in parameterKinds:
+            # *args is also difficult to handle for key-value paradigm
+            # and will mess with the logic for detecting whether any parameter
+            # is left unfilled
+            del checkNames[parameterKinds.index(_positional)]
+
         for name in checkNames:
             # May be none if this is an override name after function accepted kwargs
             param = funcParams.get(name)

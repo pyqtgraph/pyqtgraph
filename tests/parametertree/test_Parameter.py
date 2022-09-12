@@ -430,3 +430,13 @@ def test_class_interact():
 
     ci = interactor.decorate()(a.c)
     assert ci() == a.c()
+
+
+def test_args_interact():
+
+    @interact.decorate()
+    def a(*args):
+        """"""
+
+    assert not (a.parameters or a.extra)
+    a()
