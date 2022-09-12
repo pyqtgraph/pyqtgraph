@@ -361,6 +361,10 @@ class Interactor:
             and ch["name"] not in function.extra
         ]
         if missingChildren:
+            # setOpts will not be called due to the value error, so reset here.
+            # This only matters to restore Interactor state in an outer try-except
+            # block
+            self.setOpts(**oldOpts)
             raise ValueError(
                 f"Cannot interact with `{function}` since it has required parameters "
                 f"{missingChildren} with no default or closure values provided."
