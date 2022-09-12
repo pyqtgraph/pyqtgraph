@@ -4,6 +4,7 @@ import inspect
 import pydoc
 
 from . import Parameter
+from .parameterTypes import FunctionGroupParameter
 from .. import functions as fn
 
 
@@ -199,7 +200,7 @@ class InteractiveFunction:
 
 
 class Interactor:
-    runOptions = RunOptions.ON_CHANGED
+    runOptions = [RunOptions.ON_CHANGED, RunOptions.ON_ACTION]
     parent = None
     titleFormat = None
     nest = True
@@ -337,7 +338,7 @@ class Interactor:
         funcDict = self.functionToParameterDict(function.function, **overrides)
         children = funcDict.pop("children", [])  # type: list[dict]
         chNames = [ch["name"] for ch in children]
-        funcGroup = self._resolveFunctionGroup(funcDict)
+        funcGroup = self._resolveFunctionGroup(funcDict, function)
 
         # Values can't come both from closures and overrides/params, so ensure they don't
         # get created
@@ -373,19 +374,18 @@ class Interactor:
             useParams.append(child)
 
         function.hookupParameters(useParams)
-        # If no top-level parent and no nesting, return the list of child parameters
-        ret = funcGroup or useParams
         if RunOptions.ON_ACTION in self.runOptions:
             # Add an extra action child which can activate the function
-            action = self._makeRunAction(self.nest, funcDict.get("tip"), function)
-            # Return just the action if no other params were allowed
-            if not useParams:
-                ret = action
-            if funcGroup:
-                funcGroup.addChild(action, existOk=self.existOk)
-
+            action = self._resolveRunAction(
+                function, funcGroup, funcDict.get("tip")
+            )
+            if action:
+                useParams.append(action)
+        retValue = funcGroup if self.nest else useParams
         self.setOpts(**oldOpts)
-        return ret
+        # Return either the parent which contains all added options, or the list
+        # of created children (if no parent was created)
+        return retValue
 
     @functools.wraps(interact)
     def __call__(self, function, **kwargs):
@@ -433,16 +433,17 @@ class Interactor:
         # else: titleFormat should be callable
         return titleFormat(name)
 
-    def _resolveFunctionGroup(self, parentOpts):
+    def _resolveFunctionGroup(self, functionDict, interactiveFunction):
         """
         Returns parent parameter that holds function children. May be ``None`` if
         no top parent is provided and nesting is disabled.
         """
         funcGroup = self.parent
         if self.nest:
-            funcGroup = Parameter.create(**parentOpts)
-        if self.parent and self.nest:
-            self.parent.addChild(funcGroup, existOk=self.existOk)
+            funcGroup = Parameter.create(**functionDict)
+            funcGroup.sigActivated.connect(interactiveFunction.runFromAction)
+            if self.parent:
+                self.parent.addChild(funcGroup, existOk=self.existOk)
         return funcGroup
 
     @staticmethod
@@ -473,27 +474,41 @@ class Interactor:
             child.sigValueChanging.connect(interactiveFunc.runFromChangedOrChanging)
         return child
 
-    def _makeRunAction(self, nest, tip, interactiveFunc):
-        # Add an extra action child which can activate the function
+    def _resolveRunAction(self, interactiveFunction, functionGroup, functionTip):
+        if isinstance(functionGroup, FunctionGroupParameter):
+            functionGroup.setButtonOpts(visible=True)
+            child = None
+        else:
+            # Add an extra action child which can activate the function
+            createOpts = self._makePopulatedActionTemplate(
+                interactiveFunction.__name__, functionTip
+            )
+            child = Parameter.create(**createOpts)
+            child.sigActivated.connect(interactiveFunction.runFromAction)
+            if functionGroup:
+                functionGroup.addChild(child, existOk=self.existOk)
+        return child
+
+    def _makePopulatedActionTemplate(self, functionName="", functionTip=None):
         createOpts = self.runActionTemplate.copy()
 
         defaultName = createOpts.get("defaultName", "Run")
-        name = defaultName if nest else interactiveFunc.function.__name__
+        name = defaultName if self.nest else functionName
         createOpts.setdefault("name", name)
-        if tip:
-            createOpts["tip"] = tip
-        child = Parameter.create(**createOpts)
-        child.sigActivated.connect(interactiveFunc.runFromAction)
-        return child
+        if functionTip:
+            createOpts.setdefault("tip", functionTip)
+        return createOpts
 
     def functionToParameterDict(self, function, **overrides):
         """
         Converts a function into a list of child parameter dicts
         """
         children = []
-        out = dict(name=function.__name__, type="group", children=children)
+        name = function.__name__
+        btnOpts = dict(**self._makePopulatedActionTemplate(name), visible=False)
+        out = dict(name=name, type="functiongroup", children=children, button=btnOpts)
         if self.titleFormat is not None:
-            out["title"] = self._nameToTitle(function.__name__, forwardStrTitle=True)
+            out["title"] = self._nameToTitle(name, forwardStringTitle=True)
 
         funcParams = inspect.signature(function).parameters
         if function.__doc__:
@@ -501,6 +516,7 @@ class Interactor:
             synopsis, _ = pydoc.splitdoc(function.__doc__)
             if synopsis:
                 out.setdefault("tip", synopsis)
+                out["button"].setdefault("tip", synopsis)
 
         # Make pyqtgraph parameter dicts from each parameter
         # Use list instead of funcParams.items() so kwargs can add to the iterable

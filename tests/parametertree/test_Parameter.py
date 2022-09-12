@@ -104,10 +104,10 @@ def test_interact():
     a_interact = InteractiveFunction(a, closures=dict(x=lambda: myval))
     host = interactor(a_interact)
     assert "x" not in host.names
-    host.child("Run").activate()
+    host.activate()
     assert value == (5, 5)
     myval = 10
-    host.child("Run").activate()
+    host.activate()
     assert value == (10, 5)
 
     host = interactor(
@@ -149,7 +149,7 @@ def test_interact():
     host = interactor(kwargTest, a=10, test=3)
     for ch in "a", "b", "test":
         assert ch in host.names
-    host.child("Run").activate()
+    host.activate()
     assert value == 12
 
     host = GP.create(name="test deco", type="group")
@@ -162,7 +162,7 @@ def test_interact():
 
     assert "a" in host.names
     assert "x" in host.child("a").names
-    host.child("a", "Run").activate()
+    host.child("a").activate()
     assert value == 5
 
     @interactor.decorate(nest=False, runOptions=RunOptions.ON_CHANGED)
@@ -195,20 +195,24 @@ def test_run():
     interactor = Interactor(runOptions=RunOptions.ON_ACTION)
 
     defaultRunBtn = Parameter.create(**interactor.runActionTemplate, name="Run")
-    btn = interactor(a)
-    assert btn.type() == defaultRunBtn.type()
+    group = interactor(a)
+    assert group.makeTreeItem(0).button.text() == defaultRunBtn.name()
 
     template = dict(defaultName="Test", type="action")
     with interactor.optsContext(runActionTemplate=template):
         x = interactor(a)
-    assert x.name() == "Test"
+    assert x.makeTreeItem(0).button.text() == "Test"
 
     parent = Parameter.create(name="parent", type="group")
     test2 = interactor(a, parent=parent, nest=False)
-    assert test2.parent() is parent
+    assert (
+        len(test2) == 1
+        and test2[0].name() == a.__name__
+        and test2[0].parent() is parent
+    )
 
     test2 = interactor(a, nest=False)
-    assert not test2.parent()
+    assert len(test2) == 1 and not test2[0].parent()
 
 
 def test_no_func_group():
@@ -225,22 +229,19 @@ def test_tips():
 
     interactor = Interactor()
 
-    btn = interactor(a, runOptions=RunOptions.ON_ACTION)
-    assert btn.opts["tip"] == a.__doc__
+    group = interactor(a, runOptions=RunOptions.ON_ACTION)
+    assert group.opts["tip"] == a.__doc__ and group.type() == "functiongroup"
+
+    params = interactor(a, runOptions=RunOptions.ON_ACTION, nest=False)
+    assert len(params) == 1 and params[0].opts["tip"] == a.__doc__
 
     def a2(x=5):
-        """a simple tip"""
-
-    def a3(x=5):
         """
         A long docstring with a newline
         followed by more text won't result in a tooltip
         """
 
-    param = interactor(a2, runOptions=RunOptions.ON_ACTION)
-    assert param.opts["tip"] == a2.__doc__ and param.type() == "group"
-
-    param = interactor(a3)
+    param = interactor(a2)
     assert "tip" not in param.opts
 
 
