@@ -39,6 +39,10 @@ class InteractiveFunction:
     can provide an external scope for accessing the hooked up parameter signals.
     """
 
+    # Attributes below are populated by `update_wrapper` but aren't detected by linters
+    __name__: str
+    __qualname__: str
+
     def __init__(self, function, *, closures=None, **extra):
         """
         Wraps a callable function in a way that forwards Parameter arguments as keywords
@@ -207,7 +211,7 @@ class Interactor:
     existOk = True
     runActionTemplate = dict(type="action", defaultName="Run")
 
-    _optNames = [
+    _optionNames = [
         "runOptions",
         "parent",
         "titleFormat",
@@ -328,7 +332,7 @@ class Interactor:
         locs = locals()
         # Everything until action template
         opts = {
-            kk: locs[kk] for kk in self._optNames[:-1] if locs[kk] is not PARAM_UNSET
+            kk: locs[kk] for kk in self._optionNames[:-1] if locs[kk] is not PARAM_UNSET
         }
         oldOpts = self.setOpts(**opts)
         # Delete explicitly since correct values are now ``self`` attributes
@@ -380,9 +384,7 @@ class Interactor:
         function.hookupParameters(useParams)
         if RunOptions.ON_ACTION in self.runOptions:
             # Add an extra action child which can activate the function
-            action = self._resolveRunAction(
-                function, funcGroup, funcDict.get("tip")
-            )
+            action = self._resolveRunAction(function, funcGroup, funcDict.get("tip"))
             if action:
                 useParams.append(action)
         retValue = funcGroup if self.nest else useParams
@@ -413,7 +415,7 @@ class Interactor:
 
         return decorator
 
-    def _nameToTitle(self, name, forwardStrTitle=False):
+    def _nameToTitle(self, name, forwardStringTitle=False):
         """
         Converts a function name to a title based on ``self.titleFormat``.
 
@@ -421,7 +423,7 @@ class Interactor:
         ----------
         name: str
             Name of the function
-        forwardStrTitle: bool
+        forwardStringTitle: bool
             If ``self.titleFormat`` is a string and ``forwardStrTitle`` is True,
             ``self.titleFormat`` will be used as the title. Otherwise, if
             ``self.titleFormat`` is *None*, the name will be returned unchanged.
@@ -430,7 +432,7 @@ class Interactor:
         """
         titleFormat = self.titleFormat
         isString = isinstance(titleFormat, str)
-        if titleFormat is None or (isString and not forwardStrTitle):
+        if titleFormat is None or (isString and not forwardStringTitle):
             return name
         elif isString:
             return titleFormat
@@ -467,15 +469,17 @@ class Interactor:
             refOwner.interactiveRefs = [interactive]
         return interactive
 
-    def resolveAndHookupParameterChild(self, funcGroup, childOpts, interactiveFunc):
-        if not funcGroup:
+    def resolveAndHookupParameterChild(
+        self, functionGroup, childOpts, interactiveFunction
+    ):
+        if not functionGroup:
             child = Parameter.create(**childOpts)
         else:
-            child = funcGroup.addChild(childOpts, existOk=self.existOk)
+            child = functionGroup.addChild(childOpts, existOk=self.existOk)
         if RunOptions.ON_CHANGED in self.runOptions:
-            child.sigValueChanged.connect(interactiveFunc.runFromChangedOrChanging)
+            child.sigValueChanged.connect(interactiveFunction.runFromChangedOrChanging)
         if RunOptions.ON_CHANGING in self.runOptions:
-            child.sigValueChanging.connect(interactiveFunc.runFromChangedOrChanging)
+            child.sigValueChanging.connect(interactiveFunction.runFromChangedOrChanging)
         return child
 
     def _resolveRunAction(self, interactiveFunction, functionGroup, functionTip):
@@ -598,7 +602,7 @@ class Interactor:
         return str(self)
 
     def getOpts(self):
-        return {attr: getattr(self, attr) for attr in self._optNames}
+        return {attr: getattr(self, attr) for attr in self._optionNames}
 
 
 interact = Interactor()
