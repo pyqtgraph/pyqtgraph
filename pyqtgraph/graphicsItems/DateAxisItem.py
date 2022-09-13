@@ -170,9 +170,14 @@ class ZoomLevel:
             # remove any ticks that were present in higher levels
             # we assume here that if the difference between a tick value and a previously seen tick value
             # is less than min-spacing/100, then they are 'equal' and we can ignore the new tick.
-            tick_list = list(filter(lambda x: np.all(np.abs(allTicks-x) > minSpc*0.01), ticks))
-            allTicks = np.concatenate([allTicks, tick_list])
-            valueSpecs.append((spec.spacing, tick_list))
+            ticks = np.array(ticks)
+            close = np.any(
+                np.isclose(allTicks, ticks[:, np.newaxis], rtol=0, atol=minSpc * 0.01),
+                axis=-1,
+            )
+            ticks = ticks[~close]
+            allTicks = np.concatenate([allTicks, ticks])
+            valueSpecs.append((spec.spacing, ticks))
             # if we're skipping ticks on the current level there's no point in
             # producing lower level ticks
             if skipFactor > 1:
