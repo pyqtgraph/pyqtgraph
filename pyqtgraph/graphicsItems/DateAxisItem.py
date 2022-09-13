@@ -170,7 +170,6 @@ class ZoomLevel:
             # remove any ticks that were present in higher levels
             # we assume here that if the difference between a tick value and a previously seen tick value
             # is less than min-spacing/100, then they are 'equal' and we can ignore the new tick.
-            ticks = np.array(ticks)
             close = np.any(
                 np.isclose(allTicks, ticks[:, np.newaxis], rtol=0, atol=minSpc * 0.01),
                 axis=-1,
