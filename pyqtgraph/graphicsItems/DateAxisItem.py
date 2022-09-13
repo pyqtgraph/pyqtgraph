@@ -157,7 +157,7 @@ class ZoomLevel:
         # minSpc indicates the minimum spacing (in seconds) between two ticks
         # to fullfill the maxTicksPerPt constraint of the DateAxisItem at the
         # current zoom level. This is used for auto skipping ticks.
-        allTicks = []
+        allTicks = np.array([])
         valueSpecs = []
         # back-project (minVal maxVal) to UTC, compute ticks then offset to
         # back to local time again
@@ -170,8 +170,8 @@ class ZoomLevel:
             # remove any ticks that were present in higher levels
             # we assume here that if the difference between a tick value and a previously seen tick value
             # is less than min-spacing/100, then they are 'equal' and we can ignore the new tick.
-            tick_list = list(filter(lambda x: np.all(np.abs(np.array(allTicks)-x) > minSpc*0.01), ticks))
-            allTicks.extend(tick_list)
+            tick_list = list(filter(lambda x: np.all(np.abs(allTicks-x) > minSpc*0.01), ticks))
+            allTicks = np.concatenate([allTicks, tick_list])
             valueSpecs.append((spec.spacing, tick_list))
             # if we're skipping ticks on the current level there's no point in
             # producing lower level ticks
