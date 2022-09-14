@@ -47,6 +47,10 @@ intersphinx_mapping = {
     'numpy': ('https://numpy.org/doc/stable/', None)
 }
 
+nitpick_ignore_regex = [
+    ("py:class", r"re\.Pattern"),  # doesn't seem to be a good ref in python docs
+]
+
 napoleon_preprocess_types = True
 napoleon_type_aliases = {
     "callable": ":class:`collections.abc.Callable`",
