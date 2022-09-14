@@ -16,8 +16,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-from . import Qt, debug, reload
-from . import getConfigOption
+from . import Qt, debug, getConfigOption, reload
 from .metaarray import MetaArray
 from .Qt import QT_LIB, QtCore, QtGui
 from .util.cupy_helper import getCupy
@@ -501,7 +500,7 @@ def colorCIELab(qcol):
 
     Returns
     -------
-    NumPy array 
+    np.ndarray 
         Color coordinates `[L, a, b]`.
     """
     srgb = qcol.getRgbF()[:3] # get sRGB values from QColor
@@ -536,7 +535,7 @@ def colorDistance(colors, metric='CIE76'):
     ----------
         colors: list of QColor
             Two or more colors to calculate the distances between.
-        metric: string, optional
+        metric: str, optional
             Metric used to determined the difference. Only 'CIE76' is supported at this time,
             where a distance of 2.3 is considered a "just noticeable difference".
             The default may change as more metrics become available.
@@ -1329,8 +1328,8 @@ def applyLookupTable(data, lut):
 
     Parameters
     ----------
-    data : ndarray
-    lut : ndarray
+    data : np.ndarray
+    lut : np.ndarray
         Either cupy or numpy arrays are accepted, though this function has only
         consistently behaved correctly on windows with cuda toolkit version >= 11.1.
     """
@@ -2050,17 +2049,17 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     
     Parameters
     ----------
-    x : (N,) ndarray
-        x-values to be plotted
-    y : (N,) ndarray
-        y-values to be plotted, must be same length as `x`
+    x : np.ndarray
+        x-values to be plotted of shape (N,)
+    y : np.ndarray
+        y-values to be plotted, must be same length as `x` of shape (N,)
     connect : {'all', 'pairs', 'finite', (N,) ndarray}, optional
         Argument detailing how to connect the points in the path. `all` will 
         have sequential points being connected.  `pairs` generates lines
         between every other point.  `finite` only connects points that are
         finite.  If an ndarray is passed, containing int32 values of 0 or 1,
         only values with 1 will connect to the previous point.  Def
-    finiteCheck : bool, default Ture
+    finiteCheck : bool, default True
         When false, the check for finite values will be skipped, which can
         improve performance. If nonfinite values are present in `x` or `y`,
         an empty QPainterPath will be generated.

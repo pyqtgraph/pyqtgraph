@@ -1,10 +1,10 @@
 import builtins
 
-from ..Parameter import Parameter
-from ..ParameterItem import ParameterItem
 from ... import functions as fn
 from ... import icons
 from ...Qt import QtCore, QtGui, QtWidgets, mkQApp
+from ..Parameter import Parameter
+from ..ParameterItem import ParameterItem
 
 
 class WidgetParameterItem(ParameterItem):
@@ -258,8 +258,8 @@ class SimpleParameter(Parameter):
     """
     Parameter representing a single value.
 
-    This parameter is backed by :class:`WidgetParameterItem` to represent the
-    following parameter names through various subclasses:
+    This parameter is backed by :class:`~pyqtgraph.parametertree.parameterTypes.basetypes.WidgetParameterItem`
+     to represent the following parameter names through various subclasses:
 
       - 'int'
       - 'float'
@@ -274,7 +274,7 @@ class SimpleParameter(Parameter):
         Initialize the parameter.
 
         This is normally called implicitly through :meth:`Parameter.create`.
-        The keyword arguments avaialble to :meth:`Parameter.__init__` are
+        The keyword arguments available to :meth:`Parameter.__init__` are
         applicable.
         """
         Parameter.__init__(self, *args, **kargs)

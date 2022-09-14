@@ -505,7 +505,7 @@ class PlotDataItem(GraphicsObject):
     def setFillBrush(self, *args, **kargs):
         """ 
         Sets the :class:`QtGui.QBrush` used to fill the area under the curve.
-        See :func:`mkBrush() <pyqtgraph.functions.mkBrush>`) for arguments.
+        See :func:`mkBrush() <pyqtgraph.mkBrush>`) for arguments.
         """
         if args[0] is None:
             brush = None
@@ -518,7 +518,7 @@ class PlotDataItem(GraphicsObject):
 
     def setBrush(self, *args, **kargs):
         """
-        See :func:`setFillBrush() <pyqtgraph.PlotdataItem.setFillBrush()`.
+        See :func:`~pyqtgraph.PlotDataItem.setFillBrush`
         """
         return self.setFillBrush(*args, **kargs)
 
@@ -546,7 +546,7 @@ class PlotDataItem(GraphicsObject):
     def setSymbolPen(self, *args, **kargs):
         """ 
         Sets the :class:`QtGui.QPen` used to draw symbol outlines.
-        See :func:`mkPen() <pyqtgraph.functions.mkPen>`) for arguments.
+        See :func:`mkPen() <pyqtgraph.mkPen>`) for arguments.
         """
         pen = fn.mkPen(*args, **kargs)
         if self.opts['symbolPen'] == pen:
@@ -558,7 +558,7 @@ class PlotDataItem(GraphicsObject):
     def setSymbolBrush(self, *args, **kargs):
         """
         Sets the :class:`QtGui.QBrush` used to fill symbols.
-        See :func:`mkBrush() <pyqtgraph.functions.mkBrush>`) for arguments.
+        See :func:`mkBrush() <pyqtgraph.mkBrush>`) for arguments.
         """
         brush = fn.mkBrush(*args, **kargs)
         if self.opts['symbolBrush'] == brush:
@@ -811,8 +811,8 @@ class PlotDataItem(GraphicsObject):
             self._dataset = None
         else:
             self._dataset = PlotDataset( xData, yData )
-        self._datasetMapped  = None  # invalidata mapped data , will be generated in getData() / getDisplayDataset()
-        self._datasetDisplay = None  # invalidate display data, will be generated in getData() / getDisplayDataset()
+        self._datasetMapped  = None  # invalidata mapped data , will be generated in getData() / _getDisplayDataset()
+        self._datasetDisplay = None  # invalidate display data, will be generated in getData() / _getDisplayDataset()
 
         profiler('set data')
 
@@ -862,7 +862,7 @@ class PlotDataItem(GraphicsObject):
                 if k in self.opts:
                     scatterArgs[v] = self.opts[k]
 
-        dataset = self.getDisplayDataset()
+        dataset = self._getDisplayDataset()
         if dataset is None: # then we have nothing to show
             self.curve.hide()
             self.scatter.hide()
@@ -908,9 +908,9 @@ class PlotDataItem(GraphicsObject):
                 return (None, None)
             return dataset.x, dataset.y
 
-    def getDisplayDataset(self):
+    def _getDisplayDataset(self):
         """
-        Returns a :class:`PlotDataset <pyqtgraph.PlotDataset>` object that contains data suitable for display 
+        Returns a :class:`~.PlotDataset` object that contains data suitable for display 
         (after mapping and data reduction) as ``dataset.x`` and ``dataset.y``.
         Intended for internal use.
         """
@@ -1072,7 +1072,7 @@ class PlotDataItem(GraphicsObject):
         """
         Returns the displayed data as the tuple (`xData`, `yData`) after mapping and data reduction.
         """
-        dataset = self.getDisplayDataset()
+        dataset = self._getDisplayDataset()
         if dataset is None:
             return (None, None)
         return dataset.x, dataset.y
@@ -1080,7 +1080,7 @@ class PlotDataItem(GraphicsObject):
     # compatbility method for access to dataRect for full dataset:
     def dataRect(self):
         """
-        Returns a bounding rectangle (as :class:`QtGui.QRectF`) for the full set of data.
+        Returns a bounding rectangle (as :class:`QtCore.QRectF`) for the full set of data.
         Will return `None` if there is no data or if all values (x or y) are NaN.
         """
         if self._dataset is None:

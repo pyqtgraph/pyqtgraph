@@ -3,6 +3,7 @@ from collections.abc import Callable
 
 import numpy
 
+from .. import colormap
 from .. import debug as debug
 from .. import functions as fn
 from .. import getConfigOption
@@ -10,7 +11,6 @@ from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
 from ..util.cupy_helper import getCupy
 from .GraphicsObject import GraphicsObject
-from .. import colormap
 
 translate = QtCore.QCoreApplication.translate
 
@@ -32,7 +32,7 @@ class ImageItem(GraphicsObject):
 
         Parameters
         ----------
-            image: array 
+            image: np.ndarray, optional
                 Image data
         """
         GraphicsObject.__init__(self)
@@ -104,7 +104,7 @@ class ImageItem(GraphicsObject):
     def setBorder(self, b):
         """
         Defines the border drawn around the image. Accepts all arguments supported by 
-        :func:`~pyqtgraph.functions.mkPen`.
+        :func:`~pyqtgraph.mkPen`.
         """
         self.border = fn.mkPen(b)
         self.update()
@@ -138,7 +138,7 @@ class ImageItem(GraphicsObject):
         
         Parameters
         ----------
-            levels: list_like
+            levels: array_like
                 - ``[blackLevel, whiteLevel]`` 
                   sets black and white levels for monochrome data and can be used with a lookup table.
                 - ``[[minR, maxR], [minG, maxG], [minB, maxB]]``
@@ -253,18 +253,21 @@ class ImageItem(GraphicsObject):
                 See :func:`~pyqtgraph.ImageItem.setCompositionMode`
             colorMap: :class:`~pyqtgraph.ColorMap` or `str`
                 Sets a color map. A string will be passed to :func:`colormap.get() <pyqtgraph.colormap.get()>`
-            lut: array
+            lut: array_like
                 Sets a color lookup table to use when displaying the image.
                 See :func:`~pyqtgraph.ImageItem.setLookupTable`.
-            levels: list_like, usally [`min`, `max`]
-                Sets minimum and maximum values to use when rescaling the image data. By default, these will be set to 
-                the estimated minimum and maximum values in the image. If the image array has dtype uint8, no rescaling
-                is necessary. See :func:`~pyqtgraph.ImageItem.setLevels`.
-            opacity: float, 0.0-1.0
-                Overall opacity for an RGB image.
-            rect: :class:`QRectF`, :class:`QRect` or array_like of floats (`x`,`y`,`w`,`h`)
-                Displays the current image within the specified rectangle in plot coordinates.
-                See :func:`~pyqtgraph.ImageItem.setRect`.
+            levels: array_like
+                Shape of (min, max). Sets minimum and maximum values to use when
+                rescaling the image data. By default, these will be set to the
+                estimated minimum and maximum values in the image. If the image array
+                has dtype uint8, no rescaling is necessary. See
+                :func:`~pyqtgraph.ImageItem.setLevels`.
+            opacity: float
+                Overall opacity for an RGB image. Between 0.0-1.0.
+            rect: :class:`QRectF`, :class:`QRect` or array_like
+                Displays the current image within the specified rectangle in plot
+                coordinates. If ``array_like``, should be of the of ``floats 
+                (`x`,`y`,`w`,`h`)`` . See :func:`~pyqtgraph.ImageItem.setRect`.
             update : bool, optional
                 Controls if image immediately updates to reflect the new options.
         """
@@ -351,22 +354,21 @@ class ImageItem(GraphicsObject):
             imageitem.setImage(imagedata.T)
         
         or the interpretation of the data can be changed locally through the ``axisOrder`` keyword or by changing the 
-        `imageAxisOrder` :ref:`global configuration option <apiref_config>`.
+        `imageAxisOrder` :ref:`global configuration option <apiref_config>`
         
         All keywords supported by :func:`~pyqtgraph.ImageItem.setOpts` are also allowed here.
 
         Parameters
         ----------
-        image: array
+        image: np.ndarray, optional
             Image data given as NumPy array with an integer or floating
             point dtype of any bit depth. A 2-dimensional array describes single-valued (monochromatic) data.
             A 3-dimensional array is used to give individual color components. The third dimension must
             be of length 3 (RGB) or 4 (RGBA).
-
-        rect: QRectF, QRect or list_like of floats ``[x, y, w, h]``, optional
-            If given, sets translation and scaling to display the image within the specified rectangle. See 
-            :func:`~pyqtgraph.ImageItem.setRect`.
-
+        rect: QRectF or QRect or array_like, optional
+            If given, sets translation and scaling to display the image within the
+            specified rectangle. If ``array_like`` should be the form of floats
+            ``[x, y, w, h]`` See :func:`~pyqtgraph.ImageItem.setRect`
         autoLevels: bool, optional
             If `True`, ImageItem will automatically select levels based on the maximum and minimum values encountered 
             in the data. For performance reasons, this search subsamples the images and may miss individual bright or
@@ -375,12 +377,10 @@ class ImageItem(GraphicsObject):
             If `False`, the search will be omitted.
 
             The default is `False` if a ``levels`` keyword argument is given, and `True` otherwise.
-            
         levelSamples: int, default 65536
             When determining minimum and maximum values, ImageItem
             only inspects a subset of pixels no larger than this number.
             Setting this larger than the total number of pixels considers all values.
-            
         """
         profile = debug.Profiler()
 
@@ -898,7 +898,7 @@ class ImageItem(GraphicsObject):
         dimensions approximating `targetImageSize` for each axis.
 
         The `bins` argument and any extra keyword arguments are passed to
-        :func:`self.xp.histogram()`. If `bins` is `auto`, a bin number is automatically
+        :func:`numpy.histogram()`. If `bins` is `auto`, a bin number is automatically
         chosen based on the image characteristics:
 
           * Integer images will have approximately `targetHistogramSize` bins,

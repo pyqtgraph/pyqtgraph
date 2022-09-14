@@ -34,7 +34,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     sigMouseClicked(event) Emitted when the mouse is clicked over the scene. Use ev.pos() to
                            get the click position relative to the item that was clicked on,
                            or ev.scenePos() to get the click position in scene coordinates.
-                           See :class:`pyqtgraph.GraphicsScene.MouseClickEvent`.                        
+                           See :class:`pyqtgraph.GraphicsScene.mouseEvents.MouseClickEvent`.                        
     sigMouseMoved(pos)     Emitted when the mouse cursor moves over the scene. The position
                            is given in scene coordinates.
     sigMouseHover(items)   Emitted when the mouse is moved over the scene. Items is a list

@@ -58,7 +58,7 @@ class InfiniteLine(GraphicsObject):
                         None to show no label (default is None). May optionally
                         include formatting strings to display the line value.
         labelOpts       A dict of keyword arguments to use when constructing the
-                        text label. See :class:`InfLineLabel`.
+                        text label. See :class:`InfLineLabel <pyqtgraph.graphicsItems.InfiniteLine.InfLineLabel>`.
         span            Optional tuple (min, max) giving the range over the view to draw
                         the line. For example, with a vertical line, use span=(0.5, 1)
                         to draw only on the top half of the view.
