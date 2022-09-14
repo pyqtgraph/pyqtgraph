@@ -826,7 +826,7 @@ class AxisItem(GraphicsWidget):
             )
             values = values[~close]
             allValues = np.concatenate([allValues, values])
-            ticks.append((spacing/self.scale, values))
+            ticks.append((spacing/self.scale, values.tolist()))
 
         if self.logMode:
             return self.logTickValues(minVal, maxVal, size, ticks)

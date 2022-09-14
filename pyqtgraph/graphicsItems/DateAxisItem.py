@@ -176,7 +176,7 @@ class ZoomLevel:
             )
             ticks = ticks[~close]
             allTicks = np.concatenate([allTicks, ticks])
-            valueSpecs.append((spec.spacing, ticks))
+            valueSpecs.append((spec.spacing, ticks.tolist()))
             # if we're skipping ticks on the current level there's no point in
             # producing lower level ticks
             if skipFactor > 1:
