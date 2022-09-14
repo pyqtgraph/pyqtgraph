@@ -1,3 +1,4 @@
+import math
 import warnings
 
 import numpy as np
@@ -237,6 +238,9 @@ class PlotDataItem(GraphicsObject):
         **Optimization keyword arguments:**
 
             ================= =======================================================================
+            useCache          (bool) By default, generated point graphics items are cached to
+                              improve performance. Setting this to False can improve image quality
+                              in certain situations.
             antialias         (bool) By default, antialiasing is disabled to improve performance.
                               Note that in some cases (in particular, when ``pxMode=True``), points
                               will be rendered antialiased even if this is set to `False`.
@@ -348,6 +352,7 @@ class PlotDataItem(GraphicsObject):
             'antialias': getConfigOption('antialias'),
             'pointMode': None,
 
+            'useCache': True,
             'downsample': 1,
             'autoDownsample': False,
             'downsampleMethod': 'peak',
@@ -464,17 +469,6 @@ class PlotDataItem(GraphicsObject):
         self._datasetDisplay = None  # invalidate display data
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
-
-    def setPointMode(self, state):
-        # This does not seem to do anything, but PlotItem still seems to call it.
-        # warnings.warn(
-        #     'setPointMode has been deprecated, and has no effect. It will be removed from the library in the first release following April, 2022.',
-        #     DeprecationWarning, stacklevel=2
-        # )
-        if self.opts['pointMode'] == state:
-            return
-        self.opts['pointMode'] = state
-        self.update()
 
     def setPen(self, *args, **kargs):
         """
@@ -862,7 +856,8 @@ class PlotDataItem(GraphicsObject):
                 ('symbolSize', 'size'),
                 ('data', 'data'),
                 ('pxMode', 'pxMode'),
-                ('antialias', 'antialias')
+                ('antialias', 'antialias'),
+                ('useCache', 'useCache')
             ]:
                 if k in self.opts:
                     scatterArgs[v] = self.opts[k]
@@ -979,14 +974,16 @@ class PlotDataItem(GraphicsObject):
 
         if self.opts['autoDownsample']:
             # this option presumes that x-values have uniform spacing
-            if view_range is not None and len(x) > 1:
-                dx = float(x[-1]-x[0]) / (len(x)-1)
+
+            finite_x = x[np.isfinite(x)]  # ignore infinite and nan values
+            if view_range is not None and len(finite_x) > 1:
+                dx = float(finite_x[-1]-finite_x[0]) / (len(finite_x)-1)
                 if dx != 0.0:
-                    x0 = (view_range.left()-x[0]) / dx
-                    x1 = (view_range.right()-x[0]) / dx
                     width = self.getViewBox().width()
-                    if width != 0.0:
-                        ds = int(max(1, int((x1-x0) / (width*self.opts['autoDownsampleFactor']))))
+                    if width != 0.0:  # autoDownsampleFactor _should_ be > 1.0
+                        ds_float = max(1.0, abs(view_range.width() / dx / (width * self.opts['autoDownsampleFactor'])))
+                        if math.isfinite(ds_float):
+                            ds = int(ds_float)
                     ## downsampling is expensive; delay until after clipping.
 
         if self.opts['clipToView']:

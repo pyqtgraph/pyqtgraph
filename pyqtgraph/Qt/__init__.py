@@ -105,7 +105,7 @@ def _loadUiType(uiFile):
         if pyside2uic is None:
             pyside2version = tuple(map(int, PySide2.__version__.split(".")))
             if (5, 14) <= pyside2version < (5, 14, 2, 2):
-                warnings.warn('For UI compilation, it is recommended to upgrade to PySide >= 5.15')
+                warnings.warn('For UI compilation, it is recommended to upgrade to PySide >= 5.15', RuntimeWarning, stacklevel=2)
 
     # get class names from ui file
     import xml.etree.ElementTree as xml
@@ -251,97 +251,6 @@ else:
     raise ValueError("Invalid Qt lib '%s'" % QT_LIB)
 
 
-# common to PyQt5, PyQt6, PySide2 and PySide6
-if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
-    # We're using Qt5 which has a different structure so we're going to use a shim to
-    # recreate the Qt4 structure
-
-    if QT_LIB in [PYQT5, PYSIDE2]:
-        __QGraphicsItem_scale = QtWidgets.QGraphicsItem.scale
-
-        def scale(self, *args):
-            warnings.warn(
-                "Deprecated Qt API, will be removed in 0.13.0.",
-                DeprecationWarning, stacklevel=2
-            )
-            if args:	
-                sx, sy = args	
-                tr = self.transform()	
-                tr.scale(sx, sy)	
-                self.setTransform(tr)	
-            else:	
-                return __QGraphicsItem_scale(self)
-        QtWidgets.QGraphicsItem.scale = scale	
-
-        def rotate(self, angle):
-            warnings.warn(
-                "Deprecated Qt API, will be removed in 0.13.0.",
-                DeprecationWarning, stacklevel=2
-            )
-            tr = self.transform()	
-            tr.rotate(angle)	
-            self.setTransform(tr)	
-        QtWidgets.QGraphicsItem.rotate = rotate	
-
-        def translate(self, dx, dy):
-            warnings.warn(
-                "Deprecated Qt API, will be removed in 0.13.0.",
-                DeprecationWarning, stacklevel=2
-            )
-            tr = self.transform()	
-            tr.translate(dx, dy)	
-            self.setTransform(tr)	
-        QtWidgets.QGraphicsItem.translate = translate	
-
-        def setMargin(self, i):
-            warnings.warn(
-                "Deprecated Qt API, will be removed in 0.13.0.",
-                DeprecationWarning, stacklevel=2
-            )
-            self.setContentsMargins(i, i, i, i)	
-        QtWidgets.QGridLayout.setMargin = setMargin	
-
-        def setResizeMode(self, *args):
-            warnings.warn(
-                "Deprecated Qt API, will be removed in 0.13.0.",
-                DeprecationWarning, stacklevel=2
-            )
-            self.setSectionResizeMode(*args)
-        QtWidgets.QHeaderView.setResizeMode = setResizeMode	
-    
-    # Import all QtWidgets objects into QtGui
-    _fallbacks = dir(QtWidgets)
-
-    def lazyGetattr(name):
-        if not (name in _fallbacks and name.startswith('Q')):
-            raise AttributeError(f"module 'QtGui' has no attribute '{name}'")
-        # This whitelist is attrs which are not shared between PyQt6.QtGui and PyQt5.QtGui, but which can be found on
-        # one of the QtWidgets.
-        whitelist = [
-            "QAction",
-            "QActionGroup",
-            "QFileSystemModel",
-            "QPagedPaintDevice",
-            "QPaintEvent",
-            "QShortcut",
-            "QUndoCommand",
-            "QUndoGroup",
-            "QUndoStack",
-        ]
-        if name not in whitelist:
-            warnings.warn(
-                "Accessing pyqtgraph.QtWidgets through QtGui is deprecated and will be removed sometime"
-                f" after May 2022. Use QtWidgets.{name} instead.",
-                DeprecationWarning, stacklevel=2
-            )
-        attr = getattr(QtWidgets, name)
-        setattr(QtGui, name, attr)
-        return attr
-
-    QtGui.__getattr__ = lazyGetattr
-    
-    QtWidgets.QApplication.setGraphicsSystem = None
-
 
 if QT_LIB in [PYQT6, PYSIDE6]:
     # We're using Qt6 which has a different structure so we're going to use a shim to
@@ -349,6 +258,26 @@ if QT_LIB in [PYQT6, PYSIDE6]:
 
     if not isinstance(QtOpenGLWidgets, FailedImport):
         QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
+
+    # PySide6 incorrectly placed QFileSystemModel inside QtWidgets
+    if QT_LIB == PYSIDE6 and hasattr(QtWidgets, 'QFileSystemModel'):
+        module = getattr(QtWidgets, "QFileSystemModel")
+        setattr(QtGui, "QFileSystemModel", module)
+
+else:
+    # Shim Qt5 namespace to match Qt6
+    module_whitelist = [
+        "QAction",
+        "QActionGroup",
+        "QFileSystemModel",
+        "QShortcut",
+        "QUndoCommand",
+        "QUndoGroup",
+        "QUndoStack",
+    ]
+    for module in module_whitelist:
+        attr = getattr(QtWidgets, module)
+        setattr(QtGui, module, attr)
 
 
 # Common to PySide2 and PySide6
@@ -398,17 +327,16 @@ if QT_LIB in [PYQT5, PYQT6]:
 
 from . import internals
 
-# USE_XXX variables are deprecated
-USE_PYSIDE = QT_LIB == PYSIDE
-USE_PYQT4 = QT_LIB == PYQT4
-USE_PYQT5 = QT_LIB == PYQT5
-
-## Make sure we have Qt >= 5.12
-versionReq = [5, 12]
+# Alert user if using Qt < 5.15, but do not raise exception
+versionReq = [5, 15]
 m = re.match(r'(\d+)\.(\d+).*', QtVersion)
 if m is not None and list(map(int, m.groups())) < versionReq:
-    print(list(map(int, m.groups())))
-    raise Exception('pyqtgraph requires Qt version >= %d.%d  (your version is %s)' % (versionReq[0], versionReq[1], QtVersion))
+    warnings.warn(
+        f"PyQtGraph supports Qt version >= {versionReq[0]}.{versionReq[1]},"
+        f" but {QtVersion} detected.",
+        RuntimeWarning,
+        stacklevel=2
+    )
 
 App = QtWidgets.QApplication
 # subclassing QApplication causes segfaults on PySide{2, 6} / Python 3.8.7+

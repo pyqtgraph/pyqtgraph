@@ -1,12 +1,11 @@
 import string
-import warnings
 from math import atan2
 
 from .. import functions as fn
 from ..Point import Point
 from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
-from .ScatterPlotItem import Symbols, makeCrosshair
+from .ScatterPlotItem import Symbols
 from .TextItem import TextItem
 from .UIGraphicsItem import UIGraphicsItem
 from .ViewBox import ViewBox
@@ -27,7 +26,6 @@ class TargetItem(UIGraphicsItem):
         self,
         pos=None,
         size=10,
-        radii=None,
         symbol="crosshair",
         pen=None,
         hoverPen=None,
@@ -44,8 +42,6 @@ class TargetItem(UIGraphicsItem):
             Initial position of the symbol.  Default is (0, 0)
         size : int
             Size of the symbol in pixels.  Default is 10.
-        radii : tuple of int
-            Deprecated.  Gives size of crosshair in screen pixels.
         pen : QPen, tuple, list or str
             Pen to use when drawing line. Can be any arguments that are valid
             for :func:`~pyqtgraph.mkPen`. Default pen is transparent yellow.
@@ -78,21 +74,11 @@ class TargetItem(UIGraphicsItem):
             A dict of keyword arguments to use when constructing the text
             label. See :class:`TargetLabel` and :class:`~pyqtgraph.TextItem`
         """
-        super().__init__(self)
+        super().__init__()
         self.movable = movable
         self.moving = False
         self._label = None
         self.mouseHovering = False
-
-        if radii is not None:
-            warnings.warn(
-                "'radii' is now deprecated, and will be removed in 0.13.0. Use 'size' "
-                "parameter instead",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            symbol = makeCrosshair(*radii)
-            size = 1
 
         if pen is None:
             pen = (255, 255, 0)
@@ -133,16 +119,6 @@ class TargetItem(UIGraphicsItem):
         self.scale = size
         self.setPath(self._path)
         self.setLabel(label, labelOpts)
-
-    @property
-    def sigDragged(self):
-        warnings.warn(
-            "'sigDragged' has been deprecated and will be removed in 0.13.0.  Use "
-            "`sigPositionChangeFinished` instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.sigPositionChangeFinished
 
     def setPos(self, *args):
         """Method to set the position to ``(x, y)`` within the plot view
@@ -345,17 +321,6 @@ class TargetItem(UIGraphicsItem):
             if self._label is not None:
                 self._label.scene().removeItem(self._label)
             self._label = TargetLabel(self, text=text, **labelOpts)
-
-    def setLabelAngle(self, angle):
-        warnings.warn(
-            "TargetItem.setLabelAngle is deprecated and will be removed in 0.13.0."
-            "Use TargetItem.label().setAngle() instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if self.label() is not None and angle != self.label().angle:
-            self.label().setAngle(angle)
-        return None
 
 
 class TargetLabel(TextItem):

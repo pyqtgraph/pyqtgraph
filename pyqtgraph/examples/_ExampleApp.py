@@ -8,19 +8,17 @@ from collections import OrderedDict
 from functools import lru_cache
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QT_LIB, QtCore, QtGui, QtWidgets
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 app = pg.mkQApp()
 
 
 path = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, path)
-import importlib
 
 import _utils
 
-ui_template = importlib.import_module(
-    f'exampleLoaderTemplate_{QT_LIB.lower()}')
+import exampleLoaderTemplate_generic as ui_template
 
 
 # based on https://github.com/art1415926535/PyQt5-syntax-highlighting
@@ -327,6 +325,9 @@ class ExampleLoader(QtWidgets.QMainWindow):
             if self.curListener is not None:
                 self.curListener.disconnect()
             self.curListener = textFil.textChanged
+            # In case the regex was invalid before switching to title search,
+            # ensure the "invalid" color is reset
+            self.ui.exampleFilter.setStyleSheet('')
             if searchType == 'Content Search':
                 self.curListener.connect(self.filterByContent)
             else:
@@ -369,7 +370,21 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.hl.setDocument(self.ui.codeView.document())
 
     def filterByContent(self, text=None):
-        # Don't filter very short strings
+        # If the new text isn't valid regex, fail early and highlight the search filter red to indicate a problem
+        # to the user
+        validRegex = True
+        try:
+            re.compile(text)
+            self.ui.exampleFilter.setStyleSheet('')
+        except re.error:
+            colors = DarkThemeColors if app.property('darkMode') else LightThemeColors
+            errorColor = pg.mkColor(colors.Red)
+            validRegex = False
+            errorColor.setAlpha(100)
+            # Tuple prints nicely :)
+            self.ui.exampleFilter.setStyleSheet(f'background: rgba{errorColor.getRgb()}')
+        if not validRegex:
+            return
         checkDict = unnestedDict(_utils.examples_)
         self.hl.searchText = text
         # Need to reapply to current document

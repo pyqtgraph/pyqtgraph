@@ -15,13 +15,11 @@ from time import perf_counter
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QT_LIB, QtCore, QtGui, QtWidgets
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 pg.setConfigOption('imageAxisOrder', 'row-major')
 
-import importlib
-
-ui_template = importlib.import_module(f'VideoTemplate_{QT_LIB.lower()}')
+import VideoTemplate_generic as ui_template
 
 try:
     import cupy as cp

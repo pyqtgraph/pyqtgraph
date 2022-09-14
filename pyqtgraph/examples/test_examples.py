@@ -70,6 +70,10 @@ conditionalExamples = {
         False,
         reason="Example requires user interaction"
     ),
+    "jupyter_console_example.py": exceptionCondition(
+        importlib.util.find_spec("qtconsole") is not None,
+        reason="No need to test with qtconsole not being installed"
+    ),
     "RemoteSpeedTest.py": exceptionCondition(
         False,
         reason="Test is being problematic on CI machines"

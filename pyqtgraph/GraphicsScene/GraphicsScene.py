@@ -1,4 +1,3 @@
-import warnings
 import weakref
 from time import perf_counter, perf_counter_ns
 
@@ -83,13 +82,6 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     _addressCache = weakref.WeakValueDictionary()
     
     ExportDirectory = None
-    
-    @classmethod
-    def registerObject(cls, obj):
-        warnings.warn(
-            "'registerObject' is deprecated and does nothing.",
-            DeprecationWarning, stacklevel=2
-        )
 
     def __init__(self, clickRadius=2, moveDistance=5, parent=None):
         QtWidgets.QGraphicsScene.__init__(self, parent)
@@ -396,66 +388,77 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         ret = QtWidgets.QGraphicsScene.removeItem(self, item)
         self.sigItemRemoved.emit(item)
         return ret
-        
-    def itemsNearEvent(self, event, selMode=QtCore.Qt.ItemSelectionMode.IntersectsItemShape, sortOrder=QtCore.Qt.SortOrder.DescendingOrder, hoverable=False):
+
+    def itemsNearEvent(
+        self,
+        event,
+        selMode=QtCore.Qt.ItemSelectionMode.IntersectsItemShape,
+        sortOrder=QtCore.Qt.SortOrder.DescendingOrder,
+        hoverable=False,
+    ):
         """
         Return an iterator that iterates first through the items that directly intersect point (in Z order)
         followed by any other items that are within the scene's click radius.
         """
-        #tr = self.getViewWidget(event.widget()).transform()
         view = self.views()[0]
         tr = view.viewportTransform()
-        
-        if hasattr(event, 'buttonDownScenePos'):
+
+        if hasattr(event, "buttonDownScenePos"):
             point = event.buttonDownScenePos()
         else:
             point = event.scenePos()
 
-        items = self.items(point, selMode, sortOrder, tr)
-        
-        ## remove items whose shape does not contain point (scene.items() apparently sucks at this)
-        items2 = []
-        for item in items:
-            if hoverable and not hasattr(item, 'hoverEvent'):
-                continue
-            if item.scene() is not self:
-                continue
-            shape = item.shape() # Note: default shape() returns boundingRect()
-            if shape is None:
-                continue
-            if shape.contains(item.mapFromScene(point)):
-                items2.append(item)
-        
         ## Sort by descending Z-order (don't trust scene.itms() to do this either)
         ## use 'absolute' z value, which is the sum of all item/parent ZValues
         def absZValue(item):
             if item is None:
                 return 0
             return item.zValue() + absZValue(item.parentItem())
-        
-        items2.sort(key=absZValue, reverse=True)
-        
-        return items2
 
-        #seen = set()
-        #r = self._clickRadius
-        #rect = view.mapToScene(QtCore.QRect(0, 0, 2*r, 2*r)).boundingRect()
-        #w = rect.width()
-        #h = rect.height()
-        #rgn = QtCore.QRectF(point.x()-w, point.y()-h, 2*w, 2*h)
-        #self.searchRect.setRect(rgn)
-        
-        #for item in items:
-            ##seen.add(item)
+        ## Get items, which directly are at the given point (sorted by z-value)
+        items_at_point = self.items(point, selMode, sortOrder, tr)
+        items_at_point.sort(key=absZValue, reverse=True)
 
-            #shape = item.mapToScene(item.shape())
-            #if not shape.contains(point):
-                #continue
-            #yield item
-        #for item in self.items(rgn, selMode, sortOrder, tr):
-            ##if item not in seen:
-            #yield item
-        
+        ## Get items, which are within the click radius around the given point (sorted by z-value)
+        r = self._clickRadius
+        items_within_radius = []
+        rgn = None
+        if r > 0.0:
+            rect = view.mapToScene(QtCore.QRect(0, 0, 2 * r, 2 * r)).boundingRect()
+            w = rect.width()
+            h = rect.height()
+            rgn = QtCore.QRectF(point.x() - w / 2, point.y() - h / 2, w, h)
+            items_within_radius = self.items(rgn, selMode, sortOrder, tr)
+            items_within_radius.sort(key=absZValue, reverse=True)
+            # Remove items, which are already in the other list
+            for item in items_at_point:
+                if item in items_within_radius:
+                    items_within_radius.remove(item)
+
+        ## Put both groups of items together, but in the correct order
+        ## The items directly at the given point shall have higher priority
+        all_items = items_at_point + items_within_radius
+
+        ## Remove items, which we don't want, due to several reasons
+        selected_items = []
+        for item in all_items:
+            if hoverable and not hasattr(item, "hoverEvent"):
+                continue
+            if item.scene() is not self:
+                continue
+            shape = item.shape()  # Note: default shape() returns boundingRect()
+            if shape is None:
+                continue
+            # Remove items whose shape does not contain point or region
+            # (scene.items() apparently sucks at this)
+            if (
+                rgn is not None
+                and shape.intersects(item.mapFromScene(rgn).boundingRect())
+            ) or shape.contains(item.mapFromScene(point)):
+                selected_items.append(item)
+
+        return selected_items
+
     def getViewWidget(self):
         return self.views()[0]
     
