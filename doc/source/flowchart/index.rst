@@ -161,7 +161,7 @@ control panel. A minimal Node subclass looks like::
 Some nodes implement fairly complex control widgets, but most nodes follow a simple 
 form-like pattern: a list of parameter names and a single value (represented as spin 
 box, check box, etc..) for each parameter. To make this easier, the 
-:class:`CtrlNode <pyqtgraph.flowchart.library.common.CtrlNode>` subclass allows you 
+``pyqtgraph.flowchart.library.common.CtrlNode`` subclass allows you 
 to instead define a simple data structure that CtrlNode will use to automatically 
 generate the control widget. This is used in  many of the built-in library nodes 
 (especially the filters).
