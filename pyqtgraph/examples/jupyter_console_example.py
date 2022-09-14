@@ -1,4 +1,8 @@
 """
+===============
+Jupyter Console
+===============
+
 This example show how to create a Rich Jupyter Widget, and places it in a MainWindow alongside a PlotWidget.
 
 The widgets are implemented as `Docks` so they may be moved around within the Main Window

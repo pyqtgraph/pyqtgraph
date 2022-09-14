@@ -258,8 +258,8 @@ def argv_handler(gallery_conf, script_vars):
 
 # sphinx gallery config
 sphinx_gallery_conf = {
-    "examples_dirs": os.path.join(
-        os.path.dirname(__file__), "..", "..", "pyqtgraph", "examples"
+    "examples_dirs": os.path.normpath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "pyqtgraph", "examples")
     ),
     "gallery_dirs": "examples",
     "image_scrapers": (qtgallery.qtscraper,),
@@ -276,7 +276,7 @@ sphinx_gallery_conf = {
 
 qtgallery_conf = {
     "xvfb_size": (1280, 800),
-    "xfvb_extra_args": ["-ac", "+extension", "GLX", "+render"],
+    # "xfvb_extra_args": ["-ac", "+extension", "GLX", "+render"],
 }
 
 # -- Options for HTML output ---------------------------------------------------

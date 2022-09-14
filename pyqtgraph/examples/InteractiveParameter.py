@@ -1,3 +1,9 @@
+"""
+======================
+Interactive Parameters
+======================
+"""
+
 from functools import wraps
 
 import pyqtgraph as pg

@@ -8,19 +8,12 @@ build:
   tools:
     python: "3"
 
-sphinx:
-  fail_on_warning: true
-  configuration: doc/source/conf.py
-
-build:
   apt_packages:
     - xvfb
-    - libglu1-mesa-dev
-    - libgl1-mesa-dev
-    - libxi-dev
-    - libglfw3-dev
-    - libgles2-mesa-dev
-    - mesa-utils
+
+sphinx:
+  fail_on_warning: false
+  configuration: doc/source/conf.py
 
 python:
   install:
