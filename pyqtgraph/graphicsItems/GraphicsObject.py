@@ -1,13 +1,12 @@
-from ..Qt import QtCore, QtWidgets, QT_LIB
-
+from ..Qt import QT_LIB, QtCore, QtWidgets
 from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsObject']
 class GraphicsObject(GraphicsItem, QtWidgets.QGraphicsObject):
     """
-    **Bases:** :class:`GraphicsItem <pyqtgraph.graphicsItems.GraphicsItem>`, :class:`QtWidgets.QGraphicsObject`
+    **Bases:** :class:`GraphicsItem <pyqtgraph.GraphicsItem>`, :class:`QtWidgets.QGraphicsObject`
 
-    Extension of QGraphicsObject with some useful methods (provided by :class:`GraphicsItem <pyqtgraph.graphicsItems.GraphicsItem>`)
+    Extension of QGraphicsObject with some useful methods (provided by :class:`GraphicsItem <pyqtgraph.GraphicsItem>`)
     """
     _qtBaseClass = QtWidgets.QGraphicsObject
     def __init__(self, *args):

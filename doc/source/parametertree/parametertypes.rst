@@ -102,3 +102,6 @@ ParameterItems
 
 .. autoclass:: TextParameterItem
    :members:
+
+.. autoclass:: WidgetParameterItem
+   :members:

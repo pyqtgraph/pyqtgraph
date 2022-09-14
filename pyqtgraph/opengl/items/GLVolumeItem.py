@@ -8,7 +8,7 @@ __all__ = ['GLVolumeItem']
 
 class GLVolumeItem(GLGraphicsItem):
     """
-    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`
     
     Displays volumetric data. 
     """

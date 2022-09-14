@@ -9,7 +9,7 @@ __all__ = ['GLGridItem']
 
 class GLGridItem(GLGraphicsItem):
     """
-    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`
     
     Displays a wire-frame grid. 
     """

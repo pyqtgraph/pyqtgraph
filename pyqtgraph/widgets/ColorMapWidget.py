@@ -6,7 +6,7 @@ from .. import functions as fn
 from .. import parametertree as ptree
 from ..Qt import QtCore
 
-__all__ = ['ColorMapWidget']
+__all__ = ['ColorMapWidget', 'ColorMapParameter']
 
 class ColorMapWidget(ptree.ParameterTree):
     """

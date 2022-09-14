@@ -17,7 +17,6 @@ from time import perf_counter
 
 import numpy as np
 
-from .. import ImageItem, ViewBox
 from .. import debug as debug
 from .. import functions as fn
 from .. import getConfigOption
@@ -256,20 +255,20 @@ class ImageView(QtWidgets.QWidget):
 
         Parameters
         ----------
-        img : ndarray
+        img : np.ndarray
             The image to be displayed. See :func:`ImageItem.setImage` and *notes* below.
         autoRange : bool
             Whether to scale/pan the view to fit the image.
         autoLevels : bool
             Whether to update the white/black levels to fit the image.
-        levels : (min, max)
-            The white and black level values to use.
+        levels : tuple
+            (min, max) white and black level values to use.
         axes : dict
             Dictionary indicating the interpretation for each axis. This is only needed to override the default guess.
             Format is::
 
                 {'t':0, 'x':1, 'y':2, 'c':3};
-        xvals : ndarray
+        xvals : np.ndarray
             1D array of values corresponding to the first axis in a 3D image. For video, this array should contain
             the time of each frame.
         pos
@@ -925,7 +924,7 @@ class ImageView(QtWidgets.QWidget):
 
     @addGradientListToDocstring()
     def setPredefinedGradient(self, name):
-        """Set one of the gradients defined in :class:`GradientEditorItem <pyqtgraph.graphicsItems.GradientEditorItem>`.
+        """Set one of the gradients defined in :class:`GradientEditorItem`.
         Currently available gradients are:   
         """
         self.ui.histogram.gradient.loadPreset(name)

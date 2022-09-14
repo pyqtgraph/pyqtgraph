@@ -34,11 +34,13 @@ import pyqtgraph
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'sphinx_gallery.gen_gallery',
-    'qtgallery',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
+    "sphinx_qt_documentation",
+    "sphinx_gallery.gen_gallery",
+    "qtgallery",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -46,6 +48,26 @@ templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
+
+# Set Qt Documentation Variable
+qt_documentation = "Qt6"
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'numpy': ('https://numpy.org/doc/stable/', None)
+}
+
+nitpick_ignore_regex = [
+    ("py:class", r"re\.Pattern"),  # doesn't seem to be a good ref in python docs
+]
+
+napoleon_preprocess_types = True
+napoleon_type_aliases = {
+    "callable": ":class:`collections.abc.Callable`",
+    "np.ndarray": ":class:`numpy.ndarray`",
+    'array_like': ':term:`array_like`',
+    'color_like': ':func:`pyqtgraph.mkColor`'
+}
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'

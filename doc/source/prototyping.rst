@@ -21,6 +21,8 @@ PyQtGraph's flowcharts provide a visual programming environment similar in conce
 See the `flowchart documentation <flowchart>`_ and the flowchart examples for more information.
 
 
+.. _Canvas:
+
 Graphical Canvas
 ----------------
 
