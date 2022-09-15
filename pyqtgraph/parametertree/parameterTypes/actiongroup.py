@@ -21,10 +21,7 @@ class ActionGroupParameterItem(GroupParameterItem):
         tw = self.treeWidget()
         if tw is None:
             return
-        if self.button:
-            tw.setItemWidget(self, 1, self.button)
-        elif tw.itemWidget(self, 1) is not None:
-            tw.removeItemWidget(self, 1)
+        tw.setItemWidget(self, 1, self.button)
 
     def optsChanged(self, param, opts):
         if "button" in opts:
