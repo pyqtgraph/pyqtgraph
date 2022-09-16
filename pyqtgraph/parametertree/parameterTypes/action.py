@@ -72,20 +72,21 @@ class ActionParameterItem(ParameterItem):
 
 
 class ActionParameter(Parameter):
-    """Used for displaying a button within the tree.
+    """
+    Used for displaying a button within the tree.
 
     ``sigActivated(self)`` is emitted when the button is clicked.
 
-    ============== ============================================================
-    **Options:**
-    icon           Icon to display in the button. Can be any argument accepted
-                   by :func:`QtGui.QIcon <pyqtgraph.QtGui.QIcon>`
-    shortcut       Key sequence to use as a shortcut for the button. Note that
-                   this shortcut is associated with spawned parameters, i.e.
-                   the shortcut will only work when this parameter has an item
-                   in a tree that is visible. Can be set to any string accepted
-                   by :func:`QtGui.QKeySequence <pyqtgraph.QtGui.QKeySequence>`
-    ============== ============================================================
+    Parameters
+    ----------
+    icon: str
+        Icon to display in the button. Can be any argument accepted
+        by :class:`QIcon <QtGui.QIcon>`.
+    shortcut: str
+        Key sequence to use as a shortcut for the button. Note that this shortcut is
+        associated with spawned parameters, i.e. the shortcut will only work when this
+        parameter has an item in a tree that is visible. Can be set to any string
+        accepted by :class:`QKeySequence <QtGui.QKeySequence>`.
     """
     itemClass = ActionParameterItem
     sigActivated = QtCore.Signal(object)
