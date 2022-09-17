@@ -6,14 +6,14 @@ is used by the view widget
 """
 
 import argparse
+import itertools
 import sys
 
 import numpy as np
+from utils import FrameCounter
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
-
-from utils import FrameCounter
 
 pg.setConfigOption('imageAxisOrder', 'row-major')
 
@@ -48,7 +48,11 @@ parser.add_argument('--levels', default=None, type=lambda s: tuple([float(x) for
 parser.add_argument('--lut', default=False, action='store_true', help="Use color lookup table")
 parser.add_argument('--lut-alpha', default=False, action='store_true', help="Use alpha color lookup table", dest='lut_alpha')
 parser.add_argument('--size', default='512x512', type=lambda s: tuple([int(x) for x in s.split('x')]), help="WxH image dimensions default='512x512'")
+parser.add_argument('--iterations', default=float('inf'), type=float,
+    help="Number of iterations to run before exiting"
+)
 args = parser.parse_args(sys.argv[1:])
+iterations_counter = itertools.count()
 
 if RawImageGLWidget is not None:
     # don't limit frame rate to vsync
@@ -244,6 +248,12 @@ ui.numbaCheck.toggled.connect(noticeNumbaCheck)
 ptr = 0
 def update():
     global ptr
+    if next(iterations_counter) > args.iterations:
+        # cleanly close down benchmark
+        timer.stop()
+        app.quit()
+        return None
+
     if ui.lutCheck.isChecked():
         useLut = LUT
     else:

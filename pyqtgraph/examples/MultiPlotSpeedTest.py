@@ -2,12 +2,21 @@
 """
 Test the speed of rapidly updating multiple plot curves
 """
+import argparse
+import itertools
 
 import numpy as np
+from utils import FrameCounter
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
-from utils import FrameCounter
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--iterations', default=float('inf'), type=float,
+    help="Number of iterations to run before exiting"
+)
+args = parser.parse_args()
+iterations_counter = itertools.count()
 
 # pg.setConfigOptions(useOpenGL=True)
 app = pg.mkQApp("MultiPlot Speed Test")
@@ -37,7 +46,10 @@ data = np.random.normal(size=(nPlots*23,nSamples))
 ptr = 0
 def update():
     global ptr
-
+    if next(iterations_counter) > args.iterations:
+        timer.stop()
+        app.quit()
+        return None
     for i in range(nPlots):
         curves[i].setData(data[(ptr+i)%data.shape[0]])
 
