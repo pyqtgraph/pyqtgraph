@@ -28,4 +28,5 @@ Contents:
     glaxisitem
     glgraphicsitem
     glscatterplotitem
+    gltextitem
     meshdata
