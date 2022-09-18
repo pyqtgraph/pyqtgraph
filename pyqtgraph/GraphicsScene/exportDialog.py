@@ -1,14 +1,10 @@
-import importlib
-
 from .. import exporters as exporters
 from .. import functions as fn
 from ..graphicsItems.PlotItem import PlotItem
 from ..graphicsItems.ViewBox import ViewBox
-from ..Qt import QT_LIB, QtCore, QtWidgets
+from ..Qt import QtCore, QtWidgets
 
-ui_template = importlib.import_module(
-    f'.exportDialogTemplate_{QT_LIB.lower()}', package=__package__)
-
+from . import exportDialogTemplate_generic as ui_template
 
 class FormatExportListWidgetItem(QtWidgets.QListWidgetItem):
     def __init__(self, expClass, *args, **kwargs):

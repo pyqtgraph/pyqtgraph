@@ -76,7 +76,7 @@ class ViewBox(GraphicsWidget):
     **Bases:** :class:`GraphicsWidget <pyqtgraph.GraphicsWidget>`
 
     Box that allows internal scaling/panning of children by mouse drag.
-    This class is usually created automatically as part of a :class:`PlotItem <pyqtgraph.PlotItem>` or :class:`Canvas <pyqtgraph.canvas.Canvas>` or with :func:`GraphicsLayout.addViewBox() <pyqtgraph.GraphicsLayout.addViewBox>`.
+    This class is usually created automatically as part of a :class:`PlotItem <pyqtgraph.PlotItem>` or :ref:`Canvas <Canvas>` or with :func:`GraphicsLayout.addViewBox() <pyqtgraph.GraphicsLayout.addViewBox>`.
 
     Features:
 
@@ -1724,8 +1724,15 @@ class ViewBox(GraphicsWidget):
                     changed[0] = True
                 viewRange[0] = rangeX
 
-
-        changed = [(viewRange[i][0] != self.state['viewRange'][i][0]) or (viewRange[i][1] != self.state['viewRange'][i][1]) for i in (0,1)]
+        # Consider only as 'changed' if the differences are larger than floating point inaccuracies,
+        # which regularly appear in magnitude of around 1e-15. Therefore, 1e-9 as factor was chosen
+        # more or less arbitrarily.
+        thresholds = [(viewRange[axis][1] - viewRange[axis][0]) * 1.0e-9 for axis in (0,1)]
+        changed = [
+            (abs(viewRange[axis][0] - self.state["viewRange"][axis][0]) > thresholds[axis])
+            or (abs(viewRange[axis][1] - self.state["viewRange"][axis][1]) > thresholds[axis])
+            for axis in (0, 1)
+        ]
         self.state['viewRange'] = viewRange
 
         if any(changed):

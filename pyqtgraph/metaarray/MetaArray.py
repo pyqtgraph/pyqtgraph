@@ -323,17 +323,6 @@ class MetaArray(object):
             return self.asarray()
         else:
             return self.asarray().astype(dtype)
-            
-    def view(self, typ):
-        warnings.warn(
-            'MetaArray.view is deprecated and will be removed in 0.13. '
-            'Use MetaArray.asarray() instead.',
-            DeprecationWarning, stacklevel=2
-        )    
-        if typ is np.ndarray:
-            return self.asarray()
-        else:
-            raise Exception('invalid view type: %s' % str(typ))
   
     def axisValues(self, axis):
         """Return the list of values for an axis"""

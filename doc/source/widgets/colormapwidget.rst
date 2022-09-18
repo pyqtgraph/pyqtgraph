@@ -6,7 +6,9 @@ ColorMapWidget
 
     .. automethod:: pyqtgraph.ColorMapWidget.__init__
 
-    .. automethod:: pyqtgraph.widgets.ColorMapWidget.ColorMapParameter.setFields
+    .. automethod:: pyqtgraph.ColorMapParameter.setFields
 
-    .. automethod:: pyqtgraph.widgets.ColorMapWidget.ColorMapParameter.map
-    
+    .. automethod:: pyqtgraph.ColorMapParameter.map
+
+.. autoclass:: pyqtgraph.widgets.ColorMapWidget.ColorMapParameter
+    :members:

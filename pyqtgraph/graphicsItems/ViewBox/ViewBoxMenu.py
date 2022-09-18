@@ -1,10 +1,7 @@
-import importlib
-
-from ...Qt import QT_LIB, QtCore, QtGui, QtWidgets
+from ...Qt import QtCore, QtGui, QtWidgets
 from ...WidgetGroup import WidgetGroup
 
-ui_template = importlib.import_module(
-    f'.axisCtrlTemplate_{QT_LIB.lower()}', package=__package__)
+from . import axisCtrlTemplate_generic as ui_template
 
 import weakref
 

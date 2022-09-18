@@ -6,7 +6,7 @@ __all__ = ['GLAxisItem']
 
 class GLAxisItem(GLGraphicsItem):
     """
-    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`
     
     Displays three lines indicating origin and orientation of local coordinate system. 
     

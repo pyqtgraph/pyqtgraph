@@ -39,3 +39,4 @@ Contents:
     pathbutton
     valuelabel
     busycursor
+    rawimagewidget

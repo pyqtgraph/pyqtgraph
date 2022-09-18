@@ -36,7 +36,7 @@ class ConsoleWidget(QtWidgets.QWidget):
     
     def __init__(self, parent=None, namespace=None, historyFile=None, text=None, editor=None):
         """
-        ==============  ============================================================================
+        ==============  =============================================================================
         **Arguments:**
         namespace       dictionary containing the initial variables present in the default namespace
         historyFile     optional file for storing command history

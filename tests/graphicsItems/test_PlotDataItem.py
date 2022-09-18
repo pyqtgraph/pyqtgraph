@@ -83,7 +83,7 @@ def test_nonfinite():
     x = np.array([-np.inf, 0.0, 1.0,  2.0  , np.nan,   4.0 , np.inf])
     y = np.array([    1.0, 0.0,-1.0, np.inf,   2.0 , np.nan,   0.0 ])
     pdi = pg.PlotDataItem(x, y)
-    dataset = pdi.getDisplayDataset()
+    dataset = pdi._getDisplayDataset()
     _assert_equal_arrays( dataset.x, x )
     _assert_equal_arrays( dataset.y, y )
    
@@ -95,7 +95,7 @@ def test_nonfinite():
     y_log[ ~np.isfinite(y_log) ] = np.nan
 
     pdi.setLogMode(True, True)
-    dataset = pdi.getDisplayDataset()
+    dataset = pdi._getDisplayDataset()
     _assert_equal_arrays( dataset.x, x_log )
     _assert_equal_arrays( dataset.y, y_log )
 
