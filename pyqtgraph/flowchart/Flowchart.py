@@ -2,6 +2,7 @@ __init__ = ["Flowchart", "FlowchartGraphicsItem", "FlowchartNode"]
 
 import importlib
 from collections import OrderedDict
+import os
 
 from .. import DataTreeWidget, FileDialog
 from ..Qt import QT_LIB, QtCore, QtWidgets
