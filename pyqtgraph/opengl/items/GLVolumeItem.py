@@ -1,14 +1,14 @@
-from OpenGL.GL import *
-from .. GLGraphicsItem import GLGraphicsItem
-from ...Qt import QtGui
+from OpenGL.GL import *  # noqa
 import numpy as np
-from ... import debug
+
+from ...Qt import QtGui
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLVolumeItem']
 
 class GLVolumeItem(GLGraphicsItem):
     """
-    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`
     
     Displays volumetric data. 
     """
@@ -59,7 +59,8 @@ class GLVolumeItem(GLGraphicsItem):
         if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0, GL_TEXTURE_WIDTH) == 0:
             raise Exception("OpenGL failed to create 3D texture (%dx%dx%d); too large for this hardware." % shape[:3])
         
-        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, shape[0], shape[1], shape[2], 0, GL_RGBA, GL_UNSIGNED_BYTE, self.data.transpose((2,1,0,3)))
+        data = np.ascontiguousarray(self.data.transpose((2,1,0,3)))
+        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, shape[0], shape[1], shape[2], 0, GL_RGBA, GL_UNSIGNED_BYTE, data)
         glDisable(GL_TEXTURE_3D)
         
         self.lists = {}
@@ -103,8 +104,6 @@ class GLVolumeItem(GLGraphicsItem):
         glDisable(GL_TEXTURE_3D)
                 
     def drawVolume(self, ax, d):
-        N = 5
-        
         imax = [0,1,2]
         imax.remove(ax)
         
@@ -227,4 +226,3 @@ class GLVolumeItem(GLGraphicsItem):
         #glPopMatrix()
         
         
-

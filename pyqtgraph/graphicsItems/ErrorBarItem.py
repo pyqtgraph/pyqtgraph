@@ -1,8 +1,7 @@
-from ..Qt import QtGui, QtCore
-from .GraphicsObject import GraphicsObject
-from .. import getConfigOption
 from .. import functions as fn
-import numpy as np
+from .. import getConfigOption
+from ..Qt import QtGui
+from .GraphicsObject import GraphicsObject
 
 __all__ = ['ErrorBarItem']
 
@@ -34,15 +33,15 @@ class ErrorBarItem(GraphicsObject):
         Valid keyword options are:
         x, y, height, width, top, bottom, left, right, beam, pen
         
-        * x and y must be numpy arrays specifying the coordinates of data points.
-        * height, width, top, bottom, left, right, and beam may be numpy arrays,
-          single values, or None to disable. All values should be positive.
-        * top, bottom, left, and right specify the lengths of bars extending
-          in each direction.
-        * If height is specified, it overrides top and bottom.
-        * If width is specified, it overrides left and right.
-        * beam specifies the width of the beam at the end of each bar.
-        * pen may be any single argument accepted by pg.mkPen().
+          * x and y must be numpy arrays specifying the coordinates of data points.
+          * height, width, top, bottom, left, right, and beam may be numpy arrays,
+            single values, or None to disable. All values should be positive.
+          * top, bottom, left, and right specify the lengths of bars extending
+            in each direction.
+          * If height is specified, it overrides top and bottom.
+          * If width is specified, it overrides left and right.
+          * beam specifies the width of the beam at the end of each bar.
+          * pen may be any single argument accepted by pg.mkPen().
         
         This method was added in version 0.9.9. For prior versions, use setOpts.
         """

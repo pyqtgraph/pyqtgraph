@@ -1,9 +1,8 @@
-from OpenGL.GL import *
+from OpenGL.GL import *  # noqa
 from OpenGL import GL
-from ..Qt import QtGui, QtCore
-from .. import Transform3D
-from ..python2_3 import basestring
 
+from .. import Transform3D
+from ..Qt import QtCore
 
 GLOptions = {
     'opaque': {
@@ -33,7 +32,7 @@ class GLGraphicsItem(QtCore.QObject):
     _nextId = 0
     
     def __init__(self, parentItem=None):
-        QtCore.QObject.__init__(self)
+        super().__init__()
         self._id = GLGraphicsItem._nextId
         GLGraphicsItem._nextId += 1
         
@@ -42,6 +41,7 @@ class GLGraphicsItem(QtCore.QObject):
         self.__children = set()
         self.__transform = Transform3D()
         self.__visible = True
+        self.__initialized = False
         self.setParentItem(parentItem)
         self.setDepthValue(0)
         self.__glOpts = {}
@@ -91,7 +91,7 @@ class GLGraphicsItem(QtCore.QObject):
             
         
         """
-        if isinstance(opts, basestring):
+        if isinstance(opts, str):
             opts = GLOptions[opts]
         self.__glOpts = opts.copy()
         self.update()
@@ -135,9 +135,12 @@ class GLGraphicsItem(QtCore.QObject):
         
     def setTransform(self, tr):
         """Set the local transform for this object.
-        Must be a :class:`Transform3D <pyqtgraph.Transform3D>` instance. This transform
-        determines how the local coordinate system of the item is mapped to the coordinate
-        system of its parent."""
+
+        Parameters
+        ----------
+        tr : pyqtgraph.Transform3D
+            Tranformation from the local coordinate system to the parent's.
+        """
         self.__transform = Transform3D(tr)
         self.update()
         
@@ -228,6 +231,12 @@ class GLGraphicsItem(QtCore.QObject):
         view, as it may be obscured or outside of the current view area."""
         return self.__visible
     
+    def initialize(self):
+        self.initializeGL()
+        self.__initialized = True
+
+    def isInitialized(self):
+        return self.__initialized
     
     def initializeGL(self):
         """
@@ -245,7 +254,7 @@ class GLGraphicsItem(QtCore.QObject):
         for k,v in self.__glOpts.items():
             if v is None:
                 continue
-            if isinstance(k, basestring):
+            if isinstance(k, str):
                 func = getattr(GL, k)
                 func(*v)
             else:

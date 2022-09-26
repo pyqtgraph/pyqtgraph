@@ -1,12 +1,13 @@
-from .Exporter import Exporter
-from ..python2_3 import asUnicode
-from ..parametertree import Parameter
-from ..Qt import QtGui, QtCore, QtSvg, QT_LIB
-from .. import debug
-from .. import functions as fn
 import re
 import xml.dom.minidom as xml
+
 import numpy as np
+
+from .. import debug
+from .. import functions as fn
+from ..parametertree import Parameter
+from ..Qt import QtCore, QtGui, QtSvg, QtWidgets
+from .Exporter import Exporter
 
 translate = QtCore.QCoreApplication.translate
 
@@ -20,13 +21,13 @@ class SVGExporter(Exporter):
         Exporter.__init__(self, item)
         tr = self.getTargetRect()
 
-        if isinstance(item, QtGui.QGraphicsItem):
+        if isinstance(item, QtWidgets.QGraphicsItem):
             scene = item.scene()
         else:
             scene = item
         bgbrush = scene.views()[0].backgroundBrush()
         bg = bgbrush.color()
-        if bgbrush.style() == QtCore.Qt.NoBrush:
+        if bgbrush.style() == QtCore.Qt.BrushStyle.NoBrush:
             bg.setAlpha(0)
 
         self.params = Parameter(name='params', type='group', children=[
@@ -75,10 +76,10 @@ class SVGExporter(Exporter):
         elif copy:
             md = QtCore.QMimeData()
             md.setData('image/svg+xml', QtCore.QByteArray(xml.encode('UTF-8')))
-            QtGui.QApplication.clipboard().setMimeData(md)
+            QtWidgets.QApplication.clipboard().setMimeData(md)
         else:
             with open(fileName, 'wb') as fh:
-                fh.write(asUnicode(xml).encode('utf-8'))
+                fh.write(str(xml).encode('utf-8'))
 
 # Includes space for extra attributes
 xmlHeader = """\
@@ -101,7 +102,7 @@ def generateSvg(item, options={}):
         node, defs = _generateItemSvg(item, options=options)
     finally:
         ## reset export mode for all items in the tree
-        if isinstance(item, QtGui.QGraphicsScene):
+        if isinstance(item, QtWidgets.QGraphicsScene):
             items = item.items()
         else:
             items = [item]
@@ -119,7 +120,7 @@ def generateSvg(item, options={}):
     defsXml += "</defs>\n"
     svgAttributes = ' viewBox ="0 0 %f %f"' % (options["width"], options["height"])
     c = options['background']
-    backgroundtag = '<rect width="100%%" height="100%%" style="fill:rgba(%f, %f, %f, %d)" />\n' % (c.red(), c.blue(), c.green(), c.alpha()/255.0)
+    backgroundtag = '<rect width="100%%" height="100%%" style="fill:rgba(%d, %d, %d, %f)" />\n' % (c.red(), c.green(), c.blue(), c.alphaF())
     return (xmlHeader % svgAttributes) + backgroundtag + defsXml + node.toprettyxml(indent='    ') + "\n</svg>\n"
 
 
@@ -172,12 +173,11 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
     
 
     ## Generate SVG text for just this item (exclude its children; we'll handle them later)
-    tr = QtGui.QTransform()
-    if isinstance(item, QtGui.QGraphicsScene):
+    if isinstance(item, QtWidgets.QGraphicsScene):
         xmlStr = "<g>\n</g>\n"
         doc = xml.parseString(xmlStr)
         childs = [i for i in item.items() if i.parentItem() is None]
-    elif item.__class__.paint == QtGui.QGraphicsItem.paint:
+    elif item.__class__.paint == QtWidgets.QGraphicsItem.paint:
         xmlStr = "<g>\n</g>\n"
         doc = xml.parseString(xmlStr)
         childs = item.childItems()
@@ -186,7 +186,7 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
         tr = itemTransform(item, item.scene())
         
         ## offset to corner of root item
-        if isinstance(root, QtGui.QGraphicsScene):
+        if isinstance(root, QtWidgets.QGraphicsScene):
             rootPos = QtCore.QPoint(0,0)
         else:
             rootPos = root.scenePos()
@@ -207,8 +207,8 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
             item.setExportMode(True, {'painter': p})
         try:
             p.setTransform(tr)
-            opt = QtGui.QStyleOptionGraphicsItem()
-            if item.flags() & QtGui.QGraphicsItem.ItemUsesExtendedStyleOption:
+            opt = QtWidgets.QStyleOptionGraphicsItem()
+            if item.flags() & QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption:
                 opt.exposedRect = item.boundingRect()
             item.paint(p, opt, None)
         finally:
@@ -222,8 +222,6 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
     try:
         ## Get top-level group for this item
         g1 = doc.getElementsByTagName('g')[0]
-        ## get list of sub-groups
-        g2 = [n for n in g1.childNodes if isinstance(n, xml.Element) and n.tagName == 'g']
         
         defs = doc.getElementsByTagName('defs')
         if len(defs) > 0:
@@ -252,11 +250,11 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
     
     ## If this item clips its children, we need to take care of that.
     childGroup = g1  ## add children directly to this node unless we are clipping
-    if not isinstance(item, QtGui.QGraphicsScene):
+    if not isinstance(item, QtWidgets.QGraphicsScene):
         ## See if this item clips its children
-        if item.flags() & item.ItemClipsChildrenToShape:
+        if item.flags() & item.GraphicsItemFlag.ItemClipsChildrenToShape:
             ## Generate svg for just the path
-            path = QtGui.QGraphicsPathItem(item.mapToScene(item.shape()))
+            path = QtWidgets.QGraphicsPathItem(item.mapToScene(item.shape()))
             item.scene().addItem(path)
             try:
                 pathNode = _generateItemSvg(path, root=root, options=options)[0].getElementsByTagName('path')[0]
@@ -417,7 +415,7 @@ def itemTransform(item, root):
         return tr
         
     
-    if item.flags() & item.ItemIgnoresTransformations:
+    if item.flags() & item.GraphicsItemFlag.ItemIgnoresTransformations:
         pos = item.pos()
         parent = item.parentItem()
         if parent is not None:
@@ -434,10 +432,10 @@ def itemTransform(item, root):
             if nextRoot is None:
                 nextRoot = root
                 break
-            if nextRoot is root or (nextRoot.flags() & nextRoot.ItemIgnoresTransformations):
+            if nextRoot is root or (nextRoot.flags() & nextRoot.GraphicsItemFlag.ItemIgnoresTransformations):
                 break
         
-        if isinstance(nextRoot, QtGui.QGraphicsScene):
+        if isinstance(nextRoot, QtWidgets.QGraphicsScene):
             tr = item.sceneTransform()
         else:
             tr = itemTransform(nextRoot, root) * item.itemTransform(nextRoot)[0]

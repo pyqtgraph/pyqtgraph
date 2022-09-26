@@ -1,10 +1,8 @@
-from OpenGL.GL import *
-from .GLMeshItem import GLMeshItem
-from .. MeshData import MeshData
-from ...Qt import QtGui
+from OpenGL.GL import *  # noqa
 import numpy as np
 
-
+from ..MeshData import MeshData
+from .GLMeshItem import GLMeshItem
 
 __all__ = ['GLSurfacePlotItem']
 

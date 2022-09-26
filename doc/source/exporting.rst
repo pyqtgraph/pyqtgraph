@@ -41,23 +41,33 @@ Export Formats
 Exporting from the API
 ----------------------
 
-To export a file programatically, follow this example::
+To export a file programatically, follow this example:
 
-    import pyqtgraph as pg
-    import pyqtgraph.exporters
+.. code-block:: python
+
+  import pyqtgraph as pg
+  import pyqtgraph.exporters
     
-    # generate something to export
-    plt = pg.plot([1,5,2,4,3])
+  # generate something to export
+  plt = pg.plot([1,5,2,4,3])
 
-    # create an exporter instance, as an argument give it
-    # the item you wish to export
-    exporter = pg.exporters.ImageExporter(plt.plotItem)
+  # create an exporter instance, as an argument give it
+  # the item you wish to export
+  exporter = pg.exporters.ImageExporter(plt.plotItem)
 
-    # set export parameters if needed
-    exporter.parameters()['width'] = 100   # (note this also affects height parameter)
+  # set export parameters if needed
+  exporter.parameters()['width'] = 100   # (note this also affects height parameter)
     
-    # save to file
-    exporter.export('fileName.png')
+  # save to file
+  exporter.export('fileName.png')
+
+To export the overall layout of a GraphicsLayoutWidget `grl`, the exporter initialization is
+
+.. code-block:: python
+
+  exporter = pg.exporters.ImageExporter( grl.scene() )
+
+instead.
     
 
 Exporting 3D Graphics
@@ -69,5 +79,3 @@ generate an image from a GLViewWidget by using QGLWidget.grabFrameBuffer or QGLW
     glview.grabFrameBuffer().save('fileName.png')
 
 See the Qt documentation for more information. 
-
-    

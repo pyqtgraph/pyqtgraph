@@ -3,6 +3,7 @@ from warnings import warn
 
 from .. import getConfigOption
 
+
 def getCupy():
     if getConfigOption("useCupy"):
         try:

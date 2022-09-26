@@ -1,16 +1,18 @@
-import os, time, sys, traceback, weakref
-import numpy as np
+import os
+import sys
 import threading
+import time
+import traceback
 import warnings
-try:
-    import __builtin__ as builtins
-    import cPickle as pickle
-except ImportError:
-    import builtins
-    import pickle
+import weakref
+import builtins
+import pickle
+
+import numpy as np
 
 # color printing for debugging
 from ..util import cprint
+
 
 class ClosedError(Exception):
     """Raised when an event handler receives a request to close the connection
@@ -71,12 +73,11 @@ class RemoteEventHandler(object):
             'returnType': 'auto',    ## 'proxy', 'value', 'auto'
             'autoProxy': False,      ## bool
             'deferGetattr': False,   ## True, False
-            'noProxyTypes': [ type(None), str, int, float, tuple, list, dict, LocalObjectProxy, ObjectProxy ],
+            'noProxyTypes': [
+                type(None), str, bytes, int, float, tuple, list, dict,
+                LocalObjectProxy, ObjectProxy,
+            ],
         }
-        if int(sys.version[0]) < 3:
-            self.proxyOptions['noProxyTypes'].append(unicode)
-        else:
-            self.proxyOptions['noProxyTypes'].append(bytes)
         
         self.optsLock = threading.RLock()
         
@@ -86,6 +87,13 @@ class RemoteEventHandler(object):
         # Mutexes to help prevent issues when multiple threads access the same RemoteEventHandler
         self.processLock = threading.RLock()
         self.sendLock = threading.RLock()
+
+        # parent sent us None as its pid, wants us to exchange pids
+        # corresponding code is in:
+        #   processes.py::Process.__init__()
+        if pid is None:
+            connection.send(os.getpid())
+            pid = connection.recv()
         
         RemoteEventHandler.handlers[pid] = self  ## register this handler as the one communicating with pid
     
@@ -232,12 +240,12 @@ class RemoteEventHandler(object):
                         if isinstance(arg, tuple) and len(arg) > 0 and arg[0] == '__byte_message__':
                             ind = arg[1]
                             dtype, shape = arg[2]
-                            fnargs[i] = np.fromstring(byteData[ind], dtype=dtype).reshape(shape)
+                            fnargs[i] = np.frombuffer(byteData[ind], dtype=dtype).reshape(shape)
                     for k,arg in fnkwds.items():
                         if isinstance(arg, tuple) and len(arg) > 0 and arg[0] == '__byte_message__':
                             ind = arg[1]
                             dtype, shape = arg[2]
-                            fnkwds[k] = np.fromstring(byteData[ind], dtype=dtype).reshape(shape)
+                            fnkwds[k] = np.frombuffer(byteData[ind], dtype=dtype).reshape(shape)
                 
                 if len(fnkwds) == 0:  ## need to do this because some functions do not allow keyword arguments.
                     try:
@@ -256,7 +264,7 @@ class RemoteEventHandler(object):
                 returnType = 'proxy'
             elif cmd == 'transferArray':
                 ## read array data from next message:
-                result = np.fromstring(byteData[0], dtype=opts['dtype']).reshape(opts['shape'])
+                result = np.frombuffer(byteData[0], dtype=opts['dtype']).reshape(opts['shape'])
                 returnType = 'proxy'
             elif cmd == 'import':
                 name = opts['module']
@@ -323,7 +331,7 @@ class RemoteEventHandler(object):
         self.send(request='result', reqId=reqId, callSync='off', opts=dict(result=result))
     
     def replyError(self, reqId, *exc):
-        print("error: %s %s %s" % (self.name, str(reqId), str(exc[1])))
+        # print("error: %s %s %s" % (self.name, str(reqId), str(exc[1])))
         excStr = traceback.format_exception(*exc)
         try:
             self.send(request='error', reqId=reqId, callSync='off', opts=dict(exception=exc[1], excString=excStr))
@@ -503,9 +511,13 @@ class RemoteEventHandler(object):
             #print ''.join(result)
             exc, excStr = result
             if exc is not None:
-                warnings.warn("===== Remote process raised exception on request: =====", RemoteExceptionWarning)
-                warnings.warn(''.join(excStr), RemoteExceptionWarning)
-                warnings.warn("===== Local Traceback to request follows: =====", RemoteExceptionWarning)
+                # PySide6 6.1.0 does an attribute lookup for feature testing
+                # in such a case, failure is normal 
+                normal = ["AttributeError"]
+                if not any(excStr[-1].startswith(x) for x in normal):
+                    warnings.warn("===== Remote process raised exception on request: =====", RemoteExceptionWarning)
+                    warnings.warn(''.join(excStr), RemoteExceptionWarning)
+                    warnings.warn("===== Local Traceback to request follows: =====", RemoteExceptionWarning)
                 raise exc
             else:
                 print(''.join(excStr))
@@ -1128,4 +1140,3 @@ class DeferredObjectProxy(ObjectProxy):
         Return a non-deferred ObjectProxy referencing the same object
         """
         return self._parent.__getattr__(self._attributes[-1], _deferGetattr=False)
-

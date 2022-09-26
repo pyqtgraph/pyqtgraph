@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # pyqtgraph documentation build configuration file, created by
 # sphinx-quickstart on Fri Nov 18 19:33:12 2011.
@@ -11,9 +10,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import time
-import sys
 import os
+import sys
+import time
 from datetime import datetime
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -31,13 +30,39 @@ import pyqtgraph
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.napoleon']
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
+    "sphinx_qt_documentation",
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
+
+# Set Qt Documentation Variable
+qt_documentation = "Qt6"
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'numpy': ('https://numpy.org/doc/stable/', None)
+}
+
+nitpick_ignore_regex = [
+    ("py:class", r"re\.Pattern"),  # doesn't seem to be a good ref in python docs
+]
+
+napoleon_preprocess_types = True
+napoleon_type_aliases = {
+    "callable": ":class:`collections.abc.Callable`",
+    "np.ndarray": ":class:`numpy.ndarray`",
+    'array_like': ':term:`array_like`',
+    'color_like': ':func:`pyqtgraph.mkColor`'
+}
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
@@ -125,7 +150,7 @@ html_theme = 'sphinx_rtd_theme'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+html_logo = os.path.join("images", "peegee_02.svg")
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32

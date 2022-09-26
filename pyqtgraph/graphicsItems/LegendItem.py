@@ -1,16 +1,15 @@
-# -*- coding: utf-8 -*-
 import math
 
-from .GraphicsWidget import GraphicsWidget
-from .LabelItem import LabelItem
-from ..Qt import QtGui, QtCore
 from .. import functions as fn
 from ..icons import invisibleEye
 from ..Point import Point
-from .ScatterPlotItem import ScatterPlotItem, drawSymbol
-from .PlotDataItem import PlotDataItem
-from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
+from ..Qt import QtCore, QtGui, QtWidgets
 from .BarGraphItem import BarGraphItem
+from .GraphicsWidget import GraphicsWidget
+from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
+from .LabelItem import LabelItem
+from .PlotDataItem import PlotDataItem
+from .ScatterPlotItem import ScatterPlotItem, drawSymbol
 
 __all__ = ['LegendItem', 'ItemSample']
 
@@ -65,8 +64,8 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         """
         GraphicsWidget.__init__(self)
         GraphicsWidgetAnchor.__init__(self)
-        self.setFlag(self.ItemIgnoresTransformations)
-        self.layout = QtGui.QGraphicsGridLayout()
+        self.setFlag(self.GraphicsItemFlag.ItemIgnoresTransformations)
+        self.layout = QtWidgets.QGraphicsGridLayout()
         self.layout.setVerticalSpacing(verSpacing)
         self.layout.setHorizontalSpacing(horSpacing)
 
@@ -269,6 +268,18 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         except IndexError:
             return None
 
+    def _removeItemFromLayout(self, *args):
+        for item in args:
+            self.layout.removeItem(item)
+            item.close()
+            # Normally, the item is automatically removed from
+            # its scene when it gets destroyed.
+            # this doesn't happen on current versions of
+            # PySide (5.15.x, 6.3.x) and results in a leak.
+            scene = item.scene()
+            if scene:
+                scene.removeItem(item)
+
     def removeItem(self, item):
         """Removes one item from the legend.
 
@@ -280,20 +291,14 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         for sample, label in self.items:
             if sample.item is item or label.text == item:
                 self.items.remove((sample, label))  # remove from itemlist
-                self.layout.removeItem(sample)  # remove from layout
-                sample.close()  # remove from drawing
-                self.layout.removeItem(label)
-                label.close()
-                self.updateSize()  # redraq box
+                self._removeItemFromLayout(sample, label)
+                self.updateSize()  # redraw box
                 return  # return after first match
 
     def clear(self):
         """Remove all items from the legend."""
         for sample, label in self.items:
-            self.layout.removeItem(sample)
-            sample.close()
-            self.layout.removeItem(label)
-            label.close()
+            self._removeItemFromLayout(sample, label)
 
         self.items = []
         self.updateSize()
@@ -326,10 +331,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             p.drawRect(self.boundingRect())
 
     def hoverEvent(self, ev):
-        ev.acceptDrags(QtCore.Qt.LeftButton)
+        ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton)
 
     def mouseDragEvent(self, ev):
-        if ev.button() == QtCore.Qt.LeftButton:
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
             dpos = ev.pos() - ev.lastPos()
             self.autoAnchor(self.pos() + dpos)
@@ -349,7 +354,7 @@ class ItemSample(GraphicsWidget):
     def paint(self, p, *args):
         opts = self.item.opts
         if opts.get('antialias'):
-            p.setRenderHint(p.Antialiasing)
+            p.setRenderHint(p.RenderHint.Antialiasing)
 
         visible = self.item.isVisible()
         if not visible:
@@ -364,7 +369,7 @@ class ItemSample(GraphicsWidget):
             if (opts.get('fillLevel', None) is not None and
                     opts.get('fillBrush', None) is not None):
                 p.setBrush(fn.mkBrush(opts['fillBrush']))
-                p.setPen(fn.mkPen(opts['fillBrush']))
+                p.setPen(fn.mkPen(opts['pen']))
                 p.drawPolygon(QtGui.QPolygonF(
                     [QtCore.QPointF(2, 18), QtCore.QPointF(18, 2),
                      QtCore.QPointF(18, 18)]))
@@ -384,7 +389,7 @@ class ItemSample(GraphicsWidget):
     def mouseClickEvent(self, event):
         """Use the mouseClick event to toggle the visibility of the plotItem
         """
-        if event.button() == QtCore.Qt.LeftButton:
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
             visible = self.item.isVisible()
             self.item.setVisible(not visible)
 

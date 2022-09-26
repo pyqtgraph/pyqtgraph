@@ -1,12 +1,12 @@
-from OpenGL.GL import *
-from .. GLGraphicsItem import GLGraphicsItem
+from OpenGL.GL import *  # noqa
 from ... import QtGui
+from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLAxisItem']
 
 class GLAxisItem(GLGraphicsItem):
     """
-    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`
     
     Displays three lines indicating origin and orientation of local coordinate system. 
     

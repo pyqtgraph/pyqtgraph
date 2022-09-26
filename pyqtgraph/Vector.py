@@ -1,12 +1,13 @@
-# -*- coding: utf-8 -*-
 """
 Vector.py -  Extension of QVector3D which adds a few missing methods.
 Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
+from math import acos, degrees
 
-from .Qt import QtGui, QtCore, QT_LIB
-import numpy as np
+from . import functions as fn
+from .Qt import QT_LIB, QtCore, QtGui
+
 
 class Vector(QtGui.QVector3D):
     """Extension of QVector3D which adds a few helpful methods."""
@@ -40,6 +41,9 @@ class Vector(QtGui.QVector3D):
                 if len(vals) != 3:
                     raise Exception('Cannot init Vector with sequence of length %d' % len(args[0]))
                 initArgs = vals
+            elif isinstance(args[0], QtGui.QVector3D):
+                # PySide6 6.1 does not accept initialization from QVector3D
+                initArgs = args[0].x(), args[0].y(), args[0].z()
         elif len(args) == 2:
             initArgs = (args[0], args[1], 0)
         QtGui.QVector3D.__init__(self, *initArgs)
@@ -47,15 +51,6 @@ class Vector(QtGui.QVector3D):
     def __len__(self):
         return 3
 
-    def __add__(self, b):
-        # workaround for pyside bug. see https://bugs.launchpad.net/pyqtgraph/+bug/1223173
-        if QT_LIB == 'PySide' and isinstance(b, QtGui.QVector3D):
-            b = Vector(b)
-        return QtGui.QVector3D.__add__(self, b)
-    
-    #def __reduce__(self):
-        #return (Point, (self.x(), self.y()))
-        
     def __getitem__(self, i):
         if i == 0:
             return self.x()
@@ -88,11 +83,11 @@ class Vector(QtGui.QVector3D):
         if n1 == 0. or n2 == 0.:
             return None
         ## Probably this should be done with arctan2 instead..
-        ang = np.arccos(np.clip(QtGui.QVector3D.dotProduct(self, a) / (n1 * n2), -1.0, 1.0)) ### in radians
+        rads = acos(fn.clip_scalar(QtGui.QVector3D.dotProduct(self, a) / (n1 * n2), -1.0, 1.0)) ### in radians
 #        c = self.crossProduct(a)
 #        if c > 0:
 #            ang *= -1.
-        return ang * 180. / np.pi
+        return degrees(rads)
 
     def __abs__(self):
         return Vector(abs(self.x()), abs(self.y()), abs(self.z()))

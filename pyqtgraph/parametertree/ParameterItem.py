@@ -1,24 +1,22 @@
-from ..Qt import QtGui, QtCore, QT_LIB
-from ..python2_3 import asUnicode
-import os, weakref, re
+from ..Qt import QtCore, QtGui, QtWidgets
 
 translate = QtCore.QCoreApplication.translate
 
-class ParameterItem(QtGui.QTreeWidgetItem):
+class ParameterItem(QtWidgets.QTreeWidgetItem):
     """
     Abstract ParameterTree item. 
     Used to represent the state of a Parameter from within a ParameterTree.
     
-    - Sets first column of item to name
-    - generates context menu if item is renamable or removable
-    - handles child added / removed events
-    - provides virtual functions for handling changes from parameter
+      - Sets first column of item to name
+      - generates context menu if item is renamable or removable
+      - handles child added / removed events
+      - provides virtual functions for handling changes from parameter
     
     For more ParameterItem types, see ParameterTree.parameterTypes module.
     """
-    
+
     def __init__(self, param, depth=0):
-        QtGui.QTreeWidgetItem.__init__(self, [param.title(), ''])
+        QtWidgets.QTreeWidgetItem.__init__(self, [param.title(), ''])
 
         self.param = param
         self.param.registerItem(self)  ## let parameter know this item is connected to it (for debugging)
@@ -42,17 +40,17 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         ## called when Parameter opts changed
         opts = self.param.opts
         
-        flags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+        flags = QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled
         if opts.get('renamable', False):
             if opts.get('title', None) is not None:
                 raise Exception("Cannot make parameter with both title != None and renamable == True.")
-            flags |= QtCore.Qt.ItemIsEditable
+            flags |= QtCore.Qt.ItemFlag.ItemIsEditable
         
         ## handle movable / dropEnabled options
         if opts.get('movable', False):
-            flags |= QtCore.Qt.ItemIsDragEnabled
+            flags |= QtCore.Qt.ItemFlag.ItemIsDragEnabled
         if opts.get('dropEnabled', False):
-            flags |= QtCore.Qt.ItemIsDropEnabled
+            flags |= QtCore.Qt.ItemFlag.ItemIsDropEnabled
         self.setFlags(flags)
 
     
@@ -110,7 +108,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             return
         
         ## Generate context menu for renaming/removing parameter
-        self.contextMenu = QtGui.QMenu() # Put in global name space to prevent garbage collection
+        self.contextMenu = QtWidgets.QMenu() # Put in global name space to prevent garbage collection
         self.contextMenu.addSeparator()
         if opts.get('renamable', False):
             self.contextMenu.addAction(translate("ParameterItem", 'Rename')).triggered.connect(self.editName)
@@ -138,7 +136,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             if self.ignoreNameColumnChange:
                 return
             try:
-                newName = self.param.setName(asUnicode(self.text(col)))
+                newName = self.param.setName(self.text(col))
             except Exception:
                 self.setText(0, self.param.name())
                 raise
@@ -160,15 +158,14 @@ class ParameterItem(QtGui.QTreeWidgetItem):
 
     def titleChanged(self):
         # called when the user-visble title has changed (either opts['title'], or name if title is None)
-        self.setText(0, self.param.title())
-        fm = QtGui.QFontMetrics(self.font(0))
 
-        if QT_LIB == 'PyQt6':
-            # PyQt6 doesn't allow or-ing of different enum types
-            # so we need to take its value property
-            textFlags = QtCore.Qt.TextSingleLine.value
-        else:
-            textFlags = QtCore.Qt.TextSingleLine
+        title = self.param.title()
+        # This makes sure that items without a title or the title 'params' remain invisible
+        if not title or title == 'params':
+            return
+        self.setText(0, title)
+        fm = QtGui.QFontMetrics(self.font(0))
+        textFlags = QtCore.Qt.TextFlag.TextSingleLine
         size = fm.size(textFlags, self.text(0))
         size.setHeight(int(size.height() * 1.35))
         size.setWidth(int(size.width() * 1.15))

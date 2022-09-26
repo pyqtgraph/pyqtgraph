@@ -1,24 +1,19 @@
-# -*- coding: utf-8 -*-
 """
 GraphicsView.py -   Extension of QGraphicsView
 Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
-from ..Point import Point
-import sys, os
-from .FileDialog import FileDialog
-from ..GraphicsScene import GraphicsScene
-import numpy as np
 from .. import functions as fn
-from .. import debug as debug
 from .. import getConfigOption
+from ..GraphicsScene import GraphicsScene
+from ..Point import Point
+from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
 
 __all__ = ['GraphicsView']
 
 
-class GraphicsView(QtGui.QGraphicsView):
+class GraphicsView(QtWidgets.QGraphicsView):
     """Re-implementation of QGraphicsView that removes scrollbars and allows unambiguous control of the 
     viewed coordinate range. Also automatically creates a GraphicsScene and a central QGraphicsWidget
     that is automatically scaled to the full view geometry.
@@ -63,7 +58,7 @@ class GraphicsView(QtGui.QGraphicsView):
         
         self.closed = False
         
-        QtGui.QGraphicsView.__init__(self, parent)
+        QtWidgets.QGraphicsView.__init__(self, parent)
         
         # This connects a cleanup function to QApplication.aboutToQuit. It is
         # called from here because we have no good way to react when the
@@ -76,22 +71,21 @@ class GraphicsView(QtGui.QGraphicsView):
             useOpenGL = getConfigOption('useOpenGL')
         
         self.useOpenGL(useOpenGL)
-        
-        self.setCacheMode(self.CacheBackground)
+        self.setCacheMode(self.CacheModeFlag.CacheBackground)
         
         ## This might help, but it's probably dangerous in the general case..
         #self.setOptimizationFlag(self.DontSavePainterState, True)
         
-        self.setBackgroundRole(QtGui.QPalette.NoRole)
+        self.setBackgroundRole(QtGui.QPalette.ColorRole.NoRole)
         self.setBackground(background)
         
-        self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.setFrameShape(QtGui.QFrame.NoFrame)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setTransformationAnchor(QtGui.QGraphicsView.NoAnchor)
-        self.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
-        self.setViewportUpdateMode(QtGui.QGraphicsView.MinimalViewportUpdate)
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
+        self.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setTransformationAnchor(QtWidgets.QGraphicsView.ViewportAnchor.NoAnchor)
+        self.setResizeAnchor(QtWidgets.QGraphicsView.ViewportAnchor.AnchorViewCenter)
+        self.setViewportUpdateMode(QtWidgets.QGraphicsView.ViewportUpdateMode.MinimalViewportUpdate)
         
         
         self.lockedViewports = []
@@ -107,16 +101,11 @@ class GraphicsView(QtGui.QGraphicsView):
         self.sceneObj = GraphicsScene(parent=self)
         self.setScene(self.sceneObj)
         
-        ## Workaround for PySide crash
-        ## This ensures that the scene will outlive the view.
-        if QT_LIB == 'PySide':
-            self.sceneObj._view_ref_workaround = self
-        
         ## by default we set up a central widget with a grid layout.
         ## this can be replaced if needed.
         self.centralWidget = None
-        self.setCentralItem(QtGui.QGraphicsWidget())
-        self.centralLayout = QtGui.QGraphicsGridLayout()
+        self.setCentralItem(QtWidgets.QGraphicsWidget())
+        self.centralLayout = QtWidgets.QGraphicsGridLayout()
         self.centralWidget.setLayout(self.centralLayout)
         
         self.mouseEnabled = False
@@ -127,9 +116,9 @@ class GraphicsView(QtGui.QGraphicsView):
         """Enable or disable default antialiasing.
         Note that this will only affect items that do not specify their own antialiasing options."""
         if aa:
-            self.setRenderHints(self.renderHints() | QtGui.QPainter.Antialiasing)
+            self.setRenderHints(self.renderHints() | QtGui.QPainter.RenderHint.Antialiasing)
         else:
-            self.setRenderHints(self.renderHints() & ~QtGui.QPainter.Antialiasing)
+            self.setRenderHints(self.renderHints() & ~QtGui.QPainter.RenderHint.Antialiasing)
         
     def setBackground(self, background):
         """
@@ -169,7 +158,7 @@ class GraphicsView(QtGui.QGraphicsView):
 
             v = QtWidgets.QOpenGLWidget()
         else:
-            v = QtGui.QWidget()
+            v = QtWidgets.QWidget()
             
         self.setViewport(v)
             
@@ -219,9 +208,9 @@ class GraphicsView(QtGui.QGraphicsView):
             self.resetTransform()
         else:
             if self.aspectLocked:
-                self.fitInView(self.range, QtCore.Qt.KeepAspectRatio)
+                self.fitInView(self.range, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
             else:
-                self.fitInView(self.range, QtCore.Qt.IgnoreAspectRatio)
+                self.fitInView(self.range, QtCore.Qt.AspectRatioMode.IgnoreAspectRatio)
             
         if propagate:
             for v in self.lockedViewports:
@@ -321,13 +310,9 @@ class GraphicsView(QtGui.QGraphicsView):
         super().wheelEvent(ev)
         if not self.mouseEnabled:
             return
-        delta = 0
-        if QT_LIB in ['PyQt4', 'PySide']:
-            delta = ev.delta()
-        else:
-            delta = ev.angleDelta().x()
-            if delta == 0:
-                delta = ev.angleDelta().y()
+        delta = ev.angleDelta().x()
+        if delta == 0:
+            delta = ev.angleDelta().y()
                 
         sc = 1.001 ** delta
         #self.scale *= sc
@@ -346,7 +331,7 @@ class GraphicsView(QtGui.QGraphicsView):
 
         if not self.mouseEnabled:
             return
-        lpos = ev.localPos()
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
         self.lastMousePos = lpos
         self.mousePressPos = lpos
         self.clickAccepted = ev.isAccepted()
@@ -363,7 +348,7 @@ class GraphicsView(QtGui.QGraphicsView):
         return   ## Everything below disabled for now..
         
     def mouseMoveEvent(self, ev):
-        lpos = ev.localPos()
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
         if self.lastMousePos is None:
             self.lastMousePos = lpos
         delta = Point(lpos - self.lastMousePos)
@@ -377,13 +362,13 @@ class GraphicsView(QtGui.QGraphicsView):
         if self.clickAccepted:  ## Ignore event if an item in the scene has already claimed it.
             return
         
-        if ev.buttons() == QtCore.Qt.RightButton:
-            delta = Point(np.clip(delta[0], -50, 50), np.clip(-delta[1], -50, 50))
+        if ev.buttons() == QtCore.Qt.MouseButton.RightButton:
+            delta = Point(fn.clip_scalar(delta[0], -50, 50), fn.clip_scalar(-delta[1], -50, 50))
             scale = 1.01 ** delta
             self.scale(scale[0], scale[1], center=self.mapToScene(self.mousePressPos))
             self.sigDeviceRangeChanged.emit(self, self.range)
 
-        elif ev.buttons() in [QtCore.Qt.MiddleButton, QtCore.Qt.LeftButton]:  ## Allow panning by left or mid button.
+        elif ev.buttons() in [QtCore.Qt.MouseButton.MiddleButton, QtCore.Qt.MouseButton.LeftButton]:  ## Allow panning by left or mid button.
             px = self.pixelSize()
             tr = -delta * px
             

@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
 from .. import functions as functions
+from ..Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ['ColorButton']
 
-class ColorButton(QtGui.QPushButton):
+class ColorButton(QtWidgets.QPushButton):
     """
-    **Bases:** QtGui.QPushButton
+    **Bases:** QtWidgets.QPushButton
     
     Button displaying a color and allowing the user to select a new color.
     
@@ -19,12 +18,13 @@ class ColorButton(QtGui.QPushButton):
     sigColorChanging = QtCore.Signal(object)  ## emitted whenever a new color is picked in the color dialog
     sigColorChanged = QtCore.Signal(object)   ## emitted when the selected color is accepted (user clicks OK)
     
-    def __init__(self, parent=None, color=(128,128,128)):
-        QtGui.QPushButton.__init__(self, parent)
+    def __init__(self, parent=None, color=(128,128,128), padding=6):
+        QtWidgets.QPushButton.__init__(self, parent)
+        self.padding = (padding, padding, -padding, -padding) if isinstance(padding, (int, float)) else padding
         self.setColor(color)
-        self.colorDialog = QtGui.QColorDialog()
-        self.colorDialog.setOption(QtGui.QColorDialog.ShowAlphaChannel, True)
-        self.colorDialog.setOption(QtGui.QColorDialog.DontUseNativeDialog, True)
+        self.colorDialog = QtWidgets.QColorDialog()
+        self.colorDialog.setOption(QtWidgets.QColorDialog.ColorDialogOption.ShowAlphaChannel, True)
+        self.colorDialog.setOption(QtWidgets.QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
         self.colorDialog.currentColorChanged.connect(self.dialogColorChanged)
         self.colorDialog.rejected.connect(self.colorRejected)
         self.colorDialog.colorSelected.connect(self.colorSelected)
@@ -37,11 +37,11 @@ class ColorButton(QtGui.QPushButton):
     def paintEvent(self, ev):
         super().paintEvent(ev)
         p = QtGui.QPainter(self)
-        rect = self.rect().adjusted(6, 6, -6, -6)
+        rect = self.rect().adjusted(*self.padding)
         ## draw white base, then texture for indicating transparency, then actual color
         p.setBrush(functions.mkBrush('w'))
         p.drawRect(rect)
-        p.setBrush(QtGui.QBrush(QtCore.Qt.DiagCrossPattern))
+        p.setBrush(QtGui.QBrush(QtCore.Qt.BrushStyle.DiagCrossPattern))
         p.drawRect(rect)
         p.setBrush(functions.mkBrush(self._color))
         p.drawRect(rect)
@@ -72,7 +72,7 @@ class ColorButton(QtGui.QPushButton):
         self.setColor(self._color, finished=True)
     
     def saveState(self):
-        return functions.colorTuple(self._color)
+        return self._color.getRgb()
         
     def restoreState(self, state):
         self.setColor(state)
@@ -82,9 +82,9 @@ class ColorButton(QtGui.QPushButton):
         if mode == 'qcolor':
             return color
         elif mode == 'byte':
-            return (color.red(), color.green(), color.blue(), color.alpha())
+            return color.getRgb()
         elif mode == 'float':
-            return (color.red()/255., color.green()/255., color.blue()/255., color.alpha()/255.)
+            return color.getRgbF()
 
     def widgetGroupInterface(self):
         return (self.sigColorChanged, ColorButton.saveState, ColorButton.restoreState)

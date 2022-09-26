@@ -1,33 +1,31 @@
-# -*- coding: utf-8 -*-
 """
 PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.11.1.dev0'
+__version__ = '0.12.4.dev0'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
+import importlib
+import os
+import sys
+
+import numpy  # # pyqtgraph requires numpy
+
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
-## between PyQt4 and PySide.
-from .Qt import QtGui, mkQApp
+## between PyQt and PySide.
+from .colors import palette
+from .Qt import QtCore, QtGui, QtWidgets
+from .Qt import exec_ as exec
+from .Qt import mkQApp
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
-#if QtGui.QApplication.instance() is None:
-    #app = QtGui.QApplication([])
+#if QtWidgets.QApplication.instance() is None:
+    #app = QtWidgets.QApplication([])
 
-import numpy  ## pyqtgraph requires numpy
               ## (import here to avoid massive error dump later on if numpy is not available)
 
-import os, sys
-
-## check python version
-## Allow anything >= 2.7
-if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] < 6):
-    raise Exception("Pyqtgraph requires Python version 2.6 or greater (this is %d.%d)" % (sys.version_info[0], sys.version_info[1]))
-
-## helpers for 2/3 compatibility
-from . import python2_3
 
 ## in general openGL is poorly supported with Qt+GraphicsView.
 ## we only enable it where the performance benefit is critical.
@@ -36,8 +34,6 @@ if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
     useOpenGL = False
 elif 'darwin' in sys.platform: ## openGL can have a major impact on mac, but also has serious bugs
     useOpenGL = False
-    if QtGui.QApplication.instance() is not None:
-        print('Warning: QApplication was created before pyqtgraph was imported; there may be problems.')
 else:
     useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
                 
@@ -49,8 +45,6 @@ CONFIG_OPTIONS = {
     'background': 'k',        ## default background for GraphicsWidget
     'antialias': False,
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
-    'useWeave': False,       ## Use weave to speed up some operations, if it is available
-    'weaveDebug': False,    ## Print full error message if weave compile fails
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
     'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
     'crashWarning': False,  # If True, print warnings about situations that may result in a crash
@@ -60,7 +54,12 @@ CONFIG_OPTIONS = {
                                  # The default is 'col-major' for backward compatibility, but this may
                                  # change in the future.
     'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
-} 
+    'useNumba': False, # When True, use numba
+    'segmentedLineMode': 'auto',  # segmented line mode, controls if lines are plotted in segments or continuous
+                                  # 'auto': whether lines are plotted in segments is automatically decided using pen properties and whether anti-aliasing is enabled
+                                  # 'on' or True: lines are always plotted in segments
+                                  # 'off' or False: lines are never plotted in segments
+}
 
 
 def setConfigOption(opt, value):
@@ -68,6 +67,8 @@ def setConfigOption(opt, value):
         raise KeyError('Unknown configuration option "%s"' % opt)
     if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
         raise ValueError('imageAxisOrder must be either "row-major" or "col-major"')
+    if opt == 'segmentedLineMode' and value not in ('auto', 'on', 'off'):
+        raise ValueError('segmentedLineMode must be "auto", "on" or "off"')
     CONFIG_OPTIONS[opt] = value
 
 def setConfigOptions(**opts):
@@ -139,9 +140,6 @@ def renamePyc(startDir):
                 os.rename(fileName, name2)
                 
 path = os.path.split(__file__)[0]
-if __version__ is None and not hasattr(sys, 'frozen') and sys.version_info[0] == 2: ## If we are frozen, there's a good chance we don't have the original .py files anymore.
-    renamePyc(path)
-
 
 ## Import almost everything to make it available from a single namespace
 ## don't import the more complex systems--canvas, parametertree, flowchart, dockarea
@@ -198,88 +196,96 @@ if __version__ is None and not hasattr(sys, 'frozen') and sys.version_info[0] ==
 #importAll('widgets', globals(), locals(),
           #excludes=['MatplotlibWidget', 'RawImageWidget', 'RemoteGraphicsView'])
 
-from .graphicsItems.VTickGroup import * 
-from .graphicsItems.GraphicsWidget import * 
-from .graphicsItems.ScaleBar import * 
-from .graphicsItems.PlotDataItem import * 
-from .graphicsItems.GraphItem import * 
-from .graphicsItems.TextItem import * 
-from .graphicsItems.GraphicsLayout import * 
-from .graphicsItems.UIGraphicsItem import * 
-from .graphicsItems.GraphicsObject import * 
-from .graphicsItems.PlotItem import * 
-from .graphicsItems.ROI import * 
-from .graphicsItems.InfiniteLine import * 
-from .graphicsItems.HistogramLUTItem import * 
-from .graphicsItems.GridItem import * 
-from .graphicsItems.GradientLegend import * 
-from .graphicsItems.GraphicsItem import * 
-from .graphicsItems.BarGraphItem import * 
-from .graphicsItems.ViewBox import * 
-from .graphicsItems.ArrowItem import * 
-from .graphicsItems.ImageItem import * 
-from .graphicsItems.PColorMeshItem import * 
-from .graphicsItems.AxisItem import * 
-from .graphicsItems.DateAxisItem import *
-from .graphicsItems.LabelItem import * 
-from .graphicsItems.CurvePoint import * 
-from .graphicsItems.GraphicsWidgetAnchor import * 
-from .graphicsItems.PlotCurveItem import * 
-from .graphicsItems.ButtonItem import * 
-from .graphicsItems.GradientEditorItem import * 
-from .graphicsItems.MultiPlotItem import * 
-from .graphicsItems.ErrorBarItem import * 
-from .graphicsItems.IsocurveItem import * 
-from .graphicsItems.LinearRegionItem import * 
-from .graphicsItems.FillBetweenItem import * 
-from .graphicsItems.LegendItem import * 
-from .graphicsItems.ScatterPlotItem import * 
-from .graphicsItems.ItemGroup import * 
+## Attempts to work around exit crashes:
+import atexit
 
-from .widgets.MultiPlotWidget import * 
-from .widgets.ScatterPlotWidget import * 
-from .widgets.ColorMapWidget import * 
-from .widgets.FileDialog import * 
-from .widgets.ValueLabel import * 
-from .widgets.HistogramLUTWidget import * 
-from .widgets.CheckTable import * 
-from .widgets.BusyCursor import * 
-from .widgets.PlotWidget import * 
-from .widgets.ComboBox import * 
-from .widgets.GradientWidget import * 
-from .widgets.DataFilterWidget import * 
-from .widgets.SpinBox import * 
-from .widgets.JoystickButton import * 
-from .widgets.GraphicsLayoutWidget import * 
-from .widgets.TreeWidget import * 
-from .widgets.PathButton import * 
-from .widgets.VerticalLabel import * 
-from .widgets.FeedbackButton import * 
-from .widgets.ColorButton import * 
-from .widgets.DataTreeWidget import * 
-from .widgets.DiffTreeWidget import * 
-from .widgets.GraphicsView import * 
-from .widgets.LayoutWidget import * 
-from .widgets.TableWidget import * 
-from .widgets.ProgressDialog import *
-from .widgets.GroupBox import GroupBox
-from .widgets.RemoteGraphicsView import RemoteGraphicsView
-
-from .imageview import *
-from .WidgetGroup import *
-from .Point import Point
-from .Vector import Vector
-from .SRTTransform import SRTTransform
-from .Transform3D import Transform3D
-from .SRTTransform3D import SRTTransform3D
-from .functions import *
-from .graphicsWindows import *
-from .SignalProxy import *
 from .colormap import *
-from .ptime import time
-from .Qt import isQObjectAlive
-from .ThreadsafeTimer import *
+from .functions import *
+from .graphicsItems.ArrowItem import *
+from .graphicsItems.AxisItem import *
+from .graphicsItems.BarGraphItem import *
+from .graphicsItems.ButtonItem import *
+from .graphicsItems.ColorBarItem import *
+from .graphicsItems.CurvePoint import *
+from .graphicsItems.DateAxisItem import *
+from .graphicsItems.ErrorBarItem import *
+from .graphicsItems.FillBetweenItem import *
+from .graphicsItems.GradientEditorItem import *
+from .graphicsItems.GradientLegend import *
+from .graphicsItems.GraphicsItem import *
+from .graphicsItems.GraphicsLayout import *
+from .graphicsItems.GraphicsObject import *
+from .graphicsItems.GraphicsWidget import *
+from .graphicsItems.GraphicsWidgetAnchor import *
+from .graphicsItems.GraphItem import *
+from .graphicsItems.GridItem import *
+from .graphicsItems.HistogramLUTItem import *
+from .graphicsItems.ImageItem import *
+from .graphicsItems.InfiniteLine import *
+from .graphicsItems.IsocurveItem import *
+from .graphicsItems.ItemGroup import *
+from .graphicsItems.LabelItem import *
+from .graphicsItems.LegendItem import *
+from .graphicsItems.LinearRegionItem import *
+from .graphicsItems.MultiPlotItem import *
+from .graphicsItems.PColorMeshItem import *
+from .graphicsItems.PlotCurveItem import *
+from .graphicsItems.PlotDataItem import *
+from .graphicsItems.PlotItem import *
+from .graphicsItems.ROI import *
+from .graphicsItems.ScaleBar import *
+from .graphicsItems.ScatterPlotItem import *
+from .graphicsItems.TargetItem import *
+from .graphicsItems.TextItem import *
+from .graphicsItems.UIGraphicsItem import *
+from .graphicsItems.ViewBox import *
+from .graphicsItems.VTickGroup import *
 
+# indirect imports used within library
+from .GraphicsScene import GraphicsScene
+from .imageview import *
+
+# indirect imports known to be used outside of the library
+from .metaarray import MetaArray
+from .Point import Point
+from .Qt import isQObjectAlive
+from .SignalProxy import *
+from .SRTTransform import SRTTransform
+from .SRTTransform3D import SRTTransform3D
+from .ThreadsafeTimer import *
+from .Transform3D import Transform3D
+from .util.cupy_helper import getCupy
+from .Vector import Vector
+from .WidgetGroup import *
+from .widgets.BusyCursor import *
+from .widgets.CheckTable import *
+from .widgets.ColorButton import *
+from .widgets.ColorMapWidget import *
+from .widgets.ComboBox import *
+from .widgets.DataFilterWidget import *
+from .widgets.DataTreeWidget import *
+from .widgets.DiffTreeWidget import *
+from .widgets.FeedbackButton import *
+from .widgets.FileDialog import *
+from .widgets.GradientWidget import *
+from .widgets.GraphicsLayoutWidget import *
+from .widgets.GraphicsView import *
+from .widgets.GroupBox import GroupBox
+from .widgets.HistogramLUTWidget import *
+from .widgets.JoystickButton import *
+from .widgets.LayoutWidget import *
+from .widgets.MultiPlotWidget import *
+from .widgets.PathButton import *
+from .widgets.PlotWidget import *
+from .widgets.ProgressDialog import *
+from .widgets.RawImageWidget import *
+from .widgets.RemoteGraphicsView import RemoteGraphicsView
+from .widgets.ScatterPlotWidget import *
+from .widgets.SpinBox import *
+from .widgets.TableWidget import *
+from .widgets.TreeWidget import *
+from .widgets.ValueLabel import *
+from .widgets.VerticalLabel import *
 
 ##############################################################
 ## PyQt and PySide both are prone to crashing on exit. 
@@ -289,8 +295,6 @@ from .ThreadsafeTimer import *
 ##  2. Terminate the process before python starts tearing down
 ##     This is potentially dangerous
 
-## Attempts to work around exit crashes:
-import atexit
 _cleanupCalled = False
 def cleanup():
     global _cleanupCalled
@@ -306,16 +310,16 @@ def cleanup():
     ## ALL QGraphicsItems must have a scene before they are deleted.
     ## This is potentially very expensive, but preferred over crashing.
     ## Note: this appears to be fixed in PySide as of 2012.12, but it should be left in for a while longer..
-    app = QtGui.QApplication.instance()
-    if app is None or not isinstance(app, QtGui.QApplication):
+    app = QtWidgets.QApplication.instance()
+    if app is None or not isinstance(app, QtWidgets.QApplication):
         # app was never constructed is already deleted or is an
         # QCoreApplication/QGuiApplication and not a full QApplication
         return
     import gc
-    s = QtGui.QGraphicsScene()
+    s = QtWidgets.QGraphicsScene()
     for o in gc.get_objects():
         try:
-            if isinstance(o, QtGui.QGraphicsItem) and isQObjectAlive(o) and o.scene() is None:
+            if isinstance(o, QtWidgets.QGraphicsItem) and isQObjectAlive(o) and o.scene() is None:
                 if getConfigOption('crashWarning'):
                     sys.stderr.write('Error: graphics item without scene. '
                         'Make sure ViewBox.close() and GraphicsView.close() '
@@ -337,7 +341,7 @@ def _connectCleanup():
     global _cleanupConnected
     if _cleanupConnected:
         return
-    QtGui.QApplication.instance().aboutToQuit.connect(cleanup)
+    QtWidgets.QApplication.instance().aboutToQuit.connect(cleanup)
     _cleanupConnected = True
 
 
@@ -351,9 +355,9 @@ def exit():
     This function does the following in an attempt to 'safely' terminate
     the process:
     
-    * Invoke atexit callbacks
-    * Close all open file handles
-    * os._exit()
+      * Invoke atexit callbacks
+      * Close all open file handles
+      * os._exit()
     
     Note: there is some potential for causing damage with this function if you
     are using objects that _require_ their destructors to be called (for example,
@@ -389,7 +393,7 @@ QAPP = None
 
 def plot(*args, **kargs):
     """
-    Create and return a :class:`PlotWidget <pyqtgraph.PlotWinPlotWidgetdow>` 
+    Create and return a :class:`PlotWidget <pyqtgraph.PlotWidget>` 
     Accepts a *title* argument to set the title of the window.
     All other arguments are used to plot data. (see :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`)
     """
@@ -465,3 +469,20 @@ def stack(*args, **kwds):
     except NameError:
         consoles = [c]
     return c
+
+
+def setPalette(app, style):
+    if isinstance(style, str):
+        style = style.lower()
+        if style == 'qdarkstylelight':
+            p = palette.getQDarkStyleLightQPalette()
+        elif style in ['qdarkstyle','qdarkstyledark']:
+            p = palette.getQDarkStyleDarkQPalette()
+        else:
+            raise ValueError(f'no palette by the name {style} exists')
+    elif isinstance(style, QtGui.QPalette):
+        p = style
+    else:
+        raise TypeError('style either be a string or QPalette')
+    app.paletteChanged.emit(p)
+    app.setPalette(p)

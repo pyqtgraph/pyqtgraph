@@ -1,14 +1,16 @@
-from ..Qt import QtGui
 from .. import functions as fn
-from .PlotDataItem import PlotDataItem
+from ..Qt import QtGui, QtWidgets
 from .PlotCurveItem import PlotCurveItem
+from .PlotDataItem import PlotDataItem
 
-class FillBetweenItem(QtGui.QGraphicsPathItem):
+__all__ = ['FillBetweenItem']
+
+class FillBetweenItem(QtWidgets.QGraphicsPathItem):
     """
     GraphicsItem filling the space between two PlotDataItems.
     """
     def __init__(self, curve1=None, curve2=None, brush=None, pen=None):
-        QtGui.QGraphicsPathItem.__init__(self)
+        QtWidgets.QGraphicsPathItem.__init__(self)
         self.curves = None
         if curve1 is not None and curve2 is not None:
             self.setCurves(curve1, curve2)
@@ -21,10 +23,11 @@ class FillBetweenItem(QtGui.QGraphicsPathItem):
         self.updatePath()
         
     def setBrush(self, *args, **kwds):
-        QtGui.QGraphicsPathItem.setBrush(self, fn.mkBrush(*args, **kwds))
+        """Change the fill brush. Acceps the same arguments as pg.mkBrush()"""
+        QtWidgets.QGraphicsPathItem.setBrush(self, fn.mkBrush(*args, **kwds))
         
     def setPen(self, *args, **kwds):
-        QtGui.QGraphicsPathItem.setPen(self, fn.mkPen(*args, **kwds))
+        QtWidgets.QGraphicsPathItem.setPen(self, fn.mkPen(*args, **kwds))
 
     def setCurves(self, curve1, curve2):
         """Set the curves to fill between.
@@ -49,10 +52,6 @@ class FillBetweenItem(QtGui.QGraphicsPathItem):
         curve2.sigPlotChanged.connect(self.curveChanged)
         self.setZValue(min(curve1.zValue(), curve2.zValue())-1)
         self.curveChanged()
-
-    def setBrush(self, *args, **kwds):
-        """Change the fill brush. Acceps the same arguments as pg.mkBrush()"""
-        QtGui.QGraphicsPathItem.setBrush(self, fn.mkBrush(*args, **kwds))
 
     def curveChanged(self):
         self.updatePath()

@@ -1,7 +1,6 @@
-from .Exporter import Exporter
 from ..parametertree import Parameter
-from ..Qt import QtGui, QtCore, QtSvg
-import re
+from ..Qt import QtCore, QtGui, QtWidgets
+from .Exporter import Exporter
 
 translate = QtCore.QCoreApplication.translate
 
@@ -39,16 +38,9 @@ class PrintExporter(Exporter):
         printer = QtGui.QPrinter(QtGui.QPrinter.HighResolution)
         dialog = QtGui.QPrintDialog(printer)
         dialog.setWindowTitle(translate('Exporter', "Print Document"))
-        if dialog.exec_() != QtGui.QDialog.Accepted:
+        if dialog.exec_() != QtWidgets.QDialog.DialogCode.Accepted:
             return
             
-        #dpi = QtGui.QDesktopWidget().physicalDpiX()
-        
-        #self.svg.setSize(QtCore.QSize(100,100))
-        #self.svg.setResolution(600)
-        #res = printer.resolution()
-        sr = self.getSourceRect()
-        #res = sr.width() * .4 / (self.params['width'] * 100 / 2.54)
         res = QtGui.QGuiApplication.primaryScreen().physicalDotsPerInchX()
         printer.setResolution(res)
         rect = printer.pageRect()

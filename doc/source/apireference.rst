@@ -17,4 +17,6 @@ Contents:
     graphicsscene/index
     flowchart/index
     graphicswindow
+    point
+    transform3d
     uml_overview

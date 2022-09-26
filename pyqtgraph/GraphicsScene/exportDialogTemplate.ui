@@ -62,6 +62,9 @@
    </item>
    <item row="5" column="0" colspan="3">
     <widget class="ParameterTree" name="paramTree">
+     <property name="columnCount">
+      <number>2</number>
+     </property>
      <attribute name="headerVisible">
       <bool>false</bool>
      </attribute>

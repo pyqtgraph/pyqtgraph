@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 functions.py -  Miscellaneous functions with no other home
 Copyright 2010  Luke Campagnola
@@ -7,22 +6,46 @@ Distributed under MIT/X11 license. See license.txt for more information.
 
 from __future__ import division
 
-import ctypes
 import decimal
+import math
 import re
 import struct
 import sys
 import warnings
+from collections import OrderedDict
 
 import numpy as np
-from .util.cupy_helper import getCupy
 
-from . import debug, reload
-from .Qt import QtGui, QtCore, QT_LIB, QtVersion
-from . import Qt
+from . import Qt, debug, getConfigOption, reload
 from .metaarray import MetaArray
-from collections import OrderedDict
-from .python2_3 import asUnicode, basestring
+from .Qt import QT_LIB, QtCore, QtGui
+from .util.cupy_helper import getCupy
+from .util.numba_helper import getNumbaFunctions
+
+# in order of appearance in this file.
+# add new functions to this list only if they are to reside in pg namespace.
+__all__ = [
+    'siScale', 'siFormat', 'siParse', 'siEval', 'siApply',
+    'Color', 'mkColor', 'mkBrush', 'mkPen', 'hsvColor',
+    'CIELabColor', 'colorCIELab', 'colorDistance',
+    'colorTuple', 'colorStr', 'intColor', 'glColor',
+    'makeArrowPath', 'eq',
+    'affineSliceCoords', 'affineSlice',
+    'interweaveArrays', 'interpolateArray', 'subArray',
+    'transformToArray', 'transformCoordinates',
+    'solve3DTransform', 'solveBilinearTransform',
+    'clip_scalar', 'clip_array', 'rescaleData', 'applyLookupTable',
+    'makeRGBA', 'makeARGB',
+    # 'try_fastpath_argb', 'ndarray_to_qimage',
+    'makeQImage',
+    # 'ndarray_from_qimage',
+    'imageToArray', 'colorToAlpha',
+    'gaussianFilter', 'downsample', 'arrayToQPath',
+    # 'ndarray_from_qpolygonf', 'create_qpolygonf', 'arrayToQPolygonF',
+    'isocurve', 'traceImage', 'isosurface',
+    'invertQTransform',
+    'pseudoScatter', 'toposort', 'disconnect', 'SignalBlock']
+
 
 Colors = {
     'b': QtGui.QColor(0,0,255,255),
@@ -38,7 +61,7 @@ Colors = {
     's': QtGui.QColor(100,100,150,255),
 }  
 
-SI_PREFIXES = asUnicode('yzafpnµm kMGTPEZY')
+SI_PREFIXES = 'yzafpnµm kMGTPEZY'
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
 SI_PREFIX_EXPONENTS['u'] = -6
@@ -59,19 +82,15 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
     
     if isinstance(x, decimal.Decimal):
         x = float(x)
-        
     try:
-        if np.isnan(x) or np.isinf(x):
+        if not math.isfinite(x):
             return(1, '')
     except:
-        print(x, type(x))
         raise
     if abs(x) < minVal:
         m = 0
-        x = 0
     else:
-        m = int(np.clip(np.floor(np.log(abs(x))/np.log(1000)), -9.0, 9.0))
-    
+        m = int(clip_scalar(math.floor(math.log(abs(x))/math.log(1000)), -9.0, 9.0))
     if m == 0:
         pref = ''
     elif m < -8 or m > 8:
@@ -83,7 +102,6 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
             pref = SI_PREFIXES_ASCII[m+8]
     m1 = -3*m
     p = 10.**m1
-    
     return (p, pref)
 
 
@@ -110,7 +128,7 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
         return fmt % (x*p, pref, suffix)
     else:
         if allowUnicode:
-            plusminus = space + asUnicode("±") + space
+            plusminus = space + "±" + space
         else:
             plusminus = " +/- "
         fmt = "%." + str(precision) + "g%s%s%s%s"
@@ -142,7 +160,6 @@ def siParse(s, regex=FLOAT_REGEX, suffix=None):
         contains a suffix, it is discarded. This enables interpreting
         characters following the numerical value as an SI prefix.
     """
-    s = asUnicode(s)
     s = s.strip()
     if suffix is not None and len(suffix) > 0:
         if s[-len(suffix):] != suffix:
@@ -205,7 +222,7 @@ class Color(QtGui.QColor):
         
     def glColor(self):
         """Return (r,g,b,a) normalized for use in opengl"""
-        return (self.red()/255., self.green()/255., self.blue()/255., self.alpha()/255.)
+        return self.getRgbF()
         
     def __getitem__(self, ind):
         return (self.red, self.green, self.blue, self.alpha)[ind]()
@@ -213,33 +230,46 @@ class Color(QtGui.QColor):
     
 def mkColor(*args):
     """
-    Convenience function for constructing QColor from a variety of argument types. Accepted arguments are:
+    Convenience function for constructing QColor from a variety of argument 
+    types. Accepted arguments are:
     
     ================ ================================================
-     'c'             one of: r, g, b, c, m, y, k, w                      
+     'c'             one of: r, g, b, c, m, y, k, w
      R, G, B, [A]    integers 0-255
      (R, G, B, [A])  tuple of integers 0-255
      float           greyscale, 0.0-1.0
      int             see :func:`intColor() <pyqtgraph.intColor>`
      (int, hues)     see :func:`intColor() <pyqtgraph.intColor>`
-     "RGB"           hexadecimal strings; may begin with '#'
-     "RGBA"          
-     "RRGGBB"       
-     "RRGGBBAA"     
+     "#RGB"         
+     "#RGBA"         
+     "#RRGGBB"       
+     "#RRGGBBAA"     
      QColor          QColor instance; makes a copy.
     ================ ================================================
     """
     err = 'Not sure how to make a color from "%s"' % str(args)
     if len(args) == 1:
-        if isinstance(args[0], basestring):
+        if isinstance(args[0], str):
             c = args[0]
-            if c[0] == '#':
-                c = c[1:]
             if len(c) == 1:
                 try:
                     return Colors[c]
                 except KeyError:
                     raise ValueError('No color named "%s"' % c)
+            have_alpha = len(c) in [5, 9] and c[0] == '#'  # "#RGBA" and "#RRGGBBAA"
+            if not have_alpha:
+                # try parsing SVG named colors, including "#RGB" and "#RRGGBB".
+                # note that QColor.setNamedColor() treats a 9-char hex string as "#AARRGGBB".
+                qcol = QtGui.QColor()
+                qcol.setNamedColor(c)
+                if qcol.isValid():
+                    return qcol
+                # on failure, fallback to pyqtgraph parsing
+                # this includes the deprecated case of non-#-prefixed hex strings
+            if c[0] == '#':
+                c = c[1:]
+            else:
+                raise ValueError(f"Unable to convert {c} to QColor")
             if len(c) == 3:
                 r = int(c[0]*2, 16)
                 g = int(c[1]*2, 16)
@@ -260,6 +290,8 @@ def mkColor(*args):
                 g = int(c[2:4], 16)
                 b = int(c[4:6], 16)
                 a = int(c[6:8], 16)
+            else:
+                raise ValueError(f"Unknown how to convert string {c} to color")
         elif isinstance(args[0], QtGui.QColor):
             return QtGui.QColor(args[0])
         elif np.issubdtype(type(args[0]), np.floating):
@@ -267,10 +299,10 @@ def mkColor(*args):
             a = 255
         elif hasattr(args[0], '__len__'):
             if len(args[0]) == 3:
-                (r, g, b) = args[0]
+                r, g, b = args[0]
                 a = 255
             elif len(args[0]) == 4:
-                (r, g, b, a) = args[0]
+                r, g, b, a = args[0]
             elif len(args[0]) == 2:
                 return intColor(*args[0])
             else:
@@ -280,16 +312,13 @@ def mkColor(*args):
         else:
             raise TypeError(err)
     elif len(args) == 3:
-        (r, g, b) = args
+        r, g, b = args
         a = 255
     elif len(args) == 4:
-        (r, g, b, a) = args
+        r, g, b, a = args
     else:
         raise TypeError(err)
-    
-    args = [r,g,b,a]
-    args = [0 if np.isnan(a) or np.isinf(a) else a for a in args]
-    args = list(map(int, args))
+    args = [int(a) if np.isfinite(a) else 0 for a in (r, g, b, a)]
     return QtGui.QColor(*args)
 
 
@@ -304,7 +333,7 @@ def mkBrush(*args, **kwds):
     elif len(args) == 1:
         arg = args[0]
         if arg is None:
-            return QtGui.QBrush(QtCore.Qt.NoBrush)
+            return QtGui.QBrush(QtCore.Qt.BrushStyle.NoBrush)
         elif isinstance(arg, QtGui.QBrush):
             return QtGui.QBrush(arg)
         else:
@@ -323,11 +352,10 @@ def mkPen(*args, **kargs):
         mkPen(color)
         mkPen(color, width=2)
         mkPen(cosmetic=False, width=4.5, color='r')
-        mkPen({'color': "FF0", width: 2})
+        mkPen({'color': "#FF0", width: 2})
         mkPen(None)   # (no pen)
     
     In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`    """
-    
     color = kargs.get('color', None)
     width = kargs.get('width', 1)
     style = kargs.get('style', None)
@@ -342,7 +370,7 @@ def mkPen(*args, **kargs):
         if isinstance(arg, QtGui.QPen):
             return QtGui.QPen(arg)  ## return a copy of this pen
         elif arg is None:
-            style = QtCore.Qt.NoPen
+            style = QtCore.Qt.PenStyle.NoPen
         else:
             color = arg
     if len(args) > 1:
@@ -361,20 +389,181 @@ def mkPen(*args, **kargs):
         pen.setStyle(style)
     if dash is not None:
         pen.setDashPattern(dash)
+
+    # for width > 1.0, we are drawing many short segments to emulate a
+    # single polyline. the default SquareCap style causes artifacts.
+    # these artifacts can be avoided by using RoundCap.
+    # this does have a performance penalty, so enable it only
+    # for thicker line widths where the artifacts are visible.
+    if width > 4.0:
+        pen.setCapStyle(QtCore.Qt.PenCapStyle.RoundCap)
+
     return pen
 
 
 def hsvColor(hue, sat=1.0, val=1.0, alpha=1.0):
     """Generate a QColor from HSVa values. (all arguments are float 0.0-1.0)"""
-    c = QtGui.QColor()
-    c.setHsvF(hue, sat, val, alpha)
-    return c
-
+    return QtGui.QColor.fromHsvF(hue, sat, val, alpha)
     
+# Matrices and math taken from "CIELab Color Space" by Gernot Hoffmann
+# http://docs-hoffmann.de/cielab03022003.pdf
+MATRIX_XYZ_FROM_RGB = np.array( (
+    ( 0.4124, 0.3576, 0.1805),
+    ( 0.2126, 0.7152, 0.0722),
+    ( 0.0193, 0.1192, 0.9505) ) )
+    
+MATRIX_RGB_FROM_XYZ = np.array( (
+    ( 3.2410,-1.5374,-0.4985),
+    (-0.9692, 1.8760, 0.0416),
+    ( 0.0556,-0.2040, 1.0570) ) )
+
+VECTOR_XYZn = np.array( ( 0.9505, 1.0000, 1.0891) ) # white reference at illuminant D65
+
+def CIELabColor(L, a, b, alpha=1.0):
+    """
+    Generates as QColor from CIE L*a*b* values.
+    
+    Parameters
+    ----------
+        L: float
+            Lightness value ranging from 0 to 100
+        a, b: float
+            (green/red) and (blue/yellow) coordinates, typically -127 to +127.
+        alpha: float, optional
+            Opacity, ranging from 0 to 1
+
+    Notes
+    -----
+    The CIE L*a*b* color space parametrizes color in terms of a luminance `L` 
+    and the `a` and `b` coordinates that locate the hue in terms of
+    a "green to red" and a "blue to yellow" axis.
+    
+    These coordinates seek to parametrize human color preception in such a way
+    that the Euclidean distance between the coordinates of two colors represents
+    the visual difference between these colors. In particular, the difference
+    
+    ΔE = sqrt( (L1-L2)² + (a1-a2)² + (b1-b2)² ) = 2.3
+    
+    is considered the smallest "just noticeable difference" between colors.
+    
+    This simple equation represents the CIE76 standard. Later standards CIE94
+    and CIE2000 refine the difference calculation ΔE, while maintaining the 
+    L*a*b* coordinates.
+    
+    Alternative (and arguably more accurate) methods exist to quantify color
+    difference, but the CIELab color space remains a convenient approximation.
+    
+    Under a known illumination, assumed to be white standard illuminant D65 
+    here, a CIELab color induces a response in the human eye
+    that is described by the tristimulus value XYZ. Once this is known, an
+    sRGB color can be calculated to induce the same response.
+    
+    More information and underlying mathematics can be found in e.g.
+    "CIELab Color Space" by Gernot Hoffmann, available at
+    http://docs-hoffmann.de/cielab03022003.pdf .
+    
+    Also see :func:`colorDistance() <pyqtgraph.colorDistance>`.
+    """ 
+    # convert to tristimulus XYZ values
+    vec_XYZ = np.full(3, ( L +16)/116 )  # Y1 = (L+16)/116
+    vec_XYZ[0] += a / 500                # X1 = (L+16)/116 + a/500
+    vec_XYZ[2] -= b / 200                # Z1 = (L+16)/116 - b/200 
+    for idx, val in enumerate(vec_XYZ):
+        if val > 0.20689:
+            vec_XYZ[idx] = vec_XYZ[idx]**3
+        else:
+            vec_XYZ[idx] = (vec_XYZ[idx] - 16/116) / 7.787
+    vec_XYZ = VECTOR_XYZn * vec_XYZ # apply white reference
+    # print(f'XYZ: {vec_XYZ}')
+
+    # convert XYZ to linear RGB
+    vec_RGB =  MATRIX_RGB_FROM_XYZ @ vec_XYZ
+    # gamma-encode linear RGB
+    arr_sRGB = np.zeros(3)
+    for idx, val in enumerate( vec_RGB[:3] ):
+        if val > 0.0031308: # (t) RGB value for linear/exponential transition
+            arr_sRGB[idx] = 1.055 * val**(1/2.4) - 0.055
+        else:
+            arr_sRGB[idx] = 12.92 * val # (s)
+    arr_sRGB = clip_array( arr_sRGB, 0.0, 1.0 ) # avoid QColor errors
+    return QtGui.QColor.fromRgbF( *arr_sRGB, alpha )
+
+def colorCIELab(qcol):
+    """
+    Describes a QColor by an array of CIE L*a*b* values.
+    Also see :func:`CIELabColor() <pyqtgraph.CIELabColor>` .
+
+    Parameters
+    ----------
+    qcol: QColor
+        QColor to be converted
+
+    Returns
+    -------
+    np.ndarray 
+        Color coordinates `[L, a, b]`.
+    """
+    srgb = qcol.getRgbF()[:3] # get sRGB values from QColor
+    # convert gamma-encoded sRGB to linear:
+    vec_RGB = np.zeros(3)
+    for idx, val in enumerate( srgb ):
+        if val > (12.92 * 0.0031308): # coefficients (s) * (t)
+            vec_RGB[idx] = ((val+0.055)/1.055)**2.4
+        else:
+            vec_RGB[idx] = val / 12.92 # (s) coefficient
+    # converted linear RGB to tristimulus XYZ:
+    vec_XYZ = MATRIX_XYZ_FROM_RGB @ vec_RGB
+    # normalize with white reference and convert to L*a*b* values
+    vec_XYZ1 = vec_XYZ / VECTOR_XYZn 
+    for idx, val in enumerate(vec_XYZ1):
+        if val > 0.008856:
+            vec_XYZ1[idx] = vec_XYZ1[idx]**(1/3)
+        else:
+            vec_XYZ1[idx] = 7.787*vec_XYZ1[idx] + 16/116
+    vec_Lab = np.array([
+        116 * vec_XYZ1[1] - 16,              # Y1
+        500 * (vec_XYZ1[0] - vec_XYZ1[1]),   # X1 - Y1
+        200 * (vec_XYZ1[1] - vec_XYZ1[2])] ) # Y1 - Z1
+    return vec_Lab
+
+def colorDistance(colors, metric='CIE76'):
+    """
+    Returns the perceptual distances between a sequence of QColors.
+    See :func:`CIELabColor() <pyqtgraph.CIELabColor>` for more information.
+
+    Parameters
+    ----------
+        colors: list of QColor
+            Two or more colors to calculate the distances between.
+        metric: str, optional
+            Metric used to determined the difference. Only 'CIE76' is supported at this time,
+            where a distance of 2.3 is considered a "just noticeable difference".
+            The default may change as more metrics become available.
+    
+    Returns 
+    -------
+    List
+        The `N-1` sequential distances between `N` colors.
+    """
+    metric = metric.upper()
+    if len(colors) < 1: return np.array([], dtype=np.float)
+    if metric == 'CIE76':
+        dist = []
+        lab1 = None
+        for col in colors:
+            lab2 = colorCIELab(col)
+            if lab1 is None: #initialize on first element
+                lab1 = lab2 
+                continue
+            dE = math.sqrt( np.sum( (lab1-lab2)**2 ) )
+            dist.append(dE)
+            lab1 = lab2
+        return np.array(dist)
+    raise ValueError(f'Metric {metric} is not available.')
+
 def colorTuple(c):
     """Return a tuple (R,G,B,A) from a QColor"""
-    return (c.red(), c.green(), c.blue(), c.alpha())
-
+    return c.getRgb()
 
 def colorStr(c):
     """Generate a hex string code from a QColor"""
@@ -400,10 +589,7 @@ def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, mi
         v = maxValue
     h = minHue + (indh * (maxHue-minHue)) // hues
     
-    c = QtGui.QColor()
-    c.setHsv(h, sat, v)
-    c.setAlpha(alpha)
-    return c
+    return QtGui.QColor.fromHsv(h, sat, v, alpha)
 
 
 def glColor(*args, **kargs):
@@ -412,7 +598,7 @@ def glColor(*args, **kargs):
     Accepts same arguments as :func:`mkColor <pyqtgraph.mkColor>`.
     """
     c = mkColor(*args, **kargs)
-    return (c.red()/255., c.green()/255., c.blue()/255., c.alpha()/255.)
+    return c.getRgbF()
 
     
 
@@ -424,16 +610,16 @@ def makeArrowPath(headLen=20, headWidth=None, tipAngle=20, tailLen=20, tailWidth
     If *tailLen* is None, no tail will be drawn.
     """
     if headWidth is None:
-        headWidth = headLen * np.tan(tipAngle * 0.5 * np.pi/180.)
+        headWidth = headLen * math.tan(math.radians(tipAngle * 0.5))
     path = QtGui.QPainterPath()
     path.moveTo(0,0)
     path.lineTo(headLen, -headWidth)
     if tailLen is None:
-        innerY = headLen - headWidth * np.tan(baseAngle*np.pi/180.)
+        innerY = headLen - headWidth * math.tan(math.radians(baseAngle))
         path.lineTo(innerY, 0)
     else:
         tailWidth *= 0.5
-        innerY = headLen - (headWidth-tailWidth) * np.tan(baseAngle*np.pi/180.)
+        innerY = headLen - (headWidth-tailWidth) * math.tan(math.radians(baseAngle))
         path.lineTo(innerY, -tailWidth)
         path.lineTo(headLen + tailLen, -tailWidth)
         path.lineTo(headLen + tailLen, tailWidth)
@@ -450,7 +636,7 @@ def eq(a, b):
     
     1. Returns True if a IS b, even if a==b still evaluates to False.
     2. While a is b will catch the case with np.nan values, special handling is done for distinct
-       float('nan') instances using np.isnan.
+       float('nan') instances using math.isnan.
     3. Tests for equivalence using ==, but silently ignores some common exceptions that can occur
        (AtrtibuteError, ValueError).
     4. When comparing arrays, returns False if the array shapes are not the same.
@@ -464,7 +650,7 @@ def eq(a, b):
 
     # The above catches np.nan, but not float('nan')
     if isinstance(a, float) and isinstance(b, float):
-        if np.isnan(a) and np.isnan(b):
+        if math.isnan(a) and math.isnan(b):
             return True
 
     # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.
@@ -538,7 +724,7 @@ def eq(a, b):
         else:
             return e.all()
     else:
-        raise Exception("== operator returned type %s" % str(type(e)))
+        raise TypeError("== operator returned type %s" % str(type(e)))
 
 
 def affineSliceCoords(shape, origin, vectors, axes):
@@ -940,7 +1126,10 @@ def transformCoordinates(tr, coords, transpose=False):
     m = m[:, :-1]
     
     ## map coordinates and return
-    mapped = (m*coords).sum(axis=1)  ## apply scale/rotate
+    # nan or inf points will not plot, but should not generate warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        mapped = (m*coords).sum(axis=1)  ## apply scale/rotate
     mapped += translate
     
     if transpose:
@@ -986,6 +1175,7 @@ def solveBilinearTransform(points1, points2):
         mapped = np.dot(matrix, [x*y, x, y, 1])
     """
     import numpy.linalg
+
     ## A is 4 rows (points) x 4 columns (xy, x, y, 1)
     ## B is 4 rows (points) x 2 columns (x, y)
     A = np.array([[points1[i].x()*points1[i].y(), points1[i].x(), points1[i].y(), 1] for i in range(4)])
@@ -997,7 +1187,86 @@ def solveBilinearTransform(points1, points2):
         matrix[i] = numpy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
     
     return matrix
-    
+
+def clip_scalar(val, vmin, vmax):
+    """ convenience function to avoid using np.clip for scalar values """
+    return vmin if val < vmin else vmax if val > vmax else val
+
+# umath.clip was slower than umath.maximum(umath.minimum).
+# See https://github.com/numpy/numpy/pull/20134 for details.
+_win32_clip_workaround_needed = (
+    sys.platform == 'win32' and
+    tuple(map(int, np.__version__.split(".")[:2])) < (1, 22)
+)
+
+def clip_array(arr, vmin, vmax, out=None):
+    # replacement for np.clip due to regression in
+    # performance since numpy 1.17
+    # https://github.com/numpy/numpy/issues/14281
+
+    if vmin is None and vmax is None:
+        # let np.clip handle the error
+        return np.clip(arr, vmin, vmax, out=out)
+
+    if vmin is None:
+        return np.core.umath.minimum(arr, vmax, out=out)
+    elif vmax is None:
+        return np.core.umath.maximum(arr, vmin, out=out)
+    elif _win32_clip_workaround_needed:
+        if out is None:
+            out = np.empty(arr.shape, dtype=np.find_common_type([arr.dtype], [type(vmax)]))
+        out = np.core.umath.minimum(arr, vmax, out=out)
+        return np.core.umath.maximum(out, vmin, out=out)
+
+    else:
+        return np.core.umath.clip(arr, vmin, vmax, out=out)
+
+
+def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
+    """Refer to documentation for rescaleData()"""
+    data_out = np.empty_like(data_in, dtype=out_dtype)
+
+    # integer clip operations are faster than float clip operations
+    # so test to see if we can perform integer clipping
+    fits_int32 = False
+    if data_in.dtype.kind in 'ui' and out_dtype.kind in 'ui':
+        # estimate whether data range after rescale will fit within an int32.
+        # this means that the input dtype should be an 8-bit or 16-bit integer type.
+        # casting to an int32 will lose the fractional part, therefore the
+        # output dtype must be an integer kind.
+        lim_in = np.iinfo(data_in.dtype)
+        # convert numpy scalar to python scalar to avoid overflow warnings
+        lo = offset.item(0) if isinstance(offset, np.number) else offset
+        dst_bounds = scale * (lim_in.min - lo), scale * (lim_in.max - lo)
+        if dst_bounds[1] < dst_bounds[0]:
+            dst_bounds = dst_bounds[1], dst_bounds[0]
+        lim32 = np.iinfo(np.int32)
+        fits_int32 = lim32.min < dst_bounds[0] and dst_bounds[1] < lim32.max
+
+    it = np.nditer([data_in, data_out],
+            flags=['external_loop', 'buffered'],
+            op_flags=[['readonly'], ['writeonly', 'no_broadcast']],
+            op_dtypes=[None, work_dtype],
+            casting='unsafe',
+            buffersize=32768)
+
+    with it:
+        for x, y in it:
+            y[...] = x
+            y -= offset
+            y *= scale
+
+            # Clip before converting dtype to avoid overflow
+            if clip is not None:
+                if fits_int32:
+                    # converts to int32, clips back to float32
+                    np.core.umath.clip(y.astype(np.int32), clip[0], clip[1], out=y)
+                else:
+                    clip_array(y, clip[0], clip[1], out=y)
+
+    return data_out
+
+
 def rescaleData(data, scale, offset, dtype=None, clip=None):
     """Return data rescaled and optionally cast to a new dtype.
 
@@ -1006,32 +1275,48 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
         data => (data-offset) * scale
     """
     if dtype is None:
-        dtype = data.dtype
+        out_dtype = data.dtype
     else:
-        dtype = np.dtype(dtype)
-    
+        out_dtype = np.dtype(dtype)
+
+    if out_dtype.kind in 'ui':
+        lim = np.iinfo(out_dtype)
+        if clip is None:
+            # don't let rescale cause integer overflow
+            clip = lim.min, lim.max
+        clip = max(clip[0], lim.min), min(clip[1], lim.max)
+
+        # make clip limits integer-valued (no need to cast to int)
+        # this improves performance, especially on Windows
+        clip = [math.trunc(x) for x in clip]
+
     if np.can_cast(data, np.float32):
         work_dtype = np.float32
     else:
         work_dtype = np.float64
-    d2 = data.astype(work_dtype, copy=True)
-    d2 -= offset
-    d2 *= scale
 
-    # Clip before converting dtype to avoid overflow
-    if dtype.kind in 'ui':
-        lim = np.iinfo(dtype)
-        if clip is None:
-            # don't let rescale cause integer overflow
-            np.clip(d2, lim.min, lim.max, out=d2)
-        else:
-            np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max), out=d2)
-    else:
+    cp = getCupy()
+    if cp and cp.get_array_module(data) == cp:
+        # Cupy does not support nditer
+        # https://github.com/cupy/cupy/issues/5021
+
+        data_out = data.astype(work_dtype, copy=True)
+        data_out -= offset
+        data_out *= scale
+
+        # Clip before converting dtype to avoid overflow
         if clip is not None:
-            np.clip(d2, *clip, out=d2)
-    # don't copy if no change in dtype
-    data = d2.astype(dtype, copy=False)
-    return data
+            clip_array(data_out, clip[0], clip[1], out=data_out)
+
+        # don't copy if no change in dtype
+        return data_out.astype(out_dtype, copy=False)
+
+    numba_fn = getNumbaFunctions()
+    if numba_fn and clip is not None:
+        # if we got here by makeARGB(), clip will not be None at this point
+        return numba_fn.rescaleData(data, scale, offset, out_dtype, clip)
+
+    return _rescaleData_nditer(data, scale, offset, work_dtype, out_dtype, clip)
 
 
 def applyLookupTable(data, lut):
@@ -1043,8 +1328,8 @@ def applyLookupTable(data, lut):
 
     Parameters
     ----------
-    data : ndarray
-    lut : ndarray
+    data : np.ndarray
+    lut : np.ndarray
         Either cupy or numpy arrays are accepted, though this function has only
         consistently behaved correctly on windows with cuda toolkit version >= 11.1.
     """
@@ -1065,7 +1350,7 @@ def makeRGBA(*args, **kwds):
     return makeARGB(*args, **kwds)
 
 
-def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None):
+def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=True, output=None):
     """
     Convert an array of values into an ARGB array suitable for building QImages,
     OpenGL textures, etc.
@@ -1103,6 +1388,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
                    The default is False, which returns in ARGB order for use with QImage 
                    (Note that 'ARGB' is a term used by the Qt documentation; the *actual* order 
                    is BGRA).
+    maskNans       Enable or disable masking NaNs as transparent.
     ============== ==================================================================================
     """
     cp = getCupy()
@@ -1158,7 +1444,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
 
     # awkward, but fastest numpy native nan evaluation
     nanMask = None
-    if data.dtype.kind == 'f' and xp.isnan(data.min()):
+    if maskNans and data.dtype.kind == 'f' and xp.isnan(data.min()):
         nanMask = xp.isnan(data)
         if data.ndim > 2:
             nanMask = xp.any(nanMask, axis=-1)
@@ -1208,44 +1494,126 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
 
     # decide channel order
     if useRGBA:
-        order = [0,1,2,3] # array comes out RGBA
+        dst_order = [0, 1, 2, 3]    # R,G,B,A
+    elif sys.byteorder == 'little':
+        dst_order = [2, 1, 0, 3]    # B,G,R,A (ARGB32 little endian)
     else:
-        order = [2,1,0,3] # for some reason, the colors line up as BGR in the final image.
+        dst_order = [1, 2, 3, 0]    # A,R,G,B (ARGB32 big endian)
         
     # copy data into image array
-    if data.ndim == 2:
+    fastpath = try_fastpath_argb(xp, data, imgData, useRGBA)
+
+    if fastpath:
+        pass
+    elif data.ndim == 2:
         # This is tempting:
         #   imgData[..., :3] = data[..., xp.newaxis]
         # ..but it turns out this is faster:
         for i in range(3):
-            imgData[..., i] = data
+            imgData[..., dst_order[i]] = data
     elif data.shape[2] == 1:
         for i in range(3):
-            imgData[..., i] = data[..., 0]
+            imgData[..., dst_order[i]] = data[..., 0]
     else:
         for i in range(0, data.shape[2]):
-            imgData[..., i] = data[..., order[i]] 
+            imgData[..., dst_order[i]] = data[..., i]
         
     profile('reorder channels')
     
     # add opaque alpha channel if needed
-    if data.ndim == 2 or data.shape[2] == 3:
-        alpha = False
-        imgData[..., 3] = 255
-    else:
+    if data.ndim == 3 and data.shape[2] == 4:
         alpha = True
+    else:
+        alpha = False
+        if not fastpath:    # fastpath has already filled it in
+            imgData[..., dst_order[3]] = 255
 
     # apply nan mask through alpha channel
     if nanMask is not None:
         alpha = True
         # Workaround for https://github.com/cupy/cupy/issues/4693
         if xp == cp:
-            imgData[nanMask, :, 3] = 0
+            imgData[nanMask, :, dst_order[3]] = 0
         else:
-            imgData[nanMask, 3] = 0
+            imgData[nanMask, dst_order[3]] = 0
 
     profile('alpha channel')
     return imgData, alpha
+
+
+def try_fastpath_argb(xp, ain, aout, useRGBA):
+    # we only optimize for certain cases
+    # return False if we did not handle it
+    can_handle = xp is np and ain.dtype == xp.ubyte and ain.flags['C_CONTIGUOUS']
+    if not can_handle:
+        return False
+
+    nrows, ncols = ain.shape[:2]
+    nchans = 1 if ain.ndim == 2 else ain.shape[2]
+
+    Format = QtGui.QImage.Format
+
+    if nchans == 1:
+        in_fmt = Format.Format_Grayscale8
+    elif nchans == 3:
+        in_fmt = Format.Format_RGB888
+    else:
+        in_fmt = Format.Format_RGBA8888
+
+    if useRGBA:
+        out_fmt = Format.Format_RGBA8888
+    else:
+        out_fmt = Format.Format_ARGB32
+
+    if in_fmt == out_fmt:
+        aout[:] = ain
+        return True
+
+    npixels_chunk = 512*1024
+    batch = int(npixels_chunk / ncols / nchans)
+    batch = max(1, batch)
+    row_beg = 0
+    while row_beg < nrows:
+        row_end = min(row_beg + batch, nrows)
+        ain_view = ain[row_beg:row_end, ...]
+        aout_view = aout[row_beg:row_end, ...]
+        qimg = QtGui.QImage(ain_view, ncols, ain_view.shape[0], ain.strides[0], in_fmt)
+        qimg = qimg.convertToFormat(out_fmt)
+        aout_view[:] = imageToArray(qimg, copy=False, transpose=False)
+        row_beg = row_end
+
+    return True
+
+
+def ndarray_to_qimage(arr, fmt):
+    """
+    Low level function to encapsulate QImage creation differences between bindings.
+    "arr" is assumed to be C-contiguous. 
+    """
+
+    # C++ QImage has two kind of constructors
+    # - QImage(const uchar*, ...)
+    # - QImage(uchar*, ...)
+    # If the const constructor is used, subsequently calling any non-const method
+    # will trigger the COW mechanism, i.e. a copy is made under the hood.
+
+    if QT_LIB.startswith('PyQt'):
+        # PyQt5          -> non-const
+        # PyQt6 >= 6.0.1 -> non-const
+        img_ptr = int(Qt.sip.voidptr(arr))  # or arr.ctypes.data
+    else:
+        # bindings that support ndarray
+        # PyQt5          -> const
+        # PyQt6 >= 6.0.1 -> const
+        # PySide2        -> non-const
+        # PySide6        -> non-const
+        img_ptr = arr
+
+    h, w = arr.shape[:2]
+    bytesPerLine = arr.strides[0]
+    qimg = QtGui.QImage(img_ptr, w, h, bytesPerLine, fmt)
+    qimg.data = arr
+    return qimg
 
 
 def makeQImage(imgData, alpha=None, copy=True, transpose=True):
@@ -1283,7 +1651,7 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     
     copied = False
     if imgData.ndim == 2:
-        imgFormat = QtGui.QImage.Format_Grayscale8
+        imgFormat = QtGui.QImage.Format.Format_Grayscale8
     elif imgData.ndim == 3:
         # If we didn't explicitly specify alpha, check the array shape.
         if alpha is None:
@@ -1302,9 +1670,9 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         profile("add alpha channel")
         
         if alpha:
-            imgFormat = QtGui.QImage.Format_ARGB32
+            imgFormat = QtGui.QImage.Format.Format_ARGB32
         else:
-            imgFormat = QtGui.QImage.Format_RGB32
+            imgFormat = QtGui.QImage.Format.Format_RGB32
     else:
         raise TypeError("Image array must have ndim = 2 or 3.")
         
@@ -1325,44 +1693,19 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         
     profile("copy")
 
-    # C++ QImage has two kind of constructors
-    # - QImage(const uchar*, ...)
-    # - QImage(uchar*, ...)
-    # If the const constructor is used, subsequently calling any non-const method
-    # will trigger the COW mechanism, i.e. a copy is made under the hood.
+    return ndarray_to_qimage(imgData, imgFormat)
 
-    if QT_LIB.startswith('PyQt'):
-        if QtCore.PYQT_VERSION == 0x60000:
-            # PyQt5          -> const
-            # PyQt6 >= 6.0.1 -> const
-            # PyQt6 == 6.0.0 -> non-const
-            img_ptr = Qt.sip.voidptr(imgData)
-        else:
-            # PyQt5          -> non-const
-            # PyQt6 >= 6.0.1 -> non-const
-            img_ptr = int(Qt.sip.voidptr(imgData))  # or imgData.ctypes.data
-    else:
-        # bindings that support ndarray
-        # PyQt5          -> const
-        # PyQt6 >= 6.0.1 -> const
-        # PySide2        -> non-const
-        # PySide6        -> non-const
-        img_ptr = imgData
 
-    img = QtGui.QImage(img_ptr, imgData.shape[1], imgData.shape[0], imgFormat)
-                
-    img.data = imgData
-    return img
+def ndarray_from_qimage(qimg):
+    img_ptr = qimg.bits()
 
-def imageToArray(img, copy=False, transpose=True):
-    """
-    Convert a QImage into numpy array. The image must have format RGB32, ARGB32, or ARGB32_Premultiplied.
-    By default, the image is not copied; changes made to the array will appear in the QImage as well (beware: if 
-    the QImage is collected before the array, there may be trouble).
-    The array will have shape (width, height, (b,g,r,a)).
-    """
-    fmt = img.format()
-    img_ptr = img.bits()
+    if img_ptr is None:
+        raise ValueError("Null QImage not supported")
+
+    h, w = qimg.height(), qimg.width()
+    bpl = qimg.bytesPerLine()
+    depth = qimg.depth()
+    logical_bpl = w * depth // 8
 
     if QT_LIB.startswith('PyQt'):
         # sizeInBytes() was introduced in Qt 5.10
@@ -1370,17 +1713,38 @@ def imageToArray(img, copy=False, transpose=True):
         #   "TypeError: QImage.sizeInBytes() is a private method"
         # note that sizeInBytes() works fine with:
         #   PyQt5 5.15, PySide2 5.12, PySide2 5.15
-        try:
-            # 64-bits size
-            nbytes = img.sizeInBytes()
-        except (TypeError, AttributeError):
-            # 32-bits size
-            nbytes = img.byteCount()
-        img_ptr.setsize(nbytes)
+        img_ptr.setsize(h * bpl)
 
-    arr = np.frombuffer(img_ptr, dtype=np.ubyte)
-    arr = arr.reshape(img.height(), img.width(), 4)
-    if fmt == img.Format_RGB32:
+    memory = np.frombuffer(img_ptr, dtype=np.ubyte).reshape((h, bpl))
+    memory = memory[:, :logical_bpl]
+
+    if depth in (8, 24, 32):
+        dtype = np.uint8
+        nchan = depth // 8
+    elif depth in (16, 64):
+        dtype = np.uint16
+        nchan = depth // 16
+    else:
+        raise ValueError("Unsupported Image Type")
+
+    shape = h, w
+    if nchan != 1:
+        shape = shape + (nchan,)
+    arr = memory.view(dtype).reshape(shape)
+    return arr
+
+
+def imageToArray(img, copy=False, transpose=True):
+    """
+    Convert a QImage into numpy array. The image must have format RGB32, ARGB32, or ARGB32_Premultiplied.
+    By default, the image is not copied; changes made to the array will appear in the QImage as well (beware: if
+    the QImage is collected before the array, there may be trouble).
+    The array will have shape (width, height, (b,g,r,a)).
+    """
+    arr = ndarray_from_qimage(img)
+
+    fmt = img.format()
+    if fmt == img.Format.Format_RGB32:
         arr[...,3] = 255
     
     if copy:
@@ -1521,124 +1885,361 @@ def downsample(data, n, axis=0, xvals='subsample'):
         return MetaArray(d2, info=info)
 
 
-def arrayToQPath(x, y, connect='all'):
-    """Convert an array of x,y coordinats to QPainterPath as efficiently as possible.
-    The *connect* argument may be 'all', indicating that each point should be
-    connected to the next; 'pairs', indicating that each pair of points
-    should be connected, or an array of int32 values (0 or 1) indicating
-    connections.
-    """
+def _compute_backfill_indices(isfinite):
+    # the presence of inf/nans result in an empty QPainterPath being generated
+    # this behavior started in Qt 5.12.3 and was introduced in this commit
+    # https://github.com/qt/qtbase/commit/c04bd30de072793faee5166cff866a4c4e0a9dd7
+    # We therefore replace non-finite values
 
-    ## Create all vertices in path. The method used below creates a binary format so that all
-    ## vertices can be read in at once. This binary format may change in future versions of Qt,
-    ## so the original (slower) method is left here for emergencies:
-        #path.moveTo(x[0], y[0])
-        #if connect == 'all':
-            #for i in range(1, y.shape[0]):
-                #path.lineTo(x[i], y[i])
-        #elif connect == 'pairs':
-            #for i in range(1, y.shape[0]):
-                #if i%2 == 0:
-                    #path.lineTo(x[i], y[i])
-                #else:
-                    #path.moveTo(x[i], y[i])
-        #elif isinstance(connect, np.ndarray):
-            #for i in range(1, y.shape[0]):
-                #if connect[i] == 1:
-                    #path.lineTo(x[i], y[i])
-                #else:
-                    #path.moveTo(x[i], y[i])
-        #else:
-            #raise Exception('connect argument must be "all", "pairs", or array')
+    # credit: Divakar https://stackoverflow.com/a/41191127/643629
+    mask = ~isfinite
+    idx = np.arange(len(isfinite))
+    idx[mask] = -1
+    np.maximum.accumulate(idx, out=idx)
+    first = np.searchsorted(idx, 0)
+    if first < len(isfinite):
+        # Replace all non-finite entries from beginning of arr with the first finite one
+        idx[:first] = first
+        return idx
+    else:
+        return None
 
-    ## Speed this up using >> operator
-    ## Format is:
-    ##    numVerts(i4)
-    ##    0(i4)   x(f8)   y(f8)    <-- 0 means this vertex does not connect
-    ##    1(i4)   x(f8)   y(f8)    <-- 1 means this vertex connects to the previous vertex
-    ##    ...
-    ##    cStart(i4)   fillRule(i4)
-    ##
-    ## see: https://github.com/qt/qtbase/blob/dev/src/gui/painting/qpainterpath.cpp
 
-    ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
+def _arrayToQPath_all(x, y, finiteCheck):
+    n = x.shape[0]
+    if n == 0:
+        return QtGui.QPainterPath()
+
+    finite_idx = None
+    if finiteCheck:
+        isfinite = np.isfinite(x) & np.isfinite(y)
+        if not isfinite.all():
+            finite_idx = isfinite.nonzero()[0]
+            n = len(finite_idx)
+
+    if n < 2:
+        return QtGui.QPainterPath()
+
+    chunksize = 10000
+    numchunks = (n + chunksize - 1) // chunksize
+    minchunks = 3
+
+    if numchunks < minchunks:
+        # too few chunks, batching would be a pessimization
+        poly = create_qpolygonf(n)
+        arr = ndarray_from_qpolygonf(poly)
+
+        if finite_idx is None:
+            arr[:, 0] = x
+            arr[:, 1] = y
+        else:
+            arr[:, 0] = x[finite_idx]
+            arr[:, 1] = y[finite_idx]
+
+        path = QtGui.QPainterPath()
+        if hasattr(path, 'reserve'):    # Qt 5.13
+            path.reserve(n)
+        path.addPolygon(poly)
+        return path
+
+    # at this point, we have numchunks >= minchunks
 
     path = QtGui.QPainterPath()
+    if hasattr(path, 'reserve'):    # Qt 5.13
+        path.reserve(n)
+    subpoly = QtGui.QPolygonF()
+    subpath = None
+    for idx in range(numchunks):
+        sl = slice(idx*chunksize, min((idx+1)*chunksize, n))
+        currsize = sl.stop - sl.start
+        if currsize != subpoly.size():
+            if hasattr(subpoly, 'resize'):
+                subpoly.resize(currsize)
+            else:
+                subpoly.fill(QtCore.QPointF(), currsize)
+        subarr = ndarray_from_qpolygonf(subpoly)
+        if finite_idx is None:
+            subarr[:, 0] = x[sl]
+            subarr[:, 1] = y[sl]
+        else:
+            fiv = finite_idx[sl]  # view
+            subarr[:, 0] = x[fiv]
+            subarr[:, 1] = y[fiv]
+        if subpath is None:
+            subpath = QtGui.QPainterPath()
+        subpath.addPolygon(subpoly)
+        path.connectPath(subpath)
+        if hasattr(subpath, 'clear'):   # Qt 5.13
+            subpath.clear()
+        else:
+            subpath = None
+    return path
+
+
+def _arrayToQPath_finite(x, y, isfinite=None):
+    n = x.shape[0]
+    if n == 0:
+        return QtGui.QPainterPath()
+
+    if isfinite is None:
+        isfinite = np.isfinite(x) & np.isfinite(y)
+
+    path = QtGui.QPainterPath()
+    if hasattr(path, 'reserve'):    # Qt 5.13
+        path.reserve(n)
+
+    sidx = np.nonzero(~isfinite)[0] + 1
+    # note: the chunks are views
+    xchunks = np.split(x, sidx)
+    ychunks = np.split(y, sidx)
+    chunks = list(zip(xchunks, ychunks))
+
+    # create a single polygon able to hold the largest chunk
+    maxlen = max(len(chunk) for chunk in xchunks)
+    subpoly = create_qpolygonf(maxlen)
+    subarr = ndarray_from_qpolygonf(subpoly)
+
+    # resize and fill do not change the capacity
+    if hasattr(subpoly, 'resize'):
+        subpoly_resize = subpoly.resize
+    else:
+        # PyQt will be less efficient
+        subpoly_resize = lambda n, v=QtCore.QPointF() : subpoly.fill(v, n)
+
+    # notes:
+    # - we backfill the non-finite in order to get the same image as the
+    #   old codepath on the CI. somehow P1--P2 gets rendered differently
+    #   from P1--P2--P2
+    # - we do not generate MoveTo(s) that are not followed by a LineTo,
+    #   thus the QPainterPath can be different from the old codepath's
+
+    # all chunks except the last chunk have a trailing non-finite
+    for xchunk, ychunk in chunks[:-1]:
+        lc = len(xchunk)
+        if lc <= 1:
+            # len 1 means we have a string of non-finite
+            continue
+        subpoly_resize(lc)
+        subarr[:lc, 0] = xchunk
+        subarr[:lc, 1] = ychunk
+        subarr[lc-1] = subarr[lc-2] # fill non-finite with its neighbour
+        path.addPolygon(subpoly)
+
+    # handle last chunk, which is either all-finite or empty
+    for xchunk, ychunk in chunks[-1:]:
+        lc = len(xchunk)
+        if lc <= 1:
+            # can't draw a line with just 1 point
+            continue
+        subpoly_resize(lc)
+        subarr[:lc, 0] = xchunk
+        subarr[:lc, 1] = ychunk
+        path.addPolygon(subpoly)
+
+    return path
+
+
+def arrayToQPath(x, y, connect='all', finiteCheck=True):
+    """
+    Convert an array of x,y coordinates to QPainterPath as efficiently as
+    possible. The *connect* argument may be 'all', indicating that each point
+    should be connected to the next; 'pairs', indicating that each pair of
+    points should be connected, or an array of int32 values (0 or 1) indicating
+    connections.
+    
+    Parameters
+    ----------
+    x : np.ndarray
+        x-values to be plotted of shape (N,)
+    y : np.ndarray
+        y-values to be plotted, must be same length as `x` of shape (N,)
+    connect : {'all', 'pairs', 'finite', (N,) ndarray}, optional
+        Argument detailing how to connect the points in the path. `all` will 
+        have sequential points being connected.  `pairs` generates lines
+        between every other point.  `finite` only connects points that are
+        finite.  If an ndarray is passed, containing int32 values of 0 or 1,
+        only values with 1 will connect to the previous point.  Def
+    finiteCheck : bool, default True
+        When false, the check for finite values will be skipped, which can
+        improve performance. If nonfinite values are present in `x` or `y`,
+        an empty QPainterPath will be generated.
+    
+    Returns
+    -------
+    QPainterPath
+        QPainterPath object to be drawn
+    
+    Raises
+    ------
+    ValueError
+        Raised when the connect argument has an invalid value placed within.
+
+    Notes
+    -----
+    A QPainterPath is generated through one of two ways.  When the connect
+    parameter is 'all', a QPolygonF object is created, and
+    ``QPainterPath.addPolygon()`` is called.  For other connect parameters
+    a ``QDataStream`` object is created and the QDataStream >> QPainterPath
+    operator is used to pass the data.  The memory format is as follows
+
+    numVerts(i4)
+    0(i4)   x(f8)   y(f8)    <-- 0 means this vertex does not connect
+    1(i4)   x(f8)   y(f8)    <-- 1 means this vertex connects to the previous vertex
+    ...
+    cStart(i4)   fillRule(i4)
+    
+    see: https://github.com/qt/qtbase/blob/dev/src/gui/painting/qpainterpath.cpp
+
+    All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
+    This binary format may change in future versions of Qt
+    """
 
     n = x.shape[0]
+    if n == 0:
+        return QtGui.QPainterPath()
 
-    # create empty array, pad with extra space on either end
-    arr = np.empty(n+2, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')])
+    connect_array = None
+    if isinstance(connect, np.ndarray):
+        # make connect argument contain only str type
+        connect_array, connect = connect, 'array'
 
-    # write first two integers
-    byteview = arr.view(dtype=np.ubyte)
-    byteview[:16] = 0
-    byteview.data[16:20] = struct.pack('>i', n)
-
-    # Fill array with vertex values
-    arr[1:-1]['x'] = x
-    arr[1:-1]['y'] = y
-
-    # inf/nans completely prevent the plot from being displayed starting on 
-    # Qt version 5.12.3; these must now be manually cleaned out.
     isfinite = None
-    qtver = [int(x) for x in QtVersion.split('.')]
-    if qtver >= [5, 12, 3]:
+
+    if connect == 'finite':
+        if not finiteCheck:
+            # if user specified to skip finite check, then we skip the heuristic
+            return _arrayToQPath_finite(x, y)
+
+        # otherwise use a heuristic
+        # if non-finite aren't that many, then use_qpolyponf
         isfinite = np.isfinite(x) & np.isfinite(y)
-        if not np.all(isfinite):
-            # credit: Divakar https://stackoverflow.com/a/41191127/643629
-            mask = ~isfinite
-            idx = np.arange(len(x))
-            idx[mask] = -1
-            np.maximum.accumulate(idx, out=idx)
-            first = np.searchsorted(idx, 0)
-            if first < len(x):
-                # Replace all non-finite entries from beginning of arr with the first finite one
-                idx[:first] = first
-                arr[1:-1] = arr[1:-1][idx]
+        nonfinite_cnt = n - np.sum(isfinite)
+        all_isfinite = nonfinite_cnt == 0
+        if all_isfinite:
+            # delegate to connect='all'
+            connect = 'all'
+            finiteCheck = False
+        elif nonfinite_cnt / n < 2 / 100:
+            return _arrayToQPath_finite(x, y, isfinite)
+        else:
+            # delegate to connect=ndarray
+            # finiteCheck=True, all_isfinite=False
+            connect = 'array'
+            connect_array = isfinite
+
+    if connect == 'all':
+        return _arrayToQPath_all(x, y, finiteCheck)
+
+    path = QtGui.QPainterPath()
+    if hasattr(path, 'reserve'):    # Qt 5.13
+        path.reserve(n)
+
+    if hasattr(path, 'reserve') and getConfigOption('enableExperimental'):
+        backstore = None
+        arr = Qt.internals.get_qpainterpath_element_array(path, n)
+    else:
+        backstore = QtCore.QByteArray()
+        backstore.resize(4 + n*20 + 8)      # contents uninitialized
+        backstore.replace(0, 4, struct.pack('>i', n))
+        # cStart, fillRule (Qt.FillRule.OddEvenFill)
+        backstore.replace(4+n*20, 8, struct.pack('>ii', 0, 0))
+        arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
+            count=n, offset=4)
+
+    backfill_idx = None
+    if finiteCheck:
+        if isfinite is None:
+            isfinite = np.isfinite(x) & np.isfinite(y)
+            all_isfinite = np.all(isfinite)
+        if not all_isfinite:
+            backfill_idx = _compute_backfill_indices(isfinite)
+
+    if backfill_idx is None:
+        arr['x'] = x
+        arr['y'] = y
+    else:
+        arr['x'] = x[backfill_idx]
+        arr['y'] = y[backfill_idx]
 
     # decide which points are connected by lines
-    if eq(connect, 'all'):
-        arr[1:-1]['c'] = 1
-    elif eq(connect, 'pairs'):
-        arr[1:-1]['c'][::2] = 0
-        arr[1:-1]['c'][1::2] = 1  # connect every 2nd point to every 1st one
-    elif eq(connect, 'finite'):
+    if connect == 'pairs':
+        arr['c'][0::2] = 0
+        arr['c'][1::2] = 1  # connect every 2nd point to every 1st one
+    elif connect == 'array':
         # Let's call a point with either x or y being nan is an invalid point.
         # A point will anyway not connect to an invalid point regardless of the
         # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
         # the next point of an invalid point.
-        if isfinite is None:
-            isfinite = np.isfinite(x) & np.isfinite(y)
-        arr[2:]['c'] = isfinite
-    elif isinstance(connect, np.ndarray):
-        arr[2:-1]['c'] = connect[:-1]
+        arr['c'][:1] = 0  # the first vertex has no previous vertex to connect
+        arr['c'][1:] = connect_array[:-1]
     else:
-        raise Exception('connect argument must be "all", "pairs", "finite", or array')
+        raise ValueError('connect argument must be "all", "pairs", "finite", or array')
 
-    arr[1]['c'] = 0  # the first vertex has no previous vertex to connect
-
-    byteview.data[-20:-16] = struct.pack('>i', 0)  # cStart
-    byteview.data[-16:-12] = struct.pack('>i', 0)  # fillRule (Qt.OddEvenFill)
-
-    # create datastream object and stream into path
-
-    ## Avoiding this method because QByteArray(str) leaks memory in PySide
-    #buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
-
-    path.strn = byteview.data[16:-12]  # make sure data doesn't run away
-    try:
-        buf = QtCore.QByteArray.fromRawData(path.strn)
-    except TypeError:
-        buf = QtCore.QByteArray(bytes(path.strn))
-    except AttributeError:
-        # PyQt6 raises AttributeError
-        buf = QtCore.QByteArray(path.strn, path.strn.nbytes)
-
-    ds = QtCore.QDataStream(buf)
-    ds >> path
-
+    if isinstance(backstore, QtCore.QByteArray):
+        ds = QtCore.QDataStream(backstore)
+        ds >> path
     return path
+
+def ndarray_from_qpolygonf(polyline):
+    nbytes = 2 * len(polyline) * 8
+    if QT_LIB.startswith('PyQt'):
+        buffer = polyline.data()
+        if buffer is None:
+            buffer = Qt.sip.voidptr(0)
+        buffer.setsize(nbytes)
+    else:
+        ptr = polyline.data()
+        if ptr is None:
+            ptr = 0
+        buffer = Qt.shiboken.VoidPtr(ptr, nbytes, True)
+    memory = np.frombuffer(buffer, np.double).reshape((-1, 2))
+    return memory
+
+def create_qpolygonf(size):
+    polyline = QtGui.QPolygonF()
+    if QT_LIB.startswith('PyQt'):
+        polyline.fill(QtCore.QPointF(), size)
+    else:
+        polyline.resize(size)
+    return polyline
+
+def arrayToQPolygonF(x, y):
+    """
+    Utility function to convert two 1D-NumPy arrays representing curve data
+    (X-axis, Y-axis data) into a single open polygon (QtGui.PolygonF) object.
+    
+    Thanks to PythonQwt for making this code available
+    
+    License/copyright: MIT License © Pierre Raybaut 2020.
+
+    Parameters
+    ----------
+    x : np.array
+        x-axis coordinates for data to be plotted, must have have ndim of 1
+    y : np.array
+        y-axis coordinates for data to be plotted, must have ndim of 1 and 
+        be the same length as x
+    
+    Returns
+    -------
+    QPolygonF
+        Open QPolygonF object that represents the path looking to be plotted
+    
+    Raises
+    ------
+    ValueError
+        When xdata or ydata does not meet the required criteria
+    """
+    if not (
+        x.size == y.size == x.shape[0] == y.shape[0]
+    ):
+        raise ValueError("Arguments must be 1D and the same size")
+    size = x.size
+    polyline = create_qpolygonf(size)
+    memory = ndarray_from_qpolygonf(polyline)
+    memory[:, 0] = x
+    memory[:, 1] = y
+    return polyline
 
 #def isosurface(data, level):
     #"""
@@ -1713,9 +2314,9 @@ def arrayToQPath(x, y, connect='all'):
         #index = tetFields[0] + tetFields[1]*2 + tetFields[2]*4 + tetFields[3]*8
         
         ### add facets
-        #for i in xrange(index.shape[0]):                 # data x-axis
-            #for j in xrange(index.shape[1]):             # data y-axis
-                #for k in xrange(index.shape[2]):         # data z-axis
+        #for i in range(index.shape[0]):                 # data x-axis
+            #for j in range(index.shape[1]):             # data y-axis
+                #for k in range(index.shape[2]):         # data z-axis
                     #for f in indexFacets[index[i,j,k]]:  # faces to generate for this tet
                         #pts = []
                         #for l in [0,1,2]:      # points in this face
@@ -1918,11 +2519,6 @@ def traceImage(image, values, smooth=0.5):
     If image is RGB or RGBA, then the shape of values should be (nvals, 3/4)
     The parameter *smooth* is expressed in pixels.
     """
-    try:
-        import scipy.ndimage as ndi
-    except ImportError:
-        raise Exception("traceImage() requires the package scipy.ndimage, but it is not importable.")
-    
     if values.ndim == 2:
         values = values.T
     values = values[np.newaxis, np.newaxis, ...].astype(float)
@@ -2610,9 +3206,9 @@ def disconnect(signal, slot):
 
     This method augments Qt's Signal.disconnect():
 
-    * Return bool indicating whether disconnection was successful, rather than
-      raising an exception
-    * Attempt to disconnect prior versions of the slot when using pg.reload    
+      * Return bool indicating whether disconnection was successful, rather than
+        raising an exception
+      * Attempt to disconnect prior versions of the slot when using pg.reload
     """
     while True:
         try:

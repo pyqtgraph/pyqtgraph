@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtGui, mkQApp
 from ..graphicsItems.GraphicsLayout import GraphicsLayout
+from ..Qt import mkQApp
 from .GraphicsView import GraphicsView
 
 __all__ = ['GraphicsLayoutWidget']

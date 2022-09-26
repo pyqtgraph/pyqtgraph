@@ -1,12 +1,13 @@
-# -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui, QtWidgets
-from ..graphicsItems.GraphicsObject import GraphicsObject
-from .. import functions as fn
-from .Terminal import *
+__all__ = ["Node", "NodeGraphicsItem"]
+
+import sys
 from collections import OrderedDict
-from ..debug import *
-import numpy as np
-import warnings
+
+from .. import functions as fn
+from ..debug import printExc
+from ..graphicsItems.GraphicsObject import GraphicsObject
+from ..Qt import QtCore, QtGui, QtWidgets
+from .Terminal import Terminal
 
 translate = QtCore.QCoreApplication.translate
 
@@ -18,7 +19,7 @@ class Node(QtCore.QObject):
     Node represents the basic processing unit of a flowchart. 
     A Node subclass implements at least:
     
-    1) A list of input / ouptut terminals and their properties
+    1) A list of input / output terminals and their properties
     2) a process() function which takes the names of input terminals as keyword arguments and returns a dict with the names of output terminals as keys.
 
     A flowchart thus consists of multiple instances of Node subclasses, each of which is connected
@@ -188,22 +189,6 @@ class Node(QtCore.QObject):
             self._graphicsItem = NodeGraphicsItem(self)
         return self._graphicsItem
     
-    ## this is just bad planning. Causes too many bugs.
-    def __getattr__(self, attr):
-        """Return the terminal with the given name"""
-        warnings.warn(
-            "Use of note.terminalName is deprecated, use node['terminalName'] instead"
-            "Will be removed from 0.13.0",
-            DeprecationWarning, stacklevel=2
-        )
-        
-        if attr not in self.terminals:
-            raise AttributeError(attr)
-        else:
-            import traceback
-            traceback.print_stack()
-            print("Warning: use of node.terminalName is deprecated; use node['terminalName'] instead.")
-            return self.terminals[attr]
             
     def __getitem__(self, item):
         #return getattr(self, item)
@@ -455,21 +440,28 @@ class TextItem(QtWidgets.QGraphicsTextItem):
             self.on_update()
 
     def keyPressEvent(self, ev):
-        if ev.key() == QtCore.Qt.Key_Enter or ev.key() == QtCore.Qt.Key_Return:
+        if ev.key() == QtCore.Qt.Key.Key_Enter or ev.key() == QtCore.Qt.Key.Key_Return:
             if self.on_update is not None:
                 self.on_update()
                 return
         super().keyPressEvent(ev)
+        
+    def mousePressEvent(self, ev):
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
+            self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextEditorInteraction)
+            self.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)  # focus text label
+        elif ev.button() == QtCore.Qt.MouseButton.RightButton:
+            self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.NoTextInteraction)
 
 
-#class NodeGraphicsItem(QtGui.QGraphicsItem):
+#class NodeGraphicsItem(QtWidgets.QGraphicsItem):
 class NodeGraphicsItem(GraphicsObject):
     def __init__(self, node):
-        #QtGui.QGraphicsItem.__init__(self)
+        #QtWidgets.QGraphicsItem.__init__(self)
         GraphicsObject.__init__(self)
         #QObjectWorkaround.__init__(self)
         
-        #self.shadow = QtGui.QGraphicsDropShadowEffect()
+        #self.shadow = QtWidgets.QGraphicsDropShadowEffect()
         #self.shadow.setOffset(5,5)
         #self.shadow.setBlurRadius(10)
         #self.setGraphicsEffect(self.shadow)
@@ -482,7 +474,7 @@ class NodeGraphicsItem(GraphicsObject):
         self.hovered = False
         
         self.node = node
-        flags = self.ItemIsMovable | self.ItemIsSelectable | self.ItemIsFocusable |self.ItemSendsGeometryChanges
+        flags = self.GraphicsItemFlag.ItemIsMovable | self.GraphicsItemFlag.ItemIsSelectable | self.GraphicsItemFlag.ItemIsFocusable | self.GraphicsItemFlag.ItemSendsGeometryChanges
         #flags =  self.ItemIsFocusable |self.ItemSendsGeometryChanges
 
         self.setFlags(flags)
@@ -490,7 +482,6 @@ class NodeGraphicsItem(GraphicsObject):
         self.nameItem = TextItem(self.node.name(), self, self.labelChanged)
         self.nameItem.setDefaultTextColor(QtGui.QColor(50, 50, 50))
         self.nameItem.moveBy(self.bounds.width()/2. - self.nameItem.boundingRect().width()/2., 0)
-        self.nameItem.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
         self.updateTerminals()
         #self.setZValue(10)
 
@@ -505,7 +496,7 @@ class NodeGraphicsItem(GraphicsObject):
         #GraphicsObject.setZValue(self, z)
         
     def labelChanged(self):
-        newName = str(self.nameItem.toPlainText())
+        newName = self.nameItem.toPlainText()
         if newName != self.node.name():
             self.node.rename(newName)
             
@@ -586,43 +577,32 @@ class NodeGraphicsItem(GraphicsObject):
 
 
     def mouseClickEvent(self, ev):
-        #print "Node.mouseClickEvent called."
-        if ev.button() == QtCore.Qt.LeftButton:
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
-            #print "    ev.button: left"
             sel = self.isSelected()
-            #ret = QtGui.QGraphicsItem.mousePressEvent(self, ev)
             self.setSelected(True)
             if not sel and self.isSelected():
-                #self.setBrush(QtGui.QBrush(QtGui.QColor(200, 200, 255)))
-                #self.emit(QtCore.SIGNAL('selected'))
-                #self.scene().selectionChanged.emit() ## for some reason this doesn't seem to be happening automatically
                 self.update()
-            #return ret
         
-        elif ev.button() == QtCore.Qt.RightButton:
-            #print "    ev.button: right"
+        elif ev.button() == QtCore.Qt.MouseButton.RightButton:
             ev.accept()
-            #pos = ev.screenPos()
             self.raiseContextMenu(ev)
-            #self.menu.popup(QtCore.QPoint(pos.x(), pos.y()))
             
     def mouseDragEvent(self, ev):
-        #print "Node.mouseDrag"
-        if ev.button() == QtCore.Qt.LeftButton:
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
             self.setPos(self.pos()+self.mapToParent(ev.pos())-self.mapToParent(ev.lastPos()))
         
     def hoverEvent(self, ev):
-        if not ev.isExit() and ev.acceptClicks(QtCore.Qt.LeftButton):
-            ev.acceptDrags(QtCore.Qt.LeftButton)
+        if not ev.isExit() and ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton):
+            ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton)
             self.hovered = True
         else:
             self.hovered = False
         self.update()
             
     def keyPressEvent(self, ev):
-        if ev.key() == QtCore.Qt.Key_Delete or ev.key() == QtCore.Qt.Key_Backspace:
+        if ev.key() == QtCore.Qt.Key.Key_Delete or ev.key() == QtCore.Qt.Key.Key_Backspace:
             ev.accept()
             if not self.node._allowRemove:
                 return
@@ -631,11 +611,10 @@ class NodeGraphicsItem(GraphicsObject):
             ev.ignore()
 
     def itemChange(self, change, val):
-        if change == self.ItemPositionHasChanged:
+        if change == self.GraphicsItemChange.ItemPositionHasChanged:
             for k, t in self.terminals.items():
                 t[1].nodeMoved()
         return GraphicsObject.itemChange(self, change, val)
-            
 
     def getMenu(self):
         return self.menu
@@ -643,10 +622,10 @@ class NodeGraphicsItem(GraphicsObject):
     def raiseContextMenu(self, ev):
         menu = self.scene().addParentContextMenus(self, self.getMenu(), ev)
         pos = ev.screenPos()
-        menu.popup(QtCore.QPoint(pos.x(), pos.y()))
+        menu.popup(QtCore.QPoint(int(pos.x()), int(pos.y())))
         
     def buildMenu(self):
-        self.menu = QtGui.QMenu()
+        self.menu = QtWidgets.QMenu()
         self.menu.setTitle(translate("Context Menu", "Node"))
         a = self.menu.addAction(translate("Context Menu","Add input"), self.addInputFromMenu)
         if not self.node._allowAddInput:

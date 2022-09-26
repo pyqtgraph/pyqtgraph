@@ -1,10 +1,14 @@
-from ..Qt import QtGui, QtCore
-import numpy as np
-from ..colormap import ColorMap
-from .GraphicsObject import GraphicsObject
-from .. import mkBrush, mkPen
-from .. import functions as fn
+import math
 
+import numpy as np
+
+from .. import functions as fn
+from .. import mkBrush, mkPen
+from ..colormap import ColorMap
+from ..Qt import QtCore, QtGui
+from .GraphicsObject import GraphicsObject
+
+__all__ = ['NonUniformImage']
 
 class NonUniformImage(GraphicsObject):
     """
@@ -94,7 +98,7 @@ class NonUniformImage(GraphicsObject):
                     value = 0.0
                 elif np.isposinf(value):
                     value = 1.0
-                elif np.isnan(value):
+                elif math.isnan(value):
                     continue  # ignore NaN
                 else:
                     value = (value - mn) / (mx - mn)  # normalize

@@ -6,3 +6,7 @@ InfiniteLine
 
     .. automethod:: pyqtgraph.InfiniteLine.__init__
 
+.. autoclass:: pyqtgraph.InfLineLabel
+    :members:
+
+    .. automethod:: pyqtgraph.InfLineLabel.__init__

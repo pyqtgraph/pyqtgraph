@@ -1,9 +1,10 @@
-from ..Qt import QtGui, QtCore
-from .UIGraphicsItem import *
 import numpy as np
-from ..Point import Point
+
 from .. import functions as fn
 from .. import getConfigOption
+from ..Point import Point
+from ..Qt import QtCore, QtGui
+from .UIGraphicsItem import *
 
 __all__ = ['GridItem']
 class GridItem(UIGraphicsItem):
@@ -16,9 +17,9 @@ class GridItem(UIGraphicsItem):
 
     def __init__(self, pen='default', textPen='default'):
         UIGraphicsItem.__init__(self)
-        #QtGui.QGraphicsItem.__init__(self, *args)
-        #self.setFlag(QtGui.QGraphicsItem.ItemClipsToShape)
-        #self.setCacheMode(QtGui.QGraphicsItem.DeviceCoordinateCache)
+        #QtWidgets.QGraphicsItem.__init__(self, *args)
+        #self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemClipsToShape)
+        #self.setCacheMode(QtWidgets.QGraphicsItem.CacheMode.DeviceCoordinateCache)
 
         self.opts = {}
 
@@ -126,8 +127,7 @@ class GridItem(UIGraphicsItem):
         for i in range(self.grid_depth - 1, -1, -1):
             dist = br-ul
             nlTarget = 10.**i
-
-            d = 10. ** np.floor(np.log10(abs(dist/nlTarget))+0.5)
+            d = 10. ** np.floor(np.log10(np.abs(dist/nlTarget))+0.5)
             for ax in range(0,2):
                 ts = self.opts['tickSpacing'][ax]
                 try:
@@ -141,11 +141,6 @@ class GridItem(UIGraphicsItem):
             br1 = np.ceil(br / d) * d
             dist = br1-ul1
             nl = (dist / d) + 0.5
-            #print "level", i
-            #print "  dim", dim
-            #print "  dist", dist
-            #print "  d", d
-            #print "  nl", nl
             for ax in range(0,2):  ## Draw grid for both axes
                 if i >= len(self.opts['tickSpacing'][ax]):
                     continue
@@ -153,7 +148,7 @@ class GridItem(UIGraphicsItem):
                     continue
 
                 ppl = dim[ax] / nl[ax]
-                c = np.clip(5 * (ppl-3), 0., 50.).astype(int)
+                c = int(fn.clip_scalar(5 * (ppl-3), 0, 50))
 
                 linePen = self.opts['pen']
                 lineColor = self.opts['pen'].color()
@@ -168,11 +163,7 @@ class GridItem(UIGraphicsItem):
 
                 bx = (ax+1) % 2
                 for x in range(0, int(nl[ax])):
-                    linePen.setCosmetic(False)
-                    if ax == 0:
-                        linePen.setWidthF(self.pixelWidth())
-                    else:
-                        linePen.setWidthF(self.pixelHeight())
+                    linePen.setCosmetic(True)
                     p.setPen(linePen)
                     p1 = np.array([0.,0.])
                     p2 = np.array([0.,0.])

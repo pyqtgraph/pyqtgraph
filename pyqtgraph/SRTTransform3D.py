@@ -1,9 +1,11 @@
-# -*- coding: utf-8 -*-
-from .Qt import QtCore, QtGui
-from .Vector import Vector
+from math import atan2, degrees
+
+import numpy as np
+
+from .Qt import QtCore, QtGui, QtWidgets
 from .Transform3D import Transform3D
 from .Vector import Vector
-import numpy as np
+
 
 class SRTTransform3D(Transform3D):
     """4x4 Transform matrix that can always be represented as a combination of 3 matrices: scale * rotate * translate
@@ -164,7 +166,7 @@ class SRTTransform3D(Transform3D):
         sin = (r-r.T)[rInd] / (2. * sign * axis[axisInd])
         
         ## finally, we get the complete angle from arctan(sin/cos)
-        self._state['angle'] = np.arctan2(sin, cos) * 180 / np.pi
+        self._state['angle'] = degrees(atan2(sin, cos))
         if self._state['angle'] == 0:
             self._state['axis'] = (0,0,1)
         
@@ -224,31 +226,32 @@ class SRTTransform3D(Transform3D):
             raise Exception("Argument 'nd' must be 2 or 3")
         
 if __name__ == '__main__':
-    from . import widgets
     import GraphicsView
+
+    from . import widgets
     from .functions import *
-    app = pg.mkQApp()
-    win = QtGui.QMainWindow()
+    app = pg.mkQApp()  # noqa: qapp must be stored to avoid gc
+    win = QtWidgets.QMainWindow()
     win.show()
     cw = GraphicsView.GraphicsView()
     #cw.enableMouse()  
     win.setCentralWidget(cw)
-    s = QtGui.QGraphicsScene()
+    s = QtWidgets.QGraphicsScene()
     cw.setScene(s)
     win.resize(600,600)
     cw.enableMouse()
     cw.setRange(QtCore.QRectF(-100., -100., 200., 200.))
     
-    class Item(QtGui.QGraphicsItem):
+    class Item(QtWidgets.QGraphicsItem):
         def __init__(self):
-            QtGui.QGraphicsItem.__init__(self)
-            self.b = QtGui.QGraphicsRectItem(20, 20, 20, 20, self)
+            QtWidgets.QGraphicsItem.__init__(self)
+            self.b = QtWidgets.QGraphicsRectItem(20, 20, 20, 20, self)
             self.b.setPen(QtGui.QPen(mkPen('y')))
-            self.t1 = QtGui.QGraphicsTextItem(self)
+            self.t1 = QtWidgets.QGraphicsTextItem(self)
             self.t1.setHtml('<span style="color: #F00">R</span>')
             self.t1.translate(20, 20)
-            self.l1 = QtGui.QGraphicsLineItem(10, 0, -10, 0, self)
-            self.l2 = QtGui.QGraphicsLineItem(0, 10, 0, -10, self)
+            self.l1 = QtWidgets.QGraphicsLineItem(10, 0, -10, 0, self)
+            self.l2 = QtWidgets.QGraphicsLineItem(0, 10, 0, -10, self)
             self.l1.setPen(QtGui.QPen(mkPen('y')))
             self.l2.setPen(QtGui.QPen(mkPen('y')))
         def boundingRect(self):
@@ -260,8 +263,8 @@ if __name__ == '__main__':
     #s.addItem(t1)
     item = Item()
     s.addItem(item)
-    l1 = QtGui.QGraphicsLineItem(10, 0, -10, 0)
-    l2 = QtGui.QGraphicsLineItem(0, 10, 0, -10)
+    l1 = QtWidgets.QGraphicsLineItem(10, 0, -10, 0)
+    l2 = QtWidgets.QGraphicsLineItem(0, 10, 0, -10)
     l1.setPen(QtGui.QPen(mkPen('r')))
     l2.setPen(QtGui.QPen(mkPen('r')))
     s.addItem(l1)

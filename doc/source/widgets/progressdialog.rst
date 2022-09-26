@@ -5,4 +5,3 @@ ProgressDialog
     :members:
 
     .. automethod:: pyqtgraph.ProgressDialog.__init__
-

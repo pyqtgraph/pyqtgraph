@@ -1,9 +1,11 @@
-from ..Qt import QtGui, QtCore
+from math import hypot
+
 from .. import functions as fn
-import numpy as np
+from ..Qt import QtGui, QtWidgets
+
 __all__ = ['ArrowItem']
 
-class ArrowItem(QtGui.QGraphicsPathItem):
+class ArrowItem(QtWidgets.QGraphicsPathItem):
     """
     For displaying scale-invariant arrows.
     For arrows pointing to a location on a curve, see CurveArrow
@@ -17,7 +19,7 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         the setStyle() method.
         """
         self.opts = {}
-        QtGui.QGraphicsPathItem.__init__(self, parent)
+        QtWidgets.QGraphicsPathItem.__init__(self, parent)
 
         if 'size' in opts:
             opts['headLen'] = opts['size']
@@ -98,12 +100,12 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         self.setBrush(fn.mkBrush(self.opts['brush']))
         
         if self.opts['pxMode']:
-            self.setFlags(self.flags() | self.ItemIgnoresTransformations)
+            self.setFlags(self.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
         else:
-            self.setFlags(self.flags() & ~self.ItemIgnoresTransformations)
+            self.setFlags(self.flags() & ~self.GraphicsItemFlag.ItemIgnoresTransformations)
 
     def paint(self, p, *args):
-        p.setRenderHint(QtGui.QPainter.Antialiasing)
+        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         super().paint(p, *args)
         
         #p.setPen(fn.mkPen('r'))
@@ -112,7 +114,7 @@ class ArrowItem(QtGui.QGraphicsPathItem):
 
     def shape(self):
         #if not self.opts['pxMode']:
-            #return QtGui.QGraphicsPathItem.shape(self)
+            #return QtWidgets.QGraphicsPathItem.shape(self)
         return self.path
     
     ## dataBounds and pixelPadding methods are provided to ensure ViewBox can
@@ -135,7 +137,7 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         pad = 0
         if self.opts['pxMode']:
             br = self.boundingRect()
-            pad += (br.width()**2 + br.height()**2) ** 0.5
+            pad += hypot(br.width(), br.height())
         pen = self.pen()
         if pen.isCosmetic():
             pad += max(1, pen.width()) * 0.7072

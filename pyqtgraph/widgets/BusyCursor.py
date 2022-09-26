@@ -1,35 +1,36 @@
-from ..Qt import QtGui, QtCore, QT_LIB
+from contextlib import contextmanager
 
-__all__ = ['BusyCursor']
+from ..Qt import QtCore, QtGui, QtWidgets
 
-class BusyCursor(object):
-    """Class for displaying a busy mouse cursor during long operations.
+__all__ = ["BusyCursor"]
+
+
+@contextmanager
+def BusyCursor():
+    """
+    Display a busy mouse cursor during long operations.
     Usage::
 
-        with pyqtgraph.BusyCursor():
+        with BusyCursor():
             doLongOperation()
 
     May be nested. If called from a non-gui thread, then the cursor will not be affected.
     """
-    active = []
-
-    def __enter__(self):
-        app = QtCore.QCoreApplication.instance()
-        isGuiThread = (app is not None) and (QtCore.QThread.currentThread() == app.thread())
-        if isGuiThread and QtGui.QApplication.instance() is not None:
-            if QT_LIB == 'PySide':
-                # pass CursorShape rather than QCursor for PySide
-                # see https://bugreports.qt.io/browse/PYSIDE-243
-                QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+    app = QtCore.QCoreApplication.instance()
+    in_gui_thread = (app is not None) and (QtCore.QThread.currentThread() == app.thread())
+    try:
+        if in_gui_thread:
+            guard = QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.CursorShape.WaitCursor))
+            # on PySide6 6.3.0, setOverrideCursor() returns a QOverrideCursorGuard object
+            # that, on its destruction, calls restoreOverrideCursor() if the user had not
+            # already done so.
+            # if the user wants to call it manually, they must do it via the returned object,
+            # and not via the QtWidgets.QApplication static method; otherwise the restore
+            # would get called twice.
+        yield
+    finally:
+        if in_gui_thread:
+            if hasattr(guard, 'restoreOverrideCursor'):
+                guard.restoreOverrideCursor()
             else:
-                QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
-            BusyCursor.active.append(self)
-            self._active = True
-        else:
-            self._active = False
-
-    def __exit__(self, *args):
-        if self._active:
-            BusyCursor.active.pop(-1)
-            if len(BusyCursor.active) == 0:
-                QtGui.QApplication.restoreOverrideCursor()
+                QtWidgets.QApplication.restoreOverrideCursor()

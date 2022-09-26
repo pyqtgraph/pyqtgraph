@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Very simple unit support:
 #  - creates variable names like 'mV' and 'kHz'
 #  - the value assigned to the variable corresponds to the scale prefix

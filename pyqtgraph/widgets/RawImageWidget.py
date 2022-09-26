@@ -1,16 +1,16 @@
-# -*- coding: utf-8 -*-
 """
 RawImageWidget.py
 Copyright 2010-2016 Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-from .. import getConfigOption, functions as fn, getCupy
+from .. import functions as fn
+from .. import getConfigOption, getCupy
 from ..Qt import QtCore, QtGui, QtWidgets
 
 try:
     QOpenGLWidget = QtWidgets.QOpenGLWidget
-    from OpenGL.GL import *
+    from OpenGL.GL import *  # noqa
 
     HAVE_OPENGL = True
 except (ImportError, AttributeError):
@@ -18,8 +18,9 @@ except (ImportError, AttributeError):
     # AttributeError upon import
     HAVE_OPENGL = False
 
+__all__ = ['RawImageWidget']
 
-class RawImageWidget(QtGui.QWidget):
+class RawImageWidget(QtWidgets.QWidget):
     """
     Widget optimized for very fast video display.
     Generally using an ImageItem inside GraphicsView is fast enough.
@@ -31,8 +32,8 @@ class RawImageWidget(QtGui.QWidget):
         Setting scaled=True will cause the entire image to be displayed within the boundaries of the widget.
         This also greatly reduces the speed at which it will draw frames.
         """
-        QtGui.QWidget.__init__(self, parent)
-        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        QtWidgets.QWidget.__init__(self, parent)
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding))
         self.scaled = scaled
         self.opts = None
         self.image = None
@@ -78,6 +79,7 @@ class RawImageWidget(QtGui.QWidget):
 
 
 if HAVE_OPENGL:
+    __all__.append('RawImageGLWidget')
     class RawImageGLWidget(QOpenGLWidget):
         """
         Similar to RawImageWidget, but uses a GL widget to do all drawing.
@@ -141,7 +143,7 @@ if HAVE_OPENGL:
                     return
                 img, args, kwds = self.opts
                 kwds['useRGBA'] = True
-                self.image, alpha = fn.makeARGB(img, *args, **kwds)
+                self.image, _ = fn.makeARGB(img, *args, **kwds)
 
             if not self.uploaded:
                 self.uploadTexture()
@@ -160,4 +162,4 @@ if HAVE_OPENGL:
             glTexCoord2f(0, 0)
             glVertex3f(-1, 1, 0)
             glEnd()
-            glDisable(GL_TEXTURE_3D)
+            glDisable(GL_TEXTURE_2D)

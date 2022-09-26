@@ -1,17 +1,19 @@
-from ..Qt import QtGui, QtCore
-from .PlotWidget import PlotWidget
-from .DataFilterWidget import DataFilterParameter
-from .ColorMapWidget import ColorMapParameter
-from .. import parametertree as ptree
+from collections import OrderedDict
+
+import numpy as np
+
 from .. import functions as fn
 from .. import getConfigOption
+from .. import parametertree as ptree
 from ..graphicsItems.TextItem import TextItem
-import numpy as np
-from collections import OrderedDict
+from ..Qt import QtCore, QtWidgets
+from .ColorMapWidget import ColorMapParameter
+from .DataFilterWidget import DataFilterParameter
+from .PlotWidget import PlotWidget
 
 __all__ = ['ScatterPlotWidget']
 
-class ScatterPlotWidget(QtGui.QSplitter):
+class ScatterPlotWidget(QtWidgets.QSplitter):
     """
     This is a high-level widget for exploring relationships in tabular data.
         
@@ -37,11 +39,11 @@ class ScatterPlotWidget(QtGui.QSplitter):
     sigScatterPlotHovered = QtCore.Signal(object, object, object)
 
     def __init__(self, parent=None):
-        QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
-        self.ctrlPanel = QtGui.QSplitter(QtCore.Qt.Vertical)
+        QtWidgets.QSplitter.__init__(self, QtCore.Qt.Orientation.Horizontal)
+        self.ctrlPanel = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
         self.addWidget(self.ctrlPanel)
-        self.fieldList = QtGui.QListWidget()
-        self.fieldList.setSelectionMode(self.fieldList.ExtendedSelection)
+        self.fieldList = QtWidgets.QListWidget()
+        self.fieldList.setSelectionMode(self.fieldList.SelectionMode.ExtendedSelection)
         self.ptree = ptree.ParameterTree(showHeader=False)
         self.filter = DataFilterParameter()
         self.colorMap = ColorMapParameter()
@@ -80,13 +82,13 @@ class ScatterPlotWidget(QtGui.QSplitter):
         Set the list of field names/units to be processed.
         
         The format of *fields* is the same as used by 
-        :func:`ColorMapWidget.setFields <pyqtgraph.widgets.ColorMapWidget.ColorMapParameter.setFields>`
+        :meth:`~pyqtgraph.widgets.ColorMapWidget.ColorMapParameter.setFields`
         """
         self.fields = OrderedDict(fields)
         self.mouseOverField = mouseOverField
         self.fieldList.clear()
         for f,opts in fields:
-            item = QtGui.QListWidgetItem(f)
+            item = QtWidgets.QListWidgetItem(f)
             item.opts = opts
             item = self.fieldList.addItem(item)
         self.filter.setFields(fields)

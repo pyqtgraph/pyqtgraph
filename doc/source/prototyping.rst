@@ -21,6 +21,8 @@ PyQtGraph's flowcharts provide a visual programming environment similar in conce
 See the `flowchart documentation <flowchart>`_ and the flowchart examples for more information.
 
 
+.. _Canvas:
+
 Graphical Canvas
 ----------------
 
@@ -31,5 +33,3 @@ Dockable Widgets
 ----------------
 
 The dockarea system allows the design of user interfaces which can be rearranged by the user at runtime. Docks can be moved, resized, stacked, and torn out of the main window. This is similar in principle to the docking system built into Qt, but offers a more deterministic dock placement API (in Qt it is very difficult to programatically generate complex dock arrangements). Additionally, Qt's docks are designed to be used as small panels around the outer edge of a window. PyQtGraph's docks were created with the notion that the entire window (or any portion of it) would consist of dockable components.
-
-

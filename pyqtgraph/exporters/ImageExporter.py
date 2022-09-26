@@ -1,8 +1,11 @@
-from .Exporter import Exporter
-from ..parametertree import Parameter
-from ..Qt import QtGui, QtCore, QtSvg, QT_LIB
-from .. import functions as fn
+import sys
+
 import numpy as np
+
+from .. import functions as fn
+from ..parametertree import Parameter
+from ..Qt import QtCore, QtGui, QtWidgets
+from .Exporter import Exporter
 
 translate = QtCore.QCoreApplication.translate
 __all__ = ['ImageExporter']
@@ -14,13 +17,13 @@ class ImageExporter(Exporter):
     def __init__(self, item):
         Exporter.__init__(self, item)
         tr = self.getTargetRect()
-        if isinstance(item, QtGui.QGraphicsItem):
+        if isinstance(item, QtWidgets.QGraphicsItem):
             scene = item.scene()
         else:
             scene = item
         bgbrush = scene.views()[0].backgroundBrush()
         bg = bgbrush.color()
-        if bgbrush.style() == QtCore.Qt.NoBrush:
+        if bgbrush.style() == QtCore.Qt.BrushStyle.NoBrush:
             bg.setAlpha(0)
 
         self.params = Parameter(name='params', type='group', children=[
@@ -73,15 +76,8 @@ class ImageExporter(Exporter):
         targetRect = QtCore.QRect(0, 0, w, h)
         sourceRect = self.getSourceRect()
 
-        bg = np.empty((h, w, 4), dtype=np.ubyte)
-        color = self.params['background']
-        bg[:,:,0] = color.blue()
-        bg[:,:,1] = color.green()
-        bg[:,:,2] = color.red()
-        bg[:,:,3] = color.alpha()
-
-        self.png = fn.makeQImage(bg, alpha=True, copy=False, transpose=False)
-        self.bg = bg
+        self.png = QtGui.QImage(w, h, QtGui.QImage.Format.Format_ARGB32)
+        self.png.fill(self.params['background'])
         
         ## set resolution of image:
         origTargetRect = self.getTargetRect()
@@ -97,20 +93,25 @@ class ImageExporter(Exporter):
                 'background': self.params['background'],
                 'painter': painter,
                 'resolutionScale': resolutionScale})
-            painter.setRenderHint(QtGui.QPainter.Antialiasing, self.params['antialias'])
+            painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, self.params['antialias'])
             self.getScene().render(painter, QtCore.QRectF(targetRect), QtCore.QRectF(sourceRect))
         finally:
             self.setExportMode(False)
         painter.end()
         
         if self.params['invertValue']:
-            mn = bg[...,:3].min(axis=2)
-            mx = bg[...,:3].max(axis=2)
+            bg = fn.ndarray_from_qimage(self.png)
+            if sys.byteorder == 'little':
+                cv = slice(0, 3)
+            else:
+                cv = slice(1, 4)
+            mn = bg[...,cv].min(axis=2)
+            mx = bg[...,cv].max(axis=2)
             d = (255 - mx) - mn
-            bg[...,:3] += d[...,np.newaxis]
+            bg[...,cv] += d[...,np.newaxis]
         
         if copy:
-            QtGui.QApplication.clipboard().setImage(self.png)
+            QtWidgets.QApplication.clipboard().setImage(self.png)
         elif toBytes:
             return self.png
         else:

@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 
 ################################################################################
 ## Form generated from reading UI file 'TransformGuiTemplate.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.0
+## Created by: Qt User Interface Compiler version 6.1.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -74,4 +73,3 @@ class Ui_Form(object):
         self.mirrorImageBtn.setText(QCoreApplication.translate("Form", u"Mirror", None))
         self.reflectImageBtn.setText(QCoreApplication.translate("Form", u"Reflect", None))
     # retranslateUi
-

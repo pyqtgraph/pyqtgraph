@@ -1,5 +1,6 @@
-from .Parameter import Parameter, registerParameterType
-from .ParameterTree import ParameterTree
+from . import parameterTypes as types
+from .Parameter import Parameter, registerParameterItemType, registerParameterType
 from .ParameterItem import ParameterItem
 from .ParameterSystem import ParameterSystem, SystemSolver
-from . import parameterTypes as types
+from .ParameterTree import ParameterTree
+from .interactive import RunOptions, interact, InteractiveFunction, Interactor

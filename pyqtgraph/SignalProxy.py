@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 import weakref
+from time import perf_counter
 
-from .Qt import QtCore
-from .ptime import time
 from . import ThreadsafeTimer
 from .functions import SignalBlock
+from .Qt import QtCore
 
 __all__ = ['SignalProxy']
 
@@ -60,7 +59,7 @@ class SignalProxy(QtCore.QObject):
             self.timer.stop()
             self.timer.start(int(self.delay * 1000) + 1)
         else:
-            now = time()
+            now = perf_counter()
             if self.lastFlushTime is None:
                 leakTime = 0
             else:
@@ -76,7 +75,7 @@ class SignalProxy(QtCore.QObject):
             return False
         args, self.args = self.args, None
         self.timer.stop()
-        self.lastFlushTime = time()
+        self.lastFlushTime = perf_counter()
         self.sigDelayed.emit(args)
         return True
 

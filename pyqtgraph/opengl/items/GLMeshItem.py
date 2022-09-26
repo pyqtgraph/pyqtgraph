@@ -1,18 +1,16 @@
-from OpenGL.GL import *
-from .. GLGraphicsItem import GLGraphicsItem
-from .. MeshData import MeshData
-from ...Qt import QtGui
-from .. import shaders
-from ... import functions as fn
+from OpenGL.GL import *  # noqa
 import numpy as np
 
-
+from ...Qt import QtGui
+from .. import shaders
+from ..GLGraphicsItem import GLGraphicsItem
+from ..MeshData import MeshData
 
 __all__ = ['GLMeshItem']
 
 class GLMeshItem(GLGraphicsItem):
     """
-    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`
     
     Displays a 3D triangle mesh. 
     """
@@ -181,7 +179,7 @@ class GLMeshItem(GLGraphicsItem):
                     if self.colors is None:
                         color = self.opts['color']
                         if isinstance(color, QtGui.QColor):
-                            glColor4f(*fn.glColor(color))
+                            glColor4f(*color.getRgbF())
                         else:
                             glColor4f(*color)
                     else:
@@ -196,7 +194,7 @@ class GLMeshItem(GLGraphicsItem):
                     if faces is None:
                         glDrawArrays(GL_TRIANGLES, 0, np.product(verts.shape[:-1]))
                     else:
-                        faces = faces.astype(np.uint).flatten()
+                        faces = faces.astype(np.uint32).flatten()
                         glDrawElements(GL_TRIANGLES, faces.shape[0], GL_UNSIGNED_INT, faces)
                 finally:
                     glDisableClientState(GL_NORMAL_ARRAY)
@@ -213,7 +211,7 @@ class GLMeshItem(GLGraphicsItem):
                 if self.edgeColors is None:
                     color = self.opts['edgeColor']
                     if isinstance(color, QtGui.QColor):
-                        glColor4f(*fn.glColor(color))
+                        glColor4f(*color.getRgbF())
                     else:
                         glColor4f(*color)
                 else:

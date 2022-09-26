@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
-from .Qt import QtCore, QtGui
-from . import functions as fn
-from .Vector import Vector
 import numpy as np
+
+from . import functions as fn
+from .Qt import QtGui
+from .Vector import Vector
 
 
 class Transform3D(QtGui.QMatrix4x4):

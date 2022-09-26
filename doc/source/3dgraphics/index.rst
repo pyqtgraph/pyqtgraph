@@ -2,7 +2,7 @@ PyQtGraph's 3D Graphics System
 ==============================
 
 The 3D graphics system in pyqtgraph is composed of a :class:`view widget <pyqtgraph.opengl.GLViewWidget>` and 
-several graphics items (all subclasses of :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`) which 
+several graphics items (all subclasses of :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`) which 
 can be added to a view widget.
 
 **Note 1:** pyqtgraph.opengl is based on the deprecated OpenGL fixed-function pipeline. Although it is
@@ -19,6 +19,7 @@ Contents:
     glviewwidget
 
     glgriditem
+    glgraphitem
     glsurfaceplotitem
     glvolumeitem
     glimageitem
@@ -27,5 +28,5 @@ Contents:
     glaxisitem
     glgraphicsitem
     glscatterplotitem
+    gltextitem
     meshdata
-

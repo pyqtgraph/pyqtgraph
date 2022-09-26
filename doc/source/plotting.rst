@@ -3,12 +3,12 @@ Plotting in pyqtgraph
 
 There are a few basic ways to plot data in pyqtgraph: 
 
-===================================================================     ==================================================
+===================================================================     =====================================================
 :func:`pyqtgraph.plot`                                                  Create a new plot window showing your data
-:func:`PlotWidget.plot() <pyqtgraph.PlotWidget.plot>`                   Add a new set of data to an existing plot widget
 :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`                       Add a new set of data to an existing plot widget
+``PlotWidget.plot()``                                                   Calls :func:`PlotItem.plot <pyqtgraph.PlotItem.plot>`
 :func:`GraphicsLayout.addPlot() <pyqtgraph.GraphicsLayout.addPlot>`     Add a new plot to a grid of plots
-===================================================================     ==================================================
+===================================================================     =====================================================
 
 All of these will accept the same basic arguments which control how the plot data is interpreted and displayed:
     

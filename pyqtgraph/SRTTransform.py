@@ -1,8 +1,10 @@
-# -*- coding: utf-8 -*-
-from .Qt import QtCore, QtGui
-from .Point import Point
+from math import atan2, degrees
+
 import numpy as np
-import warnings
+
+from .Point import Point
+from .Qt import QtCore, QtGui, QtWidgets
+
 
 class SRTTransform(QtGui.QTransform):
     """Transform that can always be represented as a combination of 3 matrices: scale * rotate * translate
@@ -34,14 +36,6 @@ class SRTTransform(QtGui.QTransform):
     def getScale(self):
         return self._state['scale']
         
-    def getAngle(self):  
-        warnings.warn(
-            'SRTTransform.getAngle() is deprecated, use SRTTransform.getRotation() instead'
-            'will be removed in 0.13',
-            DeprecationWarning, stacklevel=2
-        )
-        return self.getRotation()
-        
     def getRotation(self):
         return self._state['angle']
         
@@ -65,8 +59,7 @@ class SRTTransform(QtGui.QTransform):
         dp3 = Point(p3-p1)
         
         ## detect flipped axes
-        if dp2.angle(dp3) > 0:
-            #da = 180
+        if dp2.angle(dp3, units="radians") > 0:
             da = 0
             sy = -1.0
         else:
@@ -76,7 +69,7 @@ class SRTTransform(QtGui.QTransform):
         self._state = {
             'pos': Point(p1),
             'scale': Point(dp2.length(), dp3.length() * sy),
-            'angle': (np.arctan2(dp2[1], dp2[0]) * 180. / np.pi) + da
+            'angle': degrees(atan2(dp2[1], dp2[0])) + da
         }
         self.update()
         
@@ -173,31 +166,32 @@ class SRTTransform(QtGui.QTransform):
 
         
 if __name__ == '__main__':
-    from . import widgets
     import GraphicsView
+
+    from . import widgets
     from .functions import *
-    app = pg.mkQApp()
-    win = QtGui.QMainWindow()
+    app = pg.mkQApp()  # noqa: qapp stored to avoid gc
+    win = QtWidgets.QMainWindow()
     win.show()
     cw = GraphicsView.GraphicsView()
     #cw.enableMouse()  
     win.setCentralWidget(cw)
-    s = QtGui.QGraphicsScene()
+    s = QtWidgets.QGraphicsScene()
     cw.setScene(s)
     win.resize(600,600)
     cw.enableMouse()
     cw.setRange(QtCore.QRectF(-100., -100., 200., 200.))
     
-    class Item(QtGui.QGraphicsItem):
+    class Item(QtWidgets.QGraphicsItem):
         def __init__(self):
-            QtGui.QGraphicsItem.__init__(self)
-            self.b = QtGui.QGraphicsRectItem(20, 20, 20, 20, self)
+            QtWidgets.QGraphicsItem.__init__(self)
+            self.b = QtWidgets.QGraphicsRectItem(20, 20, 20, 20, self)
             self.b.setPen(QtGui.QPen(mkPen('y')))
-            self.t1 = QtGui.QGraphicsTextItem(self)
+            self.t1 = QtWidgets.QGraphicsTextItem(self)
             self.t1.setHtml('<span style="color: #F00">R</span>')
             self.t1.translate(20, 20)
-            self.l1 = QtGui.QGraphicsLineItem(10, 0, -10, 0, self)
-            self.l2 = QtGui.QGraphicsLineItem(0, 10, 0, -10, self)
+            self.l1 = QtWidgets.QGraphicsLineItem(10, 0, -10, 0, self)
+            self.l2 = QtWidgets.QGraphicsLineItem(0, 10, 0, -10, self)
             self.l1.setPen(QtGui.QPen(mkPen('y')))
             self.l2.setPen(QtGui.QPen(mkPen('y')))
         def boundingRect(self):
@@ -209,8 +203,8 @@ if __name__ == '__main__':
     #s.addItem(t1)
     item = Item()
     s.addItem(item)
-    l1 = QtGui.QGraphicsLineItem(10, 0, -10, 0)
-    l2 = QtGui.QGraphicsLineItem(0, 10, 0, -10)
+    l1 = QtWidgets.QGraphicsLineItem(10, 0, -10, 0)
+    l2 = QtWidgets.QGraphicsLineItem(0, 10, 0, -10)
     l1.setPen(QtGui.QPen(mkPen('r')))
     l2.setPen(QtGui.QPen(mkPen('r')))
     s.addItem(l1)

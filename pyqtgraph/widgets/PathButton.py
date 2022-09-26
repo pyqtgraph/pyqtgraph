@@ -1,14 +1,14 @@
-from ..Qt import QtGui, QtCore
 from .. import functions as fn
+from ..Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ['PathButton']
 
 
-class PathButton(QtGui.QPushButton):
+class PathButton(QtWidgets.QPushButton):
     """Simple PushButton extension that paints a QPainterPath centered on its face.
     """
     def __init__(self, parent=None, path=None, pen='default', brush=None, size=(30,30), margin=7):
-        QtGui.QPushButton.__init__(self, parent)
+        QtWidgets.QPushButton.__init__(self, parent)
         self.margin = margin
         self.path = None
         if pen == 'default':
@@ -39,7 +39,7 @@ class PathButton(QtGui.QPushButton):
         scale = min(geom.width() / float(rect.width()), geom.height() / float(rect.height()))
         
         p = QtGui.QPainter(self)
-        p.setRenderHint(p.Antialiasing)
+        p.setRenderHint(p.RenderHint.Antialiasing)
         p.translate(geom.center())
         p.scale(scale, scale)
         p.translate(-rect.center())

@@ -5,4 +5,3 @@ flowchart.Terminal
     :members:
 
     .. automethod:: pyqtgraph.flowchart.Terminal.__init__
-
