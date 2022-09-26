@@ -1,4 +1,7 @@
 """
+GLPainterItem
+=============
+
 Demonstrate using QPainter on a subclass of GLGraphicsItem.
 """
 

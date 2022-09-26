@@ -1,4 +1,7 @@
 """
+HistogramLutWidget
+==================
+
 Use a HistogramLUTWidget to control the contrast / coloration of an image.
 """
 

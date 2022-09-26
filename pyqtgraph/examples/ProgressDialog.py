@@ -1,6 +1,8 @@
 """
-Using ProgressDialog to show progress updates in a nested process.
+ProgressDialog
+==============
 
+Using ProgressDialog to show progress updates in a nested process.
 """
 
 import time

@@ -1,3 +1,7 @@
+"""
+GradientEditor
+==============
+"""
 
 import pyqtgraph as pg
 

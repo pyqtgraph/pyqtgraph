@@ -1,4 +1,7 @@
 """
+ErrorBarItem
+============
+
 Demonstrates basic use of ErrorBarItem
 """
 

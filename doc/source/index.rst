@@ -26,8 +26,8 @@ Contents:
     parametertree/index
     flowchart/index
     internals
+    examples/index
     apireference
-    
 
 Indices and tables
 ==================

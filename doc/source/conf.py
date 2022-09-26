@@ -15,6 +15,9 @@ import sys
 import time
 from datetime import datetime
 
+import qtgallery
+from sphinx_gallery.sorting import ExampleTitleSortKey
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -36,6 +39,8 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx_qt_documentation",
+    "sphinx_gallery.gen_gallery",
+    "qtgallery",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -126,6 +131,153 @@ autodoc_mock_imports = [
     "h5py",
     "matplotlib",
 ]
+
+# PyQt6 seems to work the best
+# C++ object deleted... msgs seem to be more warnings, renders usually look ok
+runlist = [
+    "Arrow",
+    "BarGraphItem",
+    "beeswarm",
+    "CLIexample",
+    "ColorBarItem",  # internal c++ object (viewbox) already deleted
+    "ColorButton",
+    # "ColorGradientPlots",  # not a particularly good example, need to wait to scroll
+    "colorMapsLinearized",
+    "colorMaps",
+    "ConsoleWidget",
+    "contextMenu",
+    "crosshair",
+    "customGraphicsItem",
+    "CustomGraphItem",
+    "customPlot",  # doesn't show the triangles along the x axis
+    "DataSlicing",
+    "DataTreeWidget",  # wrapped c/c++ object of type QComboBox has been deleted
+    # "DateAxisItem",  # can't use __file__
+    # "DateAxisItem_QtDesigner",  # can't use __file__
+    # "designerExample",  # can't use __file__
+    "DiffTreeWidget",
+    "dockarea",
+    # "Draw",  # necessarily interactive
+    "ErrorBarItem",
+    # "FillBetweenItem",  # animated
+    "FlowchartCustomNode",
+    "Flowchart",
+    "fractal",
+    "glow",
+
+    # some GL examples do seem to work, but others give GL errors
+    "GLBarGraphItem",
+    "GLGradientLegendItem",
+    "GLGraphItem",
+    "GLImageItem",
+    "GLIsosurface",
+    "GLLinePlotItem",
+    "GLMeshItem",
+    "GLPainterItem",
+    "GLScatterPlotItem",
+    "GLshaders",
+    "GLSurfacePlot",
+    "GLTextItem",
+    "GLViewWidget",
+    "GLVolumeItem",
+
+    "GradientEditor",
+    "GradientWidget",
+    "GraphicsLayout",
+    "GraphicsScene",
+    "GraphItem",
+    "hdf5.py",
+    "HistogramLUT",
+    "histogram",
+    "imageAnalysis",
+    "ImageItem",
+    "ImageView",
+    "infiniteline_performance",
+    "InfiniteLine",
+    "isocurve",
+    "JoystickButton",
+    "Legend",
+    "linkedViews",
+    "logAxis",
+    "LogPlotTest",
+    "MatrixDisplayExample",
+    "MouseSelection",
+    "MultiplePlotAxes",
+    "multiplePlotSpeedTest",
+    "MultiPlotSpeedTest",
+    "MultiPlotWidget",
+    # "multiprocess",  # swallowed exception, not sure what's wrong
+    "NonUniformImage",
+    "optics_demos",
+    # "PanningPlot",  # animated
+    # "parallelize",  # hangs
+    "parametertree",
+    "PColorMeshItem",
+    "PlotAutoRange",
+    "PlotSpeedTest",
+    "Plotting",
+    "PlotWidget",
+    # "ProgressDialog",  # hangs
+    "relativity_demo",
+    # "RemoteGraphicsView",  # doesn't show any plot contents
+    # "RemoteSpeedTest",  # remoteproxy NoResultError
+    "ROIExamples",
+    "ROItypes",
+    "ScaleBar",
+    "ScatterPlot",
+    "ScatterPlotSpeedTest",
+    "ScatterPlotWidget",
+    "scrollingPlots",
+    "SimplePlot",
+    "SpinBox",
+    "Symbols",
+    "TableWidget",
+    "text",
+    "TreeWidget",
+    "verlet_chain_demo",
+    "VideoSpeedTest",
+    "ViewBoxFeatures",
+    "ViewBox",
+    "ViewLimits",
+]
+
+DEFAULT_CONFIG_OPTIONS = pyqtgraph.CONFIG_OPTIONS.copy()
+
+
+def reset_pg_config(gallery_conf, fname):
+    """sphinx-gallery reset callback to reset to default pg config"""
+    pyqtgraph.setConfigOptions(**DEFAULT_CONFIG_OPTIONS)
+
+
+def argv_handler(gallery_conf, script_vars):
+    if script_vars["src_file"].endswith("hdf5.py"):
+        return ["test.hdf5", "1000000"]
+    else:
+        return []
+
+
+# sphinx gallery config
+sphinx_gallery_conf = {
+    "examples_dirs": os.path.normpath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "pyqtgraph", "examples")
+    ),
+    "gallery_dirs": "examples",
+    "image_scrapers": (qtgallery.qtscraper,),
+    "reset_modules": (qtgallery.reset_qapp, reset_pg_config),
+    "filename_pattern": r"/examples/\b(" + r"|".join("{}".format(n) for n in runlist) + r")\b",
+    # "fhlename_pattern": r"/examples/.*[^/]",
+    "ignore_pattern": r"(/_)|(^_)|(setup)|(Template)|(template)|(test_examples)|(py2exe)",
+    "within_subsection_order": ExampleTitleSortKey,
+    "reset_argv": argv_handler,
+    "reference_url": {
+        "pyqtgraph": None,
+    }
+}
+
+qtgallery_conf = {
+    "xvfb_size": (1280, 800),
+    # "xfvb_extra_args": ["-ac", "+extension", "GLX", "+render"],
+}
 
 # -- Options for HTML output ---------------------------------------------------
 

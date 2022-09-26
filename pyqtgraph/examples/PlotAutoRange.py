@@ -1,5 +1,7 @@
-
 """
+PlotAutoRange
+=============
+
 This example demonstrates the different auto-ranging capabilities of ViewBoxes
 """
 

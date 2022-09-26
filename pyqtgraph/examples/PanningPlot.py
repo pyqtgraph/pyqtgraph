@@ -1,4 +1,7 @@
 """
+Panning Plot
+============
+
 Shows use of PlotWidget to display panning data
 """
 

@@ -1,4 +1,7 @@
 """
+Log Axis
+========
+
 Demonstrate programmatic setting of log transformation modes.
 """
 

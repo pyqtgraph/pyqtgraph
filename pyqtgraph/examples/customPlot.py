@@ -1,4 +1,7 @@
 """
+Custom Plot
+===========
+
 This example demonstrates the creation of a plot with 
 DateAxisItem and a customized ViewBox. 
 """

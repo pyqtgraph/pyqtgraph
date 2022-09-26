@@ -1,5 +1,8 @@
 #!/usr/bin/python
 """
+Scatter Plot Speed Test
+=======================
+
 For testing rapid updates of ScatterPlotItem under various conditions.
 
 (Scatter plots are still rather slow to draw; expect about 20fps)

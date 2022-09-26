@@ -4,3 +4,7 @@ sphinx-rtd-theme
 sphinx-qt-documentation
 numpy
 pyopengl
+h5py
+sphinx-gallery
+pillow
+qtgallery>=0.1.0rc1

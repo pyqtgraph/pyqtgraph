@@ -1,4 +1,7 @@
 """
+DockArea
+========
+
 This example demonstrates the use of pyqtgraph's dock widget system.
 
 The dockarea system allows the design of user interfaces which can be rearranged by

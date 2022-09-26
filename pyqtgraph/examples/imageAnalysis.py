@@ -1,4 +1,7 @@
 """
+Image Analysis
+==============
+
 Demonstrates common image analysis tools.
 
 Many of the features demonstrated here are already provided by the ImageView

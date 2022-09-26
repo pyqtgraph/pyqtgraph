@@ -1,4 +1,7 @@
 """
+GLScatterPlotItem
+=================
+
 Demonstrates use of GLScatterPlotItem with rapidly-updating plots.
 """
 
@@ -99,6 +102,9 @@ def update():
     color[:,2] = np.clip(z ** 3, 0, 1)
     sp3.setData(pos=pos3, color=color)
     
+
+update()
+
 t = QtCore.QTimer()
 t.timeout.connect(update)
 t.start(50)

@@ -1,5 +1,7 @@
-
 """
+DataTreeWidget
+==============
+
 Simple use of DataTreeWidget to display a structure of nested dicts, lists, and arrays
 """
 

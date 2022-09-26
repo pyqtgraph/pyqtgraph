@@ -1,4 +1,7 @@
 """
+Scatter Plot
+============
+
 Example demonstrating a variety of scatter plot features.
 """
 

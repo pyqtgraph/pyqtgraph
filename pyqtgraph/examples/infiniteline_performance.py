@@ -1,4 +1,8 @@
 #!/usr/bin/python
+"""
+InfiniteLine Performance
+========================
+"""
 
 from time import perf_counter
 

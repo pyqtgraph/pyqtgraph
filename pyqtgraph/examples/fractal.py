@@ -1,4 +1,7 @@
 """
+Koch Fractal
+============
+
 Displays an interactive Koch fractal
 """
 

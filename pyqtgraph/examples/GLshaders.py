@@ -1,4 +1,7 @@
 """
+GL Shaders
+==========
+
 Demonstration of some of the shader programs included with pyqtgraph that can be 
 used to affect the appearance of a surface.
 """

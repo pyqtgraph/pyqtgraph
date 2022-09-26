@@ -1,3 +1,8 @@
+"""
+Simple Plot
+===========
+"""
+
 import numpy as np
 
 import pyqtgraph as pg

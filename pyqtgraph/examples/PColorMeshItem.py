@@ -1,4 +1,7 @@
 """
+PColorMeshItem
+==============
+
 Demonstrates very basic use of PColorMeshItem
 """
 

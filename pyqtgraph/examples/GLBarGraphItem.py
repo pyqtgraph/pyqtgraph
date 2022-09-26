@@ -1,6 +1,8 @@
 """
-This example demonstrates the use of GLBarGraphItem.
+GLBarGraphItem
+==============
 
+This example demonstrates the use of GLBarGraphItem.
 """
 
 import numpy as np

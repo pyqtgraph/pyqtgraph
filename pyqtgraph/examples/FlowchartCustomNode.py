@@ -1,4 +1,7 @@
 """
+Flowchart Custom Node
+=====================
+
 This example demonstrates writing a custom Node subclass for use with flowcharts.
 
 We implement a couple of simple image processing nodes.

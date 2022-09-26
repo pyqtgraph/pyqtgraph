@@ -8,8 +8,11 @@ build:
   tools:
     python: "3"
 
+  apt_packages:
+    - xvfb
+
 sphinx:
-  fail_on_warning: true
+  fail_on_warning: false
   configuration: doc/source/conf.py
 
 python:

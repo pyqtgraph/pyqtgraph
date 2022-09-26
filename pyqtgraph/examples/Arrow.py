@@ -1,4 +1,7 @@
 """
+Arrow
+=====
+
 Display an animated arrowhead following a curve.
 This example uses the CurveArrow class, which is a combination
 of ArrowItem and CurvePoint.

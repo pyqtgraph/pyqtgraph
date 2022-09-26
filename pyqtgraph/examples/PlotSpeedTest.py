@@ -1,5 +1,8 @@
 #!/usr/bin/python
 """
+Plot Speed Test
+===============
+
 Update a simple plot as rapidly as possible to measure speed.
 """
 

@@ -1,4 +1,7 @@
 """
+Log Plot Test
+=============
+
 Simple logarithmic plotting test
 """
 

@@ -1,4 +1,7 @@
 """
+BarGraphItem
+============
+
 Simple example using BarGraphItem
 """
 

@@ -1,4 +1,7 @@
 """
+Beeswarm
+========
+
 Example beeswarm / bar chart
 """
 

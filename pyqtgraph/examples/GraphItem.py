@@ -1,4 +1,7 @@
 """
+GraphItem
+=========
+
 Simple example of GraphItem use.
 """
 

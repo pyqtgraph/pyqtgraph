@@ -1,4 +1,7 @@
 """
+GLLinePlotItem
+==============
+
 Demonstrate use of GLLinePlotItem to draw cross-sections of a surface.
 """
 

@@ -1,6 +1,8 @@
 """
-Very basic 3D graphics example; create a view widget and add a few items.
+GLViewWidget
+============
 
+Very basic 3D graphics example; create a view widget and add a few items.
 """
 
 import pyqtgraph as pg

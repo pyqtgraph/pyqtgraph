@@ -1,4 +1,7 @@
 """
+ImageItem
+=========
+
 Demonstrates very basic use of ImageItem to display image data inside a ViewBox.
 """
 

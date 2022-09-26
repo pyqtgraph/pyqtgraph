@@ -1,3 +1,8 @@
+"""
+GLGradientLegendItem
+====================
+"""
+
 import numpy
 
 import pyqtgraph as pg
