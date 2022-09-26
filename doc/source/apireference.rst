@@ -18,3 +18,4 @@ Contents:
     flowchart/index
     point
     transform3d
+    uml_overview
