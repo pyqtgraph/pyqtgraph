@@ -46,6 +46,9 @@ There are several classes invloved in displaying plot data. Most of these classe
 .. image:: images/plottingClasses.png
 
 
+See the :ref:`UML class diagram <uml_diagram>` page for a more detailed figure of the most important classes and their relations.
+
+
 Examples
 --------
 

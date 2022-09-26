@@ -17,3 +17,4 @@ Contents:
     graphicsscene/index
     flowchart/index
     graphicswindow
+    uml_overview
