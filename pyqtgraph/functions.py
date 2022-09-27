@@ -240,10 +240,10 @@ def mkColor(*args):
      float           greyscale, 0.0-1.0
      int             see :func:`intColor() <pyqtgraph.intColor>`
      (int, hues)     see :func:`intColor() <pyqtgraph.intColor>`
-     "#RGB"          hexadecimal strings prefixed with '#'
-     "#RGBA"         previously allowed use without prefix is deprecated and 
-     "#RRGGBB"       will be removed in 0.13
-     "#RRGGBBAA"
+     "#RGB"         
+     "#RGBA"         
+     "#RRGGBB"       
+     "#RRGGBBAA"     
      QColor          QColor instance; makes a copy.
     ================ ================================================
     """
