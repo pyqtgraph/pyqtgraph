@@ -204,7 +204,7 @@ class InteractiveFunction:
 
 
 class Interactor:
-    runOptions = [RunOptions.ON_CHANGED, RunOptions.ON_ACTION]
+    runOptions = RunOptions.ON_ACTION
     parent = None
     titleFormat = None
     nest = True
@@ -283,6 +283,7 @@ class Interactor:
         parent=PARAM_UNSET,
         titleFormat=PARAM_UNSET,
         nest=PARAM_UNSET,
+        runActionTemplate=PARAM_UNSET,
         existOk=PARAM_UNSET,
         **overrides,
     ):
@@ -318,6 +319,13 @@ class Interactor:
             and arguments to that function are 'nested' inside as its children.
             If *False*, function arguments are directly added to this parameter
             instead of being placed inside a child GroupParameter
+        runActionTemplate: dict
+            Template for the action parameter which runs the function, used
+            if ``runOptions`` is set to ``GroupParameter.RUN_ACTION``. Note that
+            if keys like "name" or "type" are not included, they are inferred
+            from the previous / default ``runActionTemplate``. This allows
+            items that should only be set per-function to exist here, like
+            a ``shortcut`` or ``icon``.
         existOk: bool
             Whether it is OK for existing parameter names to bind to this function.
             See behavior during 'Parameter.insertChild'
@@ -328,15 +336,18 @@ class Interactor:
             override can be a value (e.g. 5) or a dict specification of a
             parameter (e.g. dict(type='list', limits=[0, 10, 20]))
         """
+        # Special case: runActionTemplate can be overridden to specify action
+        if runActionTemplate is not PARAM_UNSET:
+            runActionTemplate = {**self.runActionTemplate, **runActionTemplate}
         # Get every overridden default
         locs = locals()
         # Everything until action template
         opts = {
-            kk: locs[kk] for kk in self._optionNames[:-1] if locs[kk] is not PARAM_UNSET
+            kk: locs[kk] for kk in self._optionNames if locs[kk] is not PARAM_UNSET
         }
         oldOpts = self.setOpts(**opts)
         # Delete explicitly since correct values are now ``self`` attributes
-        del runOptions, titleFormat, nest, existOk, parent
+        del runOptions, titleFormat, nest, existOk, parent, runActionTemplate
 
         function = self._toInteractiveFunction(function)
         funcDict = self.functionToParameterDict(function.function, **overrides)

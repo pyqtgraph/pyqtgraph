@@ -1,13 +1,18 @@
-import pytest
 from functools import wraps
-from pyqtgraph.parametertree import Parameter
-from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
+
+import numpy as np
+import pytest
+
+from pyqtgraph import functions as fn
 from pyqtgraph.parametertree import (
-    RunOptions,
     InteractiveFunction,
     Interactor,
     interact,
+    RunOptions,
 )
+from pyqtgraph.parametertree import Parameter
+from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
+from pyqtgraph.Qt import QtGui
 
 
 def test_parameter_hasdefault():
@@ -307,7 +312,7 @@ def test_remove_params():
     def inner(a=4):
         RetainVal.a = a
 
-    host = interact(inner)
+    host = interact(inner, runOptions=RunOptions.ON_CHANGED)
     host["a"] = 5
     assert RetainVal.a == 5
 
@@ -433,10 +438,31 @@ def test_class_interact():
 
 
 def test_args_interact():
-
     @interact.decorate()
     def a(*args):
         """"""
 
     assert not (a.parameters or a.extra)
     a()
+
+
+def test_interact_with_icon():
+    randomPixmap = QtGui.QPixmap(64, 64)
+    randomPixmap.fill(QtGui.QColor("red"))
+
+    parent = Parameter.create(name="parent", type="group")
+
+    @interact.decorate(
+        runActionTemplate=dict(icon=randomPixmap),
+        parent=parent,
+        runOptions=RunOptions.ON_ACTION,
+    )
+    def a():
+        """"""
+
+    groupItem = parent.child("a").itemClass(parent.child("a"), 1)
+    buttonPixmap = groupItem.button.icon().pixmap(randomPixmap.size())
+    imageBytes = [
+        fn.ndarray_from_qimage(pix.toImage()) for pix in (randomPixmap, buttonPixmap)
+    ]
+    assert np.array_equal(*imageBytes)
