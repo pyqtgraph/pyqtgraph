@@ -36,7 +36,7 @@ class ScaleBar(GraphicsObject, GraphicsWidgetAnchor):
         self.text = TextItem(text=fn.siFormat(size, suffix=suffix), anchor=(0.5,1))
         self.text.setParentItem(self)
 
-    def parentChanged(self):
+    def changeParent(self):
         view = self.parentItem()
         if view is None:
             return
