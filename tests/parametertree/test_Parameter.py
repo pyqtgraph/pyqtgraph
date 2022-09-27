@@ -275,6 +275,11 @@ def test_interactiveFunc():
     assert not interactive.setDisconnected(True)
     assert interactive.setDisconnected(False)
 
+    host = interact(interactive, runOptions=RunOptions.ON_CHANGED)
+    interactive.disconnect()
+    host["a"] = 20
+    assert value == 10
+
 
 def test_badOptsContext():
     with pytest.raises(KeyError):
