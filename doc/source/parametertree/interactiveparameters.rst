@@ -220,6 +220,30 @@ should be directly inside the parent, use ``nest=False``:
     # directly as children of `parent`
     params = interact(a, nest=False)
 
+``runActionTemplate``
+^^^^^^^^^^^^^^^^^^^^^
+When the ``runOptions`` argument is set to (or contains) ``RunOptions.ON_ACTION``, a
+button will be added next to the parameter group which can be clicked to run the
+function with the current parameter values. The button's options can be customized
+through passing a dictionary to ``runActionTemplate``. The dictionary can contain
+any key accepted as an ``action`` parameter option. For instance, to run a function
+either by pressing the button or a shortcut, you can interact like so:
+
+.. code:: python
+
+    def a(x=5, y=6):
+        return x + y
+
+    # The button will be labeled "Run" and will run the function when clicked or when
+    # the shortcut "Ctrl+R" is pressed
+    params = interact(a, runActionTemplate={'shortcut': 'Ctrl+R'})
+
+    # Alternatively, add an icon to the button
+    params = interact(a, runActionTemplate={'icon': 'run.png'})
+
+    # Why not both?
+    params = interact(a, runActionTemplate={'icon': 'run.png', 'shortcut': 'Ctrl+R'})
+
 ``existOk``
 ^^^^^^^^^^^
 
