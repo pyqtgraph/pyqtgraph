@@ -164,4 +164,7 @@ timer.timeout.connect(update)
 timer.start(0)
 
 if __name__ == '__main__':
+    # Splitter by default gives too small of a width to the parameter tree,
+    # so fix that right before the event loop
+    pt.setMinimumSize(225,0)
     pg.exec()
