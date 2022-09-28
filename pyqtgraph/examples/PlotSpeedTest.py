@@ -73,7 +73,9 @@ splitter.addWidget(pt)
 splitter.addWidget(pw)
 splitter.show()
 
-interactor = ptree.Interactor(parent=params, nest=False)
+interactor = ptree.Interactor(
+    parent=params, nest=False, runOptions=ptree.RunOptions.ON_CHANGED
+)
 
 pw.setWindowTitle('pyqtgraph example: PlotSpeedTest')
 pw.setLabel('bottom', 'Index', units='B')
