@@ -21,7 +21,7 @@ class CmdInput(QtWidgets.QLineEdit):
                 self.setHistory(self.ptr-1)
                 ev.accept()
                 return
-        elif ev.key() == QtCore.Qt.Key.Key_Return:
+        elif ev.key() in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter):
             self.execCmd()
         else:
             super().keyPressEvent(ev)
