@@ -14,7 +14,16 @@
    <string>Console</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <property name="margin">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
     <number>0</number>
    </property>
    <property name="spacing">
@@ -31,7 +40,8 @@
         <widget class="QPlainTextEdit" name="output">
          <property name="font">
           <font>
-           <family>Monospace</family>
+           <family>Courier New</family>
+           <stylestrategy>PreferAntialias</stylestrategy>
           </font>
          </property>
          <property name="readOnly">
@@ -71,7 +81,8 @@
      <widget class="QListWidget" name="historyList">
       <property name="font">
        <font>
-        <family>Monospace</family>
+        <family>Courier New</family>
+        <stylestrategy>PreferAntialias</stylestrategy>
        </font>
       </property>
      </widget>
