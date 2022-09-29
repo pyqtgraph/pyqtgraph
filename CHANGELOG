@@ -1,3 +1,21 @@
+pyqtgraph-0.13.1
+
+## What's Changed
+
+Bug Fixes
+
+* Refactor examples using `Interactor` to run on changing function parameters by @ntjess in https://github.com/pyqtgraph/pyqtgraph/pull/2437
+
+API Change
+
+* deprecate GraphicsObject::parentChanged method by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2420
+
+Other
+
+* Move Console to generic template and make font Courier New by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2435
+
+
+
 pyqtgraph-0.13.0
 
 ## What's Changed
