@@ -105,7 +105,7 @@ class ExportDialog(QtWidgets.QWidget):
         for exp in exporters.listExporters():
             item = FormatExportListWidgetItem(exp, QtCore.QCoreApplication.translate('Exporter', exp.Name))
             self.ui.formatList.addItem(item)
-            if item == current:
+            if item is current:
                 self.ui.formatList.setCurrentRow(self.ui.formatList.count() - 1)
                 gotCurrent = True
                 
