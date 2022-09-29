@@ -16,7 +16,7 @@ from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("Parameter Tree Example")
 import pyqtgraph.parametertree.parameterTypes as pTypes
-from pyqtgraph.parametertree import Parameter, ParameterTree
+from pyqtgraph.parametertree import Parameter, ParameterTree, param, group, action
 
 
 ## test subclassing parameters
@@ -27,8 +27,8 @@ class ComplexParameter(pTypes.GroupParameter):
         opts['value'] = True
         pTypes.GroupParameter.__init__(self, **opts)
         
-        self.addChild({'name': 'A = 1/B', 'type': 'float', 'value': 7, 'suffix': 'Hz', 'siPrefix': True})
-        self.addChild({'name': 'B = 1/A', 'type': 'float', 'value': 1/7., 'suffix': 's', 'siPrefix': True})
+        self.addChild( param( 'A = 1/B', value=7.0, suffix='Hz', siPrefix=True ) )
+        self.addChild( param( 'B = 1/A', value=1/7., suffix='s', siPrefix=True ) )
         self.a = self.param('A = 1/B')
         self.b = self.param('B = 1/A')
         self.a.sigValueChanged.connect(self.aChanged)
@@ -63,28 +63,23 @@ class ScalableGroup(pTypes.GroupParameter):
 
 params = [
     makeAllParamTypes(),
-    {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
-        {'name': 'Save State', 'type': 'action'},
-        {'name': 'Restore State', 'type': 'action', 'children': [
-            {'name': 'Add missing items', 'type': 'bool', 'value': True},
-            {'name': 'Remove extra items', 'type': 'bool', 'value': True},
-        ]},
-    ]},
-    {'name': 'Custom context menu', 'type': 'group', 'children': [
-        {'name': 'List contextMenu', 'type': 'float', 'value': 0, 'context': [
-            'menu1',
-            'menu2'
-        ]},
-        {'name': 'Dict contextMenu', 'type': 'float', 'value': 0, 'context': {
+    group( 'Save/Restore functionality',
+        action( 'Save State' ),
+        action( 'Restore State',
+            param( 'Add missing items', value=True ),
+            param( 'Remove extra items', value=True ) )
+    ),
+    group( 'Custom context menu',
+        param( 'List contextMenu', value=0.0, context=['menu1', 'menu2'] ),
+        param( 'Dict contextMenu', value=0.0, context={
             'changeName': 'Title',
-            'internal': 'What the user sees',
-        }},
-    ]},
+            'internal': 'What the user sees' })
+    ),
     ComplexParameter(name='Custom parameter group (reciprocal values)'),
     ScalableGroup(name="Expandable Parameter Group", tip='Click to add children', children=[
-        {'name': 'ScalableParam 1', 'type': 'str', 'value': "default param 1"},
-        {'name': 'ScalableParam 2', 'type': 'str', 'value': "default param 2"},
-    ]),
+        param( 'ScalableParam 1', value="default param 1" ),
+        param( 'ScalableParam 2', value="default param 2" ),
+    ])
 ]
 
 ## Create tree of Parameter objects
