@@ -43,6 +43,30 @@ def __reload__(old):
     PARAM_TYPES.update(old.get('PARAM_TYPES', {}))
     PARAM_NAMES.update(old.get('PARAM_NAMES', {}))
 
+
+def param( name, type = None, value = None, **opts ):
+    """
+    Helper function for easier definition of Parameter.
+    """
+    type   = type or value.__class__
+    typeId = getattr( type, '__name__', type )
+    return dict( opts, name=name, type=typeId, value=value )
+
+
+def group( name, *children, **opts ):
+    """
+    Helper function for easier definition of Parameter-Groups.
+    """
+    return param( name, 'group', children=children, **opts )
+
+
+def action( name, *children, **opts ):
+    """
+    Helper function for easier definition of action-Parameters.
+    """
+    return param( name, 'action', children=children, **opts )
+
+
 class Parameter(QtCore.QObject):
     """
     A Parameter is the basic unit of data in a parameter tree. Each parameter has
