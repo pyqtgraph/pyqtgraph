@@ -219,7 +219,6 @@ class Parameter(QtCore.QObject):
             self.setValue(value)
 
         if 'default' not in self.opts:
-            self.opts['default'] = None
             self.setDefault(self.opts['value'])
     
         ## Connect all state changed signals to the general sigStateChanged
@@ -440,14 +439,13 @@ class Parameter(QtCore.QObject):
         
     def defaultValue(self):
         """Return the default value for this parameter."""
-        return self.opts['default']
+        return self.opts.get('default')
         
     def setDefault(self, val):
         """Set the default value for this parameter."""
-        if self.opts['default'] == val:
-            return
-        self.opts['default'] = val
-        self.sigDefaultChanged.emit(self, val)
+        if self.opts.get('default') != val:
+            self.opts['default'] = val
+            self.sigDefaultChanged.emit(self, val)
 
     def setToDefault(self):
         """Set this parameter's value to the default."""
@@ -456,7 +454,7 @@ class Parameter(QtCore.QObject):
 
     def hasDefault(self):
         """Returns True if this parameter has a default value."""
-        return self.opts['default'] is not None
+        return self.opts.get('default') is not None
         
     def valueIsDefault(self):
         """Returns True if this parameter's value is equal to the default value."""
@@ -466,11 +464,10 @@ class Parameter(QtCore.QObject):
         """Set limits on the acceptable values for this parameter. 
         The format of limits depends on the type of the parameter and
         some parameters do not make use of limits at all."""
-        if 'limits' in self.opts and fn.eq(self.opts['limits'], limits):
-            return
-        self.opts['limits'] = limits
-        self.sigLimitsChanged.emit(self, limits)
-        return limits
+        if not fn.eq(self.opts.get('limits'), limits):
+            self.opts['limits'] = limits
+            self.sigLimitsChanged.emit(self, limits)
+            return limits
 
     def writable(self):
         """
