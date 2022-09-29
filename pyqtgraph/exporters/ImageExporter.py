@@ -30,7 +30,7 @@ class ImageExporter(Exporter):
             param( 'width', value=int(tr.width()), title=translate( "Exporter", 'width' ), limits=(0, None) ),
             param( 'height', value=int(tr.height()), title=translate( "Exporter", 'height' ), limits=[0, None] ),
             param( 'antialias', value=True, title=translate("Exporter", 'antialias') ),
-            param( 'background', type='color', value=bg, title=translate("Exporter", 'background') ),
+            param( 'background', value=bg, title=translate("Exporter", 'background') ),
             param( 'invertValue', value=False, title=translate("Exporter", 'invertValue') )
         ))
         self.params.param('width').sigValueChanged.connect(self.widthChanged)
