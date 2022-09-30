@@ -313,7 +313,7 @@ class Renderer(GraphicsView):
                     ## it also says (sometimes) 'access is denied' if we try to reuse the tag.
                     self.shmtag = "pyqtgraph_shmem_" + ''.join([chr((random.getrandbits(20)%25) + 97) for i in range(20)])
                     self.shm = mmap.mmap(-1, size, self.shmtag)
-                elif sys.platform == 'darwin':
+                elif sys.platform == 'darwin' or sys.platform.startswith('freebsd'):
                     self.shm.close()
                     fd = self.shmFile.fileno()
                     os.ftruncate(fd, size + 1)
