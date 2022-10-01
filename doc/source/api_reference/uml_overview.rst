@@ -11,5 +11,4 @@ The black arrows indicate inheritance between two classes (with the parent class
 
 The gray lines with the diamonds indicate an aggregation relation. For example the :class:`PlotDataItem <pyqtgraph.PlotDataItem>` class has a ``curve`` attribute that is a reference to a :class:`PlotCurveItem <pyqtgraph.PlotCurveItem>` object.
 
-.. image:: images/overview_uml.svg
-
+.. image:: /images/overview_uml.svg

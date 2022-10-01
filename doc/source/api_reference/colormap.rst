@@ -45,23 +45,23 @@ Examples
 False color display of a 2D data set. Display levels are controlled by 
 a :class:`ColorBarItem <pyqtgraph.ColorBarItem>`:
     
-.. literalinclude:: images/gen_example_false_color_image.py
+.. literalinclude:: /images/gen_example_false_color_image.py
     :lines: 18-28
     :dedent: 8
    
 Using QtGui.QPen and QtGui.QBrush to color plots according to the plotted value:
 
-.. literalinclude:: images/gen_example_gradient_plot.py
+.. literalinclude:: /images/gen_example_gradient_plot.py
     :lines: 16-33
     :dedent: 8
 
 .. image:: 
-    images/example_false_color_image.png
+    /images/example_false_color_image.png
     :width: 49%
     :alt: Example of a false color image
 
 .. image::
-    images/example_gradient_plot.png
+    /images/example_gradient_plot.png
     :width: 49%
     :alt: Example of drawing and filling plots with gradients
 

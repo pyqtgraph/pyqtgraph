@@ -43,7 +43,7 @@ There are several classes invloved in displaying plot data. Most of these classe
     * :class:`PlotWidget <pyqtgraph.PlotWidget>`  - A subclass of GraphicsView with a single PlotItem displayed. Most of the methods provided by PlotItem are also available through PlotWidget.
     * :class:`GraphicsLayoutWidget <pyqtgraph.GraphicsLayoutWidget>` - QWidget subclass displaying a single :class:`~pyqtgraph.GraphicsLayout`. Most of the methods provided by :class:`~pyqtgraph.GraphicsLayout` are also available through GraphicsLayoutWidget.
     
-.. image:: images/plottingClasses.png
+.. image:: /images/plottingClasses.png
 
 
 See the :ref:`UML class diagram <uml_diagram>` page for a more detailed figure of the most important classes and their relations.

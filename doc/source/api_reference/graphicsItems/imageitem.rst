@@ -50,12 +50,12 @@ If performance is critial, the following points may be worth investigating:
 Examples
 --------
 
-.. literalinclude:: ../images/gen_example_imageitem_transform.py
+.. literalinclude:: /images/gen_example_imageitem_transform.py
     :lines: 19-28
     :dedent: 8
 
 .. image:: 
-    ../images/example_imageitem_transform.png
+    /images/example_imageitem_transform.png
     :width: 49%
     :alt: Example of transformed image display
 
