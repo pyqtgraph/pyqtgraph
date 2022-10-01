@@ -15,6 +15,8 @@ import sys
 import time
 from datetime import datetime
 
+from sphinx.application import Sphinx
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -137,7 +139,11 @@ html_theme = 'pydata_sphinx_theme'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = dict(
+    github_url="https://github.com/pyqtgraph/pyqtgraph",
+    navbar_end=["theme-switcher", "navbar-icon-links"],
+    twitter_url="https://twitter.com/pyqtgraph",
+)
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -164,8 +170,18 @@ html_logo = os.path.join("images", "peegee_02.svg")
 html_static_path = ['_static']
 
 # add the theme customizations
-def setup(app):
-    app.add_css_file("custom.css")
+# def setup(app):
+#     app.add_css_file("custom.css")
+
+html_css_files = [
+    "custom.css",
+]
+
+# Redirects for pages that were moved to new locations
+# TODO: fill out the remaining remappings
+rediraffe_redirects = {
+    "functions.rst": "api_reference/functions.rst",
+}
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -259,3 +275,12 @@ man_pages = [
     ('index', 'pyqtgraph', 'pyqtgraph Documentation',
      ['Luke Campagnola'], 1)
 ]
+
+
+def html_page_context(app, pagename, templatename, context, doctree):
+    # Disable edit button for docstring generated pages
+    if "generated" in pagename:
+        context["theme_use_edit_page_button"] = False
+
+def setup(app: Sphinx):
+    app.connect("html-page-context", html_page_context)
