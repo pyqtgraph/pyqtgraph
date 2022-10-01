@@ -3,6 +3,7 @@ __all__ = ["Canvas"]
 import gc
 import importlib
 import weakref
+import warnings
 
 from ..graphicsItems.GridItem import GridItem
 from ..graphicsItems.ROI import ROI
@@ -22,6 +23,12 @@ class Canvas(QtWidgets.QWidget):
     
     def __init__(self, parent=None, allowTransforms=True, hideCtrl=False, name=None):
         QtWidgets.QWidget.__init__(self, parent)
+        warnings.warn(
+            'pyqtgrapoh.cavas will be deprecated in pyqtgraph and migrate to '
+            'acq4.  Removal will occur after September, 2023.',
+            DeprecationWarning, stacklevel=2
+        )
+
         self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
         self.view = ViewBox()
