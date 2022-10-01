@@ -43,6 +43,10 @@ PyQtGraph has adopted [NEP-29](https://numpy.org/neps/nep-0029-deprecation_polic
 * Documentation is generated with sphinx, and usage of [numpy-docstyle](https://numpydoc.readthedocs.io/en/latest/format.html) is encouraged (many places in the library do not use this docstring style at present, it's a gradual process to migrate).
 * The docs built for this PR can be previewed by clicking on the "Details" link for the read-the-docs entry in the checks section of the PR conversation page.
 
+## Templates
+
+PyQtGraph makes use of `.ui` files where are compiled using `uic`.  These files are identified by ending with `_generic.py` and have a `.ui` file next to them in the same directory.  In past versions of PyQtGraph, there was a file for each binding. These are generated using tools/rebuildUi.py.  Upon completion, the compiled files need to be modified such that they do not inherit from PyQt6 but from pyqtgraph's Qt abstraction layer.
+
 ## Style guidelines
 
 ### Formatting ~~Rules~~ Suggestions
@@ -54,6 +58,7 @@ PyQtGraph has adopted [NEP-29](https://numpy.org/neps/nep-0029-deprecation_polic
 ### Pre-Commit
 
 PyQtGraph developers are highly encouraged to (but not required) to use [`pre-commit`](https://pre-commit.com/).  `pre-commit` does a number of checks when attempting to commit the code to being committed, such as ensuring no large files are accidentally added, address mixed-line-endings types and so on.  Check the [pre-commit documentation](https://pre-commit.com) on how to setup.
+
 
 ## Testing
 
