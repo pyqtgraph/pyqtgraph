@@ -1,15 +1,14 @@
 import math
-import warnings
 import weakref
 
 import numpy as np
 
+from .. import colormap
 from .. import functions as fn
 from ..Qt import QtCore
 from .ImageItem import ImageItem
 from .LinearRegionItem import LinearRegionItem
 from .PlotItem import PlotItem
-from .. import colormap 
 
 __all__ = ['ColorBarItem']
 
@@ -26,9 +25,10 @@ class ColorBarItem(PlotItem):
     A labeled axis is displayed directly next to the gradient to help identify values.
     Handles included in the color bar allow for interactive adjustment.
 
-    A ColorBarItem can be assigned one or more :class:`~pyqtgraph.ImageItem`s that will be displayed 
-    according to the selected color map and levels. The ColorBarItem can be used as a separate
-    element in a :class:`~pyqtgraph.GraphicsLayout` or added to the layout of a 
+    A ColorBarItem can be assigned one or more :class:`~pyqtgraph.ImageItem` s 
+    that will be displayed according to the selected color map and levels. The
+    ColorBarItem can be used as a separate element in a 
+    :class:`~pyqtgraph.GraphicsLayout` or added to the layout of a 
     :class:`~pyqtgraph.PlotItem` used to display image data with coordinate axes.
 
     =============================  =============================================
@@ -52,33 +52,26 @@ class ColorBarItem(PlotItem):
             Determines the color map displayed and applied to assigned ImageItem(s).
         values: tuple of float
             The range of image levels covered by the color bar, as ``(min, max)``.
-        width: float, default=25
+        width: float, default=25.0
             The width of the displayed color bar.
         label: str, optional
             Label applied to the color bar axis.
         interactive: bool, default=True
             If `True`, handles are displayed to interactively adjust the level range.
-        limits: `None` or `tuple of float`
+        limits: `tuple of float`, optional
             Limits the adjustment range to `(low, high)`, `None` disables the limit.
         rounding: float, default=1
             Adjusted range values are rounded to multiples of this value.
         orientation: str, default 'vertical'
             'horizontal' or 'h' gives a horizontal color bar instead of the default vertical bar
-        pen: :class:`Qpen` or argument to :func:`~pyqtgraph.mkPen`
+        pen: :class:`QPen` or color_like
             Sets the color of adjustment handles in interactive mode.
-        hoverPen: :class:`QPen` or argument to :func:`~pyqtgraph.mkPen`
-            Sets the color of adjustement handles when hovered over.
-        hoverBrush: :class:`QBrush` or argument to :func:`~pyqtgraph.mkBrush`
+        hoverPen: :class:`QPen` or color_like
+            Sets the color of adjustment handles when hovered over.
+        hoverBrush: :class:`QBrush` or color_like
             Sets the color of movable center region when hovered over.
         """
         super().__init__()
-        if cmap is not None: 
-            warnings.warn(
-                "The parameter 'cmap' has been renamed to 'colorMap' for clarity. "
-                "The old name will no longer be available in any version of PyQtGraph released after July 2022.",
-                DeprecationWarning, stacklevel=2
-            )
-            colorMap = cmap
         self.img_list  = [] # list of controlled ImageItems
         self.values    = values
         self._colorMap = None
@@ -193,15 +186,6 @@ class ColorBarItem(PlotItem):
                 insert_in.layout.setColumnFixedWidth(4, 5) # enforce some space to axis on the left
         self._update_items( update_cmap = True )
 
-    # Maintain compatibility for old name of color bar setting method.
-    def setCmap(self, cmap):
-        warnings.warn(
-            "The method 'setCmap' has been renamed to 'setColorMap' for clarity. "
-            "The old name will no longer be available in any version of PyQtGraph released after July 2022.",
-            DeprecationWarning, stacklevel=2
-        )
-        self.setColorMap(cmap)
-
     def setColorMap(self, colorMap):
         """
         Sets a color map to determine the ColorBarItem's look-up table. The same
@@ -219,14 +203,6 @@ class ColorBarItem(PlotItem):
         """
         Returns the assigned ColorMap object.
         """
-        return self._colorMap
-        
-    @property
-    def cmap(self):
-        warnings.warn(
-            "Direct access to ColorMap.cmap is deprecated and will no longer be available in any "
-            "version of PyQtGraph released after July 2022. Please use 'ColorMap.colorMap()' instead.",
-            DeprecationWarning, stacklevel=2)
         return self._colorMap
 
     def setLevels(self, values=None, low=None, high=None ):

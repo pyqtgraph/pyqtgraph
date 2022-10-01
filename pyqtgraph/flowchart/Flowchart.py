@@ -2,6 +2,7 @@ __init__ = ["Flowchart", "FlowchartGraphicsItem", "FlowchartNode"]
 
 import importlib
 from collections import OrderedDict
+import os
 
 from .. import DataTreeWidget, FileDialog
 from ..Qt import QT_LIB, QtCore, QtWidgets
@@ -219,7 +220,8 @@ class Flowchart(Node):
     def nodeRenamed(self, node, oldName):
         del self._nodes[oldName]
         self._nodes[node.name()] = node
-        self.widget().nodeRenamed(node, oldName)
+        if node is not self.inputNode and node is not self.outputNode:
+            self.widget().nodeRenamed(node, oldName)
         self.sigChartChanged.emit(self, 'rename', node)
         
     def arrangeNodes(self):

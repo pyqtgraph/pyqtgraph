@@ -1,5 +1,4 @@
 import collections.abc
-import importlib
 import os
 import warnings
 import weakref
@@ -8,7 +7,7 @@ import numpy as np
 
 from ... import functions as fn
 from ... import icons
-from ...Qt import QT_LIB, QtCore, QtWidgets
+from ...Qt import QtCore, QtWidgets
 from ...WidgetGroup import WidgetGroup
 from ...widgets.FileDialog import FileDialog
 from ..AxisItem import AxisItem
@@ -22,11 +21,9 @@ from ..PlotDataItem import PlotDataItem
 from ..ScatterPlotItem import ScatterPlotItem
 from ..ViewBox import ViewBox
 
-
 translate = QtCore.QCoreApplication.translate
 
-ui_template = importlib.import_module(
-    f'.plotConfigTemplate_{QT_LIB.lower()}', package=__package__)
+from . import plotConfigTemplate_generic as ui_template
 
 __all__ = ['PlotItem']
 
@@ -38,7 +35,7 @@ class PlotItem(GraphicsWidget):
     
     This class provides the ViewBox-plus-axes that appear when using
     :func:`pg.plot() <pyqtgraph.plot>`, :class:`PlotWidget <pyqtgraph.PlotWidget>`,
-    and :func:`GraphicsLayoutWidget.addPlot() <pyqtgraph.GraphicsLayoutWidget.addPlot>`.
+    and :func:`GraphicsLayout.addPlot() <pyqtgraph.GraphicsLayout.addPlot>`.
 
     It's main functionality is:
 
@@ -504,23 +501,12 @@ class PlotItem(GraphicsWidget):
             
     def viewStateChanged(self):
         self.updateButtons()
-            
-    def enableAutoScale(self):
-        """
-        Enable auto-scaling. The plot will continuously scale to fit the boundaries of its data.
-        """
-        warnings.warn(
-            'PlotItem.enableAutoScale is deprecated, and will be removed in 0.13'
-            'Use PlotItem.enableAutoRange(axis, enable) instead',
-            DeprecationWarning, stacklevel=2
-        )
-        self.vb.enableAutoRange(self.vb.XYAxes)
 
     def addItem(self, item, *args, **kargs):
         """
         Add a graphics item to the view box. 
-        If the item has plot data (:class:`~pyqtgrpah.PlotDataItem`, 
-        :class:`~pyqtgraph.PlotCurveItem`, :class:`~pyqtgraph.ScatterPlotItem`), 
+        If the item has plot data (:class:`PlotDataItem <pyqtgraph.PlotDataItem>` , 
+        :class:`~pyqtgraph.PlotCurveItem` , :class:`~pyqtgraph.ScatterPlotItem` ), 
         it may be included in analysis performed by the PlotItem.
         """
         if item in self.items:
@@ -553,7 +539,6 @@ class PlotItem(GraphicsWidget):
             item.setFftMode(self.ctrl.fftCheck.isChecked())
             item.setDownsampling(*self.downsampleMode())
             item.setClipToView(self.clipToViewMode())
-            item.setPointMode(self.pointMode())
             
             ## Hide older plots if needed
             self.updateDecimation()
@@ -570,27 +555,11 @@ class PlotItem(GraphicsWidget):
         if name is not None and hasattr(self, 'legend') and self.legend is not None:
             self.legend.addItem(item, name=name)            
 
-    def addDataItem(self, item, *args):
-        warnings.warn(
-            'PlotItem.addDataItem is deprecated and will be removed in 0.13. '
-            'Use PlotItem.addItem instead',
-            DeprecationWarning, stacklevel=2
-        )    
-        self.addItem(item, *args)
-        
     def listDataItems(self):
-        """Return a list of all data items (:class:`~pyqtgrpah.PlotDataItem`, 
-        :class:`~pyqtgraph.PlotCurveItem`, :class:`~pyqtgraph.ScatterPlotItem`, etc)
+        """Return a list of all data items (:class:`PlotDataItem <pyqtgraph.PlotDataItem>`, 
+        :class:`~pyqtgraph.PlotCurveItem` , :class:`~pyqtgraph.ScatterPlotItem` , etc)
         contained in this PlotItem."""
         return self.dataItems[:]
-        
-    def addCurve(self, c, params=None):
-        warnings.warn(
-            'PlotItem.addCurve is deprecated and will be removed in 0.13. '
-            'Use PlotItem.addItem instead.',
-            DeprecationWarning, stacklevel=2
-        )
-        self.addItem(c, params)
 
     def addLine(self, x=None, y=None, z=None, **kwds):
         """
@@ -676,7 +645,7 @@ class PlotItem(GraphicsWidget):
         :class:`~pyqtgraph.ViewBox`. Plots added after this will be automatically 
         displayed in the legend if they are created with a 'name' argument.
 
-        If a :class:`~pyqtGraph.LegendItem` has already been created using this method, 
+        If a :class:`~pyqtgraph.LegendItem` has already been created using this method, 
         that item will be returned rather than creating a new one.
 
         Accepts the same arguments as :func:`~pyqtgraph.LegendItem.__init__`.
@@ -695,7 +664,7 @@ class PlotItem(GraphicsWidget):
         A call like `plot.addColorBar(img, colorMap='viridis')` is a convenient
         method to assign and show a color map.
         """
-        from ..ColorBarItem import ColorBarItem # avoid circular import
+        from ..ColorBarItem import ColorBarItem  # avoid circular import
         bar = ColorBarItem(**kargs)
         bar.setImageItem( image, insert_in=self )
         return bar
@@ -1017,7 +986,7 @@ class PlotItem(GraphicsWidget):
         return ds, auto, method
         
     def setClipToView(self, clip):
-        """Set the default clip-to-view mode for all :class:`~pyqtgraph.PlotDataItem`s managed by this plot.
+        """Set the default clip-to-view mode for all :class:`~pyqtgraph.PlotDataItem` s managed by this plot.
         If *clip* is `True`, then PlotDataItems will attempt to draw only points within the visible
         range of the ViewBox."""
         self.ctrl.clipToViewCheck.setChecked(clip)
@@ -1217,21 +1186,24 @@ class PlotItem(GraphicsWidget):
         
         Parameters
         ----------
-        selection: boolean or tuple of booleans (left, top, right, bottom)
+        selection: bool or tuple of bool 
             Determines which AxisItems will be displayed.
+            If in tuple form, order is (left, top, right, bottom)
             A single boolean value will set all axes, 
             so that ``showAxes(True)`` configures the axes to draw a frame.
-        showValues: optional, boolean or tuple of booleans (left, top, right, bottom)
+        showValues: bool or tuple of bool, optional
             Determines if values will be displayed for the ticks of each axis.
             True value shows values for left and bottom axis (default).
             False shows no values.
+            If in tuple form, order is (left, top, right, bottom)
             None leaves settings unchanged.
             If not specified, left and bottom axes will be drawn with values.
-        size: optional, float or tuple of floats (width, height)
+        size: float or tuple of float, optional
             Reserves as fixed amount of space (width for vertical axis, height for horizontal axis)
             for each axis where tick values are enabled. If only a single float value is given, it
             will be applied for both width and height. If `None` is given instead of a float value,
             the axis reverts to automatic allocation of space.
+            If in tuple form, order is (width, height)
         """
         if selection is True: # shortcut: enable all axes, creating a frame
             selection = (True, True, True, True)
@@ -1266,15 +1238,7 @@ class PlotItem(GraphicsWidget):
                     elif axis_key in ('top', 'bottom'):
                         if show_value: ax.setHeight(size[1])
                         else         : ax.setHeight( None )
-
-    def showScale(self, *args, **kargs):
-        warnings.warn(
-            'PlotItem.showScale has been deprecated and will be removed in 0.13. '
-            'Use PlotItem.showAxis() instead',
-            DeprecationWarning, stacklevel=2
-        )    
-        return self.showAxis(*args, **kargs)
-            
+  
     def hideButtons(self):
         """Causes auto-scale button ('A' in lower-left corner) to be hidden for this PlotItem"""
         #self.ctrlBtn.hide()

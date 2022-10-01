@@ -1,6 +1,5 @@
 from OpenGL.GL import *  # noqa
 import OpenGL.GL.framebufferobjects as glfbo  # noqa
-import warnings
 from math import cos, radians, sin, tan
 
 import numpy as np
@@ -377,18 +376,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         
         Distances are scaled roughly such that a value of 1.0 moves
         by one pixel on screen.
-        
-        Prior to version 0.11, *relative* was expected to be either True (x-aligned) or
-        False (global). These values are deprecated but still recognized.
         """
-        # for backward compatibility:
-        if isinstance(relative, bool):
-            warnings.warn(
-                "'relative' as a boolean is deprecated, and will not be recognized in 0.13. "
-                "Acceptable values are 'global', 'view', or 'view-upright'",
-                DeprecationWarning, stacklevel=2
-            )    
-        relative = {True: "view-upright", False: "global"}.get(relative, relative)
         if relative == 'global':
             self.opts['center'] += QtGui.QVector3D(dx, dy, dz)
         elif relative == 'view-upright':

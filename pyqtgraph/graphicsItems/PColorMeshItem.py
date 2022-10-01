@@ -84,18 +84,15 @@ class PColorMeshItem(GraphicsObject):
                                     +---------+
                     (x[i, j], y[i, j])           (x[i, j+1], y[i, j+1])
 
-            "ASCII from: <https://matplotlib.org/3.2.1/api/_as_gen/
-                         matplotlib.pyplot.pcolormesh.html>".
-        colorMap : pg.ColorMap, default pg.colormap.get('viridis')
+            "ASCII from: <https://matplotlib.org/3.2.1/api/_as_gen/matplotlib.pyplot.pcolormesh.html>".
+        colorMap : pyqtgraph.ColorMap
             Colormap used to map the z value to colors.
-        edgecolors : dict, default None
+            default ``pyqtgraph.colormap.get('viridis')``
+        edgecolors : dict, optional
             The color of the edges of the polygons.
             Default None means no edges.
             The dict may contains any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`.
-            Example:
-
-                ``mkPen(color='w', width=2)``
-
+            Example: ``mkPen(color='w', width=2)``
         antialiasing : bool, default False
             Whether to draw edgelines with antialiasing.
             Note that if edgecolors is None, antialiasing is always False.
@@ -107,7 +104,7 @@ class PColorMeshItem(GraphicsObject):
         self.x = None
         self.y = None
         self.z = None
-        
+
         self.edgecolors = kwargs.get('edgecolors', None)
         self.antialiasing = kwargs.get('antialiasing', False)
         
@@ -205,9 +202,6 @@ class PColorMeshItem(GraphicsObject):
                          matplotlib.pyplot.pcolormesh.html>".
         """
 
-        # Prepare data
-        self._prepareData(args)
-
         # Has the view bounds changed
         shapeChanged = False
         if self.qpicture is None:
@@ -218,6 +212,10 @@ class PColorMeshItem(GraphicsObject):
         elif len(args)==3:
             if np.any(self.x != args[0]) or np.any(self.y != args[1]):
                 shapeChanged = True
+
+        # Prepare data
+        self._prepareData(args)
+
 
         self.qpicture = QtGui.QPicture()
         painter = QtGui.QPainter(self.qpicture)

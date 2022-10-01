@@ -1,4 +1,3 @@
-import importlib
 import pickle
 import re
 import subprocess
@@ -8,10 +7,8 @@ import traceback
 from .. import exceptionHandling as exceptionHandling
 from .. import getConfigOption
 from ..functions import SignalBlock
-from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
-
-ui_template = importlib.import_module(
-    f'.template_{QT_LIB.lower()}', package=__package__)
+from ..Qt import QtCore, QtGui, QtWidgets
+from . import template_generic as ui_template
 
 
 class ConsoleWidget(QtWidgets.QWidget):
@@ -36,7 +33,7 @@ class ConsoleWidget(QtWidgets.QWidget):
     
     def __init__(self, parent=None, namespace=None, historyFile=None, text=None, editor=None):
         """
-        ==============  ============================================================================
+        ==============  =============================================================================
         **Arguments:**
         namespace       dictionary containing the initial variables present in the default namespace
         historyFile     optional file for storing command history

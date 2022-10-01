@@ -349,15 +349,13 @@ class TableWidget(QtWidgets.QTableWidget):
         self.save(self.serialize(useSelection=False))
 
     def save(self, data):
-        fileName = QtWidgets.QFileDialog.getSaveFileName(
+        fileName, _ = QtWidgets.QFileDialog.getSaveFileName(
             self,
             f"{translate('TableWidget', 'Save As')}...",
             "",
             f"{translate('TableWidget', 'Tab-separated values')} (*.tsv)"
         )
-        if isinstance(fileName, tuple):
-            fileName = fileName[0]  # Qt4/5 API difference
-        if fileName == '':
+        if not fileName:
             return
         with open(fileName, 'w') as fd:
             fd.write(data)

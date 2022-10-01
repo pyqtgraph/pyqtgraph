@@ -10,7 +10,7 @@ __all__ = ['GLMeshItem']
 
 class GLMeshItem(GLGraphicsItem):
     """
-    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`
     
     Displays a 3D triangle mesh. 
     """

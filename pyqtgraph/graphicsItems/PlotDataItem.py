@@ -1,3 +1,4 @@
+import math
 import warnings
 
 import numpy as np
@@ -237,6 +238,9 @@ class PlotDataItem(GraphicsObject):
         **Optimization keyword arguments:**
 
             ================= =======================================================================
+            useCache          (bool) By default, generated point graphics items are cached to
+                              improve performance. Setting this to False can improve image quality
+                              in certain situations.
             antialias         (bool) By default, antialiasing is disabled to improve performance.
                               Note that in some cases (in particular, when ``pxMode=True``), points
                               will be rendered antialiased even if this is set to `False`.
@@ -348,6 +352,7 @@ class PlotDataItem(GraphicsObject):
             'antialias': getConfigOption('antialias'),
             'pointMode': None,
 
+            'useCache': True,
             'downsample': 1,
             'autoDownsample': False,
             'downsampleMethod': 'peak',
@@ -465,17 +470,6 @@ class PlotDataItem(GraphicsObject):
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
-    def setPointMode(self, state):
-        # This does not seem to do anything, but PlotItem still seems to call it.
-        # warnings.warn(
-        #     'setPointMode has been deprecated, and has no effect. It will be removed from the library in the first release following April, 2022.',
-        #     DeprecationWarning, stacklevel=2
-        # )
-        if self.opts['pointMode'] == state:
-            return
-        self.opts['pointMode'] = state
-        self.update()
-
     def setPen(self, *args, **kargs):
         """
         Sets the pen used to draw lines between points.
@@ -511,7 +505,7 @@ class PlotDataItem(GraphicsObject):
     def setFillBrush(self, *args, **kargs):
         """ 
         Sets the :class:`QtGui.QBrush` used to fill the area under the curve.
-        See :func:`mkBrush() <pyqtgraph.functions.mkBrush>`) for arguments.
+        See :func:`mkBrush() <pyqtgraph.mkBrush>`) for arguments.
         """
         if args[0] is None:
             brush = None
@@ -524,7 +518,7 @@ class PlotDataItem(GraphicsObject):
 
     def setBrush(self, *args, **kargs):
         """
-        See :func:`setFillBrush() <pyqtgraph.PlotdataItem.setFillBrush()`.
+        See :func:`~pyqtgraph.PlotDataItem.setFillBrush`
         """
         return self.setFillBrush(*args, **kargs)
 
@@ -552,7 +546,7 @@ class PlotDataItem(GraphicsObject):
     def setSymbolPen(self, *args, **kargs):
         """ 
         Sets the :class:`QtGui.QPen` used to draw symbol outlines.
-        See :func:`mkPen() <pyqtgraph.functions.mkPen>`) for arguments.
+        See :func:`mkPen() <pyqtgraph.mkPen>`) for arguments.
         """
         pen = fn.mkPen(*args, **kargs)
         if self.opts['symbolPen'] == pen:
@@ -564,7 +558,7 @@ class PlotDataItem(GraphicsObject):
     def setSymbolBrush(self, *args, **kargs):
         """
         Sets the :class:`QtGui.QBrush` used to fill symbols.
-        See :func:`mkBrush() <pyqtgraph.functions.mkBrush>`) for arguments.
+        See :func:`mkBrush() <pyqtgraph.mkBrush>`) for arguments.
         """
         brush = fn.mkBrush(*args, **kargs)
         if self.opts['symbolBrush'] == brush:
@@ -817,8 +811,8 @@ class PlotDataItem(GraphicsObject):
             self._dataset = None
         else:
             self._dataset = PlotDataset( xData, yData )
-        self._datasetMapped  = None  # invalidata mapped data , will be generated in getData() / getDisplayDataset()
-        self._datasetDisplay = None  # invalidate display data, will be generated in getData() / getDisplayDataset()
+        self._datasetMapped  = None  # invalidata mapped data , will be generated in getData() / _getDisplayDataset()
+        self._datasetDisplay = None  # invalidate display data, will be generated in getData() / _getDisplayDataset()
 
         profiler('set data')
 
@@ -862,12 +856,13 @@ class PlotDataItem(GraphicsObject):
                 ('symbolSize', 'size'),
                 ('data', 'data'),
                 ('pxMode', 'pxMode'),
-                ('antialias', 'antialias')
+                ('antialias', 'antialias'),
+                ('useCache', 'useCache')
             ]:
                 if k in self.opts:
                     scatterArgs[v] = self.opts[k]
 
-        dataset = self.getDisplayDataset()
+        dataset = self._getDisplayDataset()
         if dataset is None: # then we have nothing to show
             self.curve.hide()
             self.scatter.hide()
@@ -913,9 +908,9 @@ class PlotDataItem(GraphicsObject):
                 return (None, None)
             return dataset.x, dataset.y
 
-    def getDisplayDataset(self):
+    def _getDisplayDataset(self):
         """
-        Returns a :class:`PlotDataset <pyqtgraph.PlotDataset>` object that contains data suitable for display 
+        Returns a :class:`~.PlotDataset` object that contains data suitable for display 
         (after mapping and data reduction) as ``dataset.x`` and ``dataset.y``.
         Intended for internal use.
         """
@@ -979,14 +974,16 @@ class PlotDataItem(GraphicsObject):
 
         if self.opts['autoDownsample']:
             # this option presumes that x-values have uniform spacing
-            if view_range is not None and len(x) > 1:
-                dx = float(x[-1]-x[0]) / (len(x)-1)
+
+            finite_x = x[np.isfinite(x)]  # ignore infinite and nan values
+            if view_range is not None and len(finite_x) > 1:
+                dx = float(finite_x[-1]-finite_x[0]) / (len(finite_x)-1)
                 if dx != 0.0:
-                    x0 = (view_range.left()-x[0]) / dx
-                    x1 = (view_range.right()-x[0]) / dx
                     width = self.getViewBox().width()
-                    if width != 0.0:
-                        ds = int(max(1, int((x1-x0) / (width*self.opts['autoDownsampleFactor']))))
+                    if width != 0.0:  # autoDownsampleFactor _should_ be > 1.0
+                        ds_float = max(1.0, abs(view_range.width() / dx / (width * self.opts['autoDownsampleFactor'])))
+                        if math.isfinite(ds_float):
+                            ds = int(ds_float)
                     ## downsampling is expensive; delay until after clipping.
 
         if self.opts['clipToView']:
@@ -1075,7 +1072,7 @@ class PlotDataItem(GraphicsObject):
         """
         Returns the displayed data as the tuple (`xData`, `yData`) after mapping and data reduction.
         """
-        dataset = self.getDisplayDataset()
+        dataset = self._getDisplayDataset()
         if dataset is None:
             return (None, None)
         return dataset.x, dataset.y
@@ -1083,7 +1080,7 @@ class PlotDataItem(GraphicsObject):
     # compatbility method for access to dataRect for full dataset:
     def dataRect(self):
         """
-        Returns a bounding rectangle (as :class:`QtGui.QRectF`) for the full set of data.
+        Returns a bounding rectangle (as :class:`QtCore.QRectF`) for the full set of data.
         Will return `None` if there is no data or if all values (x or y) are NaN.
         """
         if self._dataset is None:

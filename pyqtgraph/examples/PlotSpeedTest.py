@@ -41,12 +41,13 @@ sfmt = QtGui.QSurfaceFormat()
 sfmt.setSwapInterval(0)
 QtGui.QSurfaceFormat.setDefaultFormat(sfmt)
 
+
 class MonkeyCurveItem(pg.PlotCurveItem):
     def __init__(self, *args, **kwds):
         super().__init__(*args, **kwds)
         self.monkey_mode = ''
 
-    def setMethod(self, param, value):
+    def setMethod(self, value):
         self.monkey_mode = value
 
     def paint(self, painter, opt, widget):
@@ -63,28 +64,7 @@ app = pg.mkQApp("Plot Speed Test")
 
 default_pen = pg.mkPen()
 
-children = [
-    dict(name='sigopts', title='Signal Options', type='group', children=[
-        dict(name='noise', type='bool', value=args.noise),
-        dict(name='nsamples', type='int', limits=[0, None], value=args.nsamples),
-        dict(name='frames', type='int', limits=[1, None], value=args.frames),
-        dict(name='fsample', title='sample rate', type='float', value=args.fsample, units='Hz'),
-        dict(name='frequency', type='float', value=args.frequency, units='Hz'),
-        dict(name='amplitude', type='float', value=args.amplitude),
-    ]),
-    dict(name='useOpenGL', type='bool', value=pg.getConfigOption('useOpenGL'),
-        readonly=not args.allow_opengl_toggle),
-    dict(name='enableExperimental', type='bool', value=pg.getConfigOption('enableExperimental')),
-    dict(name='pen', type='pen', value=default_pen),
-    dict(name='antialias', type='bool', value=pg.getConfigOption('antialias')),
-    dict(name='connect', type='list', limits=['all', 'pairs', 'finite', 'array'], value='all'),
-    dict(name='fill', type='bool', value=False),
-    dict(name='skipFiniteCheck', type='bool', value=False),
-    dict(name='plotMethod', title='Plot Method', type='list', limits=['pyqtgraph', 'drawPolyline']),
-    dict(name='segmentedLineMode', title='Segmented lines', type='list', limits=['auto', 'on', 'off'], value='auto'),
-]
-
-params = ptree.Parameter.create(name='Parameters', type='group', children=children)
+params = ptree.Parameter.create(name='Parameters', type='group')
 pt = ptree.ParameterTree(showHeader=False)
 pt.setParameters(params)
 pw = pg.PlotWidget()
@@ -92,6 +72,10 @@ splitter = QtWidgets.QSplitter()
 splitter.addWidget(pt)
 splitter.addWidget(pw)
 splitter.show()
+
+interactor = ptree.Interactor(
+    parent=params, nest=False, runOptions=ptree.RunOptions.ON_CHANGED
+)
 
 pw.setWindowTitle('pyqtgraph example: PlotSpeedTest')
 pw.setLabel('bottom', 'Index', units='B')
@@ -104,60 +88,41 @@ elapsed = deque(maxlen=rollingAverageSize)
 def resetTimings(*args):
     elapsed.clear()
 
-def makeData(*args):
+@interactor.decorate(
+    nest=True,
+    nsamples={'limits': [0, None]},
+    frames={'limits': [1, None]},
+    fsample={'units': 'Hz'},
+    frequency={'units': 'Hz'}
+)
+def makeData(noise=True, nsamples=5000, frames=50, fsample=1000.0, frequency=0.0, amplitude=5.0):
     global data, connect_array, ptr
-    sigopts = params.child('sigopts')
-    nsamples = sigopts['nsamples']
-    frames = sigopts['frames']
-    Fs = sigopts['fsample']
-    A = sigopts['amplitude']
-    F = sigopts['frequency']
-    ttt = np.arange(frames * nsamples, dtype=np.float64) / Fs
-    data = A*np.sin(2*np.pi*F*ttt).reshape((frames, nsamples))
-    if sigopts['noise']:
+    ttt = np.arange(frames * nsamples, dtype=np.float64) / fsample
+    data = amplitude*np.sin(2*np.pi*frequency*ttt).reshape((frames, nsamples))
+    if noise:
         data += np.random.normal(size=data.shape)
     connect_array = np.ones(data.shape[-1], dtype=bool)
     ptr = 0
     pw.setRange(QtCore.QRectF(0, -10, nsamples, 20))
 
-def onUseOpenGLChanged(param, enable):
-    pw.useOpenGL(enable)
+params.child('makeData').setOpts(title='Plot Options')
 
-def onEnableExperimentalChanged(param, enable):
-    pg.setConfigOption('enableExperimental', enable)
-
-def onPenChanged(param, pen):
-    curve.setPen(pen)
-
-def onFillChanged(param, enable):
-    curve.setFillLevel(0.0 if enable else None)
-
-def onSegmentedLineModeChanged(param, mode):
-    curve.setSegmentedLineMode(mode)
-
-params.child('sigopts').sigTreeStateChanged.connect(makeData)
-params.child('useOpenGL').sigValueChanged.connect(onUseOpenGLChanged)
-params.child('enableExperimental').sigValueChanged.connect(onEnableExperimentalChanged)
-params.child('pen').sigValueChanged.connect(onPenChanged)
-params.child('fill').sigValueChanged.connect(onFillChanged)
-params.child('plotMethod').sigValueChanged.connect(curve.setMethod)
-params.child('segmentedLineMode').sigValueChanged.connect(onSegmentedLineModeChanged)
-params.sigTreeStateChanged.connect(resetTimings)
-
-makeData()
-
-fpsLastUpdate = perf_counter()
-def update():
+@interactor.decorate(
+    connect={'type': 'list', 'limits': ['all', 'pairs', 'finite', 'array']}
+)
+def update(
+    antialias=pg.getConfigOption('antialias'),
+    connect='all',
+    skipFiniteCheck=False
+):
     global curve, data, ptr, elapsed, fpsLastUpdate
 
-    options = ['antialias', 'connect', 'skipFiniteCheck']
-    kwds = { k : params[k] for k in options }
-    if kwds['connect'] == 'array':
-        kwds['connect'] = connect_array
+    if connect == 'array':
+        connect = connect_array
 
     # Measure
     t_start = perf_counter()
-    curve.setData(data[ptr], **kwds)
+    curve.setData(data[ptr], antialias=antialias, connect=connect, skipFiniteCheck=skipFiniteCheck)
     app.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents)
     t_end = perf_counter()
     elapsed.append(t_end - t_start)
@@ -170,9 +135,36 @@ def update():
         fps = 1 / average
         pw.setTitle('%0.2f fps - %0.1f ms avg' % (fps, average * 1_000))
 
+@interactor.decorate(
+    useOpenGL={'readonly': not args.allow_opengl_toggle},
+    plotMethod={'limits': ['pyqtgraph', 'drawPolyline'], 'type': 'list'},
+    curvePen={'type': 'pen'}
+)
+def updateOptions(
+    curvePen=pg.mkPen(),
+    plotMethod='pyqtgraph',
+    fillLevel=False,
+    enableExperimental=False,
+    useOpenGL=False,
+):
+    pg.setConfigOption('enableExperimental', enableExperimental)
+    pg.setConfigOption('useOpenGL', useOpenGL)
+    curve.setPen(curvePen)
+    curve.setFillLevel(0.0 if fillLevel else None)
+    curve.setMethod(plotMethod)
+
+params.sigTreeStateChanged.connect(resetTimings)
+
+makeData()
+
+fpsLastUpdate = perf_counter()
+
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
 
 if __name__ == '__main__':
+    # Splitter by default gives too small of a width to the parameter tree,
+    # so fix that right before the event loop
+    pt.setMinimumSize(225,0)
     pg.exec()

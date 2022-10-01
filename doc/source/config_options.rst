@@ -49,4 +49,6 @@ segmentedLineMode  str                 'auto'             For 'on', lines are al
 
 .. autofunction:: pyqtgraph.setConfigOptions
 
+.. autofunction:: pyqtgraph.setConfigOption
+
 .. autofunction:: pyqtgraph.getConfigOption

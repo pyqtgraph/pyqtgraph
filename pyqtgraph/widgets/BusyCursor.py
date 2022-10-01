@@ -18,15 +18,19 @@ def BusyCursor():
     """
     app = QtCore.QCoreApplication.instance()
     in_gui_thread = (app is not None) and (QtCore.QThread.currentThread() == app.thread())
-    need_cleanup = in_gui_thread
     try:
         if in_gui_thread:
             guard = QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.CursorShape.WaitCursor))
-            if hasattr(QtGui, 'QOverrideCursorGuard') and isinstance(guard, QtGui.QOverrideCursorGuard):
-                # on PySide6 6.3.0, setOverrideCursor() returns a QOverrideCursorGuard context manager
-                # object that calls restoreOverrideCursor() for us
-                need_cleanup = False
+            # on PySide6 6.3.0, setOverrideCursor() returns a QOverrideCursorGuard object
+            # that, on its destruction, calls restoreOverrideCursor() if the user had not
+            # already done so.
+            # if the user wants to call it manually, they must do it via the returned object,
+            # and not via the QtWidgets.QApplication static method; otherwise the restore
+            # would get called twice.
         yield
     finally:
-        if need_cleanup:
-            QtWidgets.QApplication.restoreOverrideCursor()
+        if in_gui_thread:
+            if hasattr(guard, 'restoreOverrideCursor'):
+                guard.restoreOverrideCursor()
+            else:
+                QtWidgets.QApplication.restoreOverrideCursor()
