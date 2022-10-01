@@ -2,5 +2,6 @@ sphinx==5.2.2
 PyQt6==6.3.1
 sphinx-rtd-theme
 sphinx-qt-documentation
+sphinx-design
 numpy
 pyopengl
