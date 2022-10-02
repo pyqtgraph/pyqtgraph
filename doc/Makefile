@@ -2,15 +2,16 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    =
-SPHINXBUILD   = sphinx-build
+SPHINXOPTS    ?= -n
+SPHINXBUILD   ?= sphinx-build
 PAPER         =
 BUILDDIR      = build
+SOURCEDIR	  = source
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -n -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
+ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCEDIR)
 
 .PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest
 
@@ -32,11 +33,17 @@ help:
 	@echo "  changes    to make an overview of all changed/added/deprecated items"
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
+	@echo "  livehtml   to create livehtml of docs that watches for changes"
 
 clean:
 	-rm -rf $(BUILDDIR)/*
 
+livehtml:
+	sphinx-autobuild -a "$(SOURCEDIR)" "$(BUILDDIR)/html" --watch doc/source/_static --open-browser
+
 html:
+	# this will not detect changes in theme files, static files and
+	# source code used with auto-doc
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
