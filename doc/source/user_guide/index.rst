@@ -3,8 +3,11 @@
 User Guide
 ==========
 
+This user guide provides an in-depth description of PyQtGraph features and how they apply to common scientific visualization tasks.
+It is intended to be a reference for users who are already familiar with the basics of PyQtGraph.
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    exporting
    mouse_interaction

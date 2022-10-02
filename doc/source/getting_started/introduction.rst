@@ -78,6 +78,3 @@ How does it compare to...
 
 (My experience with these libraries is somewhat outdated; please correct me if
 I am wrong here)
-
-
-.. rubric:: Footnotes
