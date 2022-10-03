@@ -674,24 +674,27 @@ class PlotItem(GraphicsWidget):
         Allow plotting multiple curves on the same plot, changing some kwargs
         per curve.
 
-        The first two items in *args must be in the following format:
-            - {x or y} = [n1, n2, n3, ...]: The named argument iterates through
+        Parameters
+        ----------
+        x, y: array-like
+            can be in the following formats:
+              - {x or y} = [n1, n2, n3, ...]: The named argument iterates through
                 ``n`` curves, while the unspecified argument is range(len(n)) for
                 each curve.
-            - x, [y1, y2, y3, ...]
-            - [x1, x2, x3, ...], [y1, y2, y3, ...]
-            - [x1, x2, x3, ...], y
+              - x, [y1, y2, y3, ...]
+              - [x1, x2, x3, ...], [y1, y2, y3, ...]
+              - [x1, x2, x3, ...], y
 
-        where ``x_n`` and ``y_n`` are ``ndarray`` data for each curve. Since ``x``
-        and ``y`` values are matched using ``zip``, unequal lengths mean the
-        longer array will be truncated.
-
-        iterableKwargs is a dict of {str: iterable} where the str is the name of
-        a kwarg and the iterable is a list of values to be used for that kwarg.
-
-        Note that 2D matrices for either x or y are considered lists of curve data.
-
-        *args[2:] are passed to plot() unchanged.
+              where ``x_n`` and ``y_n`` are ``ndarray`` data for each curve. Since
+              ``x`` and ``y`` values are matched using ``zip``, unequal lengths mean
+              the longer array will be truncated. Note that 2D matrices for either x
+              or y are considered lists of curve
+              data.
+        constKwargs: dict, optional
+            A dict of {str: value} passed to each curve during ``plot()``.
+        kwargs: dict, optional
+            A dict of {str: iterable} where the str is the name of a kwarg and the
+            iterable is a list of values, one for each plotted curve.
         """
         if (x is not None and not len(x)) or (y is not None and not len(y)):
             # Nothing to plot -- either x or y array will bail out early from
