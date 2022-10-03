@@ -1,4 +1,4 @@
-sphinx==5.2.2
+sphinx==5.2.3
 PyQt6==6.3.1
 pydata-sphinx-theme
 sphinx-qt-documentation
