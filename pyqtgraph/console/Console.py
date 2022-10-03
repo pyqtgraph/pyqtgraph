@@ -52,7 +52,6 @@ class ConsoleWidget(QtWidgets.QWidget):
         self.editor = editor
         self.multiline = None
         self.inCmd = False
-        self.frames = []  # stack frames to access when an item in the stack list is selected
         
         self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
@@ -135,27 +134,19 @@ class ConsoleWidget(QtWidgets.QWidget):
             sb.setValue(sb.maximum())
             
     def globals(self):
-        frame = self.currentFrame()
+        frame = self.ui.exceptionStackList.selectedFrame()
         if frame is not None and self.ui.runSelectedFrameCheck.isChecked():
-            return self.currentFrame().f_globals
+            return frame.f_globals
         else:
             return self.localNamespace
         
     def locals(self):
-        frame = self.currentFrame()
+        frame = self.ui.exceptionStackList.selectedFrame()
         if frame is not None and self.ui.runSelectedFrameCheck.isChecked():
-            return self.currentFrame().f_locals
+            return frame.f_locals
         else:
             return self.localNamespace
-            
-    def currentFrame(self):
-        ## Return the currently selected exception stack frame (or None if there is no exception)
-        index = self.ui.exceptionStackList.currentRow()
-        if index >= 0 and index < len(self.frames):
-            return self.frames[index]
-        else:
-            return None
-        
+
     def execSingle(self, cmd):
         try:
             output = eval(cmd, self.globals(), self.locals())
@@ -315,7 +306,6 @@ class ConsoleWidget(QtWidgets.QWidget):
         
     def clearExceptionClicked(self):
         self.currentTraceback = None
-        self.frames = []
         self.ui.exceptionInfoLabel.setText("[No current exception]")
         self.ui.exceptionStackList.clear()
         self.ui.clearExceptionBtn.setEnabled(False)
@@ -329,7 +319,7 @@ class ConsoleWidget(QtWidgets.QWidget):
             editor = getConfigOption('editorCommand')
         if editor is None:
             return
-        tb = self.currentFrame()
+        tb = self.ui.exceptionStackList.selectedFrame()
         lineNum = tb.f_lineno
         fileName = tb.f_code.co_filename
         subprocess.Popen(self.editor.format(fileName=fileName, lineNum=lineNum), shell=True)
@@ -385,58 +375,8 @@ class ConsoleWidget(QtWidgets.QWidget):
         self.exceptionHandler(*args)
 
     def setStack(self, frame=None, tb=None):
-        """Display a call stack and exception traceback.
-
-        This allows the user to probe the contents of any frame in the given stack.
-
-        *frame* may either be a Frame instance or None, in which case the current 
-        frame is retrieved from ``sys._getframe()``. 
-
-        If *tb* is provided then the frames in the traceback will be appended to 
-        the end of the stack list. If *tb* is None, then sys.exc_info() will 
-        be checked instead.
-        """
         self.ui.clearExceptionBtn.setEnabled(True)
-        
-        if frame is None:
-            frame = sys._getframe().f_back
-
-        if tb is None:
-            tb = sys.exc_info()[2]
-
-        self.ui.exceptionStackList.clear()
-        self.frames = []
-
-        # Build stack up to this point
-        for index, line in enumerate(traceback.extract_stack(frame)):
-            # extract_stack return value changed in python 3.5
-            if 'FrameSummary' in str(type(line)):
-                line = (line.filename, line.lineno, line.name, line._line)
-            
-            self.ui.exceptionStackList.addItem('File "%s", line %s, in %s()\n  %s' % line)
-        while frame is not None:
-            self.frames.insert(0, frame)
-            frame = frame.f_back
-
-        if tb is None:
-            return
-
-        self.ui.exceptionStackList.addItem('-- exception caught here: --')
-        item = self.ui.exceptionStackList.item(self.ui.exceptionStackList.count()-1)
-        item.setBackground(QtGui.QBrush(QtGui.QColor(200, 200, 200)))
-        item.setForeground(QtGui.QBrush(QtGui.QColor(50, 50, 50)))
-        self.frames.append(None)
-
-        # And finish the rest of the stack up to the exception
-        for index, line in enumerate(traceback.extract_tb(tb)):
-            # extract_stack return value changed in python 3.5
-            if 'FrameSummary' in str(type(line)):
-                line = (line.filename, line.lineno, line.name, line._line)
-            
-            self.ui.exceptionStackList.addItem('File "%s", line %s, in %s()\n  %s' % line)
-        while tb is not None:
-            self.frames.append(tb.tb_frame)
-            tb = tb.tb_next
+        self.ui.exceptionStackList.setStack(frame, tb)
 
     def systrace(self, frame, event, arg):
         if event == 'exception' and self.checkException(*arg):

@@ -150,7 +150,7 @@
         </widget>
        </item>
        <item row="2" column="0" colspan="7">
-        <widget class="QListWidget" name="exceptionStackList">
+        <widget class="StackWidget" name="exceptionStackList">
          <property name="alternatingRowColors">
           <bool>true</bool>
          </property>
@@ -210,6 +210,11 @@
    <class>CmdInput</class>
    <extends>QLineEdit</extends>
    <header>.CmdInput</header>
+  </customwidget>
+  <customwidget>
+   <class>StackWidget</class>
+   <extends>QListWidget</extends>
+   <header>pyqtgraph.console.stackwidget</header>
   </customwidget>
  </customwidgets>
  <resources/>
