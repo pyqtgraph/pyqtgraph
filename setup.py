@@ -39,10 +39,10 @@ import distutils.dir_util
 import os
 import re
 import sys
-from distutils.command import build
-
 from setuptools import find_namespace_packages, setup
 from setuptools.command import install
+
+from distutils.command import build
 
 path = os.path.split(__file__)[0]
 import tools.setupHelpers as helpers
