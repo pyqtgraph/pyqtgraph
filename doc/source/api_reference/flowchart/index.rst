@@ -1,3 +1,5 @@
+.. _flowchart:
+
 Visual Programming with Flowcharts
 ==================================
 

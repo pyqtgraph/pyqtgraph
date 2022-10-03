@@ -15,6 +15,8 @@ import sys
 import time
 from datetime import datetime
 
+from sphinx.application import Sphinx
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -36,6 +38,8 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx_qt_documentation",
+    "sphinx_design",
+    "sphinxext.rediraffe"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -131,12 +135,16 @@ autodoc_mock_imports = [
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = dict(
+    github_url="https://github.com/pyqtgraph/pyqtgraph",
+    navbar_end=["theme-switcher", "navbar-icon-links"],
+    twitter_url="https://twitter.com/pyqtgraph",
+)
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -163,8 +171,134 @@ html_logo = os.path.join("images", "peegee_02.svg")
 html_static_path = ['_static']
 
 # add the theme customizations
-def setup(app):
-    app.add_css_file("custom.css")
+html_css_files = [
+    "custom.css",
+]
+
+# Redirects for pages that were moved to new locations
+rediraffe_redirects = {
+    "3dgraphics/glaxisitem.rst": "api_reference/3dgraphics/glaxisitem.rst",
+    "3dgraphics/glgraphicsitem.rst": "api_reference/3dgraphics/glgraphicsitem.rst",
+    "3dgraphics/glgraphitem.rst": "api_reference/3dgraphics/glgraphitem.rst",
+    "3dgraphics/glgriditem.rst": "api_reference/3dgraphics/glgriditem.rst",
+    "3dgraphics/glimageitem.rst": "api_reference/3dgraphics/glimageitem.rst",
+    "3dgraphics/gllineplotitem.rst": "api_reference/3dgraphics/gllineplotitem.rst",
+    "3dgraphics/glmeshitem.rst": "api_reference/3dgraphics/glmeshitem.rst",
+    "3dgraphics/glscatterplotitem.rst": "api_reference/3dgraphics/glscatterplotitem.rst",
+    "3dgraphics/glsurfaceplotitem.rst": "api_reference/3dgraphics/glsurfaceplotitem.rst",
+    "3dgraphics/gltextitem.rst": "api_reference/3dgraphics/gltextitem.rst",
+    "3dgraphics/glviewwidget.rst": "api_reference/3dgraphics/glviewwidget.rst",
+    "3dgraphics/glvolumeitem.rst": "api_reference/3dgraphics/glvolumeitem.rst",
+    "3dgraphics/index.rst": "api_reference/3dgraphics/index.rst",
+    "3dgraphics/meshdata.rst": "api_reference/3dgraphics/meshdata.rst",
+    "colormap.rst": "api_reference/colormap.rst",
+    "config_options.rst": "api_reference/config_options.rst",
+    "dockarea.rst": "api_reference/dockarea.rst",
+    "flowchart/flowchart.rst": "api_reference/flowchart/flowchart.rst",
+    "flowchart/index.rst": "api_reference/flowchart/index.rst",
+    "flowchart/node.rst": "api_reference/flowchart/node.rst",
+    "flowchart/terminal.rst": "api_reference/flowchart/terminal.rst",
+    "functions.rst": "api_reference/functions.rst",
+    "graphicsItems/arrowitem.rst": "api_reference/graphicsItems/arrowitem.rst",
+    "graphicsItems/axisitem.rst": "api_reference/graphicsItems/axisitem.rst",
+    "graphicsItems/bargraphitem.rst": "api_reference/graphicsItems/bargraphitem.rst",
+    "graphicsItems/buttonitem.rst": "api_reference/graphicsItems/buttonitem.rst",
+    "graphicsItems/colorbaritem.rst": "api_reference/graphicsItems/colorbaritem.rst",
+    "graphicsItems/curvearrow.rst": "api_reference/graphicsItems/curvearrow.rst",
+    "graphicsItems/curvepoint.rst": "api_reference/graphicsItems/curvepoint.rst",
+    "graphicsItems/dateaxisitem.rst": "api_reference/graphicsItems/dateaxisitem.rst",
+    "graphicsItems/errorbaritem.rst": "api_reference/graphicsItems/errorbaritem.rst",
+    "graphicsItems/fillbetweenitem.rst": "api_reference/graphicsItems/fillbetweenitem.rst",
+    "graphicsItems/gradienteditoritem.rst": "api_reference/graphicsItems/gradienteditoritem.rst",
+    "graphicsItems/gradientlegend.rst": "api_reference/graphicsItems/gradientlegend.rst",
+    "graphicsItems/graphicsitem.rst": "api_reference/graphicsItems/graphicsitem.rst",
+    "graphicsItems/graphicslayout.rst": "api_reference/graphicsItems/graphicslayout.rst",
+    "graphicsItems/graphicsobject.rst": "api_reference/graphicsItems/graphicsobject.rst",
+    "graphicsItems/graphicswidget.rst": "api_reference/graphicsItems/graphicswidget.rst",
+    "graphicsItems/graphicswidgetanchor.rst": "api_reference/graphicsItems/graphicswidgetanchor.rst",
+    "graphicsItems/graphitem.rst": "api_reference/graphicsItems/graphitem.rst",
+    "graphicsItems/griditem.rst": "api_reference/graphicsItems/griditem.rst",
+    "graphicsItems/histogramlutitem.rst": "api_reference/graphicsItems/histogramlutitem.rst",
+    "graphicsItems/imageitem.rst": "api_reference/graphicsItems/imageitem.rst",
+    "graphicsItems/index.rst": "api_reference/graphicsItems/index.rst",
+    "graphicsItems/infiniteline.rst": "api_reference/graphicsItems/infiniteline.rst",
+    "graphicsItems/isocurveitem.rst": "api_reference/graphicsItems/isocurveitem.rst",
+    "graphicsItems/labelitem.rst": "api_reference/graphicsItems/labelitem.rst",
+    "graphicsItems/legenditem.rst": "api_reference/graphicsItems/legenditem.rst",
+    "graphicsItems/linearregionitem.rst": "api_reference/graphicsItems/linearregionitem.rst",
+    "graphicsItems/multiplotitem.rst": "api_reference/graphicsItems/multiplotitem.rst",
+    "graphicsItems/pcolormeshitem.rst": "api_reference/graphicsItems/pcolormeshitem.rst",
+    "graphicsItems/plotcurveitem.rst": "api_reference/graphicsItems/plotcurveitem.rst",
+    "graphicsItems/plotdataitem.rst": "api_reference/graphicsItems/plotdataitem.rst",
+    "graphicsItems/plotitem.rst": "api_reference/graphicsItems/plotitem.rst",
+    "graphicsItems/roi.rst": "api_reference/graphicsItems/roi.rst",
+    "graphicsItems/scalebar.rst": "api_reference/graphicsItems/scalebar.rst",
+    "graphicsItems/scatterplotitem.rst": "api_reference/graphicsItems/scatterplotitem.rst",
+    "graphicsItems/targetitem.rst": "api_reference/graphicsItems/targetitem.rst",
+    "graphicsItems/textitem.rst": "api_reference/graphicsItems/textitem.rst",
+    "graphicsItems/uigraphicsitem.rst": "api_reference/graphicsItems/uigraphicsitem.rst",
+    "graphicsItems/viewbox.rst": "api_reference/graphicsItems/viewbox.rst",
+    "graphicsItems/vtickgroup.rst": "api_reference/graphicsItems/vtickgroup.rst",
+    "graphicsscene/graphicsscene.rst": "api_reference/graphicsscene/graphicsscene.rst",
+    "graphicsscene/hoverevent.rst": "api_reference/graphicsscene/hoverevent.rst",
+    "graphicsscene/index.rst": "api_reference/graphicsscene/index.rst",
+    "graphicsscene/mouseclickevent.rst": "api_reference/graphicsscene/mouseclickevent.rst",
+    "graphicsscene/mousedragevent.rst": "api_reference/graphicsscene/mousedragevent.rst",
+    "apireference.rst": "api_reference/index.rst",
+    "parametertree/apiref.rst": "api_reference/parametertree/apiref.rst",
+    "parametertree/index.rst": "api_reference/parametertree/index.rst",
+    "parametertree/interactiveparameters.rst": "api_reference/parametertree/interactiveparameters.rst",
+    "parametertree/parameter.rst": "api_reference/parametertree/parameter.rst",
+    "parametertree/parameteritem.rst": "api_reference/parametertree/parameteritem.rst",
+    "parametertree/parametertree.rst": "api_reference/parametertree/parametertree.rst",
+    "parametertree/parametertypes.rst": "api_reference/parametertree/parametertypes.rst",
+    "point.rst": "api_reference/point.rst",
+    "transform3d.rst": "api_reference/transform3d.rst",
+    "uml_overview.rst": "api_reference/uml_overview.rst",
+    "widgets/busycursor.rst": "api_reference/widgets/busycursor.rst",
+    "widgets/checktable.rst": "api_reference/widgets/checktable.rst",
+    "widgets/colorbutton.rst": "api_reference/widgets/colorbutton.rst",
+    "widgets/colormapwidget.rst": "api_reference/widgets/colormapwidget.rst",
+    "widgets/combobox.rst": "api_reference/widgets/combobox.rst",
+    "widgets/consolewidget.rst": "api_reference/widgets/consolewidget.rst",
+    "widgets/datatreewidget.rst": "api_reference/widgets/datatreewidget.rst",
+    "widgets/feedbackbutton.rst": "api_reference/widgets/feedbackbutton.rst",
+    "widgets/filedialog.rst": "api_reference/widgets/filedialog.rst",
+    "widgets/gradientwidget.rst": "api_reference/widgets/gradientwidget.rst",
+    "widgets/graphicslayoutwidget.rst": "api_reference/widgets/graphicslayoutwidget.rst",
+    "widgets/graphicsview.rst": "api_reference/widgets/graphicsview.rst",
+    "widgets/histogramlutwidget.rst": "api_reference/widgets/histogramlutwidget.rst",
+    "widgets/imageview.rst": "api_reference/widgets/imageview.rst",
+    "widgets/index.rst": "api_reference/widgets/index.rst",
+    "widgets/joystickbutton.rst": "api_reference/widgets/joystickbutton.rst",
+    "widgets/layoutwidget.rst": "api_reference/widgets/layoutwidget.rst",
+    "widgets/matplotlibwidget.rst": "api_reference/widgets/matplotlibwidget.rst",
+    "widgets/multiplotwidget.rst": "api_reference/widgets/multiplotwidget.rst",
+    "widgets/pathbutton.rst": "api_reference/widgets/pathbutton.rst",
+    "widgets/plotwidget.rst": "api_reference/widgets/plotwidget.rst",
+    "widgets/progressdialog.rst": "api_reference/widgets/progressdialog.rst",
+    "widgets/rawimagewidget.rst": "api_reference/widgets/rawimagewidget.rst",
+    "widgets/remotegraphicsview.rst": "api_reference/widgets/remotegraphicsview.rst",
+    "widgets/scatterplotwidget.rst": "api_reference/widgets/scatterplotwidget.rst",
+    "widgets/spinbox.rst": "api_reference/widgets/spinbox.rst",
+    "widgets/tablewidget.rst": "api_reference/widgets/tablewidget.rst",
+    "widgets/treewidget.rst": "api_reference/widgets/treewidget.rst",
+    "widgets/valuelabel.rst": "api_reference/widgets/valuelabel.rst",
+    "widgets/verticallabel.rst": "api_reference/widgets/verticallabel.rst",
+    "internals.rst": "developer_guide/internals.rst",
+    "3dgraphics.rst": "getting_started/3dgraphics.rst",
+    "how_to_use.rst": "getting_started/how_to_use.rst",
+    "images.rst": "getting_started/images.rst",
+    "installation.rst": "getting_started/installation.rst",
+    "introduction.rst": "getting_started/introduction.rst",
+    "plotting.rst": "getting_started/plotting.rst",
+    "prototyping.rst": "getting_started/prototyping.rst",
+    "qtcrashcourse.rst": "getting_started/qtcrashcourse.rst",
+    "exporting.rst": "user_guide/exporting.rst",
+    "mouse_interaction.rst": "user_guide/mouse_interaction.rst",
+    "region_of_interest.rst": "user_guide/region_of_interest.rst",
+    "style.rst": "user_guide/style.rst"
+}
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -258,3 +392,12 @@ man_pages = [
     ('index', 'pyqtgraph', 'pyqtgraph Documentation',
      ['Luke Campagnola'], 1)
 ]
+
+
+def html_page_context(app, pagename, templatename, context, doctree):
+    # Disable edit button for docstring generated pages
+    if "generated" in pagename:
+        context["theme_use_edit_page_button"] = False
+
+def setup(app: Sphinx):
+    app.connect("html-page-context", html_page_context)

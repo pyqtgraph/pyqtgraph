@@ -1,3 +1,5 @@
+.. _pyqtgraph_api_ref:
+
 API Reference
 =============
 
@@ -12,7 +14,7 @@ Contents:
     widgets/index
     3dgraphics/index
     colormap
-    parametertree/apiref
+    parametertree/index
     dockarea
     graphicsscene/index
     flowchart/index

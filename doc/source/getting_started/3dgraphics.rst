@@ -11,7 +11,7 @@ Current capabilities include:
 * Volumetric rendering item
 * Grid/axis items
 
-See the :doc:`API Reference </3dgraphics/index>` and the Volumetric (GLVolumeItem.py) and Isosurface (GLMeshItem.py) examples for more information.
+See the :doc:`API Reference <../api_reference/3dgraphics/index>` and the Volumetric (GLVolumeItem.py) and Isosurface (GLMeshItem.py) examples for more information.
 
 Basic usage example::
     

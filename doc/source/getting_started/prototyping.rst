@@ -10,7 +10,7 @@ Parameter Trees
 
 The parameter tree system provides a widget displaying a tree of modifiable values similar to those used in most GUI editor applications. This allows a large number of variables to be controlled by the user with relatively little programming effort. The system also provides separation between the data being controlled and the user interface controlling it (model/view architecture). Parameters may be grouped/nested to any depth and custom parameter types can be built by subclassing from Parameter and ParameterItem.
 
-See the `parametertree documentation <parametertree>`_ for more information.
+See the :ref:`parametertree` documentation for more information.
 
 
 Visual Programming Flowcharts
@@ -18,7 +18,7 @@ Visual Programming Flowcharts
 
 PyQtGraph's flowcharts provide a visual programming environment similar in concept to LabView--functional modules are added to a flowchart and connected by wires to define a more complex and arbitrarily configurable algorithm. A small number of predefined modules (called Nodes) are included with pyqtgraph, but most flowchart developers will want to define their own library of Nodes. At their core, the Nodes are little more than 1) a Python function 2) a list of input/output terminals, and 3) an optional widget providing a control panel for the Node. Nodes may transmit/receive any type of Python object via their terminals.
 
-See the `flowchart documentation <flowchart>`_ and the flowchart examples for more information.
+See the :ref:`flowchart` documentation and the flowchart examples for more information.
 
 
 .. _Canvas:
