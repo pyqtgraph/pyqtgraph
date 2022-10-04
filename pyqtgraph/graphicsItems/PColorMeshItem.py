@@ -88,6 +88,8 @@ class PColorMeshItem(GraphicsObject):
         colorMap : pyqtgraph.ColorMap
             Colormap used to map the z value to colors.
             default ``pyqtgraph.colormap.get('viridis')``
+        limits: tuple, optional, default None
+            Limits the colormap range to (low, high), None disables the limit.
         edgecolors : dict, optional
             The color of the edges of the polygons.
             Default None means no edges.
@@ -107,6 +109,7 @@ class PColorMeshItem(GraphicsObject):
 
         self.edgecolors = kwargs.get('edgecolors', None)
         self.antialiasing = kwargs.get('antialiasing', False)
+        self.cmaplim = kwargs.get('limits', None)
         
         if 'colorMap' in kwargs:
             cmap = kwargs.get('colorMap')
@@ -233,8 +236,14 @@ class PColorMeshItem(GraphicsObject):
         lut = self.lut_qbrush
         # Second we associate each z value, that we normalize, to the lut
         scale = len(lut) - 1
-        z_min = self.z.min()
-        z_max = self.z.max()
+        if self.cmaplim is None:
+            # Autoscale colormap each time setData is called
+            z_min = self.z.min()
+            z_max = self.z.max()
+        else:
+            # Use consistent colormap scaling
+            z_min = self.cmaplim[0]
+            z_max = self.cmaplim[1]
         rng = z_max - z_min
         if rng == 0:
             rng = 1
