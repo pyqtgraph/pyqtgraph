@@ -464,10 +464,11 @@ class Parameter(QtCore.QObject):
         """Set limits on the acceptable values for this parameter. 
         The format of limits depends on the type of the parameter and
         some parameters do not make use of limits at all."""
-        if not fn.eq(self.opts.get('limits'), limits):
-            self.opts['limits'] = limits
-            self.sigLimitsChanged.emit(self, limits)
-            return limits
+        if 'limits' in self.opts and fn.eq(self.opts['limits'], limits):
+            return
+        self.opts['limits'] = limits
+        self.sigLimitsChanged.emit(self, limits)
+        return limits
 
     def writable(self):
         """
