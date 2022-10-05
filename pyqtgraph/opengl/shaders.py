@@ -372,32 +372,6 @@ class ShaderProgram(object):
         #indices = []
         #for i in range(count):
             #indices.append(glGetActiveUniformBlockiv(self.program(), blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES))
-        
-class HeightColorShader(ShaderProgram):
-    def __enter__(self):
-        ## Program should have a uniform block declared:
-        ## 
-        ## layout (std140) uniform blockName {
-        ##     vec4 diffuse;
-        ##     vec4 ambient;
-        ## };
-        
-        ## pick any-old binding point. (there are a limited number of these per-program
-        bindPoint = 1
-        
-        ## get the block index for a uniform variable in the shader
-        blockIndex = glGetUniformBlockIndex(self.program(), "blockName")
-        
-        ## give the shader block a binding point
-        glUniformBlockBinding(self.program(), blockIndex, bindPoint)
-        
-        ## create a buffer
-        buf = glGenBuffers(1)
-        glBindBuffer(GL_UNIFORM_BUFFER, buf)
-        glBufferData(GL_UNIFORM_BUFFER, size, data, GL_DYNAMIC_DRAW)
-        ## also possible to use glBufferSubData to fill parts of the buffer
-        
-        ## bind buffer to the same binding point
-        glBindBufferBase(GL_UNIFORM_BUFFER, bindPoint, buf)
-        
+
+
 initShaders()
