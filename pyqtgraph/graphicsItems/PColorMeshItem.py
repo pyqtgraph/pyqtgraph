@@ -214,10 +214,10 @@ class PColorMeshItem(GraphicsObject):
             "ASCII from: <https://matplotlib.org/3.2.1/api/_as_gen/
                          matplotlib.pyplot.pcolormesh.html>".
         autoLevels: bool, optional, default True
-            When set to True, PColorMeshITem will automatically select levels
+            When set to True, PColorMeshItem will automatically select levels
             based on the minimum and maximum values encountered in the data along the z axis.
             The minimum and maximum levels are mapped to the lowest and highest colors 
-            in the colormap. The autoLevels parameter is ignored if ``enableAutoLevels==False`` 
+            in the colormap. The autoLevels parameter is ignored if ``enableAutoLevels is False`` 
         """
         autoLevels = kwargs.get('autoLevels', True)
 
@@ -253,7 +253,7 @@ class PColorMeshItem(GraphicsObject):
         # Second we associate each z value, that we normalize, to the lut
         scale = len(lut) - 1
         # Decide whether to autoscale the colormap or use the same levels as before
-        if (self.levels is None) or (self.enableAutoLevels == True and autoLevels == True):
+        if (self.levels is None) or (self.enableAutoLevels and autoLevels):
             # Autoscale colormap 
             z_min = self.z.min()
             z_max = self.z.max()
