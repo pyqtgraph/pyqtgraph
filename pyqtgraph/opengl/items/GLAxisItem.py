@@ -1,6 +1,4 @@
-from OpenGL.GL import (GL_LINE_SMOOTH, GL_LINE_SMOOTH_HINT, GL_LINES,
-                       GL_NICEST, glBegin, glColor4f, glEnable, glEnd, glHint,
-                       glVertex3f)
+from OpenGL.GL import *  # noqa
 from ... import QtGui
 from ..GLGraphicsItem import GLGraphicsItem
 

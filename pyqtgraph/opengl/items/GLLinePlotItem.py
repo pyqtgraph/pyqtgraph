@@ -1,10 +1,4 @@
-from OpenGL.GL import (GL_BLEND, GL_COLOR_ARRAY, GL_LINE_SMOOTH,
-                       GL_LINE_SMOOTH_HINT, GL_LINE_STRIP, GL_LINES, GL_NICEST,
-                       GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_VERTEX_ARRAY,
-                       glBlendFunc, glColor4f, glColorPointerf,
-                       glDisableClientState, glDrawArrays, glEnable,
-                       glEnableClientState, glHint, glLineWidth,
-                       glVertexPointerf)
+from OpenGL.GL import *  # noqa
 import numpy as np
 
 from ... import QtGui

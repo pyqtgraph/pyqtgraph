@@ -1,8 +1,4 @@
-from OpenGL.GL import (GL_DYNAMIC_DRAW, GL_FRAGMENT_SHADER, GL_UNIFORM_BUFFER,
-                       GL_VERTEX_SHADER, glBindBuffer, glBindBufferBase,
-                       glBufferData, glGenBuffers, glGetUniformBlockIndex,
-                       glGetUniformLocation, glUniform1fv,
-                       glUniformBlockBinding, glUseProgram)
+from OpenGL.GL import *  # noqa
 from OpenGL.GL import shaders  # noqa
 try:
     from OpenGL import NullFunctionError

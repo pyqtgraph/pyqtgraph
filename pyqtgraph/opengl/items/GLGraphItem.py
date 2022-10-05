@@ -1,7 +1,6 @@
-from OpenGL.GL import (GL_LINES, GL_UNSIGNED_INT, GL_VERTEX_ARRAY, glColor4f,
-                       glDisableClientState, glDrawElements,
-                       glEnableClientState, glLineWidth, glVertexPointerf)
+from OpenGL.GL import *  # noqa
 import numpy as np
+
 from ... import functions as fn
 from ...Qt import QtCore, QtGui
 from ..GLGraphicsItem import GLGraphicsItem

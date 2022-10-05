@@ -1,19 +1,5 @@
-from OpenGL.GL import (GL_ALL_ATTRIB_BITS, GL_BGRA, GL_COLOR_BUFFER_BIT,
-                       GL_DEPTH_ATTACHMENT, GL_DEPTH_BUFFER_BIT,
-                       GL_DEPTH_COMPONENT, GL_FRAMEBUFFER, GL_MODELVIEW,
-                       GL_PROJECTION, GL_PROXY_TEXTURE_2D, GL_RENDER,
-                       GL_RENDERBUFFER, GL_RGBA, GL_SELECT, GL_TEXTURE_2D,
-                       GL_TEXTURE_WIDTH, GL_UNSIGNED_BYTE, GL_VERSION,
-                       glBindRenderbuffer, glBindTexture, glClear,
-                       glClearColor, glDeleteRenderbuffers, glDeleteTextures,
-                       glEnable, glFramebufferRenderbuffer, glGenRenderbuffers,
-                       glGenTextures, glGetString, glGetTexImage,
-                       glGetTexLevelParameteriv, glInitNames, glLoadMatrixf,
-                       glLoadName, glMatrixMode, glMultMatrixf, glPopAttrib,
-                       glPopMatrix, glPushAttrib, glPushMatrix, glPushName,
-                       glRenderbufferStorage, glRenderMode, glSelectBuffer,
-                       glTexImage2D, glViewport)
-import OpenGL.GL.framebufferobjects as glfbo
+from OpenGL.GL import *  # noqa
+import OpenGL.GL.framebufferobjects as glfbo  # noqa
 from math import cos, radians, sin, tan
 
 import numpy as np

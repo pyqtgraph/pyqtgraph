@@ -10,28 +10,8 @@ from ..Qt import QtCore, QtGui, QtWidgets
 
 try:
     QOpenGLWidget = QtWidgets.QOpenGLWidget
-    from OpenGL.GL import (GL_ALL_ATTRIB_BITS, GL_BGRA, GL_CLAMP_TO_BORDER,
-                           GL_COLOR_BUFFER_BIT, GL_DEPTH_ATTACHMENT,
-                           GL_DEPTH_BUFFER_BIT, GL_DEPTH_COMPONENT,
-                           GL_FRAMEBUFFER, GL_LINEAR, GL_MODELVIEW, GL_NEAREST,
-                           GL_PROJECTION, GL_PROXY_TEXTURE_2D, GL_QUADS,
-                           GL_RENDER, GL_RENDERBUFFER, GL_RGBA, GL_SELECT,
-                           GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                           GL_TEXTURE_MIN_FILTER, GL_TEXTURE_WIDTH,
-                           GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T,
-                           GL_UNSIGNED_BYTE, GL_VERSION, glBegin,
-                           glBindRenderbuffer, glBindTexture, glClear,
-                           glClearColor, glColor4f, glDeleteRenderbuffers,
-                           glDeleteTextures, glDisable, glEnable, glEnd,
-                           glFramebufferRenderbuffer, glGenRenderbuffers,
-                           glGenTextures, glGetString, glGetTexImage,
-                           glGetTexLevelParameteriv, glInitNames,
-                           glLoadMatrixf, glLoadName, glMatrixMode,
-                           glMultMatrixf, glPopAttrib, glPopMatrix,
-                           glPushAttrib, glPushMatrix, glPushName,
-                           glRenderbufferStorage, glRenderMode, glSelectBuffer,
-                           glTexCoord2f, glTexCoord3f, glTexImage2D,
-                           glTexParameteri, glVertex3f, glViewport)
+    from OpenGL.GL import *  # noqa
+
     HAVE_OPENGL = True
 except (ImportError, AttributeError):
     # Would prefer `except ImportError` here, but some versions of pyopengl generate
