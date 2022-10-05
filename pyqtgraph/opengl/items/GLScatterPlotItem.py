@@ -1,4 +1,15 @@
-from OpenGL.GL import *  # noqa
+from OpenGL.GL import (GL_CLAMP_TO_EDGE, GL_COLOR_ARRAY, GL_COORD_REPLACE,
+                       GL_LINEAR, GL_NORMAL_ARRAY, GL_POINT_SPRITE, GL_POINTS,
+                       GL_PROGRAM_POINT_SIZE, GL_RGBA, GL_TEXTURE0,
+                       GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                       GL_TEXTURE_MIN_FILTER, GL_TEXTURE_WRAP_S,
+                       GL_TEXTURE_WRAP_T, GL_TRUE, GL_UNSIGNED_BYTE,
+                       GL_VERTEX_ARRAY, glActiveTexture, glBindTexture,
+                       glColor4f, glColorPointerf, glDisable,
+                       glDisableClientState, glDrawArrays, glEnable,
+                       glEnableClientState, glGenTextures, glNormal3f,
+                       glNormalPointerf, glTexEnvi, glTexImage2D,
+                       glTexParameteri, glVertexPointerf)
 import numpy as np
 
 from ... import functions as fn

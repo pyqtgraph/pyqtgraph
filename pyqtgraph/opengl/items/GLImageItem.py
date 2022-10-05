@@ -1,4 +1,11 @@
-from OpenGL.GL import *  # noqa
+from OpenGL.GL import (GL_CLAMP_TO_BORDER, GL_LINEAR, GL_NEAREST,
+                       GL_PROXY_TEXTURE_2D, GL_QUADS, GL_RGBA, GL_TEXTURE_2D,
+                       GL_TEXTURE_MAG_FILTER, GL_TEXTURE_MIN_FILTER,
+                       GL_TEXTURE_WIDTH, GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T,
+                       GL_UNSIGNED_BYTE, glBegin, glBindTexture, glColor4f,
+                       glDisable, glEnable, glEnd, glGenTextures,
+                       glGetTexLevelParameteriv, glTexCoord2f, glTexImage2D,
+                       glTexParameteri, glVertex3f)
 import numpy as np
 
 from ..GLGraphicsItem import GLGraphicsItem

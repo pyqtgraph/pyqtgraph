@@ -1,4 +1,4 @@
-from OpenGL.GL import *  # noqa
+from OpenGL.GL import GL_MODELVIEW_MATRIX, GL_PROJECTION_MATRIX, glGetDoublev
 import numpy as np
 
 from ... import functions as fn

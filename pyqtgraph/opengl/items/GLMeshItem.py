@@ -1,4 +1,8 @@
-from OpenGL.GL import *  # noqa
+from OpenGL.GL import (GL_COLOR_ARRAY, GL_LINES, GL_NORMAL_ARRAY, GL_TRIANGLES,
+                       GL_UNSIGNED_INT, GL_VERTEX_ARRAY, glColor4f,
+                       glColorPointerf, glDisableClientState, glDrawArrays,
+                       glDrawElements, glEnableClientState, glNormalPointerf,
+                       glVertexPointerf)
 import numpy as np
 
 from ...Qt import QtGui

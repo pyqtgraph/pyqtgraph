@@ -1,4 +1,4 @@
-from OpenGL.GL import *  # noqa
+from OpenGL.GL import GL_LINES, glBegin, glColor4f, glEnd, glVertex3f
 from ... import functions as fn
 from ...Qt import QtGui
 from ..GLGraphicsItem import GLGraphicsItem

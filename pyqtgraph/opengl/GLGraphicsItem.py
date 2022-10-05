@@ -1,4 +1,14 @@
-from OpenGL.GL import *  # noqa
+from OpenGL.GL import (
+    GL_DEPTH_TEST,
+    GL_BLEND,
+    GL_ALPHA_TEST,
+    GL_CULL_FACE,
+    GL_SRC_ALPHA,
+    GL_ONE_MINUS_SRC_ALPHA,
+    GL_ONE,
+    glEnable,
+    glDisable,
+)
 from OpenGL import GL
 
 from .. import Transform3D

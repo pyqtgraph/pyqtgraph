@@ -1,4 +1,3 @@
-from OpenGL.GL import *  # noqa
 import numpy as np
 
 from ..MeshData import MeshData

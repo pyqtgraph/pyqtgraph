@@ -1,4 +1,12 @@
-from OpenGL.GL import *  # noqa
+from OpenGL.GL import (GL_CLAMP_TO_BORDER, GL_COMPILE, GL_LINEAR, GL_NEAREST,
+                       GL_PROXY_TEXTURE_3D, GL_QUADS, GL_RGBA, GL_TEXTURE_3D,
+                       GL_TEXTURE_MAG_FILTER, GL_TEXTURE_MIN_FILTER,
+                       GL_TEXTURE_WIDTH, GL_TEXTURE_WRAP_R, GL_TEXTURE_WRAP_S,
+                       GL_TEXTURE_WRAP_T, GL_UNSIGNED_BYTE, glBegin,
+                       glBindTexture, glCallList, glColor4f, glDisable,
+                       glEnable, glEnd, glEndList, glGenLists, glGenTextures,
+                       glGetTexLevelParameteriv, glNewList, glTexCoord3f,
+                       glTexImage3D, glTexParameteri, glVertex3f)
 import numpy as np
 
 from ...Qt import QtGui
