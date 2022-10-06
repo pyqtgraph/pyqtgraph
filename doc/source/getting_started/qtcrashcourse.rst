@@ -17,9 +17,9 @@ PyQtGraph fits into this scheme by providing its own QWidget subclasses to be in
 
 Example::
 
-    import pyqtgraph as pg
     from PyQt6 import QtWidgets  # Should work with PyQt5 / PySide2 / PySide6 as well
-
+    import pyqtgraph as pg
+    
     ## Always start by initializing Qt (only once per application)
     app = QtWidgets.QApplication([])
 
