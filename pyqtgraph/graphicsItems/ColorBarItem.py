@@ -9,6 +9,7 @@ from ..Qt import QtCore
 from .ImageItem import ImageItem
 from .LinearRegionItem import LinearRegionItem
 from .PlotItem import PlotItem
+from .PColorMeshItem import PColorMeshItem
 
 __all__ = ['ColorBarItem']
 
@@ -249,8 +250,15 @@ class ColorBarItem(PlotItem):
             img = img_weakref()
             if img is None: continue # dereference weakref
             img.setLevels( self.values ) # (min,max) tuple
+            if isinstance(img, PColorMeshItem):
+                # TODO: Should check if levels have ever been changed interactively.
+                # TODO: Should configure levels of the colorbar according to the plot on first run instead of opposite way around?
+                img.disableAutoLevels()
             if update_cmap and self._colorMap is not None:
-                img.setLookupTable( self._colorMap.getLookupTable(nPts=256) )
+                if isinstance(img, PColorMeshItem):
+                    img.setLookupTable( self._colorMap.getLookupTable(nPts=256, mode=self._colorMap.QCOLOR) )
+                else:
+                    img.setLookupTable( self._colorMap.getLookupTable(nPts=256) )
 
     def _regionChanged(self):
         """ internal: snap adjusters back to default positions on release """

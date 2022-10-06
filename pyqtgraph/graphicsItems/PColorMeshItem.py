@@ -232,8 +232,15 @@ class PColorMeshItem(GraphicsObject):
             if np.any(self.x != args[0]) or np.any(self.y != args[1]):
                 shapeChanged = True
 
-        # Prepare data
-        self._prepareData(args)
+        if len(args)==0:
+            # No data was received.
+            if self.z is None:
+                # No data is currently displayed, 
+                # so other settings (like colormap) can not be updated
+                return
+        else:
+            # Got new data. Prepare it for plotting
+            self._prepareData(args)
 
 
         self.qpicture = QtGui.QPicture()
@@ -298,12 +305,82 @@ class PColorMeshItem(GraphicsObject):
 
 
 
+    def updateImage(self, *args, **kargs):
+        ## Used for re-rendering mesh from self.z.
+        ## For example when a new colormap is applied, or the levels are adjusted
+
+        defaults = {
+            'autoLevels': False,
+        }
+        defaults.update(kargs)
+        return self.setData(*args, **defaults)
+
+
+
+    def setLevels(self, levels, update=True):
+        """
+        Sets image scaling levels. 
+        See :func:`makeARGB <pyqtgraph.makeARGB>` for more details on how levels are applied.
+        
+        Parameters
+        ----------
+            levels: array_like
+                - ``[blackLevel, whiteLevel]`` 
+                    sets black and white levels for monochrome data and can be used with a lookup table.
+                - ``[[minR, maxR], [minG, maxG], [minB, maxB]]``
+                    sets individual scaling for RGB values. Not compatible with lookup tables.
+            update: bool, optional
+                Controls if image immediately updates to reflect the new levels.
+        """
+        # if self._xp is None:
+        #     self.levels = levels
+        #     self._defferedLevels = levels
+        #     return
+        # if levels is not None:
+        #     levels = self._xp.asarray(levels)
+        self.levels = levels
+        # self._effectiveLut = None
+        if update:
+            self.updateImage()
+
+
+
+    def getLevels(self):
+        """
+        Returns the list representing the current level settings. See :func:`~setLevels`.
+        When ``autoLevels`` is active, the format is ``[blackLevel, whiteLevel]``.
+        """
+        return self.levels
+
+
+    
+    def setLookupTable(self, lut, update=True):
+        if lut is not self.lut_qbrush:
+            # if self._xp is not None:
+            #     lut = self._ensure_proper_substrate(lut, self._xp)
+            self.lut_qbrush = [QtGui.QBrush(x) for x in lut]
+            # self.lut = lut
+            # self._effectiveLut = None
+            if update:
+                self.updateImage()
+
+
+
+    def disableAutoLevels(self):
+        self.enableAutoLevels = False
+
+
+
+    def enableAutoLevels(self):
+        self.enableAutoLevels = True
+
+
+
     def paint(self, p, *args):
         if self.z is None:
             return
 
         p.drawPicture(0, 0, self.qpicture)
-
 
 
     def setBorder(self, b):
@@ -323,7 +400,6 @@ class PColorMeshItem(GraphicsObject):
         if self.y is None:
             return None
         return np.max(self.y)
-
 
 
 

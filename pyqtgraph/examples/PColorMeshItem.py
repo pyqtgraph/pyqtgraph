@@ -56,6 +56,17 @@ view.addItem(pcmi)
 textitem = pg.TextItem(anchor=(1, 0))
 view.addItem(textitem)
 
+# Add colorbar
+bar = pg.ColorBarItem(
+    label = "Z value [arbitrary unit]",
+    # values = levels,
+    # limits = (-30_000, 30_000), 
+    rounding=0.1,
+    interactive=False,
+    colorMap=cmap )
+bar.setImageItem( [pcmi] )
+win.addItem(bar)
+
 
 ## Set the animation
 fps = 25 # Frame per second of the animation
