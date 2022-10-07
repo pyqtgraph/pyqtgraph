@@ -271,8 +271,8 @@ class PlotDataItem(GraphicsObject):
                               values exist, unpredictable behavior will occur. The data may not be
                               displayed or the plot may take a significant performance hit.
                               
-                              In the default 'auto' connect mode, `PlotDataItem` will apply this 
-                              setting automatically.
+                              In the default 'auto' connect mode, `PlotDataItem` will automatically
+                              override this setting.
             ================= =======================================================================
 
         **Meta-info keyword arguments:**
@@ -877,14 +877,17 @@ class PlotDataItem(GraphicsObject):
             ): # draw if visible...
             # auto-switch to indicate non-finite values as interruptions in the curve:
             if isinstance(curveArgs['connect'], str) and curveArgs['connect'] == 'auto': # connect can also take a boolean array
-                if dataset.containsNonfinite is None:
-                    curveArgs['connect'] = 'all' # this is faster, but silently connects the curve across any non-finite values
-                else:
-                    if dataset.containsNonfinite:
-                        curveArgs['connect'] = 'finite'
-                    else:
-                        curveArgs['connect'] = 'all' # all points can be connected, and no further check is needed.
-                        curveArgs['skipFiniteCheck'] = True
+                if dataset.containsNonfinite is False:
+                    # all points can be connected, and no further check is needed.
+                    curveArgs['connect'] = 'all'
+                    curveArgs['skipFiniteCheck'] = True
+                else:   # True or None
+                    # True: (we checked and found non-finites)
+                    #   don't connect non-finites
+                    # None: (we haven't performed a check for non-finites yet)
+                    #   use connect='finite' in case there are non-finites.
+                    curveArgs['connect'] = 'finite'
+                    curveArgs['skipFiniteCheck'] = False
             self.curve.setData(x=x, y=y, **curveArgs)
             self.curve.show()
         else: # ...hide if not.
