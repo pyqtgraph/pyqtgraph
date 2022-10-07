@@ -7,6 +7,7 @@ from .. import debug as debug
 from .. import functions as fn
 from .. import getConfigOption
 from ..Qt import QtCore
+from ..exceptionHandling import ArrayDimensionError
 from .GraphicsObject import GraphicsObject
 from .PlotCurveItem import PlotCurveItem
 from .ScatterPlotItem import ScatterPlotItem
@@ -1214,7 +1215,7 @@ def dataType(obj):
             elif obj.ndim == 2 and obj.dtype.names is None and obj.shape[1] == 2:
                 return 'Nx2array'
             else:
-                raise Exception('array shape must be (N,) or (N,2); got %s instead' % str(obj.shape))
+                raise ArrayDimensionError('array shape must be (N,) or (N,2); got %s instead' % str(obj.shape))
         elif isinstance(first, dict):
             return 'listOfDicts'
         else:
