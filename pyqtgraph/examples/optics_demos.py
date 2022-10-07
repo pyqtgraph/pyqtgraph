@@ -3,10 +3,11 @@ Optical system design demo
 """
 
 import numpy as np
-from optics import *
+from optics import Mirror, Ray, Tracer, Lens
 
 import pyqtgraph as pg
 from pyqtgraph import Point
+from pyqtgraph.Qt import QtCore
 
 app = pg.mkQApp("Optics Demo")
 

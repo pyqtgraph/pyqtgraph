@@ -85,11 +85,6 @@ class Process(RemoteEventHandler):
         ## random authentication key
         authkey = os.urandom(20)
 
-        ## Windows seems to have a hard time with hmac 
-        if sys.platform.startswith('win'):
-            authkey = None
-
-        #print "key:", ' '.join([str(ord(x)) for x in authkey])
         ## Listen for connection from remote process (and find free port number)
         l = multiprocessing.connection.Listener(('localhost', 0), authkey=authkey)
         port = l.address[1]

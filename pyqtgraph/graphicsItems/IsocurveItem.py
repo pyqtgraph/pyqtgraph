@@ -1,7 +1,7 @@
 from .. import functions as fn
 from .. import getConfigOption
 from ..Qt import QtCore, QtGui
-from .GraphicsObject import *
+from .GraphicsObject import GraphicsObject
 
 __all__ = ['IsocurveItem']
 
