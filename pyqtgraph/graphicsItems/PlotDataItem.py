@@ -707,7 +707,7 @@ class PlotDataItem(GraphicsObject):
                     x = np.array(data['x'])
                 if 'y' in data:
                     y = np.array(data['y'])
-            elif dt ==  'listOfDicts':
+            elif dt == 'listOfDicts':
                 if 'x' in data[0]:
                     x = np.array([d.get('x',None) for d in data])
                 if 'y' in data[0]:
@@ -719,13 +719,13 @@ class PlotDataItem(GraphicsObject):
                 y = data.view(np.ndarray)
                 x = data.xvals(0).view(np.ndarray)
             else:
-                raise Exception('Invalid data type %s' % type(data))
+                raise TypeError('Invalid data type %s' % type(data))
 
         elif len(args) == 2:
             seq = ('listOfValues', 'MetaArray', 'empty')
             dtyp = dataType(args[0]), dataType(args[1])
             if dtyp[0] not in seq or dtyp[1] not in seq:
-                raise Exception('When passing two unnamed arguments, both must be a list or array of values. (got %s, %s)' % (str(type(args[0])), str(type(args[1]))))
+                raise TypeError('When passing two unnamed arguments, both must be a list or array of values. (got %s, %s)' % (str(type(args[0])), str(type(args[1]))))
             if not isinstance(args[0], np.ndarray):
                 #x = np.array(args[0])
                 if dtyp[0] == 'MetaArray':
@@ -1217,7 +1217,7 @@ def dataType(obj):
             elif obj.ndim == 2 and obj.dtype.names is None and obj.shape[1] == 2:
                 return 'Nx2array'
             else:
-                raise Exception('array shape must be (N,) or (N,2); got %s instead' % str(obj.shape))
+                raise ValueError('array shape must be (N,) or (N,2); got %s instead' % str(obj.shape))
         elif isinstance(first, dict):
             return 'listOfDicts'
         else:
