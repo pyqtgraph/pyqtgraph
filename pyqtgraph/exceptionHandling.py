@@ -65,10 +65,6 @@ def setTracebackClearing(clear=True):
     clear_tracebacks = clear
 
 
-class ArrayDimensionError(Exception):
-    pass
-
-
 class ExceptionHandler(object):
     def __init__(self):
         self.orig_sys_excepthook = sys.excepthook
