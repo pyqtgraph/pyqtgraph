@@ -1214,7 +1214,7 @@ def dataType(obj):
             elif obj.ndim == 2 and obj.dtype.names is None and obj.shape[1] == 2:
                 return 'Nx2array'
             else:
-                raise TypeError('array shape must be (N,) or (N,2); got %s instead' % str(obj.shape))
+                raise ValueError('array shape must be (N,) or (N,2); got %s instead' % str(obj.shape))
         elif isinstance(first, dict):
             return 'listOfDicts'
         else:
