@@ -134,9 +134,9 @@ Matplotlib images are in png and inverted while other output
 types are assumed to be normal images.
 
 */
-html[data-theme=dark] img[src*='.svg']:not(.only-dark) {
+html[data-theme=dark] img[src*='.svg']:not(.only-dark):not(.dark-light) {
     filter: brightness(0.8) invert(0.82) contrast(1.2);
-    background: none;
+    background: unset
 }
 
 html[data-theme=dark] .MathJax_SVG *  {
