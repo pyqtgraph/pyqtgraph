@@ -39,7 +39,8 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx_qt_documentation",
     "sphinx_design",
-    "sphinxext.rediraffe"
+    "sphinxext.rediraffe",
+    "sphinxcontrib.images"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -309,7 +310,10 @@ rediraffe_redirects = {
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_sidebars = {
+    "**": ["sidebar-nav-bs.html", "sidebar-ethical-ads.html"],
+    'index': []  # don't show sidebar on main landing page
+}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.

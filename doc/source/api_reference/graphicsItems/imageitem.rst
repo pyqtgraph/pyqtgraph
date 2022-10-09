@@ -54,11 +54,11 @@ Examples
     :lines: 19-28
     :dedent: 8
 
-.. image:: 
+.. thumbnail:: 
     /images/example_imageitem_transform.png
     :width: 49%
     :alt: Example of transformed image display
-
+    :title: Transformed Image Display
 
 
 .. autoclass:: pyqtgraph.ImageItem
