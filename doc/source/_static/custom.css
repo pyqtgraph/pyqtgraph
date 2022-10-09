@@ -1,6 +1,6 @@
-/* Contents/Template taken from the SciPy project */
-/* https://github.com/scipy/scipy/blob/9ae8fd0f4341d7d8785777d460cca4f7b6a93edd/doc/source/_static/scipy.css */
-/* PyQtGraph specifics */
+/* Template Inherited from SciPy and modified for PyQtGraph purposes
+   https://github.com/scipy/scipy/blob/9ae8fd0f4341d7d8785777d460cca4f7b6a93edd/doc/source/_static/scipy.css 
+   SPDX-License-Identifier: BSD-3-Clause */
 
 /* Remove parenthesis around module using fictive font and add them back.
    This is needed for better wrapping in the sidebar. */
