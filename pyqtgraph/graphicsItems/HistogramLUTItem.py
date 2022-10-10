@@ -12,12 +12,12 @@ from .. import debug as debug
 from .. import functions as fn
 from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
-from .AxisItem import *
-from .GradientEditorItem import *
+from .AxisItem import AxisItem
+from .GradientEditorItem import GradientEditorItem
 from .GraphicsWidget import GraphicsWidget
-from .LinearRegionItem import *
-from .PlotCurveItem import *
-from .ViewBox import *
+from .LinearRegionItem import LinearRegionItem
+from .PlotCurveItem import PlotCurveItem
+from .ViewBox import ViewBox
 
 __all__ = ['HistogramLUTItem']
 
