@@ -365,7 +365,6 @@ class PColorMeshItem(GraphicsObject):
 
 
     def getColorMap(self):
-        # TODO: The cmap will not be up to date if setLookupTable has been called from outside of this class. How to handle this?
         return self.cmap
 
 
