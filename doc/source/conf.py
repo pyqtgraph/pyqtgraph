@@ -25,6 +25,9 @@ sys.path.insert(0, os.path.join(path, '..', '..'))
 sys.path.insert(0, os.path.join(path, '..', 'extensions'))
 import pyqtgraph
 
+# for debug purposes
+os.environ["BUILD_DASH_DOCSET"] = "1"
+
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
