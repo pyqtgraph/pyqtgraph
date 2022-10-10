@@ -4,7 +4,7 @@ import numpy as np
 
 from .Point import Point
 from .Qt import QtGui
-from .SRTTransform3D import SRTTransform3D
+from . import SRTTransform3D
 
 
 class SRTTransform(QtGui.QTransform):
