@@ -147,6 +147,15 @@ html_theme_options = dict(
     twitter_url="https://twitter.com/pyqtgraph",
 )
 
+if os.getenv("BUILD_DASH_DOCSET"):
+    html_theme_options |= {
+        'page_sidebar_items': [],
+        "show_prev_next": False,
+        "collapse_navigation": True,
+        "use_edit_page_button": False
+    }
+
+
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
 
@@ -175,6 +184,9 @@ html_static_path = ['_static']
 html_css_files = [
     "custom.css",
 ]
+
+if os.getenv("BUILD_DASH_DOCSET"):
+    html_css_files.append("dash.css")
 
 # Redirects for pages that were moved to new locations
 rediraffe_redirects = {
@@ -310,10 +322,15 @@ rediraffe_redirects = {
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-html_sidebars = {
-    "**": ["sidebar-nav-bs.html", "sidebar-ethical-ads.html"],
-    'index': []  # don't show sidebar on main landing page
-}
+if os.getenv("BUILD_DASH_DOCSET"):  # used for building dash docsets
+    html_sidebars = {
+        "**": []
+    }
+else:
+    html_sidebars = {
+        "**": ["sidebar-nav-bs.html", "sidebar-ethical-ads.html"],
+        'index': []  # don't show sidebar on main landing page
+    }
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.

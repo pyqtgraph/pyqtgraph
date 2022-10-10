@@ -13,7 +13,7 @@ PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCEDIR)
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest livehtml dash 
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -47,6 +47,21 @@ html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+
+dash: clean
+	# this will create a docset of the documentation, used in documentation
+	# viewers such as dash or zeal, requires doc2dash to be installed
+	export BUILD_DASH_DOCSET=1;\
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	doc2dash -n pyqtgraph\
+	 --online-redirect-url https://pyqtgraph.readthedocs.io/en/latest\
+	 --icon $(SOURCEDIR)/_static/peegee_03_square_no_bg_32_cleaned.png\
+	 --force\
+	 --enable-js\
+	 -A\
+	 $(BUILDDIR)/html
+	@echo
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
