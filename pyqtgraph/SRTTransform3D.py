@@ -18,7 +18,7 @@ class SRTTransform3D(Transform3D):
         if init is None:
             return
         if init.__class__ is QtGui.QTransform:
-            init = SRTTransform(init)
+            init = SRTTransform.SRTTransform(init)
         
         if isinstance(init, dict):
             self.restoreState(init)
@@ -30,7 +30,7 @@ class SRTTransform3D(Transform3D):
                 'axis': Vector(init._state['axis']),
             }
             self.update()
-        elif isinstance(init, SRTTransform):
+        elif isinstance(init, SRTTransform.SRTTransform):
             self._state = {
                 'pos': Vector(init._state['pos']),
                 'scale': Vector(init._state['scale']),
@@ -173,15 +173,15 @@ class SRTTransform3D(Transform3D):
         
     def as2D(self):
         """Return a QTransform representing the x,y portion of this transform (if possible)"""
-        return SRTTransform(self)
+        return SRTTransform.SRTTransform(self)
 
     #def __div__(self, t):
         #"""A / B  ==  B^-1 * A"""
         #dt = t.inverted()[0] * self
-        #return SRTTransform(dt)
+        #return SRTTransform.SRTTransform(dt)
         
     #def __mul__(self, t):
-        #return SRTTransform(QtGui.QTransform.__mul__(self, t))
+        #return SRTTransform.SRTTransform(QtGui.QTransform.__mul__(self, t))
 
     def saveState(self):
         p = self._state['pos']

@@ -75,7 +75,7 @@ class SRTTransform(QtGui.QTransform):
         self.update()
         
     def setFromMatrix4x4(self, m):
-        m = SRTTransform3D(m)
+        m = SRTTransform3D.SRTTransform3D(m)
         angle, axis = m.getRotation()
         if angle != 0 and (axis[0] != 0 or axis[1] != 0 or axis[2] != 1):
             print("angle: %s  axis: %s" % (str(angle), str(axis)))
