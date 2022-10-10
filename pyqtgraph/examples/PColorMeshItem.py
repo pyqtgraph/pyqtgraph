@@ -15,7 +15,8 @@ app = pg.mkQApp("PColorMesh Example")
 win = pg.GraphicsLayoutWidget()
 win.show()  ## show widget alone in its own window
 win.setWindowTitle('pyqtgraph example: pColorMeshItem')
-view = win.addViewBox()
+view_auto_scale = win.addPlot(0,0,1,1, title="Auto-scaling colorscheme", enableMenu=False)
+view_consistent_scale = win.addPlot(1,0,1,1, title="Consistent colorscheme", enableMenu=False)
 
 
 ## Create data
@@ -41,32 +42,40 @@ y.sort(axis=0)
 # z being the color of the polygons its shape must be decreased by one in each dimension
 z = np.exp(-(x*xn)**2/1000)[:-1,:-1]
 
-## Create image item
+## Create autoscaling image item
 edgecolors   = None
 antialiasing = False
 cmap         = pg.colormap.get('viridis')
 levels       = (-2,2) # Will be overwritten unless enableAutoLevels is set to False
-enableAutoLevels = True 
 # edgecolors = {'color':'w', 'width':2} # May be uncommented to see edgecolor effect
 # antialiasing = True # May be uncommented to see antialiasing effect
 # cmap         = pg.colormap.get('plasma') # May be uncommented to see a different colormap than the default 'viridis'
-# enableAutoLevels = False # may be uncommented to see changes in the absolute value of z (color_noise) which is hidden by the autoscaling colormap when using the default `levels=None`
-pcmi = pg.PColorMeshItem(edgecolors=edgecolors, antialiasing=antialiasing, colorMap=cmap, levels=levels, enableAutoLevels=enableAutoLevels)
-view.addItem(pcmi)
-textitem = pg.TextItem(anchor=(1, 0))
-view.addItem(textitem)
+pcmi_auto = pg.PColorMeshItem(edgecolors=edgecolors, antialiasing=antialiasing, colorMap=cmap, levels=levels, enableAutoLevels=True)
+view_auto_scale.addItem(pcmi_auto)
 
 # Add colorbar
 bar = pg.ColorBarItem(
     label = "Z value [arbitrary unit]",
-    # values = levels,
-    # limits = (-30_000, 30_000), 
-    rounding=0.1,
-    interactive=False,
-    colorMap=cmap )
-bar.setImageItem( [pcmi] )
-win.addItem(bar)
+    interactive=False, # Setting `interactive=True` would override `enableAutoLevels=True` of pcmi_auto (resulting in consistent colors)
+    rounding=0.1)
+bar.setImageItem( [pcmi_auto] )
+win.addItem(bar, 0,1,1,1)
 
+# Create image item with consistent colors and an interactive colorbar
+pcmi_consistent = pg.PColorMeshItem(edgecolors=edgecolors, antialiasing=antialiasing, colorMap=cmap, levels=levels, enableAutoLevels=False)
+view_consistent_scale.addItem(pcmi_consistent)
+
+# Add colorbar
+bar_static = pg.ColorBarItem(
+    label = "Z value [arbitrary unit]",
+    interactive=True,
+    rounding=0.1)
+bar_static.setImageItem( [pcmi_consistent] )
+win.addItem(bar_static,1,1,1,1)
+
+# Add timing label to the autoscaling view
+textitem = pg.TextItem(anchor=(1, 0))
+view_auto_scale.addItem(textitem)
 
 ## Set the animation
 fps = 25 # Frame per second of the animation
@@ -95,17 +104,20 @@ def updateData():
     new_y = y+wave_amplitude*np.cos(x/wave_length+i)
     new_z = np.exp(-(x-np.cos(i*color_speed)*xn)**2/1000)[:-1,:-1] + color_noise
     t1 = time.perf_counter()
-    pcmi.setData(new_x,
+    pcmi_auto.setData(new_x,
+                 new_y,
+                 new_z)
+    pcmi_consistent.setData(new_x,
                  new_y,
                  new_z)
     t2 = time.perf_counter()
 
     i += wave_speed
 
-    # display info in top-right corner
+    # display info in top-right corner of the autoscaling plot
     textitem.setText(f'{(t2 - t1)*1000:.1f} ms')
     if textpos is None:
-        textpos = pcmi.width(), pcmi.height()
+        textpos = pcmi_auto.width(), pcmi_auto.height()
         textitem.setPos(*textpos)
 
     # cap update rate at fps
