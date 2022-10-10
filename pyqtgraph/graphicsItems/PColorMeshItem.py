@@ -329,15 +329,8 @@ class PColorMeshItem(GraphicsObject):
             update: bool, optional
                 Controls if mesh immediately updates to reflect the new color levels.
         """
-        # if self._xp is None:
-        #     self.levels = levels
-        #     self._defferedLevels = levels
-        #     return
-        # if levels is not None:
-        #     levels = self._xp.asarray(levels)
         self.levels = levels
         self.sigLevelsChanged.emit(levels)
-        # self._effectiveLut = None
         if update:
             self._updateDisplayWithCurrentState()
 
@@ -354,11 +347,7 @@ class PColorMeshItem(GraphicsObject):
     
     def setLookupTable(self, lut, update=True):
         if lut is not self.lut_qbrush:
-            # if self._xp is not None:
-            #     lut = self._ensure_proper_substrate(lut, self._xp)
             self.lut_qbrush = [QtGui.QBrush(x) for x in lut]
-            # self.lut = lut
-            # self._effectiveLut = None
             if update:
                 self._updateDisplayWithCurrentState()
 
