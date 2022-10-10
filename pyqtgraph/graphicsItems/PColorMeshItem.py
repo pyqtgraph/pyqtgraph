@@ -120,7 +120,7 @@ class PColorMeshItem(GraphicsObject):
         self.edgecolors = kwargs.get('edgecolors', None)
         self.antialiasing = kwargs.get('antialiasing', False)
         self.levels = kwargs.get('levels', None)
-        self.enableAutoLevels = kwargs.get('enableAutoLevels', True)
+        self.enableautolevels = kwargs.get('enableAutoLevels', True)
         
         if 'colorMap' in kwargs:
             cmap = kwargs.get('colorMap')
@@ -261,7 +261,7 @@ class PColorMeshItem(GraphicsObject):
         # Second we associate each z value, that we normalize, to the lut
         scale = len(lut) - 1
         # Decide whether to autoscale the colormap or use the same levels as before
-        if (self.levels is None) or (self.enableAutoLevels and autoLevels):
+        if (self.levels is None) or (self.enableautolevels and autoLevels):
             # Autoscale colormap 
             z_min = self.z.min()
             z_max = self.z.max()
@@ -371,12 +371,12 @@ class PColorMeshItem(GraphicsObject):
 
 
     def enableAutoLevels(self):
-        self.enableAutoLevels = True
+        self.enableautolevels = True
 
 
 
     def disableAutoLevels(self):
-        self.enableAutoLevels = False
+        self.enableautolevels = False
 
 
 
