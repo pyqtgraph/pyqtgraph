@@ -202,20 +202,38 @@ def test_mouseDragEventSnap():
     QtTest.QTest.qWait(100)
 
     # A Rectangular roi with scaleSnap enabled
-    initial_x = 20
-    initial_y = 20
+    initial_x = 20.0
+    initial_y = 20.0
     roi = pg.RectROI((initial_x, initial_y), (20, 20), scaleSnap=True,
                      translateSnap=True, snapSize=1.0, movable=True)
     vb.addItem(roi)
     app.processEvents()
 
-    # Snap size roundtrip
-    assert roi.snapSize == 1.0
+    # Snap size round trip
+    assert roi.snapSize == (1.0, 1.0)
+    assert roi.scaleSnapSize == (1.0, 1.0)
+    # Backward compatibility check, float is transformed to sequence
     roi.snapSize = 0.2
-    assert roi.snapSize == 0.2
-    roi.snapSize = 1.0
-    assert roi.snapSize == 1.0
+    assert roi.snapSize == (0.2, 0.2)
+    assert roi.scaleSnapSize == (1.0, 1.0)
+    # Don't affect each other
+    roi.scaleSnapSize = 0.2
+    roi.snapSize = (1.0, 1.0)
+    assert roi.snapSize == (1.0, 1.0)
+    assert roi.scaleSnapSize == (0.2, 0.2)
+    roi.scaleSnapSize = (1.0, 1.0)
+    assert roi.scaleSnapSize == (1.0, 1.0)
 
+    # Size round trip
+    roi.setSize((30.0, 30.0), snap=True)
+    assert roi.size() == pg.Point(30.0, 30.0)
+
+    roi.scaleSnapSize = (0.5, 0.5)
+    assert roi.scaleSnapSize == (0.5, 0.5)
+    roi.setSize((30.3, 30.3), snap=True)
+    assert roi.size() == pg.Point(30.0, 30.0)
+
+    # 1. Round
     # Snap position check
     snapped = roi.getSnapPosition(pg.Point(2.5, 3.5), snap=True)
     assert snapped == pg.Point(2.0, 4.0)
@@ -231,9 +249,49 @@ def test_mouseDragEventSnap():
     assert roi.pos() == pg.Point(initial_x, 18)
 
     # Only drag in x direction
-    mouseDrag(plt, roi_position, roi_position + pg.Point(10, 0),
+    mouseDrag(plt, roi_position, roi_position + pg.Point(20, 0),
               QtCore.Qt.MouseButton.LeftButton)
-    assert roi.pos() == pg.Point(21, 18)
+    assert roi.pos() == pg.Point(22, 18)
+
+    # 2. Round ... different scaleSnap (x)
+    roi.setPos(initial_x, initial_y)
+    assert roi.pos() == pg.Point(initial_x, initial_y)
+    roi.snapSize = (0.5, 1.0)
+
+    # Snap position check
+    snapped = roi.getSnapPosition(pg.Point(2.5, 3.5), snap=True)
+    assert snapped == pg.Point(2.5, 4.0)
+
+    # Only drag in y direction
+    roi_position = roi.mapToView(pg.Point(initial_x, initial_y))
+    mouseDrag(plt, roi_position, roi_position + pg.Point(0, 10),
+              QtCore.Qt.MouseButton.LeftButton)
+    assert roi.pos() == pg.Point(initial_x, 19)
+
+    # Only drag in x direction
+    mouseDrag(plt, roi_position, roi_position + pg.Point(20, 0),
+              QtCore.Qt.MouseButton.LeftButton)
+    assert roi.pos() == pg.Point(22.5, 19)
+
+    # 3. Round ... different scaleSnap (y)
+    roi.setPos(initial_x, initial_y)
+    assert roi.pos() == pg.Point(initial_x, initial_y)
+    roi.snapSize = (1.0, 0.5)
+
+    # Snap position check
+    snapped = roi.getSnapPosition(pg.Point(2.5, 3.5), snap=True)
+    assert snapped == pg.Point(2.0, 3.5)
+
+    # Only drag in y direction
+    roi_position = roi.mapToView(pg.Point(initial_x, initial_y))
+    mouseDrag(plt, roi_position, roi_position + pg.Point(0, 20),
+              QtCore.Qt.MouseButton.LeftButton)
+    assert roi.pos() == pg.Point(initial_x, 17.5)
+
+    # Only drag in x direction
+    mouseDrag(plt, roi_position, roi_position + pg.Point(20, 0),
+              QtCore.Qt.MouseButton.LeftButton)
+    assert roi.pos() == pg.Point(22, 17.5)
 
 
 def test_PolyLineROI():
