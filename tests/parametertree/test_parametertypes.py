@@ -171,8 +171,10 @@ def test_checklist_show_hide():
     pi.setHidden = MagicMock()
     p.hide()
     pi.setHidden.assert_called_with(True)
+    assert not p.opts["visible"]
     p.show()
     pi.setHidden.assert_called_with(False)
+    assert p.opts["visible"]
 
 
 def test_pen_settings():
