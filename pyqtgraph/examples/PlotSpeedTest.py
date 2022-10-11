@@ -95,7 +95,14 @@ def resetTimings(*args):
     fsample={'units': 'Hz'},
     frequency={'units': 'Hz'}
 )
-def makeData(noise=True, nsamples=5000, frames=50, fsample=1000.0, frequency=0.0, amplitude=5.0):
+def makeData(
+    noise=args.noise,
+    nsamples=args.nsamples,
+    frames=args.frames,
+    fsample=args.fsample,
+    frequency=args.frequency,
+    amplitude=args.amplitude,
+):
     global data, connect_array, ptr
     ttt = np.arange(frames * nsamples, dtype=np.float64) / fsample
     data = amplitude*np.sin(2*np.pi*frequency*ttt).reshape((frames, nsamples))
