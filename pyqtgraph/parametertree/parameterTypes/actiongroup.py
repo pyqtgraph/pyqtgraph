@@ -2,26 +2,32 @@ from ...Qt import QtCore
 from .action import ParameterControlledButton
 from .basetypes import GroupParameter, GroupParameterItem
 from ..ParameterItem import ParameterItem
-from ...Qt import QtCore
+from ...Qt import QtCore, QtWidgets
 
 
 class ActionGroupParameterItem(GroupParameterItem):
     """
-    Wraps a :class:`GroupParameterItem` to manage ``bool`` parameter children. Also provides convenience buttons to
-    select or clear all values at once. Note these conveniences are disabled when ``exclusive`` is *True*.
+    Wraps a :class:`GroupParameterItem` to manage function parameters created by
+    an interactor. Provies a button widget which mimics an ``action`` parameter.
     """
 
     def __init__(self, param, depth):
-        self.button = ParameterControlledButton()
-        super().__init__(param, depth)
+        self.itemWidget = QtWidgets.QWidget()
+        self.button = ParameterControlledButton(parent=self.itemWidget)
         self.button.clicked.connect(param.activate)
+
+        self.itemWidget.setLayout(layout := QtWidgets.QHBoxLayout())
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.button)
+
+        super().__init__(param, depth)
 
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
         tw = self.treeWidget()
         if tw is None:
             return
-        tw.setItemWidget(self, 1, self.button)
+        tw.setItemWidget(self, 1, self.itemWidget)
 
     def optsChanged(self, param, opts):
         if "button" in opts:
