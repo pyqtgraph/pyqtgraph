@@ -66,6 +66,7 @@ class ChecklistParameterItem(GroupParameterItem):
         self.btnGrp.removeButton(child.widget)
 
     def optsChanged(self, param, opts):
+        super().optsChanged(param, opts)
         if 'expanded' in opts:
             for btn in self.metaBtns.values():
                 btn.setVisible(opts['expanded'])
