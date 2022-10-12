@@ -18,6 +18,7 @@ class StackWidget(QtWidgets.QListWidget):
         
     def clear(self):
         QtWidgets.QListWidget.clear(self)
+        self.frames = []
 
     def setStack(self, frame=None, tb=None):
         """Display a call stack and exception traceback.
@@ -38,7 +39,6 @@ class StackWidget(QtWidgets.QListWidget):
             tb = sys.exc_info()[2]
 
         self.clear()
-        self.frames = []
 
         # Build stack up to this point
         for index, line in enumerate(traceback.extract_stack(frame)):
@@ -70,5 +70,3 @@ class StackWidget(QtWidgets.QListWidget):
         while tb is not None:
             self.frames.append(tb.tb_frame)
             tb = tb.tb_next
-
-

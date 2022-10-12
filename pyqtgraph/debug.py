@@ -1192,19 +1192,7 @@ class ThreadTrace(object):
                     if id == threading.current_thread().ident:
                         continue
 
-                    # try to determine a thread name
-                    try:
-                        name = threading._active.get(id, None)
-                    except:
-                        name = None
-                    if name is None:
-                        try:
-                            # QThread._names must be manually set by thread creators.
-                            name = QtCore.QThread._names.get(id)
-                        except:
-                            name = None
-                    if name is None:
-                        name = "???"
+                    name = threadName()
 
                     printFile.write("<< thread %d \"%s\" >>\n" % (id, name))
                     tb = str(''.join(traceback.format_stack(frame)))
@@ -1215,6 +1203,46 @@ class ThreadTrace(object):
 
                 iter += 1
                 time.sleep(self.interval)
+
+
+def threadName(threadId=None):
+    """Return a string name for a thread id.
+
+    If *threadId* is None, then the current thread's id is used.
+
+    This attempts to look up thread names either from `threading._active`, or from
+    QThread._names. However, note that the latter does not exist by default; rather
+    you must manually add id:name pairs to a dictionary there::
+
+        # for python threads:
+        t1 = threading.Thread(name="mythread")
+
+        # for Qt threads:
+        class Thread(Qt.QThread):
+            def __init__(self, name):
+                self._threadname = name
+                if not hasattr(Qt.QThread, '_names'):
+                    Qt.QThread._names = {}
+                Qt.QThread.__init__(self, *args, **kwds)
+            def run(self):
+                Qt.QThread._names[threading.current_thread().ident] = self._threadname
+    """
+    if threadId is None:
+        threadId = threading.current_thread().ident
+    
+    try:
+        name = threading._active.get(threadId, None)
+    except Exception:
+        name = None
+    if name is None:
+        try:
+            # QThread._names must be manually set by thread creators.
+            name = QtCore.QThread._names.get(threadId)
+        except Exception:
+            name = None
+    if name is None:
+        name = "???"
+    return name
 
 
 class ThreadColor(object):
