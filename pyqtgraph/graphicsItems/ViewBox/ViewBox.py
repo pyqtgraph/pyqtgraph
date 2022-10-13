@@ -593,7 +593,9 @@ class ViewBox(GraphicsWidget):
 
             # If we requested 0 range, try to preserve previous scale.
             # Otherwise just pick an arbitrary scale.
+            preserve = False
             if mn == mx:
+                preserve = True
                 dy = self.state['viewRange'][ax][1] - self.state['viewRange'][ax][0]
                 if dy == 0:
                     dy = 1
@@ -613,13 +615,14 @@ class ViewBox(GraphicsWidget):
                 raise Exception("Cannot set range [%s, %s]" % (str(mn), str(mx)))
 
             # Apply padding
-            if padding is None:
-                xpad = self.suggestPadding(ax)
-            else:
-                xpad = padding
-            p = (mx-mn) * xpad
-            mn -= p
-            mx += p
+            if not preserve:
+                if padding is None:
+                    xpad = self.suggestPadding(ax)
+                else:
+                    xpad = padding
+                p = (mx-mn) * xpad
+                mn -= p
+                mx += p
 
             # max range cannot be larger than bounds, if they are given
             if limits[ax][0] is not None and limits[ax][1] is not None:
