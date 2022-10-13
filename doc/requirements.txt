@@ -1,6 +1,8 @@
-sphinx==5.1.1
-PyQt6==6.3.1
-sphinx-rtd-theme
+PyQt6==6.4.0
+sphinx==5.2.3
+pydata-sphinx-theme
 sphinx-qt-documentation
+sphinx-design
+sphinxext-rediraffe
 numpy
 pyopengl

@@ -33,7 +33,7 @@ def printResult(func):
 
 
 host = Parameter.create(name="Interactive Parameter Use", type="group")
-interactor = Interactor(parent=host)
+interactor = Interactor(parent=host, runOptions=RunOptions.ON_CHANGED)
 
 
 @interactor.decorate()

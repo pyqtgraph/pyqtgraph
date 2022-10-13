@@ -73,7 +73,9 @@ splitter.addWidget(pt)
 splitter.addWidget(pw)
 splitter.show()
 
-interactor = ptree.Interactor(parent=params, nest=False)
+interactor = ptree.Interactor(
+    parent=params, nest=False, runOptions=ptree.RunOptions.ON_CHANGED
+)
 
 pw.setWindowTitle('pyqtgraph example: PlotSpeedTest')
 pw.setLabel('bottom', 'Index', units='B')
@@ -93,7 +95,14 @@ def resetTimings(*args):
     fsample={'units': 'Hz'},
     frequency={'units': 'Hz'}
 )
-def makeData(noise=True, nsamples=5000, frames=50, fsample=1000.0, frequency=0.0, amplitude=5.0):
+def makeData(
+    noise=args.noise,
+    nsamples=args.nsamples,
+    frames=args.frames,
+    fsample=args.fsample,
+    frequency=args.frequency,
+    amplitude=args.amplitude,
+):
     global data, connect_array, ptr
     ttt = np.arange(frames * nsamples, dtype=np.float64) / fsample
     data = amplitude*np.sin(2*np.pi*frequency*ttt).reshape((frames, nsamples))
@@ -162,4 +171,7 @@ timer.timeout.connect(update)
 timer.start(0)
 
 if __name__ == '__main__':
+    # Splitter by default gives too small of a width to the parameter tree,
+    # so fix that right before the event loop
+    pt.setMinimumSize(225,0)
     pg.exec()

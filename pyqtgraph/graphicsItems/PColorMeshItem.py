@@ -88,6 +88,17 @@ class PColorMeshItem(GraphicsObject):
         colorMap : pyqtgraph.ColorMap
             Colormap used to map the z value to colors.
             default ``pyqtgraph.colormap.get('viridis')``
+        levels: tuple, optional, default None
+            Sets the minimum and maximum values to be represented by the colormap (min, max). 
+            Values outside this range will be clipped to the colors representing min or max.
+            ``None`` disables the limits, meaning that the colormap will autoscale 
+            each time ``setData()`` is called - unless ``enableAutoLevels=False``.
+        enableAutoLevels: bool, optional, default True
+            Causes the colormap levels to autoscale whenever ``setData()`` is called. 
+            When enableAutoLevels is set to True, it is still possible to disable autoscaling
+            on a per-change-basis by using ``autoLevels=False`` when calling ``setData()``.
+            If ``enableAutoLevels==False`` and ``levels==None``, autoscaling will be 
+            performed once when the first z data is supplied. 
         edgecolors : dict, optional
             The color of the edges of the polygons.
             Default None means no edges.
@@ -107,6 +118,8 @@ class PColorMeshItem(GraphicsObject):
 
         self.edgecolors = kwargs.get('edgecolors', None)
         self.antialiasing = kwargs.get('antialiasing', False)
+        self.levels = kwargs.get('levels', None)
+        self.enableAutoLevels = kwargs.get('enableAutoLevels', True)
         
         if 'colorMap' in kwargs:
             cmap = kwargs.get('colorMap')
@@ -178,7 +191,7 @@ class PColorMeshItem(GraphicsObject):
             ValueError('Data must been sent as (z) or (x, y, z)')
 
 
-    def setData(self, *args):
+    def setData(self, *args, **kwargs):
         """
         Set the data to be drawn.
 
@@ -200,7 +213,13 @@ class PColorMeshItem(GraphicsObject):
 
             "ASCII from: <https://matplotlib.org/3.2.1/api/_as_gen/
                          matplotlib.pyplot.pcolormesh.html>".
+        autoLevels: bool, optional, default True
+            When set to True, PColorMeshItem will automatically select levels
+            based on the minimum and maximum values encountered in the data along the z axis.
+            The minimum and maximum levels are mapped to the lowest and highest colors 
+            in the colormap. The autoLevels parameter is ignored if ``enableAutoLevels is False`` 
         """
+        autoLevels = kwargs.get('autoLevels', True)
 
         # Has the view bounds changed
         shapeChanged = False
@@ -233,8 +252,17 @@ class PColorMeshItem(GraphicsObject):
         lut = self.lut_qbrush
         # Second we associate each z value, that we normalize, to the lut
         scale = len(lut) - 1
-        z_min = self.z.min()
-        z_max = self.z.max()
+        # Decide whether to autoscale the colormap or use the same levels as before
+        if (self.levels is None) or (self.enableAutoLevels and autoLevels):
+            # Autoscale colormap 
+            z_min = self.z.min()
+            z_max = self.z.max()
+            if not self.enableAutoLevels:
+                self.levels = (z_min, z_max)
+        else:
+            # Use consistent colormap scaling
+            z_min = self.levels[0]
+            z_max = self.levels[1]
         rng = z_max - z_min
         if rng == 0:
             rng = 1

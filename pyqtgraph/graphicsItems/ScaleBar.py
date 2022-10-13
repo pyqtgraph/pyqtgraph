@@ -2,8 +2,8 @@ from .. import functions as fn
 from .. import getConfigOption
 from ..Point import Point
 from ..Qt import QtCore, QtWidgets
-from .GraphicsObject import *
-from .GraphicsWidgetAnchor import *
+from .GraphicsObject import GraphicsObject
+from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
 from .TextItem import TextItem
 
 __all__ = ['ScaleBar']
@@ -36,7 +36,7 @@ class ScaleBar(GraphicsObject, GraphicsWidgetAnchor):
         self.text = TextItem(text=fn.siFormat(size, suffix=suffix), anchor=(0.5,1))
         self.text.setParentItem(self)
 
-    def parentChanged(self):
+    def changeParent(self):
         view = self.parentItem()
         if view is None:
             return

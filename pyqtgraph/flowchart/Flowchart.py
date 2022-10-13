@@ -1,32 +1,28 @@
 __init__ = ["Flowchart", "FlowchartGraphicsItem", "FlowchartNode"]
 
 import importlib
+import os
 from collections import OrderedDict
 
-from .. import DataTreeWidget, FileDialog
-from ..Qt import QT_LIB, QtCore, QtWidgets
-from .Node import Node
-
-FlowchartCtrlTemplate = importlib.import_module(
-    f'.FlowchartCtrlTemplate_{QT_LIB.lower()}', package=__package__)
-    
 from numpy import ndarray
 
+from .. import DataTreeWidget, FileDialog
 from .. import configfile as configfile
 from .. import dockarea as dockarea
 from .. import functions as fn
 from ..debug import printExc
 from ..graphicsItems.GraphicsObject import GraphicsObject
+from ..Qt import QtCore, QtWidgets
+from . import FlowchartCtrlTemplate_generic as FlowchartCtrlTemplate
 from . import FlowchartGraphicsView
 from .library import LIBRARY
+from .Node import Node
 from .Terminal import Terminal
 
 
 def strDict(d):
     return dict([(str(k), v) for k, v in d.items()])
 
-
-        
 
 class Flowchart(Node):
     sigFileLoaded = QtCore.Signal(object)
@@ -763,10 +759,7 @@ class FlowchartWidget(dockarea.DockArea):
         self.hoverItem = None
         #self.setMinimumWidth(250)
         #self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Expanding))
-        
-        #self.ui = FlowchartTemplate.Ui_Form()
-        #self.ui.setupUi(self)
-        
+
         ## build user interface (it was easier to do it here than via developer)
         self.view = FlowchartGraphicsView.FlowchartGraphicsView(self)
         self.viewDock = dockarea.Dock('view', size=(1000,600))
