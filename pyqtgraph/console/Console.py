@@ -50,8 +50,8 @@ class ConsoleWidget(QtWidgets.QWidget):
         namespace['__console__'] = self
         self.localNamespace = namespace
         self.editor = editor
-        self.multiline = None
-        self.inCmd = False
+        self._multiline = None  # buffer to hold multiple lines of input
+        self._inCmd = False  # flag enabled while a command is being executed
         
         self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
@@ -115,15 +115,15 @@ class ConsoleWidget(QtWidgets.QWidget):
         try:
             sys.stdout = self
             sys.stderr = self
-            if self.multiline is not None:
+            if self._multiline is not None:
                 self.write("<br><b>%s</b>\n"%encCmd, html=True, scrollToBottom=True)
                 self.execMulti(cmd)
             else:
                 self.write("<br><div style='background-color: #CCF; color: black'><b>%s</b>\n"%encCmd, html=True, scrollToBottom=True)
-                self.inCmd = True
+                self._inCmd = True
                 self.execSingle(cmd)
             
-            if not self.inCmd:
+            if not self._inCmd:
                 self.write("</div>\n", html=True, scrollToBottom=True)
                 
         finally:
@@ -163,7 +163,7 @@ class ConsoleWidget(QtWidgets.QWidget):
             exec(cmd, self.globals(), self.locals())
         except SyntaxError as exc:
             if 'unexpected EOF' in exc.msg:
-                self.multiline = cmd
+                self._multiline = cmd
             else:
                 self.displayException()
         except:
@@ -171,36 +171,36 @@ class ConsoleWidget(QtWidgets.QWidget):
             
     def execMulti(self, nextLine):
         if nextLine.strip() != '':
-            self.multiline += "\n" + nextLine
+            self._multiline += "\n" + nextLine
             return
         else:
-            cmd = self.multiline
+            cmd = self._multiline
             
         try:
             output = eval(cmd, self.globals(), self.locals())
             self.write(str(output) + '\n')
-            self.multiline = None
+            self._multiline = None
             return
         except SyntaxError:
             pass
         except:
             self.displayException()
-            self.multiline = None
+            self._multiline = None
             return
 
         # eval failed with syntax error; try exec instead
         try:
             exec(cmd, self.globals(), self.locals())
-            self.multiline = None
+            self._multiline = None
         except SyntaxError as exc:
             if 'unexpected EOF' in exc.msg:
-                self.multiline = cmd
+                self._multiline = cmd
             else:
                 self.displayException()
-                self.multiline = None
+                self._multiline = None
         except:
             self.displayException()
-            self.multiline = None
+            self._multiline = None
 
 
     def write(self, strn, html=False, scrollToBottom='auto'):
@@ -224,8 +224,8 @@ class ConsoleWidget(QtWidgets.QWidget):
         if html:
             self.output.textCursor().insertHtml(strn)
         else:
-            if self.inCmd:
-                self.inCmd = False
+            if self._inCmd:
+                self._inCmd = False
                 self.output.textCursor().insertHtml("</div><br><div style='font-weight: normal; background-color: #FFF; color: black'>")
             self.output.insertPlainText(strn)
 
