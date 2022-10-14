@@ -84,20 +84,3 @@ class JoystickButton(QtWidgets.QPushButton):
     def resizeEvent(self, ev):
         self.setState(*self.state)
         super().resizeEvent(ev)
-        
-        
-        
-if __name__ == '__main__':
-    app = mkQApp()
-    w = QtWidgets.QMainWindow()
-    b = JoystickButton()
-    w.setCentralWidget(b)
-    w.show()
-    w.resize(100, 100)
-    
-    def fn(b, s):
-        print("state changed:", s)
-        
-    b.sigStateChanged.connect(fn)
-        
-    app.exec() if hasattr(app, 'exec') else app.exec_()
