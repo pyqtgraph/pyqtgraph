@@ -7,6 +7,7 @@ class CmdInput(QtWidgets.QLineEdit):
     
     def __init__(self, parent):
         QtWidgets.QLineEdit.__init__(self, parent)
+        self.setPlaceholderText(">>>")
         self.history = [""]
         self.ptr = 0
     

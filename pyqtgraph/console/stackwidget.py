@@ -5,6 +5,7 @@ from ..Qt import QtWidgets, QtGui
 class StackWidget(QtWidgets.QListWidget):
     def __init__(self, parent=None):
         QtWidgets.QListWidget.__init__(self, parent)
+        self.setAlternatingRowColors(True)
         self.frames = []
 
     def selectedFrame(self):
