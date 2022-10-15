@@ -11,10 +11,9 @@ class ReplWidget(QtWidgets.QWidget):
     def __init__(self, globals, locals, parent=None):
         self.globals = globals
         self.locals = locals
-        self._orig_stdout = None
-        self._orig_stderr = None
         self._lastCommandRow = None
         self._commandBuffer = []  # buffer to hold multiple lines of input
+        self.stdoutInterceptor = StdoutInterceptor(self.write)
 
         QtWidgets.QWidget.__init__(self, parent=parent)
 
@@ -63,66 +62,41 @@ class ReplWidget(QtWidgets.QWidget):
         self.input.sigExecuteCmd.connect(self.runCmd)
 
     def runCmd(self, cmd):
-        self._orig_stdout = sys.stdout
-        self._orig_stderr = sys.stderr
+        # jump to next line before printing commands
+        cursor = self.output.textCursor()
+        if cursor.columnNumber() > 0:
+            self.output.insertPlainText('\n')
+
+        if len(self._commandBuffer) == 0:
+            self.write(f">>> {cmd}\n", style='command')
+        else:
+            self.write(f"... {cmd}\n", style='command')
         
+        self.sigCommandEntered.emit(self, cmd)
+        self._commandBuffer.append(cmd)
+
+        fullcmd = '\n'.join(self._commandBuffer)
         try:
-            sys.stdout = self
-            sys.stderr = self
+            cmdCode = code.compile_command(fullcmd)
+        except Exception:
+            # cannot continue processing this command; reset and print exception
+            self._commandBuffer = []
+            self.displayException()
+        else:
+            if cmdCode is None:
+                # incomplete input; wait for next line
+                return
 
-            # jump to next line before printing commands
-            cursor = self.output.textCursor()
-            if cursor.columnNumber() > 0:
-                self.output.insertPlainText('\n')
+            self._commandBuffer = []
 
-            if len(self._commandBuffer) == 0:
-                self.write(f">>> {cmd}\n", style='command')
-            else:
-                self.write(f"... {cmd}\n", style='command')
-            
-            self._commandBuffer.append(cmd)
-
-            fullcmd = '\n'.join(self._commandBuffer)
+            # run command
             try:
-                cmdCode = code.compile_command(fullcmd)
-            except Exception:
-                # cannot continue processing this command; reset and print exception
-                self._commandBuffer = []
-                self.displayException()
-            else:
-                if cmdCode is None:
-                    # incomplete input; wait for next line
-                    return
-
-                self._commandBuffer = []
-
-                # run command
-                try:
+                with self.stdoutInterceptor:
                     exec(cmdCode, self.globals(), self.locals())
-                except:
-                    self.displayException()
-                    self.sigCommandRaisedException.emit(self, sys.exc_info())
-                
-        finally:
-            sys.stdout = self._orig_stdout
-            sys.stderr = self._orig_stderr
-            self._orig_stdout = None
-            self._orig_stderr = None
-            self.sigCommandEntered.emit(self, cmd)
+            except:
+                self.displayException()
+                self.sigCommandRaisedException.emit(self, sys.exc_info())
     
-    def realOutputFiles(self):
-        """Return the real sys.stdout and stderr (which are sometimes masked while running commands)
-        """
-        return (
-            self._orig_stdout or sys.stdout,
-            self._orig_stderr or sys.stderr
-        )
-
-    def _print(self, strn):
-        """Print to real stdout (for debugging)
-        """
-        self.realOutputFiles()[0].write(strn + "\n")
-
     def write(self, strn, style='output', scrollToBottom='auto'):
         """Write a string into the console.
 
@@ -164,14 +138,6 @@ class ReplWidget(QtWidgets.QWidget):
         else:
             sb.setValue(scroll)
 
-    def flush(self):
-        # Need to implement this since we temporarily occlude sys.stdout
-        pass
-
-    def fileno(self):
-        # Need to implement this since we temporarily occlude sys.stdout, and someone may be looking for it (faulthandler, for example)
-        return 1
-
     def displayException(self):
         """
         Display the current exception and stack.
@@ -189,4 +155,47 @@ class ReplWidget(QtWidgets.QWidget):
         cursor = self.output.textCursor()
         cursor.setBlockFormat(blockFormat)
         self.output.setCurrentCharFormat(charFormat)
+
+
+class StdoutInterceptor:
+    def __init__(self, writeFn):
+        self._orig_stdout = None
+        self._orig_stderr = None
+        self.writeFn = writeFn
+
+    def realOutputFiles(self):
+        """Return the real sys.stdout and stderr (which are sometimes masked while running commands)
+        """
+        return (
+            self._orig_stdout or sys.stdout,
+            self._orig_stderr or sys.stderr
+        )
+
+    def _print(self, *args):
+        """Print to real stdout (for debugging)
+        """
+        self.realOutputFiles()[0].write(' '.join(args) + "\n")
+
+    def flush(self):
+        # Need to implement this since we temporarily occlude sys.stdout
+        pass
+
+    def fileno(self):
+        # Need to implement this since we temporarily occlude sys.stdout, and someone may be looking for it (faulthandler, for example)
+        return 1
+
+    def write(self, strn):
+        self.writeFn(strn)
+
+    def __enter__(self):
+        self._orig_stdout = sys.stdout
+        self._orig_stderr = sys.stderr
+        sys.stdout = self
+        sys.stderr = self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout = self._orig_stdout
+        sys.stderr = self._orig_stderr
+        self._orig_stdout = None
+        self._orig_stderr = None
 
