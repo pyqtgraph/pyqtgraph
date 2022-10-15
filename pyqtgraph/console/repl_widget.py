@@ -62,11 +62,6 @@ class ReplWidget(QtWidgets.QWidget):
         self.input.sigExecuteCmd.connect(self.runCmd)
 
     def runCmd(self, cmd):
-        # jump to next line before printing commands
-        cursor = self.output.textCursor()
-        if cursor.columnNumber() > 0:
-            self.output.insertPlainText('\n')
-
         if len(self._commandBuffer) == 0:
             self.write(f">>> {cmd}\n", style='command')
         else:
@@ -96,7 +91,12 @@ class ReplWidget(QtWidgets.QWidget):
             except:
                 self.displayException()
                 self.sigCommandRaisedException.emit(self, sys.exc_info())
-    
+
+            # Add a newline if the output did not
+            cursor = self.output.textCursor()
+            if cursor.columnNumber() > 0:
+                self.write('\n')
+
     def write(self, strn, style='output', scrollToBottom='auto'):
         """Write a string into the console.
 
@@ -108,15 +108,17 @@ class ReplWidget(QtWidgets.QWidget):
             sys.__stdout__.write(strn)
             return
 
+        cursor = self.output.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.End)
+        self.output.setTextCursor(cursor)
+
         sb = self.output.verticalScrollBar()
         scroll = sb.value()
         if scrollToBottom == 'auto':
             atBottom = scroll == sb.maximum()
             scrollToBottom = atBottom
 
-        self.output.moveCursor(QtGui.QTextCursor.MoveOperation.End)
-
-        row = self.output.textCursor().blockNumber()
+        row = cursor.blockNumber()
         if style == 'command':
             self._lastCommandRow = row
 
@@ -158,6 +160,8 @@ class ReplWidget(QtWidgets.QWidget):
 
 
 class StdoutInterceptor:
+    """Used to temporarily redirect writes meant for sys.stdout and sys.stderr to a new location
+    """
     def __init__(self, writeFn):
         self._orig_stdout = None
         self._orig_stderr = None
@@ -171,10 +175,10 @@ class StdoutInterceptor:
             self._orig_stderr or sys.stderr
         )
 
-    def _print(self, *args):
+    def print(self, *args):
         """Print to real stdout (for debugging)
         """
-        self.realOutputFiles()[0].write(' '.join(args) + "\n")
+        self.realOutputFiles()[0].write(' '.join(map(str, args)) + "\n")
 
     def flush(self):
         # Need to implement this since we temporarily occlude sys.stdout
