@@ -40,7 +40,7 @@
         <number>4</number>
        </property>
        <item>
-        <widget class="QPlainTextEdit" name="output">
+        <widget class="QTextEdit" name="output">
          <property name="font">
           <font>
            <family>Courier New</family>

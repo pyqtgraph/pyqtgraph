@@ -28,7 +28,7 @@ class Ui_Form(object):
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setSpacing(4)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.output = QtWidgets.QPlainTextEdit(self.layoutWidget)
+        self.output = QtWidgets.QTextEdit(self.layoutWidget)
         font = QtGui.QFont()
         font.setFamily("Courier New")
         font.setStyleStrategy(QtGui.QFont.PreferAntialias)

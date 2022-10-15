@@ -3,10 +3,11 @@ import re
 import subprocess
 import sys
 import traceback
+import code
 
 from .. import exceptionHandling as exceptionHandling
 from .. import getConfigOption
-from ..functions import SignalBlock
+from ..functions import SignalBlock, mkBrush
 from ..Qt import QtCore, QtGui, QtWidgets
 from . import template_generic as ui_template
 
@@ -48,10 +49,33 @@ class ConsoleWidget(QtWidgets.QWidget):
         if namespace is None:
             namespace = {}
         namespace['__console__'] = self
+        self._orig_stdout = None
+        self._orig_stderr = None
+        self._lastCommandRow = None
+
+        outputBlockFormat = QtGui.QTextBlockFormat()
+
+        outputFirstLineBlockFormat = QtGui.QTextBlockFormat(outputBlockFormat)
+        outputFirstLineBlockFormat.setTopMargin(5)
+
+        outputCharFormat = QtGui.QTextCharFormat()
+        outputCharFormat.setFontWeight(QtGui.QFont.Normal)
+
+        cmdBlockFormat = QtGui.QTextBlockFormat()
+        cmdBlockFormat.setBackground(mkBrush("#CCF"))
+
+        cmdCharFormat = QtGui.QTextCharFormat()
+        cmdCharFormat.setFontWeight(QtGui.QFont.Bold)
+
+        self.textStyles = {
+            'command': (cmdCharFormat, cmdBlockFormat),
+            'output': (outputCharFormat, outputBlockFormat),
+            'output_first_line': (outputCharFormat, outputFirstLineBlockFormat),
+        }
+
         self.localNamespace = namespace
         self.editor = editor
-        self._multiline = None  # buffer to hold multiple lines of input
-        self._inCmd = False  # flag enabled while a command is being executed
+        self._commandBuffer = []  # buffer to hold multiple lines of input
         
         self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
@@ -104,8 +128,8 @@ class ConsoleWidget(QtWidgets.QWidget):
     def runCmd(self, cmd):
         #cmd = str(self.input.lastCmd)
 
-        orig_stdout = sys.stdout
-        orig_stderr = sys.stderr
+        self._orig_stdout = sys.stdout
+        self._orig_stderr = sys.stderr
         encCmd = re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', cmd))
         encCmd = re.sub(r' ', '&nbsp;', encCmd)
         
@@ -115,20 +139,53 @@ class ConsoleWidget(QtWidgets.QWidget):
         try:
             sys.stdout = self
             sys.stderr = self
-            if self._multiline is not None:
-                self.write("<br><b>%s</b>\n"%encCmd, html=True, scrollToBottom=True)
-                self.execMulti(cmd)
+
+            # jump to next line before printing commands
+            cursor = self.output.textCursor()
+            if cursor.columnNumber() > 0:
+                self.output.insertPlainText('\n')
+
+            if len(self._commandBuffer) == 0:
+                # start a new div to display this command                
+                # self.write(f'<div style="{self.commandStyle}">&gt;&gt;&gt; <b>{encCmd}</b></div>', html=True)
+                self.write(f">>> {cmd}\n", style='command')
             else:
-                self.write("<br><div style='background-color: #CCF; color: black'><b>%s</b>\n"%encCmd, html=True, scrollToBottom=True)
-                self._inCmd = True
-                self.execSingle(cmd)
+                # self.write(f'<span style="{self.commandStyle}">... <b>{encCmd}</b></span><br>', html=True)
+                self.write(f"... {cmd}\n", style='command')
             
-            if not self._inCmd:
-                self.write("</div>\n", html=True, scrollToBottom=True)
+            self._commandBuffer.append(cmd)
+
+            cmd = '\n'.join(self._commandBuffer)
+            try:
+                cmdCode = code.compile_command(cmd)
+            except Exception:
+                # cannot continue processing this command; reset, close the command div, and print exception
+                self._commandBuffer = []
+                # self.write("</div>\n", html=True, scrollToBottom=True)
+                self.displayException()
+            else:
+                if cmdCode is None:
+                    # incomplete input; wait for next line
+                    return
+                # reset, close the command div, and execute code
+                self._commandBuffer = []
+                # self.write("</div>\n", html=True, scrollToBottom=True)
+
+                # start a new div for command output
+                # self.write(f'<br><div style="{self.outputStyle}">\n', html=True)
+                # run command
+                try:
+                    exec(cmdCode, self.globals(), self.locals())
+                except:
+                    self.displayException()
+                # close output div
+                # self.write(f'\n</div>\n', html=True)                
                 
         finally:
-            sys.stdout = orig_stdout
-            sys.stderr = orig_stderr
+            sys.stdout = self._orig_stdout
+            sys.stderr = self._orig_stderr
+            self._orig_stdout = None
+            self._orig_stderr = None
             
             sb = self.ui.historyList.verticalScrollBar()
             sb.setValue(sb.maximum())
@@ -147,63 +204,20 @@ class ConsoleWidget(QtWidgets.QWidget):
         else:
             return self.localNamespace
 
-    def execSingle(self, cmd):
-        try:
-            output = eval(cmd, self.globals(), self.locals())
-            self.write(repr(output) + '\n')
-            return
-        except SyntaxError:
-            pass
-        except:
-            self.displayException()
-            return
+    def realOutputFiles(self):
+        """Return the real sys.stdout and stderr (which are sometimes masked while running commands)
+        """
+        return (
+            self._orig_stdout or sys.stdout,
+            self._orig_stderr or sys.stderr
+        )
 
-        # eval failed with syntax error; try exec instead
-        try:
-            exec(cmd, self.globals(), self.locals())
-        except SyntaxError as exc:
-            if 'unexpected EOF' in exc.msg:
-                self._multiline = cmd
-            else:
-                self.displayException()
-        except:
-            self.displayException()
-            
-    def execMulti(self, nextLine):
-        if nextLine.strip() != '':
-            self._multiline += "\n" + nextLine
-            return
-        else:
-            cmd = self._multiline
-            
-        try:
-            output = eval(cmd, self.globals(), self.locals())
-            self.write(str(output) + '\n')
-            self._multiline = None
-            return
-        except SyntaxError:
-            pass
-        except:
-            self.displayException()
-            self._multiline = None
-            return
+    def _print(self, strn):
+        """Print to real stdout (for debugging)
+        """
+        self.realOutputFiles()[0].write(strn + "\n")
 
-        # eval failed with syntax error; try exec instead
-        try:
-            exec(cmd, self.globals(), self.locals())
-            self._multiline = None
-        except SyntaxError as exc:
-            if 'unexpected EOF' in exc.msg:
-                self._multiline = cmd
-            else:
-                self.displayException()
-                self._multiline = None
-        except:
-            self.displayException()
-            self._multiline = None
-
-
-    def write(self, strn, html=False, scrollToBottom='auto'):
+    def write(self, strn, style='output', scrollToBottom='auto'):
         """Write a string into the console.
 
         If scrollToBottom is 'auto', then the console is automatically scrolled
@@ -221,20 +235,35 @@ class ConsoleWidget(QtWidgets.QWidget):
             scrollToBottom = atBottom
 
         self.output.moveCursor(QtGui.QTextCursor.MoveOperation.End)
-        if html:
-            self.output.textCursor().insertHtml(strn)
-        else:
-            if self._inCmd:
-                self._inCmd = False
-                self.output.textCursor().insertHtml("</div><br><div style='font-weight: normal; background-color: #FFF; color: black'>")
+
+        row = self.output.textCursor().blockNumber()
+        if style == 'command':
+            self._lastCommandRow = row
+
+        if style == 'output' and row == self._lastCommandRow + 1:
+            # adjust style for first line of output
+            firstLine, endl, strn = strn.partition('\n')
+            self._setTextStyle('output_first_line')
+            self.output.insertPlainText(firstLine + endl)
+
+        if len(strn) > 0:
+            self._setTextStyle(style)
             self.output.insertPlainText(strn)
+            # return to output style immediately to avoid seeing an extra line of command style
+            if 'style' != 'output':
+                self._setTextStyle('output')
 
         if scrollToBottom:
             sb.setValue(sb.maximum())
         else:
             sb.setValue(scroll)
 
-    
+    def _setTextStyle(self, style):
+        charFormat, blockFormat = self.textStyles[style]
+        cursor = self.output.textCursor()
+        cursor.setBlockFormat(blockFormat)
+        self.output.setCurrentCharFormat(charFormat)
+
     def fileno(self):
         # Need to implement this since we temporarily occlude sys.stdout, and someone may be looking for it (faulthandler, for example)
         return 1
