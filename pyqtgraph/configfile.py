@@ -12,7 +12,6 @@ import datetime
 import os
 import re
 import sys
-import tempfile
 from collections import OrderedDict
 
 import numpy

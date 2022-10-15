@@ -1,6 +1,6 @@
 from math import hypot
 
-from ..Qt import QtCore, QtGui, QtWidgets, mkQApp
+from ..Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ['JoystickButton']
 
