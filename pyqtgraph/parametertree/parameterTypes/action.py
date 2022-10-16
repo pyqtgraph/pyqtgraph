@@ -57,6 +57,9 @@ class ActionParameterItem(ParameterItem):
         self.layout.addWidget(self.button)
         self.layout.addStretch()
         self.titleChanged()
+        activateFn = param.opts.get('value', None)
+        if activateFn is not None:
+            self.button.clicked.connect(activateFn)
 
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
