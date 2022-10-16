@@ -45,7 +45,7 @@ class ParameterControlledButton(QtWidgets.QPushButton):
 
 
 class ActionParameterItem(ParameterItem):
-    """ParameterItem displaying a clickable button."""
+    """ParameterItem displaying a clickable button. Accepts a 'value' parameter of a zero-argument function which is called on click event."""
     def __init__(self, param, depth):
         ParameterItem.__init__(self, param, depth)
         self.layoutWidget = QtWidgets.QWidget()
