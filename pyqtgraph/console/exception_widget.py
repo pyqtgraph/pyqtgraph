@@ -1,4 +1,4 @@
-import sys, re, traceback
+import sys, re, traceback, threading
 from .. import exceptionHandling as exceptionHandling
 from ..Qt import QtWidgets, QtCore
 from ..functions import SignalBlock
@@ -13,6 +13,8 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._setupUi()
+
+        self.filterString = ''
 
         # send exceptions raised in non-gui threads back to the main thread by signal.
         self._threadException.connect(self._threadExceptionHandler)
@@ -67,6 +69,7 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
         self.exceptionStackList.itemClicked.connect(self.stackItemClicked)
         self.exceptionStackList.itemDoubleClicked.connect(self.stackItemDblClicked)
         self.onlyUncaughtCheck.toggled.connect(self.updateSysTrace)
+        self.filterText.textChanged.connect(self._filterTextChanged)
 
     def setStack(self, frame=None, tb=None):
         self.clearExceptionBtn.setEnabled(True)
@@ -120,19 +123,34 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
         
         if not self.catchNextExceptionBtn.isChecked() and not self.catchAllExceptionsBtn.isChecked():
             if sys.gettrace() == self.systrace:
-                sys.settrace(None)
+                self._disableSysTrace()
             return
         
         if self.onlyUncaughtCheck.isChecked():
             if sys.gettrace() == self.systrace:
-                sys.settrace(None)
+                self._disableSysTrace()
         else:
-            if sys.gettrace() is not None and sys.gettrace() != self.systrace:
+            if sys.gettrace() not in (None, self.systrace):
                 self.onlyUncaughtCheck.setChecked(False)
-                raise Exception("sys.settrace is in use; cannot monitor for caught exceptions.")
+                raise Exception("sys.settrace is in use (are you using another debugger?); cannot monitor for caught exceptions.")
             else:
-                sys.settrace(self.systrace)
-        
+                self._enableSysTrace()
+
+    def _enableSysTrace(self):
+        # set global trace function
+        sys.settrace(self.systrace)
+        threading.settrace(self.systrace)
+
+        # # also update trace function on all pre-existing frames
+        # for tid, frame in sys._current_frames().items():
+        #     while frame is not None:
+        #         frame.f_trace = self.systrace
+        #         frame = frame.f_back
+
+    def _disableSysTrace(self):
+        sys.settrace(None)
+        threading.settrace(None)
+
     def exceptionHandler(self, excType, exc, tb, systrace=False, frame=None):
         if frame is None:
             frame = sys._getframe()
@@ -176,7 +194,7 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
         filename = tb.tb_frame.f_code.co_filename
         function = tb.tb_frame.f_code.co_name
         
-        filterStr = str(self.filterText.text())
+        filterStr = self.filterString
         if filterStr != '':
             if isinstance(exc, Exception):
                 msg = traceback.format_exception_only(type(exc), exc)
@@ -212,3 +230,6 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
 
     def stackItemDblClicked(self, item):
         self.sigStackItemDblClicked.emit(self, item)
+
+    def _filterTextChanged(self, value):
+        self.filterString = str(value)
