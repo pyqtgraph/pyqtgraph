@@ -467,7 +467,9 @@ def test_interact_with_icon():
 
     groupItem = parent.child("a").itemClass(parent.child("a"), 1)
     buttonPixmap = groupItem.button.icon().pixmap(randomPixmap.size())
-    imageBytes = [
-        fn.ndarray_from_qimage(pix.toImage()) for pix in (randomPixmap, buttonPixmap)
-    ]
+
+    # hold references to the QImages
+    images = [ pix.toImage() for pix in (randomPixmap, buttonPixmap) ]
+
+    imageBytes = [ fn.ndarray_from_qimage(img) for img in images ]
     assert np.array_equal(*imageBytes)
