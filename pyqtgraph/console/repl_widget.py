@@ -6,7 +6,7 @@ from .CmdInput import CmdInput
 
 class ReplWidget(QtWidgets.QWidget):
     sigCommandEntered = QtCore.Signal(object, object)  # self, command
-    sigCommandRaisedException = QtCore.Signal(object, object)  # self, exc_info
+    sigCommandRaisedException = QtCore.Signal(object, object)  # self, exc
 
     def __init__(self, globals, locals, parent=None):
         self.globals = globals
@@ -88,9 +88,9 @@ class ReplWidget(QtWidgets.QWidget):
             try:
                 with self.stdoutInterceptor:
                     exec(cmdCode, self.globals(), self.locals())
-            except:
+            except Exception as exc:
                 self.displayException()
-                self.sigCommandRaisedException.emit(self, sys.exc_info())
+                self.sigCommandRaisedException.emit(self, exc)
 
             # Add a newline if the output did not
             cursor = self.output.textCursor()

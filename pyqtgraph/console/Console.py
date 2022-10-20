@@ -133,18 +133,18 @@ class ConsoleWidget(QtWidgets.QWidget):
         sb = self.historyList.verticalScrollBar()
         sb.setValue(sb.maximum())
 
-    def _commandRaisedException(self, repl, exc_info):
-        self.excHandler.exceptionHandler(*exc_info)
+    def _commandRaisedException(self, repl, exc):
+        self.excHandler.exceptionHandler(exc)
 
     def globals(self):
-        frame = self.excHandler.exceptionStackList.selectedFrame()
+        frame = self.excHandler.selectedFrame()
         if frame is not None and self.excHandler.runSelectedFrameCheck.isChecked():
             return frame.f_globals
         else:
             return self.localNamespace
         
     def locals(self):
-        frame = self.excHandler.exceptionStackList.selectedFrame()
+        frame = self.excHandler.selectedFrame()
         if frame is not None and self.excHandler.runSelectedFrameCheck.isChecked():
             return frame.f_locals
         else:
@@ -166,7 +166,7 @@ class ConsoleWidget(QtWidgets.QWidget):
             editor = getConfigOption('editorCommand')
         if editor is None:
             return
-        tb = self.excHandler.exceptionStackList.selectedFrame()
+        tb = self.excHandler.selectedFrame()
         lineNum = tb.f_lineno
         fileName = tb.f_code.co_filename
         subprocess.Popen(self.editor.format(fileName=fileName, lineNum=lineNum), shell=True)

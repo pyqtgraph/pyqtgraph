@@ -15,6 +15,7 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
         self._setupUi()
 
         self.filterString = ''
+        self._inSystrace = False
 
         # send exceptions raised in non-gui threads back to the main thread by signal.
         self._threadException.connect(self._threadExceptionHandler)
@@ -43,16 +44,12 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
         self.onlyUncaughtCheck.setChecked(True)
         self.layout.addWidget(self.onlyUncaughtCheck, 0, 4, 1, 1)
 
-        self.exceptionStackList = StackWidget(self)
-        self.layout.addWidget(self.exceptionStackList, 2, 0, 1, 7)
+        self.stackTree = StackWidget(self)
+        self.layout.addWidget(self.stackTree, 2, 0, 1, 7)
 
         self.runSelectedFrameCheck = QtWidgets.QCheckBox("Run commands in selected stack frame", self)
         self.runSelectedFrameCheck.setChecked(True)
         self.layout.addWidget(self.runSelectedFrameCheck, 3, 0, 1, 7)
-
-        self.exceptionInfoLabel = QtWidgets.QLabel("Stack Trace", self)
-        self.exceptionInfoLabel.setWordWrap(True)
-        self.layout.addWidget(self.exceptionInfoLabel, 1, 0, 1, 7)
 
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.layout.addItem(spacerItem, 0, 5, 1, 1)
@@ -66,14 +63,21 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
         self.catchAllExceptionsBtn.toggled.connect(self.catchAllExceptions)
         self.catchNextExceptionBtn.toggled.connect(self.catchNextException)
         self.clearExceptionBtn.clicked.connect(self.clearExceptionClicked)
-        self.exceptionStackList.itemClicked.connect(self.stackItemClicked)
-        self.exceptionStackList.itemDoubleClicked.connect(self.stackItemDblClicked)
+        self.stackTree.itemClicked.connect(self.stackItemClicked)
+        self.stackTree.itemDoubleClicked.connect(self.stackItemDblClicked)
         self.onlyUncaughtCheck.toggled.connect(self.updateSysTrace)
         self.filterText.textChanged.connect(self._filterTextChanged)
 
     def setStack(self, frame=None, tb=None):
         self.clearExceptionBtn.setEnabled(True)
-        self.exceptionStackList.setStack(frame, tb)
+        self.stackTree.setStack(frame, tb)
+
+    def setException(self, exc=None, lastFrame=None):
+        self.clearExceptionBtn.setEnabled(True)
+        self.stackTree.setException(exc, lastFrame=lastFrame)
+
+    def selectedFrame(self):
+        return self.stackTree.selectedFrame()
 
     def catchAllExceptions(self, catch=True):
         """
@@ -105,17 +109,15 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
             self.disableExceptionHandling()
         
     def enableExceptionHandling(self):
-        exceptionHandling.register(self.exceptionHandler)
+        exceptionHandling.registerCallback(self.exceptionHandler)
         self.updateSysTrace()
         
     def disableExceptionHandling(self):
-        exceptionHandling.unregister(self.exceptionHandler)
+        exceptionHandling.unregisterCallback(self.exceptionHandler)
         self.updateSysTrace()
         
     def clearExceptionClicked(self):
-        self.currentTraceback = None
-        self.exceptionInfoLabel.setText("[No current exception]")
-        self.exceptionStackList.clear()
+        self.stackTree.clear()
         self.clearExceptionBtn.setEnabled(False)
         
     def updateSysTrace(self):
@@ -138,29 +140,34 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
 
     def _enableSysTrace(self):
         # set global trace function
-        sys.settrace(self.systrace)
-        threading.settrace(self.systrace)
-
-        # # also update trace function on all pre-existing frames
-        # for tid, frame in sys._current_frames().items():
-        #     while frame is not None:
-        #         frame.f_trace = self.systrace
-        #         frame = frame.f_back
+        # note: this has no effect on pre-existing frames or threads 
+        # until settrace_all_threads arrives in python 3.12.
+        sys.settrace(self.systrace)  # affects current thread only
+        threading.settrace(self.systrace)  # affects new threads only
+        if hasattr(threading, 'settrace_all_threads'):
+            threading.settrace_all_threads(self.systrace)
 
     def _disableSysTrace(self):
         sys.settrace(None)
         threading.settrace(None)
+        if hasattr(threading, 'settrace_all_threads'):
+            threading.settrace_all_threads(None)
 
-    def exceptionHandler(self, excType, exc, tb, systrace=False, frame=None):
-        if frame is None:
-            frame = sys._getframe()
+    def exceptionHandler(self, excInfo, lastFrame=None):
+        if isinstance(excInfo, Exception):
+            exc = excInfo
+        else:
+            exc = excInfo.exc_value
 
-        # exceptions raised in non-gui threads must be handled separately
+        # if lastFrame is None:
+        #     lastFrame = sys._getframe().f_back
+
+        # exceptions raised in non-gui threads must be sent to the gui thread by signal
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
         if not isGuiThread:
-            # sending a frame from one thread to another.. probably not safe, but better than just
-            # dropping the exception?
-            self._threadException.emit((excType, exc, tb, systrace, frame.f_back))
+            # note: we are giving the user the ability to modify a frame owned by another thread.. 
+            # expect trouble :)
+            self._threadException.emit((excInfo, lastFrame))
             return
 
         if self.catchNextExceptionBtn.isChecked():
@@ -168,24 +175,28 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
         elif not self.catchAllExceptionsBtn.isChecked():
             return
         
-        self.currentTraceback = tb
-        
-        excMessage = ''.join(traceback.format_exception_only(excType, exc))
-        self.exceptionInfoLabel.setText(excMessage)
-
-        if systrace:
-            # exceptions caught using systrace don't need the usual 
-            # call stack + traceback handling
-            self.setStack(frame.f_back.f_back)
-        else:
-            self.setStack(frame=frame.f_back, tb=tb)
+        self.setException(exc, lastFrame=lastFrame)
     
     def _threadExceptionHandler(self, args):
         self.exceptionHandler(*args)
 
     def systrace(self, frame, event, arg):
-        if event == 'exception' and self.checkException(*arg):
-            self.exceptionHandler(*arg, systrace=True)
+        if event != 'exception':
+            return self.systrace
+
+        if self._inSystrace:
+            # prevent recursve calling
+            return self.systrace
+        self._inSystrace = True
+        try:
+            if self.checkException(*arg):
+                # note: the exception has no __traceback__ at this point!
+                self.exceptionHandler(arg[1], lastFrame=frame)
+        except Exception as exc:
+            print("Exception in systrace:")
+            traceback.print_exc()
+        finally:
+            self.inSystrace = False
         return self.systrace
         
     def checkException(self, excType, exc, tb):
