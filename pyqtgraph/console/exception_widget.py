@@ -68,9 +68,9 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
         self.onlyUncaughtCheck.toggled.connect(self.updateSysTrace)
         self.filterText.textChanged.connect(self._filterTextChanged)
 
-    def setStack(self, frame=None, tb=None):
+    def setStack(self, frame=None):
         self.clearExceptionBtn.setEnabled(True)
-        self.stackTree.setStack(frame, tb)
+        self.stackTree.setStack(frame)
 
     def setException(self, exc=None, lastFrame=None):
         self.clearExceptionBtn.setEnabled(True)

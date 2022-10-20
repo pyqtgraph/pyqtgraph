@@ -112,8 +112,8 @@ class ConsoleWidget(QtWidgets.QWidget):
             self.exceptionBtn.setChecked(True)
         self.excHandler.catchNextException(catch)
 
-    def setStack(self, frame=None, tb=None):
-        self.excHandler.setStack(frame, tb)
+    def setStack(self, frame=None):
+        self.excHandler.setStack(frame)
  
     def loadHistory(self):
         """Return the list of previously-invoked command strings (or None)."""
