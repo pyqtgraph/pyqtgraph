@@ -188,6 +188,7 @@ class ColorBarItem(PlotItem):
             self.img_list = [ weakref.ref(item) for item in img ]
         except TypeError: # failed to iterate, make a single-item list
             self.img_list = [ weakref.ref( img ) ]
+        colormap_is_undefined = self._colorMap is None
         for img_weakref in self.img_list:
             img = img_weakref()
             if img is not None:
@@ -199,11 +200,11 @@ class ColorBarItem(PlotItem):
                     if hasattr(img, "disableAutoLevels"):
                         img.disableAutoLevels()
 
-                if self._colorMap is None and hasattr(img, 'getColorMap'): # check if one of the assigned images has a defined color map
-                    # NOTE: Behavior changes from selecting the first colormap in the list of items to selecting the last.
+                if colormap_is_undefined and hasattr(img, 'getColorMap'): # check if one of the assigned images has a defined color map
                     img_cm = img.getColorMap()
                     if img_cm is not None:
                         self._colorMap = img_cm
+                        colormap_is_undefined = False
                 
                 if not self._actively_adjusted_values: 
                     # check if one of the assigned images has a non-default set of levels
