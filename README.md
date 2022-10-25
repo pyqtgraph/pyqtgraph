@@ -99,7 +99,12 @@ Installation Methods
 --------------------
 
 * From PyPI
-  * Last released version: `pip install pyqtgraph`
+  * Last released version:
+  
+```
+ pip install pyqtgraph
+```
+
   * Latest development version: `pip install git+https://github.com/pyqtgraph/pyqtgraph@master`
 * From conda
   * Last released version: `conda install -c conda-forge pyqtgraph`
