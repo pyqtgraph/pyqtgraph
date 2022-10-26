@@ -139,24 +139,3 @@ class FeedbackButton(QtWidgets.QPushButton):
         QtWidgets.QPushButton.setStyleSheet(self, style)
         if not temporary:
             self.origStyle = style
-
-
-if __name__ == '__main__':
-    import time
-    app = QtWidgets.QApplication([])  # noqa: qapp stored to avoid gc
-    win = QtWidgets.QMainWindow()
-    btn = FeedbackButton("Button")
-    fail = True
-    def click():
-        btn.processing("Hold on..")
-        time.sleep(2.0)
-        
-        global fail
-        fail = not fail
-        if fail:
-            btn.failure(message="FAIL.", tip="There was a failure. Get over it.")
-        else:
-            btn.success(message="Bueno!")
-    btn.clicked.connect(click)
-    win.setCentralWidget(btn)
-    win.show()

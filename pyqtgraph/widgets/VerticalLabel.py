@@ -80,22 +80,3 @@ class VerticalLabel(QtWidgets.QLabel):
                 return QtCore.QSize(self.hint.width(), self.hint.height())
             else:
                 return QtCore.QSize(50, 19)
-
-
-if __name__ == '__main__':
-    app = QtWidgets.QApplication([])  # noqa: qapplication must be stored to variable to avoid gc
-    win = QtWidgets.QMainWindow()
-    w = QtWidgets.QWidget()
-    l = QtWidgets.QGridLayout()
-    w.setLayout(l)
-    
-    l1 = VerticalLabel("text 1", orientation='horizontal')
-    l2 = VerticalLabel("text 2")
-    l3 = VerticalLabel("text 3")
-    l4 = VerticalLabel("text 4", orientation='horizontal')
-    l.addWidget(l1, 0, 0)
-    l.addWidget(l2, 1, 1)
-    l.addWidget(l3, 2, 2)
-    l.addWidget(l4, 3, 3)
-    win.setCentralWidget(w)
-    win.show()
