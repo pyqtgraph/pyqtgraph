@@ -14,8 +14,8 @@ app = pg.mkQApp()
 def assert_alldead(refs):
     for ref in refs:
         obj = ref()
-        assert obj is None or not (
-            isinstance(obj, pg.QtCore.QObject) and pg.Qt.isQObjectAlive(obj)
+        assert obj is None or (
+            isinstance(obj, pg.QtCore.QObject) and not pg.Qt.isQObjectAlive(obj)
         )
 
 def qObjectTree(root):
