@@ -201,7 +201,7 @@ class PlotItem(GraphicsWidget):
         self.ctrlMenu.setTitle(translate("PlotItem", 'Plot Options'))
         self.subMenus = []
         for name, grp in menuItems:
-            sm = QtWidgets.QMenu(name)
+            sm = QtWidgets.QMenu(name, self.ctrlMenu)
             act = QtWidgets.QWidgetAction(self)
             act.setDefaultWidget(grp)
             sm.addAction(act)

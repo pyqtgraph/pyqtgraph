@@ -24,7 +24,7 @@ class ViewBoxMenu(QtWidgets.QMenu):
         self.widgetGroups = []
         self.dv = QtGui.QDoubleValidator(self)
         for axis in 'XY':
-            m = QtWidgets.QMenu()
+            m = QtWidgets.QMenu(self)
             m.setTitle(f"{axis} {translate('ViewBox', 'axis')}")
             w = QtWidgets.QWidget()
             ui = ui_template.Ui_Form()
@@ -55,12 +55,8 @@ class ViewBoxMenu(QtWidgets.QMenu):
 
         self.ctrl[0].invertCheck.toggled.connect(self.xInvertToggled)
         self.ctrl[1].invertCheck.toggled.connect(self.yInvertToggled)
-        ## exporting is handled by GraphicsScene now
-        #self.export = QtWidgets.QMenu("Export")
-        #self.setExportMethods(view.exportMethods)
-        #self.addMenu(self.export)
         
-        self.leftMenu = QtWidgets.QMenu(translate("ViewBox", "Mouse Mode"))
+        self.leftMenu = QtWidgets.QMenu(translate("ViewBox", "Mouse Mode"), self)
         group = QtGui.QActionGroup(self)
         
         # This does not work! QAction _must_ be initialized with a permanent 
@@ -84,13 +80,6 @@ class ViewBoxMenu(QtWidgets.QMenu):
         self.view().sigStateChanged.connect(self.viewStateChanged)
         
         self.updateState()
-
-    def setExportMethods(self, methods):
-        self.exportMethods = methods
-        self.export.clear()
-        for opt, fn in methods.items():
-            self.export.addAction(opt, self.exportMethod)
-        
 
     def viewStateChanged(self):
         self.valid = False
@@ -209,10 +198,6 @@ class ViewBoxMenu(QtWidgets.QMenu):
 
     def xInvertToggled(self, b):
         self.view().invertX(b)
-
-    def exportMethod(self):
-        act = self.sender()
-        self.exportMethods[str(act.text())]()
 
     def set3ButtonMode(self):
         self.view().setLeftButtonAction('pan')
