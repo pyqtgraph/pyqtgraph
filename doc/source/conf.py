@@ -39,7 +39,8 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx_qt_documentation",
     "sphinx_design",
-    "sphinxext.rediraffe"
+    "sphinxext.rediraffe",
+    "sphinxcontrib.images",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -140,11 +141,38 @@ html_theme = 'pydata_sphinx_theme'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = dict(
-    github_url="https://github.com/pyqtgraph/pyqtgraph",
-    navbar_end=["theme-switcher", "navbar-icon-links"],
-    twitter_url="https://twitter.com/pyqtgraph",
-)
+html_theme_options = {
+    "favicons": [
+        {
+            "rel": "icon",
+            "sizes": "32x32",
+            "href": "peegee_03_square_no_bg_32_cleaned.png"
+        },
+        {
+            "rel": "icon",
+            "href": "peegee_03_square_no_bg_32_cleaned.ico",
+            "sizes": "any"
+        },
+        {
+            "rel": "apple-touch-icon",
+            "href": "peegee_04_square_no_bg_180_cleaned.png"
+        },
+    ],
+    "github_url": "https://github.com/pyqtgraph/pyqtgraph",
+    "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    "twitter_url": "https://twitter.com/pyqtgraph",
+    "use_edit_page_button": False,
+    "page_sidebar_items": ["page-toc"]
+}
+
+
+if os.getenv("BUILD_DASH_DOCSET"):
+    html_theme_options |= {
+        'page_sidebar_items': [],
+        "show_prev_next": False,
+        "collapse_navigation": True,
+    }
+
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -163,7 +191,7 @@ html_logo = os.path.join("images", "peegee_02.svg")
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-#html_favicon = None
+# html_favicon = "_static/peegee_03_square_no_bg_32_cleaned.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -174,6 +202,9 @@ html_static_path = ['_static']
 html_css_files = [
     "custom.css",
 ]
+
+if os.getenv("BUILD_DASH_DOCSET"):
+    html_css_files.append("dash.css")
 
 # Redirects for pages that were moved to new locations
 rediraffe_redirects = {
@@ -309,7 +340,15 @@ rediraffe_redirects = {
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+if os.getenv("BUILD_DASH_DOCSET"):  # used for building dash docsets
+    html_sidebars = {
+        "**": []
+    }
+else:
+    html_sidebars = {
+        "**": ["sidebar-nav-bs.html", "sidebar-ethical-ads.html"],
+        'index': []  # don't show sidebar on main landing page
+    }
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -325,7 +364,7 @@ rediraffe_redirects = {
 #html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-#html_show_sourcelink = True
+html_show_sourcelink = False
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 #html_show_sphinx = True
