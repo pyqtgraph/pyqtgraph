@@ -37,17 +37,18 @@ class ActionGroupParameterItem(GroupParameterItem):
         super().optsChanged(param, opts)
 
 
-class ActionGroup(GroupParameter):
+class ActionGroupParameter(GroupParameter):
     itemClass = ActionGroupParameterItem
 
-    sigActivated = QtCore.Signal()
+    sigActivated = QtCore.Signal(object)
 
     def __init__(self, **opts):
         opts.setdefault("button", {})
         super().__init__(**opts)
 
     def activate(self):
-        self.sigActivated.emit()
+        self.sigActivated.emit(self)
+        self.emitStateChanged('activated', None)
 
     def setButtonOpts(self, **opts):
         """
