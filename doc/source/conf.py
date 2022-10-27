@@ -346,7 +346,7 @@ if os.getenv("BUILD_DASH_DOCSET"):  # used for building dash docsets
     }
 else:
     html_sidebars = {
-        "**": ["sidebar-nav-bs.html", "sidebar-ethical-ads.html"],
+        "**": ["sidebar-nav-bs.html"],
         'index': []  # don't show sidebar on main landing page
     }
 
