@@ -80,7 +80,7 @@ project = 'pyqtgraph'
 now = datetime.utcfromtimestamp(
     int(os.environ.get('SOURCE_DATE_EPOCH', time.time()))
 )
-copyright = '2011 - {}, Luke Campagnola'.format(now.year)
+copyright = '2011 - {}, PyQtGraph developers'.format(now.year)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -346,7 +346,7 @@ if os.getenv("BUILD_DASH_DOCSET"):  # used for building dash docsets
     }
 else:
     html_sidebars = {
-        "**": ["sidebar-nav-bs.html", "sidebar-ethical-ads.html"],
+        "**": ["sidebar-nav-bs.html"],
         'index': []  # don't show sidebar on main landing page
     }
 
