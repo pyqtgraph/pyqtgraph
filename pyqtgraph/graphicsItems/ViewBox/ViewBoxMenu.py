@@ -24,7 +24,7 @@ class ViewBoxMenu(QtWidgets.QMenu):
         self.widgetGroups = []
         self.dv = QtGui.QDoubleValidator(self)
         for axis in 'XY':
-            m = QtWidgets.QMenu(self)
+            m = QtWidgets.QMenu()
             m.setTitle(f"{axis} {translate('ViewBox', 'axis')}")
             w = QtWidgets.QWidget()
             ui = ui_template.Ui_Form()
@@ -56,7 +56,7 @@ class ViewBoxMenu(QtWidgets.QMenu):
         self.ctrl[0].invertCheck.toggled.connect(self.xInvertToggled)
         self.ctrl[1].invertCheck.toggled.connect(self.yInvertToggled)
         
-        self.leftMenu = QtWidgets.QMenu(translate("ViewBox", "Mouse Mode"), self)
+        self.leftMenu = QtWidgets.QMenu(translate("ViewBox", "Mouse Mode"))
         group = QtGui.QActionGroup(self)
         
         # This does not work! QAction _must_ be initialized with a permanent 
