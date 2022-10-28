@@ -48,9 +48,9 @@ class ErrorBarItem(GraphicsObject):
         self.opts.update(opts)
         self.setVisible(all(self.opts[ax] is not None for ax in ['x', 'y']))
         self.path = None
-        self.update()
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
+        self.update()
         
     def setOpts(self, **opts):
         # for backward compatibility
