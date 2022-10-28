@@ -31,29 +31,54 @@ def resizeWindow(win, w, h, timeout=2.0):
 def mousePress(widget, pos, button, modifier=None):
     if isinstance(widget, QtWidgets.QGraphicsView):
         widget = widget.viewport()
+    global_pos = QtCore.QPointF(widget.mapToGlobal(pos.toPoint()))
     if modifier is None:
         modifier = QtCore.Qt.KeyboardModifier.NoModifier
-    event = QtGui.QMouseEvent(QtCore.QEvent.Type.MouseButtonPress, pos, button, QtCore.Qt.MouseButton.NoButton, modifier)
+    event = QtGui.QMouseEvent(
+        QtCore.QEvent.Type.MouseButtonPress,
+        pos,
+        global_pos,
+        button,
+        QtCore.Qt.MouseButton.NoButton,
+        modifier
+    )
     QtWidgets.QApplication.sendEvent(widget, event)
 
 
 def mouseRelease(widget, pos, button, modifier=None):
     if isinstance(widget, QtWidgets.QGraphicsView):
         widget = widget.viewport()
+    global_pos = QtCore.QPointF(widget.mapToGlobal(pos.toPoint()))
     if modifier is None:
         modifier = QtCore.Qt.KeyboardModifier.NoModifier
-    event = QtGui.QMouseEvent(QtCore.QEvent.Type.MouseButtonRelease, pos, button, QtCore.Qt.MouseButton.NoButton, modifier)
+    event = QtGui.QMouseEvent(
+        QtCore.QEvent.Type.MouseButtonRelease,
+        pos,
+        global_pos,
+        button,
+        QtCore.Qt.MouseButton.NoButton,
+        modifier
+    )
     QtWidgets.QApplication.sendEvent(widget, event)
 
 
 def mouseMove(widget, pos, buttons=None, modifier=None):
     if isinstance(widget, QtWidgets.QGraphicsView):
         widget = widget.viewport()
+    
+    global_pos = QtCore.QPointF(widget.mapToGlobal(pos.toPoint()))
     if modifier is None:
         modifier = QtCore.Qt.KeyboardModifier.NoModifier
     if buttons is None:
         buttons = QtCore.Qt.MouseButton.NoButton
-    event = QtGui.QMouseEvent(QtCore.QEvent.Type.MouseMove, pos, QtCore.Qt.MouseButton.NoButton, buttons, modifier)
+    event = QtGui.QMouseEvent(
+        QtCore.QEvent.Type.MouseMove,
+        pos,
+        global_pos,
+        QtCore.Qt.MouseButton.NoButton,
+        buttons,
+        modifier
+    )
     QtWidgets.QApplication.sendEvent(widget, event)
 
 
