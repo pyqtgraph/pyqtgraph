@@ -2,15 +2,11 @@ __all__ = ["CanvasItem", "GroupCanvasItem"]
 
 import importlib
 
-from .. import ItemGroup, SRTTransform
+from .. import ItemGroup, SRTTransform, debug
 from .. import functions as fn
 from ..graphicsItems.ROI import ROI
 from ..Qt import QT_LIB, QtCore, QtWidgets
-
-ui_template = importlib.import_module(
-    f'.TransformGuiTemplate_{QT_LIB.lower()}', package=__package__)
-
-from .. import debug
+from . import TransformGuiTemplate_generic as ui_template
 
 translate = QtCore.QCoreApplication.translate
 

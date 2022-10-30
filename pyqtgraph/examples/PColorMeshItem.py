@@ -44,9 +44,14 @@ z = np.exp(-(x*xn)**2/1000)[:-1,:-1]
 ## Create image item
 edgecolors   = None
 antialiasing = False
-# edgecolors = {'color':'w', 'width':2} # May be uncommened to see edgecolor effect
-# antialiasing = True # May be uncommened to see antialiasing effect
-pcmi = pg.PColorMeshItem(edgecolors=edgecolors, antialiasing=antialiasing)
+cmap         = pg.colormap.get('viridis')
+levels       = (-2,2) # Will be overwritten unless enableAutoLevels is set to False
+enableAutoLevels = True 
+# edgecolors = {'color':'w', 'width':2} # May be uncommented to see edgecolor effect
+# antialiasing = True # May be uncommented to see antialiasing effect
+# cmap         = pg.colormap.get('plasma') # May be uncommented to see a different colormap than the default 'viridis'
+# enableAutoLevels = False # may be uncommented to see changes in the absolute value of z (color_noise) which is hidden by the autoscaling colormap when using the default `levels=None`
+pcmi = pg.PColorMeshItem(edgecolors=edgecolors, antialiasing=antialiasing, colorMap=cmap, levels=levels, enableAutoLevels=enableAutoLevels)
 view.addItem(pcmi)
 textitem = pg.TextItem(anchor=(1, 0))
 view.addItem(textitem)
@@ -60,6 +65,7 @@ wave_amplitude  = 3
 wave_speed      = 0.3
 wave_length     = 10
 color_speed     = 0.3
+color_noise_freq = 0.05
 
 timer = QtCore.QTimer()
 timer.setSingleShot(True)
@@ -73,9 +79,10 @@ def updateData():
     
     ## Display the new data set
     t0 = time.perf_counter()
+    color_noise = np.sin(i * 2*np.pi*color_noise_freq) 
     new_x = x
     new_y = y+wave_amplitude*np.cos(x/wave_length+i)
-    new_z = np.exp(-(x-np.cos(i*color_speed)*xn)**2/1000)[:-1,:-1]
+    new_z = np.exp(-(x-np.cos(i*color_speed)*xn)**2/1000)[:-1,:-1] + color_noise
     t1 = time.perf_counter()
     pcmi.setData(new_x,
                  new_y,

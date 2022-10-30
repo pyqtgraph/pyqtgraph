@@ -78,6 +78,7 @@ coverage.xml
 *.tiff
 *.tif
 *.png
+!doc/source/**/*.png
 *.dat
 *.DAT
 

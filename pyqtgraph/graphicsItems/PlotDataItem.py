@@ -271,8 +271,8 @@ class PlotDataItem(GraphicsObject):
                               values exist, unpredictable behavior will occur. The data may not be
                               displayed or the plot may take a significant performance hit.
                               
-                              In the default 'auto' connect mode, `PlotDataItem` will apply this 
-                              setting automatically.
+                              In the default 'auto' connect mode, `PlotDataItem` will automatically
+                              override this setting.
             ================= =======================================================================
 
         **Meta-info keyword arguments:**
@@ -707,7 +707,7 @@ class PlotDataItem(GraphicsObject):
                     x = np.array(data['x'])
                 if 'y' in data:
                     y = np.array(data['y'])
-            elif dt ==  'listOfDicts':
+            elif dt == 'listOfDicts':
                 if 'x' in data[0]:
                     x = np.array([d.get('x',None) for d in data])
                 if 'y' in data[0]:
@@ -719,13 +719,13 @@ class PlotDataItem(GraphicsObject):
                 y = data.view(np.ndarray)
                 x = data.xvals(0).view(np.ndarray)
             else:
-                raise Exception('Invalid data type %s' % type(data))
+                raise TypeError('Invalid data type %s' % type(data))
 
         elif len(args) == 2:
             seq = ('listOfValues', 'MetaArray', 'empty')
             dtyp = dataType(args[0]), dataType(args[1])
             if dtyp[0] not in seq or dtyp[1] not in seq:
-                raise Exception('When passing two unnamed arguments, both must be a list or array of values. (got %s, %s)' % (str(type(args[0])), str(type(args[1]))))
+                raise TypeError('When passing two unnamed arguments, both must be a list or array of values. (got %s, %s)' % (str(type(args[0])), str(type(args[1]))))
             if not isinstance(args[0], np.ndarray):
                 #x = np.array(args[0])
                 if dtyp[0] == 'MetaArray':
@@ -877,14 +877,17 @@ class PlotDataItem(GraphicsObject):
             ): # draw if visible...
             # auto-switch to indicate non-finite values as interruptions in the curve:
             if isinstance(curveArgs['connect'], str) and curveArgs['connect'] == 'auto': # connect can also take a boolean array
-                if dataset.containsNonfinite is None:
-                    curveArgs['connect'] = 'all' # this is faster, but silently connects the curve across any non-finite values
-                else:
-                    if dataset.containsNonfinite:
-                        curveArgs['connect'] = 'finite'
-                    else:
-                        curveArgs['connect'] = 'all' # all points can be connected, and no further check is needed.
-                        curveArgs['skipFiniteCheck'] = True
+                if dataset.containsNonfinite is False:
+                    # all points can be connected, and no further check is needed.
+                    curveArgs['connect'] = 'all'
+                    curveArgs['skipFiniteCheck'] = True
+                else:   # True or None
+                    # True: (we checked and found non-finites)
+                    #   don't connect non-finites
+                    # None: (we haven't performed a check for non-finites yet)
+                    #   use connect='finite' in case there are non-finites.
+                    curveArgs['connect'] = 'finite'
+                    curveArgs['skipFiniteCheck'] = False
             self.curve.setData(x=x, y=y, **curveArgs)
             self.curve.show()
         else: # ...hide if not.
@@ -1214,7 +1217,7 @@ def dataType(obj):
             elif obj.ndim == 2 and obj.dtype.names is None and obj.shape[1] == 2:
                 return 'Nx2array'
             else:
-                raise Exception('array shape must be (N,) or (N,2); got %s instead' % str(obj.shape))
+                raise ValueError('array shape must be (N,) or (N,2); got %s instead' % str(obj.shape))
         elif isinstance(first, dict):
             return 'listOfDicts'
         else:

@@ -73,7 +73,7 @@ class LineSegments:
     def arrayToLineSegments(self, x, y, connect, finiteCheck):
         # analogue of arrayToQPath taking the same parameters
         if len(x) < 2:
-            return []
+            return [],
 
         connect_array = None
         if isinstance(connect, np.ndarray):
