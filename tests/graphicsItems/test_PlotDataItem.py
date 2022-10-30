@@ -16,7 +16,7 @@ def test_bool():
 
 def test_bound_formats():
     for datatype in (bool, np.uint8, np.int16, float):
-        truths = np.random.randint(0, 2, size=(100,)).astype(bool)
+        truths = np.random.randint(0, 2, size=(100,)).astype(datatype)
         pdi_scatter = pg.PlotDataItem(truths, symbol='o', pen=None)
         pdi_line    = pg.PlotDataItem(truths)
         bounds = pdi_scatter.dataBounds(1)
