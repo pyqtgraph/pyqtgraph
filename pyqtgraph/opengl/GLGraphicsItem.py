@@ -31,14 +31,14 @@ GLOptions = {
 class GLGraphicsItem(QtCore.QObject):
     _nextId = 0
     
-    def __init__(self, parentItem=None):
+    def __init__(self, parentItem: 'GLGraphicsItem' = None):
         super().__init__()
         self._id = GLGraphicsItem._nextId
         GLGraphicsItem._nextId += 1
         
-        self.__parent = None
+        self.__parent: GLGraphicsItem | None = None
         self.__view = None
-        self.__children = set()
+        self.__children: set[GLGraphicsItem] = set()
         self.__transform = Transform3D()
         self.__visible = True
         self.__initialized = False
