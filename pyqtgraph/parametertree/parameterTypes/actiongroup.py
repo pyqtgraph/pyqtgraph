@@ -1,3 +1,5 @@
+import warnings
+
 from ...Qt import QtCore
 from .action import ParameterControlledButton
 from .basetypes import GroupParameter, GroupParameterItem
@@ -58,3 +60,20 @@ class ActionGroupParameter(GroupParameter):
         buttonOpts = self.opts.get("button", {}).copy()
         buttonOpts.update(opts)
         self.setOpts(button=buttonOpts)
+
+
+class ActionGroup(ActionGroupParameter):
+    sigActivated = QtCore.Signal()
+
+    def __init__(self, **opts):
+        warnings.warn(
+            "`ActionGroup` is deprecated and will be removed in the first release after "
+            "January 2023. Use `ActionGroupParameter` instead. See "
+            "https://github.com/pyqtgraph/pyqtgraph/pull/2505 for details.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(**opts)
+
+    def activate(self):
+        self.sigActivated.emit()
