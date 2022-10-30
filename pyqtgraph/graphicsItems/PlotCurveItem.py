@@ -295,13 +295,13 @@ class PlotCurveItem(GraphicsObject):
             with warnings.catch_warnings(): 
                 # All-NaN data is acceptable; Explicit numpy warning is not needed.
                 warnings.simplefilter("ignore")
-                b = (np.nanmin(d), np.nanmax(d))
+                b = ( float(np.nanmin(d)), float(np.nanmax(d)) ) # enforce float format for bounds, even if data format is different
             if math.isinf(b[0]) or math.isinf(b[1]):
                 mask = np.isfinite(d)
                 d = d[mask]
                 if len(d) == 0:
                     return (None, None)
-                b = (d.min(), d.max())
+                b = ( float(d.min()), float(d.max()) ) # enforce float format for bounds, even if data format is different
 
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
@@ -311,11 +311,14 @@ class PlotCurveItem(GraphicsObject):
             d = d[mask]
             if len(d) == 0:
                 return (None, None)
-            b = np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
+            b = np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)]) # percentile result is always float64 or larger
 
         ## adjust for fill level
         if ax == 1 and self.opts['fillLevel'] not in [None, 'enclosed']:
-            b = (min(b[0], self.opts['fillLevel']), max(b[1], self.opts['fillLevel']))
+            b = ( 
+                float( min(b[0], self.opts['fillLevel']) ), 
+                float( max(b[1], self.opts['fillLevel']) )
+            ) # enforce float format for bounds, even if data format is different
 
         ## Add pen width only if it is non-cosmetic.
         pen = self.opts['pen']
