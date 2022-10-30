@@ -14,7 +14,7 @@ class GLMeshItem(GLGraphicsItem):
     
     Displays a 3D triangle mesh. 
     """
-    def __init__(self, **kwds):
+    def __init__(self, parentItem=None, **kwds):
         """
         ============== =====================================================
         **Arguments:**
@@ -47,7 +47,7 @@ class GLMeshItem(GLGraphicsItem):
             'computeNormals': True,
         }
         
-        GLGraphicsItem.__init__(self)
+        super().__init__(parentItem=parentItem)
         glopts = kwds.pop('glOptions', 'opaque')
         self.setGLOptions(glopts)
         shader = kwds.pop('shader', None)

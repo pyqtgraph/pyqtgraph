@@ -14,8 +14,8 @@ class GLGridItem(GLGraphicsItem):
     Displays a wire-frame grid. 
     """
     
-    def __init__(self, size=None, color=(255, 255, 255, 76.5), antialias=True, glOptions='translucent'):
-        GLGraphicsItem.__init__(self)
+    def __init__(self, size=None, color=(255, 255, 255, 76.5), antialias=True, glOptions='translucent', parentItem=None):
+        super().__init__(parentItem=parentItem)
         self.setGLOptions(glOptions)
         self.antialias = antialias
         if size is None:

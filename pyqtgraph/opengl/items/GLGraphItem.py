@@ -14,8 +14,8 @@ class GLGraphItem(GLGraphicsItem):
     Useful for drawing networks, trees, etc.
     """
 
-    def __init__(self, **kwds):
-        GLGraphicsItem.__init__(self)
+    def __init__(self, parentItem=None, **kwds):
+        super().__init__(parentItem=parentItem)
 
         self.edges = None
         self.edgeColor = QtGui.QColor(QtCore.Qt.GlobalColor.white)
