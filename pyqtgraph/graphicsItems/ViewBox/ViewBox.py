@@ -87,13 +87,22 @@ class ViewBox(GraphicsWidget):
 
     """
 
+    sigKeyPressEvent = QtCore.Signal(object, object)
+    sigMouseClickEvent = QtCore.Signal(object, object)
+    sigMouseDragEvent = QtCore.Signal(object, object)
+    sigResizeEvent = QtCore.Signal(object, object)
+    sigWheelEvent = QtCore.Signal(object, object)
+
     sigYRangeChanged = QtCore.Signal(object, object)
     sigXRangeChanged = QtCore.Signal(object, object)
     sigRangeChangedManually = QtCore.Signal(object)
+    sigXRangeChangedManually = QtCore.Signal(object)
+    sigYRangeChangedManually = QtCore.Signal(object)
     sigRangeChanged = QtCore.Signal(object, object, object)
     sigStateChanged = QtCore.Signal(object)
     sigTransformChanged = QtCore.Signal(object)
     sigResized = QtCore.Signal(object)
+    sigHistoryChanged = QtCore.Signal(object)
 
     ## mouse modes
     PanMode = 3
@@ -132,6 +141,11 @@ class ViewBox(GraphicsWidget):
         """
 
         GraphicsWidget.__init__(self, parent)
+        self.sigKeyPressEvent.connect(self.keyPressEventHandler)
+        self.sigMouseClickEvent.connect(self.mouseClickEventHandler)
+        self.sigMouseDragEvent.connect(self.mouseDragEventHandler)
+        self.sigResizeEvent.connect(self.resizeEventHandler)
+        self.sigWheelEvent.connect(self.wheelEventHandler)
         self.name = None
         self.linksBlocked = False
         self.addedItems = []
@@ -457,8 +471,12 @@ class ViewBox(GraphicsWidget):
             ch.setParentItem(None)
 
     def resizeEvent(self, ev):
+        ev.accept()
+        self.sigResizeEvent.emit(id(self), ev)
+
+    def resizeEventHandler(self, eid, ev):
         if ev.oldSize() != ev.newSize():
-            self._viewPixelSizeCache  = None
+            self._viewPixelSizeCache = None
             self._matrixNeedsUpdate = True
 
             self.linkedXChanged()
@@ -1019,7 +1037,6 @@ class ViewBox(GraphicsWidget):
             signal = 'sigYRangeChanged'
             slot = self.linkedYChanged
 
-
         oldLink = self.linkedView(axis)
         if oldLink is not None:
             try:
@@ -1028,7 +1045,6 @@ class ViewBox(GraphicsWidget):
             except (TypeError, RuntimeError):
                 ## This can occur if the view has been deleted already
                 pass
-
 
         if view is None or isinstance(view, str):
             self.state['linkedViews'][axis] = view
@@ -1043,7 +1059,6 @@ class ViewBox(GraphicsWidget):
                 if self.autoRangeEnabled()[axis] is False:
                     slot()
 
-
         self.sigStateChanged.emit(self)
 
     def blockLink(self, b):
@@ -1051,13 +1066,11 @@ class ViewBox(GraphicsWidget):
 
     def linkedXChanged(self):
         ## called when x range of linked view has changed
-        view = self.linkedView(0)
-        self.linkedViewChanged(view, ViewBox.XAxis)
+        self.linkedViewChanged(self.linkedView(0), ViewBox.XAxis)
 
     def linkedYChanged(self):
         ## called when y range of linked view has changed
-        view = self.linkedView(1)
-        self.linkedViewChanged(view, ViewBox.YAxis)
+        self.linkedViewChanged(self.linkedView(1), ViewBox.YAxis)
 
     def linkedView(self, ax):
         ## Return the linked view for axis *ax*.
@@ -1276,25 +1289,50 @@ class ViewBox(GraphicsWidget):
         """Return the bounding rect of the item in view coordinates"""
         return self.mapSceneToView(item.sceneBoundingRect()).boundingRect()
 
-    def wheelEvent(self, ev, axis=None):
-        if axis in (0, 1):
-            mask = [False, False]
-            mask[axis] = self.state['mouseEnabled'][axis]
-        else:
-            mask = self.state['mouseEnabled'][:]
-        s = 1.02 ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
+    def wheelEvent(self, ev):
+        ev.accept()
+        self.sigWheelEvent.emit(id(self), ev)
+
+    def wheelEventHandler(self, eid, ev):
+        mask = self.state['mouseEnabled'][:]
+        s = 1.02 ** (ev.delta() * self.state['wheelScaleFactor'])  # actual scaling factor
         s = [(None if m is False else s) for m in mask]
         center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
 
         self._resetTarget()
         self.scaleBy(s, center)
-        ev.accept()
+
+        self.sigXRangeChangedManually.emit(mask)
+        self.sigYRangeChangedManually.emit(mask)
+        self.sigRangeChangedManually.emit(mask)
+
+    def axisWheelEventHandler(self, eid, ev, orientation):
+        axis = 1 if orientation in ['left', 'right'] else 0
+        mask = [False, False]
+        mask[axis] = self.state['mouseEnabled'][axis]
+        s = 1.02 ** (ev.delta() * self.state['wheelScaleFactor'])  # actual scaling factor
+        s = [(None if m is False else s) for m in mask]
+        center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
+
+        self._resetTarget()
+        self.scaleBy(s, center)
+        if axis == ViewBox.XAxis:
+            self.sigXRangeChangedManually.emit(mask)
+        elif axis == ViewBox.YAxis:
+            self.sigYRangeChangedManually.emit(mask)
         self.sigRangeChangedManually.emit(mask)
 
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.MouseButton.RightButton and self.menuEnabled():
             ev.accept()
+        self.sigMouseClickEvent.emit(id(self), ev)
+
+    def mouseClickEventHandler(self, eid, ev):
+        if ev.button() == QtCore.Qt.MouseButton.RightButton and self.menuEnabled():
             self.raiseContextMenu(ev)
+
+    def axisMouseClickEventHandler(self, eid, ev, orientation):
+        self.mouseClickEventHandler(eid, ev)
 
     def raiseContextMenu(self, ev):
         menu = self.getMenu(ev)
@@ -1308,26 +1346,25 @@ class ViewBox(GraphicsWidget):
     def getContextMenus(self, event):
         return self.menu.actions() if self.menuEnabled() else []
 
-    def mouseDragEvent(self, ev, axis=None):
-        ## if axis is specified, event will only affect that axis.
-        ev.accept()  ## we accept all buttons
+    def mouseDragEvent(self, ev):
+        ev.accept()
+        self.sigMouseDragEvent.emit(id(self), ev)
 
+    def mouseDragEventHandler(self, eid, ev):
         pos = ev.pos()
         lastPos = ev.lastPos()
         dif = pos - lastPos
         dif = dif * -1
 
-        ## Ignore axes if mouse is disabled
+        # Ignore axes if mouse is disabled
         mouseEnabled = np.array(self.state['mouseEnabled'], dtype=np.float64)
         mask = mouseEnabled.copy()
-        if axis is not None:
-            mask[1-axis] = 0.0
 
-        ## Scale or translate based on mouse button
+        # Scale or translate based on mouse button
         if ev.button() in [QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.MouseButton.MiddleButton]:
-            if self.state['mouseMode'] == ViewBox.RectMode and axis is None:
-                if ev.isFinish():  ## This is the final move in the drag; change the view scale now
-                    #print "finish"
+            if self.state['mouseMode'] == ViewBox.RectMode:
+                if ev.isFinish():  # This is the final move in the drag; change the view scale now
+                    # print "finish"
                     self.rbScaleBox.hide()
                     ax = QtCore.QRectF(Point(ev.buttonDownPos(ev.button())), Point(pos))
                     ax = self.childGroup.mapRectFromParent(ax)
@@ -1335,12 +1372,12 @@ class ViewBox(GraphicsWidget):
                     self.axHistoryPointer += 1
                     self.axHistory = self.axHistory[:self.axHistoryPointer] + [ax]
                 else:
-                    ## update shape of scale box
+                    # update shape of scale box
                     self.updateScaleBox(ev.buttonDownPos(), ev.pos())
             else:
                 tr = self.childGroup.transform()
                 tr = fn.invertQTransform(tr)
-                tr = tr.map(dif*mask) - tr.map(Point(0,0))
+                tr = tr.map(dif * mask) - tr.map(Point(0, 0))
 
                 x = tr.x() if mask[0] == 1 else None
                 y = tr.y() if mask[1] == 1 else None
@@ -1348,9 +1385,11 @@ class ViewBox(GraphicsWidget):
                 self._resetTarget()
                 if x is not None or y is not None:
                     self.translateBy(x=x, y=y)
-                self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+                self.sigXRangeChangedManually.emit(mask)
+                self.sigYRangeChangedManually.emit(mask)
+                self.sigRangeChangedManually.emit(mask)
         elif ev.button() & QtCore.Qt.MouseButton.RightButton:
-            #print "vb.rightDrag"
+            # print "vb.rightDrag"
             if self.state['aspectLocked'] is not False:
                 mask[0] = 0
 
@@ -1368,9 +1407,70 @@ class ViewBox(GraphicsWidget):
             center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.MouseButton.RightButton)))
             self._resetTarget()
             self.scaleBy(x=x, y=y, center=center)
-            self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+            self.sigXRangeChangedManually.emit(mask)
+            self.sigYRangeChangedManually.emit(mask)
+            self.sigRangeChangedManually.emit(mask)
+
+    def axisMouseDragEventHandler(self, eid, ev, orientation):
+        # if axis is specified, event will only affect that axis.
+        pos = ev.pos()
+        lastPos = ev.lastPos()
+        dif = pos - lastPos
+        dif = dif * -1
+
+        # Ignore axes if mouse is disabled
+        mouseEnabled = np.array(self.state['mouseEnabled'], dtype=np.float64)
+        mask = mouseEnabled.copy()
+        axis = 1 if orientation in ['left', 'right'] else 0
+        mask[1 - axis] = 0.0
+
+        # Scale or translate based on mouse button
+        if ev.button() in [QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.MouseButton.MiddleButton]:
+            tr = self.childGroup.transform()
+            tr = fn.invertQTransform(tr)
+            tr = tr.map(dif * mask) - tr.map(Point(0, 0))
+
+            x = tr.x() if mask[0] == 1 else None
+            y = tr.y() if mask[1] == 1 else None
+
+            self._resetTarget()
+            if x is not None or y is not None:
+                self.translateBy(x=x, y=y)
+            if axis == ViewBox.XAxis:
+                self.sigXRangeChangedManually.emit(mask)
+            elif axis == ViewBox.YAxis:
+                self.sigYRangeChangedManually.emit(mask)
+            self.sigRangeChangedManually.emit(mask)
+        elif ev.button() & QtCore.Qt.MouseButton.RightButton:
+            # print "vb.rightDrag"
+            if self.state['aspectLocked'] is not False:
+                mask[0] = 0
+
+            dif = ev.screenPos() - ev.lastScreenPos()
+            dif = np.array([dif.x(), dif.y()])
+            dif[0] *= -1
+            s = ((mask * 0.02) + 1) ** dif
+
+            tr = self.childGroup.transform()
+            tr = fn.invertQTransform(tr)
+
+            x = s[0] if mouseEnabled[0] == 1 else None
+            y = s[1] if mouseEnabled[1] == 1 else None
+
+            center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.MouseButton.RightButton)))
+            self._resetTarget()
+            self.scaleBy(x=x, y=y, center=center)
+            if axis == ViewBox.XAxis:
+                self.sigXRangeChangedManually.emit(mask)
+            elif axis == ViewBox.YAxis:
+                self.sigYRangeChangedManually.emit(mask)
+            self.sigRangeChangedManually.emit(mask)
 
     def keyPressEvent(self, ev):
+        ev.accept()
+        self.sigKeyPressEvent.emit(id(self), ev)
+
+    def keyPressEventHandler(self, eid, ev):
         """
         This routine should capture key presses in the current view box.
         Key presses are used only when mouse mode is RectMode
@@ -1410,7 +1510,9 @@ class ViewBox(GraphicsWidget):
         """Set the visible range to the given rectangle
         Passes keyword arguments to setRange
         """
-        self.setRange(ax.normalized(), **kwargs) # be sure w, h are correct coordinates
+        self.setRange(ax.normalized(), **kwargs)  # be sure w, h are correct coordinates
+        self.sigXRangeChangedManually.emit(self.state['mouseEnabled'])
+        self.sigYRangeChangedManually.emit(self.state['mouseEnabled'])
         self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
     def allChildren(self, item=None):

@@ -83,6 +83,7 @@ examples_ = OrderedDict([
     ])),
     ('Widgets', OrderedDict([
         ('PlotWidget', 'PlotWidget.py'),
+        ('MultiAxisPlotWidget example', 'MultiAxisPlotWidgetExample.py'),
         ('SpinBox', 'SpinBox.py'),
         ('ConsoleWidget', 'ConsoleWidget.py'),
         ('Histogram / lookup table', 'HistogramLUT.py'),

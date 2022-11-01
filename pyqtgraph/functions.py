@@ -12,6 +12,7 @@ import re
 import struct
 import sys
 import warnings
+import weakref
 from collections import OrderedDict
 
 import numpy as np
@@ -30,6 +31,7 @@ __all__ = [
     'CIELabColor', 'colorCIELab', 'colorDistance',
     'colorTuple', 'colorStr', 'intColor', 'glColor',
     'makeArrowPath', 'eq',
+    'prep_lambda_for_connect',
     'affineSliceCoords', 'affineSlice',
     'interweaveArrays', 'interpolateArray', 'subArray',
     'transformToArray', 'transformCoordinates',
@@ -3238,3 +3240,60 @@ class SignalBlock(object):
     def __exit__(self, *args):
         if self.reconnect:
             self.signal.connect(self.slot)
+
+
+def prep_lambda_for_connect(self, func):
+    """Convenience function for connecting a function to a signal
+    passing self as argument avoid lambda "leaks".
+    from: `Kovid Goyal <https://riverbankcomputing.com/pipermail/pyqt/2018-July/040604.html>`_
+    Example: connect_lambda(signal, self, lambda self, arg: self.method(arg))
+    
+    Saving a rereference to an object inside the
+    object itself or one of it's children creates a
+    reference loop that breaks garbage collection.
+    Method instances (like self.disableAxisAutoRange)
+    store a reference to self.
+    Lambdas and dynamic functions also store references
+    to the objects used inside them.
+    This means that using self in lambdas or dynamic
+    functions and using them as slots will break
+    garbage collection because PySide and PyQt store
+    the slots connected to signals in a way that
+    break garbage collection too.
+
+    Parameters
+    ----------
+    bound_signal : QSignal
+        The signal to connect func to.
+    self : object
+        The object to be passed to the func.
+        It will be wrapped transparently in a weakref
+        to resolve garbage collection issues.
+    func : callable
+        The callable to connect to bound_signal.
+        Should expect at least one parameter: self.
+        The function will be called like this: func(self, *args),
+        args are the parameters passed by the signal.
+    kwargs : dict, optional
+        extra keyword arguments to be passed to the .connect method
+        of the bound_signal.
+
+    Returns
+    -------
+    Connection
+        The newly created Connection QMetaObject
+        returned by the .connect method of the bound_signal.
+    """
+    ref = weakref.ref(self)
+    num_signal_args = func.__code__.co_argcount - 1
+    if num_signal_args < 0:
+        raise TypeError("lambda must take at least one argument")
+
+    def slot(*args):
+        ctx = ref()
+        if ctx is not None:
+            if len(args) != num_signal_args:
+                args = args[:num_signal_args]
+            func(ctx, *args)
+
+    return slot

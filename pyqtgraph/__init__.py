@@ -274,6 +274,7 @@ from .widgets.GroupBox import GroupBox
 from .widgets.HistogramLUTWidget import *
 from .widgets.JoystickButton import *
 from .widgets.LayoutWidget import *
+from .widgets.MultiAxisPlotWidget import *
 from .widgets.MultiPlotWidget import *
 from .widgets.PathButton import *
 from .widgets.PlotWidget import *

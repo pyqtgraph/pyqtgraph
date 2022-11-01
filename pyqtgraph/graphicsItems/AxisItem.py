@@ -11,16 +11,23 @@ from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsWidget import GraphicsWidget
 
 __all__ = ['AxisItem']
+
+
 class AxisItem(GraphicsWidget):
     """
     GraphicsItem showing a single plot axis with ticks, values, and label.
-    Can be configured to fit on any side of a plot, 
+    Can be configured to fit on any side of a plot,
     Can automatically synchronize its displayed scale with ViewBox items.
     Ticks can be extended to draw a grid.
     If maxTickLength is negative, ticks point into the plot.
     """
 
-    def __init__(self, orientation, pen=None, textPen=None, tickPen = None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
+    sigMouseClickEvent = QtCore.Signal(object, object, str)
+    sigMouseDragEvent = QtCore.Signal(object, object, str)
+    sigResizeEvent = QtCore.Signal(object, object)
+    sigWheelEvent = QtCore.Signal(object, object, str)
+
+    def __init__(self, orientation, pen=None, textPen=None, tickPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
         """
         =============== ===============================================================
         **Arguments:**
@@ -45,6 +52,10 @@ class AxisItem(GraphicsWidget):
         """
 
         GraphicsWidget.__init__(self, parent)
+        self.sigMouseClickEvent.connect(self.mouseClickEventHandler)
+        self.sigMouseDragEvent.connect(self.mouseDragEventHandler)
+        self.sigResizeEvent.connect(self.resizeEventHandler)
+        self.sigWheelEvent.connect(self.wheelEventHandler)
         self.label = QtWidgets.QGraphicsTextItem(self)
         self.picture = None
         self.orientation = orientation
@@ -73,6 +84,7 @@ class AxisItem(GraphicsWidget):
             'maxTickLevel': 2,
             'maxTextLevel': 2,
             'tickAlpha': None,  ## If not none, use this alpha for all ticks.
+            'labelMargin': [5, 0],  ## label margin : [between label and axis ticks, between label and axis external edge]
         }
 
         self.textWidth = 30  ## Keeps track of maximum width / height of tick text
@@ -108,7 +120,7 @@ class AxisItem(GraphicsWidget):
             self.setTextPen()
         else:
             self.setTextPen(textPen)
-            
+
         if tickPen is None:
             self.setTickPen()
         else:
@@ -119,7 +131,7 @@ class AxisItem(GraphicsWidget):
             self._linkToView_internal(linkView)
 
         self.grid = False
-        
+
         #self.setCacheMode(self.DeviceCoordinateCache)
 
     def setStyle(self, **kwds):
@@ -225,7 +237,7 @@ class AxisItem(GraphicsWidget):
 
         If an axis is set to log scale, ticks are displayed on a logarithmic scale
         and values are adjusted accordingly. (This is usually accessed by changing
-        the log mode of a :func:`PlotItem <pyqtgraph.PlotItem.setLogMode>`.) The 
+        the log mode of a :func:`PlotItem <pyqtgraph.PlotItem.setLogMode>`.) The
         linked ViewBox will be informed of the change.
         """
         if len(args) == 1:
@@ -241,12 +253,12 @@ class AxisItem(GraphicsWidget):
                 self.logMode = x
             if y is not None and self.orientation in ('left', 'right'):
                 self.logMode = y
-        
+
         if self._linkedView is not None:
-            if self.orientation in ('top', 'bottom'):           
-                self._linkedView().setLogMode('x', self.logMode)    
+            if self.orientation in ('top', 'bottom'):
+                self._linkedView().setLogMode('x', self.logMode)
             elif self.orientation in ('left', 'right'):
-                self._linkedView().setLogMode('y', self.logMode)    
+                self._linkedView().setLogMode('y', self.logMode)
 
         self.picture = None
 
@@ -254,7 +266,7 @@ class AxisItem(GraphicsWidget):
 
     def setTickFont(self, font):
         """
-        (QFont or None) Determines the font used for tick values. 
+        (QFont or None) Determines the font used for tick values.
         Use None for the default font.
         """
         self.style['tickFont'] = font
@@ -264,29 +276,31 @@ class AxisItem(GraphicsWidget):
 
         self.update()
 
-    def resizeEvent(self, ev=None):
+    def resizeEvent(self, ev):
+        self.sigResizeEvent.emit(id(self), ev)
+
+    def resizeEventHandler(self, eid, ev):
         #s = self.size()
 
-        ## Set the position of the label
-        nudge = 5
-        if self.label is None: # self.label is set to None on close, but resize events can still occur.
+        # Set the position of the label
+        if self.label is None:  # self.label is set to None on close, but resize events can still occur.
             self.picture = None
             return
-            
+
         br = self.label.boundingRect()
         p = QtCore.QPointF(0, 0)
         if self.orientation == 'left':
-            p.setY(int(self.size().height()/2 + br.width()/2))
-            p.setX(-nudge)
+            p.setY(int(self.size().height() / 2 + br.width() / 2))
+            p.setX(-self.style['labelMargin'][0] + self.style['labelMargin'][1])
         elif self.orientation == 'right':
-            p.setY(int(self.size().height()/2 + br.width()/2))
-            p.setX(int(self.size().width()-br.height()+nudge))
+            p.setY(int(self.size().height() / 2 + br.width() / 2))
+            p.setX(int(self.size().width() - br.height() + self.style['labelMargin'][0] - self.style['labelMargin'][1]))
         elif self.orientation == 'top':
-            p.setY(-nudge)
-            p.setX(int(self.size().width()/2. - br.width()/2.))
+            p.setY(-self.style['labelMargin'][0] + self.style['labelMargin'][1])
+            p.setX(int(self.size().width() / 2. - br.width() / 2.))
         elif self.orientation == 'bottom':
-            p.setX(int(self.size().width()/2. - br.width()/2.))
-            p.setY(int(self.size().height()-br.height()+nudge))
+            p.setX(int(self.size().width() / 2. - br.width() / 2.))
+            p.setY(int(self.size().height() - br.height() + self.style['labelMargin'][0] - self.style['labelMargin'][1]))
         self.label.setPos(p)
         self.picture = None
 
@@ -374,7 +388,7 @@ class AxisItem(GraphicsWidget):
                     self.textWidth = mx
             if self.style['autoExpandTextSpace']:
                 self._updateWidth()
-        
+
         else:
             if self.style['autoReduceTextSpace']:
                 if x > self.textHeight or x < self.textHeight - 10:
@@ -415,7 +429,8 @@ class AxisItem(GraphicsWidget):
                 h += self.style['tickTextOffset'][1] if self.style['showValues'] else 0
                 h += max(0, self.style['tickLength'])
                 if self.label.isVisible():
-                    h += self.label.boundingRect().height() * 0.8
+                    # bounding rect is usually an overestimate
+                    h += self.label.boundingRect().height() * 0.8 + sum(self.style['labelMargin'])
             else:
                 h = self.fixedHeight
 
@@ -446,7 +461,8 @@ class AxisItem(GraphicsWidget):
                 w += self.style['tickTextOffset'][0] if self.style['showValues'] else 0
                 w += max(0, self.style['tickLength'])
                 if self.label.isVisible():
-                    w += self.label.boundingRect().height() * 0.8  ## bounding rect is usually an overestimate
+                    # bounding rect is usually an overestimate
+                    w += self.label.boundingRect().height() * 0.8 + sum(self.style['labelMargin'])
             else:
                 w = self.fixedWidth
 
@@ -490,13 +506,13 @@ class AxisItem(GraphicsWidget):
             self._textPen = fn.mkPen(getConfigOption('foreground'))
         self.labelStyle['color'] = self._textPen.color().name() #   #RRGGBB
         self._updateLabel()
-        
+
     def tickPen(self):
         if self._tickPen is None:
             return self.pen() # Default to the main pen
         else:
             return fn.mkPen(self._tickPen)
-        
+
     def setTickPen(self, *args, **kwargs):
         """
         Set the pen used for drawing tick marks.
@@ -508,7 +524,7 @@ class AxisItem(GraphicsWidget):
         else:
             self._tickPen = None
 
-        self._updateLabel()        
+        self._updateLabel()
 
     def setScale(self, scale=None):
         """
@@ -577,35 +593,44 @@ class AxisItem(GraphicsWidget):
         else:
             return self._linkedView()
 
-    def _linkToView_internal(self, view):
+    def _linkToView_internal(self, view, replace=True):
         # We need this code to be available without override,
         # even though DateAxisItem overrides the user-side linkToView method
-        self.unlinkFromView()
-
-        self._linkedView = weakref.ref(view)
+        if replace:
+            self.unlinkFromView()
+            self._linkedView = weakref.ref(view)
         if self.orientation in ['right', 'left']:
             view.sigYRangeChanged.connect(self.linkedViewChanged)
         else:
             view.sigXRangeChanged.connect(self.linkedViewChanged)
         view.sigResized.connect(self.linkedViewChanged)
+        # passtrough event handlers
+        self.sigMouseClickEvent.connect(view.axisMouseClickEventHandler)
+        self.sigMouseDragEvent.connect(view.axisMouseDragEventHandler)
+        self.sigWheelEvent.connect(view.axisWheelEventHandler)
 
-    def linkToView(self, view):
+    def linkToView(self, view, replace=True):
         """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
-        self._linkToView_internal(view)
-        
-    def unlinkFromView(self):
-        """Unlink this axis from a ViewBox."""
-        oldView = self.linkedView()
-        self._linkedView = None
-        if self.orientation in ['right', 'left']:
-            if oldView is not None:
-                oldView.sigYRangeChanged.disconnect(self.linkedViewChanged)
-        else:
-            if oldView is not None:
-                oldView.sigXRangeChanged.disconnect(self.linkedViewChanged)
+        self._linkToView_internal(view, replace=replace)
 
+    def unlinkFromView(self, view=None):
+        """Unlink this axis from a ViewBox."""
+        if view is None:
+            oldView = self.linkedView()
+            self._linkedView = None
+        else:
+            oldView = view
         if oldView is not None:
+            if self.orientation in ['right', 'left']:
+                oldView.sigYRangeChanged.disconnect(self.linkedViewChanged)
+            else:
+                oldView.sigXRangeChanged.disconnect(self.linkedViewChanged)
             oldView.sigResized.disconnect(self.linkedViewChanged)
+
+            # remove passtrough event handlers
+            self.sigMouseClickEvent.disconnect(oldView.axisMouseClickEventHandler)
+            self.sigMouseDragEvent.disconnect(oldView.axisMouseDragEventHandler)
+            self.sigWheelEvent.disconnect(oldView.axisWheelEventHandler)
 
     def linkedViewChanged(self, view, newRange=None):
         if self.orientation in ['right', 'left']:
@@ -760,9 +785,9 @@ class AxisItem(GraphicsWidget):
             maxTickCount = size / minSpacing
             if dif / intervals[minorIndex] <= maxTickCount:
                 levels.append((intervals[minorIndex], 0))
-         
+
         return levels
-        
+
         ##### This does not work -- switching between 2/5 confuses the automatic text-level-selection
         ### Determine major/minor tick spacings which flank the optimal spacing.
         #intervals = np.array([1., 2., 5., 10., 20., 50., 100.]) * p10unit
@@ -799,7 +824,6 @@ class AxisItem(GraphicsWidget):
         This is a good method to override in subclasses.
         """
         minVal, maxVal = sorted((minVal, maxVal))
-
 
         minVal *= self.scale
         maxVal *= self.scale
@@ -839,7 +863,6 @@ class AxisItem(GraphicsWidget):
                 #nvals.append(v/self.scale)
             #nticks.append((t[0]/self.scale,nvals))
         #ticks = nticks
-
         return ticks
 
     def logTickValues(self, minVal, maxVal, size, stdTicks):
@@ -1019,7 +1042,7 @@ class AxisItem(GraphicsWidget):
 
             ## length of tick
             tickLength = self.style['tickLength'] / ((i*0.5)+1.0)
-                
+
             lineAlpha = self.style["tickAlpha"]
             if lineAlpha is None:
                 lineAlpha = 255 / (i+1)
@@ -1056,7 +1079,6 @@ class AxisItem(GraphicsWidget):
                 tickSpecs.append((tickPen, Point(p1), Point(p2)))
         profiler('compute ticks')
 
-
         if self.style['stopAxisAtTick'][0] is True:
             minTickPosition = min(map(min, tickPositions))
             if axis == 0:
@@ -1074,7 +1096,6 @@ class AxisItem(GraphicsWidget):
                 stop = min(span[1].x(), maxTickPosition)
                 span[1].setX(stop)
         axisSpec = (self.pen(), span[0], span[1])
-
 
         textOffset = self.style['tickTextOffset'][axis]  ## spacing between axis and text
         #if self.style['autoExpandTextSpace'] is True:
@@ -1147,7 +1168,7 @@ class AxisItem(GraphicsWidget):
                         break
                 if finished:
                     break
-            
+
             lastTextSize2 = textSize2
 
             #spacing, values = tickLevels[best]
@@ -1179,7 +1200,7 @@ class AxisItem(GraphicsWidget):
                     alignFlags = QtCore.Qt.AlignmentFlag.AlignHCenter|QtCore.Qt.AlignmentFlag.AlignTop
                     rect = QtCore.QRectF(x-width/2., tickStop+offset, width, height)
 
-                textFlags = alignFlags | QtCore.Qt.TextFlag.TextDontClip    
+                textFlags = alignFlags | QtCore.Qt.TextFlag.TextDontClip
                 #p.setPen(self.pen())
                 #p.drawText(rect, textFlags, vstr)
 
@@ -1238,38 +1259,23 @@ class AxisItem(GraphicsWidget):
         else:
             self._updateHeight()
 
-    def wheelEvent(self, event):
-        lv = self.linkedView()
-        if lv is None:
-            return
-        # Did the event occur inside the linked ViewBox (and not over the axis iteself)?
-        if lv.sceneBoundingRect().contains(event.scenePos()):
-            event.ignore()
-            return
-        else:
-            # pass event to linked viewbox with appropriate single axis zoom parameter
-            if self.orientation in ['left', 'right']:
-                lv.wheelEvent(event, axis=1)
-            else:
-                lv.wheelEvent(event, axis=0)
-        event.accept()
+    def wheelEvent(self, ev):
+        ev.accept()
+        self.sigWheelEvent.emit(id(self), ev, self.orientation)
 
-    def mouseDragEvent(self, event):
-        lv = self.linkedView()
-        if lv is None:
-            return
-        # Did the mouse down event occur inside the linked ViewBox (and not the axis)?
-        if lv.sceneBoundingRect().contains(event.buttonDownScenePos()):
-            event.ignore()
-            return
-        # otherwise pass event to linked viewbox with appropriate single axis parameter
-        if self.orientation in ['left', 'right']:
-            return lv.mouseDragEvent(event, axis=1)
-        else:
-            return lv.mouseDragEvent(event, axis=0)
+    def wheelEventHandler(self, eid, ev, orientation):
+        pass
 
-    def mouseClickEvent(self, event):
-        lv = self.linkedView()
-        if lv is None:
-            return
-        return lv.mouseClickEvent(event)
+    def mouseDragEvent(self, ev):
+        ev.accept()
+        self.sigMouseDragEvent.emit(id(self), ev, self.orientation)
+
+    def mouseDragEventHandler(self, eid, ev, orientation):
+        pass
+
+    def mouseClickEvent(self, ev):
+        ev.accept()
+        self.sigMouseClickEvent.emit(id(self), ev, self.orientation)
+
+    def mouseClickEventHandler(self, eid, ev, orientation):
+        pass
