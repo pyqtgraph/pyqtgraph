@@ -33,6 +33,7 @@ class ViewBoxMenu(QtWidgets.QMenu):
             a.setDefaultWidget(w)
             m.addAction(a)
             self.addMenu(m)
+            m.setParent(None)  # workaround PySide bug (present at least up to 6.4.0)
             self.axes.append(m)
             self.ctrl.append(ui)
             wg = WidgetGroup(w)
