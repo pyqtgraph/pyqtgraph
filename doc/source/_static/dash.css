@@ -22,3 +22,8 @@ width.  To be used with sphinx-pydata-theme
   flex-grow: 1;
   max-width: 100%;
 }
+
+/* patching issue from pydata-sphinx-theme */
+div.viewcode-block:target {
+  display: block;
+}
