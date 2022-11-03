@@ -207,6 +207,7 @@ class PlotItem(GraphicsWidget):
             sm.addAction(act)
             self.subMenus.append(sm)
             self.ctrlMenu.addMenu(sm)
+            sm.setParent(None)  # workaround PySide bug (present at least up to 6.4.0)
         
         self.stateGroup = WidgetGroup()
         for name, w in menuItems:

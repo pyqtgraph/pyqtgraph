@@ -13,10 +13,7 @@ app = pg.mkQApp()
 
 def assert_alldead(refs):
     for ref in refs:
-        obj = ref()
-        assert obj is None or (
-            isinstance(obj, pg.QtCore.QObject) and not pg.Qt.isQObjectAlive(obj)
-        )
+        assert ref() is None
 
 def qObjectTree(root):
     """Return root and its entire tree of qobject children"""
