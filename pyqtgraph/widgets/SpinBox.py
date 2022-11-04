@@ -572,7 +572,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         # SpinBox has very large margins on some platforms; this is a hack to remove those
         # margins and allow more compact packing of controls.
         if not self.opts['compactHeight']:
-            self.setMaximumHeight(1e6)
+            self.setMaximumHeight(1000000)
             return
         h = QtGui.QFontMetrics(self.font()).height()
         if self._lastFontHeight != h:
