@@ -197,7 +197,7 @@ class InteractiveFunction:
     def __repr__(self):
         return (
             str(self) + " with keys:\n"
-            f"params={list(self.parameters)}, "
+            f"parameters={list(self.parameters)}, "
             f"extra={list(self.extra)}, "
             f"closures={list(self.closures)}"
         )
