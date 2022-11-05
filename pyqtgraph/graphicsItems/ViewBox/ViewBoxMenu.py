@@ -19,22 +19,17 @@ class ViewBoxMenu(QtWidgets.QMenu):
         self.viewAll.triggered.connect(self.autoRange)
         self.addAction(self.viewAll)
         
-        self.axes = []
         self.ctrl = []
         self.widgetGroups = []
         self.dv = QtGui.QDoubleValidator(self)
         for axis in 'XY':
-            m = QtWidgets.QMenu()
-            m.setTitle(f"{axis} {translate('ViewBox', 'axis')}")
+            m = self.addMenu(f"{axis} {translate('ViewBox', 'axis')}")
             w = QtWidgets.QWidget()
             ui = ui_template.Ui_Form()
             ui.setupUi(w)
             a = QtWidgets.QWidgetAction(self)
             a.setDefaultWidget(w)
             m.addAction(a)
-            self.addMenu(m)
-            m.setParent(None)  # workaround PySide bug (present at least up to 6.4.0)
-            self.axes.append(m)
             self.ctrl.append(ui)
             wg = WidgetGroup(w)
             self.widgetGroups.append(wg)
