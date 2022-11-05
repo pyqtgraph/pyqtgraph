@@ -192,7 +192,7 @@ class InteractiveFunction:
         return oldDisconnect
 
     def __str__(self):
-        return f"InteractiveFunction(`<{self.function.__name__}>`) at {hex(id(self))}"
+        return f"{type(self).__name__}(`<{self.function.__name__}>`) at {hex(id(self))}"
 
     def __repr__(self):
         return (
