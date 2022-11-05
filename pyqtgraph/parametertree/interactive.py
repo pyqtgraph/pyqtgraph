@@ -388,7 +388,8 @@ class Interactor:
         for name in checkNames:
             childOpts = children[chNames.index(name)]
             child = self.resolveAndHookupParameterChild(funcGroup, childOpts, function)
-            useParams.append(child)
+            if child is not None:
+                useParams.append(child)
 
         function.hookupParameters(useParams)
         if RunOptions.ON_ACTION in self.runOptions:
