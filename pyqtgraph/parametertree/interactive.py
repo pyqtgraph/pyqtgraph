@@ -342,9 +342,7 @@ class Interactor:
         # Get every overridden default
         locs = locals()
         # Everything until action template
-        opts = {
-            kk: locs[kk] for kk in self._optionNames if locs[kk] is not PARAM_UNSET
-        }
+        opts = {kk: locs[kk] for kk in self._optionNames if locs[kk] is not PARAM_UNSET}
         oldOpts = self.setOpts(**opts)
         # Delete explicitly since correct values are now ``self`` attributes
         del runOptions, titleFormat, nest, existOk, parent, runActionTemplate
