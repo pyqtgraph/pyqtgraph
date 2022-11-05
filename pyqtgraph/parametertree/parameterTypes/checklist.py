@@ -175,7 +175,12 @@ class ChecklistParameter(GroupParameter):
             # Also, value calculation will be incorrect until children are added, so make sure to recompute
             self.setValue(value)
 
-        self.valChangingProxy = SignalProxy(self.sigValueChanging, delay=opts.get('delay', 1.0), slot=self._finishChildChanges)
+        self.valChangingProxy = SignalProxy(
+            self.sigValueChanging,
+            delay=opts.get('delay', 1.0),
+            slot=self._finishChildChanges,
+            threadSafe=False,
+        )
 
     def childrenValue(self):
         vals = [self.forward[p.name()] for p in self.children() if p.value()]

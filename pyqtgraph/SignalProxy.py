@@ -20,20 +20,23 @@ class SignalProxy(QtCore.QObject):
 
     sigDelayed = QtCore.Signal(object)
 
-    def __init__(self, signal, delay=0.3, rateLimit=0, slot=None):
+    def __init__(self, signal, delay=0.3, rateLimit=0, slot=None, *, threadSafe=True):
         """Initialization arguments:
         signal - a bound Signal or pyqtSignal instance
         delay - Time (in seconds) to wait for signals to stop before emitting (default 0.3s)
         slot - Optional function to connect sigDelayed to.
         rateLimit - (signals/sec) if greater than 0, this allows signals to stream out at a
                     steady rate while they are being received.
+        threadSafe - Specify if thread-safety is required. For backwards compatibility, it
+                     defaults to True.
         """
 
         QtCore.QObject.__init__(self)
         self.delay = delay
         self.rateLimit = rateLimit
         self.args = None
-        self.timer = ThreadsafeTimer.ThreadsafeTimer()
+        Timer = ThreadsafeTimer if threadSafe else QtCore.QTimer
+        self.timer = Timer()
         self.timer.timeout.connect(self.flush)
         self.lastFlushTime = None
         self.signal = signal
