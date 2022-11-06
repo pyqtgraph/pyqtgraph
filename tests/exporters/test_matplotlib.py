@@ -44,6 +44,7 @@ def test_MatplotlibExporter():
 
     exp = MatplotlibExporter(plt.getPlotItem())
     exp.export()
+    app.processEvents()
 
 @skip_qt6
 def test_MatplotlibExporter_nonplotitem():
@@ -53,6 +54,7 @@ def test_MatplotlibExporter_nonplotitem():
     exp = MatplotlibExporter(plt.getPlotItem().getViewBox())
     with pytest.raises(Exception):
         exp.export()
+        app.processEvents()
 
 @skip_qt6
 @pytest.mark.parametrize('scale', [1e10, 1e-9])
@@ -64,6 +66,7 @@ def test_MatplotlibExporter_siscale(scale):
     plt.setLabel('left', 'magnitude')
     exp = MatplotlibExporter(plt.getPlotItem())
     exp.export()
+    app.processEvents()
 
     mpw = MatplotlibExporter.windows[-1]
     fig = mpw.getFigure()

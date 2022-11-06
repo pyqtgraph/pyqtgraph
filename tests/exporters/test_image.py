@@ -14,6 +14,7 @@ def test_ImageExporter_filename_dialog():
     p = pg.plot()
     exp = ImageExporter(p.getPlotItem())
     exp.export()
+    app.processEvents()
 
 
 def test_ImageExporter_toBytes():
