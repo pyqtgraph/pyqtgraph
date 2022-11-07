@@ -491,3 +491,17 @@ def test_interact_ignore_none_child():
     interactor = InteractorSubclass()
     out = interactor(lambda a=None: a, runOptions=[])
     assert "a" not in out.names
+
+
+def test_interact_existing_parent():
+    lastValue = None
+
+    def a():
+        nonlocal lastValue
+        lastValue = 5
+
+    parent = Parameter.create(name="parent", type="group")
+    outParam = interact(a, parent=parent)
+    assert outParam in parent.names.values()
+    outParam.activate()
+    assert lastValue == 5

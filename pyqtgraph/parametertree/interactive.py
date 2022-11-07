@@ -457,9 +457,9 @@ class Interactor:
         funcGroup = self.parent
         if self.nest:
             funcGroup = Parameter.create(**functionDict)
-            funcGroup.sigActivated.connect(interactiveFunction.runFromAction)
             if self.parent:
-                self.parent.addChild(funcGroup, existOk=self.existOk)
+                funcGroup = self.parent.addChild(funcGroup, existOk=self.existOk)
+            funcGroup.sigActivated.connect(interactiveFunction.runFromAction)
         return funcGroup
 
     @staticmethod
