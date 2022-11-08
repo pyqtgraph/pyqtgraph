@@ -11,7 +11,7 @@ PyQtGraph
 [![Discord](https://img.shields.io/discord/946624673200893953.svg?label=PyQtGraph&logo=discord)](https://discord.gg/3Qxjz5BF)
 A pure-Python graphics library for PyQt5/PyQt6/PySide2/PySide6
 
-Copyright 2020 Luke Campagnola, University of North Carolina at Chapel Hill
+Copyright 2022 PyQtGraph developers
 
 <http://www.pyqtgraph.org>
 

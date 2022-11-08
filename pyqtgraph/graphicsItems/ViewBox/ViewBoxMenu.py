@@ -33,6 +33,7 @@ class ViewBoxMenu(QtWidgets.QMenu):
             a.setDefaultWidget(w)
             m.addAction(a)
             self.addMenu(m)
+            m.setParent(None)  # workaround PySide bug (present at least up to 6.4.0)
             self.axes.append(m)
             self.ctrl.append(ui)
             wg = WidgetGroup(w)
@@ -55,10 +56,6 @@ class ViewBoxMenu(QtWidgets.QMenu):
 
         self.ctrl[0].invertCheck.toggled.connect(self.xInvertToggled)
         self.ctrl[1].invertCheck.toggled.connect(self.yInvertToggled)
-        ## exporting is handled by GraphicsScene now
-        #self.export = QtWidgets.QMenu("Export")
-        #self.setExportMethods(view.exportMethods)
-        #self.addMenu(self.export)
         
         self.leftMenu = QtWidgets.QMenu(translate("ViewBox", "Mouse Mode"))
         group = QtGui.QActionGroup(self)
@@ -84,13 +81,6 @@ class ViewBoxMenu(QtWidgets.QMenu):
         self.view().sigStateChanged.connect(self.viewStateChanged)
         
         self.updateState()
-
-    def setExportMethods(self, methods):
-        self.exportMethods = methods
-        self.export.clear()
-        for opt, fn in methods.items():
-            self.export.addAction(opt, self.exportMethod)
-        
 
     def viewStateChanged(self):
         self.valid = False
@@ -209,10 +199,6 @@ class ViewBoxMenu(QtWidgets.QMenu):
 
     def xInvertToggled(self, b):
         self.view().invertX(b)
-
-    def exportMethod(self):
-        act = self.sender()
-        self.exportMethods[str(act.text())]()
 
     def set3ButtonMode(self):
         self.view().setLeftButtonAction('pan')

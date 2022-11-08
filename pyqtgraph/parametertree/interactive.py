@@ -4,7 +4,7 @@ import inspect
 import pydoc
 
 from . import Parameter
-from .parameterTypes import ActionGroup
+from .parameterTypes import ActionGroupParameter
 from .. import functions as fn
 
 
@@ -494,7 +494,7 @@ class Interactor:
         return child
 
     def _resolveRunAction(self, interactiveFunction, functionGroup, functionTip):
-        if isinstance(functionGroup, ActionGroup):
+        if isinstance(functionGroup, ActionGroupParameter):
             functionGroup.setButtonOpts(visible=True)
             child = None
         else:

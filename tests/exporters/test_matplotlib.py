@@ -1,3 +1,5 @@
+from importlib.metadata import version
+
 import pytest
 
 import pyqtgraph as pg
@@ -16,6 +18,17 @@ skip_qt6 = pytest.mark.skipif(
         "see https://github.com/matplotlib/matplotlib/pull/19255"
     )
 )
+
+# see https://github.com/matplotlib/matplotlib/pull/24172
+if (
+    pg.Qt.QT_LIB == "PySide6"
+    and tuple(map(int, pg.Qt.PySide6.__version__.split("."))) > (6, 4)
+    and tuple(map(int, version("matplotlib").split("."))) < (3, 6, 2)
+):
+    pytest.skip(
+        "matplotlib + PySide6 6.4 bug",
+        allow_module_level=True
+    )
 
 
 @skip_qt6
