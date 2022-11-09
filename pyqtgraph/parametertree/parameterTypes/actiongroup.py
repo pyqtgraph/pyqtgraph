@@ -35,7 +35,6 @@ class ActionGroupParameterItem(GroupParameterItem):
         if "button" in opts:
             buttonOpts = opts["button"] or dict(visible=False)
             self.button.updateOpts(param, buttonOpts)
-            self.treeWidgetChanged()
         super().optsChanged(param, opts)
 
 
