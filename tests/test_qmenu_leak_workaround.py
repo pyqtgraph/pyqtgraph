@@ -1,7 +1,13 @@
+import platform
+import pytest
 import sys
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
 
+@pytest.mark.skipif(
+    platform.python_implementation() == "PyPy",
+    reason="PyPy has no getrefcount"
+)
 def test_qmenu_leak_workaround():
     # refer to https://github.com/pyqtgraph/pyqtgraph/pull/2518
     pg.mkQApp()
