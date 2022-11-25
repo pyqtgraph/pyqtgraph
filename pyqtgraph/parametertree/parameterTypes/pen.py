@@ -49,7 +49,7 @@ class PenParameter(GroupParameter):
         self.valChangingProxy = SignalProxy(self.sigValueChanging, delay=1.0, slot=self._childrenFinishedChanging)
 
     def _childrenFinishedChanging(self, paramAndValue):
-        self.sigValueChanged.emit(*paramAndValue)
+        self.setValue(self.pen)
 
     def saveState(self, filter=None):
         state = super().saveState(filter)
