@@ -46,7 +46,12 @@ class PenParameter(GroupParameter):
         if 'children' in opts:
             raise KeyError('Cannot set "children" argument in Pen Parameter opts')
         super().__init__(**opts, children=list(children))
-        self.valChangingProxy = SignalProxy(self.sigValueChanging, delay=1.0, slot=self._childrenFinishedChanging)
+        self.valChangingProxy = SignalProxy(
+            self.sigValueChanging,
+            delay=1.0,
+            slot=self._childrenFinishedChanging,
+            threadSafe=False,
+        )
 
     def _childrenFinishedChanging(self, paramAndValue):
         self.sigValueChanged.emit(*paramAndValue)
