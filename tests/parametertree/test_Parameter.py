@@ -1,6 +1,7 @@
 from functools import wraps
 
 import numpy as np
+import pyqtgraph as pg
 import pytest
 
 from pyqtgraph import functions as fn
@@ -15,6 +16,7 @@ from pyqtgraph.parametertree.Parameter import PARAM_TYPES
 from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
 from pyqtgraph.Qt import QtGui
 
+pg.mkQApp()
 
 def test_parameter_hasdefault():
     opts = {"name": "param", "type": int, "value": 1}
