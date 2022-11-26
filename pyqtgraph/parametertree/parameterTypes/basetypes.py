@@ -68,20 +68,6 @@ class WidgetParameterItem(ParameterItem):
 
         self.optsChanged(self.param, self.param.opts)
 
-        # set size hints
-        sw = self.widget.sizeHint()
-        sb = self.defaultBtn.sizeHint()
-        # shrink row heights a bit for more compact look
-        sw.setHeight(int(sw.height() * 0.9))
-        sb.setHeight(int(sb.height() * 0.9))
-        if self.asSubItem:
-            self.setSizeHint(1, sb)
-            self.subItem.setSizeHint(0, sw)
-        else:
-            w = sw.width() + sb.width()
-            h = max(sw.height(), sb.height())
-            self.setSizeHint(1, QtCore.QSize(w, h))
-
     def makeWidget(self):
         """
         Return a single widget whose position in the tree is determined by the

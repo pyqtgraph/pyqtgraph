@@ -68,7 +68,7 @@ class ActionParameterItem(ParameterItem):
         tree.setItemWidget(self, 0, self.layoutWidget)
 
     def titleChanged(self):
-        self.setSizeHint(0, self.button.sizeHint())
+        pass
 
 
 class ActionParameter(Parameter):
