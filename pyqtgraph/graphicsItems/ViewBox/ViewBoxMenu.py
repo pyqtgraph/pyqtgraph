@@ -19,22 +19,17 @@ class ViewBoxMenu(QtWidgets.QMenu):
         self.viewAll.triggered.connect(self.autoRange)
         self.addAction(self.viewAll)
         
-        self.axes = []
         self.ctrl = []
         self.widgetGroups = []
         self.dv = QtGui.QDoubleValidator(self)
         for axis in 'XY':
-            m = QtWidgets.QMenu()
-            m.setTitle(f"{axis} {translate('ViewBox', 'axis')}")
+            m = self.addMenu(f"{axis} {translate('ViewBox', 'axis')}")
             w = QtWidgets.QWidget()
             ui = ui_template.Ui_Form()
             ui.setupUi(w)
             a = QtWidgets.QWidgetAction(self)
             a.setDefaultWidget(w)
             m.addAction(a)
-            self.addMenu(m)
-            m.setParent(None)  # workaround PySide bug (present at least up to 6.4.0)
-            self.axes.append(m)
             self.ctrl.append(ui)
             wg = WidgetGroup(w)
             self.widgetGroups.append(wg)
@@ -57,26 +52,18 @@ class ViewBoxMenu(QtWidgets.QMenu):
         self.ctrl[0].invertCheck.toggled.connect(self.xInvertToggled)
         self.ctrl[1].invertCheck.toggled.connect(self.yInvertToggled)
         
-        self.leftMenu = QtWidgets.QMenu(translate("ViewBox", "Mouse Mode"))
+        leftMenu = self.addMenu(translate("ViewBox", "Mouse Mode"))
+
         group = QtGui.QActionGroup(self)
-        
-        # This does not work! QAction _must_ be initialized with a permanent 
-        # object as the parent or else it may be collected prematurely.
-        #pan = self.leftMenu.addAction("3 button", self.set3ButtonMode)
-        #zoom = self.leftMenu.addAction("1 button", self.set1ButtonMode)
-        pan = QtGui.QAction(translate("ViewBox", "3 button"), self.leftMenu)
-        zoom = QtGui.QAction(translate("ViewBox", "1 button"), self.leftMenu)
-        self.leftMenu.addAction(pan)
-        self.leftMenu.addAction(zoom)
-        pan.triggered.connect(self.set3ButtonMode)
-        zoom.triggered.connect(self.set1ButtonMode)
-        
+        group.triggered.connect(self.setMouseMode)
+        pan = QtGui.QAction(translate("ViewBox", "3 button"), group)
+        zoom = QtGui.QAction(translate("ViewBox", "1 button"), group)
         pan.setCheckable(True)
         zoom.setCheckable(True)
-        pan.setActionGroup(group)
-        zoom.setActionGroup(group)
+
+        leftMenu.addActions(group.actions())
+
         self.mouseModes = [pan, zoom]
-        self.addMenu(self.leftMenu)
         
         self.view().sigStateChanged.connect(self.viewStateChanged)
         
@@ -200,11 +187,14 @@ class ViewBoxMenu(QtWidgets.QMenu):
     def xInvertToggled(self, b):
         self.view().invertX(b)
 
-    def set3ButtonMode(self):
-        self.view().setLeftButtonAction('pan')
-        
-    def set1ButtonMode(self):
-        self.view().setLeftButtonAction('rect')
+    def setMouseMode(self, action):
+        mode = None
+        if action == self.mouseModes[0]:
+            mode = 'pan'
+        elif action == self.mouseModes[1]:
+            mode = 'rect'
+        if mode is not None:
+            self.view().setLeftButtonAction(mode)
         
     def setViewList(self, views):
         names = ['']
