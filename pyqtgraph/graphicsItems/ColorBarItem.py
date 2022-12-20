@@ -178,8 +178,8 @@ class ColorBarItem(PlotItem):
             to retrieve a set of user-defined ``levels`` from one of the image items. If this fails,
             the default values of ColorBarItem will be used as the (min, max) levels of the colorbar. 
             Note that, for non-interactive ColorBarItems, levels may be overridden by image items with 
-            auto-scaling colors (defined by ``enableAutoLevels``). Interactive ColorBarItems will always 
-            attempt to disable auto-scaling for its assigned image items.
+            auto-scaling colors (defined by ``enableAutoLevels``). When using an interactive ColorBarItem
+            in an animated plot, auto-scaling for its assigned image items should be *manually* disabled.
         insert_in: :class:`~pyqtgraph.PlotItem`, optional
             If a PlotItem is given, the color bar is inserted on the right
             or bottom of the plot, depending on the specified orientation.
@@ -195,11 +195,6 @@ class ColorBarItem(PlotItem):
                 if hasattr(img, "sigLevelsChanged"):
                     img.sigLevelsChanged.connect(self._levelsChangedHandler)
                 
-                if self.interactive:
-                    # For interactive colorbars, autoscaling animations does not make sense
-                    if hasattr(img, "disableAutoLevels"):
-                        img.disableAutoLevels()
-
                 if colormap_is_undefined and hasattr(img, 'getColorMap'): # check if one of the assigned images has a defined color map
                     img_cm = img.getColorMap()
                     if img_cm is not None:
