@@ -159,7 +159,9 @@ class BarGraphItem(GraphicsObject):
         self.picture.play(p)
             
     def boundingRect(self):
-        return self.shape().controlPointRect()
+        if self.picture is None:
+            self.drawPicture()
+        return QtCore.QRectF(self.picture.boundingRect())
     
     def shape(self):
         if self.picture is None:

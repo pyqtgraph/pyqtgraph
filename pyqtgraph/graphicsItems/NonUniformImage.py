@@ -76,7 +76,6 @@ class NonUniformImage(GraphicsObject):
 
         x, y, z = self.data
 
-        bounds = QtCore.QRectF()
         self.picture = QtGui.QPicture()
         p = QtGui.QPainter(self.picture)
         p.setPen(mkPen(None))
@@ -117,11 +116,7 @@ class NonUniformImage(GraphicsObject):
                 b = y[0] if j == 0 else (y[j - 1] + y[j]) / 2
                 t = (y[j] + y[j + 1]) / 2 if j < y.size - 1 else y[-1]
 
-                rect = QtCore.QRectF(l, t, r - l, b - t)
-                bounds |= rect
-                p.drawRect(rect)
-
-        self._bounds = bounds
+                p.drawRect(QtCore.QRectF(l, t, r - l, b - t))
 
         if self.border is not None:
             p.setPen(self.border)
@@ -136,4 +131,4 @@ class NonUniformImage(GraphicsObject):
         p.drawPicture(0, 0, self.picture)
 
     def boundingRect(self):
-        return self._bounds
+        return QtCore.QRectF(self.picture.boundingRect())

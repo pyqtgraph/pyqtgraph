@@ -19,7 +19,6 @@ class CandlestickItem(pg.GraphicsObject):
     def generatePicture(self):
         ## pre-computing a QPicture object allows paint() to run much more quickly, 
         ## rather than re-drawing the shapes every time.
-        bounds = QtCore.QRectF()
         self.picture = QtGui.QPicture()
         p = QtGui.QPainter(self.picture)
         p.setPen(pg.mkPen('w'))
@@ -31,9 +30,7 @@ class CandlestickItem(pg.GraphicsObject):
             else:
                 p.setBrush(pg.mkBrush('g'))
             p.drawRect(QtCore.QRectF(t-w, open, w*2, close-open))
-            bounds |= QtCore.QRectF(t-w, min, w*2, max-min)
         p.end()
-        self._bounds = bounds
     
     def paint(self, p, *args):
         p.drawPicture(0, 0, self.picture)
@@ -41,7 +38,8 @@ class CandlestickItem(pg.GraphicsObject):
     def boundingRect(self):
         ## boundingRect _must_ indicate the entire area that will be drawn on
         ## or else we will get artifacts and possibly crashing.
-        return self._bounds
+        ## (in this case, QPicture does all the work of computing the bouning rect for us)
+        return QtCore.QRectF(self.picture.boundingRect())
 
 data = [  ## fields are (time, open, close, min, max).
     (1., 10, 13, 5, 15),
