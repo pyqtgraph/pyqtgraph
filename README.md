@@ -139,5 +139,6 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
 * [Semi-Supervised Semantic Annotator](https://gitlab.com/s3a/s3a)
 * [STDF-Viewer](https://github.com/noonchen/STDF-Viewer)
+* [PatchView](https://github.com/ZeitgeberH/patchview)
 
 Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!
