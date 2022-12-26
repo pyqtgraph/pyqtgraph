@@ -47,7 +47,7 @@ class BoxplotItem(GraphicsObject):
             pen=None,
             brush=None,
             medianPen=None,
-            outlier=None,
+            outlier=True,
             symbol=None,
             symbolSize=None,
             symbolPen=None,
