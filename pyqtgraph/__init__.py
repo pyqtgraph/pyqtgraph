@@ -139,6 +139,7 @@ from .functions import *
 from .graphicsItems.ArrowItem import *
 from .graphicsItems.AxisItem import *
 from .graphicsItems.BarGraphItem import *
+from .graphicsItems.BoxplotItem import *
 from .graphicsItems.ButtonItem import *
 from .graphicsItems.ColorBarItem import *
 from .graphicsItems.CurvePoint import *
