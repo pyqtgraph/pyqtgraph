@@ -7,6 +7,9 @@ from .GraphicsObject import GraphicsObject
 from .ScatterPlotItem import Symbols
 
 
+__all__ = ['BoxplotItem']
+
+
 def IQR_1p5(data):
     '''
     use 1.5IQR to get whisker boundaries
@@ -122,6 +125,10 @@ class BoxplotItem(GraphicsObject):
         medianPen = fn.mkPen("r" if self.opts["medianPen"] is None else self.opts["medianPen"])
         
         p = QtGui.QPainter(self.picture)
+        # for calculating bounding rect
+        pw = pen.widthF() * 0.7072
+        boxBounds = QRectF()
+        pixelPadding = 0
         for pos, dataset in zip(loc, data):
             dataset = np.asarray(dataset)
             p75, median, p25 = np.percentile(dataset, [75, 50, 25])
@@ -155,7 +162,20 @@ class BoxplotItem(GraphicsObject):
                 p.drawLine(QPointF(pos-width/2, median), QPointF(pos+width/2, median))
             else:
                 p.drawLine(QPointF(median, pos-width/2), QPointF(median, pos+width/2))
+            # bounding rect
+            if locAsX:
+                rect = QRectF(pos-width/2, lower, width, upper-lower)
+            else:
+                rect = QRectF(lower, pos-width/2, upper-lower, width)
+            if pen.isCosmetic():
+                boxBounds |= rect
+                pixelPadding = max(pixelPadding, pw)
+            else:
+                boxBounds |= rect.adjusted(-pw, -pw, pw, pw)
+            
         p.end()
+        self._boxBounds = boxBounds
+        self._pixelPadding = pixelPadding
             
     def paint(self, p, *args):
         if self.picture is None:
@@ -190,8 +210,33 @@ class BoxplotItem(GraphicsObject):
     def boundingRect(self):
         if self.picture is None:
             self.generatePicture()
+        
+        px = py = 0.0
+        bpx = bpy = 0.0
+        spx = spy = 0.0
+        pxPad = self._pixelPadding
+        symbolPad = 0.7072 * (10 if self.opts["symbolSize"] is None else self.opts["symbolSize"])
+        if pxPad > 0 or symbolPad > 0:
+            # determine length of pixel in local x, y directions
+            px, py = self.pixelVectors()
+            try:
+                px = 0 if px is None else px.length()
+            except OverflowError:
+                px = 0
+            try:
+                py = 0 if py is None else py.length()
+            except OverflowError:
+                py = 0
+            # return bounds expanded by pixel size
+            if pxPad > 0:
+                bpx = px * pxPad
+                bpy = py * pxPad
+            if symbolPad > 0:
+                spx = px * symbolPad
+                spy = py * symbolPad
+        
         # bounding rect of boxes
-        rect = QRectF(self.picture.boundingRect())
+        rect = self._boxBounds.adjusted(-bpx, -bpy, bpx, bpy)
         # bounding rect of outliers
         if self.opts["outlier"]:
             pos_min = min(self.outlierData.keys())
@@ -206,8 +251,8 @@ class BoxplotItem(GraphicsObject):
             
             if out_min is not None and out_max is not None:
                 if self.opts["locAsX"]:
-                    rect |= QRectF(pos_min, out_min, pos_max-pos_min, out_max-out_min)
+                    rect |= QRectF(pos_min-spx, out_min-spy, pos_max-pos_min+2*spx, out_max-out_min+2*spy)
                 else:
-                    rect |= QRectF(out_min, pos_min, out_max-out_min, pos_max-pos_min)
+                    rect |= QRectF(out_min-spx, pos_min-spy, out_max-out_min+2*spx, pos_max-pos_min+2*spy)
         return rect
 
