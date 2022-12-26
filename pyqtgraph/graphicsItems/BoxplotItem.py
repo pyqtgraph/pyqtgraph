@@ -211,7 +211,6 @@ class BoxplotItem(GraphicsObject):
         if self.picture is None:
             self.generatePicture()
         
-        px = py = 0.0
         bpx = bpy = 0.0
         spx = spy = 0.0
         pxPad = self._pixelPadding
