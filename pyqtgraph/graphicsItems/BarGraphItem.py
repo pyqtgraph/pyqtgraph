@@ -121,6 +121,8 @@ class BarGraphItem(GraphicsObject):
         
         p.setPen(fn.mkPen(pen))
         p.setBrush(fn.mkBrush(brush))
+        dataBounds = QtCore.QRectF()
+        pixelPadding = 0
         for i in range(len(x0 if not np.isscalar(x0) else y0)):
             if pens is not None:
                 p.setPen(fn.mkPen(pens[i]))
@@ -148,8 +150,18 @@ class BarGraphItem(GraphicsObject):
             rect = QtCore.QRectF(x, y, w, h)
             p.drawRect(rect)
             self._shape.addRect(rect)
-            
+
+            pen = p.pen()
+            pw = pen.widthF()*0.7072
+            if pen.isCosmetic():
+                dataBounds |= rect
+                pixelPadding = max(pixelPadding, pw)
+            else:
+                dataBounds |= rect.adjusted(-pw, -pw, pw, pw)
+
         p.end()
+        self._dataBounds = dataBounds
+        self._pixelPadding = pixelPadding
         self.prepareGeometryChange()
         
         
@@ -157,12 +169,32 @@ class BarGraphItem(GraphicsObject):
         if self.picture is None:
             self.drawPicture()
         self.picture.play(p)
-            
+
     def boundingRect(self):
         if self.picture is None:
             self.drawPicture()
-        return QtCore.QRectF(self.picture.boundingRect())
-    
+
+        px = py = 0.0
+        pxPad = self._pixelPadding
+        if pxPad > 0:
+            # determine length of pixel in local x, y directions
+            px, py = self.pixelVectors()
+            try:
+                px = 0 if px is None else px.length()
+            except OverflowError:
+                px = 0
+            try:
+                py = 0 if py is None else py.length()
+            except OverflowError:
+                py = 0
+
+            # return bounds expanded by pixel size
+            px *= pxPad
+            py *= pxPad
+        boundingRect = self._dataBounds.adjusted(-px, -py, px, py)
+
+        return boundingRect
+
     def shape(self):
         if self.picture is None:
             self.drawPicture()
