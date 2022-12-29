@@ -78,14 +78,14 @@ GraphicsView and GraphicsItems
 ------------------------------
 
 More information about the architecture of Qt GraphicsView:
-http://qt-project.org/doc/qt-4.8/graphicsview.html
+https://doc.qt.io/qt-6/graphicsview.html
 
 
 Coordinate Systems and Transformations
 --------------------------------------
 
 More information about the coordinate systems in Qt GraphicsView:
-http://qt-project.org/doc/qt-4.8/graphicsview.html#the-graphics-view-coordinate-system
+https://doc.qt.io/qt-6/graphicsview.html#the-graphics-view-coordinate-system
 
 
 Mouse and Keyboard Input
