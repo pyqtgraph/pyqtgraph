@@ -1572,19 +1572,14 @@ class ViewBox(GraphicsWidget):
                     maxRng[axis] = min(maxRng[axis], limits[axis][1] - limits[axis][0])
                 else:
                     maxRng[axis] = limits[axis][1] - limits[axis][0]
-
-        if minRng[0] is not None:
-                if(minRng[0]> viewRange[0][1] - viewRange[0][0]):
-                    viewRange[0][1] = viewRange[0][0] + minRng[0]
-        if minRng[1] is not None:
-                if(minRng[1]> viewRange[1][1] - viewRange[1][0]):
-                    viewRange[1][1] = viewRange[1][0] + minRng[1]
-        if maxRng[0] is not None:
-                if(maxRng[0]< viewRange[0][1] - viewRange[0][0]):
-                    viewRange[0][0] = viewRange[0][1] - maxRng[0]
-        if maxRng[1] is not None:
-                if(maxRng[1]< viewRange[1][1] - viewRange[1][0]):
-                    viewRange[1][0] = viewRange[1][0] - maxRng[1]
+        for axis in [0,1]:
+            if minRng[axis] is not None:
+                if(minRng[axis] > viewRange[axis][1] - viewRange[axis][0]):
+                    viewRange[axis][1] = viewRange[axis][0] + minRng[axis]
+            
+            if maxRng[axis] is not None:
+                if(maxRng[axis] < viewRange[axis][1] - viewRange[axis][0]):
+                    viewRange[axis][1] = viewRange[axis][0] + maxRng[axis]
 
         if aspect is not False and 0 not in [aspect, tr.height(), bounds.height(), bounds.width()]:
 
