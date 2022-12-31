@@ -121,6 +121,8 @@ class BarGraphItem(GraphicsObject):
         
         p.setPen(fn.mkPen(pen))
         p.setBrush(fn.mkBrush(brush))
+        dataBounds = QtCore.QRectF()
+        pixelPadding = 0
         for i in range(len(x0 if not np.isscalar(x0) else y0)):
             if pens is not None:
                 p.setPen(fn.mkPen(pens[i]))
@@ -148,8 +150,23 @@ class BarGraphItem(GraphicsObject):
             rect = QtCore.QRectF(x, y, w, h)
             p.drawRect(rect)
             self._shape.addRect(rect)
-            
+
+            pen = p.pen()
+            pw = pen.widthF()
+            if pen.style() == QtCore.Qt.PenStyle.NoPen:
+                pw = 0
+            elif pw == 0:
+                pw = 1
+            pw *= 0.5
+            if pen.isCosmetic():
+                dataBounds |= rect
+                pixelPadding = max(pixelPadding, pw)
+            else:
+                dataBounds |= rect.adjusted(-pw, -pw, pw, pw)
+
         p.end()
+        self._dataBounds = dataBounds
+        self._pixelPadding = pixelPadding
         self.prepareGeometryChange()
         
         
@@ -158,11 +175,6 @@ class BarGraphItem(GraphicsObject):
             self.drawPicture()
         self.picture.play(p)
             
-    def boundingRect(self):
-        if self.picture is None:
-            self.drawPicture()
-        return QtCore.QRectF(self.picture.boundingRect())
-    
     def shape(self):
         if self.picture is None:
             self.drawPicture()
@@ -179,3 +191,27 @@ class BarGraphItem(GraphicsObject):
 
     def getData(self):
         return self.opts.get('x'),  self.opts.get('height')
+
+    def dataBounds(self, ax, frac=1.0, orthoRange=None):
+        if self.picture is None:
+            self.drawPicture()
+        l, t, r, b = self._dataBounds.getCoords()
+        return [l, r] if ax == 0 else [t, b]
+
+    def pixelPadding(self):
+        if self.picture is None:
+            self.drawPicture()
+        return self._pixelPadding
+
+    def boundingRect(self):
+        px = py = 0
+        pxPad = self.pixelPadding()
+        if pxPad > 0:
+            # determine length of pixel in local x, y directions
+            px, py = self.pixelVectors()
+            px = 0 if px is None else px.length()
+            py = 0 if py is None else py.length()
+            # return bounds expanded by pixel size
+            px *= pxPad
+            py *= pxPad
+        return self._dataBounds.adjusted(-px, -py, px, py)
