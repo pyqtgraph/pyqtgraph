@@ -48,7 +48,7 @@ def test_PlotWidget():
         app.focusChanged.connect(w.plotItem.vb.invertY)
         
         # return weakrefs to a bunch of objects that should die when the scope exits.
-        return mkrefs(w, c, data, w.plotItem, w.plotItem.vb, w.plotItem.getMenu(), w.plotItem.getAxis('left'))
+        return mkrefs(w, c, data, w.plotItem, w.plotItem.vb, w.plotItem.getAxis('left'))
     
     for _ in range(5):
         assert_alldead(mkobjs())

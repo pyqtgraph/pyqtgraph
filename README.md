@@ -8,10 +8,10 @@ PyQtGraph
 [![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/context:python)
-[![Discord](https://img.shields.io/discord/946624673200893953.svg?label=PyQtGraph&logo=discord)](https://discord.gg/3Qxjz5BF)
+[![Discord](https://img.shields.io/discord/946624673200893953.svg?label=PyQtGraph&logo=discord)](https://discord.gg/ufTVNNreAZ)
 A pure-Python graphics library for PyQt5/PyQt6/PySide2/PySide6
 
-Copyright 2020 Luke Campagnola, University of North Carolina at Chapel Hill
+Copyright 2022 PyQtGraph developers
 
 <http://www.pyqtgraph.org>
 
@@ -133,10 +133,13 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [Joulescope](https://www.joulescope.com/)
 * [neurotic](https://neurotic.readthedocs.io)
 * [Orange3](https://orangedatamining.com/)
+* [PatchView](https://github.com/ZeitgeberH/patchview)
 * [pyplotter](https://github.com/pyplotter/pyplotter)
 * [PyMeasure](https://github.com/pymeasure/pymeasure)
 * [PySpectra](http://hasyweb.desy.de/services/computing/Spock/node138.html)
 * [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
 * [Semi-Supervised Semantic Annotator](https://gitlab.com/s3a/s3a)
+* [STDF-Viewer](https://github.com/noonchen/STDF-Viewer)
+
 
 Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!

@@ -219,7 +219,11 @@ class ImageView(QtWidgets.QWidget):
         self.ui.normTimeRangeCheck.clicked.connect(self.updateNorm)
         self.playTimer.timeout.connect(self.timeout)
         
-        self.normProxy = SignalProxy(self.normRgn.sigRegionChanged, slot=self.updateNorm)
+        self.normProxy = SignalProxy(
+            self.normRgn.sigRegionChanged,
+            slot=self.updateNorm,
+            threadSafe=False,
+        )
         self.normRoi.sigRegionChangeFinished.connect(self.updateNorm)
         
         self.ui.roiPlot.registerPlot(self.name + '_ROI')

@@ -104,7 +104,12 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         self.skipValidate = False
         self.setCorrectionMode(self.CorrectionMode.CorrectToPreviousValue)
         self.setKeyboardTracking(False)
-        self.proxy = SignalProxy(self.sigValueChanging, slot=self.delayedChange, delay=self.opts['delay'])
+        self.proxy = SignalProxy(
+            self.sigValueChanging,
+            delay=self.opts['delay'],
+            slot=self.delayedChange,
+            threadSafe=False,
+        )
         self.setOpts(**kwargs)
         self._updateHeight()
         
@@ -572,7 +577,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         # SpinBox has very large margins on some platforms; this is a hack to remove those
         # margins and allow more compact packing of controls.
         if not self.opts['compactHeight']:
-            self.setMaximumHeight(1e6)
+            self.setMaximumHeight(1000000)
             return
         h = QtGui.QFontMetrics(self.font()).height()
         if self._lastFontHeight != h:

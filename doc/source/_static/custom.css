@@ -1,6 +1,6 @@
-/* Contents/Template taken from the SciPy project */
-/* https://github.com/scipy/scipy/blob/9ae8fd0f4341d7d8785777d460cca4f7b6a93edd/doc/source/_static/scipy.css */
-/* PyQtGraph specifics */
+/* Template Inherited from SciPy and modified for PyQtGraph purposes
+   https://github.com/scipy/scipy/blob/9ae8fd0f4341d7d8785777d460cca4f7b6a93edd/doc/source/_static/scipy.css 
+   SPDX-License-Identifier: BSD-3-Clause */
 
 /* Remove parenthesis around module using fictive font and add them back.
    This is needed for better wrapping in the sidebar. */
@@ -74,7 +74,6 @@ Nat Methods 8, 441 (2011). https://doi.org/10.1038/nmeth.1618
   margin: 0px;
 }
 
-
 .sd-card .sd-card-img-top {
   height: 52px;
   width: 52px;
@@ -127,16 +126,15 @@ Nat Methods 8, 441 (2011). https://doi.org/10.1038/nmeth.1618
   color: #484848;
 }
 
-
 /* Dark theme tweaking
 
 Matplotlib images are in png and inverted while other output
 types are assumed to be normal images.
 
 */
-html[data-theme=dark] img[src*='.svg']:not(.only-dark) {
+html[data-theme=dark] img[src*='.svg']:not(.only-dark):not(.dark-light) {
     filter: brightness(0.8) invert(0.82) contrast(1.2);
-    background: none;
+    background: unset
 }
 
 html[data-theme=dark] .MathJax_SVG *  {

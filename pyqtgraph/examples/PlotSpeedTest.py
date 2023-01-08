@@ -35,6 +35,7 @@ args = parser.parse_args()
 if args.use_opengl is not None:
     pg.setConfigOption('useOpenGL', args.use_opengl)
     pg.setConfigOption('enableExperimental', args.use_opengl)
+use_opengl = pg.getConfigOption('useOpenGL')
 
 # don't limit frame rate to vsync
 sfmt = QtGui.QSurfaceFormat()
@@ -151,11 +152,11 @@ def updateOptions(
     curvePen=pg.mkPen(),
     plotMethod='pyqtgraph',
     fillLevel=False,
-    enableExperimental=False,
-    useOpenGL=False,
+    enableExperimental=use_opengl,
+    useOpenGL=use_opengl,
 ):
     pg.setConfigOption('enableExperimental', enableExperimental)
-    pg.setConfigOption('useOpenGL', useOpenGL)
+    pw.useOpenGL(useOpenGL)
     curve.setPen(curvePen)
     curve.setFillLevel(0.0 if fillLevel else None)
     curve.setMethod(plotMethod)
