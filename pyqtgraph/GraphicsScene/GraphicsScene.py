@@ -222,7 +222,8 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                     if self.sendClickEvent(cev[0]):
                         #print "sent click event"
                         ev.accept()
-                    self.clickEvents.remove(cev[0])
+                    if cev[0] in self.clickEvents:
+                        self.clickEvents.remove(cev[0])
                 
         if not ev.buttons():
             self.dragItem = None
