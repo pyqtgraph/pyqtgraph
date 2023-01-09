@@ -26,20 +26,31 @@ class GridItem(UIGraphicsItem):
         self.setPen(pen)
         self.setTextPen(textPen)
         self.setTickSpacing(x=[None, None, None], y=[None, None, None])
-        self.axes = None
+        self._axes = None
         self.ctrl = None
+
+    def axes(self):
+        """ Returns axes object """
+        return self._axes
 
 
     def setAxes(self, axes):
-        """ 
-        Set the axes object, in case the GridItem belongs to plot, whose axes are controlled by AxisItem's
         """
-        self.axes = axes
+        Set the axes object, in case the GridItem belongs to plot, whose axes
+        are controlled by AxisItem's
+        """
+        self._axes = axes
 
 
-    def setCtrl(self, ctrl):
-        """ 
-        Set the control, in case the GridItem belongs to plot, whose axes are controlled by AxisItem's
+    def control(self):
+        """ Returns axis control object """
+        return self.ctrl
+
+
+    def setControl(self, ctrl):
+        """
+        Set the control, in case the GridItem belongs to plot, whose axes are
+        controlled by AxisItem's
         """
         self.ctrl = ctrl
         self.ctrl.xGridCheck.toggled.connect(self.updateGrid)
@@ -116,7 +127,7 @@ class GridItem(UIGraphicsItem):
     def paint(self, p, opt, widget):
         ### draw picture
         if self.picture is None:
-            if self.axes:
+            if self._axes:
                 self.drawAxesGrid()
             else:
                 self.generatePicture()
@@ -129,10 +140,10 @@ class GridItem(UIGraphicsItem):
         p = QtGui.QPainter()
         p.begin(self.picture)
 
-        scaling = (+self.boundingRect().width()/self.axes['bottom'].width(),
-                   -self.boundingRect().height()/self.axes['left'].height())
+        scaling = (+self.boundingRect().width()/self._axes['bottom'].width(),
+                   -self.boundingRect().height()/self._axes['left'].height())
 
-        for axis_item in self.axes.values():
+        for axis_item in self._axes.values():
             self.drawAxisTicks(p, axis_item, scaling)
 
         tr = self.deviceTransform()
@@ -142,6 +153,7 @@ class GridItem(UIGraphicsItem):
 
     def gridAlpha(self, orientation):
         """ Determine the grid lines' alpha value """
+        show_grid = False
         if orientation in ('top', 'bottom'):
             show_grid = self.ctrl.xGridCheck.isChecked()
         elif orientation in ('left', 'right'):

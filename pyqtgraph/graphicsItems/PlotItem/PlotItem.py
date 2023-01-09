@@ -554,15 +554,7 @@ class PlotItem(GraphicsWidget):
 
         if isinstance(item, GridItem):
             item.setAxes({ax['item'].orientation: ax['item'] for ax in self.axes.values()})
-            item.setCtrl(self.ctrl)
-
-    def addDataItem(self, item, *args):
-        warnings.warn(
-            'PlotItem.addDataItem is deprecated and will be removed in 0.13. '
-            'Use PlotItem.addItem instead',
-            DeprecationWarning, stacklevel=2
-        )    
-        self.addItem(item, *args)
+            item.setControl(self.ctrl)
         
     def listDataItems(self):
         """Return a list of all data items (:class:`PlotDataItem <pyqtgraph.PlotDataItem>`, 
