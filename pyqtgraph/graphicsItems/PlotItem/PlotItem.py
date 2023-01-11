@@ -1083,6 +1083,23 @@ class PlotItem(GraphicsWidget):
     
     def menuEnabled(self):
         return self._menuEnabled
+
+    def setContextMenuActionVisible(self, name : str, visible : bool) -> None:
+        """
+        Changes the context menu action visibility
+
+        =============== ====================================================================
+        **Arguments:**
+        name            (str) Action name ('Transforms', 'Downsample', 'Average', 'Alpha', 'Grid', 'Points'
+
+        visible            (bool) If `True`, action is visible. If `False` action is invisible
+        =============== ====================================================================
+        """
+        translated_name = translate("PlotItem", name)
+        for action in self.ctrlMenu.actions():
+            if action.text() == translated_name:
+                action.setVisible(visible)
+                break
     
     def hoverEvent(self, ev):
         if ev.enter:
