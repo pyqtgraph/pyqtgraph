@@ -844,7 +844,7 @@ class ViewBox(GraphicsWidget):
         (if *axis* is omitted, both axes will be changed).
         When enabled, the axis will automatically rescale when items are added/removed or change their shape.
         The argument *enable* may optionally be a float (0.0-1.0) which indicates the fraction of the data that should
-        be visible (this only works with items implementing a dataRange method, such as PlotDataItem).
+        be visible (this only works with items implementing a dataBounds method, such as PlotDataItem).
         """
         # support simpler interface:
         if x is not None or y is not None:
