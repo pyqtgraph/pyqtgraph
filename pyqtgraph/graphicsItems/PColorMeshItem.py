@@ -322,19 +322,16 @@ class PColorMeshItem(GraphicsObject):
 
 
     def width(self):
-        if self.x is None:
-            return None
-        return np.max(self.x)
-
-
+        if self._dataBounds is None:
+            return 0
+        bounds = self._dataBounds[0]
+        return bounds[1]-bounds[0]
 
     def height(self):
-        if self.y is None:
-            return None
-        return np.max(self.y)
-
-
-
+        if self._dataBounds is None:
+            return 0
+        bounds = self._dataBounds[1]
+        return bounds[1]-bounds[0]
 
     def dataBounds(self, ax, frac=1.0, orthoRange=None):
         if self._dataBounds is None:
