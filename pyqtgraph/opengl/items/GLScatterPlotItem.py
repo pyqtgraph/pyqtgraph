@@ -11,8 +11,8 @@ __all__ = ['GLScatterPlotItem']
 class GLScatterPlotItem(GLGraphicsItem):
     """Draws points at a list of 3D positions."""
     
-    def __init__(self, **kwds):
-        super().__init__()
+    def __init__(self, parentItem=None, **kwds):
+        super().__init__(parentItem=parentItem)
         glopts = kwds.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
         self.pos = None
