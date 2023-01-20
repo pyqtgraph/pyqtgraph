@@ -1,6 +1,8 @@
 from ...Qt import QtCore, QtWidgets, QtGui
+from ...functions import disconnect
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
+
 
 
 class ParameterControlledButton(QtWidgets.QPushButton):
@@ -94,3 +96,13 @@ class ActionParameter(Parameter):
     def activate(self):
         self.sigActivated.emit(self)
         self.emitStateChanged('activated', None)
+
+    def setValue(self, value, blocksignal=None):
+        if not callable(value):
+            return super().setValue(value, blocksignal)
+        else:
+            if callable(self.opts["value"]):
+                disconnect(self.sigActivated, self.opts["value"])
+            self.sigActivated.connect(value)
+            return self.opts["value"]
+
