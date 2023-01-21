@@ -12,12 +12,6 @@ from .GraphicsObject import GraphicsObject
 __all__ = ['PColorMeshItem']
 
 
-if Qt.QT_LIB.startswith('PyQt'):
-    wrapinstance = Qt.sip.wrapinstance
-else:
-    wrapinstance = Qt.shiboken.wrapInstance
-
-
 class QuadInstances:
     def __init__(self):
         self.polys = []
@@ -27,7 +21,7 @@ class QuadInstances:
 
         # 2 * (size + 1) vertices, (x, y)
         arr = np.empty((2 * (size + 1), 2), dtype=np.float64)
-        ptrs = list(map(wrapinstance,
+        ptrs = list(map(Qt.compat.wrapinstance,
             itertools.count(arr.ctypes.data, arr.strides[0]),
             itertools.repeat(QtCore.QPointF, arr.shape[0])))
 
@@ -102,6 +96,7 @@ class PColorMeshItem(GraphicsObject):
         edgecolors : dict, optional
             The color of the edges of the polygons.
             Default None means no edges.
+            Only cosmetic pens are supported.
             The dict may contains any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`.
             Example: ``mkPen(color='w', width=2)``
         antialiasing : bool, default False
@@ -115,8 +110,14 @@ class PColorMeshItem(GraphicsObject):
         self.x = None
         self.y = None
         self.z = None
+        self._dataBounds = None
 
         self.edgecolors = kwargs.get('edgecolors', None)
+        if self.edgecolors is not None:
+            self.edgecolors = fn.mkPen(self.edgecolors)
+            # force the pen to be cosmetic. see discussion in
+            # https://github.com/pyqtgraph/pyqtgraph/pull/2586
+            self.edgecolors.setCosmetic(True)
         self.antialiasing = kwargs.get('antialiasing', False)
         self.levels = kwargs.get('levels', None)
         self.enableAutoLevels = kwargs.get('enableAutoLevels', True)
@@ -164,6 +165,8 @@ class PColorMeshItem(GraphicsObject):
             self.x = None
             self.y = None
             self.z = None
+
+            self._dataBounds = None
             
         # User only specified z
         elif len(args)==1:
@@ -172,6 +175,8 @@ class PColorMeshItem(GraphicsObject):
             y = np.arange(0, args[0].shape[1]+1, 1)
             self.x, self.y = np.meshgrid(x, y, indexing='ij')
             self.z = args[0]
+
+            self._dataBounds = ((x[0], x[-1]), (y[0], y[-1]))
 
         # User specified x, y, z
         elif len(args)==3:
@@ -186,6 +191,10 @@ class PColorMeshItem(GraphicsObject):
             self.x = args[0]
             self.y = args[1]
             self.z = args[2]
+
+            xmn, xmx = np.min(self.x), np.max(self.x)
+            ymn, ymx = np.min(self.y), np.max(self.y)
+            self._dataBounds = ((xmn, xmx), (ymn, ymx))
 
         else:
             ValueError('Data must been sent as (z) or (x, y, z)')
@@ -242,7 +251,7 @@ class PColorMeshItem(GraphicsObject):
         if self.edgecolors is None:
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
         else:
-            painter.setPen(fn.mkPen(self.edgecolors))
+            painter.setPen(self.edgecolors)
             if self.antialiasing:
                 painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
                 
@@ -313,21 +322,45 @@ class PColorMeshItem(GraphicsObject):
 
 
     def width(self):
-        if self.x is None:
-            return None
-        return np.max(self.x)
-
-
+        if self._dataBounds is None:
+            return 0
+        bounds = self._dataBounds[0]
+        return bounds[1]-bounds[0]
 
     def height(self):
-        if self.y is None:
-            return None
-        return np.max(self.y)
+        if self._dataBounds is None:
+            return 0
+        bounds = self._dataBounds[1]
+        return bounds[1]-bounds[0]
 
+    def dataBounds(self, ax, frac=1.0, orthoRange=None):
+        if self._dataBounds is None:
+            return (None, None)
+        return self._dataBounds[ax]
 
-
+    def pixelPadding(self):
+        # pen is known to be cosmetic
+        pen = self.edgecolors
+        no_pen = (pen is None) or (pen.style() == QtCore.Qt.PenStyle.NoPen)
+        return 0 if no_pen else (pen.widthF() or 1) * 0.5
 
     def boundingRect(self):
-        if self.qpicture is None:
-            return QtCore.QRectF(0., 0., 0., 0.)
-        return QtCore.QRectF(self.qpicture.boundingRect())
+        xmn, xmx = self.dataBounds(ax=0)
+        if xmn is None or xmx is None:
+            return QtCore.QRectF()
+        ymn, ymx = self.dataBounds(ax=1)
+        if ymn is None or ymx is None:
+            return QtCore.QRectF()
+
+        px = py = 0
+        pxPad = self.pixelPadding()
+        if pxPad > 0:
+            # determine length of pixel in local x, y directions
+            px, py = self.pixelVectors()
+            px = 0 if px is None else px.length()
+            py = 0 if py is None else py.length()
+            # return bounds expanded by pixel size
+            px *= pxPad
+            py *= pxPad
+
+        return QtCore.QRectF(xmn-px, ymn-py, (2*px)+xmx-xmn, (2*py)+ymx-ymn)
