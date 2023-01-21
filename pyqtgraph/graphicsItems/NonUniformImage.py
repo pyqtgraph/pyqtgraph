@@ -131,4 +131,5 @@ class NonUniformImage(GraphicsObject):
         p.drawPicture(0, 0, self.picture)
 
     def boundingRect(self):
-        return QtCore.QRectF(self.picture.boundingRect())
+        x, y, _ = self.data
+        return QtCore.QRectF(x[0], y[0], x[-1]-x[0], y[-1]-y[0])
