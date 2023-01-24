@@ -196,17 +196,13 @@ class PlotItem(GraphicsWidget):
         ]
         
         
-        self.ctrlMenu = QtWidgets.QMenu()
-        
-        self.ctrlMenu.setTitle(translate("PlotItem", 'Plot Options'))
-        self.subMenus = []
+        self.ctrlMenu = QtWidgets.QMenu(translate("PlotItem", 'Plot Options'))
+
         for name, grp in menuItems:
-            sm = QtWidgets.QMenu(name)
+            sm = self.ctrlMenu.addMenu(name)
             act = QtWidgets.QWidgetAction(self)
             act.setDefaultWidget(grp)
             sm.addAction(act)
-            self.subMenus.append(sm)
-            self.ctrlMenu.addMenu(sm)
         
         self.stateGroup = WidgetGroup()
         for name, w in menuItems:

@@ -88,6 +88,8 @@ class ImageView(QtWidgets.QWidget):
             imageItem=None,
             levelMode='mono',
             discreteTimeLine=False,
+            roi=None,
+            normRoi=None,
             *args,
     ):
         """
@@ -116,6 +118,10 @@ class ImageView(QtWidgets.QWidget):
             See the *levelMode* argument to :func:`HistogramLUTItem.__init__() <pyqtgraph.HistogramLUTItem.__init__>`
         discreteTimeLine : bool
             Whether to snap to xvals / frame numbers when interacting with the timeline position.
+        roi : ROI
+            If specified, this object is used as ROI for the plot feature. Must be an instance of ROI.
+        normRoi : ROI
+            If specified, this object is used as ROI for the normalization feature. Must be an instance of ROI.
         """
         QtWidgets.QWidget.__init__(self, parent, *args)
         self._imageLevels = None  # [(min, max), ...] per channel image metrics
@@ -145,12 +151,18 @@ class ImageView(QtWidgets.QWidget):
         
         self.ui.normGroup.hide()
 
-        self.roi = PlotROI(10)
+        if roi is None:
+            self.roi = PlotROI(10)
+        else:
+            self.roi = roi
         self.roi.setZValue(20)
         self.view.addItem(self.roi)
         self.roi.hide()
-        self.normRoi = PlotROI(10)
-        self.normRoi.setPen('y')
+        if normRoi is None:
+            self.normRoi = PlotROI(10)
+            self.normRoi.setPen('y')
+        else:
+            self.normRoi = normRoi
         self.normRoi.setZValue(20)
         self.view.addItem(self.normRoi)
         self.normRoi.hide()
@@ -219,7 +231,11 @@ class ImageView(QtWidgets.QWidget):
         self.ui.normTimeRangeCheck.clicked.connect(self.updateNorm)
         self.playTimer.timeout.connect(self.timeout)
         
-        self.normProxy = SignalProxy(self.normRgn.sigRegionChanged, slot=self.updateNorm)
+        self.normProxy = SignalProxy(
+            self.normRgn.sigRegionChanged,
+            slot=self.updateNorm,
+            threadSafe=False,
+        )
         self.normRoi.sigRegionChangeFinished.connect(self.updateNorm)
         
         self.ui.roiPlot.registerPlot(self.name + '_ROI')

@@ -7,7 +7,7 @@ from .GLMeshItem import GLMeshItem
 
 
 class GLBarGraphItem(GLMeshItem):
-    def __init__(self, pos, size):
+    def __init__(self, pos, size, parentItem=None):
         """
         pos is (...,3) array of the bar positions (the corner of each bar)
         size is (...,3) array of the sizes of each bar
@@ -27,4 +27,4 @@ class GLBarGraphItem(GLMeshItem):
         faces = cubeFaces + (np.arange(nCubes) * 8).reshape(nCubes,1,1)
         md = MeshData(verts.reshape(nCubes*8,3), faces.reshape(nCubes*12,3))
 
-        GLMeshItem.__init__(self, meshdata=md, shader='shaded', smooth=False)
+        super().__init__(meshdata=md, shader='shaded', smooth=False, parentItem=parentItem)

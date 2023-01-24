@@ -136,7 +136,10 @@ class Process(RemoteEventHandler):
         # the multiprocessing connection. Technically, only the launched subprocess needs to
         # send its pid back. Practically, we hijack the ppid parameter to indicate to the
         # subprocess that pid exchange is needed.
-        xchg_pids = sys.platform == 'win32' and os.getenv('VIRTUAL_ENV') is not None
+        #
+        # We detect a virtual environment using sys.base_prefix, see https://docs.python.org/3/library/sys.html#sys.base_prefix
+        # See https://github.com/pyqtgraph/pyqtgraph/pull/2566 and https://github.com/spyder-ide/spyder/issues/20273
+        xchg_pids = sys.platform == 'win32' and sys.prefix != sys.base_prefix
 
         ## Send everything the remote process needs to start correctly
         data = dict(

@@ -55,15 +55,17 @@ Using QtGui.QPen and QtGui.QBrush to color plots according to the plotted value:
     :lines: 16-33
     :dedent: 8
 
-.. image:: 
+.. thumbnail:: 
     /images/example_false_color_image.png
     :width: 49%
     :alt: Example of a false color image
+    :title: False color image
 
-.. image::
+.. thumbnail::
     /images/example_gradient_plot.png
     :width: 49%
     :alt: Example of drawing and filling plots with gradients
+    :title: Drawing and filling plots with gradients
 
 The use of color maps is also demonstrated in the `ImageView`, `Color Gradient Plots` and `ColorBarItem` 
 :ref:`examples`.

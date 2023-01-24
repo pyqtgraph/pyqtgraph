@@ -1,0 +1,29 @@
+/* Slight Modification When Building Dash Docset
+
+Dash windows can be of a variety of sizes, no need to restrict to fixed
+width.  To be used with sphinx-pydata-theme
+
+*/
+
+.bd-header {
+  display: none;
+}
+
+.bd-sidebar-primary {
+  display: none;
+}
+
+.bd-main .bd-content .bd-article-container {
+  flex-grow: 1;
+  max-width: 100%;
+}
+
+.bd-container .bd-container__inner {
+  flex-grow: 1;
+  max-width: 100%;
+}
+
+/* patching issue from pydata-sphinx-theme */
+div.viewcode-block:target {
+  display: block;
+}

@@ -87,6 +87,12 @@ wave_length     = 10
 color_speed     = 0.3
 color_noise_freq = 0.05
 
+# display info in top-right corner
+miny = np.min(y) - wave_amplitude
+maxy = np.max(y) + wave_amplitude
+view_auto_scale.setYRange(miny, maxy)
+textitem.setPos(np.max(x), maxy)
+
 timer = QtCore.QTimer()
 timer.setSingleShot(True)
 # not using QTimer.singleShot() because of persistence on PyQt. see PR #1605
@@ -114,11 +120,7 @@ def updateData():
 
     i += wave_speed
 
-    # display info in top-right corner of the autoscaling plot
     textitem.setText(f'{(t2 - t1)*1000:.1f} ms')
-    if textpos is None:
-        textpos = pcmi_auto.width(), pcmi_auto.height()
-        textitem.setPos(*textpos)
 
     # cap update rate at fps
     delay = max(1000/fps - (t2 - t0), 0)

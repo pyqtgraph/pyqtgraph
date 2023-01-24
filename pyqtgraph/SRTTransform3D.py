@@ -2,9 +2,10 @@ from math import atan2, degrees
 
 import numpy as np
 
-from .Qt import QtCore, QtGui, QtWidgets
+from .Qt import QtGui
 from .Transform3D import Transform3D
 from .Vector import Vector
+from . import SRTTransform
 
 
 class SRTTransform3D(Transform3D):
@@ -17,7 +18,7 @@ class SRTTransform3D(Transform3D):
         if init is None:
             return
         if init.__class__ is QtGui.QTransform:
-            init = SRTTransform(init)
+            init = SRTTransform.SRTTransform(init)
         
         if isinstance(init, dict):
             self.restoreState(init)
@@ -29,7 +30,7 @@ class SRTTransform3D(Transform3D):
                 'axis': Vector(init._state['axis']),
             }
             self.update()
-        elif isinstance(init, SRTTransform):
+        elif isinstance(init, SRTTransform.SRTTransform):
             self._state = {
                 'pos': Vector(init._state['pos']),
                 'scale': Vector(init._state['scale']),
@@ -172,15 +173,15 @@ class SRTTransform3D(Transform3D):
         
     def as2D(self):
         """Return a QTransform representing the x,y portion of this transform (if possible)"""
-        return SRTTransform(self)
+        return SRTTransform.SRTTransform(self)
 
     #def __div__(self, t):
         #"""A / B  ==  B^-1 * A"""
         #dt = t.inverted()[0] * self
-        #return SRTTransform(dt)
+        #return SRTTransform.SRTTransform(dt)
         
     #def __mul__(self, t):
-        #return SRTTransform(QtGui.QTransform.__mul__(self, t))
+        #return SRTTransform.SRTTransform(QtGui.QTransform.__mul__(self, t))
 
     def saveState(self):
         p = self._state['pos']
@@ -224,95 +225,3 @@ class SRTTransform3D(Transform3D):
             return m[:3,:3]
         else:
             raise Exception("Argument 'nd' must be 2 or 3")
-        
-if __name__ == '__main__':
-    import GraphicsView
-
-    from . import widgets
-    from .functions import mkPen
-    app = pg.mkQApp()  # noqa: qapp must be stored to avoid gc
-    win = QtWidgets.QMainWindow()
-    win.show()
-    cw = GraphicsView.GraphicsView()
-    #cw.enableMouse()  
-    win.setCentralWidget(cw)
-    s = QtWidgets.QGraphicsScene()
-    cw.setScene(s)
-    win.resize(600,600)
-    cw.enableMouse()
-    cw.setRange(QtCore.QRectF(-100., -100., 200., 200.))
-    
-    class Item(QtWidgets.QGraphicsItem):
-        def __init__(self):
-            QtWidgets.QGraphicsItem.__init__(self)
-            self.b = QtWidgets.QGraphicsRectItem(20, 20, 20, 20, self)
-            self.b.setPen(QtGui.QPen(mkPen('y')))
-            self.t1 = QtWidgets.QGraphicsTextItem(self)
-            self.t1.setHtml('<span style="color: #F00">R</span>')
-            self.t1.translate(20, 20)
-            self.l1 = QtWidgets.QGraphicsLineItem(10, 0, -10, 0, self)
-            self.l2 = QtWidgets.QGraphicsLineItem(0, 10, 0, -10, self)
-            self.l1.setPen(QtGui.QPen(mkPen('y')))
-            self.l2.setPen(QtGui.QPen(mkPen('y')))
-        def boundingRect(self):
-            return QtCore.QRectF()
-        def paint(self, *args):
-            pass
-            
-    #s.addItem(b)
-    #s.addItem(t1)
-    item = Item()
-    s.addItem(item)
-    l1 = QtWidgets.QGraphicsLineItem(10, 0, -10, 0)
-    l2 = QtWidgets.QGraphicsLineItem(0, 10, 0, -10)
-    l1.setPen(QtGui.QPen(mkPen('r')))
-    l2.setPen(QtGui.QPen(mkPen('r')))
-    s.addItem(l1)
-    s.addItem(l2)
-    
-    tr1 = SRTTransform()
-    tr2 = SRTTransform()
-    tr3 = QtGui.QTransform()
-    tr3.translate(20, 0)
-    tr3.rotate(45)
-    print("QTransform -> Transform: %s" % str(SRTTransform(tr3)))
-    
-    print("tr1: %s" % str(tr1))
-    
-    tr2.translate(20, 0)
-    tr2.rotate(45)
-    print("tr2: %s" % str(tr2))
-    
-    dt = tr2/tr1
-    print("tr2 / tr1 = %s" % str(dt))
-    
-    print("tr2 * tr1 = %s" % str(tr2*tr1))
-    
-    tr4 = SRTTransform()
-    tr4.scale(-1, 1)
-    tr4.rotate(30)
-    print("tr1 * tr4 = %s" % str(tr1*tr4))
-    
-    w1 = widgets.TestROI((19,19), (22, 22), invertible=True)
-    #w2 = widgets.TestROI((0,0), (150, 150))
-    w1.setZValue(10)
-    s.addItem(w1)
-    #s.addItem(w2)
-    w1Base = w1.getState()
-    #w2Base = w2.getState()
-    def update():
-        tr1 = w1.getGlobalTransform(w1Base)
-        #tr2 = w2.getGlobalTransform(w2Base)
-        item.setTransform(tr1)
-        
-    #def update2():
-        #tr1 = w1.getGlobalTransform(w1Base)
-        #tr2 = w2.getGlobalTransform(w2Base)
-        #t1.setTransform(tr1)
-        #w1.setState(w1Base)
-        #w1.applyGlobalTransform(tr2)
-        
-    w1.sigRegionChanged.connect(update)
-    #w2.sigRegionChanged.connect(update2)
-    
-from .SRTTransform import SRTTransform
