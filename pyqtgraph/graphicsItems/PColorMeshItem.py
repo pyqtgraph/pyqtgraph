@@ -50,6 +50,7 @@ class PColorMeshItem(GraphicsObject):
     **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
     """
 
+    sigLevelsChanged = QtCore.Signal(object)  # emits tuple with levels (low,high) when color levels are changed.
 
     def __init__(self, *args, **kwargs):
         """
@@ -120,7 +121,7 @@ class PColorMeshItem(GraphicsObject):
             self.edgecolors.setCosmetic(True)
         self.antialiasing = kwargs.get('antialiasing', False)
         self.levels = kwargs.get('levels', None)
-        self.enableAutoLevels = kwargs.get('enableAutoLevels', True)
+        self.enableautolevels = kwargs.get('enableAutoLevels', True)
         
         if 'colorMap' in kwargs:
             cmap = kwargs.get('colorMap')
@@ -241,8 +242,15 @@ class PColorMeshItem(GraphicsObject):
             if np.any(self.x != args[0]) or np.any(self.y != args[1]):
                 shapeChanged = True
 
-        # Prepare data
-        self._prepareData(args)
+        if len(args)==0:
+            # No data was received.
+            if self.z is None:
+                # No data is currently displayed, 
+                # so other settings (like colormap) can not be updated
+                return
+        else:
+            # Got new data. Prepare it for plotting
+            self._prepareData(args)
 
 
         self.qpicture = QtGui.QPicture()
@@ -262,12 +270,11 @@ class PColorMeshItem(GraphicsObject):
         # Second we associate each z value, that we normalize, to the lut
         scale = len(lut) - 1
         # Decide whether to autoscale the colormap or use the same levels as before
-        if (self.levels is None) or (self.enableAutoLevels and autoLevels):
+        if (self.levels is None) or (self.enableautolevels and autoLevels):
             # Autoscale colormap 
             z_min = self.z.min()
             z_max = self.z.max()
-            if not self.enableAutoLevels:
-                self.levels = (z_min, z_max)
+            self.setLevels( (z_min, z_max), update=False)
         else:
             # Use consistent colormap scaling
             z_min = self.levels[0]
@@ -307,12 +314,74 @@ class PColorMeshItem(GraphicsObject):
 
 
 
+    def _updateDisplayWithCurrentState(self, *args, **kargs):
+        ## Used for re-rendering mesh from self.z.
+        ## For example when a new colormap is applied, or the levels are adjusted
+
+        defaults = {
+            'autoLevels': False,
+        }
+        defaults.update(kargs)
+        return self.setData(*args, **defaults)
+
+
+
+    def setLevels(self, levels, update=True):
+        """
+        Sets color-scaling levels for the mesh. 
+        
+        Parameters
+        ----------
+            levels: tuple
+                ``(low, high)`` 
+                sets the range for which values can be represented in the colormap.
+            update: bool, optional
+                Controls if mesh immediately updates to reflect the new color levels.
+        """
+        self.levels = levels
+        self.sigLevelsChanged.emit(levels)
+        if update:
+            self._updateDisplayWithCurrentState()
+
+
+
+    def getLevels(self):
+        """
+        Returns a tuple containing the current level settings. See :func:`~setLevels`.
+        The format is ``(low, high)``.
+        """
+        return self.levels
+
+
+    
+    def setLookupTable(self, lut, update=True):
+        if lut is not self.lut_qbrush:
+            self.lut_qbrush = [QtGui.QBrush(x) for x in lut]
+            if update:
+                self._updateDisplayWithCurrentState()
+
+
+
+    def getColorMap(self):
+        return self.cmap
+
+
+
+    def enableAutoLevels(self):
+        self.enableautolevels = True
+
+
+
+    def disableAutoLevels(self):
+        self.enableautolevels = False
+
+
+
     def paint(self, p, *args):
         if self.z is None:
             return
 
         p.drawPicture(0, 0, self.qpicture)
-
 
 
     def setBorder(self, b):
