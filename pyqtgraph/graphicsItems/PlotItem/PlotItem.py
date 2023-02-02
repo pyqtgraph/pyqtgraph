@@ -1088,12 +1088,15 @@ class PlotItem(GraphicsWidget):
         """
         Changes the context menu action visibility
 
-        =============== ====================================================================
-        **Arguments:**
-        name            (str) Action name ('Transforms', 'Downsample', 'Average', 'Alpha', 'Grid', 'Points'
-
-        visible            (bool) If `True`, action is visible. If `False` action is invisible
-        =============== ====================================================================
+        Parameters
+        ----------
+        name: str
+            Action name
+            must be one of 'Transforms', 'Downsample', 'Average','Alpha', 'Grid', or 'Points'
+        visible: bool
+            Determines if action will be display
+            True action is visible
+            False action is invisible.
         """
         translated_name = translate("PlotItem", name)
         for action in self.ctrlMenu.actions():
