@@ -1,0 +1,19 @@
+-r requirements-numpy.txt
+
+# image testing
+scipy==1.10.0
+
+# optional high performance paths
+numba==0.56.4; python_version == '3.9'
+
+# optional 3D
+pyopengl==3.1.6
+
+# supplimental tools
+matplotlib==3.6.3
+h5py==3.8.0
+
+# testing
+pytest==7.2.1
+pytest-xdist==3.2.0
+pytest-xvfb==2.0.0; sys_platform == 'linux'
