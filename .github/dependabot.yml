@@ -1,14 +1,15 @@
-# Set update schedule for GitHub Actions
-
 version: 2
 updates:
-
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       # Check for updates to GitHub Actions every weekday
       interval: "daily"
-  - package-ecosystem: pip
-    directory: /doc
+  - package-ecosystem: "pip"
+    directory: "/doc"
     schedule:
-      interval: daily
+      interval: "daily"
+  - package-ecosystem: "pip"
+    directory: ".github/workflows/etc"
+    schedule:
+      interval: "daily"

@@ -89,7 +89,7 @@ jobs:
       shell: cmd
     - name: Install Dependencies
       run: |
-        python -m pip install -r .github/workflows/requirements.txt ${{ matrix.qt-version }} .
+        python -m pip install -r .github/workflows/etc/requirements.txt ${{ matrix.qt-version }} .
     - name: "Install Linux VirtualDisplay"
       if: runner.os == 'Linux'
       run: |
