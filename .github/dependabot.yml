@@ -11,5 +11,8 @@ updates:
       interval: "daily"
   - package-ecosystem: "pip"
     directory: ".github/workflows/etc"
+    ignore:
+      - dependency-name: "numpy"
+      # NEP-29 governs supported versions of NumPy
     schedule:
       interval: "daily"
