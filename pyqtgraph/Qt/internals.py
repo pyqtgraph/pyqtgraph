@@ -75,6 +75,9 @@ def get_qpainterpath_element_array(qpath, nelems=None):
     return np.frombuffer(vp, dtype=dtype)
 
 class PrimitiveArray:
+    # Note: This class is an internal implementation detail and is not part
+    #       of the public API.
+    #
     # QPainter has a C++ native API that takes an array of objects:
     #   drawPrimitives(const Primitive *array, int count, ...)
     # where "Primitive" is one of QPointF, QLineF, QRectF, PixmapFragment
@@ -95,30 +98,30 @@ class PrimitiveArray:
     # C array of PixmapFragment(s) _and_ the length of the array.
     # There is no overload that takes a Python list of PixmapFragment(s).
 
-    def __init__(self, Klass, nfields, method=None):
+    def __init__(self, Klass, nfields, *, use_array=None):
         self._Klass = Klass
         self._nfields = nfields
         self._ndarray = None
 
         if QT_LIB.startswith('PyQt'):
-            if method is None:
-                method = (
+            if use_array is None:
+                use_array = (
                     hasattr(sip, 'array') and
                     (
                         (0x60301 <= QtCore.PYQT_VERSION) or
                         (0x50f07 <= QtCore.PYQT_VERSION < 0x60000)
                     )
                 )
-            self.use_sip_array = method
+            self.use_sip_array = use_array
         else:
             self.use_sip_array = False
 
         if QT_LIB.startswith('PySide'):
-            if method is None:
-                method = (
+            if use_array is None:
+                use_array = (
                     Klass is QtGui.QPainter.PixmapFragment
                 )
-            self.use_ptr_to_array = method
+            self.use_ptr_to_array = use_array
         else:
             self.use_ptr_to_array = False
 
