@@ -5,6 +5,7 @@ from collections import OrderedDict
 examples_ = OrderedDict([
     ('Command-line usage', 'CLIexample.py'),
     ('Basic Plotting', Namespace(filename='Plotting.py', recommended=True)),
+    ('Plotting Datasets', 'MultiDataPlot.py'),
     ('ImageView', 'ImageView.py'),
     ('ParameterTree', 'parametertree.py'),
     ('Parameter-Function Interaction', 'InteractiveParameter.py'),
