@@ -1,3 +1,4 @@
+import warnings
 import weakref
 from time import perf_counter, perf_counter_ns
 
@@ -220,10 +221,18 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                 cev = [e for e in self.clickEvents if e.button() == ev.button()]
                 if cev:
                     if self.sendClickEvent(cev[0]):
-                        #print "sent click event"
                         ev.accept()
-                    self.clickEvents.remove(cev[0])
-                
+                    try:
+                        self.clickEvents.remove(cev[0])
+                    except ValueError:
+                        warnings.warn(
+                            ("A ValueError can occur here with errant "
+                             "QApplication.processEvent() calls, see "
+                            "https://github.com/pyqtgraph/pyqtgraph/pull/2580 "
+                            "for more information."),
+                            RuntimeWarning,
+                            stacklevel=2
+                        )
         if not ev.buttons():
             self.dragItem = None
             self.dragButtons = []
