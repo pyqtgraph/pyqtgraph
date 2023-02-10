@@ -4,19 +4,19 @@ numpy~=1.21.0; python_version == '3.9'
 numpy~=1.20.0; python_version == '3.8'
 
 # image testing
-scipy==1.8.1
+scipy
 
 # optional high performance paths
-numba==0.55.2; python_version == '3.9'
+numba==0.56.4; python_version == '3.9'
 
 # optional 3D
 pyopengl==3.1.6
 
 # supplimental tools
-matplotlib==3.6.1
-h5py==3.7.0
+matplotlib
+h5py
 
 # testing
-pytest==7.1.2
-pytest-xdist==2.5.0
+pytest==7.2.1
+pytest-xdist==3.2.0
 pytest-xvfb==2.0.0; sys_platform == 'linux'
