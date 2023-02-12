@@ -62,6 +62,11 @@ class ReplWidget(QtWidgets.QWidget):
         self.input.sigExecuteCmd.connect(self.runCmd)
 
     def runCmd(self, cmd):
+        if '\n' in cmd:
+            for line in cmd.split('\n'):
+                self.runCmd(line)
+            return
+
         if len(self._commandBuffer) == 0:
             self.write(f">>> {cmd}\n", style='command')
         else:
@@ -73,13 +78,16 @@ class ReplWidget(QtWidgets.QWidget):
         fullcmd = '\n'.join(self._commandBuffer)
         try:
             cmdCode = code.compile_command(fullcmd)
+            self.input.setMultiline(False)
         except Exception:
             # cannot continue processing this command; reset and print exception
             self._commandBuffer = []
             self.displayException()
+            self.input.setMultiline(False)
         else:
             if cmdCode is None:
                 # incomplete input; wait for next line
+                self.input.setMultiline(True)
                 return
 
             self._commandBuffer = []
