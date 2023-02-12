@@ -132,7 +132,7 @@ class ReplWidget(QtWidgets.QWidget):
             self._setTextStyle(style)
             self.output.insertPlainText(strn)
             # return to output style immediately to avoid seeing an extra line of command style
-            if 'style' != 'output':
+            if style != 'output':
                 self._setTextStyle('output')
 
         if scrollToBottom:

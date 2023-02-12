@@ -159,9 +159,6 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
         else:
             exc = excInfo.exc_value
 
-        # if lastFrame is None:
-        #     lastFrame = sys._getframe().f_back
-
         # exceptions raised in non-gui threads must be sent to the gui thread by signal
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
         if not isGuiThread:
