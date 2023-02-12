@@ -1,5 +1,5 @@
 import sys, traceback
-from ..Qt import QtWidgets, QtGui, QtCore
+from ..Qt import QtWidgets, QtGui
 
 
 class StackWidget(QtWidgets.QTreeWidget):
@@ -27,12 +27,7 @@ class StackWidget(QtWidgets.QTreeWidget):
         if exc is None:
             exc = sys.exc_info()[1]
 
-        # self.setStack(expand=False)
-
-        # if exc is None:
-        #     return
-
-        # self.addTopLevelItem(textItem('Exception displayed here ^^^'))
+        self.clear()
 
         exceptions = exceptionChain(exc)
         for ex, cause in exceptions:
