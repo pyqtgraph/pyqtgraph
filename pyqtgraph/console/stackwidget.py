@@ -33,7 +33,7 @@ class StackWidget(QtWidgets.QTreeWidget):
         for ex, cause in exceptions:
             stackFrames, tbFrames = stacksFromTraceback(ex.__traceback__, lastFrame=lastFrame)
             catchMsg = textItem("Exception caught here")
-            excStr = ''.join(traceback.format_exception_only(ex)).strip()
+            excStr = ''.join(traceback.format_exception_only(type(ex), ex)).strip()
             items = makeItemTree(stackFrames + [catchMsg] + tbFrames, excStr)
             self.addTopLevelItem(items[0])
             if cause is not None:

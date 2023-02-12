@@ -1,3 +1,5 @@
+import os
+import sys
 import pickle
 import subprocess
 
@@ -58,7 +60,11 @@ class ConsoleWidget(QtWidgets.QWidget):
 
         self.historyFile = historyFile
         
-        history = self.loadHistory()
+        try:
+            history = self.loadHistory()
+        except Exception as exc:
+            sys.excepthook(*sys.exc_info())
+            history = None
         if history is not None:
             self.input.history = [""] + history
             self.historyList.addItems(history[::-1])
@@ -117,7 +123,7 @@ class ConsoleWidget(QtWidgets.QWidget):
  
     def loadHistory(self):
         """Return the list of previously-invoked command strings (or None)."""
-        if self.historyFile is not None:
+        if self.historyFile is not None and os.path.exists(self.historyFile):
             with open(self.historyFile, 'rb') as pf:
                 return pickle.load(pf)
         
@@ -125,7 +131,7 @@ class ConsoleWidget(QtWidgets.QWidget):
         """Store the list of previously-invoked command strings."""
         if self.historyFile is not None:
             with open(self.historyFile, 'wb') as pf:
-                pickle.dump(pf, history)
+                pickle.dump(history, pf)
         
     def _commandEntered(self, repl, cmd):
         self.historyList.addItem(cmd)
