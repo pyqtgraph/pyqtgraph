@@ -9,7 +9,7 @@ from .. import Qt, debug
 from .. import functions as fn
 from .. import getConfigOption
 from ..Point import Point
-from ..Qt import QT_LIB, QtCore, QtGui
+from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
@@ -131,57 +131,6 @@ def _mkBrush(*args, **kwargs):
         return args[0]
     else:
         return fn.mkBrush(*args, **kwargs)
-
-
-class PixmapFragments:
-    def __init__(self):
-        self.use_sip_array = (
-            Qt.QT_LIB.startswith('PyQt') and
-            hasattr(Qt.sip, 'array') and
-            (
-                (0x60301 <= QtCore.PYQT_VERSION) or
-                (0x50f07 <= QtCore.PYQT_VERSION < 0x60000)
-            )
-        )
-        self.alloc(0)
-
-    def alloc(self, size):
-        # The C++ native API is:
-        #   drawPixmapFragments(const PixmapFragment *fragments, int fragmentCount,
-        #                       const QPixmap &pixmap)
-        #
-        # PySide exposes this API whereas PyQt wraps it to be more Pythonic.
-        # In PyQt, a Python list of PixmapFragment instances needs to be provided.
-        # This is inefficient because:
-        # 1) constructing the Python list involves calling sip.wrapinstance multiple times.
-        #    - this is mitigated here by reusing the instance pointers
-        # 2) PyQt will anyway deconstruct the Python list and repack the PixmapFragment
-        #    instances into a contiguous array, in order to call the underlying C++ native API.
-        if self.use_sip_array:
-            self.objs = Qt.sip.array(QtGui.QPainter.PixmapFragment, size)
-            vp = Qt.sip.voidptr(self.objs, len(self.objs)*10*8)
-            self.arr = np.frombuffer(vp, dtype=np.float64).reshape((-1, 10))
-        else:
-            self.arr = np.empty((size, 10), dtype=np.float64)
-            if QT_LIB.startswith('PyQt'):
-                self.objs = list(map(Qt.sip.wrapinstance,
-                    itertools.count(self.arr.ctypes.data, self.arr.strides[0]),
-                    itertools.repeat(QtGui.QPainter.PixmapFragment, self.arr.shape[0])))
-            else:
-                self.objs = Qt.shiboken.wrapInstance(self.arr.ctypes.data, QtGui.QPainter.PixmapFragment)
-
-    def array(self, size):
-        if size != self.arr.shape[0]:
-            self.alloc(size)
-        return self.arr
-
-    def draw(self, painter, pixmap):
-        if not len(self.arr):
-            return
-        if QT_LIB.startswith('PyQt'):
-            painter.drawPixmapFragments(self.objs, pixmap)
-        else:
-            painter.drawPixmapFragments(self.objs, len(self.arr), pixmap)
 
 
 class SymbolAtlas(object):
@@ -427,7 +376,7 @@ class ScatterPlotItem(GraphicsObject):
         self.bounds = [None, None]  ## caches data bounds
         self._maxSpotWidth = 0      ## maximum size of the scale-variant portion of all spots
         self._maxSpotPxWidth = 0    ## maximum size of the scale-invariant portion of all spots
-        self._pixmapFragments = PixmapFragments()
+        self._pixmapFragments = Qt.internals.PrimitiveArray(QtGui.QPainter.PixmapFragment, 10)
         self.opts = {
             'pxMode': True,
             'useCache': True,  ## If useCache is False, symbols are re-drawn on every paint.
@@ -1002,13 +951,19 @@ class ScatterPlotItem(GraphicsObject):
                 xy = pts[:, viewMask].T
                 sr = self.data['sourceRect'][viewMask]
 
-                frags = self._pixmapFragments.array(sr.size)
+                self._pixmapFragments.resize(sr.size)
+                frags = self._pixmapFragments.ndarray()
                 frags[:, 0:2] = xy
                 frags[:, 2:6] = np.frombuffer(sr, dtype=int).reshape((-1, 4)) # sx, sy, sw, sh
                 frags[:, 6:10] = [1.0, 1.0, 0.0, 1.0]   # scaleX, scaleY, rotation, opacity
 
                 profiler('prep')
-                self._pixmapFragments.draw(p, self.fragmentAtlas.pixmap)
+                inst = self._pixmapFragments.instances()
+                if Qt.QT_LIB.startswith('PySide'):
+                    args = inst, sr.size
+                else:
+                    args = inst,
+                p.drawPixmapFragments(*args, self.fragmentAtlas.pixmap)
                 profiler('draw')
             else:
                 # render each symbol individually

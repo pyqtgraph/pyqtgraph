@@ -134,6 +134,7 @@ class Point(QtCore.QPointF):
         return Point.dotProduct(self, a)
     
     def cross(self, a):
+        """Returns the cross product of a and this Point"""
         if not isinstance(a, QtCore.QPointF):
             a = Point(a)
         return self.x() * a.y() - self.y() * a.x()

@@ -23,7 +23,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         qt-lib: [pyqt, pyside]
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
         include:
           - python-version: "3.8"
             qt-lib: "pyqt"
@@ -43,6 +43,12 @@ jobs:
           - python-version: "3.10"
             qt-lib: "pyside"
             qt-version: "PySide6-Essentials"
+          - python-version: "3.11"
+            qt-lib: "pyqt"
+            qt-version: "PyQt6"
+          - python-version: "3.11"
+            qt-lib: "pyside"
+            qt-version: "PySide6-Essentials"
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -55,7 +61,8 @@ jobs:
     - name: Get pip cache dir
       id: pip-cache
       run: |
-        echo "::set-output name=dir::$(pip cache dir)"
+        echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+      shell: bash
     - name: pip cache
       uses: actions/cache@v3
       with:
@@ -82,7 +89,7 @@ jobs:
       shell: cmd
     - name: Install Dependencies
       run: |
-        python -m pip install -r .github/workflows/requirements.txt ${{ matrix.qt-version }} .
+        python -m pip install -r .github/workflows/etc/requirements.txt ${{ matrix.qt-version }} .
     - name: "Install Linux VirtualDisplay"
       if: runner.os == 'Linux'
       run: |
@@ -161,7 +168,8 @@ jobs:
           miniforge-variant: Mambaforge
           environment-file: ${{ matrix.environment-file }}
           auto-update-conda: false
-          python-version: "3.9"
+          python-version: "3.11"
+          use-mamba: true
       - name: "Install Test Framework"
         run: pip install pytest pytest-xdist
       - name: "Install Windows-Mesa OpenGL DLL"
@@ -233,10 +241,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Python 3.9
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.11'
       - name: Build Wheel
         run: |
           python -m pip install setuptools wheel
@@ -255,7 +263,7 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: '3.11'
     - name: Install Dependencies
       run: |
         python -m pip install PyQt5 numpy scipy

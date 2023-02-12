@@ -12,7 +12,6 @@ import datetime
 import os
 import re
 import sys
-import tempfile
 from collections import OrderedDict
 
 import numpy
@@ -193,24 +192,3 @@ def measureIndent(s):
     while n < len(s) and s[n] == ' ':
         n += 1
     return n
-
-if __name__ == '__main__':
-    cf = """
-key: 'value'
-key2:              ##comment
-                   ##comment
-    key21: 'value' ## comment
-                   ##comment
-    key22: [1,2,3]
-    key23: 234  #comment
-    """
-    with tempfile.NamedTemporaryFile(encoding="utf-8") as tf:
-        tf.write(cf.encode("utf-8"))
-        print("=== Test:===")
-        for num, line in enumerate(cf.split('\n'), start=1):
-            print("%02d   %s" % (num, line))
-        print(cf)
-        print("============")
-        data = readConfigFile(tf.name)
-    print(data)
-    

@@ -196,17 +196,13 @@ class PlotItem(GraphicsWidget):
         ]
         
         
-        self.ctrlMenu = QtWidgets.QMenu()
-        
-        self.ctrlMenu.setTitle(translate("PlotItem", 'Plot Options'))
-        self.subMenus = []
+        self.ctrlMenu = QtWidgets.QMenu(translate("PlotItem", 'Plot Options'))
+
         for name, grp in menuItems:
-            sm = QtWidgets.QMenu(name)
+            sm = self.ctrlMenu.addMenu(name)
             act = QtWidgets.QWidgetAction(self)
             act.setDefaultWidget(grp)
             sm.addAction(act)
-            self.subMenus.append(sm)
-            self.ctrlMenu.addMenu(sm)
         
         self.stateGroup = WidgetGroup()
         for name, w in menuItems:
@@ -669,6 +665,72 @@ class PlotItem(GraphicsWidget):
         bar.setImageItem( image, insert_in=self )
         return bar
 
+    def multiDataPlot(self, *, x=None, y=None, constKwargs=None, **kwargs):
+        """
+        Allow plotting multiple curves on the same plot, changing some kwargs
+        per curve.
+
+        Parameters
+        ----------
+        x, y: array-like
+            can be in the following formats:
+              - {x or y} = [n1, n2, n3, ...]: The named argument iterates through
+                ``n`` curves, while the unspecified argument is range(len(n)) for
+                each curve.
+              - x, [y1, y2, y3, ...]
+              - [x1, x2, x3, ...], [y1, y2, y3, ...]
+              - [x1, x2, x3, ...], y
+
+              where ``x_n`` and ``y_n`` are ``ndarray`` data for each curve. Since
+              ``x`` and ``y`` values are matched using ``zip``, unequal lengths mean
+              the longer array will be truncated. Note that 2D matrices for either x
+              or y are considered lists of curve
+              data.
+        constKwargs: dict, optional
+            A dict of {str: value} passed to each curve during ``plot()``.
+        kwargs: dict, optional
+            A dict of {str: iterable} where the str is the name of a kwarg and the
+            iterable is a list of values, one for each plotted curve.
+        """
+        if (x is not None and not len(x)) or (y is not None and not len(y)):
+            # Nothing to plot -- either x or y array will bail out early from
+            # zip() below.
+            return []
+        def scalarOrNone(val):
+            return val is None or (len(val) and np.isscalar(val[0]))
+
+        if scalarOrNone(x) and scalarOrNone(y):
+            raise ValueError(
+                "If both `x` and `y` represent single curves, use `plot` instead "
+                "of `multiPlot`."
+            )
+        curves = []
+        constKwargs = constKwargs or {}
+        xy: 'dict[str, list | None]' = dict(x=x, y=y)
+        for key, oppositeVal in zip(('x', 'y'), [y, x]):
+            oppositeVal: 'Iterable | None'
+            val = xy[key]
+            if val is None:
+                # Other curve has all data, make range that supports longest chain
+                val = range(max(len(curveN) for curveN in oppositeVal))
+            if np.isscalar(val[0]):
+                # x, [y1, y2, y3, ...] or [x1, x2, x3, ...], y
+                # Repeat the single curve to match length of opposite list
+                val = [val] * len(oppositeVal)
+            xy[key] = val
+        for ii, (xi, yi) in enumerate(zip(xy['x'], xy['y'])):
+            for kk in kwargs:
+                if len(kwargs[kk]) <= ii:
+                    raise ValueError(
+                        f"Not enough values for kwarg `{kk}`. "
+                        f"Expected {ii + 1:d} (number of curves to plot), got"
+                        f" {len(kwargs[kk]):d}"
+                    )
+            kwargsi = {kk: kwargs[kk][ii] for kk in kwargs}
+            constKwargs.update(kwargsi)
+            curves.append(self.plot(xi, yi, **constKwargs))
+        return curves
+
     def scatterPlot(self, *args, **kargs):
         if 'pen' in kargs:
             kargs['symbolPen'] = kargs['pen']
@@ -1087,6 +1149,26 @@ class PlotItem(GraphicsWidget):
     
     def menuEnabled(self):
         return self._menuEnabled
+
+    def setContextMenuActionVisible(self, name : str, visible : bool) -> None:
+        """
+        Changes the context menu action visibility
+
+        Parameters
+        ----------
+        name: str
+            Action name
+            must be one of 'Transforms', 'Downsample', 'Average','Alpha', 'Grid', or 'Points'
+        visible: bool
+            Determines if action will be display
+            True action is visible
+            False action is invisible.
+        """
+        translated_name = translate("PlotItem", name)
+        for action in self.ctrlMenu.actions():
+            if action.text() == translated_name:
+                action.setVisible(visible)
+                break
     
     def hoverEvent(self, ev):
         if ev.enter:
