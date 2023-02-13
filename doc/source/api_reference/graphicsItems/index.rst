@@ -14,6 +14,7 @@ Contents:
     imageitem
     colorbaritem
     pcolormeshitem
+    nonuniformimage
     graphitem
     viewbox
     linearregionitem
