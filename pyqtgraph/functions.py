@@ -2181,26 +2181,18 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     return path
 
 def ndarray_from_qpolygonf(polyline):
-    nbytes = 2 * len(polyline) * 8
-    if QT_LIB.startswith('PyQt'):
-        buffer = polyline.data()
-        if buffer is None:
-            buffer = Qt.sip.voidptr(0)
-        buffer.setsize(nbytes)
-    else:
-        ptr = polyline.data()
-        if ptr is None:
-            ptr = 0
-        buffer = Qt.shiboken.VoidPtr(ptr, nbytes, True)
-    memory = np.frombuffer(buffer, np.double).reshape((-1, 2))
-    return memory
+    # polyline.data() will be None if the pointer was null.
+    # voidptr(None) is the same as voidptr(0).
+    vp = Qt.compat.voidptr(polyline.data(), len(polyline)*2*8, True)
+    return np.frombuffer(vp, dtype=np.float64).reshape((-1, 2))
 
 def create_qpolygonf(size):
     polyline = QtGui.QPolygonF()
-    if QT_LIB.startswith('PyQt'):
-        polyline.fill(QtCore.QPointF(), size)
-    else:
+    if hasattr(polyline, 'resize'):
+        # (PySide) and (PyQt6 >= 6.3.1)
         polyline.resize(size)
+    else:
+        polyline.fill(QtCore.QPointF(), size)
     return polyline
 
 def arrayToQPolygonF(x, y):
