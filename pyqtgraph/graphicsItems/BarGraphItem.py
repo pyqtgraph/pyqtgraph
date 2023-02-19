@@ -197,19 +197,31 @@ class BarGraphItem(GraphicsObject):
         memory[:, 3] = y1 - y0
 
     def _render(self, painter):
-        if self._sharedPen is not None:
-            painter.setPen(self._sharedPen)
-        if self._sharedBrush is not None:
-            painter.setBrush(self._sharedBrush)
+        multi_pen = self._pens is not None
+        multi_brush = self._brushes is not None
+        no_pen = (
+            not multi_pen
+            and self._sharedPen.style() == QtCore.Qt.PenStyle.NoPen
+        )
 
         rects = self._rectarray.instances()
-        for idx, rect in enumerate(rects):
-            if self._pens is not None:
-                painter.setPen(self._pens[idx])
-            if self._brushes is not None:
-                painter.setBrush(self._brushes[idx])
 
-            painter.drawRect(rect)
+        if no_pen and multi_brush:
+            for idx, rect in enumerate(rects):
+                painter.fillRect(rect, self._brushes[idx])
+        else:
+            if not multi_pen:
+                painter.setPen(self._sharedPen)
+            if not multi_brush:
+                painter.setBrush(self._sharedBrush)
+
+            for idx, rect in enumerate(rects):
+                if multi_pen:
+                    painter.setPen(self._pens[idx])
+                if multi_brush:
+                    painter.setBrush(self._brushes[idx])
+
+                painter.drawRect(rect)
 
     def drawPicture(self):
         self.picture = QtGui.QPicture()
