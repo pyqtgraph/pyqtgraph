@@ -473,8 +473,9 @@ class ImageView(QtWidgets.QWidget):
         """
         if self.image is None:
             return 0
-        else:
-            return self.image.shape[0]
+        elif self.axes['t'] is not None:
+            return self.image.shape[self.axes['t']]
+        return 1
 
     def autoLevels(self):
         """Set the min/max intensity levels automatically to match the image data."""
