@@ -33,7 +33,8 @@ if (
 
 @skip_qt6
 def test_MatplotlibExporter():
-    plt = pg.plot()
+    plt = pg.PlotWidget()
+    plt.show()
 
     # curve item
     plt.plot([0, 1, 2], [0, 1, 2])
@@ -48,7 +49,8 @@ def test_MatplotlibExporter():
 @skip_qt6
 def test_MatplotlibExporter_nonplotitem():
     # attempting to export something other than a PlotItem raises an exception
-    plt = pg.plot()
+    plt = pg.PlotWidget()
+    plt.show()
     plt.plot([0, 1, 2], [2, 3, 4])
     exp = MatplotlibExporter(plt.getPlotItem().getViewBox())
     with pytest.raises(Exception):
@@ -59,7 +61,9 @@ def test_MatplotlibExporter_nonplotitem():
 def test_MatplotlibExporter_siscale(scale):
     # coarse test to verify that plot data is scaled before export when
     # autoSIPrefix is in effect (so mpl doesn't add its own multiplier label)
-    plt = pg.plot([0, 1, 2], [(i+1)*scale for i in range(3)])
+    plt = pg.PlotWidget()
+    plt.show()
+    plt.plot([0, 1, 2], [(i+1)*scale for i in range(3)])
     # set the label so autoSIPrefix works
     plt.setLabel('left', 'magnitude')
     exp = MatplotlibExporter(plt.getPlotItem())
