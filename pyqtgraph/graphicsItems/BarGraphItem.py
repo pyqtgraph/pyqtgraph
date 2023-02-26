@@ -233,8 +233,8 @@ class BarGraphItem(GraphicsObject):
         if self._singleColor:
             p.setPen(self._sharedPen)
             p.setBrush(self._sharedBrush)
-            inst = self._rectarray.instances()
-            p.drawRects(inst)
+            drawargs = self._rectarray.drawargs()
+            p.drawRects(*drawargs)
         else:
             if self.picture is None:
                 self.drawPicture()

@@ -19,14 +19,11 @@ class LineSegments:
     def __init__(self):
         self.array = Qt.internals.PrimitiveArray(QtCore.QLineF, 4)
 
-    def get(self, size):
-        self.array.resize(size)
-        return self.array.instances(), self.array.ndarray()
-
     def arrayToLineSegments(self, x, y, connect, finiteCheck):
         # analogue of arrayToQPath taking the same parameters
         if len(x) < 2:
-            return [],
+            self.array.resize(0)
+            return self.array.drawargs()
 
         connect_array = None
         if isinstance(connect, np.ndarray):
@@ -58,13 +55,11 @@ class LineSegments:
                 x = x[backfill_idx]
                 y = y[backfill_idx]
 
-        segs = []
-        nsegs = 0
-
         if connect == 'all':
             nsegs = len(x) - 1
+            self.array.resize(nsegs)
             if nsegs:
-                segs, memory = self.get(nsegs)
+                memory = self.array.ndarray()
                 memory[:, 0] = x[:-1]
                 memory[:, 2] = x[1:]
                 memory[:, 1] = y[:-1]
@@ -72,8 +67,9 @@ class LineSegments:
 
         elif connect == 'pairs':
             nsegs = len(x) // 2
+            self.array.resize(nsegs)
             if nsegs:
-                segs, memory = self.get(nsegs)
+                memory = self.array.ndarray()
                 memory = memory.reshape((-1, 2))
                 memory[:, 0] = x[:nsegs * 2]
                 memory[:, 1] = y[:nsegs * 2]
@@ -83,17 +79,19 @@ class LineSegments:
             # - 'array'
             # - 'finite' with non-finite elements
             nsegs = np.count_nonzero(connect_array)
+            self.array.resize(nsegs)
             if nsegs:
-                segs, memory = self.get(nsegs)
+                memory = self.array.ndarray()
                 memory[:, 0] = x[:-1][connect_array]
                 memory[:, 2] = x[1:][connect_array]
                 memory[:, 1] = y[:-1][connect_array]
                 memory[:, 3] = y[1:][connect_array]
 
-        if nsegs and self.use_native_drawlines:
-            return segs, nsegs
         else:
-            return segs,
+            nsegs = 0
+            self.array.resize(nsegs)
+
+        return self.array.drawargs()
 
 
 class PlotCurveItem(GraphicsObject):

@@ -45,4 +45,7 @@ def test_LineSegments():
     xy = np.array([0.])
     segs = ls.arrayToLineSegments(xy, xy, connect='all', finiteCheck=True)
     assert isinstance(segs, tuple) and len(segs) in [1, 2]
-    assert len(segs[0]) == 0
+    if len(segs) == 1:
+        assert len(segs[0]) == 0
+    elif len(segs) == 2:
+        assert segs[1] == 0

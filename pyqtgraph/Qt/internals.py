@@ -8,6 +8,10 @@ __all__ = ["get_qpainterpath_element_array"]
 
 if QT_LIB.startswith('PyQt'):
     from . import sip
+elif QT_LIB == 'PySide2':
+    from PySide2 import __version_info__ as pyside_version_info
+elif QT_LIB == 'PySide6':
+    from PySide6 import __version_info__ as pyside_version_info
 
 class QArrayDataQt5(ctypes.Structure):
     _fields_ = [
@@ -120,6 +124,7 @@ class PrimitiveArray:
             if use_array is None:
                 use_array = (
                     Klass is QtGui.QPainter.PixmapFragment
+                    or pyside_version_info >= (6, 4, 3)
                 )
             self.use_ptr_to_array = use_array
         else:
@@ -134,17 +139,18 @@ class PrimitiveArray:
         if self.use_sip_array:
             self._objs = sip.array(self._Klass, size)
             vp = sip.voidptr(self._objs, size*self._nfields*8)
-            array = np.frombuffer(vp, dtype=np.float64).reshape((-1, self._nfields))
+            self._ndarray = np.frombuffer(vp, dtype=np.float64).reshape((-1, self._nfields))
         elif self.use_ptr_to_array:
-            array = np.empty((size, self._nfields), dtype=np.float64)
-            self._objs = compat.wrapinstance(array.ctypes.data, self._Klass)
+            self._ndarray = np.empty((size, self._nfields), dtype=np.float64)
+            self._objs = None
         else:
-            array = np.empty((size, self._nfields), dtype=np.float64)
-            self._objs = list(map(compat.wrapinstance,
-                itertools.count(array.ctypes.data, array.strides[0]),
-                itertools.repeat(self._Klass, array.shape[0])))
+            self._ndarray = np.empty((size, self._nfields), dtype=np.float64)
+            self._objs = self._wrap_instances(self._ndarray)
 
-        self._ndarray = array
+    def _wrap_instances(self, array):
+        return list(map(compat.wrapinstance,
+            itertools.count(array.ctypes.data, array.strides[0]),
+            itertools.repeat(self._Klass, array.shape[0])))
 
     def __len__(self):
         return len(self._ndarray)
@@ -153,4 +159,25 @@ class PrimitiveArray:
         return self._ndarray
 
     def instances(self):
+        # this returns an iterable container of Klass instances.
+        # for "use_ptr_to_array" mode, such a container may not
+        # be required at all, so its creation is deferred
+        if self._objs is None:
+            self._objs = self._wrap_instances(self._ndarray)
         return self._objs
+
+    def drawargs(self):
+        # returns arguments to apply to the respective drawPrimitives() functions
+        if self.use_ptr_to_array:
+            size = len(self._ndarray)
+            if size:
+                # wrap memory only if it is safe to do so
+                ptr = compat.wrapinstance(self._ndarray.ctypes.data, self._Klass)
+            else:
+                # shiboken translates None <--> nullptr
+                # alternatively, we could instantiate a dummy _Klass()
+                ptr = None
+            return ptr, size
+
+        else:
+            return self._objs,
