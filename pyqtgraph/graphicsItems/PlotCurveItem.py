@@ -15,40 +15,9 @@ from .GraphicsObject import GraphicsObject
 __all__ = ['PlotCurveItem']
 
 
-def have_native_drawlines_array():
-    size = 10
-    line = QtCore.QLineF(0, 0, size, size)
-    qimg = QtGui.QImage(size, size, QtGui.QImage.Format.Format_RGB32)
-    qimg.fill(QtCore.Qt.GlobalColor.transparent)
-    painter = QtGui.QPainter(qimg)
-    painter.setPen(QtCore.Qt.GlobalColor.white)
-
-    try:
-        painter.drawLines(line, 1)
-    except TypeError:
-        success = False
-    else:
-        success = True
-    finally:
-        painter.end()
-
-    return success
-
-_have_native_drawlines_array = Qt.QT_LIB.startswith('PySide') and have_native_drawlines_array()
-
-
 class LineSegments:
     def __init__(self):
-        use_array = None
-
-        # "use_native_drawlines" is pending the following issue and code review
-        # https://bugreports.qt.io/projects/PYSIDE/issues/PYSIDE-1924
-        # https://codereview.qt-project.org/c/pyside/pyside-setup/+/415702
-        self.use_native_drawlines = Qt.QT_LIB.startswith('PySide') and _have_native_drawlines_array
-        if self.use_native_drawlines:
-            use_array = True
-
-        self.array = Qt.internals.PrimitiveArray(QtCore.QLineF, 4, use_array=use_array)
+        self.array = Qt.internals.PrimitiveArray(QtCore.QLineF, 4)
 
     def get(self, size):
         self.array.resize(size)
