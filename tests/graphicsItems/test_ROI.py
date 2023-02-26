@@ -244,7 +244,6 @@ def test_PolyLineROI():
          'open')
     ]
 
-    # plt = pg.plot()
     plt = pg.GraphicsView()
     plt.show()
     resizeWindow(plt, 200, 200)
@@ -347,7 +346,8 @@ def test_PolyLineROI():
     ((-2, 1), (-4, -8)),
 ])
 def test_LineROI_coords(p1, p2):
-    pw = pg.plot()
+    pw = pg.PlotWidget()
+    pw.show()
 
     lineroi = pg.LineROI(p1, p2, width=0.5, pen="r")
     pw.addItem(lineroi)

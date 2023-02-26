@@ -230,11 +230,18 @@ def test_setRect():
 
 
 def test_dividebyzero():
-    im = pg.image(np.random.normal(size=(100,100)))
-    im.imageItem.setAutoDownsample(True)
-    im.view.setRange(xRange=[-5+25, 5e+25],yRange=[-5e+25, 5e+25])
-    app.processEvents()
-    QtTest.QTest.qWait(1000)
-    # must manually call im.imageItem.render here or the exception
+    # test that the calculation of downsample factors
+    # does not result in a division by zero
+    plt = pg.PlotWidget()
+    plt.show()
+    plt.setAspectLocked(True)
+    imgitem = pg.ImageItem(np.random.normal(size=(100,100)))
+    imgitem.setAutoDownsample(True)
+    plt.addItem(imgitem)
+
+    plt.setRange(xRange=[-5e+25, 5e+25],yRange=[-5e+25, 5e+25])
+    QtTest.QTest.qWaitForWindowExposed(plt)
+    QtTest.QTest.qWait(100)
+    # must manually call imgitem.render here or the exception
     # will only exist on the Qt event loop
-    im.imageItem.render()
+    imgitem.render()

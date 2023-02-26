@@ -4,7 +4,8 @@ app = pg.mkQApp()
 
 
 def test_TextItem_setAngle():
-    plt = pg.plot()
+    plt = pg.PlotWidget()
+    plt.show()
     plt.setXRange(-10, 10)
     plt.setYRange(-20, 20)
     item = pg.TextItem(text="test")
