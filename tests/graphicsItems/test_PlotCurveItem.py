@@ -13,6 +13,7 @@ def test_PlotCurveItem():
     v = p.addViewBox()
     data = np.array([1,4,2,3,np.inf,5,7,6,-np.inf,8,10,9,np.nan,-1,-2,0])
     c = pg.PlotCurveItem(data)
+    c.setSegmentedLineMode('off')   # test images assume non-segmented-line-mode
     v.addItem(c)
     v.autoRange()
     
