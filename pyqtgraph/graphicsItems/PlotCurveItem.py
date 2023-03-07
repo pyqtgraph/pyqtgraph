@@ -15,84 +15,82 @@ from .GraphicsObject import GraphicsObject
 __all__ = ['PlotCurveItem']
 
 
-class LineSegments:
-    def __init__(self):
-        self.array = Qt.internals.PrimitiveArray(QtCore.QLineF, 4)
+def arrayToLineSegments(x, y, connect, finiteCheck, out=None):
+    if out is None:
+        out = Qt.internals.PrimitiveArray(QtCore.QLineF, 4)
 
-    def arrayToLineSegments(self, x, y, connect, finiteCheck):
-        # analogue of arrayToQPath taking the same parameters
-        if len(x) < 2:
-            self.array.resize(0)
-            return self.array.drawargs()
+    # analogue of arrayToQPath taking the same parameters
+    if len(x) < 2:
+        out.resize(0)
+        return out
 
-        connect_array = None
-        if isinstance(connect, np.ndarray):
-            # the last element is not used
-            connect_array, connect = np.asarray(connect[:-1], dtype=bool), 'array'
+    connect_array = None
+    if isinstance(connect, np.ndarray):
+        # the last element is not used
+        connect_array, connect = np.asarray(connect[:-1], dtype=bool), 'array'
 
-        all_finite = True
-        if finiteCheck or connect == 'finite':
-            mask = np.isfinite(x) & np.isfinite(y)
-            all_finite = np.all(mask)
+    all_finite = True
+    if finiteCheck or connect == 'finite':
+        mask = np.isfinite(x) & np.isfinite(y)
+        all_finite = np.all(mask)
 
-        if connect == 'all':
-            if not all_finite:
-                # remove non-finite points, if any
-                x = x[mask]
-                y = y[mask]
+    if connect == 'all':
+        if not all_finite:
+            # remove non-finite points, if any
+            x = x[mask]
+            y = y[mask]
 
-        elif connect == 'finite':
-            if all_finite:
-                connect = 'all'
-            else:
-                # each non-finite point affects the segment before and after
-                connect_array = mask[:-1] & mask[1:]
-
-        elif connect in ['pairs', 'array']:
-            if not all_finite:
-                # replicate the behavior of arrayToQPath
-                backfill_idx = fn._compute_backfill_indices(mask)
-                x = x[backfill_idx]
-                y = y[backfill_idx]
-
-        if connect == 'all':
-            nsegs = len(x) - 1
-            self.array.resize(nsegs)
-            if nsegs:
-                memory = self.array.ndarray()
-                memory[:, 0] = x[:-1]
-                memory[:, 2] = x[1:]
-                memory[:, 1] = y[:-1]
-                memory[:, 3] = y[1:]
-
-        elif connect == 'pairs':
-            nsegs = len(x) // 2
-            self.array.resize(nsegs)
-            if nsegs:
-                memory = self.array.ndarray()
-                memory = memory.reshape((-1, 2))
-                memory[:, 0] = x[:nsegs * 2]
-                memory[:, 1] = y[:nsegs * 2]
-
-        elif connect_array is not None:
-            # the following are handled here
-            # - 'array'
-            # - 'finite' with non-finite elements
-            nsegs = np.count_nonzero(connect_array)
-            self.array.resize(nsegs)
-            if nsegs:
-                memory = self.array.ndarray()
-                memory[:, 0] = x[:-1][connect_array]
-                memory[:, 2] = x[1:][connect_array]
-                memory[:, 1] = y[:-1][connect_array]
-                memory[:, 3] = y[1:][connect_array]
-
+    elif connect == 'finite':
+        if all_finite:
+            connect = 'all'
         else:
-            nsegs = 0
-            self.array.resize(nsegs)
+            # each non-finite point affects the segment before and after
+            connect_array = mask[:-1] & mask[1:]
 
-        return self.array.drawargs()
+    elif connect in ['pairs', 'array']:
+        if not all_finite:
+            # replicate the behavior of arrayToQPath
+            backfill_idx = fn._compute_backfill_indices(mask)
+            x = x[backfill_idx]
+            y = y[backfill_idx]
 
+    if connect == 'all':
+        nsegs = len(x) - 1
+        out.resize(nsegs)
+        if nsegs:
+            memory = out.ndarray()
+            memory[:, 0] = x[:-1]
+            memory[:, 2] = x[1:]
+            memory[:, 1] = y[:-1]
+            memory[:, 3] = y[1:]
+
+    elif connect == 'pairs':
+        nsegs = len(x) // 2
+        out.resize(nsegs)
+        if nsegs:
+            memory = out.ndarray()
+            memory = memory.reshape((-1, 2))
+            memory[:, 0] = x[:nsegs * 2]
+            memory[:, 1] = y[:nsegs * 2]
+
+    elif connect_array is not None:
+        # the following are handled here
+        # - 'array'
+        # - 'finite' with non-finite elements
+        nsegs = np.count_nonzero(connect_array)
+        out.resize(nsegs)
+        if nsegs:
+            memory = out.ndarray()
+            memory[:, 0] = x[:-1][connect_array]
+            memory[:, 2] = x[1:][connect_array]
+            memory[:, 1] = y[:-1][connect_array]
+            memory[:, 3] = y[1:][connect_array]
+
+    else:
+        nsegs = 0
+        out.resize(nsegs)
+
+    return out
 
 class PlotCurveItem(GraphicsObject):
     """
@@ -540,7 +538,7 @@ class PlotCurveItem(GraphicsObject):
         self.fillPath = None
         self._fillPathList = None
         self._mouseShape = None
-        self._renderSegmentList = None
+        self._lineSegmentsRendered = False
 
         if 'name' in kargs:
             self.opts['name'] = kargs['name']
@@ -670,10 +668,7 @@ class PlotCurveItem(GraphicsObject):
         )
 
     def _getLineSegments(self):
-        if not hasattr(self, '_lineSegments'):
-            self._lineSegments = LineSegments()
-
-        if self._renderSegmentList is None:
+        if not self._lineSegmentsRendered:
             x, y = self.getData()
             if self.opts['stepMode']:
                 x, y = self._generateStepModeData(
@@ -683,14 +678,17 @@ class PlotCurveItem(GraphicsObject):
                     baseline=self.opts['fillLevel']
                 )
 
-            self._renderSegmentList = self._lineSegments.arrayToLineSegments(
+            self._lineSegments = arrayToLineSegments(
                 x,
                 y,
                 connect=self.opts['connect'],
-                finiteCheck=not self.opts['skipFiniteCheck']
+                finiteCheck=not self.opts['skipFiniteCheck'],
+                out=self._lineSegments
             )
 
-        return self._renderSegmentList
+            self._lineSegmentsRendered = True
+
+        return self._lineSegments.drawargs()
 
     def _getClosingSegments(self):
         # this is only used for fillOutline
@@ -955,7 +953,8 @@ class PlotCurveItem(GraphicsObject):
     def clear(self):
         self.xData = None  ## raw values
         self.yData = None
-        self._renderSegmentList = None
+        self._lineSegments = None
+        self._lineSegmentsRendered = False
         self.path = None
         self.fillPath = None
         self._fillPathList = None

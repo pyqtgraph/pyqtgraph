@@ -1,7 +1,7 @@
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.graphicsItems.PlotCurveItem import LineSegments
+from pyqtgraph.graphicsItems.PlotCurveItem import arrayToLineSegments
 from tests.image_testing import assertImageApproved
 
 
@@ -38,12 +38,11 @@ def test_PlotCurveItem():
     p.close()
 
 
-def test_LineSegments():
-    ls = LineSegments()
-
+def test_arrayToLineSegments():
     # test the boundary case where the dataset consists of a single point
     xy = np.array([0.])
-    segs = ls.arrayToLineSegments(xy, xy, connect='all', finiteCheck=True)
+    parray = arrayToLineSegments(xy, xy, connect='all', finiteCheck=True)
+    segs = parray.drawargs()
     assert isinstance(segs, tuple) and len(segs) in [1, 2]
     if len(segs) == 1:
         assert len(segs[0]) == 0
