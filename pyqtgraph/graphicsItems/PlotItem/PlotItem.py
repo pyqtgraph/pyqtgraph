@@ -672,7 +672,7 @@ class PlotItem(GraphicsWidget):
 
         Parameters
         ----------
-        x, y: array-like
+        x, y: array_like
             can be in the following formats:
               - {x or y} = [n1, n2, n3, ...]: The named argument iterates through
                 ``n`` curves, while the unspecified argument is range(len(n)) for
