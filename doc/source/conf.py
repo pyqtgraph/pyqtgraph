@@ -39,6 +39,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx_qt_documentation",
     "sphinx_design",
+    "sphinx_favicon",
     "sphinxext.rediraffe",
     "sphinxcontrib.images",
 ]
@@ -138,37 +139,28 @@ autodoc_mock_imports = [
 # a list of builtin themes.
 html_theme = 'pydata_sphinx_theme'
 
+# favicons
+favicons = [
+    "peegee_03_square_no_bg_32_cleaned.png",
+    "peegee_04_square_no_bg_180_cleaned.png",
+    "peegee_03_square_no_bg_32_cleaned.ico"
+]
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    "favicons": [
-        {
-            "rel": "icon",
-            "sizes": "32x32",
-            "href": "peegee_03_square_no_bg_32_cleaned.png"
-        },
-        {
-            "rel": "icon",
-            "href": "peegee_03_square_no_bg_32_cleaned.ico",
-            "sizes": "any"
-        },
-        {
-            "rel": "apple-touch-icon",
-            "href": "peegee_04_square_no_bg_180_cleaned.png"
-        },
-    ],
     "github_url": "https://github.com/pyqtgraph/pyqtgraph",
     "navbar_end": ["theme-switcher", "navbar-icon-links"],
     "twitter_url": "https://twitter.com/pyqtgraph",
     "use_edit_page_button": False,
-    "page_sidebar_items": ["page-toc"]
+    "secondary_sidebar_items": ["page-toc"]
 }
 
 
 if os.getenv("BUILD_DASH_DOCSET"):
     html_theme_options |= {
-        'page_sidebar_items': [],
+        'secondary_sidebar_items': [],
         "show_prev_next": False,
         "collapse_navigation": True,
     }

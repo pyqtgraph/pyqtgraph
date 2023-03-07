@@ -8,8 +8,8 @@ from .. import functions as fn
 from ..Qt import QtCore
 from .ImageItem import ImageItem
 from .LinearRegionItem import LinearRegionItem
-from .PlotItem import PlotItem
 from .PColorMeshItem import PColorMeshItem
+from .PlotItem import PlotItem
 
 __all__ = ['ColorBarItem']
 
@@ -168,7 +168,7 @@ class ColorBarItem(PlotItem):
 
         Parameters
         ----------
-        image: :image item or list of `[image item, image item, ...]`
+        image: :class:`~pyqtgraph.ImageItem` or list of :class:`~pyqtgraph.ImageItem`
             Assigns one or more image items to this ColorBarItem.
             If a :class:`~pyqtgraph.ColorMap` is defined for ColorBarItem, this will be assigned to the 
             ImageItems. Otherwise, the ColorBarItem will attempt to retrieve a color map from the image items.
