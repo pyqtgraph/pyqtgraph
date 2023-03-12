@@ -1,3 +1,4 @@
+import PySide6
 import pytest
 
 import pyqtgraph as pg
@@ -74,3 +75,8 @@ def test_ColorMap_getColors(color_list):
     colors = cm.getColors('qcolor')
     for actual, good in zip(colors, qcols):
         assert actual.getRgbF() == good.getRgbF()
+
+def test_ColorMap_getByIndex():
+    cm = pg.ColorMap([0.0, 1.0], [(0,0,0), (255,0,0)])
+    assert cm.getByIndex(0) == PySide6.QtGui.QColor.fromRgbF(0.0, 0.0, 0.0, 1.0)
+    assert cm.getByIndex(1) == PySide6.QtGui.QColor.fromRgbF(1.0, 0.0, 0.0, 1.0)
