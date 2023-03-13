@@ -622,7 +622,7 @@ class ColorMap(object):
 
     def getByIndex(self, idx):
         """Retrieve a QColor by the index of the stop it is assigned to."""
-        return QtGui.QColor( *self.color[idx] )
+        return QtGui.QColor.fromRgbF( *self.color[idx] )
 
     def getGradient(self, p1=None, p2=None):
         """
