@@ -418,12 +418,10 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         xDist = dist * 2. * tan(0.5 * radians(self.opts['fov']))
         return xDist / self.width()
         
-    def mousePressEvent(self, ev):
-        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
-        self.mousePos = lpos
-        
     def mouseMoveEvent(self, ev):
         lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
+        if not hasattr(self, 'mousePos'):
+            self.mousePos = lpos
         diff = lpos - self.mousePos
         self.mousePos = lpos
         
