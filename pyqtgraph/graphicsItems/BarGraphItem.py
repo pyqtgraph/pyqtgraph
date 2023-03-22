@@ -185,6 +185,11 @@ class BarGraphItem(GraphicsObject):
 
     def _prepareData(self):
         x0, y0, x1, y1 = self._getNormalizedCoords()
+        if x0.size == 0 or y0.size == 0:
+            self._dataBounds = (None, None), (None, None)
+            self._rectarray.resize(0)
+            return
+
         xmn, xmx = np.min(x0), np.max(x1)
         ymn, ymx = np.min(y0), np.max(y1)
         self._dataBounds = (xmn, xmx), (ymn, ymx)
@@ -266,6 +271,9 @@ class BarGraphItem(GraphicsObject):
         pw = self._penWidth[0] * 0.5
         # _dataBounds is available after _prepareData()
         bounds = self._dataBounds[ax]
+        if bounds[0] is None or bounds[1] is None:
+            return None, None
+
         return (bounds[0] - pw, bounds[1] + pw)
 
     def pixelPadding(self):
