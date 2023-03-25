@@ -8,7 +8,7 @@ pg.mkQApp()
 @pytest.mark.skipif(
     sys.platform.startswith("linux")
     and pg.Qt.QT_LIB == "PySide6"
-    and pg.Qt.PySide6.__version_info__ > (6, 0),
+    and (6, 0) < pg.Qt.PySide6.__version_info__ < (6, 4, 3),
     reason="taking gui thread causes segfault"
 )
 def test_progress_dialog():
