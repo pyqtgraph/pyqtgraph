@@ -1,5 +1,5 @@
 from .. import functions as fn
-from .. import getConfigOption
+from .. import configStyle
 from ..Point import Point
 from ..Qt import QtCore, QtWidgets
 from .GraphicsObject import GraphicsObject
@@ -17,9 +17,9 @@ class ScaleBar(GraphicsWidgetAnchor, GraphicsObject):
         GraphicsWidgetAnchor.__init__(self)
         self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
         self.setAcceptedMouseButtons(QtCore.Qt.MouseButton.NoButton)
-        
+
         if brush is None:
-            brush = getConfigOption('foreground')
+            brush = configStyle['scaleBarItem.color']
         self.brush = fn.mkBrush(brush)
         self.pen = fn.mkPen(pen)
         self._width = width
@@ -27,12 +27,12 @@ class ScaleBar(GraphicsWidgetAnchor, GraphicsObject):
         if offset is None:
             offset = (0,0)
         self.offset = offset
-        
+
         self.bar = QtWidgets.QGraphicsRectItem()
         self.bar.setPen(self.pen)
         self.bar.setBrush(self.brush)
         self.bar.setParentItem(self)
-        
+
         self.text = TextItem(text=fn.siFormat(size, suffix=suffix), anchor=(0.5,1))
         self.text.setParentItem(self)
 
@@ -42,8 +42,8 @@ class ScaleBar(GraphicsWidgetAnchor, GraphicsObject):
             return
         view.sigRangeChanged.connect(self.updateBar)
         self.updateBar()
-        
-        
+
+
     def updateBar(self):
         view = self.parentItem()
         if view is None:

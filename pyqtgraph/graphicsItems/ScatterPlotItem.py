@@ -7,7 +7,7 @@ import numpy as np
 
 from .. import Qt, debug
 from .. import functions as fn
-from .. import getConfigOption
+from .. import configStyle
 from ..Point import Point
 from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
@@ -380,13 +380,13 @@ class ScatterPlotItem(GraphicsObject):
         self.opts = {
             'pxMode': True,
             'useCache': True,  ## If useCache is False, symbols are re-drawn on every paint.
-            'antialias': getConfigOption('antialias'),
+            'antialias': configStyle['scatterPlotItem.antialias'],
             'compositionMode': None,
             'name': None,
-            'symbol': 'o',
-            'size': 7,
-            'pen': fn.mkPen(getConfigOption('foreground')),
-            'brush': fn.mkBrush(100, 100, 150),
+            'symbol': configStyle['scatterPlotItem.symbol'],
+            'size': configStyle['scatterPlotItem.size'],
+            'pen': fn.mkPen(configStyle['scatterPlotItem.color']),
+            'brush': fn.mkBrush(configStyle['scatterPlotItem.brush']),
             'hoverable': False,
             'tip': 'x: {x:.3g}\ny: {y:.3g}\ndata={data}'.format,
         }
@@ -421,10 +421,10 @@ class ScatterPlotItem(GraphicsObject):
                                Otherwise, size is in scene coordinates and the spots scale with the view. To ensure
                                effective caching, QPen and QBrush objects should be reused as much as possible.
                                Default is True
-        *symbol*               can be one (or a list) of symbols. For a list of supported symbols, see 
+        *symbol*               can be one (or a list) of symbols. For a list of supported symbols, see
                                :func:`~ScatterPlotItem.setSymbol`. QPainterPath is also supported to specify custom symbol
                                shapes. To properly obey the position and size, custom symbols should be centered at (0,0) and
-                               width and height of 1.0. Note that it is also possible to 'install' custom shapes by setting 
+                               width and height of 1.0. Note that it is also possible to 'install' custom shapes by setting
                                ScatterPlotItem.Symbols[key] = shape.
         *pen*                  The pen (or list of pens) to use for drawing spot outlines.
         *brush*                The brush (or list of brushes) to use for filling spots.
@@ -727,7 +727,7 @@ class ScatterPlotItem(GraphicsObject):
         dataSet['sourceRect'] = 0
         if update:
             self.updateSpots(dataSet)
-        
+
     def setPointData(self, data, dataSet=None, mask=None):
         if dataSet is None:
             dataSet = self.data
@@ -1205,7 +1205,7 @@ class SpotItem(object):
         """Set whether or not this spot is visible."""
         self._data['visible'] = visible
         self.updateItem()
-    
+
     def setData(self, data):
         """Set the user-data associated with this spot"""
         self._data['data'] = data

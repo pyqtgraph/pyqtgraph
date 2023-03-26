@@ -1,0 +1,55 @@
+### Default pyqtgraph style sheet
+
+
+
+### GraphItem
+## Set all item values
+graphItem.background : k     # background
+graphItem.color      : w     # color
+graphItem.antialias  : False # if antialiased
+
+
+### AxisItem
+axis.color            : w # background color
+axis.tick.label.color : w # ticks label color
+axis.tick.color       : w # ticks color
+
+
+### PlotCurveItem
+plotCurveItem.antialias : False # if antialiased
+
+
+### PlotDataItem
+plotDataItem.line.color  : 200, 200, 200 # color of the line
+plotDataItem.symbol.color: 200, 200, 200 # color of the symbol
+plotDataItem.symbol.size : 10            # size of the symbol
+plotDataItem.symbol.brush: 50,  50,  150 # brush of the symbol
+plotDataItem.antialias   : False         # if antialiased
+
+
+### BarItem
+barItem.color : w # color of the barItem
+
+
+### ErrorBarItem
+ErrorBarItem.color : w # color of the ErrorBarItem
+
+
+### GridItem
+gridItem.color : w # color of the GridItem
+
+
+### LabelItem
+labelItem.color : w # color of the labelItem
+
+
+### ScaleBarItem
+scaleBarItem.color : w # color of the scaleBarItem
+
+
+### ScatterPlotItem
+scatterPlotItem.color    : w                  # color
+scatterPlotItem.antialias: False              # if antialiased
+scatterPlotItem.symbol   : o                  # symbol type
+scatterPlotItem.size     : 7                  # symbol size
+scatterPlotItem.brush    : 100, 100, 150      # brush color

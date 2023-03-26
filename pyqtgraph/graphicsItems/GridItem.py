@@ -1,7 +1,7 @@
 import numpy as np
 
 from .. import functions as fn
-from .. import getConfigOption
+from .. import configStyle
 from ..Point import Point
 from ..Qt import QtCore, QtGui
 from .UIGraphicsItem import UIGraphicsItem
@@ -10,7 +10,7 @@ __all__ = ['GridItem']
 class GridItem(UIGraphicsItem):
     """
     **Bases:** :class:`UIGraphicsItem <pyqtgraph.UIGraphicsItem>`
-    
+
     Displays a rectangular grid of lines indicating major divisions within a coordinate system.
     Automatically determines what divisions to use.
     """
@@ -31,7 +31,7 @@ class GridItem(UIGraphicsItem):
     def setPen(self, *args, **kwargs):
         """Set the pen used to draw the grid."""
         if kwargs == {} and (args == () or args == ('default',)):
-            self.opts['pen'] = fn.mkPen(getConfigOption('foreground'))
+            self.opts['pen'] = fn.mkPen(configStyle['gridItem.color'])
         else:
             self.opts['pen'] = fn.mkPen(*args, **kwargs)
 
@@ -42,7 +42,7 @@ class GridItem(UIGraphicsItem):
     def setTextPen(self, *args, **kwargs):
         """Set the pen used to draw the texts."""
         if kwargs == {} and (args == () or args == ('default',)):
-            self.opts['textPen'] = fn.mkPen(getConfigOption('foreground'))
+            self.opts['textPen'] = fn.mkPen(configStyle['gridItem.color'])
         else:
             if args == (None,):
                 self.opts['textPen'] = None
@@ -88,7 +88,7 @@ class GridItem(UIGraphicsItem):
         self.picture = None
         #UIGraphicsItem.viewRangeChanged(self)
         #self.update()
-        
+
     def paint(self, p, opt, widget):
         #p.setPen(QtGui.QPen(QtGui.QColor(100, 100, 100)))
         #p.drawRect(self.boundingRect())
@@ -102,22 +102,22 @@ class GridItem(UIGraphicsItem):
         #p.drawLine(0, -100, 0, 100)
         #p.drawLine(-100, 0, 100, 0)
         #print "drawing Grid."
-        
-        
+
+
     def generatePicture(self):
         self.picture = QtGui.QPicture()
         p = QtGui.QPainter()
         p.begin(self.picture)
-        
+
         vr = self.getViewWidget().rect()
         unit = self.pixelWidth(), self.pixelHeight()
         dim = [vr.width(), vr.height()]
         lvr = self.boundingRect()
         ul = np.array([lvr.left(), lvr.top()])
         br = np.array([lvr.right(), lvr.bottom()])
-        
+
         texts = []
-        
+
         if ul[1] > br[1]:
             x = ul[1]
             ul[1] = br[1]

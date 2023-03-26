@@ -6,7 +6,7 @@ import numpy as np
 
 from .. import Vector
 from .. import functions as fn
-from .. import getConfigOption
+from .. import getConfigOption, configStyle
 from ..Qt import QtCore, QtGui, QtWidgets
 
 class GLViewMixin:
@@ -24,22 +24,22 @@ class GLViewMixin:
 
         if rotationMethod not in ["euler", "quaternion"]:
             raise ValueError("Rotation method should be either 'euler' or 'quaternion'")
-        
+
         self.opts = {
             'center': Vector(0,0,0),  ## will always appear at the center of the widget
             'rotation' : QtGui.QQuaternion(1,0,0,0), ## camera rotation (quaternion:wxyz)
             'distance': 10.0,         ## distance of camera from center
             'fov':  60,               ## horizontal field of view in degrees
             'elevation': 30,          ## camera's angle of elevation in degrees
-            'azimuth': 45,            ## camera's azimuthal angle in degrees 	
-                                      ## (rotation around z-axis 0 points along x-axis)	
+            'azimuth': 45,            ## camera's azimuthal angle in degrees
+                                      ## (rotation around z-axis 0 points along x-axis)
             'viewport': None,         ## glViewport params; None == whole widget
                                       ## note that 'viewport' is in device pixels
             'rotationMethod': rotationMethod
         }
         self.reset()
         self.items = []
-        
+
         self.noRepeatKeys = [QtCore.Qt.Key.Key_Right, QtCore.Qt.Key.Key_Left, QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_PageUp, QtCore.Qt.Key.Key_PageDown]
         self.keysPressed = {}
         self.keyTimer = QtCore.QTimer()
@@ -61,20 +61,20 @@ class GLViewMixin:
         self.opts['distance'] = 10.0         ## distance of camera from center
         self.opts['fov'] = 60                ## horizontal field of view in degrees
         self.opts['elevation'] = 30          ## camera's angle of elevation in degrees
-        self.opts['azimuth'] = 45            ## camera's azimuthal angle in degrees 
+        self.opts['azimuth'] = 45            ## camera's azimuthal angle in degrees
                                              ## (rotation around z-axis 0 points along x-axis)
         self.opts['viewport'] = None         ## glViewport params; None == whole widget
-        self.setBackgroundColor(getConfigOption('background'))
+        self.setBackgroundColor(configStyle('graphItem.background'))
 
     def addItem(self, item):
         self.items.append(item)
 
         if self.isValid():
             item.initialize()
-                
+
         item._setView(self)
         self.update()
-        
+
     def removeItem(self, item):
         """
         Remove the item from the scene.
@@ -90,8 +90,8 @@ class GLViewMixin:
         for item in self.items:
             item._setView(None)
         self.items = []
-        self.update()        
-        
+        self.update()
+
     def initializeGL(self):
         """
         Initialize items that were not initialized during addItem().
@@ -107,7 +107,7 @@ class GLViewMixin:
         for item in self.items:
             if not item.isInitialized():
                 item.initialize()
-        
+
     def setBackgroundColor(self, *args, **kwds):
         """
         Set the background color of the widget. Accepts the same arguments as
@@ -115,14 +115,14 @@ class GLViewMixin:
         """
         self.opts['bgcolor'] = fn.mkColor(*args, **kwds).getRgbF()
         self.update()
-        
+
     def getViewport(self):
         vp = self.opts['viewport']
         if vp is None:
             return (0, 0, self.deviceWidth(), self.deviceHeight())
         else:
             return vp
-        
+
     def setProjection(self, region=None):
         m = self.projectionMatrix(region)
         glMatrixMode(GL_PROJECTION)
@@ -131,7 +131,7 @@ class GLViewMixin:
     def projectionMatrix(self, region=None):
         if region is None:
             region = (0, 0, self.deviceWidth(), self.deviceHeight())
-        
+
         x0, y0, w, h = self.getViewport()
         dist = self.opts['distance']
         fov = self.opts['fov']
@@ -150,12 +150,12 @@ class GLViewMixin:
         tr = QtGui.QMatrix4x4()
         tr.frustum(left, right, bottom, top, nearClip, farClip)
         return tr
-        
+
     def setModelview(self):
         m = self.viewMatrix()
         glMatrixMode(GL_MODELVIEW)
         glLoadMatrixf(np.array(m.data(), dtype=np.float32))
-        
+
     def viewMatrix(self):
         tr = QtGui.QMatrix4x4()
         tr.translate( 0.0, 0.0, -self.opts['distance'])
@@ -164,7 +164,7 @@ class GLViewMixin:
         else:
             # default rotation method
             tr.rotate(self.opts['elevation']-90, 1, 0, 0)
-            tr.rotate(self.opts['azimuth']+90, 0, 0, -1)  
+            tr.rotate(self.opts['azimuth']+90, 0, 0, -1)
         center = self.opts['center']
         tr.translate(-center.x(), -center.y(), -center.z())
         return tr
@@ -172,10 +172,10 @@ class GLViewMixin:
     def itemsAt(self, region=None):
         """
         Return a list of the items displayed in the region (x, y, w, h)
-        relative to the widget.        
+        relative to the widget.
         """
         region = (region[0], self.deviceHeight()-(region[1]+region[3]), region[2], region[3])
-        
+
         #buf = np.zeros(100000, dtype=np.uint)
         buf = glSelectBuffer(100000)
         try:
@@ -184,14 +184,14 @@ class GLViewMixin:
             glPushName(0)
             self._itemNames = {}
             self.paintGL(region=region, useItemNames=True)
-            
+
         finally:
             hits = glRenderMode(GL_RENDER)
-            
+
         items = [(h.near, h.names[0]) for h in hits]
         items.sort(key=lambda i: i[0])
         return [self._itemNames[i[1]] for i in items]
-    
+
     def paintGL(self, region=None, viewport=None, useItemNames=False):
         """
         viewport specifies the arguments to glViewport. If None, then we use self.opts['viewport']
@@ -208,7 +208,7 @@ class GLViewMixin:
         glClearColor(*bgcolor)
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
         self.drawItemTree(useItemNames=useItemNames)
-        
+
     def drawItemTree(self, item=None, useItemNames=False):
         if item is None:
             items = [x for x in self.items if x.parentItem() is None]
@@ -230,7 +230,7 @@ class GLViewMixin:
                     from .. import debug
                     debug.printExc()
                     print("Error while drawing item %s." % str(item))
-                    
+
                 finally:
                     glPopAttrib()
             else:
@@ -243,7 +243,7 @@ class GLViewMixin:
                 finally:
                     glMatrixMode(GL_MODELVIEW)
                     glPopMatrix()
-            
+
     def setCameraPosition(self, pos=None, distance=None, elevation=None, azimuth=None, rotation=None):
         if rotation is not None:
             # Alternatively, we could define that rotation overrides elevation and azimuth
@@ -280,7 +280,7 @@ class GLViewMixin:
                 self.opts['azimuth'] = -eu.z() - 90
 
         self.update()
-        
+
     def cameraPosition(self):
         """Return current position of camera based on center, dist, elevation, and azimuth"""
         center = self.opts['center']
@@ -325,27 +325,27 @@ class GLViewMixin:
             self.opts['azimuth'] += azim
             self.opts['elevation'] = fn.clip_scalar(self.opts['elevation'] + elev, -90., 90.)
         self.update()
-        
+
     def pan(self, dx, dy, dz, relative='global'):
         """
-        Moves the center (look-at) position while holding the camera in place. 
-        
+        Moves the center (look-at) position while holding the camera in place.
+
         ==============  =======================================================
         **Arguments:**
         *dx*            Distance to pan in x direction
         *dy*            Distance to pan in y direction
         *dz*            Distance to pan in z direction
-        *relative*      String that determines the direction of dx,dy,dz. 
+        *relative*      String that determines the direction of dx,dy,dz.
                         If "global", then the global coordinate system is used.
                         If "view", then the z axis is aligned with the view
                         direction, and x and y axes are in the plane of the
-                        view: +x points right, +y points up. 
+                        view: +x points right, +y points up.
                         If "view-upright", then x is in the global xy plane and
                         points to the right side of the view, y is in the
                         global xy plane and orthogonal to x, and z points in
                         the global z direction.
         ==============  =======================================================
-        
+
         Distances are scaled roughly such that a value of 1.0 moves
         by one pixel on screen.
         """
@@ -388,9 +388,9 @@ class GLViewMixin:
                 self.opts['center'] += QtGui.QVector3D(x, -y, z)
         else:
             raise ValueError("relative argument must be global, view, or view-upright")
-        
+
         self.update()
-        
+
     def pixelSize(self, pos):
         """
         Return the approximate size of a screen pixel at the location pos
@@ -415,7 +415,7 @@ class GLViewMixin:
             self.mousePos = lpos
         diff = lpos - self.mousePos
         self.mousePos = lpos
-        
+
         if ev.buttons() == QtCore.Qt.MouseButton.LeftButton:
             if (ev.modifiers() & QtCore.Qt.KeyboardModifier.ControlModifier):
                 self.pan(diff.x(), diff.y(), 0, relative='view')
@@ -426,20 +426,20 @@ class GLViewMixin:
                 self.pan(diff.x(), 0, diff.y(), relative='view-upright')
             else:
                 self.pan(diff.x(), diff.y(), 0, relative='view-upright')
-        
+
     def mouseReleaseEvent(self, ev):
         pass
         # Example item selection code:
         #region = (ev.pos().x()-5, ev.pos().y()-5, 10, 10)
         #print(self.itemsAt(region))
-        
+
         ## debugging code: draw the picking region
         #glViewport(*self.getViewport())
         #glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
         #region = (region[0], self.height()-(region[1]+region[3]), region[2], region[3])
         #self.paintGL(region=region)
         #self.swapBuffers()
-        
+
     def wheelEvent(self, ev):
         delta = ev.angleDelta().x()
         if delta == 0:
@@ -457,7 +457,7 @@ class GLViewMixin:
                 return
             self.keysPressed[ev.key()] = 1
             self.evalKeyState()
-      
+
     def keyReleaseEvent(self, ev):
         if ev.key() in self.noRepeatKeys:
             ev.accept()
@@ -468,7 +468,7 @@ class GLViewMixin:
             except KeyError:
                 self.keysPressed = {}
             self.evalKeyState()
-        
+
     def evalKeyState(self):
         speed = 2.0
         if len(self.keysPressed) > 0:
@@ -494,10 +494,10 @@ class GLViewMixin:
         Read the current buffer pixels out as a QImage.
         """
         return self.grabFramebuffer()
-        
+
     def renderToArray(self, size, format=GL_BGRA, type=GL_UNSIGNED_BYTE, textureSize=1024, padding=256):
         w,h = map(int, size)
-        
+
         self.makeCurrent()
         tex = None
         fb = None
@@ -506,13 +506,13 @@ class GLViewMixin:
             output = np.empty((h, w, 4), dtype=np.ubyte)
             fb = glfbo.glGenFramebuffers(1)
             glfbo.glBindFramebuffer(glfbo.GL_FRAMEBUFFER, fb )
-            
+
             glEnable(GL_TEXTURE_2D)
             tex = glGenTextures(1)
             glBindTexture(GL_TEXTURE_2D, tex)
             texwidth = textureSize
             data = np.zeros((texwidth,texwidth,4), dtype=np.ubyte)
-            
+
             ## Test texture dimensions first
             glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
             if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
@@ -535,18 +535,18 @@ class GLViewMixin:
                     y2 = min(y+texwidth, h+padding)
                     w2 = x2-x
                     h2 = y2-y
-                    
+
                     ## render to texture
                     glfbo.glFramebufferTexture2D(glfbo.GL_FRAMEBUFFER, glfbo.GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0)
-                    
+
                     self.paintGL(region=(x, h-y-h2, w2, h2), viewport=(0, 0, w2, h2))  # only render sub-region
                     glBindTexture(GL_TEXTURE_2D, tex) # fixes issue #366
-                    
+
                     ## read texture back to array
                     data = glGetTexImage(GL_TEXTURE_2D, 0, format, type)
                     data = np.frombuffer(data, dtype=np.ubyte).reshape(texwidth,texwidth,4)[::-1, ...]
                     output[y+padding:y2-padding, x+padding:x2-padding] = data[-(h2-padding):-padding, padding:w2-padding]
-                    
+
         finally:
             self.opts['viewport'] = None
             glfbo.glBindFramebuffer(glfbo.GL_FRAMEBUFFER, 0)

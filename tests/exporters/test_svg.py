@@ -3,9 +3,9 @@ import pyqtgraph as pg
 app = pg.mkQApp()
 
 def test_plotscene(tmpdir):
-    pg.setConfigOption('foreground', (0,0,0))
+    pg.configStyle['graphItem.color']      = 'k'
     w = pg.GraphicsLayoutWidget()
-    w.show()        
+    w.show()
     p1 = w.addPlot()
     p2 = w.addPlot()
     p1.plot([1,3,2,3,1,6,9,8,4,2,3,5,3], pen={'color':'k'})
@@ -13,7 +13,7 @@ def test_plotscene(tmpdir):
     p2.plot([1,5,2,3,4,6,1,2,4,2,3,5,3], pen={'color':'k', 'cosmetic':False, 'width': 0.3})
     app.processEvents()
     app.processEvents()
-    
+
     ex = pg.exporters.SVGExporter(w.scene())
 
     tf = tmpdir.join("expot.svg")
@@ -21,7 +21,7 @@ def test_plotscene(tmpdir):
     # clean up after the test is done
     w.close()
 
-def test_simple(tmpdir):    
+def test_simple(tmpdir):
     view = pg.GraphicsView()
     view.show()
 
@@ -32,20 +32,20 @@ def test_simple(tmpdir):
     rect.setPos(20,20)
     tr = pg.QtGui.QTransform()
     rect.setTransform(tr.translate(50, 50).rotate(30).scale(0.5, 0.5))
-    
+
     rect1 = pg.QtWidgets.QGraphicsRectItem(0, 0, 100, 100)
     rect1.setParentItem(rect)
     rect1.setFlag(rect1.GraphicsItemFlag.ItemIgnoresTransformations)
     rect1.setPos(20, 20)
     rect1.setScale(2)
-    
+
     el1 = pg.QtWidgets.QGraphicsEllipseItem(0, 0, 100, 100)
     el1.setParentItem(rect1)
     grp = pg.ItemGroup()
     grp.setParentItem(rect)
     tr = pg.QtGui.QTransform()
     grp.setTransform(tr.translate(200, 0).rotate(30))
-    
+
     rect2 = pg.QtWidgets.QGraphicsRectItem(0, 0, 100, 25)
     rect2.setFlag(rect2.GraphicsItemFlag.ItemClipsChildrenToShape)
     rect2.setParentItem(grp)

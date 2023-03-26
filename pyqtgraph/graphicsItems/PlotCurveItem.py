@@ -9,7 +9,7 @@ import numpy as np
 
 from .. import Qt, debug
 from .. import functions as fn
-from .. import getConfigOption
+from .. import getConfigOption, configStyle
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['PlotCurveItem']
@@ -95,7 +95,7 @@ def arrayToLineSegments(x, y, connect, finiteCheck, out=None):
 class PlotCurveItem(GraphicsObject):
     """
     Class representing a single plot curve. Instances of this class are created
-    automatically as part of :class:`PlotDataItem <pyqtgraph.PlotDataItem>`; 
+    automatically as part of :class:`PlotDataItem <pyqtgraph.PlotDataItem>`;
     these rarely need to be instantiated directly.
 
     Features:
@@ -141,7 +141,7 @@ class PlotCurveItem(GraphicsObject):
             'brush': None,
             'stepMode': None,
             'name': None,
-            'antialias': getConfigOption('antialias'),
+            'antialias': configStyle['plotCurveItem.antialias'],
             'connect': 'all',
             'mouseWidth': 8, # width of shape responding to mouse click
             'compositionMode': None,
@@ -178,7 +178,7 @@ class PlotCurveItem(GraphicsObject):
         """
         Change the composition mode of the item. This is useful when overlaying
         multiple items.
-        
+
         Parameters
         ----------
         mode : ``QtGui.QPainter.CompositionMode``
@@ -243,7 +243,7 @@ class PlotCurveItem(GraphicsObject):
         if frac >= 1.0:
             # include complete data range
             # first try faster nanmin/max function, then cut out infs if needed.
-            with warnings.catch_warnings(): 
+            with warnings.catch_warnings():
                 # All-NaN data is acceptable; Explicit numpy warning is not needed.
                 warnings.simplefilter("ignore")
                 b = ( float(np.nanmin(d)), float(np.nanmax(d)) ) # enforce float format for bounds, even if data format is different
@@ -266,8 +266,8 @@ class PlotCurveItem(GraphicsObject):
 
         ## adjust for fill level
         if ax == 1 and self.opts['fillLevel'] not in [None, 'enclosed']:
-            b = ( 
-                float( min(b[0], self.opts['fillLevel']) ), 
+            b = (
+                float( min(b[0], self.opts['fillLevel']) ),
                 float( max(b[1], self.opts['fillLevel']) )
             ) # enforce float format for bounds, even if data format is different
 
@@ -382,7 +382,7 @@ class PlotCurveItem(GraphicsObject):
         """
         Set the shadow pen used to draw behind the primary pen.
         This pen must have a larger width than the primary
-        pen to be visible. Arguments are passed to 
+        pen to be visible. Arguments are passed to
         :func:`mkPen <pyqtgraph.mkPen>`
         """
         if args[0] is None:
@@ -394,7 +394,7 @@ class PlotCurveItem(GraphicsObject):
 
     def setBrush(self, *args, **kargs):
         """
-        Sets the brush used when filling the area under the curve. All 
+        Sets the brush used when filling the area under the curve. All
         arguments are passed to :func:`mkBrush <pyqtgraph.mkBrush>`.
         """
         if args[0] is None:
@@ -411,11 +411,11 @@ class PlotCurveItem(GraphicsObject):
         self._fillPathList = None
         self.invalidateBounds()
         self.update()
-        
+
     def setSkipFiniteCheck(self, skipFiniteCheck):
         """
         When it is known that the plot data passed to ``PlotCurveItem`` contains only finite numerical values,
-        the `skipFiniteCheck` property can help speed up plotting. If this flag is set and the data contains 
+        the `skipFiniteCheck` property can help speed up plotting. If this flag is set and the data contains
         any non-finite values (such as `NaN` or `Inf`), unpredictable behavior will occur. The data might not
         be plotted, or there migth be significant performance impact.
         """
@@ -445,18 +445,18 @@ class PlotCurveItem(GraphicsObject):
                         associated to the mid-points between the boundaries of
                         each step. This is commonly used when drawing
                         histograms. Note that in this case, ``len(x) == len(y) + 1``
-                        
+
                         If 'left' or 'right', the step is drawn assuming that
                         the `y` value is associated to the left or right boundary,
                         respectively. In this case ``len(x) == len(y)``
                         If not passed or an empty string or `None` is passed, the
                         step mode is not enabled.
         connect         Argument specifying how vertexes should be connected
-                        by line segments. 
-                        
-                            | 'all' (default) indicates full connection. 
+                        by line segments.
+
+                            | 'all' (default) indicates full connection.
                             | 'pairs' draws one separate line segment for each two points given.
-                            | 'finite' omits segments attached to `NaN` or `Inf` values. 
+                            | 'finite' omits segments attached to `NaN` or `Inf` values.
                             | For any other connectivity, specify an array of boolean values.
         compositionMode See :func:`setCompositionMode
                         <pyqtgraph.PlotCurveItem.setCompositionMode>`.
@@ -470,10 +470,10 @@ class PlotCurveItem(GraphicsObject):
         If non-keyword arguments are used, they will be interpreted as
         ``setData(y)`` for a single argument and ``setData(x, y)`` for two
         arguments.
-        
+
         **Notes on performance:**
-        
-        Line widths greater than 1 pixel affect the performance as discussed in 
+
+        Line widths greater than 1 pixel affect the performance as discussed in
         the documentation of :class:`PlotDataItem <pyqtgraph.PlotDataItem>`.
         """
         self.updateData(*args, **kargs)
@@ -512,7 +512,7 @@ class PlotCurveItem(GraphicsObject):
                                                         ##    Test this bug with test_PlotWidget and zoom in on the animated plot
         self.yData = kargs['y'].view(np.ndarray)
         self.xData = kargs['x'].view(np.ndarray)
-        
+
         self.invalidateBounds()
         self.prepareGeometryChange()
         self.informViewBoundsChanged()

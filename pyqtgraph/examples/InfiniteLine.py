@@ -12,7 +12,7 @@ win = pg.GraphicsLayoutWidget(show=True, title="Plotting items examples")
 win.resize(1000,600)
 
 # Enable antialiasing for prettier plots
-pg.setConfigOptions(antialias=True)
+pg.configStyle['graphItem.antialias'] = True
 
 # Create a plot with some random data
 p1 = win.addPlot(title="Plot Items example", y=np.random.normal(size=100, scale=10), pen=0.5)

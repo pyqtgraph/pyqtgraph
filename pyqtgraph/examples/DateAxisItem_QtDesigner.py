@@ -13,8 +13,8 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets, loadUiType
 
-pg.setConfigOption('background', 'w')
-pg.setConfigOption('foreground', 'k')
+pg.configStyle['graphItem.background'] = 'w'
+pg.configStyle['graphItem.color']      = 'k'
 
 BLUE = pg.mkPen('#1f77b4')
 
@@ -29,7 +29,7 @@ class ExampleApp(QtWidgets.QMainWindow, Design):
         now = time.time()
         # Plot random values with timestamps in the last 6 months
         timestamps = np.linspace(now - 6*30*24*3600, now, 100)
-        self.curve = self.plotWidget.plot(x=timestamps, y=np.random.rand(100), 
+        self.curve = self.plotWidget.plot(x=timestamps, y=np.random.rand(100),
                                           symbol='o', symbolSize=5, pen=BLUE)
         # 'o' circle  't' triangle  'd' diamond  '+' plus  's' square
         self.plotWidget.setAxisItems({'bottom': pg.DateAxisItem()})

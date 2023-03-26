@@ -5,7 +5,7 @@ import numpy as np
 
 from .. import debug as debug
 from .. import functions as fn
-from .. import getConfigOption
+from .. import configStyle
 from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsWidget import GraphicsWidget
@@ -14,7 +14,7 @@ __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):
     """
     GraphicsItem showing a single plot axis with ticks, values, and label.
-    Can be configured to fit on any side of a plot, 
+    Can be configured to fit on any side of a plot,
     Can automatically synchronize its displayed scale with ViewBox items.
     Ticks can be extended to draw a grid.
     If maxTickLength is negative, ticks point into the plot.
@@ -108,7 +108,7 @@ class AxisItem(GraphicsWidget):
             self.setTextPen()
         else:
             self.setTextPen(textPen)
-            
+
         if tickPen is None:
             self.setTickPen()
         else:
@@ -119,7 +119,7 @@ class AxisItem(GraphicsWidget):
             self._linkToView_internal(linkView)
 
         self.grid = False
-        
+
         #self.setCacheMode(self.DeviceCoordinateCache)
 
     def setStyle(self, **kwds):
@@ -225,7 +225,7 @@ class AxisItem(GraphicsWidget):
 
         If an axis is set to log scale, ticks are displayed on a logarithmic scale
         and values are adjusted accordingly. (This is usually accessed by changing
-        the log mode of a :func:`PlotItem <pyqtgraph.PlotItem.setLogMode>`.) The 
+        the log mode of a :func:`PlotItem <pyqtgraph.PlotItem.setLogMode>`.) The
         linked ViewBox will be informed of the change.
         """
         if len(args) == 1:
@@ -241,12 +241,12 @@ class AxisItem(GraphicsWidget):
                 self.logMode = x
             if y is not None and self.orientation in ('left', 'right'):
                 self.logMode = y
-        
+
         if self._linkedView is not None:
-            if self.orientation in ('top', 'bottom'):           
-                self._linkedView().setLogMode('x', self.logMode)    
+            if self.orientation in ('top', 'bottom'):
+                self._linkedView().setLogMode('x', self.logMode)
             elif self.orientation in ('left', 'right'):
-                self._linkedView().setLogMode('y', self.logMode)    
+                self._linkedView().setLogMode('y', self.logMode)
 
         self.picture = None
 
@@ -254,7 +254,7 @@ class AxisItem(GraphicsWidget):
 
     def setTickFont(self, font):
         """
-        (QFont or None) Determines the font used for tick values. 
+        (QFont or None) Determines the font used for tick values.
         Use None for the default font.
         """
         self.style['tickFont'] = font
@@ -272,7 +272,7 @@ class AxisItem(GraphicsWidget):
         if self.label is None: # self.label is set to None on close, but resize events can still occur.
             self.picture = None
             return
-            
+
         br = self.label.boundingRect()
         p = QtCore.QPointF(0, 0)
         if self.orientation == 'left':
@@ -374,7 +374,7 @@ class AxisItem(GraphicsWidget):
                     self.textWidth = mx
             if self.style['autoExpandTextSpace']:
                 self._updateWidth()
-        
+
         else:
             if self.style['autoReduceTextSpace']:
                 if x > self.textHeight or x < self.textHeight - 10:
@@ -456,7 +456,7 @@ class AxisItem(GraphicsWidget):
 
     def pen(self):
         if self._pen is None:
-            return fn.mkPen(getConfigOption('foreground'))
+            return fn.mkPen(configStyle['axis.color'])
         return fn.mkPen(self._pen)
 
     def setPen(self, *args, **kwargs):
@@ -469,13 +469,13 @@ class AxisItem(GraphicsWidget):
         if args or kwargs:
             self._pen = fn.mkPen(*args, **kwargs)
         else:
-            self._pen = fn.mkPen(getConfigOption('foreground'))
+            self._pen = fn.mkPen(configStyle['axis.color'])
         self.labelStyle['color'] = self._pen.color().name() #   #RRGGBB
         self._updateLabel()
 
     def textPen(self):
         if self._textPen is None:
-            return fn.mkPen(getConfigOption('foreground'))
+            return fn.mkPen(configStyle['axis.tick.label.color'])
         return fn.mkPen(self._textPen)
 
     def setTextPen(self, *args, **kwargs):
@@ -487,16 +487,15 @@ class AxisItem(GraphicsWidget):
         if args or kwargs:
             self._textPen = fn.mkPen(*args, **kwargs)
         else:
-            self._textPen = fn.mkPen(getConfigOption('foreground'))
+            self._textPen = fn.mkPen(configStyle['axis.tick.label.color'])
         self.labelStyle['color'] = self._textPen.color().name() #   #RRGGBB
         self._updateLabel()
-        
+
     def tickPen(self):
         if self._tickPen is None:
-            return self.pen() # Default to the main pen
-        else:
-            return fn.mkPen(self._tickPen)
-        
+            return fn.mkPen(configStyle['axis.tick.color'])
+        return fn.mkPen(self._tickPen)
+
     def setTickPen(self, *args, **kwargs):
         """
         Set the pen used for drawing tick marks.
@@ -508,7 +507,7 @@ class AxisItem(GraphicsWidget):
         else:
             self._tickPen = None
 
-        self._updateLabel()        
+        self._updateLabel()
 
     def setScale(self, scale=None):
         """
@@ -592,7 +591,7 @@ class AxisItem(GraphicsWidget):
     def linkToView(self, view):
         """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
         self._linkToView_internal(view)
-        
+
     def unlinkFromView(self):
         """Unlink this axis from a ViewBox."""
         oldView = self.linkedView()
@@ -760,9 +759,9 @@ class AxisItem(GraphicsWidget):
             maxTickCount = size / minSpacing
             if dif / intervals[minorIndex] <= maxTickCount:
                 levels.append((intervals[minorIndex], 0))
-         
+
         return levels
-        
+
         ##### This does not work -- switching between 2/5 confuses the automatic text-level-selection
         ### Determine major/minor tick spacings which flank the optimal spacing.
         #intervals = np.array([1., 2., 5., 10., 20., 50., 100.]) * p10unit
@@ -1019,7 +1018,7 @@ class AxisItem(GraphicsWidget):
 
             ## length of tick
             tickLength = self.style['tickLength'] / ((i*0.5)+1.0)
-                
+
             lineAlpha = self.style["tickAlpha"]
             if lineAlpha is None:
                 lineAlpha = 255 / (i+1)
@@ -1147,7 +1146,7 @@ class AxisItem(GraphicsWidget):
                         break
                 if finished:
                     break
-            
+
             lastTextSize2 = textSize2
 
             #spacing, values = tickLevels[best]
@@ -1179,7 +1178,7 @@ class AxisItem(GraphicsWidget):
                     alignFlags = QtCore.Qt.AlignmentFlag.AlignHCenter|QtCore.Qt.AlignmentFlag.AlignTop
                     rect = QtCore.QRectF(x-width/2., tickStop+offset, width, height)
 
-                textFlags = alignFlags | QtCore.Qt.TextFlag.TextDontClip    
+                textFlags = alignFlags | QtCore.Qt.TextFlag.TextDontClip
                 #p.setPen(self.pen())
                 #p.drawText(rect, textFlags, vstr)
 

@@ -1,5 +1,5 @@
 from .. import functions as fn
-from .. import getConfigOption
+from .. import configStyle
 from ..Qt import QtGui
 from .GraphicsObject import GraphicsObject
 
@@ -29,10 +29,10 @@ class ErrorBarItem(GraphicsObject):
     def setData(self, **opts):
         """
         Update the data in the item. All arguments are optional.
-        
+
         Valid keyword options are:
         x, y, height, width, top, bottom, left, right, beam, pen
-        
+
           * x and y must be numpy arrays specifying the coordinates of data points.
           * height, width, top, bottom, left, right, and beam may be numpy arrays,
             single values, or None to disable. All values should be positive.
@@ -42,7 +42,7 @@ class ErrorBarItem(GraphicsObject):
           * If width is specified, it overrides left and right.
           * beam specifies the width of the beam at the end of each bar.
           * pen may be any single argument accepted by pg.mkPen().
-        
+
         This method was added in version 0.9.9. For prior versions, use setOpts.
         """
         self.opts.update(opts)
@@ -51,21 +51,21 @@ class ErrorBarItem(GraphicsObject):
         self.update()
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
-        
+
     def setOpts(self, **opts):
         # for backward compatibility
         self.setData(**opts)
-        
+
     def drawPath(self):
         p = QtGui.QPainterPath()
-        
+
         x, y = self.opts['x'], self.opts['y']
         if x is None or y is None:
             self.path = p
             return
-        
+
         beam = self.opts['beam']
-        
+
         height, top, bottom = self.opts['height'], self.opts['top'], self.opts['bottom']
         if height is not None or top is not None or bottom is not None:
             ## draw vertical error bars
@@ -117,7 +117,7 @@ class ErrorBarItem(GraphicsObject):
                     x2 = x
                 else:
                     x2 = x + right
-            
+
             ys = fn.interweaveArrays(y, y)
             x1_x2 = fn.interweaveArrays(x1, x2)
             ends = fn.arrayToQPath(x1_x2, ys, connect='pairs')
@@ -136,23 +136,23 @@ class ErrorBarItem(GraphicsObject):
                     x1s = fn.interweaveArrays(x1, x1)
                     leftEnds = fn.arrayToQPath(x1s, y1_y2, connect="pairs")
                     p.addPath(leftEnds)
-                    
+
         self.path = p
         self.prepareGeometryChange()
-        
-        
+
+
     def paint(self, p, *args):
         if self.path is None:
             self.drawPath()
         pen = self.opts['pen']
         if pen is None:
-            pen = getConfigOption('foreground')
+            pen = configStyle['ErrorBarItem.color']
         p.setPen(fn.mkPen(pen))
         p.drawPath(self.path)
-            
+
     def boundingRect(self):
         if self.path is None:
             self.drawPath()
         return self.path.boundingRect()
-    
-        
+
+

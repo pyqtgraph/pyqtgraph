@@ -3,7 +3,7 @@ from collections import OrderedDict
 import numpy as np
 
 from .. import functions as fn
-from .. import getConfigOption
+from .. import configStyle
 from .. import parametertree as ptree
 from ..graphicsItems.TextItem import TextItem
 from ..Qt import QtCore, QtWidgets
@@ -16,20 +16,20 @@ __all__ = ['ScatterPlotWidget']
 class ScatterPlotWidget(QtWidgets.QSplitter):
     """
     This is a high-level widget for exploring relationships in tabular data.
-        
+
     Given a multi-column record array, the widget displays a scatter plot of a
     specific subset of the data. Includes controls for selecting the columns to
     plot, filtering data, and determining symbol color and shape.
-    
+
     The widget consists of four components:
-    
+
     1) A list of column names from which the user may select 1 or 2 columns
        to plot. If one column is selected, the data for that column will be
        plotted in a histogram-like manner by using :func:`pseudoScatter()
        <pyqtgraph.pseudoScatter>`. If two columns are selected, then the
        scatter plot will be generated with x determined by the first column
        that was selected and y by the second.
-    2) A DataFilter that allows the user to select a subset of the data by 
+    2) A DataFilter that allows the user to select a subset of the data by
        specifying multiple selection criteria.
     3) A ColorMap that allows the user to determine how points are colored by
        specifying multiple criteria.
@@ -49,18 +49,18 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
         self.colorMap = ColorMapParameter()
         self.params = ptree.Parameter.create(name='params', type='group', children=[self.filter, self.colorMap])
         self.ptree.setParameters(self.params, showTop=False)
-        
+
         self.plot = PlotWidget()
         self.ctrlPanel.addWidget(self.fieldList)
         self.ctrlPanel.addWidget(self.ptree)
         self.addWidget(self.plot)
-        
-        fg = fn.mkColor(getConfigOption('foreground'))
+
+        fg = fn.mkColor(configStyle['scatterPlotItem.color'])
         fg.setAlpha(150)
-        self.filterText = TextItem(border=getConfigOption('foreground'), color=fg)
+        self.filterText = TextItem(border=configStyle['scatterPlotItem.color'], color=fg)
         self.filterText.setPos(60,20)
         self.filterText.setParentItem(self.plot.plotItem)
-        
+
         self.data = None
         self.indices = None
         self.mouseOverField = None
@@ -72,16 +72,16 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
         self._visibleData = None  # currently plotted records
         self._visibleIndices = None
         self._indexMap = None
-        
+
         self.fieldList.itemSelectionChanged.connect(self.fieldSelectionChanged)
         self.filter.sigFilterChanged.connect(self.filterChanged)
         self.colorMap.sigColorMapChanged.connect(self.updatePlot)
-    
+
     def setFields(self, fields, mouseOverField=None):
         """
         Set the list of field names/units to be processed.
-        
-        The format of *fields* is the same as used by 
+
+        The format of *fields* is the same as used by
         :meth:`~pyqtgraph.widgets.ColorMapWidget.ColorMapParameter.setFields`
         """
         self.fields = OrderedDict(fields)
@@ -108,7 +108,7 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
 
     def setData(self, data):
         """
-        Set the data to be processed and displayed. 
+        Set the data to be processed and displayed.
         Argument must be a numpy record array.
         """
         self.data = data
@@ -116,7 +116,7 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
         self.filtered = None
         self.filteredIndices = None
         self.updatePlot()
-        
+
     def setSelectedIndices(self, inds):
         """Mark the specified indices as selected.
 
@@ -141,9 +141,9 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
                     item.setSelected(False)
             finally:
                 self.fieldList.blockSignals(False)
-                
+
         self.updatePlot()
-        
+
     def filterChanged(self, f):
         self.filtered = None
         self.updatePlot()
@@ -153,12 +153,12 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
         else:
             self.filterText.setText('\n'.join(desc))
             self.filterText.setVisible(True)
-        
+
     def updatePlot(self):
         self.plot.clear()
         if self.data is None or len(self.data) == 0:
             return
-        
+
         if self.filtered is None:
             mask = self.filter.generateMask(self.data)
             self.filtered = self.data[mask]
@@ -166,18 +166,18 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
         data = self.filtered
         if len(data) == 0:
             return
-        
+
         colors = np.array([fn.mkBrush(*x) for x in self.colorMap.map(data)])
-        
+
         style = self.style.copy()
-        
+
         ## Look up selected columns and units
         sel = list([str(item.text()) for item in self.fieldList.selectedItems()])
         units = list([item.opts.get('units', '') for item in self.fieldList.selectedItems()])
         if len(sel) == 0:
             self.plot.setTitle('')
             return
-        
+
 
         if len(sel) == 1:
             self.plot.setLabels(left=('N', ''), bottom=(sel[0], units[0]), title='')
@@ -190,7 +190,7 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
             self.plot.setLabels(left=(sel[1],units[1]), bottom=(sel[0],units[0]))
             if len(data) == 0:
                 return
-            
+
             xy = [data[sel[0]], data[sel[1]]]
             #xydata = []
             #for ax in [0,1]:
@@ -198,7 +198,7 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
                 ### scatter catecorical values just a bit so they show up better in the scatter plot.
                 ##if sel[ax] in ['MorphologyBSMean', 'MorphologyTDMean', 'FIType']:
                     ##d += np.random.normal(size=len(cells), scale=0.1)
-                    
+
                 #xydata.append(d)
             #x,y = xydata
 
@@ -213,14 +213,14 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
                 enum[i] = True
             else:
                 axis.setTicks(None)  # reset to automatic ticking
-        
+
         ## mask out any nan values
         mask = np.ones(len(xy[0]), dtype=bool)
         if xy[0].dtype.kind == 'f':
             mask &= np.isfinite(xy[0])
         if xy[1] is not None and xy[1].dtype.kind == 'f':
             mask &= np.isfinite(xy[1])
-        
+
         xy[0] = xy[0][mask]
         style['symbolBrush'] = colors[mask]
         data = data[mask]
@@ -253,7 +253,7 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
                 self.scatterPlot.sigPointsClicked.disconnect(self.plotClicked)
             except:
                 pass
-        
+
         self._visibleXY = xy
         self._visibleData = data
         self._visibleIndices = indices

@@ -18,7 +18,7 @@ win.resize(1000,600)
 win.setWindowTitle('pyqtgraph example: Plotting')
 
 # Enable antialiasing for prettier plots
-pg.setConfigOptions(antialias=True)
+pg.configStyle['graphItem.antialias'] = True
 
 p1 = win.addPlot(title="Basic array plotting", y=np.random.normal(size=100))
 

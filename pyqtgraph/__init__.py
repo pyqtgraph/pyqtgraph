@@ -27,6 +27,9 @@ from .Qt import mkQApp
               ## (import here to avoid massive error dump later on if numpy is not available)
 
 
+
+### Set runing options
+## All options not related to style are set here
 ## in general openGL is poorly supported with Qt+GraphicsView.
 ## we only enable it where the performance benefit is critical.
 ## Note this only applies to 2D graphics; 3D graphics always use OpenGL.
@@ -40,10 +43,6 @@ else:
 CONFIG_OPTIONS = {
     'useOpenGL': useOpenGL, ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
     'leftButtonPan': True,  ## if false, left button drags a rubber band for zooming in viewbox
-    # foreground/background take any arguments to the 'mkColor' in /pyqtgraph/functions.py
-    'foreground': 'd',  ## default foreground color for axes, labels, etc.
-    'background': 'k',        ## default background for GraphicsWidget
-    'antialias': False,
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
     'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
@@ -83,6 +82,19 @@ def getConfigOption(opt):
     """Return the value of a single global configuration option.
     """
     return CONFIG_OPTIONS[opt]
+
+
+
+
+
+### Set style options
+## All options related to style are set here
+## Init default style
+from .style.core import loadDefautStyle
+configStyle = loadDefautStyle()
+
+
+
 
 
 def systemInfo():
