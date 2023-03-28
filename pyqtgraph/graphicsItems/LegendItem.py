@@ -212,8 +212,10 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         title           The title to display for this item. Simple HTML allowed.
         ==============  ========================================================
         """
-        label = LabelItem(name, color=self.opts['labelTextColor'],
-                          justify='left', size=self.opts['labelTextSize'])
+        label = LabelItem(name,
+                          color=self.opts['labelTextColor'],
+                          align='left',
+                          size=self.opts['labelTextSize'])
         if isinstance(item, self.sampleType):
             sample = item
         else:

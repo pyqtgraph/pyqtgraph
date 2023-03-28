@@ -40,7 +40,11 @@ gridItem.color : w # color of the GridItem
 
 
 ### LabelItem
-labelItem.color : w # color of the labelItem
+labelItem.color      : w      # color of the labelItem
+labelItem.fontsize   : 11     # font-size of the labelItem in pt
+labelItem.fontweight : normal # font-weight of the labelItem
+labelItem.fontstyle  : normal # font-style of the labelItem
+labelItem.align      : center # text alignement of the labelItem
 
 
 ### ScaleBarItem
