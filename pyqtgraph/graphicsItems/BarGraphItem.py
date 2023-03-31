@@ -185,8 +185,8 @@ class BarGraphItem(GraphicsObject):
 
     def _prepareData(self):
         x0, y0, x1, y1 = self._getNormalizedCoords()
-        xmn, xmx = np.min(x0), np.max(x1)
-        ymn, ymx = np.min(y0), np.max(y1)
+        xmn, xmx = (np.min(x0), np.max(x1)) if x0.size and x1.size else (0, 0)
+        ymn, ymx = (np.min(y0), np.max(y1)) if y0.size and y1.size else (0, 0)
         self._dataBounds = (xmn, xmx), (ymn, ymx)
 
         self._rectarray.resize(max(x0.size, y0.size))
