@@ -20,7 +20,6 @@ class ViewBoxMenu(QtWidgets.QMenu):
         self.addAction(self.viewAll)
         
         self.ctrl = []
-        self.widgetGroups = []
         self.dv = QtGui.QDoubleValidator(self)
         for axis in 'XY':
             m = self.addMenu(f"{axis} {translate('ViewBox', 'axis')}")
@@ -31,8 +30,6 @@ class ViewBoxMenu(QtWidgets.QMenu):
             a.setDefaultWidget(w)
             m.addAction(a)
             self.ctrl.append(ui)
-            wg = WidgetGroup(w)
-            self.widgetGroups.append(wg)
             
             connects = [
                 (ui.mouseCheck.toggled, 'MouseToggled'),
