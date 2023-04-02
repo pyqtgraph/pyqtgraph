@@ -12,11 +12,12 @@ __all__ = ['LabelItem']
 
 
 optsHint = TypedDict('optsHint',
-                     {'color' : configColorHint,
-                      'fontsize' : float,
-                      'fontweight' : str,
+                     {'color'     : configColorHint,
+                      'fontsize'  : float,
+                      'fontweight': str,
                       'fontstyle' : str,
-                      'align' : str},
+                      'align'     : str,
+                      'angle'     : float},
                      total=False)
 
 
@@ -31,7 +32,6 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
     def __init__(self, text: str=' ',
                        parent: Optional[Any]=None,
-                       angle: float=0,
                        **kwargs: configHint) -> None:
         """
         Item to display text.
@@ -42,8 +42,6 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
             Text to be displayed, by default ' '
         parent: optional
             Parent item, by default None
-        angle: optional
-            angle of the displayed text in degrees, by default 0
         *args: optional
             style options , see setStyles() for accepted style parameters.
         """
@@ -51,17 +49,17 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         GraphicsWidget.__init__(self, parent)
         GraphicsWidgetAnchor.__init__(self)
         self.item = QtWidgets.QGraphicsTextItem(self)
+        self._sizeHint: Dict[int, Tuple[float, float]] = {}
 
         # Store style options in opts dict
         self.opts: optsHint = {}
         # Get default stylesheet
         self._initStyle()
-        # Update style
-        self.setStyles(*kwargs)
+        # Update style if needed
+        if len(kwargs)>0:
+            self.setStyles(*kwargs)
 
-        self._sizeHint: Dict[int, Tuple[float, float]] = {}
         self.setText(text)
-        self.setAngle(angle)
 
 
     ##############################################################
@@ -70,10 +68,11 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
     #
     ##############################################################
 
+    # All these methods are called automatically because their name
+    # follow the definition in the stylesheet, see setStyle()
 
     ## Font size
     def setFontsize(self, fontsize: float) -> None:
-
         if not isinstance(fontsize, float):
             raise ValueError('fontsize argument:{} is not a float'.format(fontsize))
 
@@ -88,7 +87,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
     def setFontweight(self, fontweight: str) -> None:
 
         if isinstance(fontweight, str):
-            if fontweight not in ('normal, bold, bolder, lighter'):
+            if fontweight not in ('normal', 'bold', 'bolder', 'lighter'):
                 raise ValueError('fontweight argument:{} must be "normal", "bold", "bolder", or "lighter"'.format(fontweight))
         else:
             raise ValueError('fontweight argument:{} is not a string'.format(fontweight))
@@ -103,22 +102,22 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
     def setFontstyle(self, fontstyle: str) -> None:
 
         if isinstance(fontstyle, str):
-            if fontstyle not in ('normal, bold, bolder, lighter'):
+            if fontstyle not in ('normal', 'italic', 'oblique'):
                 raise ValueError('fontstyle argument:{} must be "normal", "italic", or "oblique"'.format(fontstyle))
         else:
             raise ValueError('style argument:{} is not a string'.format(fontstyle))
 
-        self.opts['fontweight'] = fontstyle
+        self.opts['fontstyle'] = fontstyle
 
 
     def getFontstyle(self) -> str:
         return self.opts['fontstyle']
 
     ## Alignement
-    def setAlignement(self, align: str) -> None:
+    def setAlign(self, align: str) -> None:
 
-        if isinstance(self.opts['align'], str):
-            if align in ('left', 'center', 'right'):
+        if isinstance(align, str):
+            if align not in ('left', 'center', 'right'):
                 raise ValueError('Given "align" argument:{} must be "left", "center", or "right".'.format(align))
         else:
             raise ValueError('align argument:{} is not a string'.format(align))
@@ -126,16 +125,34 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         self.opts['align'] = align
 
 
-    def getAlignement(self) -> str:
+    def getAlign(self) -> str:
         return self.opts['align']
 
     ## Color
     def setColor(self, color: configColorHint) -> None:
+
         self.opts['color'] = color
 
 
     def getColor(self) -> configColorHint:
         return self.opts['color']
+
+    ## Text angle
+    def setAngle(self, angle: float) -> None:
+
+        if not isinstance(angle, float):
+            raise ValueError('angle argument:{} is not a float'.format(angle))
+
+        self.opts['angle'] = angle
+
+        # self.angle = angle
+        self.item.resetTransform()
+        self.item.setRotation(angle)
+        self.updateMin()
+
+
+    def getAngle(self) -> float:
+        return self.opts['angle']
 
 
     def _initStyle(self) -> None:
@@ -143,20 +160,10 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         Add to internal opts dict all labelItem style options from the stylesheet.
         """
 
-        # Since we are using a typedDict, I couldn't find another way that
-        # to assign the keys manually...
-        # If there is a better way, I am in
         for key, val in configStyle.items():
-            if key=='labelItem.color':
-                self.opts['color'] = val
-            elif key=='labelItem.fontsize':
-                self.opts['fontsize'] = val
-            elif key=='labelItem.fontweight':
-                self.opts['fontweight'] = val
-            elif key=='labelItem.fontstyle':
-                self.opts['fontstyle'] = val
-            elif key=='labelItem.align':
-                self.opts['align'] = val
+            if key[:9]=='labelItem':
+                fun = getattr(self, 'set{}{}'.format(key[10:][:1].upper(), key[10:][1:]))
+                fun(val)
 
 
     def setStyle(self, attr: str,
@@ -220,6 +227,8 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
             Text style.
         align {'left', 'center', 'right'}:
             Text alignement.
+        angle (float):
+            Text angle in degrees.
 
         Deprecated parameters
         size (float):
@@ -310,7 +319,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
     ##############################################################
     #
-    #                   Text and angle
+    #                   Text
     #
     ##############################################################
 
@@ -324,6 +333,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         self.text = text
         self.setStyles(**kwargs)
 
+        # Most of the style is applied via css
         optlist = []
         optlist.append('color: {}'.format(fn.mkColor(self.opts['color']).name(QtGui.QColor.NameFormat.HexArgb)))
         optlist.append('font-size: {}pt'.format(self.opts['fontsize']))
@@ -332,7 +342,14 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         full = "<span style='%s'>%s</span>" % ('; '.join(optlist), text)
         self.item.setHtml(full)
 
-        self.updateMin()
+        # The angle style is done directly
+        # Note that setAngle  call UpdateMin
+        if 'angle' in kwargs:
+            self.setAngle(kwargs['angle'])
+        else:
+            self.setAngle(self.opts['angle'])
+
+        # The alignement is applied  in resizeEvent
         self.resizeEvent(None)
         self.updateGeometry()
 
@@ -369,23 +386,6 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
                 bounds.moveTop(rect.top())
 
         self.item.setPos(bounds.topLeft() - self.itemRect().topLeft())
-        self.updateMin()
-
-
-    def setAngle(self, angle: float) -> None:
-        """
-        Set the label displayed angle.
-        Once done, call updateMin().
-
-        Parameters
-        ----------
-        angle
-            angle of the displayed text, by default 0
-        """
-
-        self.angle = angle
-        self.item.resetTransform()
-        self.item.setRotation(angle)
         self.updateMin()
 
 

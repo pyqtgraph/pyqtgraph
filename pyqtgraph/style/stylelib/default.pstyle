@@ -45,7 +45,14 @@ labelItem.fontsize   : 11     # font-size of the labelItem in pt
 labelItem.fontweight : normal # font-weight of the labelItem
 labelItem.fontstyle  : normal # font-style of the labelItem
 labelItem.align      : center # text alignement of the labelItem
+labelItem.angle      : 0      # text angle of the labelItem in degress
 
+
+### LegendItem
+legendItem.labelcolor      : w      # color of the legendItem
+legendItem.labelfontsize   : 11     # font-size of the legendItem in pt
+legendItem.facecolor     : inherit   # legend background color (when 'inherit' uses axes.facecolor)
+legendItem.edgecolor     : inherit   # legend edge color (when 'inherit' uses axes.edgecolor)
 
 ### ScaleBarItem
 scaleBarItem.color : w # color of the scaleBarItem
