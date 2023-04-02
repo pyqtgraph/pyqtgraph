@@ -1,13 +1,24 @@
+from typing import Any, Dict, Optional, Tuple, TypedDict, Union
 import warnings
-from typing import Any, Optional, Union
 
 from .. import functions as fn
 from .. import configStyle
+from ..style.core import configHint, configColorHint
 from ..Qt import QtCore, QtWidgets, QtGui
 from .GraphicsWidget import GraphicsWidget
 from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
 
 __all__ = ['LabelItem']
+
+
+optsHint = TypedDict('optsHint',
+                     {'color' : configColorHint,
+                      'fontsize' : float,
+                      'fontweight' : str,
+                      'fontstyle' : str,
+                      'align' : str},
+                     total=False)
+
 
 class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
     """
@@ -21,197 +32,357 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
     def __init__(self, text: str=' ',
                        parent: Optional[Any]=None,
                        angle: float=0,
-                       **args: dict[str, Any]) -> None:
+                       **kwargs: configHint) -> None:
+        """
+        Item to display text.
+
+        Parameters
+        ----------
+        text: optional
+            Text to be displayed, by default ' '
+        parent: optional
+            Parent item, by default None
+        angle: optional
+            angle of the displayed text in degrees, by default 0
+        *args: optional
+            style options , see setStyles() for accepted style parameters.
+        """
+
         GraphicsWidget.__init__(self, parent)
         GraphicsWidgetAnchor.__init__(self)
         self.item = QtWidgets.QGraphicsTextItem(self)
-        self.opts = {}
-        self.opts.update(args)
-        self._sizeHint = {}
+
+        # Store style options in opts dict
+        self.opts: optsHint = {}
+        # Get default stylesheet
+        self._initStyle()
+        # Update style
+        self.setStyles(*kwargs)
+
+        self._sizeHint: Dict[int, Tuple[float, float]] = {}
         self.setText(text)
         self.setAngle(angle)
+
+
+    ##############################################################
+    #
+    #                   Style methods
+    #
+    ##############################################################
+
+
+    ## Font size
+    def setFontsize(self, fontsize: float) -> None:
+
+        if not isinstance(fontsize, float):
+            raise ValueError('fontsize argument:{} is not a float'.format(fontsize))
+
+        self.opts['fontsize'] = fontsize
+
+
+    def getFontsize(self) -> float:
+        return self.opts['fontsize']
+
+
+    ## Font weight
+    def setFontweight(self, fontweight: str) -> None:
+
+        if isinstance(fontweight, str):
+            if fontweight not in ('normal, bold, bolder, lighter'):
+                raise ValueError('fontweight argument:{} must be "normal", "bold", "bolder", or "lighter"'.format(fontweight))
+        else:
+            raise ValueError('fontweight argument:{} is not a string'.format(fontweight))
+
+        self.opts['fontweight'] = fontweight
+
+
+    def getFontweight(self) -> str:
+        return self.opts['fontweight']
+
+    ## Font style
+    def setFontstyle(self, fontstyle: str) -> None:
+
+        if isinstance(fontstyle, str):
+            if fontstyle not in ('normal, bold, bolder, lighter'):
+                raise ValueError('fontstyle argument:{} must be "normal", "italic", or "oblique"'.format(fontstyle))
+        else:
+            raise ValueError('style argument:{} is not a string'.format(fontstyle))
+
+        self.opts['fontweight'] = fontstyle
+
+
+    def getFontstyle(self) -> str:
+        return self.opts['fontstyle']
+
+    ## Alignement
+    def setAlignement(self, align: str) -> None:
+
+        if isinstance(self.opts['align'], str):
+            if align in ('left', 'center', 'right'):
+                raise ValueError('Given "align" argument:{} must be "left", "center", or "right".'.format(align))
+        else:
+            raise ValueError('align argument:{} is not a string'.format(align))
+
+        self.opts['align'] = align
+
+
+    def getAlignement(self) -> str:
+        return self.opts['align']
+
+    ## Color
+    def setColor(self, color: configColorHint) -> None:
+        self.opts['color'] = color
+
+
+    def getColor(self) -> configColorHint:
+        return self.opts['color']
+
+
+    def _initStyle(self) -> None:
+        """
+        Add to internal opts dict all labelItem style options from the stylesheet.
+        """
+
+        # Since we are using a typedDict, I couldn't find another way that
+        # to assign the keys manually...
+        # If there is a better way, I am in
+        for key, val in configStyle.items():
+            if key=='labelItem.color':
+                self.opts['color'] = val
+            elif key=='labelItem.fontsize':
+                self.opts['fontsize'] = val
+            elif key=='labelItem.fontweight':
+                self.opts['fontweight'] = val
+            elif key=='labelItem.fontstyle':
+                self.opts['fontstyle'] = val
+            elif key=='labelItem.align':
+                self.opts['align'] = val
+
+
+    def setStyle(self, attr: str,
+                       value: Union[str, float, bool]) -> None:
+        """
+        Set a single style property.
+        See:
+            - setStyles() for all accepted style parameter.
+            - stylesheet.
+
+        Parameters
+        ----------
+        attr:
+            style parameter to change
+        value:
+            its new value
+        """
+
+        # If the attr is a valid entry of the stylesheet
+        if attr in (key[10:] for key in configStyle.keys() if key[:9]=='labelItem'):
+            fun = getattr(self, 'set{}{}'.format(attr[:1].upper(), attr[1:]))
+            fun(value)
+        # For backward compatibility, we also accept some old attr values
+        elif attr=='size':
+            if isinstance(value, str):
+                self._setSize(value)
+            else:
+                raise ValueError('Given size argument:{} is not a string.'.format(value))
+        elif attr=='bold':
+            if isinstance(value, bool):
+                self._setBold(value)
+            else:
+                raise ValueError('Given "bold" argument:{}, is not a boolean.'.format(value))
+        elif attr=='italic':
+            if isinstance(value, bool):
+                self._setItalic(value)
+            else:
+                raise ValueError('Given "italic" argument:{}, is not a boolean.'.format(value))
+        elif attr=='justify':
+            if isinstance(value, str):
+                self._setJustify(value)
+            else:
+                raise ValueError('Given "italic" argument:{}, is not a boolean.'.format(value))
+        else:
+            raise ValueError('Your "attr" argument: "{}" is not recognized'.format(value))
+
+
+    def setStyles(self, **kwargs):
+        """
+        Set the style of the LabelItem.
+
+        Parameters
+        ----------
+        color (str):
+            Text color. Example: '#CCFF00'.
+        fontsize (float):
+            Text size in pt.
+        fontweight {'normal', 'bold', 'bolder' 'lighter'}:
+            Text weight.
+        fontstyle {'normal', 'italic' 'oblique'}:
+            Text style.
+        align {'left', 'center', 'right'}:
+            Text alignement.
+
+        Deprecated parameters
+        size (float):
+            text size in pt. Example: 8.
+            (Deprecated:
+            size (str) '8pt' allowed for compatibility).
+        bold (bool):
+            deprecated.
+            weight should be used instead, see below.
+        italic (bool):
+            deprecated, style should be used instead, see below.
+        justify (str):
+            Text alignement.
+            Must be: 'left', 'center', or 'right'
+        """
+
+        for k, v in kwargs.items():
+            self.setStyle(k, v)
+
+
+    ##############################################################
+    #
+    #                   Deprecated style methods
+    #
+    ##############################################################
+
+    ## bold
+    def _setBold(self, bold: bool) -> None:
+
+        warnings.warn('Argument "bold" is deprecated, "fontweight" should be used instead.',
+                       DeprecationWarning,
+                       stacklevel=2)
+
+        self.opts['fontweight'] = {True:'bold', False:'normal'}[bold]
+
+
+    ## size
+    def _setSize(self, size: str) -> None:
+
+        warnings.warn('Argument "size" given as string is deprecated, "fontsize" should be used instead.',
+                      DeprecationWarning,
+                      stacklevel=2)
+        try:
+            sizeFloat = float(size[:-2])
+        except:
+            raise ValueError('Given size argument:{} is not a proper size in pt.'.format(size[:-2]))
+
+        self.opts['fontsize'] = sizeFloat
+
+
+    ## italic
+    def _setItalic(self, italic: bool) -> None:
+
+        warnings.warn('Argument "italic" is deprecated, "fontstyle" should be used instead.',
+                        DeprecationWarning,
+                        stacklevel=2)
+
+        self.opts['fontstyle'] = {True:'italic', False:'normal'}[italic]
+
+
+    ## justify
+    def _setJustify(self, justify: str) -> None:
+
+        warnings.warn('Argument "justify" is deprecated, "align" should be used instead.',
+                        DeprecationWarning,
+                        stacklevel=2)
+
+        if justify in ('left', 'center', 'right'):
+            align = justify
+        else:
+            raise ValueError('Given "justify" argument:{} must be "left", "center", or "right".'.format(justify))
+
+        self.opts['align'] = align
+
 
     def setAttr(self, attr: str,
                       value: Union[str, float, bool]) -> None:
         """
+        Deprecated, please use "setStyle".
         Set a style property.
-        See setText() for accepted style parameter.
         """
-        self.opts[attr] = value
+
+        warnings.warn('Method "setAttr" is deprecated. Use "setStyle" instead',
+                        DeprecationWarning,
+                        stacklevel=2)
+        self.setStyle(attr, value)
+
+
+    ##############################################################
+    #
+    #                   Text and angle
+    #
+    ##############################################################
+
 
     def setText(self, text: str,
-                      **args) -> None:
-        """Set the text and text properties in the label.
-        Accepts optional arguments for auto-generating a CSS style string.
-
-        Args:
-            text: Text to be displayed.
-            args: Style arguments:
-                color   (str): text color. Example: '#CCFF00'
-                size    (float): text size in pt. Example: 8
-                bold    (bool): deprecated. weight should be used instead, see below.
-                weight  (str): Text weight. Must be: 'normal', 'bold', 'bolder', or 'lighter'
-                italic  (bool): deprecated, style should be used instead, see below.
-                style   (str): Text style. Must be: 'normal', 'italic', or 'oblique'
-                justify (str): Text alignement. Must be: 'left', 'center', or 'right'
+                      **kwargs) -> None:
         """
+        Set the text and text properties in the label.
+        """
+
         self.text = text
-        opts = self.opts
-        for k in args:
-            opts[k] = args[k]
+        self.setStyles(**kwargs)
 
         optlist = []
-
-        ## Color
-        if 'color' not in opts:
-            colorQt = fn.mkColor(configStyle['labelItem.color'])
-        else:
-            try:
-                colorQt = fn.mkColor(opts['color'])
-            except:
-                raise ValueError('Given color argument:{} is not a proper color'.format(opts['color']))
-        optlist.append('color: {}'.format(colorQt.name(QtGui.QColor.NameFormat.HexArgb)))
-
-        ## Font-size
-        # Currently we accept a float, a string or None
-        # If None, we use the stylesheet labelItem.fontsize
-        # If float, we interprete the given value as the font-size in pt
-        # If sring, we interprete the given string as the css property value
-        if 'size' not in self.opts:
-            size = configStyle['labelItem.fontsize']
-        else:
-            try:
-                size = float(opts['size'])
-            except ValueError:
-                warnings.warn('Argument "size" given as string is deprecated and should be set by a float instead.',
-                              DeprecationWarning,
-                              stacklevel=2)
-                try:
-                    size = float(opts['size'][:-2])
-                except:
-                    raise ValueError('Given size argument:{} is not a proper float or string'.format(opts['size']))
-        optlist.append('font-size: {}pt'.format(size))
-
-        ## Font-weight
-        # Currently can be setted by two argument: "bold" deprecated and "weight"
-        #       bold must be a boolean, True means "font-weight: bold" and False "font-weight: normal"
-        # for weight we accept a string or None
-        # If None, we use the stylesheet labelItem.fontweight
-        # If sring, we interprete the given string as the css property value
-        if 'bold' in self.opts:
-            warnings.warn('Argument "bold" is deprecated, "weight" should be used instead.',
-                          DeprecationWarning,
-                          stacklevel=2)
-            if isinstance(opts['bold'], bool):
-                weight = {True:'bold', False:'normal'}[opts['bold']]
-            else:
-                raise ValueError('Given "bold" argument:{}, is not a boolean.'.format(opts['bold']))
-        elif 'weight' in self.opts:
-            if isinstance(weight, str):
-                if weight not in ('normal, bold, bolder, lighter'):
-                    raise ValueError('weight argument:{} must be "normal", "bold", "bolder", or "lighter"'.format(weight))
-            else:
-                raise ValueError('weight argument:{} is not a string'.format(opts['weight']))
-            weight = opts['weight']
-        else:
-            weight = configStyle['labelItem.fontweight']
-        optlist.append('font-weight: {}'.format(weight))
-
-        ## Font-style
-        # Currently can be setted by two argument: "italic" deprecated and "style"
-        #       italic must be a boolean, True means "font-style: italic" and False "font-style: normal"
-        # for style we accept a string or None
-        # If None, we use the stylesheet labelItem.fontstyle
-        # If sring, we interprete the given string as the css property value
-        if 'italic' in self.opts:
-            warnings.warn('Argument "italic" is deprecated, "style" should be used instead.',
-                          DeprecationWarning,
-                          stacklevel=2)
-            if isinstance(opts['italic'], bool):
-                style = {True:'italic', False:'normal'}[opts['italic']]
-            else:
-                raise ValueError('Given "italic" argument:{}, is not a boolean.'.format(opts['italic']))
-        elif 'style' in self.opts:
-            if isinstance(style, str):
-                if style not in ('normal, bold, bolder, lighter'):
-                    raise ValueError('style argument:{} must be "normal", "italic", or "oblique"'.format(style))
-            else:
-                raise ValueError('style argument:{} is not a string'.format(opts['style']))
-            style = opts['style']
-        else:
-            style = configStyle['labelItem.fontstyle']
-        optlist.append('font-style: {}'.format(style))
-
+        optlist.append('color: {}'.format(fn.mkColor(self.opts['color']).name(QtGui.QColor.NameFormat.HexArgb)))
+        optlist.append('font-size: {}pt'.format(self.opts['fontsize']))
+        optlist.append('font-weight: {}'.format(self.opts['fontweight']))
+        optlist.append('font-style: {}'.format(self.opts['fontstyle']))
         full = "<span style='%s'>%s</span>" % ('; '.join(optlist), text)
-
         self.item.setHtml(full)
+
         self.updateMin()
         self.resizeEvent(None)
         self.updateGeometry()
 
-    def resizeEvent(self, ev) -> None:
-        #c1 = self.boundingRect().center()
-        #c2 = self.item.mapToParent(self.item.boundingRect().center()) # + self.item.pos()
-        #dif = c1 - c2
-        #self.item.moveBy(dif.x(), dif.y())
-        #print c1, c2, dif, self.item.pos()
+
+    def resizeEvent(self, ev: Optional[QtWidgets.QGraphicsSceneResizeEvent]) -> None:
+        """
+        Set the position of the LabelItem considering alignement specified either
+            in the item via "justify" (deprecated) or "align"
+            in the stylesheet via "labelItem.align"
+
+        Once the position is reset, call updateMin().
+        """
+
         self.item.setPos(0,0)
         bounds = self.itemRect()
         left = self.mapFromItem(self.item, QtCore.QPointF(0,0)) - self.mapFromItem(self.item, QtCore.QPointF(1,0))
         rect = self.rect()
 
-
-        ## Text-alignement
-        # Currently can be setted by two argument: "justify" deprecated and "align"
-        #       justify and align must be "left", "center", or "right"
-        # for justify we accept a string or None
-        # If None, we use the stylesheet labelItem.fontstyle
-        # for align we accept a string or None
-        # If None, we use the stylesheet labelItem.fontstyle
-        if 'justify' in self.opts:
-            warnings.warn('Argument "justify" is deprecated, "align" should be used instead.',
-                          DeprecationWarning,
-                          stacklevel=2)
-            if isinstance(self.opts['justify'], str):
-                if self.opts['justify'] in ('left', 'center', 'right'):
-                    align = self.opts['justify']
-            else:
-                raise ValueError('Given "justify" argument:{} must be "left", "center", or "right".'.format(self.opts['justify']))
-        elif 'align' in self.opts:
-            if isinstance(self.opts['align'], str):
-                if self.opts['align'] in ('left', 'center', 'right'):
-                    align = self.opts['align']
-            else:
-                raise ValueError('Given "align" argument:{} must be "left", "center", or "right".'.format(self.opts['justify']))
-        else:
-            align = configStyle['labelItem.align']
-
-        if align == 'left':
+        if self.opts['align'] == 'left':
             if left.x() != 0:
                 bounds.moveLeft(rect.left())
             if left.y() < 0:
                 bounds.moveTop(rect.top())
             elif left.y() > 0:
                 bounds.moveBottom(rect.bottom())
-
-        elif align == 'center':
+        elif self.opts['align'] == 'center':
             bounds.moveCenter(rect.center())
-            #bounds = self.itemRect()
-            #self.item.setPos(self.width()/2. - bounds.width()/2., 0)
-        elif align == 'right':
+        elif self.opts['align'] == 'right':
             if left.x() != 0:
                 bounds.moveRight(rect.right())
             if left.y() < 0:
                 bounds.moveBottom(rect.bottom())
             elif left.y() > 0:
                 bounds.moveTop(rect.top())
-            #bounds = self.itemRect()
-            #self.item.setPos(self.width() - bounds.width(), 0)
 
         self.item.setPos(bounds.topLeft() - self.itemRect().topLeft())
         self.updateMin()
 
+
     def setAngle(self, angle: float) -> None:
+        """
+        Set the label displayed angle.
+        Once done, call updateMin().
+
+        Parameters
+        ----------
+        angle
+            angle of the displayed text, by default 0
+        """
+
         self.angle = angle
         self.item.resetTransform()
         self.item.setRotation(angle)
@@ -219,6 +390,10 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
 
     def updateMin(self) -> None:
+        """
+        Update the size of the item.
+        Once done, call updateGeometry().
+        """
         bounds = self.itemRect()
         self.setMinimumWidth(bounds.width())
         self.setMinimumHeight(bounds.height())
@@ -231,29 +406,32 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         }
         self.updateGeometry()
 
-    def sizeHint(self, hint: int,
-                       constraint: Any) -> QtCore.QSizeF:
-        """
-        Return the recommended size for the widget.
 
-        Args:
-            hint: Integer used to specify the minimum size of a graphics layout item:
-                0 : MinimumSize
-                1 : PreferredSize
-                2 : MaximumSize
-                3 : MinimumDescent
-            constraint: no idea, not used
+    def sizeHint(self, hint: int,
+                       constraint: QtCore.QSizeF) -> QtCore.QSizeF:
         """
+        Return the size of the widget following the hint argument.
+
+        Parameters
+        ----------
+        hint:
+            Integer used to specify the minimum size of a graphics layout item:
+            0 : MinimumSize
+            1 : PreferredSize
+            2 : MaximumSize
+            3 : MinimumDescent
+        constraint:
+            no idea, not used
+        """
+
         if hint not in self._sizeHint:
             return QtCore.QSizeF(0, 0)
         return QtCore.QSizeF(*self._sizeHint[hint])
 
-    def itemRect(self) -> QtCore.QRectF :
+
+    def itemRect(self) -> QtCore.QRectF:
+        """
+        Return the item pyqt rectangle coordinates
+        """
+
         return self.item.mapRectToParent(self.item.boundingRect())
-
-    #def paint(self, p, *args):
-        #p.setPen(fn.mkPen('r'))
-        #p.drawRect(self.rect())
-        #p.setPen(fn.mkPen('g'))
-        #p.drawRect(self.itemRect())
-
