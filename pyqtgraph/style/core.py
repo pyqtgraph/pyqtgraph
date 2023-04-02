@@ -1,6 +1,6 @@
 # This Python file uses the following encoding: utf-8
 import os
-from typing import Tuple, Union
+from typing import Dict, Tuple, Union
 
 import pyqtgraph as pg
 
@@ -8,6 +8,12 @@ import pyqtgraph as pg
 DEFAULT_STYLE = 'default'
 STYLE_EXTENSION = 'pstyle'
 USER_LIBRARY_PATHS = 'stylelib'
+
+# hint of allowed style options
+configColorHint = Union[str, Tuple[float, float, float]]
+configValueHint = Union[str, int, float, bool, Tuple[float, float, float]]
+configKeyHint   = str
+configHint      = Dict[configValueHint, configKeyHint]
 
 
 def removeComment(line: str) -> str:
@@ -113,7 +119,7 @@ def loadConfigStyle(style: str) -> dict:
     return config_style
 
 
-def loadDefautStyle() -> dict:
+def loadDefaultStyle() -> dict:
 
     return loadConfigStyle(DEFAULT_STYLE)
 

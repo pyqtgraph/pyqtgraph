@@ -90,8 +90,8 @@ def getConfigOption(opt):
 ### Set style options
 ## All options related to style are set here
 ## Init default style
-from .style.core import loadDefautStyle
-configStyle = loadDefautStyle()
+from .style.core import loadDefaultStyle
+configStyle = loadDefaultStyle()
 
 
 
