@@ -10,10 +10,13 @@ STYLE_EXTENSION = 'pstyle'
 USER_LIBRARY_PATHS = 'stylelib'
 
 # hint of allowed style options
-configColorHint = Union[str, Tuple[float, float, float]]
-configValueHint = Union[str, int, float, bool, Tuple[float, float, float]]
-configKeyHint   = str
-configHint      = Dict[configValueHint, configKeyHint]
+ConfigColorHint = Union[str,
+                        int,
+                        Tuple[float, float, float],
+                        Tuple[float, float, float, float]]
+ConfigValueHint = Union[str, int, float, bool, Tuple[float, float, float]]
+ConfigKeyHint   = str
+ConfigHint      = Dict[ConfigKeyHint, ConfigValueHint]
 
 
 def removeComment(line: str) -> str:
@@ -78,7 +81,7 @@ def isBool(str: str) -> bool:
         return False
 
 
-def validateVal(val: str) -> Union[str, float, Tuple[float, float, float], bool]:
+def validateVal(val: str) -> Union[str, float, Tuple[float, ...], bool]:
 
     if isFloat(val):
         return float(val)
@@ -129,3 +132,18 @@ def use(style: str) -> None:
     style = loadConfigStyle(style)
 
     pg.configStyle.update(style)
+
+# Currently hint not correct, because of circular import...
+def initItemStyle(item,
+                  itemName: str,
+                  configStyle: ConfigHint) -> None:
+    """
+    Add to internal Item opts attribute all Item style options from the
+    stylesheet.
+    """
+
+    for key, val in configStyle.items():
+        if key[:len(itemName)]==itemName:
+            fun = getattr(item, 'set{}{}'.format(key[len(itemName)+1:][:1].upper(),
+                                                    key[len(itemName)+1:][1:]))
+            fun(val)

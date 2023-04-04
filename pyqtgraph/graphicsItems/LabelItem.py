@@ -1,9 +1,13 @@
-from typing import Any, Dict, Optional, Tuple, TypedDict, Union
+from typing import Any, Dict, Optional, Tuple, TypedDict
 import warnings
 
 from .. import functions as fn
 from .. import configStyle
-from ..style.core import configHint, configColorHint
+from ..style.core import (
+    ConfigColorHint,
+    ConfigKeyHint,
+    ConfigValueHint,
+    initItemStyle)
 from ..Qt import QtCore, QtWidgets, QtGui
 from .GraphicsWidget import GraphicsWidget
 from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
@@ -12,14 +16,14 @@ __all__ = ['LabelItem']
 
 
 optsHint = TypedDict('optsHint',
-                     {'color'     : configColorHint,
+                     {'color'     : ConfigColorHint,
                       'fontsize'  : float,
                       'fontweight': str,
                       'fontstyle' : str,
                       'align'     : str,
                       'angle'     : float},
                      total=False)
-
+# kwargs are not typed because mypy has not ye included Unpack[Typeddict]
 
 class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
     """
@@ -32,7 +36,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
     def __init__(self, text: str=' ',
                        parent: Optional[Any]=None,
-                       **kwargs: configHint) -> None:
+                       **kwargs) -> None:
         """
         Item to display text.
 
@@ -42,7 +46,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
             Text to be displayed, by default ' '
         parent: optional
             Parent item, by default None
-        *args: optional
+        *kwargs: optional
             style options , see setStyles() for accepted style parameters.
         """
 
@@ -54,11 +58,10 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         # Store style options in opts dict
         self.opts: optsHint = {}
         # Get default stylesheet
-        self._initStyle()
+        initItemStyle(self, 'labelItem', configStyle)
         # Update style if needed
         if len(kwargs)>0:
-            self.setStyles(*kwargs)
-
+            self.setStyles(**kwargs)
         self.setText(text)
 
 
@@ -73,6 +76,23 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
     ## Font size
     def setFontsize(self, fontsize: float) -> None:
+        """
+        Set the font size.
+
+        Parameters
+        ----------
+        fontsize : float
+            The font size to set.
+
+        Raises
+        ------
+        ValueError
+            If fontsize is not a float.
+
+        Returns
+        -------
+        None
+        """
         if not isinstance(fontsize, float):
             raise ValueError('fontsize argument:{} is not a float'.format(fontsize))
 
@@ -80,12 +100,37 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
 
     def getFontsize(self) -> float:
+        """
+        Get the current font size.
+
+        Returns
+        -------
+        float
+            The current font size.
+        """
         return self.opts['fontsize']
 
 
     ## Font weight
     def setFontweight(self, fontweight: str) -> None:
+        """
+        Set the font weight.
 
+        Parameters
+        ----------
+        fontweight : str
+            The font weight to set.
+            Must be "normal", "bold", "bolder", or "lighter".
+
+        Raises
+        ------
+        ValueError
+            If fontweight is not one of the accepted values.
+
+        Returns
+        -------
+        None
+        """
         if isinstance(fontweight, str):
             if fontweight not in ('normal', 'bold', 'bolder', 'lighter'):
                 raise ValueError('fontweight argument:{} must be "normal", "bold", "bolder", or "lighter"'.format(fontweight))
@@ -96,11 +141,32 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
 
     def getFontweight(self) -> str:
+        """
+        Get the current font weight.
+
+        Returns
+        -------
+        str
+            The current font weight.
+        """
         return self.opts['fontweight']
 
     ## Font style
     def setFontstyle(self, fontstyle: str) -> None:
+        """
+        Set the font style.
 
+        Parameters
+        ----------
+        fontstyle : str
+            The font style to set.
+            Must be "normal", "italic", or "oblique".
+
+        Raises
+        ------
+        ValueError
+            If fontstyle is not one of the accepted values.
+        """
         if isinstance(fontstyle, str):
             if fontstyle not in ('normal', 'italic', 'oblique'):
                 raise ValueError('fontstyle argument:{} must be "normal", "italic", or "oblique"'.format(fontstyle))
@@ -111,11 +177,36 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
 
     def getFontstyle(self) -> str:
+        """
+        Get the current font style.
+
+        Returns
+        -------
+        str
+            The current font style.
+        """
         return self.opts['fontstyle']
 
     ## Alignement
     def setAlign(self, align: str) -> None:
+        """
+        Set the text alignment.
 
+        Parameters
+        ----------
+        align : str
+            The text alignment to set.
+            Must be "left", "center", or "right".
+
+        Raises
+        ------
+        ValueError
+            If align is not one of the accepted values.
+
+        Returns
+        -------
+        None
+        """
         if isinstance(align, str):
             if align not in ('left', 'center', 'right'):
                 raise ValueError('Given "align" argument:{} must be "left", "center", or "right".'.format(align))
@@ -126,20 +217,63 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
 
     def getAlign(self) -> str:
+        """
+        Get the current text alignment.
+
+        Returns
+        -------
+        str
+            The current text alignment.
+        """
         return self.opts['align']
 
     ## Color
-    def setColor(self, color: configColorHint) -> None:
+    def setColor(self, color: ConfigColorHint) -> None:
+        """
+        Set the color.
 
+        Parameters
+        ----------
+        color : ConfigColorHint
+            The color to set.
+
+        Returns
+        -------
+        None
+        """
         self.opts['color'] = color
 
 
-    def getColor(self) -> configColorHint:
+    def getColor(self) -> ConfigColorHint:
+        """
+        Get the current color.
+
+        Returns
+        -------
+        ConfigColorHint
+            The current color.
+        """
         return self.opts['color']
 
     ## Text angle
     def setAngle(self, angle: float) -> None:
+        """
+        Set the text angle.
 
+        Parameters
+        ----------
+        angle : float
+            The text angle to set.
+
+        Raises
+        ------
+        ValueError
+            If angle is not a float.
+
+        Returns
+        -------
+        None
+        """
         if not isinstance(angle, float):
             raise ValueError('angle argument:{} is not a float'.format(angle))
 
@@ -152,34 +286,39 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
 
     def getAngle(self) -> float:
+        """
+        Get the current text angle.
+
+        Returns
+        -------
+        float
+            The current text angle.
+        """
         return self.opts['angle']
 
 
-    def _initStyle(self) -> None:
-        """
-        Add to internal opts dict all labelItem style options from the stylesheet.
-        """
+    def setStyle(self, attr: ConfigKeyHint,
+                       value: ConfigValueHint) -> None:
 
-        for key, val in configStyle.items():
-            if key[:9]=='labelItem':
-                fun = getattr(self, 'set{}{}'.format(key[10:][:1].upper(), key[10:][1:]))
-                fun(val)
-
-
-    def setStyle(self, attr: str,
-                       value: Union[str, float, bool]) -> None:
         """
         Set a single style property.
-        See:
-            - setStyles() for all accepted style parameter.
-            - stylesheet.
 
         Parameters
         ----------
-        attr:
-            style parameter to change
-        value:
-            its new value
+        attr : ConfigKeyHint
+            The name of the style parameter to change.
+            See `setStyles()` for a list of all accepted style parameters.
+        value : ConfigValueHint
+            The new value for the specified style parameter.
+
+        See Also
+        --------
+        setStyles : Set multiple style properties at once.
+        stylesheet : Qt Style Sheets reference.
+
+        Examples
+        --------
+        >>> setStyle('color', 'red')
         """
 
         # If the attr is a valid entry of the stylesheet
@@ -211,13 +350,13 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
             raise ValueError('Your "attr" argument: "{}" is not recognized'.format(value))
 
 
-    def setStyles(self, **kwargs):
+    def setStyles(self, **kwargs) -> None:
         """
         Set the style of the LabelItem.
 
         Parameters
         ----------
-        color (str):
+        color (ConfigColorHint):
             Text color. Example: '#CCFF00'.
         fontsize (float):
             Text size in pt.
@@ -231,6 +370,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
             Text angle in degrees.
 
         Deprecated parameters
+        ----------
         size (float):
             text size in pt. Example: 8.
             (Deprecated:
@@ -257,8 +397,18 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
     ## bold
     def _setBold(self, bold: bool) -> None:
+        """
+        Set the font weight to either 'bold' or 'normal' based on the given
+        boolean value.
 
-        warnings.warn('Argument "bold" is deprecated, "fontweight" should be used instead.',
+        Parameters
+        ----------
+        bold : bool
+            If True, the font weight will be set to 'bold'. If False, it will
+            be set to 'normal'.
+        """
+
+        warnings.warn('Argument "bold" is deprecated, "fontweight" should beused instead.',
                        DeprecationWarning,
                        stacklevel=2)
 
@@ -267,6 +417,20 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
     ## size
     def _setSize(self, size: str) -> None:
+        """
+        Set the font size in points.
+
+        Parameters
+        ----------
+        size : str
+            The font size as a string in the format "xpt", where x is a
+            floating number.
+
+        Raises
+        ------
+        ValueError
+            If the given size argument is not in the proper format.
+        """
 
         warnings.warn('Argument "size" given as string is deprecated, "fontsize" should be used instead.',
                       DeprecationWarning,
@@ -281,6 +445,15 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
     ## italic
     def _setItalic(self, italic: bool) -> None:
+        """
+        Set the font style to either 'italic' or 'normal' based on the given boolean value.
+
+        Parameters
+        ----------
+        italic : bool
+            If True, the font style will be set to 'italic'. If False, it will be set to 'normal'.
+        None
+        """
 
         warnings.warn('Argument "italic" is deprecated, "fontstyle" should be used instead.',
                         DeprecationWarning,
@@ -291,6 +464,19 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
     ## justify
     def _setJustify(self, justify: str) -> None:
+        """
+        Set the text alignment to either 'left', 'center', or 'right'.
+
+        Parameters
+        ----------
+        justify : str
+            The text alignment. Must be one of 'left', 'center', or 'right'.
+
+        Raises
+        ------
+        ValueError
+            If the given justify argument is not one of 'left', 'center', or 'right'.
+    """
 
         warnings.warn('Argument "justify" is deprecated, "align" should be used instead.',
                         DeprecationWarning,
@@ -304,11 +490,18 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         self.opts['align'] = align
 
 
-    def setAttr(self, attr: str,
-                      value: Union[str, float, bool]) -> None:
+    def setAttr(self, attr: ConfigKeyHint,
+                      value: ConfigValueHint) -> None:
         """
         Deprecated, please use "setStyle".
         Set a style property.
+
+        Parameters
+        ----------
+        attr : ConfigKeyHint
+            The name of the style property to set.
+        value : ConfigValueHint
+            The value to set the style property to.
         """
 
         warnings.warn('Method "setAttr" is deprecated. Use "setStyle" instead',
@@ -328,6 +521,20 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
                       **kwargs) -> None:
         """
         Set the text and text properties in the label.
+
+        Parameters
+        ----------
+        text : str
+            The text to be displayed.
+        **kwargs : optsHint
+            Optional keyword arguments to set text properties:
+                - fontsize: font size in points (float)
+                - fontweight: font weight as string, either 'normal', 'bold', 'bolder', or 'lighter'.
+                - fontstyle: font style as string, either 'normal', 'italic', or 'oblique'.
+                - align: text alignment as string, either 'left', 'center', or 'right'.
+                - color: color of the text as either a tuple of 3 or 4 integers (RGB or RGBA), or a string
+                        representing a named color or a color in hexadecimal format (#RRGGBB or #AARRGGBB).
+                - angle: angle of the text in degrees (float).
         """
 
         self.text = text
@@ -433,5 +640,4 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         Return the item pyqt rectangle coordinates
         """
-
         return self.item.mapRectToParent(self.item.boundingRect())
