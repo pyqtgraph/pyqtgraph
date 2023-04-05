@@ -108,7 +108,7 @@ class SignalEmitter(pg.QtCore.QObject):
     def __init__(self, queued):
         pg.QtCore.QObject.__init__(self)
         if queued:
-            self.signal.connect(self.run, pg.QtCore.Qt.QueuedConnection)
+            self.signal.connect(self.run, pg.QtCore.Qt.ConnectionType.QueuedConnection)
         else:
             self.signal.connect(self.run)
     def run(self, func, args):

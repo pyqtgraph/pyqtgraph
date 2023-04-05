@@ -117,7 +117,7 @@ class ReplWidget(QtWidgets.QWidget):
             return
 
         cursor = self.output.textCursor()
-        cursor.movePosition(QtGui.QTextCursor.End)
+        cursor.movePosition(QtGui.QTextCursor.MoveOperation.End)
         self.output.setTextCursor(cursor)
 
         sb = self.output.verticalScrollBar()

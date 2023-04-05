@@ -113,7 +113,7 @@ def makeItemTree(stack, title):
     topItem = QtWidgets.QTreeWidgetItem([title])
     topItem.frame = None
     font = topItem.font(0)
-    font.setWeight(font.Bold)
+    font.setWeight(font.Weight.Bold)
     topItem.setFont(0, font)
     items = [topItem]
     for entry in stack:
@@ -153,5 +153,5 @@ def textItem(text):
     item.frame = None
     item.setBackground(0, QtGui.QBrush(QtGui.QColor(220, 220, 220)))
     item.setForeground(0, QtGui.QBrush(QtGui.QColor(0, 0, 0)))
-    item.setChildIndicatorPolicy(item.DontShowIndicator)
+    item.setChildIndicatorPolicy(item.ChildIndicatorPolicy.DontShowIndicator)
     return item
