@@ -14,19 +14,22 @@ class ReplWidget(QtWidgets.QWidget):
         self._lastCommandRow = None
         self._commandBuffer = []  # buffer to hold multiple lines of input
         self.stdoutInterceptor = StdoutInterceptor(self.write)
+        self.ps1 = ">>> "
+        self.ps2 = "... "
 
         QtWidgets.QWidget.__init__(self, parent=parent)
 
         self._setupUi()
 
         # define text styles
+        isDark = self.output.palette().color(QtGui.QPalette.ColorRole.Base).value() < 128
         outputBlockFormat = QtGui.QTextBlockFormat()
         outputFirstLineBlockFormat = QtGui.QTextBlockFormat(outputBlockFormat)
         outputFirstLineBlockFormat.setTopMargin(5)
         outputCharFormat = QtGui.QTextCharFormat()
         outputCharFormat.setFontWeight(QtGui.QFont.Weight.Normal)
         cmdBlockFormat = QtGui.QTextBlockFormat()
-        cmdBlockFormat.setBackground(mkBrush("#CCF"))
+        cmdBlockFormat.setBackground(mkBrush("#335" if isDark else "#CCF"))
         cmdCharFormat = QtGui.QTextCharFormat()
         cmdCharFormat.setFontWeight(QtGui.QFont.Weight.Bold)
         self.textStyles = {
@@ -34,6 +37,9 @@ class ReplWidget(QtWidgets.QWidget):
             'output': (outputCharFormat, outputBlockFormat),
             'output_first_line': (outputCharFormat, outputFirstLineBlockFormat),
         }
+
+        self.input.ps1 = self.ps1
+        self.input.ps2 = self.ps2
 
     def _setupUi(self):
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -68,9 +74,9 @@ class ReplWidget(QtWidgets.QWidget):
             return
 
         if len(self._commandBuffer) == 0:
-            self.write(f">>> {cmd}\n", style='command')
+            self.write(f"{self.ps1}{cmd}\n", style='command')
         else:
-            self.write(f"... {cmd}\n", style='command')
+            self.write(f"{self.ps2}{cmd}\n", style='command')
         
         self.sigCommandEntered.emit(self, cmd)
         self._commandBuffer.append(cmd)
