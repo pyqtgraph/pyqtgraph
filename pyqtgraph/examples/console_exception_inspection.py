@@ -142,7 +142,7 @@ funcs = [
 
 app = pg.mkQApp()
 
-win = pg.QtWidgets.QSplitter(pg.QtCore.Qt.Horizontal)
+win = pg.QtWidgets.QSplitter(pg.QtCore.Qt.Orientation.Horizontal)
 
 ctrl = QtWidgets.QWidget()
 ctrlLayout = QtWidgets.QVBoxLayout()

@@ -77,7 +77,7 @@ class ConsoleWidget(QtWidgets.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
 
-        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical, self)
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical, self)
         self.layout.addWidget(self.splitter, 0, 0)
 
         self.repl = ReplWidget(self.globals, self.locals, self)
