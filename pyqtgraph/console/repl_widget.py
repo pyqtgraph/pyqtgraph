@@ -24,11 +24,11 @@ class ReplWidget(QtWidgets.QWidget):
         outputFirstLineBlockFormat = QtGui.QTextBlockFormat(outputBlockFormat)
         outputFirstLineBlockFormat.setTopMargin(5)
         outputCharFormat = QtGui.QTextCharFormat()
-        outputCharFormat.setFontWeight(QtGui.QFont.Normal)
+        outputCharFormat.setFontWeight(QtGui.QFont.Weight.Normal)
         cmdBlockFormat = QtGui.QTextBlockFormat()
         cmdBlockFormat.setBackground(mkBrush("#CCF"))
         cmdCharFormat = QtGui.QTextCharFormat()
-        cmdCharFormat.setFontWeight(QtGui.QFont.Bold)
+        cmdCharFormat.setFontWeight(QtGui.QFont.Weight.Bold)
         self.textStyles = {
             'command': (cmdCharFormat, cmdBlockFormat),
             'output': (outputCharFormat, outputBlockFormat),
@@ -44,7 +44,7 @@ class ReplWidget(QtWidgets.QWidget):
         self.output = QtWidgets.QTextEdit(self)
         font = QtGui.QFont()
         font.setFamily("Courier New")
-        font.setStyleStrategy(QtGui.QFont.PreferAntialias)
+        font.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferAntialias)
         self.output.setFont(font)
         self.output.setReadOnly(True)
         self.layout.addWidget(self.output)
