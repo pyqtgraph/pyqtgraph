@@ -51,7 +51,7 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
         self.runSelectedFrameCheck.setChecked(True)
         self.layout.addWidget(self.runSelectedFrameCheck, 3, 0, 1, 7)
 
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         self.layout.addItem(spacerItem, 0, 5, 1, 1)
 
         self.filterLabel = QtWidgets.QLabel("Filter (regex):", self)
