@@ -8,6 +8,10 @@ __all__ = ["get_qpainterpath_element_array"]
 
 if QT_LIB.startswith('PyQt'):
     from . import sip
+elif QT_LIB == 'PySide2':
+    from PySide2 import __version_info__ as pyside_version_info
+elif QT_LIB == 'PySide6':
+    from PySide6 import __version_info__ as pyside_version_info
 
 class QArrayDataQt5(ctypes.Structure):
     _fields_ = [
@@ -101,7 +105,10 @@ class PrimitiveArray:
     def __init__(self, Klass, nfields, *, use_array=None):
         self._Klass = Klass
         self._nfields = nfields
-        self._ndarray = None
+        self._capa = -1
+
+        self.use_sip_array = False
+        self.use_ptr_to_array = False
 
         if QT_LIB.startswith('PyQt'):
             if use_array is None:
@@ -113,44 +120,107 @@ class PrimitiveArray:
                     )
                 )
             self.use_sip_array = use_array
-        else:
-            self.use_sip_array = False
 
         if QT_LIB.startswith('PySide'):
             if use_array is None:
                 use_array = (
                     Klass is QtGui.QPainter.PixmapFragment
+                    or pyside_version_info >= (6, 4, 3)
                 )
             self.use_ptr_to_array = use_array
-        else:
-            self.use_ptr_to_array = False
 
         self.resize(0)
 
     def resize(self, size):
-        if self._ndarray is not None and len(self._ndarray) == size:
-            return
-
         if self.use_sip_array:
-            self._objs = sip.array(self._Klass, size)
-            vp = sip.voidptr(self._objs, size*self._nfields*8)
-            array = np.frombuffer(vp, dtype=np.float64).reshape((-1, self._nfields))
-        elif self.use_ptr_to_array:
-            array = np.empty((size, self._nfields), dtype=np.float64)
-            self._objs = compat.wrapinstance(array.ctypes.data, self._Klass)
-        else:
-            array = np.empty((size, self._nfields), dtype=np.float64)
-            self._objs = list(map(compat.wrapinstance,
-                itertools.count(array.ctypes.data, array.strides[0]),
-                itertools.repeat(self._Klass, array.shape[0])))
+            # For reference, SIP_VERSION 6.7.8 first arrived
+            # in PyQt5_sip 12.11.2 and PyQt6_sip 13.4.2
+            if sip.SIP_VERSION >= 0x60708:
+                if size <= self._capa:
+                    self._size = size
+                    return
+            else:
+                # sip.array prior to SIP_VERSION 6.7.8 had a
+                # buggy slicing implementation.
+                # so trigger a reallocate for any different size
+                if size == self._capa:
+                    return
 
-        self._ndarray = array
+            self._siparray = sip.array(self._Klass, size)
+
+        else:
+            if size <= self._capa:
+                self._size = size
+                return
+            self._ndarray = np.empty((size, self._nfields), dtype=np.float64)
+
+            if self.use_ptr_to_array:
+                # defer creation
+                self._objs = None
+            else:
+                self._objs = self._wrap_instances(self._ndarray)
+
+        self._capa = size
+        self._size = size
+
+    def _wrap_instances(self, array):
+        return list(map(compat.wrapinstance,
+            itertools.count(array.ctypes.data, array.strides[0]),
+            itertools.repeat(self._Klass, array.shape[0])))
 
     def __len__(self):
-        return len(self._ndarray)
+        return self._size
 
     def ndarray(self):
-        return self._ndarray
+        # ndarray views are cheap to recreate each time
+        if self.use_sip_array:
+            if sip.SIP_VERSION >= 0x60708:
+                mv = self._siparray
+            else:
+                # sip.array prior to SIP_VERSION 6.7.8 had a buggy buffer protocol
+                # that set the wrong size.
+                # workaround it by going through a sip.voidptr
+                mv = sip.voidptr(self._siparray, self._capa*self._nfields*8)
+            # note that we perform the slicing by using only _size rows
+            nd = np.frombuffer(mv, dtype=np.float64, count=self._size*self._nfields)
+            return nd.reshape((-1, self._nfields))
+        else:
+            return self._ndarray[:self._size]
 
     def instances(self):
-        return self._objs
+        # this returns an iterable container of Klass instances.
+        # for "use_ptr_to_array" mode, such a container may not
+        # be required at all, so its creation is deferred
+        if self.use_sip_array:
+            if self._size == self._capa:
+                # avoiding slicing when it's not necessary
+                # handles the case where sip.array had a buggy
+                # slicing implementation 
+                return self._siparray
+            else:
+                # this is a view
+                return self._siparray[:self._size]
+
+        if self._objs is None:
+            self._objs = self._wrap_instances(self._ndarray)
+
+        if self._size == self._capa:
+            return self._objs
+        else:
+            # this is a shallow copy
+            return self._objs[:self._size]
+
+    def drawargs(self):
+        # returns arguments to apply to the respective drawPrimitives() functions
+        if self.use_ptr_to_array:
+            if self._capa > 0:
+                # wrap memory only if it is safe to do so
+                ptr = compat.wrapinstance(self._ndarray.ctypes.data, self._Klass)
+            else:
+                # shiboken translates None <--> nullptr
+                # alternatively, we could instantiate a dummy _Klass()
+                ptr = None
+            return ptr, self._size
+
+        else:
+            return self.instances(),

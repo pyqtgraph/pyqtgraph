@@ -958,12 +958,8 @@ class ScatterPlotItem(GraphicsObject):
                 frags[:, 6:10] = [1.0, 1.0, 0.0, 1.0]   # scaleX, scaleY, rotation, opacity
 
                 profiler('prep')
-                inst = self._pixmapFragments.instances()
-                if Qt.QT_LIB.startswith('PySide'):
-                    args = inst, sr.size
-                else:
-                    args = inst,
-                p.drawPixmapFragments(*args, self.fragmentAtlas.pixmap)
+                drawargs = self._pixmapFragments.drawargs()
+                p.drawPixmapFragments(*drawargs, self.fragmentAtlas.pixmap)
                 profiler('draw')
             else:
                 # render each symbol individually
