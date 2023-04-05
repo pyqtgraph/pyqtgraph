@@ -105,7 +105,8 @@ jobs:
           libxcb-randr0 \
           libxcb-render-util0 \
           libxcb-xinerama0 \
-          libopengl0
+          libopengl0 \
+          libxcb-cursor0
     - name: 'Debug Info'
       run: |
         echo python location: `which python`
@@ -204,7 +205,8 @@ jobs:
             libxcb-randr0 \
             libxcb-render-util0 \
             libxcb-xinerama0 \
-            libopengl0
+            libopengl0 \
+            libxcb-cursor0
           pip install pytest-xvfb
       - name: 'Debug Info'
         run: |
