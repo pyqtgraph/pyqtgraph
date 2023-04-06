@@ -27,7 +27,7 @@ def raiseException():
     """Raise an exception
     """
     x = "inside raiseException()"
-    raise Exception(f"Raised an exception in {threadName()}")
+    raise Exception(f"Raised an exception {x} in {threadName()}")
 
 
 def raiseNested():
@@ -37,7 +37,7 @@ def raiseNested():
     try:
         raiseException()
     except Exception:
-        raise Exception(f"Raised during exception handling in {threadName()}")
+        raise Exception(f"Raised during exception handling {x} in {threadName()}")
 
 
 def raiseFrom():
@@ -47,7 +47,7 @@ def raiseFrom():
     try:
         raiseException()
     except Exception as exc:
-        raise Exception(f"Raised-from during exception handling in {threadName()}") from exc
+        raise Exception(f"Raised-from during exception handling {x} in {threadName()}") from exc
 
 
 def raiseCaughtException():
@@ -55,9 +55,9 @@ def raiseCaughtException():
     """
     x = "inside raiseCaughtException()"
     try:
-        raise Exception(f"Raised an exception in {threadName()}")
+        raise Exception(f"Raised an exception {x} in {threadName()}")
     except Exception:
-        print(f"Raised and caught exception in {threadName()}  trace: {sys._getframe().f_trace}")
+        print(f"Raised and caught exception {x} in {threadName()}  trace: {sys._getframe().f_trace}")
 
 
 def captureStack():
@@ -66,6 +66,7 @@ def captureStack():
     x = "inside captureStack()"
     global console
     console.setStack()
+    return x
 
 
 # Background thread for running functions
@@ -89,18 +90,22 @@ thread.start()
 def runInStack(func):
     x = "inside runInStack(func)"
     runInStack2(func)
+    return x
 
 def runInStack2(func):
     x = "inside runInStack2(func)"
     runInStack3(func)
+    return x
 
 def runInStack3(func):
     x = "inside runInStack3(func)"
     runInStack4(func)
+    return x
 
 def runInStack4(func):
     x = "inside runInStack4(func)"
-    return func()
+    func()
+    return x
 
 
 class SignalEmitter(pg.QtCore.QObject):
