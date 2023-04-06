@@ -172,7 +172,7 @@ ctrlLayout.addWidget(queuedSignalCheck)
 
 ctrlLayout.addStretch()
 
-console = pg.console.ConsoleWidget(text="""
+console = pyqtgraph.console.ConsoleWidget(text="""
 Use ConsoleWidget to interactively inspect exception tracebacks and call stacks!
 
 - Enable "Show next exception" and the next unhandled exception will be displayed below.
