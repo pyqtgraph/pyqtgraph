@@ -510,7 +510,9 @@ class ExampleLoader(QtWidgets.QMainWindow):
             return os.path.join(path, item.file)
         return None
 
-    def loadFile(self, edited=False):
+    def loadFile(self, *, edited=False):
+        # make *edited* keyword-only so it is not confused for extra arguments
+        # sent by ui signals
         qtLib = self.ui.qtLibCombo.currentText()
         env = dict(os.environ, PYQTGRAPH_QT_LIB=qtLib)
         example_path = os.path.abspath(os.path.dirname(__file__))
