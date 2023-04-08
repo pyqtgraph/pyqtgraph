@@ -5,8 +5,8 @@ from typing import Dict, Tuple, Union
 import pyqtgraph as pg
 
 
-DEFAULT_STYLE = 'default'
-STYLE_EXTENSION = 'pstyle'
+DEFAULT_STYLE      = 'default'
+STYLE_EXTENSION    = 'pstyle'
 USER_LIBRARY_PATHS = 'stylelib'
 
 # hint of allowed style options
@@ -14,7 +14,12 @@ ConfigColorHint = Union[str,
                         int,
                         Tuple[float, float, float],
                         Tuple[float, float, float, float]]
-ConfigValueHint = Union[str, int, float, bool, Tuple[float, float, float]]
+ConfigValueHint = Union[str,
+                        int,
+                        float,
+                        bool,
+                        Tuple[float, float],
+                        ConfigColorHint]
 ConfigKeyHint   = str
 ConfigHint      = Dict[ConfigKeyHint, ConfigValueHint]
 
@@ -107,7 +112,7 @@ def loadConfigStyle(style: str) -> dict:
     """
 
     file = os.path.join(os.path.dirname(os.path.realpath(__file__)), USER_LIBRARY_PATHS, '{}.{}'.format(style, STYLE_EXTENSION))
-    config_style = {}
+    styleDict = {}
     with open(file, encoding='utf-8', mode='r') as f:
 
         for line in f:
@@ -117,9 +122,9 @@ def loadConfigStyle(style: str) -> dict:
 
             key, val = getKeyVal(line)
 
-            config_style[key] = validateVal(val)
+            styleDict[key] = validateVal(val)
 
-    return config_style
+    return styleDict
 
 
 def loadDefaultStyle() -> dict:
@@ -127,11 +132,11 @@ def loadDefaultStyle() -> dict:
     return loadConfigStyle(DEFAULT_STYLE)
 
 
-def use(style: str) -> None:
+def use(styleName: str) -> None:
 
-    style = loadConfigStyle(style)
+    styleDict = loadConfigStyle(styleName)
 
-    pg.configStyle.update(style)
+    pg.configStyle.update(styleDict)
 
 # Currently hint not correct, because of circular import...
 def initItemStyle(item,

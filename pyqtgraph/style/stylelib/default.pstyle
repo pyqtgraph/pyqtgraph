@@ -49,10 +49,14 @@ labelItem.angle      : 0      # text angle of the labelItem in degress
 
 
 ### LegendItem
-legendItem.labelcolor      : w      # color of the legendItem
-legendItem.labelfontsize   : 11     # font-size of the legendItem in pt
-legendItem.facecolor     : inherit   # legend background color (when 'inherit' uses axes.facecolor)
-legendItem.edgecolor     : inherit   # legend edge color (when 'inherit' uses axes.edgecolor)
+legendItem.labelColor      : 200, 200, 200, 255 # color of the labelItem
+legendItem.labelFontsize   : 11                 # font-size of the labelItem in pt
+legendItem.labelFontweight : bold             # font-weight of the labelItem in pt
+legendItem.labelAlign      : left               # text alignement of the labelItem
+legendItem.offset          : 0, 0               # offset position relative to the legendItem's parent.
+legendItem.facecolor       : 0, 0, 0, 0         # legend background color
+legendItem.edgecolor       : 200, 200, 200, 255 # legend edge color
+legendItem.frameon         : True               # whether or not to draw a frame around legend
 
 ### ScaleBarItem
 scaleBarItem.color : w # color of the scaleBarItem
