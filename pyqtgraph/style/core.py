@@ -5,7 +5,8 @@ from typing import Dict, Tuple, Union
 import pyqtgraph as pg
 
 
-DEFAULT_STYLE      = 'default'
+# DEFAULT_STYLE      = 'default'
+DEFAULT_STYLE      = 'matplotlib'
 STYLE_EXTENSION    = 'pstyle'
 USER_LIBRARY_PATHS = 'stylelib'
 
@@ -59,7 +60,13 @@ def parseLineStyle(linestyle: ConfigLinestyleHint) -> int:
 def removeComment(line: str) -> str:
     """
     Remove comment from line
-    if "#" is present, return the line up to "#" position
+    if "#" is present:
+        if "#" position is 0, we assume commented line
+            return empty line
+        if "#" position is 1 after a ":", we assume a color in hex
+            return line up to the second "#".
+        else we assume comments about the style itself
+            return the line up to "#" position
     if "#" not present, return empty str
 
     Args:
@@ -70,11 +77,12 @@ def removeComment(line: str) -> str:
     """
 
     hash_pos = line.find('#')
-    if hash_pos>0:
-        return line[:hash_pos]
     # Commented line
-    elif hash_pos==0:
+    if hash_pos==0:
         return ''
+    elif hash_pos>0:
+        hash_pos_ = line[::-1].find('#')
+        return line[:-hash_pos_-1]
     # Empty line
     else:
         return ''
