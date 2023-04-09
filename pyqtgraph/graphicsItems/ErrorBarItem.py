@@ -462,10 +462,11 @@ class ErrorBarItem(GraphicsObject):
         p.setPen(self._getPen())
         p.drawPath(self.path)
 
-    def boundingRect(self) -> Optional[QtCore.QRectF]:
+    def boundingRect(self) -> QtCore.QRectF:
         """
         Return the item rectangle coordinates
         """
         if self.path is None:
             self.drawPath()
+        assert self.path is not None
         return self.path.boundingRect()
