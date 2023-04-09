@@ -27,10 +27,10 @@ __all__ = ['LegendItem', 'ItemSample']
 
 optsHint = TypedDict('optsHint',
                      {'offset'         : float,
-                      'labelColor'     : ConfigColorHint,
-                      'labelFontsize'  : float,
-                      'labelFontweight': str,
-                      'labelAlign'     : str,
+                      'labelcolor'     : ConfigColorHint,
+                      'labelfontsize'  : float,
+                      'labelfontweight': str,
+                      'labelalign'     : str,
                       'facecolor'      : ConfigColorHint,
                       'edgecolor'      : ConfigColorHint,
                       'frameon'        : bool},
@@ -137,7 +137,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         Get the color used for the item labels.
         """
-        return self.opts['labelColor']
+        return self.opts['labelcolor']
 
     def setLabelColor(self, color: ConfigColorHint):
         """
@@ -148,13 +148,13 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         color : ConfigColorHint
             The QColor to set for the item labels.
         """
-        if hasattr(self, 'labelColor'):
-            update = self.opts['labelColor']==color
+        if hasattr(self, 'labelcolor'):
+            update = self.opts['labelcolor']==color
         else:
             update = False
-        self.opts['labelColor'] = color
+        self.opts['labelcolor'] = color
         for _, label in self.items:
-            label.setStyle('color', self.opts['labelColor'])
+            label.setStyle('color', self.opts['labelcolor'])
         if update:
             self.update()
 
@@ -163,7 +163,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         Get the font size used for the item labels.
         """
-        return self.opts['labelFontsize']
+        return self.opts['labelfontsize']
 
     def setLabelFontsize(self, size: float) -> None:
         """
@@ -174,9 +174,9 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         weight : str
             The font weight to set for the item labels.
         """
-        self.opts['labelFontsize'] = size
+        self.opts['labelfontsize'] = size
         for _, label in self.items:
-            label.setStyle('fontsize', self.opts['labelFontsize'])
+            label.setStyle('fontsize', self.opts['labelfontsize'])
 
         self.update()
 
@@ -190,7 +190,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         str
             The font weight used for the item labels.
         """
-        return self.opts['labelFontweight']
+        return self.opts['labelfontweight']
 
     def setLabelFontweight(self, weight: str) -> None:
         """
@@ -207,9 +207,9 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         ValueError
             If the given `weight` parameter is not one of "bold", "bolder", or "lighter".
         """
-        self.opts['labelFontweight'] = weight
+        self.opts['labelfontweight'] = weight
         for _, label in self.items:
-            label.setStyle('fontweight', self.opts['labelFontweight'])
+            label.setStyle('fontweight', self.opts['labelfontweight'])
 
         self.update()
 
@@ -224,7 +224,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             The current alignment of the item labels, which can be one of
             'left', 'center', or 'right'.
         """
-        return self.opts['labelAlign']
+        return self.opts['labelalign']
 
     def setLabelAlign(self, align: str) -> None:
         """
@@ -249,9 +249,9 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         else:
             raise ValueError('align argument:{} is not a string'.format(align))
 
-        self.opts['labelAlign'] = align
+        self.opts['labelalign'] = align
         for _, label in self.items:
-            label.setStyle('align', self.opts['labelAlign'])
+            label.setStyle('align', self.opts['labelalign'])
 
         self.update()
 
@@ -413,7 +413,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         warnings.warn('Method "labelTextColor" is deprecated. Use "getLabelColor" instead',
                       DeprecationWarning,
                       stacklevel=2)
-        return self.opts['labelColor']
+        return self.opts['labelcolor']
 
     def setLabelTextColor(self, *args, **kargs):
         """Set the color of the item labels.
@@ -425,9 +425,9 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
                        DeprecationWarning,
                       stacklevel=2)
 
-        self.opts['labelColor'] = fn.mkColor(*args, **kargs)
+        self.opts['labelcolor'] = fn.mkColor(*args, **kargs)
         for sample, label in self.items:
-            label.setStyle('color', self.opts['labelColor'])
+            label.setStyle('color', self.opts['labelcolor'])
 
         self.update()
 
@@ -438,7 +438,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         warnings.warn('Method "labelTextSize" is deprecated. Use "getLabelFontsize" instead',
                       DeprecationWarning,
                       stacklevel=2)
-        return self.opts['labelFontsize']
+        return self.opts['labelfontsize']
 
     def setLabelTextSize(self, size: float) -> None:
         """
@@ -451,9 +451,9 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         warnings.warn('Method "setLabelTextSize" is deprecated. Use "setLabelFontsize" instead',
                       DeprecationWarning,
                       stacklevel=2)
-        self.opts['labelFontsize'] = size
+        self.opts['labelfontsize'] = size
         for _, label in self.items:
-            label.setStyle('size', self.opts['labelFontsize'])
+            label.setStyle('size', self.opts['labelfontsize'])
 
         self.update()
 
@@ -557,10 +557,10 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             The title to display for this item. Simple HTML allowed.
         """
         label = LabelItem(name,
-                          color=self.opts['labelColor'],
-                          align=self.opts['labelAlign'],
-                          fontsize=self.opts['labelFontsize'],
-                          fontweight=self.opts['labelFontweight'])
+                          color=self.opts['labelcolor'],
+                          align=self.opts['labelalign'],
+                          fontsize=self.opts['labelfontsize'],
+                          fontweight=self.opts['labelfontweight'])
         if isinstance(item, self.sampleType):
             sample = item
         else:
