@@ -1,5 +1,11 @@
-### Default pyqtgraph style sheet
+### Default pyqtgrapph style sheet
 
+## Possible linestyle
+# "-", "1"   -> A plain line.
+# "--, "2"   -> Dashes separated by a few pixels.
+# ":", "3"   -> Dots separated by a few pixels.
+# "-.", "4"  -> Alternate dots and dashes.
+# "-..", "5" -> One dash, two dots, one dash, two dots.
 
 
 ### GraphItem
@@ -32,7 +38,10 @@ barItem.color : w # color of the barItem
 
 
 ### ErrorBarItem
-ErrorBarItem.color : w # color of the ErrorBarItem
+ErrorBarItem.color : 200, 200, 200 # color of the ErrorBarItem
+ErrorBarItem.linestyle : -         # linestyle of the ErrorBarItem
+ErrorBarItem.linewidth : 1         # linewidth of the ErrorBarItem
+ErrorBarItem.beam : 0.3            # specifies the width of the beam at the end of each bar.
 
 
 ### GridItem

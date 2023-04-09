@@ -14,6 +14,7 @@ ConfigColorHint = Union[str,
                         int,
                         Tuple[float, float, float],
                         Tuple[float, float, float, float]]
+ConfigLinestyleHint = Union[str, int]
 ConfigValueHint = Union[str,
                         int,
                         float,
@@ -22,6 +23,37 @@ ConfigValueHint = Union[str,
                         ConfigColorHint]
 ConfigKeyHint   = str
 ConfigHint      = Dict[ConfigKeyHint, ConfigValueHint]
+
+parseLineStyleDict = {"-" :   1,
+                      "--" :  2,
+                      ":" :   3,
+                      "-." :  4,
+                      "-.." : 5}
+def parseLineStyle(linestyle: ConfigLinestyleHint) -> int:
+    """
+    Parse the given linestyle, string or integerm into an accepted Qt,
+    linestyle, integer only.
+
+    Correspondence between linestyle:
+        * "-", "1"   -> A plain line.
+        * "--, "2"   -> Dashes separated by a few pixels.
+        * ":", "3"   -> Dots separated by a few pixels.
+        * "-.", "4"  -> Alternate dots and dashes.
+        * "-..", "5" -> One dash, two dots, one dash, two dots.
+    """
+
+    if isinstance(linestyle, str):
+        if linestyle in parseLineStyleDict.keys():
+            return parseLineStyleDict[linestyle]
+        else:
+            raise ValueError('Given "linestyle" argument:{} must be "-", "--", ":", "-." or, "-..".'.format(linestyle))
+    elif isinstance(linestyle, int):
+        if linestyle in parseLineStyleDict.values():
+            return linestyle
+        else:
+            raise ValueError('Given "linestyle" argument:{} must be 0, 1, 2, 3 or, 4.'.format(linestyle))
+    else:
+        raise ValueError('Given "linestyle" argument:{} must be a string or a int'.format(linestyle))
 
 
 def removeComment(line: str) -> str:
