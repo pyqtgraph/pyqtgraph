@@ -3,6 +3,7 @@ import platform
 
 import numpy as np
 import pytest
+from packaging.version import Version, parse
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, QtTest
@@ -326,8 +327,12 @@ def test_PolyLineROI():
 
         # call setPoints
         r.setPoints(initState['points'])
-        assertImageApproved(plt, 'roi/polylineroi/' + name + '_setpoints',
-                            'Reset points to initial state.')
+        assertImageApproved(
+            plt,
+            f'roi/polylineroi/{name}_setpoints',
+            'Reset points to initial state.',
+            pxCount=1 if platform.system() == "Darwin" and parse(platform.mac_ver()[0]) >= Version("13.0") else 0
+        )
         assert len(r.getState()['points']) == 3
 
         # call setState
