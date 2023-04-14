@@ -13,7 +13,6 @@ import struct
 import sys
 import warnings
 from collections import OrderedDict
-from distutils.version import StrictVersion
 
 import numpy as np
 
