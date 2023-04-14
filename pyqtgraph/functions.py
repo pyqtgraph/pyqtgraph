@@ -13,6 +13,7 @@ import struct
 import sys
 import warnings
 from collections import OrderedDict
+from distutils.version import StrictVersion
 
 import numpy as np
 
@@ -1531,8 +1532,8 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
     # apply nan mask through alpha channel
     if nanMask is not None:
         alpha = True
-        # Workaround for https://github.com/cupy/cupy/issues/4693
-        if xp == cp:
+        # Workaround for https://github.com/cupy/cupy/issues/4693, fixed in cupy 10.0.0
+        if xp == cp and StrictVersion(xp.__version__) < StrictVersion("10.0.0"):
             imgData[nanMask, :, dst_order[3]] = 0
         else:
             imgData[nanMask, dst_order[3]] = 0
