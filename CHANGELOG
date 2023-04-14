@@ -1,3 +1,41 @@
+pyqtgraph-0.13.3
+
+## What's Changed
+
+### Highlights
+
+* PySide6 6.5 Compatability
+
+### Bug Fixes
+
+* Return float values from QColor in getByIndex by @nickdimitroff in https://github.com/pyqtgraph/pyqtgraph/pull/2648
+* GLViewWidget: don't assume mouse tracking is disabled by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2653
+* Tolerate an empty BarGraphItem by @jmakovicka in https://github.com/pyqtgraph/pyqtgraph/pull/2658
+* Only apply nan mask workaround for cp version below 10.0. by @koenstrien in https://github.com/pyqtgraph/pyqtgraph/pull/2689
+
+### Misc
+
+* unify ndarray_from_qpolygonf implementation by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2654
+* re-enable tests taking gui thread on PySide6 by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2657
+* inherit GraphicsWidgetAnchor on the left-hand-side by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2662
+* Prepare support for PySide6 drawLines and friends by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2596
+* Avoid changing background colors of text and rows for group parameter… by @ntjess in https://github.com/pyqtgraph/pyqtgraph/pull/2683
+
+### Testing
+
+* Allow macOS to have fudge factor in test_polyROI by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2687
+
+### Docs 
+* Update pydata-sphinx-theme and fix warnings by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2643
+* Bump sphinx-design from 0.3.0 to 0.4.1 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2686
+* Bump sphinx from 5.3.0 to 6.1.3 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2585
+
+## New Contributors
+* @nickdimitroff made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2648
+* @koenstrien made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2689
+
+**Full Changelog**: https://github.com/pyqtgraph/pyqtgraph/compare/pyqtgraph-0.13.2...pyqtgraph-0.13.3
+
 pyqtgraph-0.13.2
 
 ## What's Changed

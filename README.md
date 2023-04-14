@@ -6,12 +6,10 @@ PyQtGraph
 [![Build Status](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/actions/?query=workflow%3Amain)
 [![CodeQL Status](https://github.com/pyqtgraph/pyqtgraph/workflows/codeql/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/actions/?query=workflow%3Acodeql)
 [![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/alerts/)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/context:python)
 [![Discord](https://img.shields.io/discord/946624673200893953.svg?label=PyQtGraph&logo=discord)](https://discord.gg/ufTVNNreAZ)
 A pure-Python graphics library for PyQt5/PyQt6/PySide2/PySide6
 
-Copyright 2022 PyQtGraph developers
+Copyright 2023 PyQtGraph developers
 
 <http://www.pyqtgraph.org>
 
@@ -66,24 +64,6 @@ Through 3rd part libraries, additional functionality may be added to PyQtGraph, 
 [`numba`]: https://github.com/numba/numba
 [`cupy`]: https://docs.cupy.dev/en/stable/install.html
 [`jupyter_rfb`]: https://github.com/vispy/jupyter_rfb
-
-Qt Bindings Test Matrix
------------------------
-
-The following table represents the python environments we test in our CI system.  Our CI system uses Ubuntu 20.04, Windows Server 2019, and macOS 10.15 base images.
-
-| Qt-Bindings    |Python 3.8              | Python 3.9              | Python 3.10             |
-| :------------- |:---------------------: | :---------------------: | :---------------------: |
-| PySide2-5.15   | :white_check_mark:     | :white_check_mark:      |                         |
-| PyQt5-5.15     | :white_check_mark:     | :white_check_mark:      |                         |
-| PySide6-6.2    |                        | :white_check_mark:      |                         |
-| PyQt6-6.2      |                        | :white_check_mark:      |                         |
-| PySide6-6.3    |                        |                         | :white_check_mark:      |
-| PyQt6-6.3      |                        |                         | :white_check_mark:      |
-
-* :x: - Not compatible
-* :white_check_mark: - Tested
-* No icon means supported configuration but we do not explicitely test it
 
 Support
 -------
