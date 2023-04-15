@@ -3,7 +3,7 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.13.3'
+__version__ = '0.13.4.dev0'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
