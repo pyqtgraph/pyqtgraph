@@ -26,7 +26,7 @@ __all__ = ['LegendItem', 'ItemSample']
 
 
 optsHint = TypedDict('optsHint',
-                     {'offset'         : float,
+                     {'offset'         : Tuple[int, int],
                       'labelcolor'     : ConfigColorHint,
                       'labelfontsize'  : float,
                       'labelfontweight': str,
@@ -115,7 +115,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
 
         self.opts: optsHint = {}
         # Get default stylesheet
-        initItemStyle(self, 'legendItem', configStyle)
+        initItemStyle(self, 'LegendItem', configStyle)
         # Update style if needed
         if len(kwargs)>0:
             self.setStyles(**kwargs)
@@ -257,25 +257,25 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
 
     # Style applicable to LegendItem
     ## offset
-    def setOffset(self, offset: Tuple[float, float]):
+    def setOffset(self, offset: Tuple[int, int]):
         """
         Set the offset position of the legend relative to the parent.
 
         Parameters
         ----------
-        offset : Tuple[float, float]
-            The new offset position of the legend relative to the parent. This should
-            be a tuple of two float values.
+        offset : Tuple[int, int]
+            The new offset position of the legend relative to the parent.
+            This should be a tuple of two int values.
 
         Raises
         ------
         ValueError
             If the given `offset` argument is not a tuple or contains any values
-            that are not float values.
+            that are not int values.
         """
         if not isinstance(offset, tuple):
-            if not all((isinstance(i, float)for i in offset)):
-                raise ValueError('offset argument:{} is not a tuple of float'.format(offset))
+            if not all((isinstance(i, int)for i in offset)):
+                raise ValueError('offset argument:{} is not a tuple of int'.format(offset))
         self.opts['offset'] = offset
 
     def getOffset(self):
@@ -343,11 +343,11 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
 
         # If the attr is a valid entry of the stylesheet
-        if attr in (key[11:] for key in configStyle.keys() if key[:10]=='legendItem'):
+        if attr in configStyle['LegendItem'].keys():
             fun = getattr(self, 'set{}{}'.format(attr[:1].upper(), attr[1:]))
             fun(value)
         else:
-            raise ValueError('Your "attr" argument: "{}" is not recognized'.format(value))
+            raise ValueError('Your "attr" argument: "{}" is not recognized'.format(attr))
 
     def setStyles(self, **kwargs) -> None:
         """
@@ -355,7 +355,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
 
         Parameters
         ----------
-        offset : tuple of float or None, optional
+        offset : tuple of int or None, optional
             Specifies the offset position relative to the legend's parent.
             Positive values offset from the left or top; negative values offset
             from the right or bottom. If offset is None, the legend must be
