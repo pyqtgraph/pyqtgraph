@@ -8,72 +8,100 @@
 # "-..", "5" -> One dash, two dots, one dash, two dots.
 
 
-### GraphItem
+[GraphItem]
 ## Set all item values
-graphItem.background : k     # background
-graphItem.color      : w     # color
-graphItem.antialias  : False # if antialiased
+background : 'k'     # background
+color      : 'w'     # color
+antialias  : False   # if antialiased
 
 
-### AxisItem
-axis.color            : w # background color
-axis.tick.label.color : w # ticks label color
-axis.tick.color       : w # ticks color
+[AxisItem]
+color : 'w' # background color
+
+tickAlpha      : 0      # alpha channel from 0 to 1
+tickColor      : 'w'    # ticks color
+tickFont       : None   # Font used for tick values
+tickFontsize   : 9      # font-size of the tick label in pt
+tickLabelColor : 'w'    # ticks label color
+tickLength     : -5     # The maximum length of ticks in pixels
+tickTextHeight : 18     # Vertical space reserved for tick text in px
+tickTextOffset : [5, 2] # (horizontal, vertical) spacing between text and axis
+tickTextWidth  : 30     # Horizontal space reserved for tick text in px
+
+labelColor      : (200, 200, 200, 255) # color of the label axis
+labelFontsize   : 11.0                 # font-size of the label axis in pt
+labelFontweight : 'normal'             # font-weight of the label axis in pt
+labelFontstyle  : 'normal'             # font-style of the label axis
+
+autoExpandTextSpace   : True         # automatically expand text space if needed
+autoReduceTextSpace   : True         # Automatically shrink the axis if necessary
+hideOverlappingLabels : True         # Hide tick labels which overlap the AxisItems
+stopAxisAtTick        : [False, False] # whether axis is drawn to edge of box or to last tick
+## how much of the axis to fill up with tick text, maximally. For the one below
+## (0., 0.8) never fill more than 80% of the axis
+## (2., 0.6) If we already have 2 ticks with text, fill no more than 60% of the axis
+## (4., 0.4) If we already have 4 ticks with text, fill no more than 40% of the axis
+## (6., 0.2) If we already have 6 ticks with text, fill no more than 20% of the axis
+textFillLimits : [(0., 0.8), (2., 0.6), (4., 0.4), (6., 0.2)] #
+showValues     : True # Either show values or not
+maxTickLength  : 2     # (px) maximum length of ticks to draw. Negative values
+                       # draw into the plot, positive values draw outward.
+maxTickLevel   : 2    # decide whether to include the last level of ticks
+maxTextLevel   : 2    # decide whether to include the last level of ticks
+
+[PlotCurveItem]
+antialias : False # if antialiased
 
 
-### PlotCurveItem
-plotCurveItem.antialias : False # if antialiased
+[PlotDataItem]
+lineColor  : (200, 200, 200) # color of the line
+symbolColor: (200, 200, 200) # color of the symbol
+symbolSize : 10.0            # size of the symbol
+symbolBrush: (50,  50,  150) # brush of the symbol
+antialias   : False          # if antialiased
 
 
-### PlotDataItem
-plotDataItem.line.color  : 200, 200, 200 # color of the line
-plotDataItem.symbol.color: 200, 200, 200 # color of the symbol
-plotDataItem.symbol.size : 10            # size of the symbol
-plotDataItem.symbol.brush: 50,  50,  150 # brush of the symbol
-plotDataItem.antialias   : False         # if antialiased
+[BarItem]
+color : 'w' # color of the barItem
 
 
-### BarItem
-barItem.color : w # color of the barItem
+[ErrorBarItem]
+color : (200, 200, 200) # color of the ErrorBarItem
+linestyle : '-'         # linestyle of the ErrorBarItem
+linewidth : 1.0         # linewidth of the ErrorBarItem
+beam : 0.3              # specifies the width of the beam at the end of each bar.
 
 
-### ErrorBarItem
-ErrorBarItem.color : 200, 200, 200 # color of the ErrorBarItem
-ErrorBarItem.linestyle : -         # linestyle of the ErrorBarItem
-ErrorBarItem.linewidth : 1         # linewidth of the ErrorBarItem
-ErrorBarItem.beam : 0.3            # specifies the width of the beam at the end of each bar.
+[GridItem]
+color : 'w' # color of the GridItem
 
 
-### GridItem
-gridItem.color : w # color of the GridItem
+[LabelItem]
+color      : 'w'      # color of the LabelItem
+fontsize   : 11.0     # font-size of the LabelItem in pt
+fontweight : 'normal' # font-weight of the LabelItem
+fontstyle  : 'normal' # font-style of the LabelItem
+align      : 'center' # text alignement of the LabelItem
+angle      : 0.0      # text angle of the LabelItem in degress
 
 
-### LabelItem
-labelItem.color      : w      # color of the labelItem
-labelItem.fontsize   : 11     # font-size of the labelItem in pt
-labelItem.fontweight : normal # font-weight of the labelItem
-labelItem.fontstyle  : normal # font-style of the labelItem
-labelItem.align      : center # text alignement of the labelItem
-labelItem.angle      : 0      # text angle of the labelItem in degress
+[LegendItem]
+labelColor      : (200, 200, 200, 255) # color of the labelItem
+labelFontsize   : 11.0                 # font-size of the labelItem in pt
+labelFontweight : 'normal'             # font-weight of the labelItem in pt
+labelAlign      : 'left'               # text alignement of the labelItem
+offset          : 0.0, 0.0             # offset position relative to the LegendItem's parent in px.
+facecolor       : 0, 0, 0, 0           # legend background color
+edgecolor       : (200, 200, 200, 255) # legend edge color
+frameon         : True                 # whether or not to draw a frame around legend
+
+[ScaleBarItem]
+color : 'w' # color of the scaleBarItem
 
 
-### LegendItem
-legendItem.labelColor      : 200, 200, 200, 255 # color of the labelItem
-legendItem.labelFontsize   : 11                 # font-size of the labelItem in pt
-legendItem.labelFontweight : bold             # font-weight of the labelItem in pt
-legendItem.labelAlign      : left               # text alignement of the labelItem
-legendItem.offset          : 0, 0               # offset position relative to the legendItem's parent.
-legendItem.facecolor       : 0, 0, 0, 0         # legend background color
-legendItem.edgecolor       : 200, 200, 200, 255 # legend edge color
-legendItem.frameon         : True               # whether or not to draw a frame around legend
-
-### ScaleBarItem
-scaleBarItem.color : w # color of the scaleBarItem
-
-
-### ScatterPlotItem
-scatterPlotItem.color    : w                  # color
-scatterPlotItem.antialias: False              # if antialiased
-scatterPlotItem.symbol   : o                  # symbol type
-scatterPlotItem.size     : 7                  # symbol size
-scatterPlotItem.brush    : 100, 100, 150      # brush color
+[ScatterPlotItem]
+color    : 'w'              # color
+antialias: False            # if antialiased
+symbol   : 'o'              # symbol type
+size     : 7                # symbol size
+brush    : (100, 100, 150)  # brush color

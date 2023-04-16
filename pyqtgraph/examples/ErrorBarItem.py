@@ -6,7 +6,7 @@ import numpy as np
 
 import pyqtgraph as pg
 
-pg.configStyle['graphItem.antialias'] = True
+pg.configStyle['GraphItem']['antialias'] = True
 
 x = np.arange(10)
 y = np.arange(10) %3

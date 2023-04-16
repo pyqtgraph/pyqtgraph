@@ -7,7 +7,7 @@ import numpy as np
 import pyqtgraph as pg
 
 # Enable antialiasing for prettier plots
-pg.configStyle['graphItem.antialias'] = True
+pg.configStyle['GraphItem']['antialias'] = True
 
 w = pg.GraphicsLayoutWidget(show=True)
 w.setWindowTitle('pyqtgraph example: GraphItem')

@@ -227,14 +227,14 @@ class ErrorBarItem(GraphicsObject):
         """
 
         # If the attr is a valid entry of the stylesheet
-        if attr in (key[13:] for key in configStyle.keys() if key[:12]=='ErrorBarItem'):
+        if attr in configStyle['ErrorBarItem'].keys():
             fun = getattr(self, 'set{}{}'.format(attr[:1].upper(), attr[1:]))
             fun(value)
         # If a pen has been specified, it overrides other style arguments
         elif attr=='pen':
             self._setPen(value)
         else:
-            raise ValueError('Your "attr" argument: "{}" is not recognized'.format(value))
+            raise ValueError('Your "attr" argument: "{}" is not recognized'.format(attr))
 
     def setStyles(self, **kwargs) -> None:
         """

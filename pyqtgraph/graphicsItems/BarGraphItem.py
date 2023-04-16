@@ -51,7 +51,7 @@ class BarGraphItem(GraphicsObject):
         )
 
         if 'pen' not in opts:
-            opts['pen'] = configStyle['barItem.color']
+            opts['pen'] = configStyle['BarItem']['color']
         if 'brush' not in opts:
             opts['brush'] = (128, 128, 128)
         # the first call to _updateColors() will thus always be an update

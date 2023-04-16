@@ -168,7 +168,7 @@ class ImageView(QtWidgets.QWidget):
         self.normRoi.hide()
         self.roiCurves = []
         self.timeLine = InfiniteLine(0, movable=True)
-        if configStyle['graphItem.background']=='w':
+        if configStyle['GraphItem']['background']=='w':
             self.timeLine.setPen((20, 80,80, 200))
         else:
             self.timeLine.setPen((255, 255, 0, 200))

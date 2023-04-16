@@ -19,7 +19,7 @@ class ScaleBar(GraphicsWidgetAnchor, GraphicsObject):
         self.setAcceptedMouseButtons(QtCore.Qt.MouseButton.NoButton)
 
         if brush is None:
-            brush = configStyle['scaleBarItem.color']
+            brush = configStyle['ScaleBarItem']['color']
         self.brush = fn.mkBrush(brush)
         self.pen = fn.mkPen(pen)
         self._width = width

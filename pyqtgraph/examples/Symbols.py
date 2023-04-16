@@ -11,7 +11,7 @@ app = pg.mkQApp("Symbols Examples")
 win = pg.GraphicsLayoutWidget(show=True, title="Scatter Plot Symbols")
 win.resize(1000,600)
 
-pg.configStyle['graphItem.antialias'] = True
+pg.configStyle['GraphItem']['antialias'] = True
 
 plot = win.addPlot(title="Plotting with symbols")
 plot.addLegend()

@@ -120,7 +120,7 @@ class GraphItem(GraphicsObject):
                     p.drawLine(QtCore.QPointF(*pts[i][0]), QtCore.QPointF(*pts[i][1]))
             else:
                 if pen == 'default':
-                    pen = configStyle['graphItem.color']
+                    pen = configStyle['GraphItem']['color']
                 p.setPen(fn.mkPen(pen))
                 pts = pts.reshape((pts.shape[0]*pts.shape[1], pts.shape[2]))
                 path = fn.arrayToQPath(x=pts[:,0], y=pts[:,1], connect='pairs')
@@ -131,7 +131,7 @@ class GraphItem(GraphicsObject):
     def paint(self, p, *args):
         if self.picture is None:
             self.generatePicture()
-        if configStyle['graphItem.antialias']:
+        if configStyle['GraphItem']['antialias']:
             p.setRenderHint(p.RenderHint.Antialiasing)
         self.picture.play(p)
 

@@ -31,7 +31,7 @@ class GridItem(UIGraphicsItem):
     def setPen(self, *args, **kwargs):
         """Set the pen used to draw the grid."""
         if kwargs == {} and (args == () or args == ('default',)):
-            self.opts['pen'] = fn.mkPen(configStyle['gridItem.color'])
+            self.opts['pen'] = fn.mkPen(configStyle['GridItem']['color'])
         else:
             self.opts['pen'] = fn.mkPen(*args, **kwargs)
 
@@ -42,7 +42,7 @@ class GridItem(UIGraphicsItem):
     def setTextPen(self, *args, **kwargs):
         """Set the pen used to draw the texts."""
         if kwargs == {} and (args == () or args == ('default',)):
-            self.opts['textPen'] = fn.mkPen(configStyle['gridItem.color'])
+            self.opts['textPen'] = fn.mkPen(configStyle['GridItem']['color'])
         else:
             if args == (None,):
                 self.opts['textPen'] = None

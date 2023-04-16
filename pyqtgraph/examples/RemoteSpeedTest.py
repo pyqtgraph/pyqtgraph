@@ -29,8 +29,8 @@ iterations_counter = itertools.count()
 app = pg.mkQApp()
 
 view = pg.widgets.RemoteGraphicsView.RemoteGraphicsView()
-pg.configStyle['graphItem.antialias'] = True  ## this will be expensive for the local plot
-view.pg.configStyle['graphItem.antialias'] = True  ## prettier plots at no cost to the main process!
+pg.configStyle['GraphItem']['antialias'] = True  ## this will be expensive for the local plot
+view.pg.configStyle['GraphItem']['antialias'] = True  ## prettier plots at no cost to the main process!
 view.setWindowTitle('pyqtgraph example: RemoteSpeedTest')
 
 app.aboutToQuit.connect(view.close)

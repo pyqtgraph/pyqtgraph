@@ -8,7 +8,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
 
 # Enable antialiasing for prettier plots
-pg.configStyle['graphItem.antialias'] = True
+pg.configStyle['GraphItem']['antialias'] = True
 
 w = pg.GraphicsLayoutWidget(show=True)
 w.setWindowTitle('pyqtgraph example: CustomGraphItem')

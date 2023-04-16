@@ -13,8 +13,8 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets, loadUiType
 
-pg.configStyle['graphItem.background'] = 'w'
-pg.configStyle['graphItem.color']      = 'k'
+pg.configStyle['GraphItem']['background'] = 'w'
+pg.configStyle['GraphItem']['color']      = 'k'
 
 BLUE = pg.mkPen('#1f77b4')
 

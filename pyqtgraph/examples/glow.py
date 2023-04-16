@@ -10,7 +10,7 @@ import numpy as np
 import pyqtgraph as pg
 
 # Enable antialiasing for prettier plots
-pg.configStyle['graphItem.antialias'] = True
+pg.configStyle['GraphItem']['antialias'] = True
 
 app = pg.mkQApp("Glow Example")
 

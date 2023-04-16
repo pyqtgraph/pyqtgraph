@@ -345,7 +345,7 @@ class PlotDataItem(GraphicsObject):
             'alphaHint': 1.0,
             'alphaMode': False,
 
-            'pen': configStyle['plotDataItem.line.color'],
+            'pen': configStyle['PlotDataItem']['lineColor'],
             'shadowPen': None,
             'fillLevel': None,
             'fillOutline': False,
@@ -353,12 +353,12 @@ class PlotDataItem(GraphicsObject):
             'stepMode': None,
 
             'symbol': None,
-            'symbolSize': configStyle['plotDataItem.symbol.size'],
-            'symbolPen': configStyle['plotDataItem.symbol.color'],
-            'symbolBrush': configStyle['plotDataItem.symbol.brush'],
+            'symbolSize': configStyle['PlotDataItem']['symbolSize'],
+            'symbolPen': configStyle['PlotDataItem']['symbolColor'],
+            'symbolBrush': configStyle['PlotDataItem']['symbolBrush'],
             'pxMode': True,
 
-            'antialias': configStyle['plotDataItem.antialias'],
+            'antialias': configStyle['PlotDataItem']['antialias'],
             'pointMode': None,
 
             'useCache': True,

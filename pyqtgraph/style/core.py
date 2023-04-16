@@ -1,29 +1,34 @@
 # This Python file uses the following encoding: utf-8
+import ast
+from configparser import ConfigParser, Interpolation
 import os
-from typing import Dict, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import pyqtgraph as pg
 
 
-# DEFAULT_STYLE      = 'default'
-DEFAULT_STYLE      = 'matplotlib'
+DEFAULT_STYLE      = 'default'
+# DEFAULT_STYLE      = 'matplotlib'
 STYLE_EXTENSION    = 'pstyle'
 USER_LIBRARY_PATHS = 'stylelib'
 
 # hint of allowed style options
-ConfigColorHint = Union[str,
-                        int,
-                        Tuple[float, float, float],
-                        Tuple[float, float, float, float]]
+ConfigColorHint = Union[str, # 'c' one of: r, g, b, c, m, y, k, w or or "#RGB" or "#RGBA" or "#RRGGBB" or "#RRGGBBAA"
+                        int, # see :func:`intColor() <pyqtgraph.intColor>`
+                        float, # greyscale, 0.0-1.0
+                        Tuple[int, int, int, int], # list of integers 0-255  (R, G, B, A)
+                        Tuple[int, int, int]] # list of integers 0-255  (R, G, B)
 ConfigLinestyleHint = Union[str, int]
-ConfigValueHint = Union[str,
-                        int,
-                        float,
-                        bool,
-                        Tuple[float, float],
+ConfigValueHint = Union[str, # example: font weight
+                        int,  # example: tick alpha
+                        float,  # example: label font size
+                        bool, # example: autoExpandTextSpace
+                        List[int], # example: tickTextOffset
+                        List[bool], # example: stopAxisAtTick
+                        List[Tuple[float, float]], # example: textFillLimits
                         ConfigColorHint]
 ConfigKeyHint   = str
-ConfigHint      = Dict[ConfigKeyHint, ConfigValueHint]
+ConfigHint      = Dict[ConfigKeyHint, Dict[ConfigKeyHint, ConfigValueHint]]
 
 parseLineStyleDict = {"-" :   1,
                       "--" :  2,
@@ -57,87 +62,15 @@ def parseLineStyle(linestyle: ConfigLinestyleHint) -> int:
         raise ValueError('Given "linestyle" argument:{} must be a string or a int'.format(linestyle))
 
 
-def removeComment(line: str) -> str:
-    """
-    Remove comment from line
-    if "#" is present:
-        if "#" position is 0, we assume commented line
-            return empty line
-        if "#" position is 1 after a ":", we assume a color in hex
-            return line up to the second "#".
-        else we assume comments about the style itself
-            return the line up to "#" position
-    if "#" not present, return empty str
-
-    Args:
-        s : line from which the comments will be removed
-
-    Returns:
-        uncommented or empty line
-    """
-
-    hash_pos = line.find('#')
-    # Commented line
-    if hash_pos==0:
-        return ''
-    elif hash_pos>0:
-        hash_pos_ = line[::-1].find('#')
-        return line[:-hash_pos_-1]
-    # Empty line
-    else:
-        return ''
-
-
-def getKeyVal(line: str) -> Tuple[str, str]:
-    """
-    Return a tuple (key, val) from a line such as:
-        key : val
-    """
-
-    t = line.split(':')
-
-    key = t[0].strip()
-    val = t[1].strip()
-
-    return key, val
-
-
-def isFloat(str: str) -> bool:
-    try:
-        float(str)
-        return True
-    except ValueError:
-        return False
-
-
-def isTuple(str: str) -> bool:
-
-    t = str.split(',')
-    if len(t)>1:
-        return True
-    else:
-        return False
-
-def isBool(str: str) -> bool:
-
-    if str in ('True', 'False'):
-        return True
-    else:
-        return False
-
-
-def validateVal(val: str) -> Union[str, float, Tuple[float, ...], bool]:
-
-    if isFloat(val):
-        return float(val)
-    elif isTuple(val):
-        return tuple([float(i) for i in val.split(',')])
-    elif isBool(val):
-        return val=='True'
-    else:
-        return val
-
-
+class TypedInterpolation(Interpolation):
+    def before_get(self, parser, section, option, value, defaults):
+        try:
+            return ast.literal_eval(value)
+        except (ValueError, SyntaxError):
+            return super().before_get(parser, section, option, value, defaults)
+typedConfig = ConfigParser(interpolation=TypedInterpolation())
+# To preserve the case of the style options
+typedConfig.optionxform = str # type: ignore
 
 
 def loadConfigStyle(style: str) -> dict:
@@ -152,19 +85,10 @@ def loadConfigStyle(style: str) -> dict:
     """
 
     file = os.path.join(os.path.dirname(os.path.realpath(__file__)), USER_LIBRARY_PATHS, '{}.{}'.format(style, STYLE_EXTENSION))
-    styleDict = {}
     with open(file, encoding='utf-8', mode='r') as f:
+        typedConfig.read_string(f.read())
 
-        for line in f:
-            line = removeComment(line)
-            if line=='':
-                continue
-
-            key, val = getKeyVal(line)
-
-            styleDict[key] = validateVal(val)
-
-    return styleDict
+    return {section_name: dict(typedConfig[section_name]) for section_name in typedConfig.sections()}
 
 
 def loadDefaultStyle() -> dict:
@@ -185,10 +109,18 @@ def initItemStyle(item,
     """
     Add to internal Item opts attribute all Item style options from the
     stylesheet.
+
+    Parameters
+    ----------
+    item
+        The item to init.
+    itemName
+        Name of the item in the style file.
+    configStyle
+        The current config Style dictionnary
     """
 
-    for key, val in configStyle.items():
-        if key[:len(itemName)]==itemName:
-            fun = getattr(item, 'set{}{}'.format(key[len(itemName)+1:][:1].upper(),
-                                                    key[len(itemName)+1:][1:]))
-            fun(val)
+    for key, val in configStyle[itemName].items():
+        fun = getattr(item, 'set{}{}'.format(key[:1].upper(),
+                                             key[1:]))
+        fun(val)

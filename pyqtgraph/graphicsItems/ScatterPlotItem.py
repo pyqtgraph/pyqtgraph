@@ -380,13 +380,13 @@ class ScatterPlotItem(GraphicsObject):
         self.opts = {
             'pxMode': True,
             'useCache': True,  ## If useCache is False, symbols are re-drawn on every paint.
-            'antialias': configStyle['scatterPlotItem.antialias'],
+            'antialias': configStyle['ScatterPlotItem']['antialias'],
             'compositionMode': None,
             'name': None,
-            'symbol': configStyle['scatterPlotItem.symbol'],
-            'size': configStyle['scatterPlotItem.size'],
-            'pen': fn.mkPen(configStyle['scatterPlotItem.color']),
-            'brush': fn.mkBrush(configStyle['scatterPlotItem.brush']),
+            'symbol': configStyle['ScatterPlotItem']['symbol'],
+            'size': configStyle['ScatterPlotItem']['size'],
+            'pen': fn.mkPen(configStyle['ScatterPlotItem']['color']),
+            'brush': fn.mkBrush(configStyle['ScatterPlotItem']['brush']),
             'hoverable': False,
             'tip': 'x: {x:.3g}\ny: {y:.3g}\ndata={data}'.format,
         }

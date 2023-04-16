@@ -128,7 +128,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         """
         self._background = background
         if background == 'default':
-            background = configStyle['graphItem.background']
+            background = configStyle['GraphItem']['background']
         brush = fn.mkBrush(background)
         self.setBackgroundBrush(brush)
 

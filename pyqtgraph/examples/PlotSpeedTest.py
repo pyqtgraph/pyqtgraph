@@ -118,7 +118,7 @@ params.child('makeData').setOpts(title='Plot Options')
     connect={'type': 'list', 'limits': ['all', 'pairs', 'finite', 'array']}
 )
 def update(
-    antialias=pg.configStyle('graphItem.antialias'),
+    antialias=pg.configStyle['GraphItem']['antialias'],
     connect='all',
     skipFiniteCheck=False
 ):

@@ -87,7 +87,7 @@ def test_init_spots():
     # check data is correct
     spots = s.points()
 
-    defPen = pg.mkPen(pg.configStyle['scatterPlotItem.color'])
+    defPen = pg.mkPen(pg.configStyle['ScatterPlotItem']['color'])
 
     assert spots[0].pos().x() == 0
     assert spots[0].pos().y() == 1

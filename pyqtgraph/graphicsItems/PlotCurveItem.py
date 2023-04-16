@@ -141,7 +141,7 @@ class PlotCurveItem(GraphicsObject):
             'brush': None,
             'stepMode': None,
             'name': None,
-            'antialias': configStyle['plotCurveItem.antialias'],
+            'antialias': configStyle['PlotCurveItem']['antialias'],
             'connect': 'all',
             'mouseWidth': 8, # width of shape responding to mouse click
             'compositionMode': None,

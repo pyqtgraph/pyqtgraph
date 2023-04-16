@@ -3,7 +3,7 @@ import pyqtgraph as pg
 app = pg.mkQApp()
 
 def test_plotscene(tmpdir):
-    pg.configStyle['graphItem.color']      = 'k'
+    pg.configStyle['GraphItem']['color']      = 'k'
     w = pg.GraphicsLayoutWidget()
     w.show()
     p1 = w.addPlot()

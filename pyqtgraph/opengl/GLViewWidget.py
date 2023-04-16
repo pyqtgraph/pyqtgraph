@@ -64,7 +64,7 @@ class GLViewMixin:
         self.opts['azimuth'] = 45            ## camera's azimuthal angle in degrees
                                              ## (rotation around z-axis 0 points along x-axis)
         self.opts['viewport'] = None         ## glViewport params; None == whole widget
-        self.setBackgroundColor(configStyle('graphItem.background'))
+        self.setBackgroundColor(configStyle['GraphItem']['background'])
 
     def addItem(self, item):
         self.items.append(item)

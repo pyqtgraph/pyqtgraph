@@ -7,8 +7,8 @@ from pyqtgraph.Qt import QtWidgets
 #   from scipy.stats import futil
 #   from scipy.sparse.csgraph import _validation
 
-pg.configStyle['graphItem.background'] = 'w'
-pg.configStyle['graphItem.color']      = 'k'
+pg.configStyle['GraphItem']['background'] = 'w'
+pg.configStyle['GraphItem']['color']      = 'k'
 app = QtWidgets.QApplication(sys.argv)
 
 pw = pg.plot(x = [0, 1, 2, 4], y = [4, 5, 9, 6])
