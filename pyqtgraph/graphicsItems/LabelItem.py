@@ -58,7 +58,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         # Store style options in opts dict
         self.opts: optsHint = {}
         # Get default stylesheet
-        initItemStyle(self, 'labelItem', configStyle)
+        initItemStyle(self, 'LabelItem', configStyle)
         # Update style if needed
         if len(kwargs)>0:
             self.setStyles(**kwargs)
@@ -322,7 +322,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
 
         # If the attr is a valid entry of the stylesheet
-        if attr in (key[10:] for key in configStyle.keys() if key[:9]=='labelItem'):
+        if attr in configStyle['LabelItem'].keys():
             fun = getattr(self, 'set{}{}'.format(attr[:1].upper(), attr[1:]))
             fun(value)
         # For backward compatibility, we also accept some old attr values
@@ -347,7 +347,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
             else:
                 raise ValueError('Given "italic" argument:{}, is not a boolean.'.format(value))
         else:
-            raise ValueError('Your "attr" argument: "{}" is not recognized'.format(value))
+            raise ValueError('Your "attr" argument: "{}" is not recognized'.format(attr))
 
 
     def setStyles(self, **kwargs) -> None:
@@ -565,7 +565,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         Set the position of the LabelItem considering alignement specified either
             in the item via "justify" (deprecated) or "align"
-            in the stylesheet via "labelItem.align"
+            in the stylesheet via "LabelItem.align"
 
         Once the position is reset, call updateMin().
         """
