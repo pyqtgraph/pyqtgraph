@@ -73,7 +73,10 @@ beam : 0.3              # specifies the width of the beam at the end of each bar
 
 
 [GridItem]
-color : 'w' # color of the GridItem
+lineColor : 'w' # color of the GridItem line
+textColor : 'w' # color of the GridItem text
+tickSpacingX: [None, None, None] # Set the grid tick spacing to use
+tickSpacingY: [None, None, None] # Set the grid tick spacing to use
 
 
 [LabelItem]

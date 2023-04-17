@@ -17,19 +17,19 @@ class ColorBarItem(PlotItem):
     """
     **Bases:** :class:`PlotItem <pyqtgraph.PlotItem>`
 
-    :class:`ColorBarItem` controls the application of a 
-    :ref:`color map <apiref_colormap>` to one (or more) 
-    :class:`~pyqtgraph.ImageItem`. It is a simpler, compact alternative to 
-    :class:`~pyqtgraph.HistogramLUTItem`, without histogram or the 
+    :class:`ColorBarItem` controls the application of a
+    :ref:`color map <apiref_colormap>` to one (or more)
+    :class:`~pyqtgraph.ImageItem`. It is a simpler, compact alternative to
+    :class:`~pyqtgraph.HistogramLUTItem`, without histogram or the
     option to adjust the colors of the look-up table.
 
     A labeled axis is displayed directly next to the gradient to help identify values.
     Handles included in the color bar allow for interactive adjustment.
 
-    A ColorBarItem can be assigned one or more :class:`~pyqtgraph.ImageItem` s 
+    A ColorBarItem can be assigned one or more :class:`~pyqtgraph.ImageItem` s
     that will be displayed according to the selected color map and levels. The
-    ColorBarItem can be used as a separate element in a 
-    :class:`~pyqtgraph.GraphicsLayout` or added to the layout of a 
+    ColorBarItem can be used as a separate element in a
+    :class:`~pyqtgraph.GraphicsLayout` or added to the layout of a
     :class:`~pyqtgraph.PlotItem` used to display image data with coordinate axes.
 
     =============================  =============================================
@@ -53,8 +53,8 @@ class ColorBarItem(PlotItem):
             Determines the color map displayed and applied to assigned ImageItem(s).
         values: tuple of float, optional
             The range of values that will be represented by the color bar, as ``(min, max)``.
-            If no values are supplied, the default is to use user-specified values from 
-            an assigned image. If that does not exist, values will default to (0,1). 
+            If no values are supplied, the default is to use user-specified values from
+            an assigned image. If that does not exist, values will default to (0,1).
         width: float, default=25.0
             The width of the displayed color bar.
         label: str, optional
@@ -124,8 +124,8 @@ class ColorBarItem(PlotItem):
                 self.axis.setWidth(45)
             else: # show other axes to create frame
                 axis.setTicks( [] )
-                axis.setStyle( showValues=False )
-        self.axis.setStyle( showValues=True )
+                axis.setStyle('showValues', False)
+        self.axis.setStyle('showValues', True)
         self.axis.unlinkFromView()
         self.axis.setRange( self.values[0], self.values[1] )
 
@@ -170,14 +170,14 @@ class ColorBarItem(PlotItem):
         ----------
         image: :class:`~pyqtgraph.ImageItem` or list of :class:`~pyqtgraph.ImageItem`
             Assigns one or more image items to this ColorBarItem.
-            If a :class:`~pyqtgraph.ColorMap` is defined for ColorBarItem, this will be assigned to the 
+            If a :class:`~pyqtgraph.ColorMap` is defined for ColorBarItem, this will be assigned to the
             ImageItems. Otherwise, the ColorBarItem will attempt to retrieve a color map from the image items.
-            In interactive mode, ColorBarItem will control the levels of the assigned image items, 
+            In interactive mode, ColorBarItem will control the levels of the assigned image items,
             simultaneously if there is more than one.
-            If the ColorBarItem was initialized without a specified ``values`` parameter, it will attempt 
+            If the ColorBarItem was initialized without a specified ``values`` parameter, it will attempt
             to retrieve a set of user-defined ``levels`` from one of the image items. If this fails,
-            the default values of ColorBarItem will be used as the (min, max) levels of the colorbar. 
-            Note that, for non-interactive ColorBarItems, levels may be overridden by image items with 
+            the default values of ColorBarItem will be used as the (min, max) levels of the colorbar.
+            Note that, for non-interactive ColorBarItems, levels may be overridden by image items with
             auto-scaling colors (defined by ``enableAutoLevels``). When using an interactive ColorBarItem
             in an animated plot, auto-scaling for its assigned image items should be *manually* disabled.
         insert_in: :class:`~pyqtgraph.PlotItem`, optional
@@ -194,14 +194,14 @@ class ColorBarItem(PlotItem):
             if img is not None:
                 if hasattr(img, "sigLevelsChanged"):
                     img.sigLevelsChanged.connect(self._levelsChangedHandler)
-                
+
                 if colormap_is_undefined and hasattr(img, 'getColorMap'): # check if one of the assigned images has a defined color map
                     img_cm = img.getColorMap()
                     if img_cm is not None:
                         self._colorMap = img_cm
                         colormap_is_undefined = False
-                
-                if not self._actively_adjusted_values: 
+
+                if not self._actively_adjusted_values:
                     # check if one of the assigned images has a non-default set of levels
                     if hasattr(img, 'getLevels'):
                         img_levels = img.getLevels()
@@ -223,15 +223,15 @@ class ColorBarItem(PlotItem):
         """
         Sets a color map to determine the ColorBarItem's look-up table. The same
         look-up table is applied to any assigned ImageItem.
-        
-        `colorMap` can be a :class:`~pyqtgraph.ColorMap` or a string argument that is passed to 
+
+        `colorMap` can be a :class:`~pyqtgraph.ColorMap` or a string argument that is passed to
         :func:`colormap.get() <pyqtgraph.colormap.get>`.
         """
         if isinstance(colorMap, str):
             colorMap = colormap.get(colorMap)
         self._colorMap = colorMap
         self._update_items( update_cmap = True )
-        
+
     def colorMap(self):
         """
         Returns the assigned ColorMap object.
@@ -326,15 +326,15 @@ class ColorBarItem(PlotItem):
 
         if self.hi_lim is not None:
             if hi_new > self.hi_lim: # limit maximum value
-                hi_new = self.hi_lim 
+                hi_new = self.hi_lim
                 if top!=0 and bot!=0:          # moving entire region?
                     lo_new = hi_new - span_prv # avoid collapsing the span against top limit
         if self.lo_lim is not None:
             if lo_new < self.lo_lim: # limit minimum value
-                lo_new = self.lo_lim 
+                lo_new = self.lo_lim
                 if top!=0 and bot!=0:          # moving entire region?
                     hi_new = lo_new + span_prv # avoid collapsing the span against bottom limit
-        if hi_new-lo_new < self.rounding: # do not allow less than one "rounding" unit of span 
+        if hi_new-lo_new < self.rounding: # do not allow less than one "rounding" unit of span
             if   bot == 0: hi_new = lo_new + self.rounding
             elif top == 0: lo_new = hi_new - self.rounding
             else: # this should never happen, but let's try to recover if it does:
