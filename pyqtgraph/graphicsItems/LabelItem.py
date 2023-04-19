@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Tuple, TypedDict
+from typing import Any, Dict, Optional, Tuple, Union, TypedDict
 import warnings
 
 from .. import functions as fn
@@ -14,14 +14,15 @@ from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
 
 __all__ = ['LabelItem']
 
+Number = Union[float, int]
 
 optsHint = TypedDict('optsHint',
                      {'color'     : ConfigColorHint,
-                      'fontsize'  : float,
+                      'fontsize'  : Number,
                       'fontweight': str,
                       'fontstyle' : str,
                       'align'     : str,
-                      'angle'     : float},
+                      'angle'     : Number},
                      total=False)
 # kwargs are not typed because mypy has not ye included Unpack[Typeddict]
 
@@ -75,37 +76,37 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
     # follow the definition in the stylesheet, see setStyle()
 
     ## Font size
-    def setFontsize(self, fontsize: float) -> None:
+    def setFontsize(self, fontsize: Number) -> None:
         """
         Set the font size.
 
         Parameters
         ----------
-        fontsize : float
+        fontsize : float or int
             The font size to set.
 
         Raises
         ------
         ValueError
-            If fontsize is not a float.
+            If fontsize is not a float or int.
 
         Returns
         -------
         None
         """
-        if not isinstance(fontsize, float):
-            raise ValueError('fontsize argument:{} is not a float'.format(fontsize))
+        if not isinstance(fontsize, float) and not isinstance(fontsize, int):
+            raise ValueError('fontsize argument:{} is not a float or a int'.format(fontsize))
 
         self.opts['fontsize'] = fontsize
 
 
-    def getFontsize(self) -> float:
+    def getFontsize(self) -> Number:
         """
         Get the current font size.
 
         Returns
         -------
-        float
+        float or int
             The current font size.
         """
         return self.opts['fontsize']
@@ -256,26 +257,26 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         return self.opts['color']
 
     ## Text angle
-    def setAngle(self, angle: float) -> None:
+    def setAngle(self, angle: Number) -> None:
         """
         Set the text angle.
 
         Parameters
         ----------
-        angle : float
+        angle : float or int
             The text angle to set.
 
         Raises
         ------
         ValueError
-            If angle is not a float.
+            If angle is not a float or int.
 
         Returns
         -------
         None
         """
-        if not isinstance(angle, float):
-            raise ValueError('angle argument:{} is not a float'.format(angle))
+        if not isinstance(angle, float) and not isinstance(angle, int):
+            raise ValueError('angle argument:{} is not a float or int'.format(angle))
 
         self.opts['angle'] = angle
 
@@ -285,13 +286,13 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         self.updateMin()
 
 
-    def getAngle(self) -> float:
+    def getAngle(self) -> Number:
         """
         Get the current text angle.
 
         Returns
         -------
-        float
+        float or int
             The current text angle.
         """
         return self.opts['angle']
@@ -408,7 +409,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
             be set to 'normal'.
         """
 
-        warnings.warn('Argument "bold" is deprecated, "fontweight" should beused instead.',
+        warnings.warn('Argument "bold" is deprecated, "fontweight" should be used instead.',
                        DeprecationWarning,
                        stacklevel=2)
 
