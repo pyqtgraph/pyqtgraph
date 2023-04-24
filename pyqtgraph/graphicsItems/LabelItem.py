@@ -48,7 +48,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         parent: optional
             Parent item, by default None
         *kwargs: optional
-            style options , see setStyles() for accepted style parameters.
+            style options , see setStyle() for accepted style parameters.
         """
 
         GraphicsWidget.__init__(self, parent)
@@ -62,7 +62,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         initItemStyle(self, 'LabelItem', configStyle)
         # Update style if needed
         if len(kwargs)>0:
-            self.setStyles(**kwargs)
+            self.setStyle(**kwargs)
         self.setText(text)
 
 
@@ -285,7 +285,6 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         self.item.setRotation(angle)
         self.updateMin()
 
-
     def getAngle(self) -> Number:
         """
         Get the current text angle.
@@ -297,61 +296,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         return self.opts['angle']
 
-
-    def setStyle(self, attr: ConfigKeyHint,
-                       value: ConfigValueHint) -> None:
-
-        """
-        Set a single style property.
-
-        Parameters
-        ----------
-        attr : ConfigKeyHint
-            The name of the style parameter to change.
-            See `setStyles()` for a list of all accepted style parameters.
-        value : ConfigValueHint
-            The new value for the specified style parameter.
-
-        See Also
-        --------
-        setStyles : Set multiple style properties at once.
-        stylesheet : Qt Style Sheets reference.
-
-        Examples
-        --------
-        >>> setStyle('color', 'red')
-        """
-
-        # If the attr is a valid entry of the stylesheet
-        if attr in configStyle['LabelItem'].keys():
-            fun = getattr(self, 'set{}{}'.format(attr[:1].upper(), attr[1:]))
-            fun(value)
-        # For backward compatibility, we also accept some old attr values
-        elif attr=='size':
-            if isinstance(value, str):
-                self._setSize(value)
-            else:
-                raise ValueError('Given size argument:{} is not a string.'.format(value))
-        elif attr=='bold':
-            if isinstance(value, bool):
-                self._setBold(value)
-            else:
-                raise ValueError('Given "bold" argument:{}, is not a boolean.'.format(value))
-        elif attr=='italic':
-            if isinstance(value, bool):
-                self._setItalic(value)
-            else:
-                raise ValueError('Given "italic" argument:{}, is not a boolean.'.format(value))
-        elif attr=='justify':
-            if isinstance(value, str):
-                self._setJustify(value)
-            else:
-                raise ValueError('Given "italic" argument:{}, is not a boolean.'.format(value))
-        else:
-            raise ValueError('Your "attr" argument: "{}" is not recognized'.format(attr))
-
-
-    def setStyles(self, **kwargs) -> None:
+    def setStyle(self, **kwargs) -> None:
         """
         Set the style of the LabelItem.
 
@@ -385,10 +330,34 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
             Text alignement.
             Must be: 'left', 'center', or 'right'
         """
-
         for k, v in kwargs.items():
-            self.setStyle(k, v)
-
+            # If the key is a valid entry of the stylesheet
+            if k in configStyle['LabelItem'].keys():
+                fun = getattr(self, 'set{}{}'.format(k[:1].upper(), k[1:]))
+                fun(v)
+            # For backward compatibility, we also accept some old key, value tuple
+            elif k=='size':
+                if isinstance(v, str):
+                    self._setSize(v)
+                else:
+                    raise ValueError('Given size argument:{} is not a string.'.format(v))
+            elif k=='bold':
+                if isinstance(v, bool):
+                    self._setBold(v)
+                else:
+                    raise ValueError('Given "bold" argument:{}, is not a boolean.'.format(v))
+            elif k=='italic':
+                if isinstance(v, bool):
+                    self._setItalic(v)
+                else:
+                    raise ValueError('Given "italic" argument:{}, is not a boolean.'.format(v))
+            elif k=='justify':
+                if isinstance(v, str):
+                    self._setJustify(v)
+                else:
+                    raise ValueError('Given "italic" argument:{}, is not a boolean.'.format(v))
+            else:
+                raise ValueError('Your argument: "{}" is not a valid style argument.'.format(k))
 
     ##############################################################
     #
@@ -508,7 +477,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         warnings.warn('Method "setAttr" is deprecated. Use "setStyle" instead',
                         DeprecationWarning,
                         stacklevel=2)
-        self.setStyle(attr, value)
+        self._setStyle(attr, value)
 
 
     ##############################################################
@@ -539,7 +508,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
 
         self.text = text
-        self.setStyles(**kwargs)
+        self.setStyle(**kwargs)
 
         # Most of the style is applied via css
         optlist = []

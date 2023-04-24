@@ -86,7 +86,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             Customizes the item sample class of the `LegendItem`.
             Default None
         *kwargs:
-            Style options , see setStyles() for accepted style parameters.
+            Style options , see setStyle() for accepted style parameters.
         """
 
 
@@ -118,7 +118,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         initItemStyle(self, 'LegendItem', configStyle)
         # Update style if needed
         if len(kwargs)>0:
-            self.setStyles(**kwargs)
+            self.setStyle(**kwargs)
 
         # Deprecated attributes
         self._brush: Optional[QtGui.QBrush] = None
@@ -154,7 +154,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             update = False
         self.opts['labelcolor'] = color
         for _, label in self.items:
-            label.setStyle('color', self.opts['labelcolor'])
+            label.setStyle(color=self.opts['labelcolor'])
         if update:
             self.update()
 
@@ -176,7 +176,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         self.opts['labelfontsize'] = size
         for _, label in self.items:
-            label.setStyle('fontsize', self.opts['labelfontsize'])
+            label.setStyle(fontsize=self.opts['labelfontsize'])
 
         self.update()
 
@@ -209,7 +209,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         self.opts['labelfontweight'] = weight
         for _, label in self.items:
-            label.setStyle('fontweight', self.opts['labelfontweight'])
+            label.setStyle(fontweight=self.opts['labelfontweight'])
 
         self.update()
 
@@ -251,7 +251,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
 
         self.opts['labelalign'] = align
         for _, label in self.items:
-            label.setStyle('align', self.opts['labelalign'])
+            label.setStyle(align=self.opts['labelalign'])
 
         self.update()
 
@@ -319,37 +319,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         else:
             return self._pen
 
-    def setStyle(self, attr: ConfigKeyHint,
-                       value: ConfigValueHint) -> None:
-        """
-        Set a single style property.
-
-        Parameters
-        ----------
-        attr : ConfigKeyHint
-            The name of the style parameter to change.
-            See `setStyles()` for a list of all accepted style parameters.
-        value : ConfigValueHint
-            The new value for the specified style parameter.
-
-        See Also
-        --------
-        setStyles : Set multiple style properties at once.
-        stylesheet : Qt Style Sheets reference.
-
-        Examples
-        --------
-        >>> setStyle('color', 'red')
-        """
-
-        # If the attr is a valid entry of the stylesheet
-        if attr in configStyle['LegendItem'].keys():
-            fun = getattr(self, 'set{}{}'.format(attr[:1].upper(), attr[1:]))
-            fun(value)
-        else:
-            raise ValueError('Your "attr" argument: "{}" is not recognized'.format(attr))
-
-    def setStyles(self, **kwargs) -> None:
+    def setStyle(self, **kwargs) -> None:
         """
         Set the style of the LegendItem.
 
@@ -384,11 +354,16 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
 
         Examples
         --------
-        >>> setStyles(offset=(10, 20), labelColor='w', labelFontsize=12,
+        >>> setStyle(offset=(10, 20), labelColor='w', labelFontsize=12,
                       labelFontweight='bold', labelAlign='center')
         """
         for k, v in kwargs.items():
-            self.setStyle(k, v)
+            # If the key is a valid entry of the stylesheet
+            if k in configStyle['LegendItem'].keys():
+                fun = getattr(self, 'set{}{}'.format(k[:1].upper(), k[1:]))
+                fun(v)
+            else:
+                raise ValueError('Your argument: "{}" is not a valid style argument.'.format(k))
 
     ##############################################################
     #
@@ -427,7 +402,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
 
         self.opts['labelcolor'] = fn.mkColor(*args, **kargs)
         for sample, label in self.items:
-            label.setStyle('color', self.opts['labelcolor'])
+            label.setStyle(color=self.opts['labelcolor'])
 
         self.update()
 
@@ -453,7 +428,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
                       stacklevel=2)
         self.opts['labelfontsize'] = size
         for _, label in self.items:
-            label.setStyle('size', self.opts['labelfontsize'])
+            label.setStyle(size=self.opts['labelfontsize'])
 
         self.update()
 

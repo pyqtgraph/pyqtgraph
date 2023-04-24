@@ -42,7 +42,7 @@ class MainWindow(QtWidgets.QMainWindow):
         p2.addItem( i2, title='' )
         # inserted color bar also works with labels on the right.
         p2.showAxis('right')
-        p2.getAxis('left').setStyle('showValues', False )
+        p2.getAxis('left').setStyle(showValues=False)
         p2.getAxis('bottom').setLabel('bottom axis label')
         p2.getAxis('right').setLabel('right axis label')
 

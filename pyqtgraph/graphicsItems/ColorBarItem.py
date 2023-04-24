@@ -124,8 +124,8 @@ class ColorBarItem(PlotItem):
                 self.axis.setWidth(45)
             else: # show other axes to create frame
                 axis.setTicks( [] )
-                axis.setStyle('showValues', False)
-        self.axis.setStyle('showValues', True)
+                axis.setStyle(showValues=False)
+        self.axis.setStyle(showValues=True)
         self.axis.unlinkFromView()
         self.axis.setRange( self.values[0], self.values[1] )
 

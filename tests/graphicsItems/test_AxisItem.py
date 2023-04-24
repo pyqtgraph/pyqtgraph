@@ -23,14 +23,14 @@ def test_AxisItem_stopAxisAtTick(monkeypatch):
     bottom.setRange(0, 1)
     bticks = [(0.25, "a"), (0.6, "b"), (0.75, "c")]
     bottom.setTicks([bticks, bticks])
-    bottom.setStyle('stopAxisAtTick', (True, True))
+    bottom.setStyle(stopAxisAtTick=(True, True))
     monkeypatch.setattr(bottom, "drawPicture", test_bottom)
 
     left = plot.getAxis("left")
     lticks = [(0.125, "a"), (0.55, "b"), (0.875, "c")]
     left.setTicks([lticks, lticks])
     left.setRange(0, 1)
-    left.setStyle('stopAxisAtTick', (True, True))
+    left.setStyle(stopAxisAtTick=(True, True))
     monkeypatch.setattr(left, "drawPicture", test_left)
 
     plot.show()
@@ -112,8 +112,8 @@ def test_AxisItem_tickFont(monkeypatch):
     left = plot.getAxis("left")
     font = bottom.linkedView().font()
     font.setPointSize(25)
-    bottom.setStyle('tickFont', font)
-    left.setStyle('tickFont', font)
+    bottom.setStyle(tickFont=font)
+    left.setStyle(tickFont=font)
     monkeypatch.setattr(bottom, "drawPicture", test_collision)
     monkeypatch.setattr(left, "drawPicture", test_collision)
 

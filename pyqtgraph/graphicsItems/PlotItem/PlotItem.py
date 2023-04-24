@@ -1230,7 +1230,7 @@ class PlotItem(GraphicsWidget):
                 pass # leave value display as it is.
             else:
                 ax = self.getAxis(axis_key)
-                ax.setStyle('showValues', show_value)
+                ax.setStyle(showValues=show_value)
                 if size is not False: # size adjustment is requested
                     if axis_key in ('left','right'):
                         if show_value: ax.setWidth(size[0])

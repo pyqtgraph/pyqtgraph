@@ -72,7 +72,7 @@ class ErrorBarItem(GraphicsObject):
             All values should be positive.
             By default None
         **kwargs:
-            Style options , see setStyles() for accepted style parameters.
+            Style options , see setStyle() for accepted style parameters.
         """
         GraphicsObject.__init__(self)
 
@@ -92,7 +92,7 @@ class ErrorBarItem(GraphicsObject):
         initItemStyle(self, 'ErrorBarItem', configStyle)
         # Update style if needed
         if len(kwargs)>0:
-            self.setStyles(**kwargs)
+            self.setStyle(**kwargs)
 
         # Since all arguments are optional, the default visibility is False.
         # The visibility is set in setData()
@@ -203,40 +203,7 @@ class ErrorBarItem(GraphicsObject):
                             width=self.opts['linewidth'],
                             style=parseLineStyle(self.opts['linestyle']))
 
-    def setStyle(self, attr: ConfigKeyHint,
-                       value: ConfigValueHint) -> None:
-        """
-        Set a single style property.
-
-        Parameters
-        ----------
-        attr : ConfigKeyHint
-            The name of the style parameter to change.
-            See `setStyles()` for a list of all accepted style parameters.
-        value : ConfigValueHint
-            The new value for the specified style parameter.
-
-        See Also
-        --------
-        setStyles : Set multiple style properties at once.
-        stylesheet : Qt Style Sheets reference.
-
-        Examples
-        --------
-        >>> setStyle('color', 'red')
-        """
-
-        # If the attr is a valid entry of the stylesheet
-        if attr in configStyle['ErrorBarItem'].keys():
-            fun = getattr(self, 'set{}{}'.format(attr[:1].upper(), attr[1:]))
-            fun(value)
-        # If a pen has been specified, it overrides other style arguments
-        elif attr=='pen':
-            self._setPen(value)
-        else:
-            raise ValueError('Your "attr" argument: "{}" is not recognized'.format(attr))
-
-    def setStyles(self, **kwargs) -> None:
+    def setStyle(self, **kwargs) -> None:
         """
         Set the style of the ErrorBarItem.
 
@@ -266,11 +233,19 @@ class ErrorBarItem(GraphicsObject):
 
         Examples
         --------
-        >>> setStyles(linewidth=1.2, linestyle='--')
+        >>> setStyle(linewidth=1.2, linestyle='--')
         """
 
         for k, v in kwargs.items():
-            self.setStyle(k, v)
+            # If the attr is a valid entry of the stylesheet
+            if k in configStyle['ErrorBarItem'].keys():
+                fun = getattr(self, 'set{}{}'.format(k[:1].upper(), k[1:]))
+                fun(v)
+            # If a pen has been specified, it overrides other style arguments
+            elif k=='pen':
+                self._setPen(v)
+            else:
+                raise ValueError('Your argument: "{}" is not a valid style argument.'.format(k))
 
     ##############################################################
     #
@@ -335,12 +310,12 @@ class ErrorBarItem(GraphicsObject):
             All values should be positive.
             By default None
         **kwargs:
-            Style options , see setStyles() for accepted style parameters.
+            Style options , see setStyle() for accepted style parameters.
         """
 
         # Update style if needed
         if len(kwargs)>0:
-            self.setStyles(**kwargs)
+            self.setStyle(**kwargs)
 
         # Update errorBar data as internal attributes
         if x is not None:

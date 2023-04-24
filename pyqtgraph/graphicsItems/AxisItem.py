@@ -130,7 +130,7 @@ class AxisItem(GraphicsWidget):
         initItemStyle(self, 'AxisItem', configStyle)
         # Update style if needed
         if len(kwargs)>0:
-            self.setStyles(**kwargs)
+            self.setStyle(**kwargs)
 
         self.showLabel(False)
         self.setRange(0, 1)
@@ -516,37 +516,7 @@ class AxisItem(GraphicsWidget):
         """
         return self.style['maxTextLevel']
 
-    def setStyle(self, attr: ConfigKeyHint,
-                       value: ConfigValueHint) -> None:
-        """
-        Set a single style property.
-
-        Parameters
-        ----------
-        attr : ConfigKeyHint
-            The name of the style parameter to change.
-            See `setStyles()` for a list of all accepted style parameters.
-        value : ConfigValueHint
-            The new value for the specified style parameter.
-
-        See Also
-        --------
-        setStyles : Set multiple style properties at once.
-        stylesheet : Qt Style Sheets reference.
-
-        Examples
-        --------
-        >>> setStyle('color', 'red')
-        """
-
-        # If the attr is a valid entry of the stylesheet
-        if attr in configStyle['AxisItem'].keys():
-            fun = getattr(self, 'set{}{}'.format(attr[:1].upper(), attr[1:]))
-            fun(value)
-        else:
-            raise ValueError('Your "attr" argument: "{}" is not recognized'.format(attr))
-
-    def setStyles(self, **kwargs) -> None:
+    def setStyle(self, **kwargs) -> None:
         """
         Set various style options.
         Added in version 0.9.9
@@ -620,7 +590,12 @@ class AxisItem(GraphicsWidget):
         """
 
         for k, v in kwargs.items():
-            self.setStyle(k, v)
+            # If the attr is a valid entry of the stylesheet
+            if k in configStyle['AxisItem'].keys():
+                fun = getattr(self, 'set{}{}'.format(k[:1].upper(), k[1:]))
+                fun(v)
+            else:
+                raise ValueError('Your argument: "{}" is not a valid style argument.'.format(k))
 
         self.picture = None
         self._adjustSize()
