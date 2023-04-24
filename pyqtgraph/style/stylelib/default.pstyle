@@ -11,7 +11,7 @@
 [GraphItem]
 ## Set all item values
 background : 'k'     # background
-color      : 'w'     # color
+color      : 'w'     # color of the lines between connected nodes
 antialias  : False   # if antialiased
 
 

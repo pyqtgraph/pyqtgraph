@@ -1,12 +1,26 @@
 import numpy as np
+from typing import Any, Dict, Optional, Tuple, Union, TypedDict
 
 from .. import functions as fn
 from .. import configStyle
+from ..style.core import (
+    ConfigColorHint,
+    ConfigKeyHint,
+    ConfigValueHint,
+    initItemStyle)
 from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
 from .ScatterPlotItem import ScatterPlotItem
 
 __all__ = ['GraphItem']
+
+
+optsHint = TypedDict('optsHint',
+                     {'background' : ConfigColorHint,
+                      'color'      : ConfigColorHint,
+                      'antialias'  : bool},
+                     total=False)
+# kwargs are not typed because mypy has not ye included Unpack[Typeddict]
 
 
 class GraphItem(GraphicsObject):
@@ -15,7 +29,7 @@ class GraphItem(GraphicsObject):
     Useful for drawing networks, trees, etc.
     """
 
-    def __init__(self, **kwds):
+    def __init__(self, **kwargs) -> None:
         GraphicsObject.__init__(self)
         self.scatter = ScatterPlotItem()
         self.scatter.setParentItem(self)
@@ -23,9 +37,115 @@ class GraphItem(GraphicsObject):
         self.pos = None
         self.picture = None
         self.pen = 'default'
-        self.setData(**kwds)
+        self.setData(**kwargs)
 
-    def setData(self, **kwds):
+        # Store style options in opts dict
+        self.opts: optsHint = {}
+        # Get default stylesheet
+        initItemStyle(self, 'GraphItem', configStyle)
+        # Update style if needed
+        if len(kwargs)>0:
+            self.setStyle(**kwargs)
+
+
+    ##############################################################
+    #
+    #                   Style methods
+    #
+    ##############################################################
+
+    def setBackground(self, background: ConfigColorHint) -> None:
+        """
+        Set the background.
+        """
+        self.opts['background'] = background
+
+    def getBackground(self) -> ConfigColorHint:
+        """
+        Get the current background.
+        """
+        return self.opts['background']
+
+    def setColor(self, color: ConfigColorHint) -> None:
+        """
+        Set the color.
+        """
+        self.opts['color'] = color
+
+    def getColor(self) -> ConfigColorHint:
+        """
+        Get the current color.
+        """
+        return self.opts['color']
+
+    def setAntialias(self, antialias: bool) -> None:
+        """
+        Set the antialiasing
+        """
+        self.opts['antialias'] = antialias
+
+    def getAntialias(self) -> bool:
+        """
+        Get if antialiasing
+        """
+        return self.opts['antialias']
+
+    def setPen(self, *args, **kwargs) -> None:
+        """
+        Set the pen used to draw graph lines.
+        May be:
+
+          * None to disable line drawing
+          * Record array with fields (red, green, blue, alpha, width)
+          * Any set of arguments and keyword arguments accepted by
+            :func:`mkPen <pyqtgraph.mkPen>`.
+          * 'default' to use the default color.
+        """
+        if len(args) == 1 and len(kwargs) == 0:
+            self.pen = args[0]
+        else:
+            self.pen = fn.mkPen(*args, **kwargs)
+        self.picture = None
+        self.update()
+
+    def setStyle(self, **kwargs) -> None:
+        """
+        Set the style of the GraphItem.
+
+        Parameters
+        ----------
+        background: ConfigColorHint or None, optional
+            Color of the background.
+            Any single argument accepted by :func:`mkPen <pyqtgraph.mkPen>` is allowed.
+        color : ConfigColorHint or None, optional
+            color of the lines between connected nodes.
+            Any single argument accepted by :func:`mkPen <pyqtgraph.mkPen>` is allowed.
+        antialias : bool or None, optional
+            If True, use antialiasing.
+
+        Notes
+        -----
+        The parameters that are not provided will not be modified.
+
+        Examples
+        --------
+        >>> setStyle(color='w', background='k')
+        """
+        for k, v in kwargs.items():
+            # If the key is a valid entry of the stylesheet
+            if k in configStyle['LegendItem'].keys():
+                fun = getattr(self, 'set{}{}'.format(k[:1].upper(), k[1:]))
+                fun(v)
+            else:
+                raise ValueError('Your argument: "{}" is not a valid style argument.'.format(k))
+
+    ##############################################################
+    #
+    #                   Item
+    #
+    ##############################################################
+
+    def setData(self, **kwargs) -> None:
         """
         Change the data displayed by the graph.
 
@@ -54,51 +174,33 @@ class GraphItem(GraphicsObject):
                         etc.)
         ==============  =======================================================================
         """
-        if 'adj' in kwds:
-            self.adjacency = kwds.pop('adj')
+        if 'adj' in kwargs:
+            self.adjacency = kwargs.pop('adj')
             if hasattr(self.adjacency, '__len__') and len(self.adjacency) == 0:
                 self.adjacency = None
             elif self.adjacency is not None and self.adjacency.dtype.kind not in 'iu':
                 raise Exception("adjacency must be None or an array of either int or unsigned type.")
             self._update()
-        if 'pos' in kwds:
-            self.pos = kwds['pos']
+        if 'pos' in kwargs:
+            self.pos = kwargs['pos']
             self._update()
-        if 'pen' in kwds:
-            self.setPen(kwds.pop('pen'))
+        if 'pen' in kwargs:
+            self.setPen(kwargs.pop('pen'))
             self._update()
 
-        if 'symbolPen' in kwds:
-            kwds['pen'] = kwds.pop('symbolPen')
-        if 'symbolBrush' in kwds:
-            kwds['brush'] = kwds.pop('symbolBrush')
-        self.scatter.setData(**kwds)
+        if 'symbolPen' in kwargs:
+            kwargs['pen'] = kwargs.pop('symbolPen')
+        if 'symbolBrush' in kwargs:
+            kwargs['brush'] = kwargs.pop('symbolBrush')
+        self.scatter.setData(**kwargs)
         self.informViewBoundsChanged()
 
-    def _update(self):
+    def _update(self) -> None:
         self.picture = None
         self.prepareGeometryChange()
         self.update()
 
-    def setPen(self, *args, **kwargs):
-        """
-        Set the pen used to draw graph lines.
-        May be:
-
-          * None to disable line drawing
-          * Record array with fields (red, green, blue, alpha, width)
-          * Any set of arguments and keyword arguments accepted by
-            :func:`mkPen <pyqtgraph.mkPen>`.
-          * 'default' to use the default foreground color.
-        """
-        if len(args) == 1 and len(kwargs) == 0:
-            self.pen = args[0]
-        else:
-            self.pen = fn.mkPen(*args, **kwargs)
-        self.picture = None
-        self.update()
-
-    def generatePicture(self):
+    def generatePicture(self) -> None:
         self.picture = QtGui.QPicture()
         if self.pen is None or self.pos is None or self.adjacency is None:
             return
@@ -128,18 +230,18 @@ class GraphItem(GraphicsObject):
         finally:
             p.end()
 
-    def paint(self, p, *args):
+    def paint(self, p: QtGui.QPainter, *args) -> None:
         if self.picture is None:
             self.generatePicture()
         if configStyle['GraphItem']['antialias']:
             p.setRenderHint(p.RenderHint.Antialiasing)
         self.picture.play(p)
 
-    def boundingRect(self):
+    def boundingRect(self) -> QtCore.QRectF:
         return self.scatter.boundingRect()
 
-    def dataBounds(self, *args, **kwds):
-        return self.scatter.dataBounds(*args, **kwds)
+    def dataBounds(self, *args, **kwargs) -> Tuple[float, float]:
+        return self.scatter.dataBounds(*args, **kwargs)
 
-    def pixelPadding(self):
+    def pixelPadding(self) -> float:
         return self.scatter.pixelPadding()
