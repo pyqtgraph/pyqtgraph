@@ -52,7 +52,7 @@ class GridItem(UIGraphicsItem):
         initItemStyle(self, 'GridItem', configStyle)
         # Update style if needed
         if len(kwargs)>0:
-            self.setStyles(**kwargs)
+            self.setStyle(**kwargs)
 
 
         self.setPen(pen)
@@ -166,35 +166,7 @@ class GridItem(UIGraphicsItem):
         self.picture = None
         self.update()
 
-    def setStyle(self, attr: ConfigKeyHint,
-                       value: ConfigValueHint) -> None:
-        """
-        Set a single style property.
-
-        Parameters
-        ----------
-        attr : ConfigKeyHint
-            The name of the style parameter to change.
-            See `setStyles()` for a list of all accepted style parameters.
-        value : ConfigValueHint
-            The new value for the specified style parameter.
-
-        See Also
-        --------
-        setStyles : Set multiple style properties at once.
-        stylesheet : Qt Style Sheets reference.
-
-        Examples
-        --------
-        >>> setStyle('color', 'red')
-        """
-
-        # If the attr is a valid entry of the stylesheet
-        if attr in configStyle['GridItem'].keys():
-            fun = getattr(self, 'set{}{}'.format(attr[:1].upper(), attr[1:]))
-            fun(value)
-
-    def setStyles(self, **kwargs) -> None:
+    def setStyle(self, **kwargs) -> None:
         """
         Set the style of the GridItem.
 
@@ -209,9 +181,13 @@ class GridItem(UIGraphicsItem):
         tickSpacingY (List[Optional[float]]):
             Set the grid tick spacing to use
         """
-
         for k, v in kwargs.items():
-            self.setStyle(k, v)
+            # If the attr is a valid entry of the stylesheet
+            if k in configStyle['GridItem'].keys():
+                fun = getattr(self, 'set{}{}'.format(k[:1].upper(), k[1:]))
+                fun(v)
+            else:
+                raise ValueError('Your argument: "{}" is not a valid style argument.'.format(k))
 
     ##############################################################
     #
@@ -295,7 +271,7 @@ class GridItem(UIGraphicsItem):
 
                 textPen = self.opts['textPen']
                 if isinstance(textPen, QtGui.QPen):
-                    textColor = self.opts['textPen'].color()
+                    textColor = textPen.color()
                     textColor.setAlpha(c * 2)
                     textPen.setColor(textColor)
 
