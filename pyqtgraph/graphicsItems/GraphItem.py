@@ -108,16 +108,25 @@ class GraphItem(GraphicsObject):
             pts = self.pos[self.adjacency]
             pen = self.pen
             if isinstance(pen, np.ndarray):
-                lastPen = None
+                pen = lastPen = self.pen[0]
+                if pen.dtype.fields is None:
+                    p.setPen(
+                        fn.mkPen(color=(pen[0], pen[1], pen[2], pen[3]), width=1))
+                else:
+                    p.setPen(fn.mkPen(color=(
+                        pen['red'], pen['green'], pen['blue'], pen['alpha']), width=pen['width']))
                 for i in range(pts.shape[0]):
                     pen = self.pen[i]
                     if np.any(pen != lastPen):
                         lastPen = pen
                         if pen.dtype.fields is None:
-                            p.setPen(fn.mkPen(color=(pen[0], pen[1], pen[2], pen[3]), width=1))                            
+                            p.setPen(
+                                fn.mkPen(color=(pen[0], pen[1], pen[2], pen[3]), width=1))
                         else:
-                            p.setPen(fn.mkPen(color=(pen['red'], pen['green'], pen['blue'], pen['alpha']), width=pen['width']))
-                    p.drawLine(QtCore.QPointF(*pts[i][0]), QtCore.QPointF(*pts[i][1]))
+                            p.setPen(fn.mkPen(color=(
+                                pen['red'], pen['green'], pen['blue'], pen['alpha']), width=pen['width']))
+                    p.drawLine(QtCore.QPointF(
+                        *pts[i][0]), QtCore.QPointF(*pts[i][1]))
             else:
                 if pen == 'default':
                     pen = getConfigOption('foreground')
