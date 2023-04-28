@@ -18,7 +18,8 @@ class ViewBoxMenu(QtWidgets.QMenu):
         self.viewAll = QtGui.QAction(translate("ViewBox", "View All"), self)
         self.viewAll.triggered.connect(self.autoRange)
         self.addAction(self.viewAll)
-        
+
+        self.axes = []
         self.ctrl = []
         self.widgetGroups = []
         self.dv = QtGui.QDoubleValidator(self)
@@ -30,6 +31,7 @@ class ViewBoxMenu(QtWidgets.QMenu):
             a = QtWidgets.QWidgetAction(self)
             a.setDefaultWidget(w)
             m.addAction(a)
+            self.axes.append(m)
             self.ctrl.append(ui)
             wg = WidgetGroup(w)
             self.widgetGroups.append(wg)
