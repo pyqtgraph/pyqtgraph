@@ -337,7 +337,8 @@ class InfiniteLine(GraphicsObject):
         return self._boundingRect
 
     def paint(self, p, *args):
-        p.setRenderHint(p.RenderHint.Antialiasing)
+        if self.angle % 180 not in (0, 90):
+            p.setRenderHint(p.RenderHint.Antialiasing)
         
         left, right = self._endPoints
         pen = self.currentPen
