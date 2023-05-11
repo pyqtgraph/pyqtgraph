@@ -169,7 +169,7 @@ jobs:
           miniforge-variant: Mambaforge
           environment-file: ${{ matrix.environment-file }}
           auto-update-conda: false
-          python-version: "3.11"
+          python-version: "3.10"
           use-mamba: true
       - name: "Install Test Framework"
         run: pip install pytest pytest-xdist
