@@ -978,7 +978,14 @@ class PlotDataItem(GraphicsObject):
         if self.opts['autoDownsample']:
             # this option presumes that x-values have uniform spacing
 
-            finite_x = x[np.isfinite(x)]  # ignore infinite and nan values
+            if containsNonfinite is False:
+                finite_x = x
+            else:   # True or None
+                # True: (we checked and found non-finites)
+                # None: (we haven't performed a check for non-finites yet)
+                # we also land here if x is finite but y has non-finites
+                finite_x = x[np.isfinite(x)]  # ignore infinite and nan values
+
             if view_range is not None and len(finite_x) > 1:
                 dx = float(finite_x[-1]-finite_x[0]) / (len(finite_x)-1)
                 if dx != 0.0:
