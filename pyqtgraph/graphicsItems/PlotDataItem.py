@@ -28,7 +28,7 @@ class PlotDataset(object):
 
     For internal use in :class:`PlotDataItem <pyqtgraph.PlotDataItem>`, this class should not be instantiated when no data is available. 
     """
-    def __init__(self, x, y):
+    def __init__(self, x, y, xAllFinite=None, yAllFinite=None):
         """ 
         Parameters
         ----------
@@ -40,9 +40,22 @@ class PlotDataset(object):
         super().__init__()
         self.x = x
         self.y = y
+        self.xAllFinite = xAllFinite
+        self.yAllFinite = yAllFinite
         self._dataRect = None
-        self.containsNonfinite = None
-        
+
+        if isinstance(x, np.ndarray) and x.dtype.kind in 'iu':
+            self.xAllFinite = True
+        if isinstance(y, np.ndarray) and y.dtype.kind in 'iu':
+            self.yAllFinite = True
+
+    @property
+    def containsNonfinite(self):
+        if self.xAllFinite is None or self.yAllFinite is None:
+            # don't know for sure yet
+            return None
+        return not (self.xAllFinite and self.yAllFinite)
+
     def _updateDataRect(self):
         """ 
         Finds bounds of plotable data and stores them as ``dataset._dataRect``, 
@@ -50,31 +63,27 @@ class PlotDataset(object):
             """
         if self.y is None or self.x is None:
             return None
-        if self.containsNonfinite is False: # all points are directly usable.
-            ymin = np.min( self.y ) # find minimum of all values
-            ymax = np.max( self.y ) # find maximum of all values
-            xmin = np.min( self.x ) # find minimum of all values
-            xmax = np.max( self.x ) # find maximum of all values
-        else: # This may contain NaN values and infinites.
-            selection = np.isfinite(self.y)    # We are looking for the bounds of the plottable data set. Infinite and Nan are ignored. 
-            all_y_are_finite = selection.all() # False if all values are finite, True if there are any non-finites
-            try:
-                ymin = np.min( self.y[selection] ) # find minimum of all finite values
-                ymax = np.max( self.y[selection] ) # find maximum of all finite values
-            except ValueError: # is raised when there are no finite values
-                ymin = np.nan
-                ymax = np.nan
-            selection = np.isfinite(self.x) # We are looking for the bounds of the plottable data set. Infinite and Nan are ignored. 
-            all_x_are_finite = selection.all() # False if all values are finite, True if there are any non-finites
-            try:
-                xmin = np.min( self.x[selection] ) # find minimum of all finite values
-                xmax = np.max( self.x[selection] ) # find maximum of all finite values
-            except ValueError: # is raised when there are no finite values
-                xmin = np.nan
-                xmax = np.nan
-            self.containsNonfinite = not (all_x_are_finite and all_y_are_finite) # This always yields a definite True/False answer
+        xmin, xmax, self.xAllFinite = self._getArrayBounds(self.x, self.xAllFinite)
+        ymin, ymax, self.yAllFinite = self._getArrayBounds(self.y, self.yAllFinite)
         self._dataRect = QtCore.QRectF( QtCore.QPointF(xmin,ymin), QtCore.QPointF(xmax,ymax) )
-        
+
+    def _getArrayBounds(self, arr, all_finite):
+        # here all_finite could be [None, False, True]
+        if not all_finite:  # This may contain NaN values and infinites.
+            selection = np.isfinite(arr) # We are looking for the bounds of the plottable data set. Infinite and Nan are ignored.
+            all_finite = selection.all() # True if all values are finite, False if there are any non-finites
+            if not all_finite:
+                arr = arr[selection]
+        # here all_finite could be [False, True]
+
+        try:
+            amin = np.min( arr ) # find minimum of all finite values
+            amax = np.max( arr ) # find maximum of all finite values
+        except ValueError: # is raised when there are no finite values
+            amin = np.nan
+            amax = np.nan
+        return amin, amax, all_finite
+
     def dataRect(self):
         """
         Returns a bounding rectangle (as :class:`QtCore.QRectF`) for the finite subset of data.
@@ -96,7 +105,6 @@ class PlotDataset(object):
         logmode: tuple or list of two bool
             A `True` value requests log-scale mapping for the x and y axis (in this order).
         """
-        all_x_finite = False
         if logMode[0]:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
@@ -104,10 +112,11 @@ class PlotDataset(object):
             nonfinites = ~np.isfinite( self.x )
             if nonfinites.any():
                 self.x[nonfinites] = np.nan # set all non-finite values to NaN
-                self.containsNonfinite = True
+                all_x_finite = False
             else:
                 all_x_finite = True
-        all_y_finite = False
+            self.xAllFinite = all_x_finite
+
         if logMode[1]:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
@@ -115,11 +124,10 @@ class PlotDataset(object):
             nonfinites = ~np.isfinite( self.y )
             if nonfinites.any():
                 self.y[nonfinites] = np.nan # set all non-finite values to NaN
-                self.containsNonfinite = True
+                all_y_finite = False
             else:
                 all_y_finite = True
-        if all_x_finite and all_y_finite: 
-            self.containsNonfinite = False # mark as False only if both axes were checked.
+            self.yAllFinite = all_y_finite
         
 class PlotDataItem(GraphicsObject):
     """
@@ -951,8 +959,7 @@ class PlotDataItem(GraphicsObject):
                 x = self._dataset.y[:-1]
                 y = np.diff(self._dataset.y)/np.diff(self._dataset.x)
 
-            dataset = PlotDataset(x,y)
-            dataset.containsNonfinite = self._dataset.containsNonfinite
+            dataset = PlotDataset(x, y, self._dataset.xAllFinite, self._dataset.yAllFinite)
             
             if True in self.opts['logMode']:
                 dataset.applyLogMapping( self.opts['logMode'] ) # Apply log scaling for x and/or y axis
@@ -962,7 +969,8 @@ class PlotDataItem(GraphicsObject):
         # apply processing that affects the on-screen display of data:
         x = self._datasetMapped.x
         y = self._datasetMapped.y
-        containsNonfinite = self._datasetMapped.containsNonfinite
+        xAllFinite = self._datasetMapped.xAllFinite
+        yAllFinite = self._datasetMapped.yAllFinite
 
         view = self.getViewBox()
         if view is None:
@@ -979,12 +987,11 @@ class PlotDataItem(GraphicsObject):
         if self.opts['autoDownsample']:
             # this option presumes that x-values have uniform spacing
 
-            if containsNonfinite is False:
+            if xAllFinite:
                 finite_x = x
-            else:   # True or None
-                # True: (we checked and found non-finites)
-                # None: (we haven't performed a check for non-finites yet)
-                # we also land here if x is finite but y has non-finites
+            else:
+                # False: (we checked and found non-finites)
+                # None : (we haven't performed a check for non-finites yet)
                 finite_x = x[np.isfinite(x)]  # ignore infinite and nan values
 
             if view_range is not None and len(finite_x) > 1:
@@ -1074,8 +1081,7 @@ class PlotDataItem(GraphicsObject):
                             # y = np.clip(y, a_min=min_val, a_max=max_val)
                             y = fn.clip_array(y, min_val, max_val)
                             self._drlLastClip = (min_val, max_val)
-        self._datasetDisplay = PlotDataset( x,y )
-        self._datasetDisplay.containsNonfinite = containsNonfinite
+        self._datasetDisplay = PlotDataset(x, y, xAllFinite, yAllFinite)
         self.setProperty('xViewRangeWasChanged', False)
         self.setProperty('yViewRangeWasChanged', False)
 
