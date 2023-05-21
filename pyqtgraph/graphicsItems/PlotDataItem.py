@@ -447,6 +447,7 @@ class PlotDataItem(GraphicsObject):
         self.opts['logMode'] = [xState, yState]
         self._datasetMapped  = None  # invalidate mapped data
         self._datasetDisplay = None  # invalidate display data
+        self._adsLastValue   = 1     # reset auto-downsample value
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
@@ -461,6 +462,7 @@ class PlotDataItem(GraphicsObject):
         self.opts['derivativeMode'] = state
         self._datasetMapped  = None  # invalidate mapped data
         self._datasetDisplay = None  # invalidate display data
+        self._adsLastValue   = 1     # reset auto-downsample value
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
@@ -476,6 +478,7 @@ class PlotDataItem(GraphicsObject):
         self.opts['phasemapMode'] = state
         self._datasetMapped  = None  # invalidate mapped data
         self._datasetDisplay = None  # invalidate display data
+        self._adsLastValue   = 1     # reset auto-downsample value
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
@@ -622,6 +625,7 @@ class PlotDataItem(GraphicsObject):
         if changed:
             self._datasetMapped  = None  # invalidata mapped data
             self._datasetDisplay = None  # invalidate display data
+            self._adsLastValue   = 1     # reset auto-downsample value
             self.updateItems(styleUpdate=False)
 
     def setClipToView(self, state):
@@ -822,6 +826,7 @@ class PlotDataItem(GraphicsObject):
             self._dataset = PlotDataset( xData, yData )
         self._datasetMapped  = None  # invalidata mapped data , will be generated in getData() / _getDisplayDataset()
         self._datasetDisplay = None  # invalidate display data, will be generated in getData() / _getDisplayDataset()
+        self._adsLastValue   = 1     # reset auto-downsample value
 
         profiler('set data')
 
@@ -1003,6 +1008,12 @@ class PlotDataItem(GraphicsObject):
                         if math.isfinite(ds_float):
                             ds = int(ds_float)
                     ## downsampling is expensive; delay until after clipping.
+
+            # use the last computed value if our new value is not too different.
+            # this guards against an infinite cycle where the plot never stabilizes.
+            if math.isclose(ds, self._adsLastValue, rel_tol=0.01):
+                ds = self._adsLastValue
+            self._adsLastValue = ds
 
         if self.opts['clipToView']:
             if view is None or view.autoRangeEnabled()[0]:
