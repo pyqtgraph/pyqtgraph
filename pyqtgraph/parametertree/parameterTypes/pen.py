@@ -174,20 +174,13 @@ class PenParameter(GroupParameter):
             name = name.title().strip()
             p.setOpts(title=name, default=default)
 
-        def penPropertyWrapper(propertySetter):
-            def tiePenPropToParam(_, value):
-                propertySetter(value)
-                self.sigValueChanging.emit(self, self.pen)
-
-            return tiePenPropToParam
-
         if boundPen is not None:
             self.updateFromPen(param, boundPen)
             for p in param:
-                setter, setName = self._setterForParam(p.name(), boundPen, returnName=True)
+                setName = f'set{p.name().capitalize()}'
                 # Instead, set the parameter which will signal the old setter
                 setattr(boundPen, setName, p.setValue)
-                newSetter = penPropertyWrapper(setter)
+                newSetter = self.penPropertySetter
                 # Edge case: color picker uses a dialog with user interaction, so wait until full change there
                 if p.type() != 'color':
                     p.sigValueChanging.connect(newSetter)
@@ -198,13 +191,13 @@ class PenParameter(GroupParameter):
 
         return param
 
-    @staticmethod
-    def _setterForParam(paramName, obj, returnName=False):
-        formatted = paramName[0].upper() + paramName[1:]
-        setter = getattr(obj, f'set{formatted}')
-        if returnName:
-            return setter, formatted
-        return setter
+    def penPropertySetter(self, p, value):
+        boundPen = self.pen
+        setName = f'set{p.name().capitalize()}'
+        # boundPen.setName has been monkey-patched
+        # so we get the original setter from the class
+        getattr(boundPen.__class__, setName)(boundPen, value)
+        self.sigValueChanging.emit(self, boundPen)
 
     @staticmethod
     def updateFromPen(param, pen):
