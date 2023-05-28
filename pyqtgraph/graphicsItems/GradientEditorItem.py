@@ -494,7 +494,7 @@ class GradientEditorItem(TickSliderItem):
         self.linkedGradients = {}
         
         self.sigTicksChanged.connect(self._updateGradientIgnoreArgs)
-        self.sigTicksChangeFinished.connect(self.sigGradientChangeFinished.emit)
+        self.sigTicksChangeFinished.connect(self.sigGradientChangeFinished)
 
     def showTicks(self, show=True):
         for tick in self.ticks.keys():
