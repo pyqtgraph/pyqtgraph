@@ -3,7 +3,7 @@ from ..Qt import QT_LIB, QtCore, QtWidgets
 from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsObject']
-class GraphicsObject(GraphicsItem, QtWidgets.QGraphicsObject):
+class GraphicsObject(QtWidgets.QGraphicsObject, GraphicsItem):
     """
     **Bases:** :class:`GraphicsItem <pyqtgraph.GraphicsItem>`, :class:`QtWidgets.QGraphicsObject`
 
@@ -15,7 +15,10 @@ class GraphicsObject(GraphicsItem, QtWidgets.QGraphicsObject):
         QtWidgets.QGraphicsObject.__init__(self, *args)
         self.setFlag(self.GraphicsItemFlag.ItemSendsGeometryChanges)
         GraphicsItem.__init__(self)
-        
+
+    def deviceTransform(self, viewportTransform=None):
+        return GraphicsItem.deviceTransform(self, viewportTransform)
+
     def itemChange(self, change, value):
         ret = super().itemChange(change, value)
         if change in [self.GraphicsItemChange.ItemParentHasChanged, self.GraphicsItemChange.ItemSceneHasChanged]:

@@ -46,7 +46,7 @@ CONFIG_OPTIONS = {
     'antialias': False,
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
-    'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
+    'enableExperimental': True, ## Enable experimental features (the curious can search for this key in the code)
     'crashWarning': False,  # If True, print warnings about situations that may result in a crash
     'mouseRateLimit': 100,  # For ignoring frequent mouse events, max number of mouse move events per second, if <= 0, then it is switched off
     'imageAxisOrder': 'col-major',  # For 'row-major', image data is expected in the standard (row, col) order.

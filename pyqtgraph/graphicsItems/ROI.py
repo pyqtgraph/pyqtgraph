@@ -2005,7 +2005,7 @@ class PolyLineROI(ROI):
     def saveState(self):
         state = ROI.saveState(self)
         state['closed'] = self.closed
-        state['points'] = [tuple(h.pos()) for h in self.getHandles()]
+        state['points'] = [tuple(Point(h.pos())) for h in self.getHandles()]
         return state
 
     def setState(self, state):
@@ -2148,7 +2148,7 @@ class LineSegmentROI(ROI):
 
     def saveState(self):
         state = ROI.saveState(self)
-        state['points'] = [tuple(h.pos()) for h in self.getHandles()]
+        state['points'] = [tuple(Point(h.pos())) for h in self.getHandles()]
         return state
 
     def setState(self, state):
@@ -2173,7 +2173,7 @@ class LineSegmentROI(ROI):
     
         h1 = self.endpoints[0].pos()
         h2 = self.endpoints[1].pos()
-        dh = h2-h1
+        dh = Point(h2-h1)
         if dh.length() == 0:
             return p
         pxv = self.pixelVectors(dh)[1]

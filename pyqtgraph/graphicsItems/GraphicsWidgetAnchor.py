@@ -11,7 +11,7 @@ class GraphicsWidgetAnchor(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, *args):
         self.__parent = None
         self.__parentAnchor = None
         self.__itemAnchor = None

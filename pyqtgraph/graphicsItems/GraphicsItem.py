@@ -47,7 +47,7 @@ class GraphicsItem(object):
     """
     _pixelVectorGlobalCache = LRU(100)
 
-    def __init__(self):
+    def __init__(self, *args):
         if not hasattr(self, '_qtBaseClass'):
             for b in self.__class__.__bases__:
                 if issubclass(b, QtWidgets.QGraphicsItem):

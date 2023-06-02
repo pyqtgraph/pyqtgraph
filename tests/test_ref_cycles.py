@@ -2,12 +2,18 @@
 Test for unwanted reference cycles
 
 """
+import platform
 import warnings
 import weakref
 
 import numpy as np
 
+import pytest
+
 import pyqtgraph as pg
+
+if platform.python_implementation() == "PyPy":
+    pytest.skip("skipping liveness tests on PyPy", allow_module_level=True)
 
 app = pg.mkQApp()
 

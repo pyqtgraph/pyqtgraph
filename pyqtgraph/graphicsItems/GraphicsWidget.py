@@ -4,7 +4,7 @@ from .GraphicsItem import GraphicsItem
 __all__ = ['GraphicsWidget']
 
 
-class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
+class GraphicsWidget(QtWidgets.QGraphicsWidget, GraphicsItem):
     
     _qtBaseClass = QtWidgets.QGraphicsWidget
 
@@ -25,6 +25,9 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
 
         # done by GraphicsItem init
         # GraphicsScene.registerObject(self)  # workaround for pyqt bug in GraphicsScene.items()
+
+    def deviceTransform(self, viewportTransform=None):
+        return GraphicsItem.deviceTransform(self, viewportTransform)
 
     # Removed due to https://bugreports.qt-project.org/browse/PYSIDE-86
     # def itemChange(self, change, value):

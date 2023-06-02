@@ -1,4 +1,5 @@
 import os
+import platform
 
 import pytest
 
@@ -6,6 +7,10 @@ import pyqtgraph as pg
 
 app = pg.mkQApp()
 
+@pytest.mark.skipif(
+    platform.python_implementation() == "PyPy",
+    reason="liveness test fails on PyPy"
+)
 def test_isQObjectAlive():
     o1 = pg.QtCore.QObject()
     o2 = pg.QtCore.QObject()

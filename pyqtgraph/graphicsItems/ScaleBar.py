@@ -8,7 +8,7 @@ from .TextItem import TextItem
 
 __all__ = ['ScaleBar']
 
-class ScaleBar(GraphicsWidgetAnchor, GraphicsObject):
+class ScaleBar(GraphicsObject, GraphicsWidgetAnchor):
     """
     Displays a rectangular bar to indicate the relative scale of objects on the view.
     """

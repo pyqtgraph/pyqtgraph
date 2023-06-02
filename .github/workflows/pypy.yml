@@ -1,0 +1,97 @@
+name: pypy
+
+on:
+  push:
+    branches-ignore: "dependabot/**"
+  pull_request:
+    paths-ignore:
+      - '**.md'
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
+
+concurrency: 
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  test-pip:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ]
+        qt-lib: [pyside, ]
+        python-version: ["pypy3.9", ]
+        include:
+          - python-version: "pypy3.9"
+            qt-lib: "pyside"
+            qt-version: "PySide6-Essentials"
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        # Semantic version range syntax or exact version of a Python version
+        python-version: ${{ matrix.python-version }}
+        cache: pip
+    - name: Install Dependencies
+      run: |
+        python -m pip install ${{ matrix.qt-version }}
+        python -m pip install numpy pyopengl pytest pytest-xvfb pytest-xdist pytest-rerunfailures
+    - name: "Install Linux VirtualDisplay"
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install --no-install-recommends -y \
+          libxkbcommon-x11-0 \
+          x11-utils \
+          libyaml-dev \
+          libegl1-mesa \
+          libxcb-icccm4 \
+          libxcb-image0 \
+          libxcb-keysyms1 \
+          libxcb-randr0 \
+          libxcb-render-util0 \
+          libxcb-xinerama0 \
+          libopengl0 \
+          libxcb-cursor0
+    - name: 'Debug Info'
+      run: |
+        echo python location: `which python`
+        echo python version: `python --version`
+        echo pytest location: `which pytest`
+        echo installed packages
+        python -m pip list
+        echo pyqtgraph system info
+        python -c "import pyqtgraph as pg; pg.systemInfo()"
+      shell: bash
+      env:
+        QT_DEBUG_PLUGINS: 1
+    - name: 'XVFB Display Info'
+      run: |
+        xvfb-run --server-args="-screen 0, 1920x1200x24 -ac +extension GLX +render -noreset" python -m pyqtgraph.util.glinfo
+        xvfb-run --server-args="-screen 0, 1920x1200x24 -ac +extension GLX +render -noreset" python -m pyqtgraph.util.get_resolution
+      if: runner.os == 'Linux'
+    - name: 'Display Info'
+      run: |
+        python -m pyqtgraph.util.glinfo
+        python -m pyqtgraph.util.get_resolution
+      if: runner.os != 'Linux'
+    - name: Run Tests
+      run: |
+        mkdir $SCREENSHOT_DIR
+        pytest tests -v -n 1 --reruns 2
+        pytest tests_pypy -v -n 1
+        pytest pyqtgraph/examples -v -n 2
+      shell: bash
+    - name: Upload Screenshots
+      uses: actions/upload-artifact@v3
+      with:
+        name: Screenshots (Python ${{ matrix.python-version }} - Qt-Bindings ${{ matrix.qt-lib }} - OS ${{ matrix.os }})
+        path: $SCREENSHOT_DIR
+        if-no-files-found: ignore
+    env:
+      SCREENSHOT_DIR: ./screenshots

@@ -6,7 +6,7 @@ from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
 
 __all__ = ['LabelItem']
 
-class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
+class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
     """
     GraphicsWidget displaying text.
     Used mainly as axis labels, titles, etc.

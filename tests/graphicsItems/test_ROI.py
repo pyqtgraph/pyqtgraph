@@ -10,6 +10,12 @@ from pyqtgraph.Qt import QtCore, QtGui, QtTest
 from tests.image_testing import assertImageApproved
 from tests.ui_testing import mouseClick, mouseDrag, mouseMove, resizeWindow
 
+# ROI handles don't receive hover event
+# ROI handles are scaled wrongly
+if platform.python_implementation() == "PyPy":
+    pytest.skip("skipping ROI tests on PyPy", allow_module_level=True)
+
+
 app = pg.mkQApp()
 pg.setConfigOption("mouseRateLimit", 0)
 
