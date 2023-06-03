@@ -400,3 +400,7 @@ def test_ndarray_from_qimage():
         qimg.fill(0)
         arr = pg.functions.ndarray_from_qimage(qimg)
         assert arr.shape == (h, w)
+
+def test_colorDistance():
+    pg.colorDistance([pg.Qt.QtGui.QColor(0,0,0), pg.Qt.QtGui.QColor(255,0,0)])
+    pg.colorDistance([])
