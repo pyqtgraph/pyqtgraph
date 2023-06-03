@@ -79,3 +79,8 @@ def test_ColorMap_getByIndex():
     cm = pg.ColorMap([0.0, 1.0], [(0,0,0), (255,0,0)])
     assert cm.getByIndex(0) == QtGui.QColor.fromRgbF(0.0, 0.0, 0.0, 1.0)
     assert cm.getByIndex(1) == QtGui.QColor.fromRgbF(1.0, 0.0, 0.0, 1.0)
+
+def test_ColorMap_linearize():
+    cm = pg.ColorMap([0.0, 1.0], [(0,0,0), (255,0,0)], linearize=True)
+    cm.colorDistance([(0,0,0), (255,0,0)])
+    assert cm is not None

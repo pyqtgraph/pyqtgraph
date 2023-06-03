@@ -546,7 +546,7 @@ def colorDistance(colors, metric='CIE76'):
         The `N-1` sequential distances between `N` colors.
     """
     metric = metric.upper()
-    if len(colors) < 1: return np.array([], dtype=np.float)
+    if len(colors) < 1: return np.array([], dtype=float)
     if metric == 'CIE76':
         dist = []
         lab1 = None
