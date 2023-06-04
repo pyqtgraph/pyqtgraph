@@ -26,15 +26,6 @@ from numpy import ndarray
 
 from .Qt import QT_LIB, QtCore
 from .util import cprint
-
-if sys.version.startswith("3.8") and QT_LIB == "PySide2":
-    from .Qt import PySide2
-    if tuple(map(int, PySide2.__version__.split("."))) < (5, 14) \
-        and PySide2.__version__.startswith(QtCore.__version__):
-        warnings.warn(
-            "Due to PYSIDE-1140, ThreadChase and ThreadColor will not work" +
-            " on pip-installed PySide2 bindings < 5.14"
-        )
 from .util.mutex import Mutex
 
 
