@@ -1,15 +1,18 @@
+__all__ = ['GraphicsItem']
+
 import operator
 import weakref
+import xml.dom.minidom as xml
 from collections import OrderedDict
 from functools import reduce
 from math import hypot
+from typing import Optional
 
 from .. import functions as fn
 from ..GraphicsScene import GraphicsScene
 from ..Point import Point
 from ..Qt import QtCore, QtWidgets, isQObjectAlive
 
-__all__ = ['GraphicsItem']
 
 # Recipe from https://docs.python.org/3.8/library/collections.html#collections.OrderedDict
 # slightly adapted for Python 3.7 compatibility
@@ -151,8 +154,6 @@ class GraphicsItem(object):
         else:
             return self.sceneTransform()
             #return self.deviceTransform(view.viewportTransform())
-
-
 
     def getBoundingParents(self):
         """Return a list of parents to this item that have child clipping enabled."""
@@ -606,3 +607,27 @@ class GraphicsItem(object):
 
     def getContextMenus(self, event):
         return [self.getMenu()] if hasattr(self, "getMenu") else []
+
+    def generateSvg(self, nodes: dict[str, xml.Element]) -> Optional[tuple[xml.Element, list[xml.Element]]]:
+        """Method to overwrite to manually specify the SVG writer mechanism
+
+        Parameters
+        ----------
+        nodes : dict[str, xml.Element]
+            Dictionary keyed by the name of graphics items and the XML
+            representation of the the item that can be written as valid
+            SVG.
+        
+        Returns
+        -------
+        Optional[tuple[xml.Element, list[xml.Element]]]
+            First element is the top level group for this item
+            Second element is a list of xml Elements corresponding to the
+            child nodes of the item.
+
+        Raises
+        ------
+        NotImplementedError
+            Overwrite method to implement in subclasses of GraphicsItem
+        """
+        raise NotImplementedError

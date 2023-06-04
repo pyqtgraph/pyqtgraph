@@ -1,3 +1,6 @@
+__all__ = ['SVGExporter']
+
+import contextlib
 import re
 import xml.dom.minidom as xml
 
@@ -10,8 +13,6 @@ from ..Qt import QtCore, QtGui, QtSvg, QtWidgets
 from .Exporter import Exporter
 
 translate = QtCore.QCoreApplication.translate
-
-__all__ = ['SVGExporter']
 
 class SVGExporter(Exporter):
     Name = "Scalable Vector Graphics (SVG)"
@@ -99,7 +100,6 @@ def generateSvg(item, options=None):
     global xmlHeader
     try:
         node, defs = _generateItemSvg(item, options=options)
-
     finally:
         ## reset export mode for all items in the tree
         if isinstance(item, QtWidgets.QGraphicsScene):
@@ -167,8 +167,8 @@ def _generateItemSvg(item, nodes=None, root=None, options=None):
     if hasattr(item, 'isVisible') and not item.isVisible():
         return None
 
-    ## If this item defines its own SVG generator, use that.
-    if hasattr(item, 'generateSvg'):
+    with contextlib.suppress(NotImplementedError, AttributeError):
+        # If this item defines its own SVG generator, use that.
         return item.generateSvg(nodes)
     ## Generate SVG text for just this item (exclude its children; we'll handle them later)
     if isinstance(item, QtWidgets.QGraphicsScene):
@@ -199,12 +199,15 @@ def _generateItemSvg(item, nodes=None, root=None, options=None):
 
             sx = 1 / abs(x_range)
             sy = 1 / abs(y_range)
-            
+
             item.blockSignals(True)
+
             xDataOriginal = item.xData
             yDataOriginal = item.yData
             # use deepcopy of data to not mess with other references...
-            item.setData((item.xData.copy() - dx) * sx, (item.yData.copy() - dy) * sy)
+            item.setData(
+                (xDataOriginal.copy() - dx) * sx, (yDataOriginal.copy() - dy) * sy
+            )
             item.blockSignals(False)
 
         manipulate = QtGui.QTransform(1 / sx, 0, 0, 1 / sy, dx, dy)
@@ -242,6 +245,7 @@ def _generateItemSvg(item, nodes=None, root=None, options=None):
             # if hasattr(item, 'setExportMode'):
             #     item.setExportMode(False)
         doc = xml.parseString(arr.data())
+
     try:
         ## Get top-level group for this item
         g1 = doc.getElementsByTagName('g')[0]
