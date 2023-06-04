@@ -4,6 +4,7 @@ pydata-sphinx-theme==0.13.3
 sphinx-design==0.4.1
 sphinxcontrib-images==0.9.4
 sphinx-favicon==1.0.1
+sphinx-autodoc-typehints
 sphinx-qt-documentation
 sphinxext-rediraffe
 numpy

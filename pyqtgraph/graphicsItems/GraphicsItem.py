@@ -2,11 +2,11 @@ __all__ = ['GraphicsItem']
 
 import operator
 import weakref
-import xml.dom.minidom as xml
 from collections import OrderedDict
 from functools import reduce
 from math import hypot
 from typing import Optional
+from xml.etree.ElementTree import Element
 
 from .. import functions as fn
 from ..GraphicsScene import GraphicsScene
@@ -608,26 +608,37 @@ class GraphicsItem(object):
     def getContextMenus(self, event):
         return [self.getMenu()] if hasattr(self, "getMenu") else []
 
-    def generateSvg(self, nodes: dict[str, xml.Element]) -> Optional[tuple[xml.Element, list[xml.Element]]]:
-        """Method to overwrite to manually specify the SVG writer mechanism
+    def generateSvg(
+            self,
+            nodes: dict[str, Element]
+    ) -> Optional[tuple[Element, list[Element]]]:
+        """Method to override to manually specify the SVG writer mechanism.
 
         Parameters
         ----------
-        nodes : dict[str, xml.Element]
+        nodes
             Dictionary keyed by the name of graphics items and the XML
             representation of the the item that can be written as valid
             SVG.
         
         Returns
         -------
-        Optional[tuple[xml.Element, list[xml.Element]]]
-            First element is the top level group for this item
-            Second element is a list of xml Elements corresponding to the
+        tuple
+            First element is the top level group for this item. The
+            second element is a list of xml Elements corresponding to the
             child nodes of the item.
+        None
+            Return None if no XML is needed for rendering
 
         Raises
         ------
         NotImplementedError
-            Overwrite method to implement in subclasses of GraphicsItem
+            override method to implement in subclasses of GraphicsItem
+
+        See Also
+        --------
+        pyqtgraph.exporters.SVGExporter._generateItemSvg
+            The generic and default implementation
+
         """
         raise NotImplementedError
