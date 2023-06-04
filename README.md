@@ -31,13 +31,13 @@ This project supports:
 
 Currently this means:
 
-* Python 3.8+
+* Python 3.9+
 * Qt 5.15, 6.2+
 * [PyQt5](https://www.riverbankcomputing.com/software/pyqt/),
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
   [PySide2](https://wiki.qt.io/Qt_for_Python), or
   [PySide6](https://wiki.qt.io/Qt_for_Python)
-* [`numpy`](https://github.com/numpy/numpy) 1.20+
+* [`numpy`](https://github.com/numpy/numpy) 1.21+
 
 ### Optional added functionalities
 
@@ -121,6 +121,5 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
 * [Semi-Supervised Semantic Annotator](https://gitlab.com/s3a/s3a)
 * [STDF-Viewer](https://github.com/noonchen/STDF-Viewer)
-
 
 Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!
