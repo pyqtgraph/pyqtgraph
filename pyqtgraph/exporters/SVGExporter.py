@@ -36,8 +36,15 @@ class SVGExporter(Exporter):
              'limits': (0, None)},
             #{'name': 'viewbox clipping', 'type': 'bool', 'value': True},
             #{'name': 'normalize coordinates', 'type': 'bool', 'value': True},
-            {'name': 'scaling stroke', 'title': translate("Exporter", 'scaling stroke'), 'type': 'bool', 'value': False, 'tip': "If False, strokes are non-scaling, "
-             "which means that they appear the same width on screen regardless of how they are scaled or how the view is zoomed."},
+            {
+                'name': 'scaling stroke',
+                'title': translate("Exporter", 'scaling stroke'),
+                'type': 'bool',
+                'value': False,
+                'tip': "If False, strokes are non-scaling, which means that "
+                       "they appear the same width on screen regardless of "
+                       "how they are scaled or how the view is zoomed."
+            },
         ])
         self.params.param('width').sigValueChanged.connect(self.widthChanged)
         self.params.param('height').sigValueChanged.connect(self.heightChanged)
@@ -68,7 +75,6 @@ class SVGExporter(Exporter):
         options['width'] = self.params['width']
         options['height'] = self.params['height']
         xml = generateSvg(self.item, options)
-        
         if toBytes:
             return xml.encode('UTF-8')
         elif copy:
@@ -117,9 +123,9 @@ def generateSvg(item, options=None):
     for d in defs:
         defsXml += d.toprettyxml(indent='    ')
     defsXml += "</defs>\n"
-    svgAttributes = ' viewBox ="0 0 %f %f"' % (options["width"], options["height"])
+    svgAttributes = f' viewBox ="0 0 {int(options["width"])} {int(options["height"])}"'
     c = options['background']
-    backgroundtag = '<rect width="100%%" height="100%%" style="fill:rgba(%d, %d, %d, %f)" />\n' % (c.red(), c.green(), c.blue(), c.alphaF())
+    backgroundtag = f'<rect width="100%" height="100%" fill="{c.name()}" fill-opacity="{c.alphaF()}" />\n'
     return (xmlHeader % svgAttributes) + backgroundtag + defsXml + node.toprettyxml(indent='    ') + "\n</svg>\n"
 
 def _generateItemSvg(item, nodes=None, root=None, options=None):
@@ -239,16 +245,22 @@ def _generateItemSvg(item, nodes=None, root=None, options=None):
                 (xDataOriginal.copy() - dx) * sx, (yDataOriginal.copy() - dy) * sy
             )
             item.blockSignals(False)
-
+        
         manipulate = QtGui.QTransform(1 / sx, 0, 0, 1 / sy, dx, dy)
         tr = itemTransform(item, item.scene())
-        ## offset to corner of root item
+        # offset to corner of root item
         if isinstance(root, QtWidgets.QGraphicsScene):
             rootPos = QtCore.QPoint(0,0)
         else:
             rootPos = root.scenePos()
-        tr2 = QtGui.QTransform()
-        tr2.translate(-rootPos.x(), -rootPos.y())
+
+        # handle rescaling from the export dialog
+        if hasattr(root, 'boundingRect'):
+            resize_x = options["width"] / root.boundingRect().width()
+            resize_y = options["height"] / root.boundingRect().height()
+        else:
+            resize_x = resize_y = 1
+        tr2 = QtGui.QTransform(resize_x, 0, 0, resize_y, -rootPos.x(), -rootPos.y())
         tr = manipulate * tr * tr2
 
         arr = QtCore.QByteArray()
@@ -257,7 +269,6 @@ def _generateItemSvg(item, nodes=None, root=None, options=None):
         svg.setOutputDevice(buf)
         dpi = QtGui.QGuiApplication.primaryScreen().logicalDotsPerInchX()
         svg.setResolution(int(dpi))
-
         p = QtGui.QPainter()
         p.begin(svg)
         if hasattr(item, 'setExportMode'):
