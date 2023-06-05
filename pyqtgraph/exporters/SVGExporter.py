@@ -296,7 +296,6 @@ def _generateItemSvg(item, nodes=None, root=None, options=None):
     except:
         print(doc.toxml())
         raise
-
     profiler('render')
     ## Get rid of group transformation matrices by applying
     ## transformation to inner coordinates
@@ -355,8 +354,34 @@ def _generateItemSvg(item, nodes=None, root=None, options=None):
     return g1, defs
 
 
-def correctCoordinates(node, defs, item, options):
-    # TODO: correct gradient coordinates inside defs
+def correctCoordinates(node, defs, item, options):   
+    # correct the defs in the linearGradient
+    for d in defs:
+        if d.tagName == "linearGradient":
+            # reset "gradientUnits" attribute to SVG default value
+            d.removeAttribute("gradientUnits")
+
+            # replace with percentages
+            for coord in ("x1", "x2", "y1", "y2"):
+                if coord.startswith("x"):
+                    denominator = item.boundingRect().width()
+                else:
+                    denominator = item.boundingRect().height()
+                percentage = round(float(d.getAttribute(coord)) * 100 / denominator)
+                d.setAttribute(coord, f"{percentage}%")
+
+            # replace stops with percentages
+            for child in filter(
+                lambda e: isinstance(e, xml.Element) and e.tagName == "stop",
+                d.childNodes
+            ):
+                offset = child.getAttribute("offset")
+                try:
+                    child.setAttribute("offset", f"{round(float(offset) * 100)}%")
+                except ValueError:
+                    # offset attribute could not be converted to float
+                    # must be one of the other SVG accepted formats
+                    continue
 
     ## Remove transformation matrices from <g> tags by applying matrix to coordinates inside.
     ## Each item is represented by a single top-level group with one or more groups inside.
