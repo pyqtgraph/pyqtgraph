@@ -42,6 +42,7 @@ extensions = [
     "sphinx_favicon",
     "sphinxext.rediraffe",
     "sphinxcontrib.images",
+    "sphinx_autodoc_typehints"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -132,6 +133,7 @@ autodoc_mock_imports = [
     "h5py",
     "matplotlib",
 ]
+
 
 # -- Options for HTML output ---------------------------------------------------
 

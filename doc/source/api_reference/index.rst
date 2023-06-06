@@ -17,6 +17,7 @@ Contents:
     parametertree/index
     dockarea
     graphicsscene/index
+    exporters/index
     flowchart/index
     point
     transform3d
