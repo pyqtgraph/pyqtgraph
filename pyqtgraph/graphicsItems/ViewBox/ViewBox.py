@@ -12,6 +12,7 @@ from ...Point import Point
 from ...Qt import QtCore, QtGui, QtWidgets, isQObjectAlive
 from ..GraphicsWidget import GraphicsWidget
 from ..ItemGroup import ItemGroup
+from ... import plotDataMappings
 
 __all__ = ['ViewBox']
 
@@ -166,12 +167,13 @@ class ViewBox(GraphicsWidget):
             'background': None,
             
             'logMode': [False, False],
+            'xMapping': plotDataMappings.get('identity'),
+            'yMapping': plotDataMappings.get('identity'),
 
-            # Limits
-            # maximum value of double float is 1.7E+308, but internal caluclations exceed this limit before the range reaches it.
+            # User limits: Number representation limit are applied separately.
             'limits': { 
-                'xLimits': [-1E307, +1E307],   # Maximum and minimum visible X values
-                'yLimits': [-1E307, +1E307],   # Maximum and minimum visible Y values
+                'xLimits': [None, None],   # Maximum and minimum visible X values
+                'yLimits': [None, None],   # Maximum and minimum visible Y values
                 'xRange': [None, None],   # Maximum and minimum X range
                 'yRange': [None, None],   # Maximum and minimum Y range
                 }
@@ -325,6 +327,8 @@ class ViewBox(GraphicsWidget):
         """Return the current state of the ViewBox.
         Linked views are always converted to view names in the returned state."""
         state = self.state.copy()
+        state['xMapping'] = state['xMapping'].name
+        state['yMapping'] = state['yMapping'].name
         views = []
         for v in state['linkedViews']:
             if isinstance(v, weakref.ref):
@@ -343,6 +347,18 @@ class ViewBox(GraphicsWidget):
         """Restore the state of this ViewBox.
         (see also getState)"""
         state = state.copy()
+        try:
+            xMapping = plotDataMappings.get(state['xMapping'])
+        except KeyError: # fall back to identity of the mapping is not known:
+            xMapping = plotDataMappings.get('identity')
+        self.state['xMapping'] = xMapping
+
+        try:
+            yMapping = plotDataMappings.get(state['yMapping'])
+        except KeyError: # fall back to identity of the mapping is not known:
+            yMapping = plotDataMappings.get('identity')
+        self.state['yMapping'] = yMapping
+
         self.setXLink(state['linkedViews'][0])
         self.setYLink(state['linkedViews'][1])
         del state['linkedViews']
@@ -515,23 +531,17 @@ class ViewBox(GraphicsWidget):
             
     def _effectiveLimits(self):
         # Determines restricted effective scaling range when in log mapping mode
-        if self.state['logMode'][0]:
-            xlimits = (# constrain to the +1.7E308 to 2.2E-308 range of double float values
-                max( self.state['limits']['xLimits'][0], -307.6 ),
-                min( self.state['limits']['xLimits'][1], +308.2 )
-            )
-        else:
-            xlimits = self.state['limits']['xLimits']
-        
-        if self.state['logMode'][1]: 
-            ylimits = (# constrain to the +1.7E308 to 2.2E-308 range of double float values
-                max( self.state['limits']['yLimits'][0], -307.6 ),
-                min( self.state['limits']['yLimits'][1], +308.2 )
-            )
-        else:
-            ylimits = self.state['limits']['yLimits']
-        # print('limits ', xlimits, ylimits) # diagnostic output should reflect additional limit in log mode
-        return (xlimits, ylimits)
+        # merge x limits:
+        (set_xmin, set_xmax) = self.state['limits']['xLimits']
+        (map_xmin, map_xmax) = self.state['xMapping'].vsLimits
+        if set_xmin is None or set_xmin < map_xmin: set_xmin = map_xmin
+        if set_xmax is None or set_xmax > map_xmax: set_xmax = map_xmax
+        # merge y limits:
+        (set_ymin, set_ymax) = self.state['limits']['yLimits']
+        (map_ymin, map_ymax) = self.state['yMapping'].vsLimits
+        if set_ymin is None or set_ymin < map_ymin: set_ymin = map_ymin
+        if set_ymax is None or set_ymax > map_ymax: set_ymax = map_ymax
+        return(set_xmin, set_xmax), (set_ymin, set_ymax)
 
     def setRange(self, rect=None, xRange=None, yRange=None, padding=None, update=True, disableAutoRange=True):
         """
@@ -988,14 +998,17 @@ class ViewBox(GraphicsWidget):
         """Link this view's Y axis to another view. (see LinkView)"""
         self.linkView(self.YAxis, view)
         
-    def setLogMode(self, axis, logMode):
-        """Informs ViewBox that log mode is active for the specified axis, so that the view range cen be restricted"""
-        if axis == 'x':
-            self.state['logMode'][0] = bool(logMode)
-            # print('x log mode', self.state['logMode'][0] )
-        elif axis == 'y':
-            self.state['logMode'][1] = bool(logMode)
-            # print('x log mode', self.state['logMode'][0] )
+    def setMappings(self, xMapping, yMapping):
+        """
+        Sets a mapping functions for x and y data, described by `plotDataMappings.PlotDataMap` objects.
+        Eventually, objects assigned to this ViewBox should retrieve this from here.
+        The mapping also provides limits for the allowed zoom range.
+        Passing `None` will leave the current mapping unchanged
+        """
+        if xMapping is not None:
+            self.state['xMapping'] = xMapping
+        if yMapping is not None:
+            self.state['yMapping'] = yMapping
 
     def linkView(self, axis, view):
         """
@@ -1441,12 +1454,22 @@ class ViewBox(GraphicsWidget):
             useX = True
             useY = True
 
-            if hasattr(item, 'dataBounds'):
-                if frac is None:
-                    frac = (1.0, 1.0)
+            have_bounds = False
+
+            if frac is None: frac = (1.0, 1.0)
+            if not have_bounds and hasattr(item, 'vsBounds'): # prefer bounds that are explicitly in view space
+                xr = item.vsBounds(0, frac=frac[0], orthoRange=orthoRange[0])
+                yr = item.vsBounds(1, frac=frac[1], orthoRange=orthoRange[1])
+                pxPad = 0 if not hasattr(item, 'pixelPadding') else item.pixelPadding()
+                have_bounds = True
+                
+            if not have_bounds and hasattr(item, 'dataBounds'): # fall back to unspecific legacy method
                 xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
                 yr = item.dataBounds(1, frac=frac[1], orthoRange=orthoRange[1])
                 pxPad = 0 if not hasattr(item, 'pixelPadding') else item.pixelPadding()
+                have_bounds = True
+            
+            if have_bounds:
                 if (
                     xr is None or
                     (xr[0] is None and xr[1] is None) or
@@ -1472,7 +1495,10 @@ class ViewBox(GraphicsWidget):
 
                 ## If we are ignoring only one axis, we need to check for rotations
                 if useX != useY:  ##   !=  means  xor
-                    ang = round(item.transformAngle())
+                    ang_float = item.transformAngle()
+                    if np.isnan(ang_float):
+                        continue # Item reports invalid angle
+                    ang = round(ang_float)
                     if ang == 0 or ang == 180:
                         pass
                     elif ang == 90 or ang == 270:
@@ -1481,7 +1507,6 @@ class ViewBox(GraphicsWidget):
                         ## Item is rotated at non-orthogonal angle, ignore bounds entirely.
                         ## Not really sure what is the expected behavior in this case.
                         continue  ## need to check for item rotations and decide how best to apply this boundary.
-
 
                 itemBounds.append((bounds, useX, useY, pxPad))
             else:

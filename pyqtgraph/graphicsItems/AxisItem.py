@@ -9,6 +9,7 @@ from .. import getConfigOption
 from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsWidget import GraphicsWidget
+from .. import plotDataMappings
 
 __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):
@@ -88,6 +89,7 @@ class AxisItem(GraphicsWidget):
         self.labelUnitPrefix = unitPrefix
         self.labelStyle = args
         self.logMode = False
+        self.mapping = plotDataMappings.get('identity')
 
         self._tickLevels = None  ## used to override the automatic ticking system with explicit ticks
         self._tickSpacing = None  # used to override default tickSpacing method
@@ -118,8 +120,7 @@ class AxisItem(GraphicsWidget):
         if linkView is not None:
             self._linkToView_internal(linkView)
 
-        self.grid = False
-        
+        self.grid = False        
         #self.setCacheMode(self.DeviceCoordinateCache)
 
     def setStyle(self, **kwds):
@@ -214,42 +215,62 @@ class AxisItem(GraphicsWidget):
         self.prepareGeometryChange()
         self.update()
 
-    def setLogMode(self, *args, **kwargs):
+    def setMapping(self, mapping):
+        """ 
+        Sets data mapping function. Currently, only `plotDataMapping.LogMapping` 
+        is supported, others will be treated as indentity
         """
-        Set log scaling for x and/or y axes.
+        self.picture = None
+        if isinstance(mapping, plotDataMappings.LogMapping):
+            self.logMode = True
+        else:
+            self.logMode = False
+        self.update()
 
-        If two positional arguments are provided, the first will set log scaling
-        for the x axis and the second for the y axis. If a single positional
-        argument is provided, it will set the log scaling along the direction of
-        the AxisItem. Alternatively, x and y can be passed as keyword arguments.
+    def setLogMode(self, *args):
+        """
+        Set log scaling for `x` and/or `y` axes.
 
         If an axis is set to log scale, ticks are displayed on a logarithmic scale
         and values are adjusted accordingly. (This is usually accessed by changing
         the log mode of a :func:`PlotItem <pyqtgraph.PlotItem.setLogMode>`.) The 
         linked ViewBox will be informed of the change.
+
+        If two positional arguments are provided, the first will set log scaling
+        for the `x` axis and the second for the `y` axis. If a single positional
+        argument is provided, it will set the log scaling along the direction of
+        the AxisItem. Alternatively, x and y can be passed as keyword arguments.
         """
+        # if self._linkedView is not None:
+        #     axis = None
+        #     if self.orientation in ('top', 'bottom'):
+        #         axis = 'x'
+        #         # self._linkedView().setLogMode('x', log)
+        #     elif self.orientation in ('left', 'right'):
+        #         axis = 'y'
+        #         # self._linkedView().setLogMode('y', log)
+        #     if axis is not None:
+        #         if log:
+        #             self._linkedView().setMapping(axis, plotDataMappings.getLog() )
+        #         else:
+        #             self._linkedView().setMapping(axis, plotDataMappings.getIdentity() )
         if len(args) == 1:
             self.logMode = args[0]
-        else:
-            if len(args) == 2:
-                x, y = args
-            else:
-                x = kwargs.get('x')
-                y = kwargs.get('y')
-
+        elif len(args) == 2:
+            x, y = args
             if x is not None and self.orientation in ('top', 'bottom'):
                 self.logMode = x
             if y is not None and self.orientation in ('left', 'right'):
                 self.logMode = y
+        else:
+            return
         
-        if self._linkedView is not None:
-            if self.orientation in ('top', 'bottom'):           
-                self._linkedView().setLogMode('x', self.logMode)    
-            elif self.orientation in ('left', 'right'):
-                self._linkedView().setLogMode('y', self.logMode)    
-
+        # if self._linkedView is not None:
+        #     if self.orientation in ('top', 'bottom'):           
+        #         self._linkedView().setLogMode('x', self.logMode)    
+        #     elif self.orientation in ('left', 'right'):
+        #         self._linkedView().setLogMode('y', self.logMode)    
         self.picture = None
-
         self.update()
 
     def setTickFont(self, font):
@@ -810,9 +831,13 @@ class AxisItem(GraphicsWidget):
         allValues = np.array([])
         for i in range(len(tickLevels)):
             spacing, offset = tickLevels[i]
+            if not np.isfinite(spacing):
+                # print(f"infinite spacing for tick level {i}")
+                continue
 
             ## determine starting tick
             start = (ceil((minVal-offset) / spacing) * spacing) + offset
+            # if np.isnan(start): print(minVal, offset, spacing)
 
             ## determine number of ticks
             num = int((maxVal-start) / spacing) + 1
@@ -831,22 +856,12 @@ class AxisItem(GraphicsWidget):
         if self.logMode:
             return self.logTickValues(minVal, maxVal, size, ticks)
 
-
-        #nticks = []
-        #for t in ticks:
-            #nvals = []
-            #for v in t[1]:
-                #nvals.append(v/self.scale)
-            #nticks.append((t[0]/self.scale,nvals))
-        #ticks = nticks
-
         return ticks
 
     def logTickValues(self, minVal, maxVal, size, stdTicks):
 
         ## start with the tick spacing given by tickValues().
         ## Any level whose spacing is < 1 needs to be converted to log scale
-
         ticks = []
         for (spacing, t) in stdTicks:
             if spacing >= 1.0:

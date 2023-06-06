@@ -1,5 +1,6 @@
 import string
 from math import atan2
+import numpy as np
 
 from .. import functions as fn
 from ..Point import Point
@@ -9,6 +10,7 @@ from .ScatterPlotItem import Symbols
 from .TextItem import TextItem
 from .UIGraphicsItem import UIGraphicsItem
 from .ViewBox import ViewBox
+from .. import plotDataMappings
 
 __all__ = ['TargetItem', 'TargetLabel']
 
@@ -74,7 +76,12 @@ class TargetItem(UIGraphicsItem):
             A dict of keyword arguments to use when constructing the text
             label. See :class:`TargetLabel` and :class:`~pyqtgraph.TextItem`
         """
-        super().__init__()
+        super().__init__(self)
+
+        # mappings from data space to view space:
+        self.xMapping = plotDataMappings.get('identity')
+        self.yMapping = plotDataMappings.get('identity')
+
         self.movable = movable
         self.moving = False
         self._label = None
@@ -101,9 +108,9 @@ class TargetItem(UIGraphicsItem):
 
         self._shape = None
 
-        self._pos = Point(0, 0)
-        if pos is None:
-            pos = Point(0, 0)
+        self._pos    = Point(np.nan, np.nan)
+        self._vs_pos = Point(np.nan, np.nan)
+        if pos is None: pos = Point(1E-100, 1E-100)
         self.setPos(pos)
 
         if isinstance(symbol, str):
@@ -120,6 +127,29 @@ class TargetItem(UIGraphicsItem):
         self.setPath(self._path)
         self.setLabel(label, labelOpts)
 
+    @property
+    def sigDragged(self):
+        warnings.warn(
+            "'sigDragged' has been deprecated and will be removed in 0.13.0.  Use "
+            "`sigPositionChangeFinished` instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.sigPositionChangeFinished
+        
+    def setVSPos(self, vs_pos):
+        """ Set position based on view space coordinate """
+        ds_xpos = self.xMapping.reverseFloat(vs_pos[0])
+        if np.isnan(ds_xpos):
+            # print(f"view space x coordinate {vs_pos[1]} out of conversion range")
+            return
+        ds_ypos = self.yMapping.reverseFloat(vs_pos[1])
+        if np.isnan(ds_ypos):
+            # print(f"view space y coordinate {vs_pos[1]} out of conversion range")
+            return
+        self.setPos( Point(ds_xpos, ds_ypos) )
+        # print(f"setting from view space: {vs_pos} --> {(ds_xpos, ds_ypos)} --> {self._vs_pos}")
+
     def setPos(self, *args):
         """Method to set the position to ``(x, y)`` within the plot view
 
@@ -132,7 +162,7 @@ class TargetItem(UIGraphicsItem):
         Raises
         ------
         TypeError
-            If args cannot be used to instantiate a Point
+            if args cannot be used to instantiate a pg.Point
         """
         try:
             newPos = Point(*args)
@@ -142,9 +172,29 @@ class TargetItem(UIGraphicsItem):
             raise TypeError(f"Could not make Point from arguments: {args!r}")
 
         if self._pos != newPos:
-            self._pos = newPos
-            super().setPos(self._pos)
+            self._pos    = newPos
+            self._vs_pos = Point(
+                self.xMapping.mapFloat( self._pos.x() ),
+                self.yMapping.mapFloat( self._pos.y() )
+            )
+            super().setPos(self._vs_pos)
             self.sigPositionChanged.emit(self)
+
+    def setMappings(self, xMapping, yMapping):
+        """ Updates mapping for x and y axis, None retains previous mapping """
+        # print(f"InfiniteLine, new mappings: {xMapping} / {yMapping}")
+        if xMapping is not None:
+            self.xMapping = xMapping
+        if yMapping is not None:
+            self.yMapping = yMapping
+        self._vs_pos = Point(
+            self.xMapping.mapFloat( self._pos.x() ),
+            self.yMapping.mapFloat( self._pos.y() )
+        )
+        # print(f"updated mapped position: {self._pos} -> {self._vs_pos}")
+        self.viewTransformChanged()
+        super().setPos(self._vs_pos)
+        # self.sigPositionChanged.emit(self)
 
     def setBrush(self, *args, **kwargs):
         """Set the brush that fills the symbol. Allowable arguments are any that
@@ -223,16 +273,17 @@ class TargetItem(UIGraphicsItem):
         return dti.map(tr.map(self._path))
 
     def mouseDragEvent(self, ev):
+        # dragging coordinates are all in view space
         if not self.movable or ev.button() != QtCore.Qt.MouseButton.LeftButton:
             return
         ev.accept()
         if ev.isStart():
-            self.symbolOffset = self.pos() - self.mapToView(ev.buttonDownPos())
+            self.symbolOffset = super().pos() - self.mapToView(ev.buttonDownPos())
             self.moving = True
 
         if not self.moving:
             return
-        self.setPos(self.symbolOffset + self.mapToView(ev.pos()))
+        self.setVSPos(self.symbolOffset + self.mapToView(ev.pos()))
 
         if ev.isFinish():
             self.moving = False

@@ -135,15 +135,6 @@ class LinearRegionItem(GraphicsObject):
         
         self.setMovable(movable)
 
-    def getRegion(self):
-        """Return the values at the edges of the region."""
-
-        r = (self.lines[0].value(), self.lines[1].value())
-        if self.swapMode == 'sort':
-            return (min(r), max(r))
-        else:
-            return r
-
     def setRegion(self, rgn):
         """Set the values for the edges of the region.
         
@@ -162,6 +153,33 @@ class LinearRegionItem(GraphicsObject):
         self.lineMoved(0)
         self.lineMoved(1)
         self.lineMoveFinished()
+        
+    def getRegion(self):
+        """ Returns the values at the edges of the region. """
+
+        r = (self.lines[0].value(), self.lines[1].value())
+        if self.swapMode == 'sort':
+            return (min(r), max(r))
+        else:
+            return r
+
+    def getVSRegion(self):
+        """ Returns the values at the edges of the region in view space coordinates. """
+        vsValue0 = self.lines[0].vsValue()
+        vsValue1 = self.lines[1].vsValue()
+        # check if order in data space needs to be reversed, and match that in view space if necessary:
+        if self.swapMode == 'sort':
+            dsValue0 = self.lines[0].value()
+            dsValue1 = self.lines[1].value()
+            if dsValue0 is not None and dsValue1 is not None and dsValue0 > dsValue1:
+                return vsValue1, vsValue0
+        return vsValue0, vsValue1
+
+    def setMappings(self, xMapping, yMapping):
+        """ Updates mapping for x and y axis, None retains previous mapping """
+        self.viewTransformChanged()
+        for line in self.lines:
+            line.setMappings(xMapping, yMapping)
 
     def setBrush(self, *br, **kargs):
         """Set the brush that fills the region. Can have any arguments that are valid
@@ -246,7 +264,9 @@ class LinearRegionItem(GraphicsObject):
         if self.clipItem is not None:
             self._updateClipItemBounds()
 
-        rng = self.getRegion()
+        # rng = self.getRegion()
+        rng = (self.lines[0].vsValue(), self.lines[1].vsValue())
+
         if self.orientation in ('vertical', LinearRegionItem.Vertical):
             br.setLeft(rng[0])
             br.setRight(rng[1])
@@ -261,11 +281,9 @@ class LinearRegionItem(GraphicsObject):
             br.setLeft(br.left() + length * self.span[0])
 
         br = br.normalized()
-        
         if self._boundingRectCache != br:
             self._boundingRectCache = br
             self.prepareGeometryChange()
-        
         return br
         
     def paint(self, p, *args):
@@ -277,6 +295,12 @@ class LinearRegionItem(GraphicsObject):
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
         if axis == self._orientation_axis[self.orientation]:
             return self.getRegion()
+        else:
+            return None
+            
+    def vsBounds(self, axis, frac=1.0, orthoRange=None):
+        if axis == self._orientation_axis[self.orientation]:
+            return self.getVSRegion()
         else:
             return None
 
@@ -304,22 +328,23 @@ class LinearRegionItem(GraphicsObject):
         self.sigRegionChangeFinished.emit(self)
 
     def mouseDragEvent(self, ev):
+        # dragging coordinates are all in view space
         if not self.movable or ev.button() != QtCore.Qt.MouseButton.LeftButton:
             return
         ev.accept()
-        
+
         if ev.isStart():
             bdp = ev.buttonDownPos()
             self.cursorOffsets = [l.pos() - bdp for l in self.lines]
             self.startPositions = [l.pos() for l in self.lines]
             self.moving = True
-            
+
         if not self.moving:
             return
-            
+
         self.lines[0].blockSignals(True)  # only want to update once
         for i, l in enumerate(self.lines):
-            l.setPos(self.cursorOffsets[i] + ev.pos())
+            l.setVSPos(self.cursorOffsets[i] + ev.pos())
         self.lines[0].blockSignals(False)
         self.prepareGeometryChange()
         
@@ -328,7 +353,7 @@ class LinearRegionItem(GraphicsObject):
             self.sigRegionChangeFinished.emit(self)
         else:
             self.sigRegionChanged.emit(self)
-            
+
     def mouseClickEvent(self, ev):
         if self.moving and ev.button() == QtCore.Qt.MouseButton.RightButton:
             ev.accept()
@@ -343,7 +368,7 @@ class LinearRegionItem(GraphicsObject):
             self.setMouseHover(True)
         else:
             self.setMouseHover(False)
-            
+
     def setMouseHover(self, hover):
         ## Inform the item that the mouse is(not) hovering over it
         if self.mouseHovering == hover:

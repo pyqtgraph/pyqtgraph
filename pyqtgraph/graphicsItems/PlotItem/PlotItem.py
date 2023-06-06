@@ -20,6 +20,7 @@ from ..PlotCurveItem import PlotCurveItem
 from ..PlotDataItem import PlotDataItem
 from ..ScatterPlotItem import ScatterPlotItem
 from ..ViewBox import ViewBox
+from ... import plotDataMappings
 
 translate = QtCore.QCoreApplication.translate
 
@@ -524,8 +525,21 @@ class PlotItem(GraphicsWidget):
             #item.setMeta(params)
             self.curves.append(item)
             #self.addItem(c)
-            
-        if hasattr(item, 'setLogMode'):
+        
+        # look for method to directly set mapping:
+        if hasattr(item, 'setMappings'):
+            if self.ctrl.logXCheck.isChecked():
+                xMapping = plotDataMappings.get('log')
+            else:
+                xMapping = plotDataMappings.get('identity')
+            if self.ctrl.logYCheck.isChecked():
+                yMapping = plotDataMappings.get('log')
+            else:
+                yMapping = plotDataMappings.get('identity')
+            item.setMappings( xMapping, yMapping )
+        
+        # otherwise fall back to previous log mode setting:
+        elif hasattr(item, 'setLogMode'):
             item.setLogMode(self.ctrl.logXCheck.isChecked(), self.ctrl.logYCheck.isChecked())
             
         if isinstance(item, PlotDataItem):
@@ -864,14 +878,22 @@ class PlotItem(GraphicsWidget):
             
     def updateLogMode(self):
         x = self.ctrl.logXCheck.isChecked()
+        if x: xMapping = plotDataMappings.get('log')
+        else: xMapping = plotDataMappings.get('identity')
         y = self.ctrl.logYCheck.isChecked()
+        if y: yMapping = plotDataMappings.get('log')
+        else: yMapping = plotDataMappings.get('identity')
         for i in self.items:
-            if hasattr(i, 'setLogMode'):
+            if hasattr(i, 'setMappings'):
+                i.setMappings(xMapping, yMapping)
+            elif hasattr(i, 'setLogMode'):
                 i.setLogMode(x,y)
-        self.getAxis('bottom').setLogMode(x, y)
-        self.getAxis('top').setLogMode(x, y)
-        self.getAxis('left').setLogMode(x, y)
-        self.getAxis('right').setLogMode(x, y)
+        
+        for edge in ('bottom','top', 'left', 'right'):
+            self.getAxis(edge).setLogMode(x, y)
+
+        self.vb.setMappings(xMapping, yMapping)
+
         self.enableAutoRange()
         self.recomputeAverages()
     
