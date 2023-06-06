@@ -26,11 +26,6 @@ from numpy import ndarray
 
 from .Qt import QT_LIB, QtCore
 from .util import cprint
-
-if sys.version.startswith("3.8") and QT_LIB == "PySide2":
-    from .Qt import PySide2
-    if tuple(map(int, PySide2.__version__.split("."))) < (5, 14):
-        warnings.warn("Due to PYSIDE-1140, ThreadChase and ThreadColor won't work")
 from .util.mutex import Mutex
 
 
@@ -889,7 +884,6 @@ class ObjTracker(object):
         
     def findTypes(self, refs, regex):
         allObjs = get_all_objects()
-        ids = {}
         objs = []
         r = re.compile(regex)
         for k in refs:
@@ -1053,10 +1047,8 @@ def walkQObjectTree(obj, counts=None, verbose=False, depth=0):
     
     if verbose:
         print("  "*depth + typeStr(obj))
-    report = False
     if counts is None:
         counts = {}
-        report = True
     typ = str(type(obj))
     try:
         counts[typ] += 1
@@ -1191,19 +1183,7 @@ class ThreadTrace(object):
                     if id == threading.current_thread().ident:
                         continue
 
-                    # try to determine a thread name
-                    try:
-                        name = threading._active.get(id, None)
-                    except:
-                        name = None
-                    if name is None:
-                        try:
-                            # QThread._names must be manually set by thread creators.
-                            name = QtCore.QThread._names.get(id)
-                        except:
-                            name = None
-                    if name is None:
-                        name = "???"
+                    name = threadName()
 
                     printFile.write("<< thread %d \"%s\" >>\n" % (id, name))
                     tb = str(''.join(traceback.format_stack(frame)))
@@ -1214,6 +1194,46 @@ class ThreadTrace(object):
 
                 iter += 1
                 time.sleep(self.interval)
+
+
+def threadName(threadId=None):
+    """Return a string name for a thread id.
+
+    If *threadId* is None, then the current thread's id is used.
+
+    This attempts to look up thread names either from `threading._active`, or from
+    QThread._names. However, note that the latter does not exist by default; rather
+    you must manually add id:name pairs to a dictionary there::
+
+        # for python threads:
+        t1 = threading.Thread(name="mythread")
+
+        # for Qt threads:
+        class Thread(Qt.QThread):
+            def __init__(self, name):
+                self._threadname = name
+                if not hasattr(Qt.QThread, '_names'):
+                    Qt.QThread._names = {}
+                Qt.QThread.__init__(self, *args, **kwds)
+            def run(self):
+                Qt.QThread._names[threading.current_thread().ident] = self._threadname
+    """
+    if threadId is None:
+        threadId = threading.current_thread().ident
+    
+    try:
+        name = threading._active.get(threadId, None)
+    except Exception:
+        name = None
+    if name is None:
+        try:
+            # QThread._names must be manually set by thread creators.
+            name = QtCore.QThread._names.get(threadId)
+        except Exception:
+            name = None
+    if name is None:
+        name = "???"
+    return name
 
 
 class ThreadColor(object):

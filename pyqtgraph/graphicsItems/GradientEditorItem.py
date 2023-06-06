@@ -12,7 +12,7 @@ from .GraphicsWidget import GraphicsWidget
 
 translate = QtCore.QCoreApplication.translate
 
-__all__ = ['TickSliderItem', 'GradientEditorItem']
+__all__ = ['TickSliderItem', 'GradientEditorItem', 'addGradientListToDocstring']
 
 Gradients = OrderedDict([
     ('thermal', {'ticks': [(0.3333, (185, 0, 0, 255)), (0.6666, (255, 220, 0, 255)), (1, (255, 255, 255, 255)), (0, (0, 0, 0, 255))], 'mode': 'rgb'}),
@@ -494,7 +494,7 @@ class GradientEditorItem(TickSliderItem):
         self.linkedGradients = {}
         
         self.sigTicksChanged.connect(self._updateGradientIgnoreArgs)
-        self.sigTicksChangeFinished.connect(self.sigGradientChangeFinished.emit)
+        self.sigTicksChangeFinished.connect(self.sigGradientChangeFinished)
 
     def showTicks(self, show=True):
         for tick in self.ticks.keys():

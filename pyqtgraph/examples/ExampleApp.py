@@ -1,5 +1,6 @@
 import keyword
 import os
+import pkgutil
 import re
 import subprocess
 import sys
@@ -15,13 +16,9 @@ app = pg.mkQApp()
 
 path = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, path)
-import importlib
 
+import exampleLoaderTemplate_generic as ui_template
 import utils
-
-ui_template = importlib.import_module(
-    f'exampleLoaderTemplate_{QT_LIB.lower()}')
-
 
 # based on https://github.com/art1415926535/PyQt5-syntax-highlighting
 
@@ -301,6 +298,10 @@ def unnestedDict(exDict):
 
 
 class ExampleLoader(QtWidgets.QMainWindow):
+    # update qtLibCombo item order to match bindings in the UI file and recreate
+    # the templates files if you change bindings.
+    bindings = {'PyQt6': 0, 'PySide6': 1, 'PyQt5': 2, 'PySide2': 3}
+    modules = tuple(m.name for m in pkgutil.iter_modules())
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         self.ui = ui_template.Ui_Form()
@@ -322,11 +323,17 @@ class ExampleLoader(QtWidgets.QMainWindow):
         textFil = self.ui.exampleFilter
         self.curListener = None
         self.ui.exampleFilter.setFocus()
+        self.ui.qtLibCombo.addItems(self.bindings.keys())
+        self.ui.qtLibCombo.setCurrentIndex(self.bindings[QT_LIB])
+
 
         def onComboChanged(searchType):
             if self.curListener is not None:
                 self.curListener.disconnect()
             self.curListener = textFil.textChanged
+            # In case the regex was invalid before switching to title search,
+            # ensure the "invalid" color is reset
+            self.ui.exampleFilter.setStyleSheet('')
             if searchType == 'Content Search':
                 self.curListener.connect(self.filterByContent)
             else:
@@ -352,6 +359,27 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.ui.exampleTree.itemDoubleClicked.connect(self.loadFile)
         self.ui.codeView.textChanged.connect(self.onTextChange)
         self.codeBtn.clicked.connect(self.runEditedCode)
+        self.updateCodeViewTabWidth(self.ui.codeView.font())
+
+    def updateCodeViewTabWidth(self,font):
+        """
+        Change the codeView tabStopDistance to 4 spaces based on the size of the current font
+        """
+        fm = QtGui.QFontMetrics(font)
+        tabWidth = fm.horizontalAdvance(' ' * 4)
+        # the default value is 80 pixels! that's more than 2x what we want.
+        self.ui.codeView.setTabStopDistance(tabWidth)
+
+    def showEvent(self, event) -> None:
+        super(ExampleLoader, self).showEvent(event)
+        disabledColor = QColor(QtCore.Qt.GlobalColor.red)
+        for name, idx in self.bindings.items():
+            disableBinding = name not in self.modules
+            if disableBinding:
+                item = self.ui.qtLibCombo.model().item(idx)
+                item.setData(disabledColor, QtCore.Qt.ItemDataRole.ForegroundRole)
+                item.setEnabled(False)
+                item.setToolTip(f'{item.text()} is not installed')
 
     def onTextChange(self):
         """
@@ -369,7 +397,21 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.hl.setDocument(self.ui.codeView.document())
 
     def filterByContent(self, text=None):
-        # Don't filter very short strings
+        # If the new text isn't valid regex, fail early and highlight the search filter red to indicate a problem
+        # to the user
+        validRegex = True
+        try:
+            re.compile(text)
+            self.ui.exampleFilter.setStyleSheet('')
+        except re.error:
+            colors = DarkThemeColors if app.property('darkMode') else LightThemeColors
+            errorColor = pg.mkColor(colors.Red)
+            validRegex = False
+            errorColor.setAlpha(100)
+            # Tuple prints nicely :)
+            self.ui.exampleFilter.setStyleSheet(f'background: rgba{errorColor.getRgb()}')
+        if not validRegex:
+            return
         checkDict = unnestedDict(utils.examples_)
         self.hl.searchText = text
         # Need to reapply to current document
@@ -468,15 +510,11 @@ class ExampleLoader(QtWidgets.QMainWindow):
             return os.path.join(path, item.file)
         return None
 
-    def loadFile(self, edited=False):
-
-        qtLib = str(self.ui.qtLibCombo.currentText())
-
-        env = None
-        if qtLib != 'default':
-            env = dict(os.environ, PYQTGRAPH_QT_LIB=qtLib)
-        else:
-            env = dict(os.environ)
+    def loadFile(self, *, edited=False):
+        # make *edited* keyword-only so it is not confused for extra arguments
+        # sent by ui signals
+        qtLib = self.ui.qtLibCombo.currentText()
+        env = dict(os.environ, PYQTGRAPH_QT_LIB=qtLib)
         example_path = os.path.abspath(os.path.dirname(__file__))
         path = os.path.dirname(os.path.dirname(example_path))
         env['PYTHONPATH'] = f'{path}'
@@ -516,9 +554,9 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.loadFile(edited=True)
 
     def keyPressEvent(self, event):
-        ret = super().keyPressEvent(event)
-        if not QtCore.Qt.KeyboardModifier.ControlModifier & event.modifiers():
-            return ret
+        super().keyPressEvent(event)
+        if not (event.modifiers() & QtCore.Qt.KeyboardModifier.ControlModifier):
+            return
         key = event.key()
         Key = QtCore.Qt.Key
 
@@ -529,7 +567,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
             return
 
         if key not in [Key.Key_Plus, Key.Key_Minus, Key.Key_Underscore, Key.Key_Equal, Key.Key_0]:
-            return ret
+            return
         font = self.ui.codeView.font()
         oldSize = font.pointSize()
         if key == Key.Key_Plus or key == Key.Key_Equal:
@@ -541,6 +579,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
             # Reset to original size
             font.setPointSize(10)
         self.ui.codeView.setFont(font)
+        self.updateCodeViewTabWidth(font)
         event.accept()
 
 def main():

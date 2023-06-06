@@ -1,5 +1,6 @@
 from ..Parameter import registerParameterItemType, registerParameterType
 from .action import ActionParameter, ActionParameterItem
+from .actiongroup import ActionGroup, ActionGroupParameter, ActionGroupParameterItem
 from .basetypes import (
     GroupParameter,
     GroupParameterItem,
@@ -27,7 +28,9 @@ registerParameterItemType('float', NumericParameterItem, SimpleParameter, overri
 registerParameterItemType('int',   NumericParameterItem, SimpleParameter, override=True)
 registerParameterItemType('str',   StrParameterItem,     SimpleParameter, override=True)
 
-registerParameterType('group', GroupParameter, override=True)
+registerParameterType('group',        GroupParameter,       override=True)
+# Keep actiongroup private for now, mainly useful for Interactor but not externally
+registerParameterType('_actiongroup', ActionGroupParameter, override=True)
 
 registerParameterType('action',    ActionParameter,      override=True)
 registerParameterType('calendar',  CalendarParameter,    override=True)

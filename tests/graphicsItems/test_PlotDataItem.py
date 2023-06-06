@@ -11,12 +11,20 @@ pg.mkQApp()
 def test_bool():
     truths = np.random.randint(0, 2, size=(100,)).astype(bool)
     pdi = pg.PlotDataItem(truths)
-    bounds = pdi.dataBounds(1)
-    assert isinstance(bounds[0], np.uint8)
-    assert isinstance(bounds[1], np.uint8)
     xdata, ydata = pdi.getData()
     assert ydata.dtype == np.uint8
 
+def test_bound_formats():
+    for datatype in (bool, np.uint8, np.int16, float):
+        truths = np.random.randint(0, 2, size=(100,)).astype(datatype)
+        pdi_scatter = pg.PlotDataItem(truths, symbol='o', pen=None)
+        pdi_line    = pg.PlotDataItem(truths)
+        bounds = pdi_scatter.dataBounds(1)
+        assert isinstance(bounds[0], float), 'bound 0 is not float for scatter plot of '+str(datatype)
+        assert isinstance(bounds[0], float), 'bound 1 is not float for scatter plot of '+str(datatype)
+        bounds = pdi_line.dataBounds(1)
+        assert isinstance(bounds[0], float), 'bound 0 is not float for line plot of '+str(datatype)
+        assert isinstance(bounds[0], float), 'bound 1 is not float for line plot of '+str(datatype)
 
 def test_fft():
     f = 20.
@@ -83,7 +91,7 @@ def test_nonfinite():
     x = np.array([-np.inf, 0.0, 1.0,  2.0  , np.nan,   4.0 , np.inf])
     y = np.array([    1.0, 0.0,-1.0, np.inf,   2.0 , np.nan,   0.0 ])
     pdi = pg.PlotDataItem(x, y)
-    dataset = pdi.getDisplayDataset()
+    dataset = pdi._getDisplayDataset()
     _assert_equal_arrays( dataset.x, x )
     _assert_equal_arrays( dataset.y, y )
    
@@ -95,7 +103,7 @@ def test_nonfinite():
     y_log[ ~np.isfinite(y_log) ] = np.nan
 
     pdi.setLogMode(True, True)
-    dataset = pdi.getDisplayDataset()
+    dataset = pdi._getDisplayDataset()
     _assert_equal_arrays( dataset.x, x_log )
     _assert_equal_arrays( dataset.y, y_log )
 

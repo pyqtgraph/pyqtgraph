@@ -1,18 +1,15 @@
 __all__ = ["Canvas"]
 
+import gc
 import importlib
+import weakref
+import warnings
 
 from ..graphicsItems.GridItem import GridItem
 from ..graphicsItems.ROI import ROI
 from ..graphicsItems.ViewBox import ViewBox
 from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
-
-ui_template = importlib.import_module(
-    f'.CanvasTemplate_{QT_LIB.lower()}', package=__package__)
-    
-import gc
-import weakref
-
+from . import CanvasTemplate_generic as ui_template
 from .CanvasItem import CanvasItem, GroupCanvasItem
 from .CanvasManager import CanvasManager
 
@@ -26,6 +23,12 @@ class Canvas(QtWidgets.QWidget):
     
     def __init__(self, parent=None, allowTransforms=True, hideCtrl=False, name=None):
         QtWidgets.QWidget.__init__(self, parent)
+        warnings.warn(
+            'pyqtgrapoh.cavas will be deprecated in pyqtgraph and migrate to '
+            'acq4.  Removal will occur after September, 2023.',
+            DeprecationWarning, stacklevel=2
+        )
+
         self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
         self.view = ViewBox()
@@ -294,20 +297,9 @@ class Canvas(QtWidgets.QWidget):
         name = citem.opts['name']
         if name is None:
             name = 'item'
-        newname = name
 
-        ## If name already exists, append a number to the end
-        ## NAH. Let items have the same name if they really want.
-        #c=0
-        #while newname in self.items:
-            #c += 1
-            #newname = name + '_%03d' %c
-        #name = newname
-            
         ## find parent and add item to tree
         insertLocation = 0
-        #print "Inserting node:", name
-        
             
         ## determine parent list item where this item should be inserted
         parent = citem.parentItem()

@@ -59,7 +59,7 @@ class InfiniteLine(GraphicsObject):
                         None to show no label (default is None). May optionally
                         include formatting strings to display the line value.
         labelOpts       A dict of keyword arguments to use when constructing the
-                        text label. See :class:`InfLineLabel`.
+                        text label. See :class:`InfLineLabel <pyqtgraph.graphicsItems.InfiniteLine.InfLineLabel>`.
         span            Optional tuple (min, max) giving the range over the view to draw
                         the line. For example, with a vertical line, use span=(0.5, 1)
                         to draw only on the top half of the view.
@@ -338,14 +338,14 @@ class InfiniteLine(GraphicsObject):
         vr = self.viewRect()  # bounds of containing ViewBox mapped to view space local coords.
         if vr is None:
             return QtCore.QRectF()
-        
-        ## add a 4-pixel radius around the line for mouse interaction.
-        px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
-        if px is None:
-            px = 0
+
+        # compute the pixel size orthogonal to the line
+        # this is more complicated than it seems, maybe it can be simplified
+        _, ortho = self.pixelVectors(direction=Point(1, 0))
+        px = 0 if ortho is None else ortho.y()
+
         pw = max(self.pen.width() / 2, self.hoverPen.width() / 2)
-        w = max(4, self._maxMarkerSize + pw) + 1
-        w = w * px
+        w = (self._maxMarkerSize + pw + 1) * px
         br = QtCore.QRectF(vr)
         br.setBottom(-w)
         br.setTop(w)
@@ -374,8 +374,8 @@ class InfiniteLine(GraphicsObject):
         return self._boundingRect
 
     def paint(self, p, *args):
-        p.setRenderHint(p.RenderHint.Antialiasing)
-
+        if self.angle % 180 not in (0, 90):
+            p.setRenderHint(p.RenderHint.Antialiasing)
         left, right = self._endPoints
         p.setPen(self.currentPen)
         p.drawLine(Point(left, 0), Point(right, 0))
@@ -651,6 +651,5 @@ class InfLineLabel(TextItem):
         pt1, pt2 = self.getEndpoints()
         if pt1 is None:
             return 0
-        view = self.getViewBox()
         pos = self.mapToParent(pos)
         return (pos.x() - pt1.x()) / (pt2.x()-pt1.x())

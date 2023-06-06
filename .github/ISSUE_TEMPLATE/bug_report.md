@@ -1,14 +1,13 @@
 ---
-name: Bug report
+name: Bug Report
 about: Create a report to help us improve
 title: ''
 labels: ''
 assignees: ''
-
 ---
 
 <!-- In the following, please describe your issue in detail! -->
-<!-- If some of the sections do not apply, just remove them. -->
+<!-- If some sections do not apply, just remove them. -->
 
 ### Short description
 <!-- This should summarize the issue. -->
@@ -16,6 +15,7 @@ assignees: ''
 ### Code to reproduce
 <!-- Please provide a minimal working example that reproduces the issue in the code block below.
      Ideally, this should be a full example someone else could run without additional setup. -->
+
 ```python
 import pyqtgraph as pg
 import numpy as np

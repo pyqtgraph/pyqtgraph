@@ -1,16 +1,18 @@
+__all__ = ['GraphicsItem']
+
 import operator
-import warnings
 import weakref
 from collections import OrderedDict
 from functools import reduce
 from math import hypot
+from typing import Optional
+from xml.etree.ElementTree import Element
 
 from .. import functions as fn
 from ..GraphicsScene import GraphicsScene
 from ..Point import Point
 from ..Qt import QtCore, QtWidgets, isQObjectAlive
 
-__all__ = ['GraphicsItem']
 
 # Recipe from https://docs.python.org/3.8/library/collections.html#collections.OrderedDict
 # slightly adapted for Python 3.7 compatibility
@@ -48,7 +50,7 @@ class GraphicsItem(object):
     """
     _pixelVectorGlobalCache = LRU(100)
 
-    def __init__(self, register=None):
+    def __init__(self):
         if not hasattr(self, '_qtBaseClass'):
             for b in self.__class__.__bases__:
                 if issubclass(b, QtWidgets.QGraphicsItem):
@@ -63,11 +65,7 @@ class GraphicsItem(object):
         self._connectedView = None
         self._exportOpts = False   ## If False, not currently exporting. Otherwise, contains dict of export options.
         self._cachedView = None
-        if register is not None and register:
-            warnings.warn(
-                "'register' argument is deprecated and does nothing, will be removed in 0.13",
-                DeprecationWarning, stacklevel=2
-            )
+
 
     def getViewWidget(self):
         """
@@ -152,15 +150,10 @@ class GraphicsItem(object):
         if view is None:
             return None
         if hasattr(view, 'implements') and view.implements('ViewBox'):
-            tr = self.itemTransform(view.innerSceneItem())
-            if isinstance(tr, tuple):
-                tr = tr[0]   ## difference between pyside and pyqt
-            return tr
+            return self.itemTransform(view.innerSceneItem())[0]
         else:
             return self.sceneTransform()
             #return self.deviceTransform(view.viewportTransform())
-
-
 
     def getBoundingParents(self):
         """Return a list of parents to this item that have child clipping enabled."""
@@ -408,8 +401,7 @@ class GraphicsItem(object):
         return self.mapToView(self.mapFromParent(self.pos()))
     
     def parentItem(self):
-        ## PyQt bug -- some items are returned incorrectly.
-        return GraphicsScene.translateGraphicsItem(self._qtBaseClass.parentItem(self))
+        return self._qtBaseClass.parentItem(self)
         
     def setParentItem(self, parent):
         ## Workaround for Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
@@ -420,8 +412,7 @@ class GraphicsItem(object):
         return self._qtBaseClass.setParentItem(self, parent)
     
     def childItems(self):
-        ## PyQt bug -- some child items are returned incorrectly.
-        return list(map(GraphicsScene.translateGraphicsItem, self._qtBaseClass.childItems(self)))
+        return self._qtBaseClass.childItems(self)
 
 
     def sceneTransform(self):
@@ -441,9 +432,7 @@ class GraphicsItem(object):
         if relativeItem is None:
             relativeItem = self.parentItem()
 
-        tr = self.itemTransform(relativeItem)
-        if isinstance(tr, tuple):  ## difference between pyside and pyqt
-            tr = tr[0]
+        tr = self.itemTransform(relativeItem)[0]
         vec = tr.map(QtCore.QLineF(0,0,1,0))
         return vec.angleTo(QtCore.QLineF(vec.p1(), vec.p1()+QtCore.QPointF(1,0)))
         
@@ -464,13 +453,16 @@ class GraphicsItem(object):
                 #print "   --> ", ch2.scene()
             #self.setChildScene(ch2)
 
-    def parentChanged(self):
+    def changeParent(self):
         """Called when the item's parent has changed. 
         This method handles connecting / disconnecting from ViewBox signals
         to make sure viewRangeChanged works properly. It should generally be 
         extended, not overridden."""
         self._updateView()
-        
+
+    def parentChanged(self):
+        # deprecated version of changeParent()
+        GraphicsItem.changeParent(self)
 
     def _updateView(self):
         ## called to see whether this item has a new view to connect to
@@ -580,7 +572,6 @@ class GraphicsItem(object):
     
     def childrenShape(self):
         """Return the union of the shapes of all descendants of this item in local coordinates."""
-        childs = self.allChildItems()
         shapes = [self.mapFromItem(c, c.shape()) for c in self.allChildItems()]
         return reduce(operator.add, shapes)
     
@@ -616,3 +607,38 @@ class GraphicsItem(object):
 
     def getContextMenus(self, event):
         return [self.getMenu()] if hasattr(self, "getMenu") else []
+
+    def generateSvg(
+            self,
+            nodes: dict[str, Element]
+    ) -> Optional[tuple[Element, list[Element]]]:
+        """Method to override to manually specify the SVG writer mechanism.
+
+        Parameters
+        ----------
+        nodes
+            Dictionary keyed by the name of graphics items and the XML
+            representation of the the item that can be written as valid
+            SVG.
+        
+        Returns
+        -------
+        tuple
+            First element is the top level group for this item. The
+            second element is a list of xml Elements corresponding to the
+            child nodes of the item.
+        None
+            Return None if no XML is needed for rendering
+
+        Raises
+        ------
+        NotImplementedError
+            override method to implement in subclasses of GraphicsItem
+
+        See Also
+        --------
+        pyqtgraph.exporters.SVGExporter._generateItemSvg
+            The generic and default implementation
+
+        """
+        raise NotImplementedError

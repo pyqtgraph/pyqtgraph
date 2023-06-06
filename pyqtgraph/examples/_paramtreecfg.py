@@ -91,6 +91,11 @@ cfg = {
         'exclusive': {
             'type': 'bool',
             'value': False,
+        },
+        'delay': {
+            'type': 'float',
+            'value': 1.0,
+            'limits': [0, None]
         }
     },
 
@@ -125,6 +130,18 @@ cfg = {
             'type': 'list',
             'limits': ['Use span', 'Use step + limits'],
         }
+    },
+
+    'action': {
+        'shortcut': {
+            'type': 'str',
+            'value': "Ctrl+Shift+P",
+        },
+        'icon': {
+            'type': 'file',
+            'value': None,
+            'nameFilter': "Images (*.png *.jpg *.bmp *.jpeg *.svg)",
+        },
     },
 
     'calendar': {
@@ -181,7 +198,6 @@ cfg = {
         'bool': False,
         'colormap': None,
         'progress': 50,
-        'action': None,
         'font': 'Inter',
     }
 }

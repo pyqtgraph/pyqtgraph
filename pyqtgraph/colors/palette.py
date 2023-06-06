@@ -1,0 +1,68 @@
+from ..Qt import QtGui
+
+
+def getQDarkStyleDarkQPalette():
+    BG_DARK = QtGui.QColor('#19232D')
+    BG_NORMAL = QtGui.QColor('#37414F')
+    BG_LIGHT = QtGui.QColor('#455364')
+    FG_DARK = QtGui.QColor('#9DA9B5')
+    FG_NORMAL = QtGui.QColor('#E0E1E3')
+    FG_LIGHT = QtGui.QColor('#F0F0F0')
+    SEL_DARK = QtGui.QColor('#1A72BB')
+    SEL_NORMAL = QtGui.QColor('#26486B')
+    SEL_LIGHT = QtGui.QColor('#346792')
+    qpal = QtGui.QPalette(QtGui.QColor(BG_DARK))
+
+    for ptype in (QtGui.QPalette.Active, QtGui.QPalette.Inactive):
+        qpal.setColor(ptype, QtGui.QPalette.Base, BG_DARK)
+        qpal.setColor(ptype, QtGui.QPalette.Window, BG_DARK)
+        qpal.setColor(ptype, QtGui.QPalette.WindowText, FG_NORMAL)
+        qpal.setColor(ptype, QtGui.QPalette.AlternateBase, BG_LIGHT)
+        qpal.setColor(ptype, QtGui.QPalette.Button, BG_LIGHT)
+        qpal.setColor(ptype, QtGui.QPalette.ButtonText, FG_LIGHT)
+        qpal.setColor(ptype, QtGui.QPalette.Highlight, SEL_LIGHT)
+        qpal.setColor(ptype, QtGui.QPalette.HighlightedText, FG_LIGHT)
+        qpal.setColor(ptype, QtGui.QPalette.Text, FG_LIGHT)
+        qpal.setColor(ptype, QtGui.QPalette.ToolTipBase, BG_LIGHT)
+        qpal.setColor(ptype, QtGui.QPalette.ToolTipText, FG_LIGHT)
+    qpal.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Base, BG_NORMAL)
+    qpal.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Button, BG_NORMAL)
+    qpal.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, FG_DARK)
+    qpal.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.WindowText, FG_DARK)
+    qpal.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, FG_DARK)
+    qpal.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Highlight, BG_LIGHT)
+    qpal.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.HighlightedText, FG_DARK)
+    return qpal
+
+
+def getQDarkStyleLightQPalette():
+    BG_DARK = QtGui.QColor('#ACB1B6')
+    BG_NORMAL = QtGui.QColor('#E0E1E3')
+    BG_LIGHT = QtGui.QColor('#FAFAFA')
+    FG_DARK = QtGui.QColor('#19223D')
+    FG_NORMAL = QtGui.QColor('#293544')
+    FG_LIGHT = QtGui.QColor('#788D9C')
+    SEL_DARK = QtGui.QColor('#1A72BB')
+    SEL_NORMAL = QtGui.QColor('#26486B')
+    SEL_LIGHT = QtGui.QColor('#9FCBFF')
+    qpal = QtGui.QPalette(QtGui.QColor(BG_LIGHT))
+    for ptype in (QtGui.QPalette.Active, QtGui.QPalette.Inactive):
+        qpal.setColor(ptype, QtGui.QPalette.Base, BG_LIGHT)
+        qpal.setColor(ptype, QtGui.QPalette.Window, BG_LIGHT)
+        qpal.setColor(ptype, QtGui.QPalette.WindowText, FG_NORMAL)
+        qpal.setColor(ptype, QtGui.QPalette.AlternateBase, BG_NORMAL)
+        qpal.setColor(ptype, QtGui.QPalette.Button, BG_NORMAL)
+        qpal.setColor(ptype, QtGui.QPalette.ButtonText, FG_DARK)
+        qpal.setColor(ptype, QtGui.QPalette.Highlight, SEL_LIGHT)
+        qpal.setColor(ptype, QtGui.QPalette.HighlightedText, FG_DARK)
+        qpal.setColor(ptype, QtGui.QPalette.Text, FG_DARK)
+        qpal.setColor(ptype, QtGui.QPalette.ToolTipBase, BG_DARK)
+        qpal.setColor(ptype, QtGui.QPalette.ToolTipText, FG_DARK)
+    qpal.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Base, BG_NORMAL)
+    qpal.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Button, BG_NORMAL)
+    qpal.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, FG_LIGHT)
+    qpal.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.WindowText, FG_LIGHT)
+    qpal.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, FG_LIGHT)
+    qpal.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Highlight, SEL_LIGHT)
+    qpal.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.HighlightedText, FG_NORMAL)
+    return qpal

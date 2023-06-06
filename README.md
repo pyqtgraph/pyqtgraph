@@ -6,12 +6,10 @@ PyQtGraph
 [![Build Status](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/actions/?query=workflow%3Amain)
 [![CodeQL Status](https://github.com/pyqtgraph/pyqtgraph/workflows/codeql/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/actions/?query=workflow%3Acodeql)
 [![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/alerts/)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/context:python)
-
+[![Discord](https://img.shields.io/discord/946624673200893953.svg?label=PyQtGraph&logo=discord)](https://discord.gg/ufTVNNreAZ)
 A pure-Python graphics library for PyQt5/PyQt6/PySide2/PySide6
 
-Copyright 2020 Luke Campagnola, University of North Carolina at Chapel Hill
+Copyright 2023 PyQtGraph developers
 
 <http://www.pyqtgraph.org>
 
@@ -29,17 +27,17 @@ This project supports:
 
 * All minor versions of Python released 42 months prior to the project, and at minimum the two latest minor versions.
 * All minor versions of numpy released in the 24 months prior to the project, and at minimum the last three minor versions.
-* All Qt5 versions from 5.12-5.15, and Qt6 6.1
+* Qt5 5.15, and Qt6 6.2+
 
 Currently this means:
 
-* Python 3.7+
-* Qt 5.12-5.15, 6.1
+* Python 3.9+
+* Qt 5.15, 6.2+
 * [PyQt5](https://www.riverbankcomputing.com/software/pyqt/),
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
   [PySide2](https://wiki.qt.io/Qt_for_Python), or
   [PySide6](https://wiki.qt.io/Qt_for_Python)
-* [`numpy`](https://github.com/numpy/numpy) 1.18+
+* [`numpy`](https://github.com/numpy/numpy) 1.21+
 
 ### Optional added functionalities
 
@@ -54,7 +52,7 @@ Through 3rd part libraries, additional functionality may be added to PyQtGraph, 
 | [`matplotlib`] | <ul><li> Export of PlotItem in matplotlib figure </li><li> Add matplotlib collection of colormaps </li></ul> |
 | [`cupy`]       | <ul><li> CUDA-enhanced image processing </li><li> Note: On Windows, CUDA toolkit must be >= 11.1 </li></ul> |
 | [`numba`]      | <ul><li> Faster image processing </li></ul> |
-| [`jupyter_rfb`]| <ul><li> Jupyter Notebook support </li> <li> [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pyqtgraph/pyqtgraph/HEAD?labpath=pyqtgraph%2Fexamples%2Fnotebooks) </li> </ul> |
+| [`jupyter_rfb`]| <ul><li> Jupyter Notebook support </li> <li> [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pyqtgraph/pyqtgraph/HEAD?urlpath=%2Flab%2Ftree%2Fpyqtgraph%2Fexamples%2Fnotebooks) </li> </ul> |
 
 [`scipy`]: https://github.com/scipy/scipy
 [`ndimage`]: https://docs.scipy.org/doc/scipy/reference/ndimage.html
@@ -67,33 +65,20 @@ Through 3rd part libraries, additional functionality may be added to PyQtGraph, 
 [`cupy`]: https://docs.cupy.dev/en/stable/install.html
 [`jupyter_rfb`]: https://github.com/vispy/jupyter_rfb
 
-Qt Bindings Test Matrix
------------------------
-
-The following table represents the python environments we test in our CI system.  Our CI system uses Ubuntu 20.04, Windows Server 2019, and macOS 10.15 base images.
-
-| Qt-Bindings    | Python 3.7         | Python 3.8         | Python 3.9         |
-| :------------- | :----------------: | :----------------: | :----------------: |
-| PySide2-5.12   | :white_check_mark: | :x:                | :x:                |
-| PyQt5-5.12     | :white_check_mark: |                    | :x:                |
-| PySide2-5.15   |                    | :white_check_mark: |                    |
-| PyQt5-5.15     |                    | :white_check_mark: |                    |
-| PySide6-6.1    |                    |                    | :white_check_mark: |
-| PyQt6-6.1      |                    |                    | :white_check_mark: |
-
-* :x: - Not compatible
-* :white_check_mark: - Tested
-
 Support
 -------
 
 * Report issues on the [GitHub issue tracker](https://github.com/pyqtgraph/pyqtgraph/issues)
-* Post questions to the [mailing list / forum](https://groups.google.com/forum/?fromgroups#!forum/pyqtgraph) or [StackOverflow](https://stackoverflow.com/questions/tagged/pyqtgraph)
+* Post questions to
+  * [mailing list / forum](https://groups.google.com/forum/?fromgroups#!forum/pyqtgraph)
+  * [StackOverflow](https://stackoverflow.com/questions/tagged/pyqtgraph)
+  * [GitHub Discussions](https://github.com/pyqtgraph/pyqtgraph/discussions)
+  * [Python Discord](https://discord.com/channels/267624335836053506/898139460821192724)
 
 Installation Methods
 --------------------
 
-* From PyPI:
+* From PyPI
   * Last released version: `pip install pyqtgraph`
   * Latest development version: `pip install git+https://github.com/pyqtgraph/pyqtgraph@master`
 * From conda
@@ -116,16 +101,25 @@ Used By
 Here is a partial listing of some of the applications that make use of PyQtGraph!
 
 * [ACQ4](https://github.com/acq4/acq4)
-* [Orange3](https://orangedatamining.com/)
-* [neurotic](https://neurotic.readthedocs.io)
-* [ephyviewer](https://ephyviewer.readthedocs.io)
-* [Joulescope](https://www.joulescope.com/)
-* [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
+* [Antenna Array Analysis](https://github.com/rookiepeng/antenna-array-analysis)
 * [argos](https://github.com/titusjan/argos)
-* [PySpectra](http://hasyweb.desy.de/services/computing/Spock/node138.html)
-* [Semi-Supervised Semantic Annotator](https://gitlab.com/ficsresearch/s3ah)
-* [PyMeasure](https://github.com/pymeasure/pymeasure)
+* [Atomize](https://github.com/Anatoly1010/Atomize)
+* [EnMAP-Box](https://enmap-box.readthedocs.io)
+* [EO Time Series Viewer](https://eo-time-series-viewer.readthedocs.io)
+* [ephyviewer](https://ephyviewer.readthedocs.io)
 * [Exo-Striker](https://github.com/3fon3fonov/exostriker)
+* [GraPhysio](https://github.com/jaj42/GraPhysio)
 * [HussariX](https://github.com/sem-geologist/HussariX)
+* [Joulescope](https://www.joulescope.com/)
+* [MaD GUI](https://github.com/mad-lab-fau/mad-gui)
+* [neurotic](https://neurotic.readthedocs.io)
+* [Orange3](https://orangedatamining.com/)
+* [PatchView](https://github.com/ZeitgeberH/patchview)
+* [pyplotter](https://github.com/pyplotter/pyplotter)
+* [PyMeasure](https://github.com/pymeasure/pymeasure)
+* [PySpectra](http://hasyweb.desy.de/services/computing/Spock/node138.html)
+* [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
+* [Semi-Supervised Semantic Annotator](https://gitlab.com/s3a/s3a)
+* [STDF-Viewer](https://github.com/noonchen/STDF-Viewer)
 
 Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!

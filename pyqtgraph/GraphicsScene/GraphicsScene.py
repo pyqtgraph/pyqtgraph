@@ -5,17 +5,10 @@ from time import perf_counter, perf_counter_ns
 from .. import debug as debug
 from .. import getConfigOption
 from ..Point import Point
-from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets, isQObjectAlive
+from ..Qt import QtCore, QtGui, QtWidgets, isQObjectAlive
 from .mouseEvents import HoverEvent, MouseClickEvent, MouseDragEvent
 
 getMillis = lambda: perf_counter_ns() // 10 ** 6
-
-
-if QT_LIB.startswith('PyQt'):
-    from ..Qt import sip
-    HAVE_SIP = True
-else:
-    HAVE_SIP = False
 
 
 __all__ = ['GraphicsScene']
@@ -42,7 +35,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     sigMouseClicked(event) Emitted when the mouse is clicked over the scene. Use ev.pos() to
                            get the click position relative to the item that was clicked on,
                            or ev.scenePos() to get the click position in scene coordinates.
-                           See :class:`pyqtgraph.GraphicsScene.MouseClickEvent`.                        
+                           See :class:`pyqtgraph.GraphicsScene.mouseEvents.MouseClickEvent`.                        
     sigMouseMoved(pos)     Emitted when the mouse cursor moves over the scene. The position
                            is given in scene coordinates.
     sigMouseHover(items)   Emitted when the mouse is moved over the scene. Items is a list
@@ -90,13 +83,6 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     _addressCache = weakref.WeakValueDictionary()
     
     ExportDirectory = None
-    
-    @classmethod
-    def registerObject(cls, obj):
-        warnings.warn(
-            "'registerObject' is deprecated and does nothing.",
-            DeprecationWarning, stacklevel=2
-        )
 
     def __init__(self, clickRadius=2, moveDistance=5, parent=None):
         QtWidgets.QGraphicsScene.__init__(self, parent)
@@ -235,10 +221,18 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                 cev = [e for e in self.clickEvents if e.button() == ev.button()]
                 if cev:
                     if self.sendClickEvent(cev[0]):
-                        #print "sent click event"
                         ev.accept()
-                    self.clickEvents.remove(cev[0])
-                
+                    try:
+                        self.clickEvents.remove(cev[0])
+                    except ValueError:
+                        warnings.warn(
+                            ("A ValueError can occur here with errant "
+                             "QApplication.processEvent() calls, see "
+                            "https://github.com/pyqtgraph/pyqtgraph/pull/2580 "
+                            "for more information."),
+                            RuntimeWarning,
+                            stacklevel=2
+                        )
         if not ev.buttons():
             self.dragItem = None
             self.dragButtons = []
@@ -403,95 +397,80 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         ret = QtWidgets.QGraphicsScene.removeItem(self, item)
         self.sigItemRemoved.emit(item)
         return ret
-        
-    def items(self, *args):
-        items = QtWidgets.QGraphicsScene.items(self, *args)
-        return self.translateGraphicsItems(items)
-    
-    def selectedItems(self, *args):
-        items = QtWidgets.QGraphicsScene.selectedItems(self, *args)
-        return self.translateGraphicsItems(items)
 
-    def itemAt(self, *args):
-        item = QtWidgets.QGraphicsScene.itemAt(self, *args)
-        return self.translateGraphicsItem(item)
-
-    def itemsNearEvent(self, event, selMode=QtCore.Qt.ItemSelectionMode.IntersectsItemShape, sortOrder=QtCore.Qt.SortOrder.DescendingOrder, hoverable=False):
+    def itemsNearEvent(
+        self,
+        event,
+        selMode=QtCore.Qt.ItemSelectionMode.IntersectsItemShape,
+        sortOrder=QtCore.Qt.SortOrder.DescendingOrder,
+        hoverable=False,
+    ):
         """
         Return an iterator that iterates first through the items that directly intersect point (in Z order)
         followed by any other items that are within the scene's click radius.
         """
-        #tr = self.getViewWidget(event.widget()).transform()
         view = self.views()[0]
         tr = view.viewportTransform()
-        r = self._clickRadius
-        rect = view.mapToScene(QtCore.QRect(0, 0, 2*r, 2*r)).boundingRect()
-        
-        seen = set()
-        if hasattr(event, 'buttonDownScenePos'):
+
+        if hasattr(event, "buttonDownScenePos"):
             point = event.buttonDownScenePos()
         else:
             point = event.scenePos()
-        w = rect.width()
-        h = rect.height()
-        rgn = QtCore.QRectF(point.x()-w, point.y()-h, 2*w, 2*h)
-        #self.searchRect.setRect(rgn)
 
-
-        items = self.items(point, selMode, sortOrder, tr)
-        
-        ## remove items whose shape does not contain point (scene.items() apparently sucks at this)
-        items2 = []
-        for item in items:
-            if hoverable and not hasattr(item, 'hoverEvent'):
-                continue
-            if item.scene() is not self:
-                continue
-            shape = item.shape() # Note: default shape() returns boundingRect()
-            if shape is None:
-                continue
-            if shape.contains(item.mapFromScene(point)):
-                items2.append(item)
-        
         ## Sort by descending Z-order (don't trust scene.itms() to do this either)
         ## use 'absolute' z value, which is the sum of all item/parent ZValues
         def absZValue(item):
             if item is None:
                 return 0
             return item.zValue() + absZValue(item.parentItem())
-        
-        items2.sort(key=absZValue, reverse=True)
-        
-        return items2
-        
-        #for item in items:
-            ##seen.add(item)
 
-            #shape = item.mapToScene(item.shape())
-            #if not shape.contains(point):
-                #continue
-            #yield item
-        #for item in self.items(rgn, selMode, sortOrder, tr):
-            ##if item not in seen:
-            #yield item
-        
+        ## Get items, which directly are at the given point (sorted by z-value)
+        items_at_point = self.items(point, selMode, sortOrder, tr)
+        items_at_point.sort(key=absZValue, reverse=True)
+
+        ## Get items, which are within the click radius around the given point (sorted by z-value)
+        r = self._clickRadius
+        items_within_radius = []
+        rgn = None
+        if r > 0.0:
+            rect = view.mapToScene(QtCore.QRect(0, 0, 2 * r, 2 * r)).boundingRect()
+            w = rect.width()
+            h = rect.height()
+            rgn = QtCore.QRectF(point.x() - w / 2, point.y() - h / 2, w, h)
+            items_within_radius = self.items(rgn, selMode, sortOrder, tr)
+            items_within_radius.sort(key=absZValue, reverse=True)
+            # Remove items, which are already in the other list
+            for item in items_at_point:
+                if item in items_within_radius:
+                    items_within_radius.remove(item)
+
+        ## Put both groups of items together, but in the correct order
+        ## The items directly at the given point shall have higher priority
+        all_items = items_at_point + items_within_radius
+
+        ## Remove items, which we don't want, due to several reasons
+        selected_items = []
+        for item in all_items:
+            if hoverable and not hasattr(item, "hoverEvent"):
+                continue
+            if item.scene() is not self:
+                continue
+            shape = item.shape()  # Note: default shape() returns boundingRect()
+            if shape is None:
+                continue
+            # Remove items whose shape does not contain point or region
+            # (scene.items() apparently sucks at this)
+            if (
+                rgn is not None
+                and shape.intersects(item.mapFromScene(rgn).boundingRect())
+            ) or shape.contains(item.mapFromScene(point)):
+                selected_items.append(item)
+
+        return selected_items
+
     def getViewWidget(self):
         return self.views()[0]
     
-    #def getViewWidget(self, widget):
-        ### same pyqt bug -- mouseEvent.widget() doesn't give us the original python object.
-        ### [[doesn't seem to work correctly]]
-        #if HAVE_SIP and isinstance(self, sip.wrapper):
-            #addr = sip.unwrapinstance(sip.cast(widget, QtWidgets.QWidget))
-            ##print "convert", widget, addr
-            #for v in self.views():
-                #addr2 = sip.unwrapinstance(sip.cast(v, QtWidgets.QWidget))
-                ##print "   check:", v, addr2
-                #if addr2 == addr:
-                    #return v
-        #else:
-            #return widget
-
     def addParentContextMenus(self, item, menu, event):
         """
         Can be called by any item in the scene to expand its context menu to include parent context menus.
@@ -534,18 +513,23 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                 menusToAdd.extend(subMenus)
             else:
                 menusToAdd.append(subMenus)
+        # Filter out options that were previously added
+        existingActions = menu.actions()
+        actsToAdd = []
+        for menuOrAct in menusToAdd:
+            if isinstance(menuOrAct, QtWidgets.QMenu):
+                menuOrAct = menuOrAct.menuAction()
+            elif not isinstance(menuOrAct, QtGui.QAction):
+                raise Exception(
+                    f"Cannot add object {menuOrAct} (type={type(menuOrAct)}) to QMenu."
+                )
+            if menuOrAct not in existingActions:
+                actsToAdd.append(menuOrAct)
 
-        if menusToAdd:
+        if actsToAdd:
             menu.addSeparator()
 
-        for m in menusToAdd:
-            if isinstance(m, QtWidgets.QMenu):
-                menu.addAction(m.menuAction())
-            elif isinstance(m, QtGui.QAction):
-                menu.addAction(m)
-            else:
-                raise Exception("Cannot add object %s (type=%s) to QMenu." % (str(m), str(type(m))))
-            
+        menu.addActions(actsToAdd)
         return menu
 
     def getContextMenus(self, event):
@@ -557,19 +541,3 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             from . import exportDialog
             self.exportDialog = exportDialog.ExportDialog(self)
         self.exportDialog.show(self.contextMenuItem)
-
-    @staticmethod
-    def translateGraphicsItem(item):
-        # This function is intended as a workaround for a problem with older
-        # versions of PyQt (< 4.9?), where methods returning 'QGraphicsItem *'
-        # lose the type of the QGraphicsObject subclasses and instead return
-        # generic QGraphicsItem wrappers.
-        if HAVE_SIP and isinstance(item, sip.wrapper):
-            obj = item.toGraphicsObject()
-            if obj is not None:
-                item = obj
-        return item
-
-    @staticmethod
-    def translateGraphicsItems(items):
-        return list(map(GraphicsScene.translateGraphicsItem, items))

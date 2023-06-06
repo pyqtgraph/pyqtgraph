@@ -3,10 +3,11 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.12.3'
+__version__ = '0.13.4.dev0'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
+import importlib
 import os
 import sys
 
@@ -14,6 +15,7 @@ import numpy  # # pyqtgraph requires numpy
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt and PySide.
+from .colors import palette
 from .Qt import QtCore, QtGui, QtWidgets
 from .Qt import exec_ as exec
 from .Qt import mkQApp
@@ -33,8 +35,8 @@ if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
 elif 'darwin' in sys.platform: ## openGL can have a major impact on mac, but also has serious bugs
     useOpenGL = False
 else:
-    useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
-                
+    useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff.
+
 CONFIG_OPTIONS = {
     'useOpenGL': useOpenGL, ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
     'leftButtonPan': True,  ## if false, left button drags a rubber band for zooming in viewbox
@@ -53,7 +55,11 @@ CONFIG_OPTIONS = {
                                  # change in the future.
     'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
     'useNumba': False, # When True, use numba
-} 
+    'segmentedLineMode': 'auto',  # segmented line mode, controls if lines are plotted in segments or continuous
+                                  # 'auto': whether lines are plotted in segments is automatically decided using pen properties and whether anti-aliasing is enabled
+                                  # 'on' or True: lines are always plotted in segments
+                                  # 'off' or False: lines are never plotted in segments
+}
 
 
 def setConfigOption(opt, value):
@@ -61,12 +67,14 @@ def setConfigOption(opt, value):
         raise KeyError('Unknown configuration option "%s"' % opt)
     if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
         raise ValueError('imageAxisOrder must be either "row-major" or "col-major"')
+    if opt == 'segmentedLineMode' and value not in ('auto', 'on', 'off'):
+        raise ValueError('segmentedLineMode must be "auto", "on" or "off"')
     CONFIG_OPTIONS[opt] = value
 
 def setConfigOptions(**opts):
-    """Set global configuration options. 
-    
-    Each keyword argument sets one global option. 
+    """Set global configuration options.
+
+    Each keyword argument sets one global option.
     """
     for k,v in opts.items():
         setConfigOption(k, v)
@@ -82,7 +90,7 @@ def systemInfo():
     print("sys.version: %s" % sys.version)
     from .Qt import VERSION_INFO
     print("qt bindings: %s" % VERSION_INFO)
-    
+
     global __version__
     rev = None
     if __version__ is None:  ## this code was probably checked out from bzr; look up the last-revision file
@@ -90,7 +98,7 @@ def systemInfo():
         if os.path.exists(lastRevFile):
             with open(lastRevFile, 'r') as fd:
                 rev = fd.read().strip()
-    
+
     print("pyqtgraph: %s; %s" % (__version__, rev))
     print("config:")
     import pprint
@@ -98,16 +106,16 @@ def systemInfo():
 
 ## Rename orphaned .pyc files. This is *probably* safe :)
 ## We only do this if __version__ is None, indicating the code was probably pulled
-## from the repository. 
+## from the repository.
 def renamePyc(startDir):
     ### Used to rename orphaned .pyc files
     ### When a python file changes its location in the repository, usually the .pyc file
-    ### is left behind, possibly causing mysterious and difficult to track bugs. 
+    ### is left behind, possibly causing mysterious and difficult to track bugs.
 
     ### Note that this is no longer necessary for python 3.2; from PEP 3147:
-    ### "If the py source file is missing, the pyc file inside __pycache__ will be ignored. 
+    ### "If the py source file is missing, the pyc file inside __pycache__ will be ignored.
     ### This eliminates the problem of accidental stale pyc file imports."
-    
+
     printed = False
     startDir = os.path.abspath(startDir)
     for path, dirs, files in os.walk(startDir):
@@ -130,7 +138,7 @@ def renamePyc(startDir):
                 print("  " + fileName + "  ==>")
                 print("  " + name2)
                 os.rename(fileName, name2)
-                
+
 path = os.path.split(__file__)[0]
 
 ## Import almost everything to make it available from a single namespace
@@ -139,8 +147,8 @@ path = os.path.split(__file__)[0]
 #from . import frozenSupport
 #def importModules(path, globals, locals, excludes=()):
     #"""Import all modules residing within *path*, return a dict of name: module pairs.
-    
-    #Note that *path* MUST be relative to the module doing the import.    
+
+    #Note that *path* MUST be relative to the module doing the import.
     #"""
     #d = os.path.join(os.path.split(globals['__file__'])[0], path)
     #files = set()
@@ -151,7 +159,7 @@ path = os.path.split(__file__)[0]
             #files.add(f[:-3])
         #elif f[-4:] == '.pyc' and f != '__init__.pyc':
             #files.add(f[:-4])
-        
+
     #mods = {}
     #path = path.replace(os.sep, '.')
     #for modName in files:
@@ -168,7 +176,7 @@ path = os.path.split(__file__)[0]
             #traceback.print_stack()
             #sys.excepthook(*sys.exc_info())
             #print("[Error importing module: %s]" % modName)
-            
+
     #return mods
 
 #def importAll(path, globals, locals, excludes=()):
@@ -235,14 +243,11 @@ from .graphicsItems.VTickGroup import *
 
 # indirect imports used within library
 from .GraphicsScene import GraphicsScene
-from .graphicsWindows import *
 from .imageview import *
 
 # indirect imports known to be used outside of the library
 from .metaarray import MetaArray
-from .ordereddict import OrderedDict
 from .Point import Point
-from .ptime import time
 from .Qt import isQObjectAlive
 from .SignalProxy import *
 from .SRTTransform import SRTTransform
@@ -273,6 +278,7 @@ from .widgets.MultiPlotWidget import *
 from .widgets.PathButton import *
 from .widgets.PlotWidget import *
 from .widgets.ProgressDialog import *
+from .widgets.RawImageWidget import *
 from .widgets.RemoteGraphicsView import RemoteGraphicsView
 from .widgets.ScatterPlotWidget import *
 from .widgets.SpinBox import *
@@ -282,7 +288,7 @@ from .widgets.ValueLabel import *
 from .widgets.VerticalLabel import *
 
 ##############################################################
-## PyQt and PySide both are prone to crashing on exit. 
+## PyQt and PySide both are prone to crashing on exit.
 ## There are two general approaches to dealing with this:
 ##  1. Install atexit handlers that assist in tearing down to avoid crashes.
 ##     This helps, but is never perfect.
@@ -294,34 +300,12 @@ def cleanup():
     global _cleanupCalled
     if _cleanupCalled:
         return
-    
+
     if not getConfigOption('exitCleanup'):
         return
-    
+
     ViewBox.quit()  ## tell ViewBox that it doesn't need to deregister views anymore.
-    
-    ## Workaround for Qt exit crash:
-    ## ALL QGraphicsItems must have a scene before they are deleted.
-    ## This is potentially very expensive, but preferred over crashing.
-    ## Note: this appears to be fixed in PySide as of 2012.12, but it should be left in for a while longer..
-    app = QtWidgets.QApplication.instance()
-    if app is None or not isinstance(app, QtWidgets.QApplication):
-        # app was never constructed is already deleted or is an
-        # QCoreApplication/QGuiApplication and not a full QApplication
-        return
-    import gc
-    s = QtWidgets.QGraphicsScene()
-    for o in gc.get_objects():
-        try:
-            if isinstance(o, QtWidgets.QGraphicsItem) and isQObjectAlive(o) and o.scene() is None:
-                if getConfigOption('crashWarning'):
-                    sys.stderr.write('Error: graphics item without scene. '
-                        'Make sure ViewBox.close() and GraphicsView.close() '
-                        'are properly called before app shutdown (%s)\n' % (o,))
-                
-                s.addItem(o)
-        except (RuntimeError, ReferenceError):  ## occurs if a python wrapper no longer has its underlying C++ object
-            continue
+
     _cleanupCalled = True
 
 atexit.register(cleanup)
@@ -343,28 +327,28 @@ def _connectCleanup():
 def exit():
     """
     Causes python to exit without garbage-collecting any objects, and thus avoids
-    calling object destructor methods. This is a sledgehammer workaround for 
+    calling object destructor methods. This is a sledgehammer workaround for
     a variety of bugs in PyQt and Pyside that cause crashes on exit.
-    
+
     This function does the following in an attempt to 'safely' terminate
     the process:
-    
+
       * Invoke atexit callbacks
       * Close all open file handles
       * os._exit()
-    
+
     Note: there is some potential for causing damage with this function if you
     are using objects that _require_ their destructors to be called (for example,
     to properly terminate log files, disconnect from devices, etc). Situations
     like this are probably quite rare, but use at your own risk.
     """
-    
+
     ## first disable our own cleanup function; won't be needing it.
     setConfigOptions(exitCleanup=False)
-    
+
     ## invoke atexit callbacks
     atexit._run_exitfuncs()
-    
+
     ## close file handles
     if sys.platform == 'darwin':
         for fd in range(3, 4096):
@@ -378,7 +362,7 @@ def exit():
         os.closerange(3, 4096) ## just guessing on the maximum descriptor count..
 
     os._exit(0)
-    
+
 
 ## Convenience functions for command-line use
 plots = []
@@ -387,7 +371,7 @@ QAPP = None
 
 def plot(*args, **kargs):
     """
-    Create and return a :class:`PlotWidget <pyqtgraph.PlotWinPlotWidgetdow>` 
+    Create and return a :class:`PlotWidget <pyqtgraph.PlotWidget>`
     Accepts a *title* argument to set the title of the window.
     All other arguments are used to plot data. (see :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`)
     """
@@ -411,7 +395,7 @@ def plot(*args, **kargs):
 
 def image(*args, **kargs):
     """
-    Create and return an :class:`ImageView <pyqtgraph.ImageView>` 
+    Create and return an :class:`ImageView <pyqtgraph.ImageView>`
     Will show 2D or 3D image data.
     Accepts a *title* argument to set the title of the window.
     All other arguments are used to show data. (see :func:`ImageView.setImage() <pyqtgraph.ImageView.setImage>`)
@@ -430,7 +414,7 @@ show = image  ## for backward compatibility
 def dbg(*args, **kwds):
     """
     Create a console window and begin watching for exceptions.
-    
+
     All arguments are passed to :func:`ConsoleWidget.__init__() <pyqtgraph.console.ConsoleWidget.__init__>`.
     """
     mkQApp()
@@ -449,7 +433,7 @@ def dbg(*args, **kwds):
 def stack(*args, **kwds):
     """
     Create a console window and show the current stack trace.
-    
+
     All arguments are passed to :func:`ConsoleWidget.__init__() <pyqtgraph.console.ConsoleWidget.__init__>`.
     """
     mkQApp()
@@ -463,3 +447,20 @@ def stack(*args, **kwds):
     except NameError:
         consoles = [c]
     return c
+
+
+def setPalette(app, style):
+    if isinstance(style, str):
+        style = style.lower()
+        if style == 'qdarkstylelight':
+            p = palette.getQDarkStyleLightQPalette()
+        elif style in ['qdarkstyle','qdarkstyledark']:
+            p = palette.getQDarkStyleDarkQPalette()
+        else:
+            raise ValueError(f'no palette by the name {style} exists')
+    elif isinstance(style, QtGui.QPalette):
+        p = style
+    else:
+        raise TypeError('style either be a string or QPalette')
+    app.paletteChanged.emit(p)
+    app.setPalette(p)

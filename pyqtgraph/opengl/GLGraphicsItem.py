@@ -31,14 +31,14 @@ GLOptions = {
 class GLGraphicsItem(QtCore.QObject):
     _nextId = 0
     
-    def __init__(self, parentItem=None):
+    def __init__(self, parentItem: 'GLGraphicsItem' = None):
         super().__init__()
         self._id = GLGraphicsItem._nextId
         GLGraphicsItem._nextId += 1
         
-        self.__parent = None
+        self.__parent: GLGraphicsItem | None = None
         self.__view = None
-        self.__children = set()
+        self.__children: set[GLGraphicsItem] = set()
         self.__transform = Transform3D()
         self.__visible = True
         self.__initialized = False
@@ -135,9 +135,12 @@ class GLGraphicsItem(QtCore.QObject):
         
     def setTransform(self, tr):
         """Set the local transform for this object.
-        Must be a :class:`Transform3D <pyqtgraph.Transform3D>` instance. This transform
-        determines how the local coordinate system of the item is mapped to the coordinate
-        system of its parent."""
+
+        Parameters
+        ----------
+        tr : pyqtgraph.Transform3D
+            Tranformation from the local coordinate system to the parent's.
+        """
         self.__transform = Transform3D(tr)
         self.update()
         

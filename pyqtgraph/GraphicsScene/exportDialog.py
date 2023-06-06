@@ -1,14 +1,10 @@
-import importlib
-
 from .. import exporters as exporters
 from .. import functions as fn
 from ..graphicsItems.PlotItem import PlotItem
 from ..graphicsItems.ViewBox import ViewBox
-from ..Qt import QT_LIB, QtCore, QtWidgets
+from ..Qt import QtCore, QtWidgets
 
-ui_template = importlib.import_module(
-    f'.exportDialogTemplate_{QT_LIB.lower()}', package=__package__)
-
+from . import exportDialogTemplate_generic as ui_template
 
 class FormatExportListWidgetItem(QtWidgets.QListWidgetItem):
     def __init__(self, expClass, *args, **kwargs):
@@ -53,11 +49,12 @@ class ExportDialog(QtWidgets.QWidget):
         self.activateWindow()
         self.raise_()
         self.selectBox.setVisible(True)
-        
         if not self.shown:
             self.shown = True
             vcenter = self.scene.getViewWidget().geometry().center()
-            self.setGeometry(vcenter.x()-self.width()/2, vcenter.y()-self.height()/2, self.width(), self.height())
+            x = max(0, int(vcenter.x() - self.width() / 2))
+            y = max(0, int(vcenter.y() - self.height() / 2))
+            self.move(x, y)
         
     def updateItemList(self, select=None):
         self.ui.itemTree.clear()

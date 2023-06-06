@@ -14,6 +14,10 @@ setupOpts = dict(
     long_description=DESCRIPTION,
     license =  'MIT',
     url='http://www.pyqtgraph.org',
+    project_urls={
+        'Documentation': 'https://pyqtgraph.readthedocs.io',
+        'Source': 'https://github.com/pyqtgraph/pyqtgraph',
+    },
     author='Luke Campagnola',
     author_email='luke.campagnola@gmail.com',
     classifiers = [
@@ -32,9 +36,12 @@ setupOpts = dict(
 
 
 import distutils.dir_util
+import os
+import re
+import sys
 from distutils.command import build
-import os, sys, re
-from setuptools import setup, find_namespace_packages
+
+from setuptools import find_namespace_packages, setup
 from setuptools.command import install
 
 path = os.path.split(__file__)[0]
@@ -67,7 +74,7 @@ class Install(install.install):
     """
     def run(self):
         global path, version, initVersion, forcedVersion, installVersion
-        
+
         name = self.config_vars['dist_name']
         path = os.path.join(self.install_libbase, 'pyqtgraph')
         if os.path.exists(path):
@@ -115,7 +122,7 @@ setup(
         'style': helpers.StyleCommand
     },
     packages=find_namespace_packages(include=['pyqtgraph', 'pyqtgraph.*']),
-    python_requires=">=3.7",
+    python_requires=">=3.9",
     package_dir={"pyqtgraph": "pyqtgraph"},
     package_data={
         'pyqtgraph.examples': ['optics/*.gz', 'relativity/presets/*.cfg'],
@@ -127,7 +134,7 @@ setup(
         ],
     },
     install_requires = [
-        'numpy>=1.17.0',
+        'numpy>=1.21.0',
     ],
     **setupOpts
 )

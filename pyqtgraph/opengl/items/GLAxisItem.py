@@ -6,14 +6,14 @@ __all__ = ['GLAxisItem']
 
 class GLAxisItem(GLGraphicsItem):
     """
-    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`
     
     Displays three lines indicating origin and orientation of local coordinate system. 
     
     """
     
-    def __init__(self, size=None, antialias=True, glOptions='translucent'):
-        GLGraphicsItem.__init__(self)
+    def __init__(self, size=None, antialias=True, glOptions='translucent', parentItem=None):
+        super().__init__(parentItem=parentItem)
         if size is None:
             size = QtGui.QVector3D(1,1,1)
         self.antialias = antialias

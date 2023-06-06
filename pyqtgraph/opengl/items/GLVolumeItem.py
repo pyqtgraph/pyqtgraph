@@ -8,13 +8,13 @@ __all__ = ['GLVolumeItem']
 
 class GLVolumeItem(GLGraphicsItem):
     """
-    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`
     
     Displays volumetric data. 
     """
     
     
-    def __init__(self, data, sliceDensity=1, smooth=True, glOptions='translucent'):
+    def __init__(self, data, sliceDensity=1, smooth=True, glOptions='translucent', parentItem=None):
         """
         ==============  =======================================================================================
         **Arguments:**
@@ -29,7 +29,7 @@ class GLVolumeItem(GLGraphicsItem):
         self.data = None
         self._needUpload = False
         self.texture = None
-        GLGraphicsItem.__init__(self)
+        super().__init__(parentItem=parentItem)
         self.setGLOptions(glOptions)
         self.setData(data)
         
@@ -59,7 +59,8 @@ class GLVolumeItem(GLGraphicsItem):
         if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0, GL_TEXTURE_WIDTH) == 0:
             raise Exception("OpenGL failed to create 3D texture (%dx%dx%d); too large for this hardware." % shape[:3])
         
-        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, shape[0], shape[1], shape[2], 0, GL_RGBA, GL_UNSIGNED_BYTE, self.data.transpose((2,1,0,3)))
+        data = np.ascontiguousarray(self.data.transpose((2,1,0,3)))
+        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, shape[0], shape[1], shape[2], 0, GL_RGBA, GL_UNSIGNED_BYTE, data)
         glDisable(GL_TEXTURE_3D)
         
         self.lists = {}
@@ -103,8 +104,6 @@ class GLVolumeItem(GLGraphicsItem):
         glDisable(GL_TEXTURE_3D)
                 
     def drawVolume(self, ax, d):
-        N = 5
-        
         imax = [0,1,2]
         imax.remove(ax)
         
