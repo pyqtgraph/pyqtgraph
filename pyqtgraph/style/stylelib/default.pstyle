@@ -61,8 +61,12 @@ symbolBrush: (50,  50,  150) # brush of the symbol
 antialias   : False          # if antialiased
 
 
-[BarItem]
-color : 'w' # color of the barItem
+[ColorBarItem]
+width            : 25          # width of the displayed colorBar
+orientation      : 'vertical'  # orientation of the ColorBarItem
+handleColor      : 'w'         # color of adjustment handles in interactive mode.
+handleHoverColor : 'r'         # color of adjustment handles when hovered over.
+regionHoverBrush : '#FF000080' # color of movable center region when hovered over.
 
 
 [ErrorBarItem]
