@@ -69,6 +69,9 @@ handleHoverColor : 'r'         # color of adjustment handles when hovered over.
 regionHoverBrush : '#FF000080' # color of movable center region when hovered over.
 
 
+[BarGraphItem]
+BarGraphItem.color : w # color of the barItem
+
 [ErrorBarItem]
 color : (200, 200, 200) # color of the ErrorBarItem
 linestyle : '-'         # linestyle of the ErrorBarItem
@@ -98,12 +101,15 @@ labelFontsize   : 11.0                 # font-size of the labelItem in pt
 labelFontweight : 'normal'             # font-weight of the labelItem in pt
 labelAlign      : 'left'               # text alignement of the labelItem
 offset          : 0.0, 0.0             # offset position relative to the LegendItem's parent in px.
-facecolor       : 0, 0, 0, 0           # legend background color
-edgecolor       : (200, 200, 200, 255) # legend edge color
+faceColor       : 0, 0, 0, 0           # legend background color
+edgeColor       : (200, 200, 200, 255) # legend edge color
 frameon         : True                 # whether or not to draw a frame around legend
 
-[ScaleBarItem]
-color : 'w' # color of the scaleBarItem
+[ScaleBar]
+faceColor  : 'w'                  # color of the scalebar
+labelColor : (200, 200, 200, 255) # color of the label of the scalebar
+offset     : 0.0, 0.0           # offset position relative to the scalebar in px.
+width      : 5                    # width of the displayed scalebar
 
 
 [ScatterPlotItem]
