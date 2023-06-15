@@ -287,7 +287,7 @@ def _handle_underflow(dtype, *elements):
     "xs, ys, connect, expected", [
         *(
             (
-                np.arange(6, dtype=dtype), np.arange(0, -6, step=-1, dtype=dtype), 'all',
+                np.arange(6, dtype=dtype), np.arange(0, -6, step=-1).astype(dtype), 'all',
                 _handle_underflow(dtype,
                                   (MoveToElement, 0.0, 0.0),
                                   (LineToElement, 1.0, -1.0),
@@ -300,7 +300,7 @@ def _handle_underflow(dtype, *elements):
         ),
         *(
             (
-                np.arange(6, dtype=dtype), np.arange(0, -6, step=-1, dtype=dtype), 'pairs',
+                np.arange(6, dtype=dtype), np.arange(0, -6, step=-1).astype(dtype), 'pairs',
                 _handle_underflow(dtype,
                                   (MoveToElement, 0.0, 0.0),
                                   (LineToElement, 1.0, -1.0),
@@ -313,7 +313,7 @@ def _handle_underflow(dtype, *elements):
         ),
         *(
             (
-                np.arange(5, dtype=dtype), np.arange(0, -5, step=-1, dtype=dtype), 'pairs',
+                np.arange(5, dtype=dtype), np.arange(0, -5, step=-1).astype(dtype), 'pairs',
                 _handle_underflow(dtype,
                                   (MoveToElement, 0.0, 0.0),
                                   (LineToElement, 1.0, -1.0),
@@ -344,7 +344,7 @@ def _handle_underflow(dtype, *elements):
         ),
         *(
             (
-                np.arange(5, dtype=dtype), np.arange(0, -5, step=-1, dtype=dtype), np.array([0, 1, 0, 1, 0]),
+                np.arange(5, dtype=dtype), np.arange(0, -5, step=-1).astype(dtype), np.array([0, 1, 0, 1, 0]),
                 _handle_underflow(dtype,
                                   (MoveToElement, 0.0, 0.0),
                                   (MoveToElement, 1.0, -1.0),
