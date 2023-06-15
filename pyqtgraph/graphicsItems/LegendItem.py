@@ -31,8 +31,8 @@ optsHint = TypedDict('optsHint',
                       'labelfontsize'  : float,
                       'labelfontweight': str,
                       'labelalign'     : str,
-                      'facecolor'      : ConfigColorHint,
-                      'edgecolor'      : ConfigColorHint,
+                      'faceColor'      : ConfigColorHint,
+                      'edgeColor'      : ConfigColorHint,
                       'frameon'        : bool},
                      total=False)
 # kwargs are not typed because mypy has not yet included Unpack[Typeddict]
@@ -85,7 +85,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         sampleType :
             Customizes the item sample class of the `LegendItem`.
             Default None
-        *kwargs:
+        **kwargs:
             Style options , see setStyle() for accepted style parameters.
         """
 
@@ -284,19 +284,19 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         return self.opts['offset']
 
-    ## facecolor
-    def getFacecolor(self):
-        return self.opts['facecolor']
+    ## faceColor
+    def getFaceColor(self):
+        return self.opts['faceColor']
 
-    def setFacecolor(self, color: ConfigColorHint):
-        self.opts['facecolor'] = color
+    def setFaceColor(self, color: ConfigColorHint):
+        self.opts['faceColor'] = color
 
-    ## edgecolor
-    def getEdgecolor(self):
-        return self.opts['edgecolor']
+    ## edgeColor
+    def getEdgeColor(self):
+        return self.opts['edgeColor']
 
-    def setEdgecolor(self, color: ConfigColorHint):
-        self.opts['edgecolor'] = color
+    def setEdgeColor(self, color: ConfigColorHint):
+        self.opts['edgeColor'] = color
 
     ## frame
     def getFrameon(self):
@@ -309,13 +309,13 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     # that
     def _getBrush(self):
         if self._brush is None:
-            return fn.mkBrush(self.opts['facecolor'])
+            return fn.mkBrush(self.opts['faceColor'])
         else:
             return self._brush
 
     def _getPen(self):
         if self._pen is None:
-            return fn.mkPen(self.opts['edgecolor'])
+            return fn.mkPen(self.opts['edgeColor'])
         else:
             return self._pen
 
@@ -341,11 +341,11 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             Label style.
         labelAlign : {'left', 'center', 'right'} or None, optional
             Label alignment.
-        facecolor : ConfigColorHint or None, optional
+        faceColor : ConfigColorHint or None, optional
             Background color of the legend.
         frameon : bool or None, optional
             If True, draw a frame around the legend.
-        edgecolor : ConfigColorHint or None, optional
+        edgeColor : ConfigColorHint or None, optional
             Color of the frame.
 
         Notes
@@ -435,7 +435,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     ## brush
     def brush(self):
 
-        warnings.warn('Method "brush" is deprecated. Use "setFacecolor" instead',
+        warnings.warn('Method "brush" is deprecated. Use "setFaceColor" instead',
                       DeprecationWarning,
                       stacklevel=2)
         """Get the QBrush used to draw the legend background."""
@@ -447,7 +447,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         Accepts the same arguments as :func:`~pyqtgraph.mkBrush`.
         """
 
-        warnings.warn('Method "setBrush" is deprecated. Use "getFacecolor" instead',
+        warnings.warn('Method "setBrush" is deprecated. Use "getFaceColor" instead',
                       DeprecationWarning,
                       stacklevel=2)
         brush = fn.mkBrush(*args, **kargs)
