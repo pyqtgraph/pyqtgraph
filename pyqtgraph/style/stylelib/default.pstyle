@@ -70,7 +70,7 @@ regionHoverBrush : '#FF000080' # color of movable center region when hovered ove
 
 
 [BarGraphItem]
-BarGraphItem.color : w # color of the barItem
+color : 'w' # color of the barItem
 
 [ErrorBarItem]
 color : (200, 200, 200) # color of the ErrorBarItem
