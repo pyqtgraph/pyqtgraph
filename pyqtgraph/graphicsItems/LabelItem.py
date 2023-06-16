@@ -47,7 +47,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
             Text to be displayed, by default ' '
         parent: optional
             Parent item, by default None
-        *kwargs: optional
+        **kwargs: optional
             style options , see setStyle() for accepted style parameters.
         """
 

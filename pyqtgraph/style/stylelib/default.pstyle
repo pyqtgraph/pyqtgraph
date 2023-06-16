@@ -113,8 +113,8 @@ width      : 5                    # width of the displayed scalebar
 
 
 [ScatterPlotItem]
-color    : 'w'              # color
-antialias: False            # if antialiased
-symbol   : 'o'              # symbol type
-size     : 7                # symbol size
-brush    : (100, 100, 150)  # brush color
+antialias : False            # if antialiased
+edgeColor : 'w'              # color
+faceColor : (100, 100, 150)  # brush color
+size      : 1                # symbol size
+symbol    : 'o'              # symbol type

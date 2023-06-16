@@ -1,12 +1,10 @@
 import numpy as np
-from typing import Any, Dict, Optional, Tuple, Union, TypedDict
+from typing import Tuple, TypedDict
 
 from .. import functions as fn
 from .. import configStyle
 from ..style.core import (
     ConfigColorHint,
-    ConfigKeyHint,
-    ConfigValueHint,
     initItemStyle)
 from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
