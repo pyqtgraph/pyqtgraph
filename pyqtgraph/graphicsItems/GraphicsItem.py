@@ -1,15 +1,18 @@
+__all__ = ['GraphicsItem']
+
 import operator
 import weakref
 from collections import OrderedDict
 from functools import reduce
 from math import hypot
+from typing import Optional
+from xml.etree.ElementTree import Element
 
 from .. import functions as fn
 from ..GraphicsScene import GraphicsScene
 from ..Point import Point
 from ..Qt import QtCore, QtWidgets, isQObjectAlive
 
-__all__ = ['GraphicsItem']
 
 # Recipe from https://docs.python.org/3.8/library/collections.html#collections.OrderedDict
 # slightly adapted for Python 3.7 compatibility
@@ -151,8 +154,6 @@ class GraphicsItem(object):
         else:
             return self.sceneTransform()
             #return self.deviceTransform(view.viewportTransform())
-
-
 
     def getBoundingParents(self):
         """Return a list of parents to this item that have child clipping enabled."""
@@ -606,3 +607,38 @@ class GraphicsItem(object):
 
     def getContextMenus(self, event):
         return [self.getMenu()] if hasattr(self, "getMenu") else []
+
+    def generateSvg(
+            self,
+            nodes: dict[str, Element]
+    ) -> Optional[tuple[Element, list[Element]]]:
+        """Method to override to manually specify the SVG writer mechanism.
+
+        Parameters
+        ----------
+        nodes
+            Dictionary keyed by the name of graphics items and the XML
+            representation of the the item that can be written as valid
+            SVG.
+        
+        Returns
+        -------
+        tuple
+            First element is the top level group for this item. The
+            second element is a list of xml Elements corresponding to the
+            child nodes of the item.
+        None
+            Return None if no XML is needed for rendering
+
+        Raises
+        ------
+        NotImplementedError
+            override method to implement in subclasses of GraphicsItem
+
+        See Also
+        --------
+        pyqtgraph.exporters.SVGExporter._generateItemSvg
+            The generic and default implementation
+
+        """
+        raise NotImplementedError

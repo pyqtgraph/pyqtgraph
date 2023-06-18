@@ -23,18 +23,18 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         qt-lib: [pyqt, pyside]
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10", "3.11"]
         include:
-          - python-version: "3.8"
+          - python-version: "3.9"
             qt-lib: "pyqt"
             qt-version: "PyQt5~=5.15.0"
-          - python-version: "3.8"
+          - python-version: "3.9"
             qt-lib: "pyside"
             qt-version: "PySide2~=5.15.0"
-          - python-version: "3.9"
+          - python-version: "3.10"
             qt-lib: "pyqt"
             qt-version: "PyQt6~=6.2.0 PyQt6-Qt6~=6.2.0"
-          - python-version: "3.9"
+          - python-version: "3.10"
             qt-lib: "pyside"
             qt-version: "PySide6~=6.2.0"
           - python-version: "3.10"
@@ -105,7 +105,8 @@ jobs:
           libxcb-randr0 \
           libxcb-render-util0 \
           libxcb-xinerama0 \
-          libopengl0
+          libopengl0 \
+          libxcb-cursor0
     - name: 'Debug Info'
       run: |
         echo python location: `which python`
@@ -168,7 +169,7 @@ jobs:
           miniforge-variant: Mambaforge
           environment-file: ${{ matrix.environment-file }}
           auto-update-conda: false
-          python-version: "3.11"
+          python-version: "3.10"
           use-mamba: true
       - name: "Install Test Framework"
         run: pip install pytest pytest-xdist
@@ -204,7 +205,8 @@ jobs:
             libxcb-randr0 \
             libxcb-render-util0 \
             libxcb-xinerama0 \
-            libopengl0
+            libopengl0 \
+            libxcb-cursor0
           pip install pytest-xvfb
       - name: 'Debug Info'
         run: |

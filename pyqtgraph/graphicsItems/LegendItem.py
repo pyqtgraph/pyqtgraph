@@ -14,7 +14,7 @@ from .ScatterPlotItem import ScatterPlotItem, drawSymbol
 __all__ = ['LegendItem', 'ItemSample']
 
 
-class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
+class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     """
     Displays a legend used for describing the contents of a plot.
 

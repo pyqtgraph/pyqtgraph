@@ -9,31 +9,18 @@ from .. import functions as fn
 from .. import getConfigOption
 from ..Qt import QtCore, QtGui, QtWidgets
 
-##Vector = QtGui.QVector3D
-
-
-class GLViewWidget(QtWidgets.QOpenGLWidget):
-    
-    def __init__(self, parent=None, devicePixelRatio=None, rotationMethod='euler'):
-        """    
-        Basic widget for displaying 3D data
-          - Rotation/scale controls
-          - Axis/grid display
-          - Export options
+class GLViewMixin:
+    def __init__(self, *args, rotationMethod='euler', **kwargs):
+        """
+        Mixin class providing functionality for GLViewWidget
 
         ================ ==============================================================
         **Arguments:**
-        parent           (QObject, optional): Parent QObject. Defaults to None.
-        devicePixelRatio No longer in use. High-DPI displays should automatically
-                         detect the correct resolution.
-        rotationMethod   (str): Mechanimsm to drive the rotation method, options are 
+        rotationMethod   (str): Mechanism to drive the rotation method, options are
                          'euler' and 'quaternion'. Defaults to 'euler'.
         ================ ==============================================================
         """
-
-        QtWidgets.QOpenGLWidget.__init__(self, parent)
-        
-        self.setFocusPolicy(QtCore.Qt.FocusPolicy.ClickFocus)
+        super().__init__(*args, **kwargs)
 
         if rotationMethod not in ["euler", "quaternion"]:
             raise ValueError("Rotation method should be either 'euler' or 'quaternion'")
@@ -417,13 +404,15 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             dist = (pos-cam).length()
         xDist = dist * 2. * tan(0.5 * radians(self.opts['fov']))
         return xDist / self.width()
-        
+
     def mousePressEvent(self, ev):
         lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
         self.mousePos = lpos
-        
+
     def mouseMoveEvent(self, ev):
         lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
+        if not hasattr(self, 'mousePos'):
+            self.mousePos = lpos
         diff = lpos - self.mousePos
         self.mousePos = lpos
         
@@ -570,3 +559,24 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
                 glDeleteRenderbuffers(1, [depth_buf])
 
         return output
+
+
+class GLViewWidget(GLViewMixin, QtWidgets.QOpenGLWidget):
+    def __init__(self, *args, devicePixelRatio=None, **kwargs):
+        """
+        Basic widget for displaying 3D data
+          - Rotation/scale controls
+          - Axis/grid display
+          - Export options
+
+        ================ ==============================================================
+        **Arguments:**
+        parent           (QObject, optional): Parent QObject. Defaults to None.
+        devicePixelRatio No longer in use. High-DPI displays should automatically
+                         detect the correct resolution.
+        rotationMethod   (str): Mechanism to drive the rotation method, options are
+                         'euler' and 'quaternion'. Defaults to 'euler'.
+        ================ ==============================================================
+        """
+        super().__init__(*args, **kwargs)
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy.ClickFocus)
