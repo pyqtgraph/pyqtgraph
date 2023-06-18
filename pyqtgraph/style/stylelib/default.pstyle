@@ -7,26 +7,49 @@
 # "-.", "4"  -> Alternate dots and dashes.
 # "-..", "5" -> One dash, two dots, one dash, two dots.
 
+## Possible symbols
+# 'o'  circle (default)
+# 's'  square
+# 't'  triangle
+# 'd'  diamond
+# '+'  plus
+# 't1' triangle pointing upwards
+# 't2'  triangle pointing right side
+# 't3'  triangle pointing left side
+# 'p'  pentagon
+# 'h'  hexagon
+# 'star'
+# 'x'  cross
+# 'arrow_up'
+# 'arrow_right'
+# 'arrow_down'
+# 'arrow_left'
+# 'crosshair'
+
+## Default value
+# For consistency, all the item are using the following value
+# lineColor : (200, 200, 200, 255) # curve, label, symbol, ...
+# antialias : False # To increase speed
 
 [GraphItem]
 ## Set all item values
-background : 'k'     # background
-color      : 'w'     # color of the lines between connected nodes
-antialias  : False   # if antialiased
+background : 'k'                  # background
+color      : (200, 200, 200, 255) # color of the lines between connected nodes
+antialias  : False                # if antialiased
 
 
 [AxisItem]
-color : 'w' # background color
+color : (200, 200, 200, 255) # background color
 
-tickAlpha      : 0      # alpha channel from 0 to 1
-tickColor      : 'w'    # ticks color
-tickFont       : None   # Font used for tick values
-tickFontsize   : 9      # font-size of the tick label in pt
-tickLabelColor : 'w'    # ticks label color
-tickLength     : -5     # The maximum length of ticks in pixels
-tickTextHeight : 18     # Vertical space reserved for tick text in px
-tickTextOffset : [5, 2] # (horizontal, vertical) spacing between text and axis
-tickTextWidth  : 30     # Horizontal space reserved for tick text in px
+tickAlpha      : 0                    # alpha channel from 0 to 1
+tickColor      : (200, 200, 200, 255) # ticks color
+tickFont       : None                 # Font used for tick values
+tickFontsize   : 9                    # font-size of the tick label in pt
+tickLabelColor : (200, 200, 200, 255) # ticks label color
+tickLength     : -5                   # The maximum length of ticks in pixels
+tickTextHeight : 18                   # Vertical space reserved for tick text in px
+tickTextOffset : [5, 2]               # (horizontal, vertical) spacing between text and axis
+tickTextWidth  : 30                   # Horizontal space reserved for tick text in px
 
 labelColor      : (200, 200, 200, 255) # color of the label axis
 labelFontsize   : 11.0                 # font-size of the label axis in pt
@@ -50,49 +73,57 @@ maxTickLevel   : 2    # decide whether to include the last level of ticks
 maxTextLevel   : 2    # decide whether to include the last level of ticks
 
 [PlotCurveItem]
-antialias : False # if antialiased
+antialias   : False                # if antialiased
+faceColor   : None                 # color of the scalebar
+fillLevel   : None                 # (float or None) fill the area under the
+                                   # curve to the specified value.
+fillOutline : False                # (bool) If True, an outline surrounding the
+                                   # `fillLevel` area is drawn.
+lineColor   : (200, 200, 200, 255) # color used to draw the curve
+mouseWidth  : 8                    # width of shape responding to mouse click
+shadowColor : None                 # color of Pen for drawing behind the primary pen
 
 
 [PlotDataItem]
-lineColor  : (200, 200, 200) # color of the line
-symbolColor: (200, 200, 200) # color of the symbol
-symbolSize : 10.0            # size of the symbol
-symbolBrush: (50,  50,  150) # brush of the symbol
-antialias   : False          # if antialiased
+lineColor  : (200, 200, 200, 255) # color of the line
+symbolColor: (200, 200, 200, 255) # color of the symbol
+symbolSize : 10.0                 # size of the symbol
+symbolBrush: (50,  50,  150)      # brush of the symbol
+antialias   : False               # if antialiased
 
 
 [ColorBarItem]
-width            : 25          # width of the displayed colorBar
-orientation      : 'vertical'  # orientation of the ColorBarItem
-handleColor      : 'w'         # color of adjustment handles in interactive mode.
-handleHoverColor : 'r'         # color of adjustment handles when hovered over.
-regionHoverBrush : '#FF000080' # color of movable center region when hovered over.
+width            : 25                   # width of the displayed colorBar
+orientation      : 'vertical'           # orientation of the ColorBarItem
+handleColor      : (200, 200, 200, 255) # color of adjustment handles in interactive mode.
+handleHoverColor : 'r'                  # color of adjustment handles when hovered over.
+regionHoverBrush : '#FF000080'          # color of movable center region when hovered over.
 
 
 [BarGraphItem]
-color : 'w' # color of the barItem
+color : (200, 200, 200, 255) # color of the barItem
 
 [ErrorBarItem]
-color : (200, 200, 200) # color of the ErrorBarItem
-linestyle : '-'         # linestyle of the ErrorBarItem
-linewidth : 1.0         # linewidth of the ErrorBarItem
-beam : 0.3              # specifies the width of the beam at the end of each bar.
+color     : (200, 200, 200, 255)  # color of the ErrorBarItem
+linestyle : '-'                   # linestyle of the ErrorBarItem
+linewidth : 1.0                   # linewidth of the ErrorBarItem
+beam      : 0.3                   # specifies the width of the beam at the end of each bar.
 
 
 [GridItem]
-lineColor : 'w' # color of the GridItem line
-textColor : 'w' # color of the GridItem text
+lineColor : (200, 200, 200, 255) # color of the GridItem line
+textColor : (200, 200, 200, 255) # color of the GridItem text
 tickSpacingX: [None, None, None] # Set the grid tick spacing to use
 tickSpacingY: [None, None, None] # Set the grid tick spacing to use
 
 
 [LabelItem]
-color      : 'w'      # color of the LabelItem
-fontsize   : 11.0     # font-size of the LabelItem in pt
-fontweight : 'normal' # font-weight of the LabelItem
-fontstyle  : 'normal' # font-style of the LabelItem
-align      : 'center' # text alignement of the LabelItem
-angle      : 0.0      # text angle of the LabelItem in degress
+color      : (200, 200, 200, 255) # color of the LabelItem
+fontsize   : 11.0                 # font-size of the LabelItem in pt
+fontweight : 'normal'             # font-weight of the LabelItem
+fontstyle  : 'normal'             # font-style of the LabelItem
+align      : 'center'             # text alignement of the LabelItem
+angle      : 0.0                  # text angle of the LabelItem in degress
 
 
 [LegendItem]
@@ -106,15 +137,15 @@ edgeColor       : (200, 200, 200, 255) # legend edge color
 frameon         : True                 # whether or not to draw a frame around legend
 
 [ScaleBar]
-faceColor  : 'w'                  # color of the scalebar
+faceColor  : (200, 200, 200, 255) # color of the scalebar
 labelColor : (200, 200, 200, 255) # color of the label of the scalebar
-offset     : 0.0, 0.0           # offset position relative to the scalebar in px.
+offset     : 0.0, 0.0             # offset position relative to the scalebar in px.
 width      : 5                    # width of the displayed scalebar
 
 
 [ScatterPlotItem]
-antialias : False            # if antialiased
-edgeColor : 'w'              # color
-faceColor : (100, 100, 150)  # brush color
-size      : 1                # symbol size
-symbol    : 'o'              # symbol type
+antialias : False                # if antialiased
+edgeColor : (200, 200, 200, 255) # color
+faceColor : (100, 100, 150)      # brush color
+size      : 1                    # symbol size
+symbol    : 'o'                  # symbol type

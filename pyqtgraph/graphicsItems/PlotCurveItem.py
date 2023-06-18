@@ -1,15 +1,17 @@
 from ..Qt import QtCore, QtGui, QtWidgets
-
 HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
+
+import numpy as np
 import math
 import sys
 import warnings
 
-import numpy as np
-
 from .. import Qt, debug
 from .. import functions as fn
 from .. import getConfigOption, configStyle
+from ..style.core import (
+    ConfigColorHint,
+    initItemStyle)
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['PlotCurveItem']
@@ -134,24 +136,234 @@ class PlotCurveItem(GraphicsObject):
         #self.setCacheMode(QtWidgets.QGraphicsItem.CacheMode.DeviceCoordinateCache)
 
         self.metaData = {}
+
+        # Style options are defined in the stylesheet, default.pstyle
         self.opts = {
-            'shadowPen': None,
-            'fillLevel': None,
-            'fillOutline': False,
-            'brush': None,
             'stepMode': None,
             'name': None,
-            'antialias': configStyle['PlotCurveItem']['antialias'],
             'connect': 'all',
-            'mouseWidth': 8, # width of shape responding to mouse click
             'compositionMode': None,
             'skipFiniteCheck': False,
             'segmentedLineMode': getConfigOption('segmentedLineMode'),
         }
         if 'pen' not in kargs:
-            self.opts['pen'] = fn.mkPen('w')
+            if configStyle['PlotCurveItem']['lineColor'] is not None:
+                self.opts['pen'] = fn.mkPen(configStyle['PlotCurveItem']['lineColor'])
+            else:
+                self.opts['pen'] = None
+        if 'shadowPen' not in kargs:
+            if configStyle['PlotCurveItem']['shadowColor'] is not None:
+                self.opts['shadowPen'] = fn.mkPen(configStyle['PlotCurveItem']['shadowColor'])
+            else:
+                self.opts['shadowPen'] = None
+        if 'brush' not in kargs:
+            if configStyle['PlotCurveItem']['faceColor'] is not None:
+                self.opts['brush'] = fn.mkBrush(configStyle['PlotCurveItem']['faceColor'])
+            else:
+                self.opts['brush'] = None
+
+        initItemStyle(self, 'PlotCurveItem', configStyle)
         self.setClickable(kargs.get('clickable', False))
         self.setData(*args, **kargs)
+
+    ##############################################################
+    #
+    #                   Style methods
+    #
+    ##############################################################
+
+    def setAntialias(self, antialias: bool) -> None:
+        """
+        Set the antialiasing
+        """
+        self.opts['antialias'] = antialias
+
+    def getAntialias(self) -> bool:
+        """
+        Get if antialiasing
+        """
+        return self.opts['antialias']
+
+    def setLineColor(self, lineColor: ConfigColorHint) -> None:
+        """
+        Set the color used to draw the curve
+        """
+        self.opts['lineColor'] = lineColor
+        if 'pen' in self.opts:
+            if self.opts['pen'] is not None:
+                self.opts['pen'].setColor(fn.mkColor(lineColor))
+            else:
+                self.setPen(lineColor)
+        else:
+            self.opts['pen'] = fn.mkColor(lineColor)
+
+
+    def getLineColor(self) -> ConfigColorHint:
+        """
+        Get the color used to draw the curve
+        """
+        return self.opts['lineColor']
+
+    def setShadowColor(self, shadowColor: ConfigColorHint) -> None:
+        """
+        Set the color used for drawing behind the primary pen
+        """
+        self.opts['shadowColor'] = shadowColor
+        if 'shadowPen' in self.opts:
+            if self.opts['shadowPen'] is not None:
+                self.opts['shadowPen'].setColor(fn.mkColor(shadowColor))
+            else:
+                self.setShadowPen(shadowColor)
+        else:
+            self.opts['shadowPen'] = fn.mkColor(shadowColor)
+
+
+    def getShadowColor(self) -> ConfigColorHint:
+        """
+        Get the color used for drawing behind the primary pen
+        """
+        return self.opts['shadowColor']
+
+    def setFaceColor(self, faceColor: ConfigColorHint) -> None:
+        """
+        Set the color used when filling
+        """
+        self.opts['faceColor'] = faceColor
+        if 'brush' in self.opts:
+            if self.opts['brush'] is not None:
+                self.opts['brush'].setColor(fn.mkBrush(faceColor))
+            else:
+                self.setBrush(faceColor)
+        else:
+            self.opts['brush'] = fn.mkBrush(faceColor)
+
+
+    def getFaceColor(self) -> ConfigColorHint:
+        """
+        Get the color used when filling
+        """
+        return self.opts['faceColor']
+
+    def setMouseWidth(self, mouseWidth: int) -> None:
+        """
+        Set the width of shape responding to mouse click
+        """
+        self.opts['mouseWidth'] = mouseWidth
+
+    def getMouseWidth(self) -> int:
+        """
+        Get the width of shape responding to mouse click
+        """
+        return self.opts['mouseWidth']
+
+    def setFillLevel(self, fillLevel: float) -> None:
+        """
+        Fill the area under the curve to the specified value.
+        """
+        self.opts['fillLevel'] = fillLevel
+
+    def getFillLevel(self) -> float:
+        """
+        Get the filling the area under the curve.
+        """
+        return self.opts['fillLevel']
+
+    def setFillOutline(self, fillOutline: bool) -> None:
+        """
+        If True, an outline surrounding the `fillLevel` area is drawn.
+        """
+        self.opts['fillOutline'] = fillOutline
+
+    def getFillOutline(self) -> bool:
+        """
+        If True, an outline surrounding the `fillLevel` area is drawn.
+        """
+        return self.opts['fillOutline']
+
+    def setPen(self, *args, **kargs) -> None:
+        """Set the pen used to draw the curve."""
+        if args[0] is None:
+            self.opts['pen'] = None
+            self.opts['lineColor'] = None
+        else:
+            self.opts['pen'] = fn.mkPen(*args, **kargs)
+            self.opts['lineColor'] = self.opts['pen'].color().getRgbF()
+        self.invalidateBounds()
+        self.update()
+
+    def setShadowPen(self, *args, **kargs) -> None:
+        """
+        Set the shadow pen used to draw behind the primary pen.
+        This pen must have a larger width than the primary
+        pen to be visible. Arguments are passed to
+        :func:`mkPen <pyqtgraph.mkPen>`
+        """
+        if args[0] is None:
+            self.opts['shadowPen'] = None
+            self.opts['shadowColor'] = None
+        else:
+            self.opts['shadowPen'] = fn.mkPen(*args, **kargs)
+            self.opts['shadowColor'] = self.opts['shadowPen'].color().getRgbF()
+        self.invalidateBounds()
+        self.update()
+
+    def setBrush(self, *args, **kargs) -> None:
+        """
+        Sets the brush used when filling the area under the curve. All
+        arguments are passed to :func:`mkBrush <pyqtgraph.mkBrush>`.
+        """
+        if args[0] is None:
+            self.opts['brush'] = None
+            self.opts['faceColor'] = None
+        else:
+            self.opts['brush'] = fn.mkBrush(*args, **kargs)
+            self.opts['faceColor'] = self.opts['brush'].color().getRgbF()
+        self.invalidateBounds()
+        self.update()
+
+    def setFillLevel(self, level) -> None:
+        """Sets the level filled to when filling under the curve"""
+        self.opts['fillLevel'] = level
+        self.fillPath = None
+        self._fillPathList = None
+        self.invalidateBounds()
+        self.update()
+
+    def setStyle(self, **kwargs) -> None:
+        """
+        Set the style of the PlotCurveItem.
+
+        Parameters
+        ----------
+        antialias : ConfigColorHint
+            Whether to use antialiasing when drawing. This is disabled by
+            default because it decreases performance.
+        faceColor : ConfigColorHint
+            Color to use when filling
+        fillLevel : float
+            Fill the area under the curve to the specified value.
+        fillOutline : bool
+            If True, an outline surrounding the `fillLevel` area is drawn.
+        lineColor : ConfigColorHint
+            Color to use when drawing
+        mouseWidth : int
+            Width of shape responding to mouse click
+        shadowColor : ConfigColorHint
+            Color to use for drawing behind the primary pen
+        """
+        for k, v in kwargs.items():
+            # If the key is a valid entry of the stylesheet
+            if k in configStyle['PlotCurveItem'].keys():
+                fun = getattr(self, 'set{}{}'.format(k[:1].upper(), k[1:]))
+                fun(v)
+            else:
+                raise ValueError('Your argument: "{}" is not a valid style argument.'.format(k))
+
+    ##############################################################
+    #
+    #                   Item
+    #
+    ##############################################################
 
     def implements(self, interface=None):
         ints = ['plotData']
@@ -369,48 +581,6 @@ class PlotCurveItem(GraphicsObject):
         self._boundingRect = None
         self._boundsCache = [None, None]
 
-    def setPen(self, *args, **kargs):
-        """Set the pen used to draw the curve."""
-        if args[0] is None:
-            self.opts['pen'] = None
-        else:
-            self.opts['pen'] = fn.mkPen(*args, **kargs)
-        self.invalidateBounds()
-        self.update()
-
-    def setShadowPen(self, *args, **kargs):
-        """
-        Set the shadow pen used to draw behind the primary pen.
-        This pen must have a larger width than the primary
-        pen to be visible. Arguments are passed to
-        :func:`mkPen <pyqtgraph.mkPen>`
-        """
-        if args[0] is None:
-            self.opts['shadowPen'] = None
-        else:
-            self.opts['shadowPen'] = fn.mkPen(*args, **kargs)
-        self.invalidateBounds()
-        self.update()
-
-    def setBrush(self, *args, **kargs):
-        """
-        Sets the brush used when filling the area under the curve. All
-        arguments are passed to :func:`mkBrush <pyqtgraph.mkBrush>`.
-        """
-        if args[0] is None:
-            self.opts['brush'] = None
-        else:
-            self.opts['brush'] = fn.mkBrush(*args, **kargs)
-        self.invalidateBounds()
-        self.update()
-
-    def setFillLevel(self, level):
-        """Sets the level filled to when filling under the curve"""
-        self.opts['fillLevel'] = level
-        self.fillPath = None
-        self._fillPathList = None
-        self.invalidateBounds()
-        self.update()
 
     def setSkipFiniteCheck(self, skipFiniteCheck):
         """
