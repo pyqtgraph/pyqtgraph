@@ -118,10 +118,15 @@ def test_subArray():
     
     
 def test_rescaleData():
+    rng = np.random.default_rng(12345)
     dtypes = map(np.dtype, ('ubyte', 'uint16', 'byte', 'int16', 'int', 'float'))
     for dtype1 in dtypes:
         for dtype2 in dtypes:
-            data = (np.random.random(size=10) * 2**32 - 2**31).astype(dtype1)
+            if dtype1.kind in 'iu':
+                lim = np.iinfo(dtype1)
+                data = rng.integers(lim.min, lim.max, size=10, dtype=dtype1, endpoint=True)
+            else:
+                data = (rng.random(size=10) * 2**32 - 2**31).astype(dtype1)
             for scale, offset in [(10, 0), (10., 0.), (1, -50), (0.2, 0.5), (0.001, 0)]:
                 if dtype2.kind in 'iu':
                     lim = np.iinfo(dtype2)
