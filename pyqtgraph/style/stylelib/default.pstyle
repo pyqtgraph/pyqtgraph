@@ -74,7 +74,7 @@ maxTextLevel   : 2    # decide whether to include the last level of ticks
 
 [PlotCurveItem]
 antialias   : False                # if antialiased
-faceColor   : None                 # color of the scalebar
+fillColor   : None                 # color to use when filling
 fillLevel   : None                 # (float or None) fill the area under the
                                    # curve to the specified value.
 fillOutline : False                # (bool) If True, an outline surrounding the
@@ -85,11 +85,18 @@ shadowColor : None                 # color of Pen for drawing behind the primary
 
 
 [PlotDataItem]
-lineColor  : (200, 200, 200, 255) # color of the line
-symbolColor: (200, 200, 200, 255) # color of the symbol
-symbolSize : 10.0                 # size of the symbol
-symbolBrush: (50,  50,  150)      # brush of the symbol
-antialias   : False               # if antialiased
+antialias   : False                   # if antialiased
+fillColor   : None                    # color to use when filling
+fillLevel   : None                    # (float or None) fill the area under the
+                                      # curve to the specified value.
+fillOutline : False                   # (bool) If True, an outline surrounding the
+                                      # `fillLevel` area is drawn.
+lineColor  : (200, 200, 200, 255)     # color of the line
+shadowColor : None                    # color of Pen for drawing behind the primary pen
+symbol    : 'o'                       # symbol type
+symbolEdgeColor: (200, 200, 200, 255) # color of the symbol
+symbolFaceColor: (50,  50,  150)      # brush of the symbol
+symbolSize : 10.0                     # size of the symbol
 
 
 [ColorBarItem]

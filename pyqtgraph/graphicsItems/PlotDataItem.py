@@ -1,12 +1,18 @@
 import math
+import numpy as np
+from typing import Any, Dict, Optional, Tuple, Union, TypedDict
 import warnings
 import bisect
 
-import numpy as np
 
 from .. import debug as debug
 from .. import functions as fn
 from .. import configStyle
+from ..style.core import (
+    ConfigColorHint,
+    ConfigKeyHint,
+    ConfigValueHint,
+    initItemStyle)
 from ..Qt import QtCore
 from .GraphicsObject import GraphicsObject
 from .PlotCurveItem import PlotCurveItem
@@ -335,6 +341,9 @@ class PlotDataItem(GraphicsObject):
 
         self._drlLastClip = (0.0, 0.0) # holds last clipping points of dynamic range limiter
         #self.clear()
+
+
+        # Style options are defined in the stylesheet, see default.pstyle
         self.opts = {
             'connect': 'auto', # defaults to 'all', unless overridden to 'finite' for log-scaling
             'skipFiniteCheck': False,
@@ -345,20 +354,10 @@ class PlotDataItem(GraphicsObject):
             'alphaHint': 1.0,
             'alphaMode': False,
 
-            'pen': configStyle['PlotDataItem']['lineColor'],
-            'shadowPen': None,
-            'fillLevel': None,
-            'fillOutline': False,
-            'fillBrush': None,
             'stepMode': None,
 
-            'symbol': None,
-            'symbolSize': configStyle['PlotDataItem']['symbolSize'],
-            'symbolPen': configStyle['PlotDataItem']['symbolColor'],
-            'symbolBrush': configStyle['PlotDataItem']['symbolBrush'],
             'pxMode': True,
 
-            'antialias': configStyle['PlotDataItem']['antialias'],
             'pointMode': None,
 
             'useCache': True,
@@ -371,8 +370,360 @@ class PlotDataItem(GraphicsObject):
             'dynamicRangeHyst': 3.0,
             'data': None,
         }
+
+        # Fill opts with default pen and brush based on stylesheet
+        if 'pen' not in kargs:
+            if configStyle['PlotDataItem']['lineColor'] is not None:
+                self.opts['pen'] = fn.mkPen(configStyle['PlotDataItem']['lineColor'])
+            else:
+                self.opts['pen'] = None
+        if 'shadowPen' not in kargs:
+            if configStyle['PlotDataItem']['shadowColor'] is not None:
+                self.opts['shadowPen'] = fn.mkPen(configStyle['PlotDataItem']['shadowColor'])
+            else:
+                self.opts['shadowPen'] = None
+        if 'fillBrush' not in kargs:
+            if configStyle['PlotDataItem']['fillColor'] is not None:
+                self.opts['fillBrush'] = fn.mkBrush(configStyle['PlotDataItem']['fillColor'])
+            else:
+                self.opts['fillBrush'] = None
+        if 'symbolPen' not in kargs:
+            if configStyle['PlotDataItem']['fillColor'] is not None:
+                self.opts['symbolPen'] = fn.mkBrush(configStyle['PlotDataItem']['symbolEdgeColor'])
+            else:
+                self.opts['symbolPen'] = None
+        if 'symbolBrush' not in kargs:
+            if configStyle['PlotDataItem']['fillColor'] is not None:
+                self.opts['symbolBrush'] = fn.mkBrush(configStyle['PlotDataItem']['symbolFaceColor'])
+            else:
+                self.opts['symbolBrush'] = None
+
+        # Get default stylesheet
+        initItemStyle(self, 'PlotDataItem', configStyle)
+
         self.setCurveClickable(kargs.get('clickable', False))
         self.setData(*args, **kargs)
+
+
+    ##############################################################
+    #
+    #                   Style methods
+    #
+    ##############################################################
+
+    def setAntialias(self, antialias: bool) -> None:
+        """
+        Set the antialiasing
+        """
+        self.opts['antialias'] = antialias
+
+    def getAntialias(self) -> bool:
+        """
+        Get if antialiasing
+        """
+        return self.opts['antialias']
+
+    def setLineColor(self, lineColor: ConfigColorHint) -> None:
+        """
+        Set the color used to draw the curve
+        """
+        self.opts['lineColor'] = lineColor
+        if 'pen' in self.opts:
+            if self.opts['pen'] is not None:
+                self.opts['pen'].setColor(fn.mkColor(lineColor))
+            else:
+                self.setPen(lineColor)
+        else:
+            self.opts['pen'] = fn.mkColor(lineColor)
+
+    def getLineColor(self) -> ConfigColorHint:
+        """
+        Get the color used to draw the curve
+        """
+        return self.opts['lineColor']
+
+    def setSymbolEdgeColor(self, symbolEdgeColor: ConfigColorHint) -> None:
+        """
+        Set the color used for drawing symbol pen edges
+        """
+        self.opts['symbolEdgeColor'] = symbolEdgeColor
+        if 'symbolPen' in self.opts:
+            if self.opts['symbolPen'] is not None:
+                self.opts['symbolPen'].setColor(fn.mkColor(symbolEdgeColor))
+            else:
+                self.setShadowPen(symbolEdgeColor)
+        else:
+            self.opts['symbolPen'] = fn.mkColor(symbolEdgeColor)
+
+    def getSymbolEdgeColor(self) -> ConfigColorHint:
+        """
+        Get the color used for drawing symbol pen edges
+        """
+        return self.opts['symbolEdgeColor']
+
+    def setSymbolFaceColor(self, symbolFaceColor: ConfigColorHint) -> None:
+        """
+        Set the color used for drawing symbol pen edges
+        """
+        self.opts['symbolFaceColor'] = symbolFaceColor
+        if 'symbolBrush' in self.opts:
+            if self.opts['symbolBrush'] is not None:
+                self.opts['symbolBrush'].setColor(fn.mkColor(symbolFaceColor))
+            else:
+                self.setShadowPen(symbolFaceColor)
+        else:
+            self.opts['symbolBrush'] = fn.mkColor(symbolFaceColor)
+
+    def getSymbolFaceColor(self) -> ConfigColorHint:
+        """
+        Get the color used for drawing symbol pen edges
+        """
+        return self.opts['symbolFaceColor']
+
+    def setShadowColor(self, shadowColor: ConfigColorHint) -> None:
+        """
+        Set the color used for drawing behind the primary pen
+        """
+        self.opts['shadowColor'] = shadowColor
+        if 'shadowPen' in self.opts:
+            if self.opts['shadowPen'] is not None:
+                self.opts['shadowPen'].setColor(fn.mkColor(shadowColor))
+            else:
+                self.setShadowPen(shadowColor)
+        else:
+            self.opts['shadowPen'] = fn.mkColor(shadowColor)
+
+    def getShadowColor(self) -> ConfigColorHint:
+        """
+        Get the color used for drawing behind the primary pen
+        """
+        return self.opts['shadowColor']
+
+    def setFillColor(self, fillColor: ConfigColorHint) -> None:
+        """
+        Set the color used for drawing the fill below the curve
+        """
+        self.opts['fillColor'] = fillColor
+        if 'fillColor' in self.opts:
+            if self.opts['fillColor'] is not None:
+                self.opts['fillColor'].setColor(fn.mkColor(fillColor))
+            else:
+                self.setFillBrush(fillColor)
+        else:
+            self.opts['fillColor'] = fn.mkColor(fillColor)
+
+    def getFillColor(self) -> ConfigColorHint:
+        """
+        Get the color used for drawing the fill below the curve
+        """
+        return self.opts['fillColor']
+
+    def setFillLevel(self, fillLevel: float) -> None:
+        """
+        Fill the area under the curve to the specified value.
+        """
+        self.opts['fillLevel'] = fillLevel
+
+    def getFillLevel(self) -> float:
+        """
+        Get the filling the area under the curve.
+        """
+        return self.opts['fillLevel']
+
+    def setFillOutline(self, fillOutline: bool) -> None:
+        """
+        If True, an outline surrounding the `fillLevel` area is drawn.
+        """
+        self.opts['fillOutline'] = fillOutline
+
+    def getFillOutline(self) -> bool:
+        """
+        If True, an outline surrounding the `fillLevel` area is drawn.
+        """
+        return self.opts['fillOutline']
+
+    def setAlpha(self, alpha, auto):
+        if self.opts['alphaHint'] == alpha and self.opts['alphaMode'] == auto:
+            return
+        self.opts['alphaHint'] = alpha
+        self.opts['alphaMode'] = auto
+        self.setOpacity(alpha)
+        #self.update()
+
+    def setPen(self, *args, **kargs):
+        """
+        Sets the pen used to draw lines between points.
+        The argument can be a :class:`QtGui.QPen` or any combination of arguments accepted by
+        :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`.
+        """
+        pen = fn.mkPen(*args, **kargs)
+        self.opts['pen'] = pen
+        if self.opts['pen'] is not None:
+            self.opts['lineColor'] = self.opts['pen'].color().getRgbF()
+        else:
+            self.opts['lineColor'] = None
+        self.updateItems(styleUpdate=True)
+
+    def setShadowPen(self, *args, **kargs):
+        """
+        Sets the shadow pen used to draw lines between points (this is for enhancing contrast or
+        emphasizing data). This line is drawn behind the primary pen and should generally be assigned
+        greater width than the primary pen.
+        The argument can be a :class:`QtGui.QPen` or any combination of arguments accepted by
+        :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`.
+        """
+        if args[0] is None:
+            pen = None
+        else:
+            pen = fn.mkPen(*args, **kargs)
+        self.opts['shadowPen'] = pen
+        if self.opts['shadowPen'] is not None:
+            self.opts['shadowColor'] = self.opts['shadowPen'].color().getRgbF()
+        else:
+            self.opts['shadowColor'] = None
+        self.updateItems(styleUpdate=True)
+
+    def setFillBrush(self, *args, **kargs):
+        """
+        Sets the :class:`QtGui.QBrush` used to fill the area under the curve.
+        See :func:`mkBrush() <pyqtgraph.mkBrush>`) for arguments.
+        """
+        if args[0] is None:
+            brush = None
+        else:
+            brush = fn.mkBrush(*args, **kargs)
+        if 'fillBrush' in self.opts:
+            if self.opts['fillBrush'] == brush:
+                return
+        self.opts['fillBrush'] = brush
+        if self.opts['fillBrush'] is not None:
+            self.opts['fillColor'] = self.opts['fillBrush'].color().getRgbF()
+        else:
+            self.opts['fillColor'] = None
+
+        self.updateItems(styleUpdate=True)
+
+    def setBrush(self, *args, **kargs):
+        """
+        See :func:`~pyqtgraph.PlotDataItem.setFillBrush`
+        """
+        return self.setFillBrush(*args, **kargs)
+
+    def setFillLevel(self, level):
+        """
+        Enables filling the area under the curve towards the value specified by
+        `level`. `None` disables the filling.
+        """
+        if 'fillLevel' in self.opts:
+            if self.opts['fillLevel'] == level:
+                return
+        self.opts['fillLevel'] = level
+        self.updateItems(styleUpdate=True)
+
+    def setSymbol(self, symbol):
+        """ `symbol` can be any string recognized by
+        :class:`ScatterPlotItem <pyqtgraph.ScatterPlotItem>` or a list that
+        specifies a symbol for each point.
+        """
+        if 'symbol' in self.opts:
+            if self.opts['symbol'] == symbol:
+                return
+        self.opts['symbol'] = symbol
+        #self.scatter.setSymbol(symbol)
+        self.updateItems(styleUpdate=True)
+
+    def setSymbolPen(self, *args, **kargs):
+        """
+        Sets the :class:`QtGui.QPen` used to draw symbol outlines.
+        See :func:`mkPen() <pyqtgraph.mkPen>`) for arguments.
+        """
+        pen = fn.mkPen(*args, **kargs)
+        if 'symbolPen' in self.opts:
+            if self.opts['symbolPen'] == pen:
+                return
+        self.opts['symbolPen'] = pen
+        if self.opts['symbolPen'] is not None:
+            self.opts['symbolEdgeColor'] = self.opts['symbolPen'].color().getRgbF()
+        else:
+            self.opts['symbolEdgeColor'] = None
+        #self.scatter.setSymbolPen(pen)
+        self.updateItems(styleUpdate=True)
+
+    def setSymbolBrush(self, *args, **kargs):
+        """
+        Sets the :class:`QtGui.QBrush` used to fill symbols.
+        See :func:`mkBrush() <pyqtgraph.mkBrush>`) for arguments.
+        """
+        brush = fn.mkBrush(*args, **kargs)
+        if self.opts['symbolBrush'] == brush:
+            return
+        self.opts['symbolBrush'] = brush
+        if self.opts['symbolBrush'] is not None:
+            self.opts['symbolFaceColor'] = self.opts['symbolBrush'].color().getRgbF()
+        else:
+            self.opts['symbolFaceColor'] = None
+        #self.scatter.setSymbolBrush(brush)
+        self.updateItems(styleUpdate=True)
+
+    def setSymbolSize(self, size: float) -> None:
+        """
+        Sets the symbol size.
+        """
+        if 'symbolSize' in self.opts:
+            if self.opts['symbolSize'] == size:
+                return
+        self.opts['symbolSize'] = size
+        #self.scatter.setSymbolSize(symbolSize)
+        self.updateItems(styleUpdate=True)
+
+    def getSymbolSize(self) -> float:
+        """
+        Get the symbol size.
+        """
+        return self.opts['symbolSize']
+
+
+    def setStyle(self, **kwargs) -> None:
+        """
+        Set the style of the PlotDataItem.
+
+        Parameters
+        ----------
+        antialias : ConfigColorHint
+            Whether to use antialiasing when drawing. This is disabled by
+            default because it decreases performance.
+        fillColor : ConfigColorHint
+            Color to use when filling
+        fillLevel : float
+            Fill the area under the curve to the specified value.
+        fillOutline : bool
+            If True, an outline surrounding the `fillLevel` area is drawn.
+        lineColor : ConfigColorHint
+            Color to use when drawing
+        shadowColor : ConfigColorHint
+            Color to use for drawing behind the primary pen
+        symbol : str
+            Symbol to use for drawing points
+        symbolEdgeColor : ConfigColorHint
+            Color for drawing points
+        symbolFaceColor : ConfigColorHint
+            Color for filling points
+        symbolSize : float
+            Diameter of symbols
+        """
+        for k, v in kwargs.items():
+            # If the key is a valid entry of the stylesheet
+            if k in configStyle['PlotCurveItem'].keys():
+                fun = getattr(self, 'set{}{}'.format(k[:1].upper(), k[1:]))
+                fun(v)
+            else:
+                raise ValueError('Your argument: "{}" is not a valid style argument.'.format(k))
+
+    ##############################################################
+    #
+    #                   Item
+    #
+    ##############################################################
 
     # Compatibility with direct property access to previous xData and yData structures:
     @property
@@ -412,14 +763,6 @@ class PlotDataItem(GraphicsObject):
         self.viewTransformChanged()
         # to update displayed point sets, e.g. when clipping (which uses viewRect):
         self.viewRangeChanged()
-
-    def setAlpha(self, alpha, auto):
-        if self.opts['alphaHint'] == alpha and self.opts['alphaMode'] == auto:
-            return
-        self.opts['alphaHint'] = alpha
-        self.opts['alphaMode'] = auto
-        self.setOpacity(alpha)
-        #self.update()
 
     def setFftMode(self, state):
         """
@@ -481,113 +824,6 @@ class PlotDataItem(GraphicsObject):
         self._adsLastValue   = 1     # reset auto-downsample value
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
-
-    def setPen(self, *args, **kargs):
-        """
-        Sets the pen used to draw lines between points.
-        The argument can be a :class:`QtGui.QPen` or any combination of arguments accepted by
-        :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`.
-        """
-        pen = fn.mkPen(*args, **kargs)
-        self.opts['pen'] = pen
-        #self.curve.setPen(pen)
-        #for c in self.curves:
-            #c.setPen(pen)
-        #self.update()
-        self.updateItems(styleUpdate=True)
-
-    def setShadowPen(self, *args, **kargs):
-        """
-        Sets the shadow pen used to draw lines between points (this is for enhancing contrast or
-        emphasizing data). This line is drawn behind the primary pen and should generally be assigned
-        greater width than the primary pen.
-        The argument can be a :class:`QtGui.QPen` or any combination of arguments accepted by
-        :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`.
-        """
-        if args[0] is None:
-            pen = None
-        else:
-            pen = fn.mkPen(*args, **kargs)
-        self.opts['shadowPen'] = pen
-        #for c in self.curves:
-            #c.setPen(pen)
-        #self.update()
-        self.updateItems(styleUpdate=True)
-
-    def setFillBrush(self, *args, **kargs):
-        """
-        Sets the :class:`QtGui.QBrush` used to fill the area under the curve.
-        See :func:`mkBrush() <pyqtgraph.mkBrush>`) for arguments.
-        """
-        if args[0] is None:
-            brush = None
-        else:
-            brush = fn.mkBrush(*args, **kargs)
-        if self.opts['fillBrush'] == brush:
-            return
-        self.opts['fillBrush'] = brush
-        self.updateItems(styleUpdate=True)
-
-    def setBrush(self, *args, **kargs):
-        """
-        See :func:`~pyqtgraph.PlotDataItem.setFillBrush`
-        """
-        return self.setFillBrush(*args, **kargs)
-
-    def setFillLevel(self, level):
-        """
-        Enables filling the area under the curve towards the value specified by
-        `level`. `None` disables the filling.
-        """
-        if self.opts['fillLevel'] == level:
-            return
-        self.opts['fillLevel'] = level
-        self.updateItems(styleUpdate=True)
-
-    def setSymbol(self, symbol):
-        """ `symbol` can be any string recognized by
-        :class:`ScatterPlotItem <pyqtgraph.ScatterPlotItem>` or a list that
-        specifies a symbol for each point.
-        """
-        if self.opts['symbol'] == symbol:
-            return
-        self.opts['symbol'] = symbol
-        #self.scatter.setSymbol(symbol)
-        self.updateItems(styleUpdate=True)
-
-    def setSymbolPen(self, *args, **kargs):
-        """
-        Sets the :class:`QtGui.QPen` used to draw symbol outlines.
-        See :func:`mkPen() <pyqtgraph.mkPen>`) for arguments.
-        """
-        pen = fn.mkPen(*args, **kargs)
-        if self.opts['symbolPen'] == pen:
-            return
-        self.opts['symbolPen'] = pen
-        #self.scatter.setSymbolPen(pen)
-        self.updateItems(styleUpdate=True)
-
-    def setSymbolBrush(self, *args, **kargs):
-        """
-        Sets the :class:`QtGui.QBrush` used to fill symbols.
-        See :func:`mkBrush() <pyqtgraph.mkBrush>`) for arguments.
-        """
-        brush = fn.mkBrush(*args, **kargs)
-        if self.opts['symbolBrush'] == brush:
-            return
-        self.opts['symbolBrush'] = brush
-        #self.scatter.setSymbolBrush(brush)
-        self.updateItems(styleUpdate=True)
-
-    def setSymbolSize(self, size):
-        """
-        Sets the symbol size.
-        """
-        if self.opts['symbolSize'] == size:
-            return
-        self.opts['symbolSize'] = size
-        #self.scatter.setSymbolSize(symbolSize)
-        self.updateItems(styleUpdate=True)
 
     def setDownsampling(self, ds=None, auto=None, method=None):
         """

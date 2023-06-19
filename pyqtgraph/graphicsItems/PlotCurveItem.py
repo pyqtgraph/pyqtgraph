@@ -157,8 +157,8 @@ class PlotCurveItem(GraphicsObject):
             else:
                 self.opts['shadowPen'] = None
         if 'brush' not in kargs:
-            if configStyle['PlotCurveItem']['faceColor'] is not None:
-                self.opts['brush'] = fn.mkBrush(configStyle['PlotCurveItem']['faceColor'])
+            if configStyle['PlotCurveItem']['fillColor'] is not None:
+                self.opts['brush'] = fn.mkBrush(configStyle['PlotCurveItem']['fillColor'])
             else:
                 self.opts['brush'] = None
 
@@ -224,25 +224,25 @@ class PlotCurveItem(GraphicsObject):
         """
         return self.opts['shadowColor']
 
-    def setFaceColor(self, faceColor: ConfigColorHint) -> None:
+    def setFillColor(self, fillColor: ConfigColorHint) -> None:
         """
         Set the color used when filling
         """
-        self.opts['faceColor'] = faceColor
+        self.opts['fillColor'] = fillColor
         if 'brush' in self.opts:
             if self.opts['brush'] is not None:
-                self.opts['brush'].setColor(fn.mkBrush(faceColor))
+                self.opts['brush'].setColor(fn.mkBrush(fillColor))
             else:
-                self.setBrush(faceColor)
+                self.setBrush(fillColor)
         else:
-            self.opts['brush'] = fn.mkBrush(faceColor)
+            self.opts['brush'] = fn.mkBrush(fillColor)
 
 
-    def getFaceColor(self) -> ConfigColorHint:
+    def getFillColor(self) -> ConfigColorHint:
         """
         Get the color used when filling
         """
-        return self.opts['faceColor']
+        return self.opts['fillColor']
 
     def setMouseWidth(self, mouseWidth: int) -> None:
         """
@@ -314,10 +314,10 @@ class PlotCurveItem(GraphicsObject):
         """
         if args[0] is None:
             self.opts['brush'] = None
-            self.opts['faceColor'] = None
+            self.opts['fillColor'] = None
         else:
             self.opts['brush'] = fn.mkBrush(*args, **kargs)
-            self.opts['faceColor'] = self.opts['brush'].color().getRgbF()
+            self.opts['fillColor'] = self.opts['brush'].color().getRgbF()
         self.invalidateBounds()
         self.update()
 
@@ -338,7 +338,7 @@ class PlotCurveItem(GraphicsObject):
         antialias : ConfigColorHint
             Whether to use antialiasing when drawing. This is disabled by
             default because it decreases performance.
-        faceColor : ConfigColorHint
+        fillColor : ConfigColorHint
             Color to use when filling
         fillLevel : float
             Fill the area under the curve to the specified value.
