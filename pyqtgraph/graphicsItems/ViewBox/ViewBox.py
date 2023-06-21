@@ -1441,7 +1441,7 @@ class ViewBox(GraphicsWidget):
             useX = True
             useY = True
 
-            if hasattr(item, 'dataBounds'):
+            if hasattr(item, 'dataBounds') and item.dataBounds is not None:
                 if frac is None:
                     frac = (1.0, 1.0)
                 xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])

@@ -12,26 +12,29 @@ class TextItem(GraphicsObject):
     GraphicsItem displaying unscaled text (the text will always appear normal even inside a scaled ViewBox). 
     """
     def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0),
-                 border=None, fill=None, angle=0, rotateAxis=None):
+                 border=None, fill=None, angle=0, rotateAxis=None, ensureInBounds=False):
         """
-        ==============  =================================================================================
+        ================  =================================================================================
         **Arguments:**
-        *text*          The text to display
-        *color*         The color of the text (any format accepted by pg.mkColor)
-        *html*          If specified, this overrides both *text* and *color*
-        *anchor*        A QPointF or (x,y) sequence indicating what region of the text box will
-                        be anchored to the item's position. A value of (0,0) sets the upper-left corner
-                        of the text box to be at the position specified by setPos(), while a value of (1,1)
-                        sets the lower-right corner.
-        *border*        A pen to use when drawing the border
-        *fill*          A brush to use when filling within the border
-        *angle*         Angle in degrees to rotate text. Default is 0; text will be displayed upright.
-        *rotateAxis*    If None, then a text angle of 0 always points along the +x axis of the scene.
-                        If a QPointF or (x,y) sequence is given, then it represents a vector direction
-                        in the parent's coordinate system that the 0-degree line will be aligned to. This
-                        Allows text to follow both the position and orientation of its parent while still
-                        discarding any scale and shear factors.
-        ==============  =================================================================================
+        *text*            The text to display
+        *color*           The color of the text (any format accepted by pg.mkColor)
+        *html*            If specified, this overrides both *text* and *color*
+        *anchor*          A QPointF or (x,y) sequence indicating what region of the text box will
+                          be anchored to the item's position. A value of (0,0) sets the upper-left corner
+                          of the text box to be at the position specified by setPos(), while a value of (1,1)
+                          sets the lower-right corner.
+        *border*          A pen to use when drawing the border
+        *fill*            A brush to use when filling within the border
+        *angle*           Angle in degrees to rotate text. Default is 0; text will be displayed upright.
+        *rotateAxis*      If None, then a text angle of 0 always points along the +x axis of the scene.
+                          If a QPointF or (x,y) sequence is given, then it represents a vector direction
+                          in the parent's coordinate system that the 0-degree line will be aligned to. This
+                          Allows text to follow both the position and orientation of its parent while still
+                          discarding any scale and shear factors.
+        *ensureInBounds*  Ensures that the entire TextItem will be visible when using autorange, but may
+                          produce runaway scaling in certain circumstances (See issue #2642). Setting to 
+                          "True" retains legacy behavior.
+        ================  =================================================================================
 
 
         The effects of the `rotateAxis` and `angle` arguments are added independently. So for example:
@@ -51,6 +54,13 @@ class TextItem(GraphicsObject):
         self.textItem.setParentItem(self)
         self._lastTransform = None
         self._lastScene = None
+
+        # Note: The following is pretty scuffed; ideally there would likely be 
+        # some inheritance changes, But this is the least-intrusive thing that 
+        # works for now
+        if ensureInBounds:
+            self.dataBounds = None
+        
         self._bounds = QtCore.QRectF()
         if html is None:
             self.setColor(color)
@@ -150,6 +160,18 @@ class TextItem(GraphicsObject):
         offset = (br - tl) * self.anchor
         self.textItem.setPos(-offset)
 
+    def dataBounds(self, ax, frac=1.0, orthoRange=None):
+        """
+        Returns only the anchor point for when calulating view ranges.
+        
+        Sacrifices some visual polish for fixing issue #2642.
+        """
+        if orthoRange:
+            range_min, range_max = orthoRange[0], orthoRange[1]
+            if not range_min <= self.anchor[ax] <= range_max:
+                return [None, None]
+
+        return [self.anchor[ax], self.anchor[ax]]
         
     def boundingRect(self):
         return self.textItem.mapRectToParent(self.textItem.boundingRect())
