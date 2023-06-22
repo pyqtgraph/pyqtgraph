@@ -7,7 +7,7 @@ numpy~=1.21.0; python_version == '3.9'
 scipy==1.10.1
 
 # optional high performance paths
-numba==0.57.0; python_version == '3.9'
+numba==0.57.1; python_version == '3.9'
 
 # optional 3D
 pyopengl==3.1.7
