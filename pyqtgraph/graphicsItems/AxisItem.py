@@ -1330,7 +1330,7 @@ class AxisItem(GraphicsWidget):
 
     def generateDrawSpecs(self, p: QtGui.QPainter) -> Optional[Tuple[Tuple[QtGui.QPen, QtCore.QPointF, QtCore.QPointF],
                                                                      List[Tuple[QtGui.QPen, Point, Point]],
-                                                                     List[Tuple[QtCore.QRectF, QtCore.Qt.Alignment, str]]]]:
+                                                                     List[Tuple[QtCore.QRectF, QtCore.Qt.AlignmentFlag, str]]]]:
         """
         Calls tickValues() and tickStrings() to determine where and how ticks should
         be drawn, then generates from this a set of drawing commands to be
@@ -1609,7 +1609,7 @@ class AxisItem(GraphicsWidget):
     def drawPicture(self, p: QtGui.QPainter,
                           axisSpec: Tuple[QtGui.QPen, QtCore.QPointF, QtCore.QPointF],
                           tickSpecs: List[Tuple[QtGui.QPen, Point, Point]],
-                          textSpecs: List[Tuple[QtCore.QRectF, QtCore.Qt.Alignment, str]]) -> None:
+                          textSpecs: List[Tuple[QtCore.QRectF, QtCore.Qt.AlignmentFlag, str]]) -> None:
         profiler = debug.Profiler()
 
         p.setRenderHint(p.RenderHint.Antialiasing, False)
