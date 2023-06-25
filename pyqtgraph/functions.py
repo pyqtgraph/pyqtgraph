@@ -994,7 +994,7 @@ def interpolateArray(data, x, default=0.0, order=1):
             sax = f1 * dx[...,ax] + (1-f1) * (1-dx[...,ax])
             sax = sax.reshape(sax.shape + (1,) * (s.ndim-1-sax.ndim))
             s[ax] = sax
-        s = np.product(s, axis=0)
+        s = np.prod(s, axis=0)
         result = fieldData * s
         for i in range(md):
             result = result.sum(axis=0)
