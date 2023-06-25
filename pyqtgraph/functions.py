@@ -1192,12 +1192,6 @@ def clip_scalar(val, vmin, vmax):
     """ convenience function to avoid using np.clip for scalar values """
     return vmin if val < vmin else vmax if val > vmax else val
 
-# umath.clip was slower than umath.maximum(umath.minimum).
-# See https://github.com/numpy/numpy/pull/20134 for details.
-_win32_clip_workaround_needed = (
-    sys.platform == 'win32' and
-    tuple(map(int, np.__version__.split(".")[:2])) < (1, 22)
-)
 
 def clip_array(arr, vmin, vmax, out=None):
     # replacement for np.clip due to regression in
@@ -1212,12 +1206,6 @@ def clip_array(arr, vmin, vmax, out=None):
         return np.core.umath.minimum(arr, vmax, out=out)
     elif vmax is None:
         return np.core.umath.maximum(arr, vmin, out=out)
-    elif _win32_clip_workaround_needed:
-        if out is None:
-            out = np.empty(arr.shape, dtype=np.find_common_type([arr.dtype], [type(vmax)]))
-        out = np.core.umath.minimum(arr, vmax, out=out)
-        return np.core.umath.maximum(out, vmin, out=out)
-
     else:
         return np.core.umath.clip(arr, vmin, vmax, out=out)
 
