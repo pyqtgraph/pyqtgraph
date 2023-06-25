@@ -1,8 +1,9 @@
 import ctypes
 import itertools
+
 import numpy as np
-from . import QT_LIB, QtCore, QtGui
-from . import compat
+
+from . import QT_LIB, QtCore, QtGui, compat
 
 __all__ = ["get_qpainterpath_element_array"]
 
@@ -174,7 +175,11 @@ class PrimitiveArray:
     def ndarray(self):
         # ndarray views are cheap to recreate each time
         if self.use_sip_array:
-            if sip.SIP_VERSION >= 0x60708:
+            if (
+                sip.SIP_VERSION >= 0x60708 and 
+                np.__version__ != "1.22.4"  # TODO: remove me after numpy 1.23+
+            ):  # workaround for numpy/sip compatability issue
+                # see https://github.com/numpy/numpy/issues/21612
                 mv = self._siparray
             else:
                 # sip.array prior to SIP_VERSION 6.7.8 had a buggy buffer protocol
