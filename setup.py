@@ -134,7 +134,7 @@ setup(
         ],
     },
     install_requires = [
-        'numpy>=1.21.0',
+        'numpy>=1.22.0',
     ],
     **setupOpts
 )
