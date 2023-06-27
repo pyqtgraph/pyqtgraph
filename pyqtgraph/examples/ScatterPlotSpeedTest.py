@@ -9,8 +9,9 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtWidgets
 import pyqtgraph.parametertree as ptree
-from time import perf_counter
 import re
+
+from utils import FrameCounter
 
 translate = QtCore.QCoreApplication.translate
 
@@ -30,10 +31,7 @@ data = {}
 item = pg.ScatterPlotItem()
 hoverBrush = pg.mkBrush("y")
 ptr = 0
-lastTime = perf_counter()
-fps = None
 timer = QtCore.QTimer()
-
 
 def fmt(name):
     replace = r"\1 \2"
@@ -52,7 +50,7 @@ interactor = ptree.Interactor(
     size=dict(limits=[1, None]),
 )
 def mkDataAndItem(count=500, size=10):
-    global data, fps
+    global data
     scale = 100
     data = {
         "pos": np.random.normal(size=(50, count), scale=scale),
@@ -97,7 +95,7 @@ def getData(randomize=False):
     ),
 )
 def update(mode="Reuse Item"):
-    global ptr, lastTime, fps
+    global ptr
     if mode == "New Item":
         mkItem()
     elif mode == "Reuse Item":
@@ -114,17 +112,7 @@ def update(mode="Reuse Item"):
         new.setBrush(hoverBrush)
 
     ptr += 1
-    now = perf_counter()
-    dt = now - lastTime
-    lastTime = now
-    if fps is None:
-        fps = 1.0 / dt
-    else:
-        s = np.clip(dt * 3.0, 0, 1)
-        fps = fps * (1 - s) + (1.0 / dt) * s
-    p.setTitle("%0.2f fps" % fps)
-    p.repaint()
-    # app.processEvents()  # force complete redraw for every plot
+    framecnt.update()
 
 
 @interactor.decorate()
@@ -138,5 +126,9 @@ def pausePlot(paused=False):
 mkDataAndItem()
 timer.timeout.connect(update)
 timer.start(0)
+
+framecnt = FrameCounter()
+framecnt.sigFpsUpdate.connect(lambda fps : p.setTitle(f'{fps:.1f} fps'))
+
 if __name__ == "__main__":
     pg.exec()

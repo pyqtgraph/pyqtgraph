@@ -4,8 +4,6 @@ Update a simple plot as rapidly as possible to measure speed.
 """
 
 import argparse
-from collections import deque
-from time import perf_counter
 
 import numpy as np
 
@@ -13,6 +11,8 @@ import pyqtgraph as pg
 import pyqtgraph.functions as fn
 import pyqtgraph.parametertree as ptree
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+
+from utils import FrameCounter
 
 # defaults here result in the same configuration as the original PlotSpeedTest
 parser = argparse.ArgumentParser()
@@ -41,7 +41,6 @@ use_opengl = pg.getConfigOption('useOpenGL')
 sfmt = QtGui.QSurfaceFormat()
 sfmt.setSwapInterval(0)
 QtGui.QSurfaceFormat.setDefaultFormat(sfmt)
-
 
 class MonkeyCurveItem(pg.PlotCurveItem):
     def __init__(self, *args, **kwds):
@@ -83,12 +82,6 @@ pw.setLabel('bottom', 'Index', units='B')
 curve = MonkeyCurveItem(pen=default_pen, brush='b')
 pw.addItem(curve)
 
-rollingAverageSize = 1000
-elapsed = deque(maxlen=rollingAverageSize)
-
-def resetTimings(*args):
-    elapsed.clear()
-
 @interactor.decorate(
     nest=True,
     nsamples={'limits': [0, None]},
@@ -123,25 +116,14 @@ def update(
     connect='all',
     skipFiniteCheck=False
 ):
-    global curve, data, ptr, elapsed, fpsLastUpdate
+    global ptr
 
     if connect == 'array':
         connect = connect_array
 
-    # Measure
-    t_start = perf_counter()
     curve.setData(data[ptr], antialias=antialias, connect=connect, skipFiniteCheck=skipFiniteCheck)
-    app.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents)
-    t_end = perf_counter()
-    elapsed.append(t_end - t_start)
     ptr = (ptr + 1) % data.shape[0]
-
-    # update fps at most once every 0.2 secs
-    if t_end - fpsLastUpdate > 0.2:
-        fpsLastUpdate = t_end
-        average = np.mean(elapsed)
-        fps = 1 / average
-        pw.setTitle('%0.2f fps - %0.1f ms avg' % (fps, average * 1_000))
+    framecnt.update()
 
 @interactor.decorate(
     useOpenGL={'readonly': not args.allow_opengl_toggle},
@@ -161,15 +143,13 @@ def updateOptions(
     curve.setFillLevel(0.0 if fillLevel else None)
     curve.setMethod(plotMethod)
 
-params.sigTreeStateChanged.connect(resetTimings)
-
 makeData()
-
-fpsLastUpdate = perf_counter()
-
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
+
+framecnt = FrameCounter()
+framecnt.sigFpsUpdate.connect(lambda fps: pw.setTitle(f'{fps:.1f} fps'))
 
 if __name__ == '__main__':
     # Splitter by default gives too small of a width to the parameter tree,
