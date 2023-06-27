@@ -1542,7 +1542,13 @@ class MouseDragHandler(object):
         if ev.isStart():
             if ev.button() == QtCore.Qt.MouseButton.LeftButton:
                 roi.setSelected(True)
-                mods = ev.modifiers() & ~self.snapModifier
+                mods = ev.modifiers()
+                try:
+                    mods &= ~self.snapModifier
+                except ValueError:
+                    # workaround bug in Python 3.11.4 that affects PyQt
+                    if mods & self.snapModifier:
+                        mods ^= self.snapModifier
                 if roi.translatable and mods == self.translateModifier:
                     self.dragMode = 'translate'
                 elif roi.rotatable and mods == self.rotateModifier:
