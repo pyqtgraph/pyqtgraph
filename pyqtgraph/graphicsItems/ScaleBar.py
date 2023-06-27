@@ -69,8 +69,8 @@ class ScaleBar(GraphicsWidgetAnchor, GraphicsObject):
         else:
             self._pen = None
 
-        self.brush = fn.mkBrush(self._getBrush())
-        self.pen = fn.mkPen(self._getPen())
+        self.brush = fn.mkBrush(self.__brush())
+        self.pen = fn.mkPen(self.__pen())
         self.size = size
 
         self.bar = QtWidgets.QGraphicsRectItem()
@@ -89,13 +89,13 @@ class ScaleBar(GraphicsWidgetAnchor, GraphicsObject):
     ##############################################################
 
 
-    def getFaceColor(self) -> ConfigColorHint:
+    def faceColor(self) -> ConfigColorHint:
         return self.opts['faceColor']
 
     def setFaceColor(self, color: ConfigColorHint):
         self.opts['faceColor'] = color
 
-    def getLabelColor(self) -> ConfigColorHint:
+    def labelColor(self) -> ConfigColorHint:
         return self.opts['labelColor']
 
     def setLabelColor(self, labelColor: ConfigColorHint):
@@ -107,7 +107,7 @@ class ScaleBar(GraphicsWidgetAnchor, GraphicsObject):
         """
         self.opts['offset'] = offset
 
-    def getOffset(self) -> Tuple[float, float]:
+    def offset(self) -> Tuple[float, float]:
         """
         Get the offset position of the label relative to the bar.
         """
@@ -129,7 +129,7 @@ class ScaleBar(GraphicsWidgetAnchor, GraphicsObject):
         self.opts['width'] = width
 
 
-    def getWidth(self) -> int:
+    def width(self) -> int:
         """
         Get the current width of the scalebar.
 
@@ -143,13 +143,13 @@ class ScaleBar(GraphicsWidgetAnchor, GraphicsObject):
 
     ## Since we keep two parameters for the same task, these 2 methods sort
     # that
-    def _getBrush(self):
+    def __brush(self):
         if self._brush is None:
             return fn.mkBrush(self.opts['faceColor'])
         else:
             return self._brush
 
-    def _getPen(self):
+    def __pen(self):
         if self._pen is None:
             return fn.mkPen(self.opts['labelColor'])
         else:

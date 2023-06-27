@@ -58,7 +58,7 @@ class GraphItem(GraphicsObject):
         """
         self.opts['background'] = background
 
-    def getBackground(self) -> ConfigColorHint:
+    def background(self) -> ConfigColorHint:
         """
         Get the current background.
         """
@@ -70,7 +70,7 @@ class GraphItem(GraphicsObject):
         """
         self.opts['color'] = color
 
-    def getColor(self) -> ConfigColorHint:
+    def color(self) -> ConfigColorHint:
         """
         Get the current color.
         """
@@ -82,7 +82,7 @@ class GraphItem(GraphicsObject):
         """
         self.opts['antialias'] = antialias
 
-    def getAntialias(self) -> bool:
+    def antialias(self) -> bool:
         """
         Get if antialiasing
         """

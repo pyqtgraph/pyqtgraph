@@ -133,7 +133,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
 
     # All style applicable to labelItem contained inside the LegendItem
     ## labelColor
-    def getLabelColor(self) -> ConfigColorHint:
+    def labelColor(self) -> ConfigColorHint:
         """
         Get the color used for the item labels.
         """
@@ -159,7 +159,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             self.update()
 
     ## labelFontsize
-    def getLabelFontsize(self) -> float:
+    def labelFontsize(self) -> float:
         """
         Get the font size used for the item labels.
         """
@@ -181,7 +181,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         self.update()
 
     ## labelFontweight
-    def getLabelFontweight(self) -> str:
+    def labelFontweight(self) -> str:
         """
         Get the font weight used for the item labels.
 
@@ -214,7 +214,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         self.update()
 
     ## labelAlign
-    def getLabelAlign(self) -> str:
+    def labelAlign(self) -> str:
         """
         Get the alignment of the item labels.
 
@@ -278,28 +278,28 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
                 raise ValueError('offset argument:{} is not a tuple of int'.format(offset))
         self.opts['offset'] = offset
 
-    def getOffset(self):
+    def offset(self):
         """
         Get the offset position of the legend relative to the parent.
         """
         return self.opts['offset']
 
     ## faceColor
-    def getFaceColor(self):
+    def faceColor(self):
         return self.opts['faceColor']
 
     def setFaceColor(self, color: ConfigColorHint):
         self.opts['faceColor'] = color
 
     ## edgeColor
-    def getEdgeColor(self):
+    def edgeColor(self):
         return self.opts['edgeColor']
 
     def setEdgeColor(self, color: ConfigColorHint):
         self.opts['edgeColor'] = color
 
     ## frame
-    def getFrameon(self):
+    def frameon(self):
         return self.opts['frameon']
 
     def setFrameon(self, frameon: bool):
@@ -307,13 +307,13 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
 
     ## Since we keep two parameters for the same task, these 2 methods sort
     # that
-    def _getBrush(self):
+    def __brush(self):
         if self._brush is None:
             return fn.mkBrush(self.opts['faceColor'])
         else:
             return self._brush
 
-    def _getPen(self):
+    def __pen(self):
         if self._pen is None:
             return fn.mkPen(self.opts['edgeColor'])
         else:
@@ -375,7 +375,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     def offset(self):
         """Get the offset position relative to the parent."""
 
-        warnings.warn('Method "offset" is deprecated. Use "getOffset" instead',
+        warnings.warn('Method "offset" is deprecated. Use "offset" instead',
                       DeprecationWarning,
                       stacklevel=2)
         return self.opts['offset']
@@ -385,7 +385,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     def labelTextColor(self):
         """Get the QColor used for the item labels."""
 
-        warnings.warn('Method "labelTextColor" is deprecated. Use "getLabelColor" instead',
+        warnings.warn('Method "labelTextColor" is deprecated. Use "labelColor" instead',
                       DeprecationWarning,
                       stacklevel=2)
         return self.opts['labelcolor']
@@ -410,7 +410,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     def labelTextSize(self) -> float:
         """Get the `labelTextSize` used for the item labels."""
 
-        warnings.warn('Method "labelTextSize" is deprecated. Use "getLabelFontsize" instead',
+        warnings.warn('Method "labelTextSize" is deprecated. Use "labelFontsize" instead',
                       DeprecationWarning,
                       stacklevel=2)
         return self.opts['labelfontsize']
@@ -447,7 +447,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         Accepts the same arguments as :func:`~pyqtgraph.mkBrush`.
         """
 
-        warnings.warn('Method "setBrush" is deprecated. Use "getFaceColor" instead',
+        warnings.warn('Method "setBrush" is deprecated. Use "faceColor" instead',
                       DeprecationWarning,
                       stacklevel=2)
         brush = fn.mkBrush(*args, **kargs)
@@ -461,7 +461,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     def pen(self):
         """Get the QPen used to draw the border around the legend."""
 
-        warnings.warn('Method "pen" is deprecated. Use "getEdgecolor" instead',
+        warnings.warn('Method "pen" is deprecated. Use "edgecolor" instead',
                       DeprecationWarning,
                       stacklevel=2)
         return self._pen
@@ -584,7 +584,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
                 self._addItemToLayout(sample, label)
             self.updateSize()
 
-    def getLabel(self, plotItem: PlotItem) -> Optional[LabelItem]:
+    def label(self, plotItem: PlotItem) -> Optional[LabelItem]:
         """
         Return the labelItem inside the legend for a given plotItem.
         Return None if no Label.
@@ -659,8 +659,8 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
 
     def paint(self, p: QtGui.QPainter, *args) -> None:
         if self.opts['frameon']:
-            p.setPen(self._getPen())
-            p.setBrush(self._getBrush())
+            p.setPen(self.__pen())
+            p.setBrush(self.__brush())
             p.drawRect(self.boundingRect())
 
     def hoverEvent(self, ev: HoverEvent) -> None:

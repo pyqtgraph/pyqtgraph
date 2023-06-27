@@ -168,7 +168,7 @@ class AxisItem(GraphicsWidget):
         """
         self.style['color'] = color
 
-    def getColor(self) -> ConfigColorHint:
+    def color(self) -> ConfigColorHint:
         """
         Get the current axis background color.
         """
@@ -182,7 +182,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given tickAlpha type is "{}", must be "str"'.format(type(tickAlpha).__name__))
         self.style['tickAlpha'] = tickAlpha
 
-    def getTickAlpha(self) -> Optional[Union[float, int]]:
+    def tickAlpha(self) -> Optional[Union[float, int]]:
         """
         Get the current tick alpha channel.
         """
@@ -194,7 +194,7 @@ class AxisItem(GraphicsWidget):
         """
         self.style['tickColor'] = tickColor
 
-    def getTickColor(self) -> ConfigColorHint:
+    def tickColor(self) -> ConfigColorHint:
         """
         Get the current tick color.
         """
@@ -222,7 +222,7 @@ class AxisItem(GraphicsWidget):
         else:
             raise ValueError('The given tickFont type is "{}", must be "str"'.format(type(tickFont).__name__))
 
-    def getTickFont(self) -> Optional[str]:
+    def tickFont(self) -> Optional[str]:
         """
         Get the current tick font.
         """
@@ -236,7 +236,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given tickFontsize type is "{}", must be "int"'.format(type(tickFontsize).__name__))
         self.style['tickFontsize'] = tickFontsize
 
-    def getTickFontsize(self) -> int:
+    def tickFontsize(self) -> int:
         """
         Get the current tick font.
         """
@@ -248,7 +248,7 @@ class AxisItem(GraphicsWidget):
         """
         self.style['tickLabelColor'] = tickLabelColor
 
-    def getTickLabelColor(self) -> ConfigColorHint:
+    def tickLabelColor(self) -> ConfigColorHint:
         """
         Get the current tick labelcolor.
         """
@@ -262,7 +262,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given tickLength type is "{}", must be "int"'.format(type(tickLength).__name__))
         self.style['tickLength'] = tickLength
 
-    def getTickLength(self) -> int:
+    def tickLength(self) -> int:
         """
         Get the current tick length.
         """
@@ -276,7 +276,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given tickTextHeight type is "{}", must a "int"'.format(type(tickTextHeight).__name__))
         self.style['tickTextHeight'] = tickTextHeight
 
-    def getTickTextHeight(self) -> int:
+    def tickTextHeight(self) -> int:
         """
         Get the current tick textheight.
         """
@@ -299,7 +299,7 @@ class AxisItem(GraphicsWidget):
         else:
             raise ValueError('The given tickTextOffset type is "{}", must a "int"'.format(type(tickTextOffset).__name__))
 
-    def getTickTextOffset(self) -> int:
+    def tickTextOffset(self) -> int:
         """
         Get the current tick text offset.
         """
@@ -316,7 +316,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given tickTextWidth type is "{}", must a "int"'.format(type(tickTextWidth).__name__))
         self.style['tickTextWidth'] = tickTextWidth
 
-    def getTickTextWidth(self) -> int:
+    def tickTextWidth(self) -> int:
         """
         Get the current tick text width.
         """
@@ -330,7 +330,7 @@ class AxisItem(GraphicsWidget):
         #     raise ValueError('The given labelColor type is "{}", must a "ConfigColorHint"'.format(type(labelColor).__name__))
         self.style['labelColor'] = labelColor
 
-    def getLabelColor(self) -> ConfigColorHint:
+    def labelColor(self) -> ConfigColorHint:
         """
         Get the current tick text width.
         """
@@ -344,7 +344,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given labelFontsize type is "{}", must a "float"'.format(type(labelFontsize).__name__))
         self.style['labelFontsize'] = labelFontsize
 
-    def getLabelFontsize(self) -> float:
+    def labelFontsize(self) -> float:
         """
         Get the current tick text width.
         """
@@ -358,7 +358,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given labelFontweight type is "{}", must a "str"'.format(type(labelFontweight).__name__))
         self.style['labelFontweight'] = labelFontweight
 
-    def getLabelFontweight(self) -> str:
+    def labelFontweight(self) -> str:
         """
         Get the current tick text width.
         """
@@ -372,7 +372,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given labelFontstyle type is "{}", must a "str"'.format(type(labelFontstyle).__name__))
         self.style['labelFontstyle'] = labelFontstyle
 
-    def getLabelFontstyle(self) -> str:
+    def labelFontstyle(self) -> str:
         """
         Get the current tick text width.
         """
@@ -387,7 +387,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given autoExpandTextSpace is {}, must be a "bool"'.format(type(autoExpandTextSpace).__name__))
         self.style['autoExpandTextSpace'] = autoExpandTextSpace
 
-    def getAutoExpandTextSpace(self) -> bool:
+    def autoExpandTextSpace(self) -> bool:
         """
         Get the current auto expand text space.
         Automatically expand text space if the tick strings become too long
@@ -403,7 +403,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given autoReduceTextSpace is {}, must be a "bool"'.format(type(autoReduceTextSpace).__name__))
         self.style['autoReduceTextSpace'] = autoReduceTextSpace
 
-    def getAutoReduceTextSpace(self) -> bool:
+    def autoReduceTextSpace(self) -> bool:
         """
         Get the current auto reduce text space.
         Automatically shrink the axis if necessary
@@ -419,7 +419,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given hideOverlappingLabels is {}, must be a "bool"'.format(type(hideOverlappingLabels).__name__))
         self.style['hideOverlappingLabels'] = hideOverlappingLabels
 
-    def getHideOverlappingLabels(self) -> bool:
+    def hideOverlappingLabels(self) -> bool:
         """
         Get the current hide over lapping labels
         Automatically shrink the axis if necessary
@@ -438,7 +438,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given stopAxisAtTick arguments is {}, must be "bool"'.format(type(stopAxisAtTick).__name__))
         self.style['stopAxisAtTick'] = stopAxisAtTick
 
-    def getStopAxisAtTick(self) -> List[bool]:
+    def stopAxisAtTick(self) -> List[bool]:
         """
         Get the current stop axis at tick
         If True, the axis line is drawn only as far as the last tick.
@@ -454,7 +454,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given textFillLimits type is "{}", must be a "list"'.format(type(textFillLimits).__name__))
         self.style['textFillLimits'] = textFillLimits
 
-    def getTextFillLimits(self) -> List[Tuple[float, float]]:
+    def textFillLimits(self) -> List[Tuple[float, float]]:
         """
         Get the current text fill limits
         """
@@ -468,7 +468,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given showValues type is "{}", must be a "bool"'.format(type(showValues).__name__))
         self.style['showValues'] = showValues
 
-    def getShowValues(self) -> bool:
+    def showValues(self) -> bool:
         """
         Get the current show values
         """
@@ -482,7 +482,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given maxTickLength type is "{}", must be a "int"'.format(type(maxTickLength).__name__))
         self.style['maxTickLength'] = maxTickLength
 
-    def getMaxTickLength(self) -> int:
+    def maxTickLength(self) -> int:
         """
         Get the current max tick length
         """
@@ -496,7 +496,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given maxTickLevel type is "{}", must be a "int"'.format(type(maxTickLevel).__name__))
         self.style['maxTickLevel'] = maxTickLevel
 
-    def getMaxTickLevel(self) -> int:
+    def maxTickLevel(self) -> int:
         """
         Get the current max tick level
         """
@@ -510,7 +510,7 @@ class AxisItem(GraphicsWidget):
             raise ValueError('The given maxTextLevel type is "{}", must be a "int"'.format(type(maxTextLevel).__name__))
         self.style['maxTextLevel'] = maxTextLevel
 
-    def getMaxTextLevel(self) -> int:
+    def maxTextLevel(self) -> int:
         """
         Get the current max text level
         """

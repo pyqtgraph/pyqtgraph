@@ -129,7 +129,7 @@ class ErrorBarItem(GraphicsObject):
         """
         self.opts['color'] = color
 
-    def getColor(self) -> ConfigColorHint:
+    def color(self) -> ConfigColorHint:
         """
         Get the current color.
 
@@ -147,7 +147,7 @@ class ErrorBarItem(GraphicsObject):
         """
         self.opts['linestyle'] = linestyle
 
-    def getLinestyle(self) -> ConfigLinestyleHint:
+    def linestyle(self) -> ConfigLinestyleHint:
         """
         Get the current linestyle.
         """
@@ -160,7 +160,7 @@ class ErrorBarItem(GraphicsObject):
         """
         self.opts['linewidth'] = linewidth
 
-    def getLinewidth(self) -> float:
+    def linewidth(self) -> float:
         """
         Get the current linewidth.
         """
@@ -173,13 +173,13 @@ class ErrorBarItem(GraphicsObject):
         """
         self.opts['beam'] = beam
 
-    def getBeam(self) -> float:
+    def beam(self) -> float:
         """
         Get the current beam.
         """
         return self.opts['beam']
 
-    def _getPen(self) -> QtGui.QPen:
+    def __pen(self) -> QtGui.QPen:
         """
         Return a pen to draw the error bar using the following style options:
             * color
@@ -379,9 +379,9 @@ class ErrorBarItem(GraphicsObject):
             verticalLines = fn.arrayToQPath(xs, y1_y2, connect="pairs")
             p.addPath(verticalLines)
 
-            if self.getBeam() is not None and self.getBeam() > 0:
-                x1 = self._x - self.getBeam()/2.
-                x2 = self._x + self.getBeam()/2.
+            if self.beam() is not None and self.beam() > 0:
+                x1 = self._x - self.beam()/2.
+                x2 = self._x + self.beam()/2.
 
                 x1_x2 = fn.interweaveArrays(x1, x2)
                 if self._height is not None or self._top is not None:
@@ -414,9 +414,9 @@ class ErrorBarItem(GraphicsObject):
             ends = fn.arrayToQPath(x1_x2, ys, connect='pairs')
             p.addPath(ends)
 
-            if self.getBeam() is not None and self.getBeam() > 0:
-                y1 = self._y - self.getBeam()/2.
-                y2 = self._y + self.getBeam()/2.
+            if self.beam() is not None and self.beam() > 0:
+                y1 = self._y - self.beam()/2.
+                y2 = self._y + self.beam()/2.
                 y1_y2 = fn.interweaveArrays(y1, y2)
                 if self._width is not None or self._right is not None:
                     x2s = fn.interweaveArrays(x2, x2)
@@ -434,7 +434,7 @@ class ErrorBarItem(GraphicsObject):
     def paint(self, p: QtGui.QPainter, *args) -> None:
         if self.path is None:
             self.drawPath()
-        p.setPen(self._getPen())
+        p.setPen(self.__pen())
         p.drawPath(self.path)
 
     def boundingRect(self) -> QtCore.QRectF:

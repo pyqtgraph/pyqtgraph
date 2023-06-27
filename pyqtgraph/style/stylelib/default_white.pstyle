@@ -118,7 +118,7 @@ beam      : 0.3                   # specifies the width of the beam at the end o
 
 
 [GridItem]
-lineColor : #B0B0B0   # color of the GridItem line
+lineColor : '#B0B0B0'   # color of the GridItem line
 textColor : '#000000' # color of the GridItem text
 tickSpacingX: [None, None, None] # Set the grid tick spacing to use
 tickSpacingY: [None, None, None] # Set the grid tick spacing to use

@@ -23,7 +23,6 @@ optsHint = TypedDict('optsHint',
                       'tickSpacingY' : List[Optional[float]],
 
                       # "style" option to stay compatible with previous version
-                      #
                       'pen' : Optional[QtGui.QPen],
                       'textPen' : Optional[QtGui.QPen],
                       'tickSpacing': Tuple[List[Optional[float]], List[Optional[float]]]},
@@ -71,7 +70,7 @@ class GridItem(UIGraphicsItem):
         """
         self.opts['lineColor'] = lineColor
 
-    def getLineColor(self) -> ConfigColorHint:
+    def lineColor(self) -> ConfigColorHint:
         """
         Get the current lineColor
         """
@@ -83,7 +82,7 @@ class GridItem(UIGraphicsItem):
         """
         self.opts['textColor'] = textColor
 
-    def getTextColor(self) -> ConfigColorHint:
+    def textColor(self) -> ConfigColorHint:
         """
         Get the current textColor
         """
@@ -95,7 +94,7 @@ class GridItem(UIGraphicsItem):
         """
         self.opts['tickSpacingX'] = tickSpacingX
 
-    def getTickSpacingX(self) -> List[Optional[float]]:
+    def tickSpacingX(self) -> List[Optional[float]]:
         """
         Get the current tickSpacing along the x axis
         """
@@ -107,7 +106,7 @@ class GridItem(UIGraphicsItem):
         """
         self.opts['tickSpacingY'] = tickSpacingY
 
-    def getTickSpacingY(self) -> List[Optional[float]]:
+    def tickSpacingY(self) -> List[Optional[float]]:
         """
         Get the current tickSpacing along the y axis
         """

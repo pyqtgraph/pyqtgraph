@@ -417,7 +417,7 @@ class PlotDataItem(GraphicsObject):
         """
         self.opts['antialias'] = antialias
 
-    def getAntialias(self) -> bool:
+    def antialias(self) -> bool:
         """
         Get if antialiasing
         """
@@ -436,7 +436,7 @@ class PlotDataItem(GraphicsObject):
         else:
             self.opts['pen'] = fn.mkColor(lineColor)
 
-    def getLineColor(self) -> ConfigColorHint:
+    def lineColor(self) -> ConfigColorHint:
         """
         Get the color used to draw the curve
         """
@@ -455,7 +455,7 @@ class PlotDataItem(GraphicsObject):
         else:
             self.opts['symbolPen'] = fn.mkColor(symbolEdgeColor)
 
-    def getSymbolEdgeColor(self) -> ConfigColorHint:
+    def symbolEdgeColor(self) -> ConfigColorHint:
         """
         Get the color used for drawing symbol pen edges
         """
@@ -474,7 +474,7 @@ class PlotDataItem(GraphicsObject):
         else:
             self.opts['symbolBrush'] = fn.mkColor(symbolFaceColor)
 
-    def getSymbolFaceColor(self) -> ConfigColorHint:
+    def symbolFaceColor(self) -> ConfigColorHint:
         """
         Get the color used for drawing symbol pen edges
         """
@@ -493,7 +493,7 @@ class PlotDataItem(GraphicsObject):
         else:
             self.opts['shadowPen'] = fn.mkColor(shadowColor)
 
-    def getShadowColor(self) -> ConfigColorHint:
+    def shadowColor(self) -> ConfigColorHint:
         """
         Get the color used for drawing behind the primary pen
         """
@@ -512,7 +512,7 @@ class PlotDataItem(GraphicsObject):
         else:
             self.opts['fillColor'] = fn.mkColor(fillColor)
 
-    def getFillColor(self) -> ConfigColorHint:
+    def fillColor(self) -> ConfigColorHint:
         """
         Get the color used for drawing the fill below the curve
         """
@@ -524,7 +524,7 @@ class PlotDataItem(GraphicsObject):
         """
         self.opts['fillLevel'] = fillLevel
 
-    def getFillLevel(self) -> float:
+    def fillLevel(self) -> float:
         """
         Get the filling the area under the curve.
         """
@@ -536,7 +536,7 @@ class PlotDataItem(GraphicsObject):
         """
         self.opts['fillOutline'] = fillOutline
 
-    def getFillOutline(self) -> bool:
+    def fillOutline(self) -> bool:
         """
         If True, an outline surrounding the `fillLevel` area is drawn.
         """
@@ -676,7 +676,7 @@ class PlotDataItem(GraphicsObject):
         #self.scatter.setSymbolSize(symbolSize)
         self.updateItems(styleUpdate=True)
 
-    def getSymbolSize(self) -> float:
+    def symbolSize(self) -> float:
         """
         Get the symbol size.
         """
@@ -713,7 +713,7 @@ class PlotDataItem(GraphicsObject):
         """
         for k, v in kwargs.items():
             # If the key is a valid entry of the stylesheet
-            if k in configStyle['PlotCurveItem'].keys():
+            if k in configStyle['PlotDataItem'].keys():
                 fun = getattr(self, 'set{}{}'.format(k[:1].upper(), k[1:]))
                 fun(v)
             else:

@@ -178,7 +178,7 @@ class PlotCurveItem(GraphicsObject):
         """
         self.opts['antialias'] = antialias
 
-    def getAntialias(self) -> bool:
+    def antialias(self) -> bool:
         """
         Get if antialiasing
         """
@@ -198,7 +198,7 @@ class PlotCurveItem(GraphicsObject):
             self.opts['pen'] = fn.mkColor(lineColor)
 
 
-    def getLineColor(self) -> ConfigColorHint:
+    def lineColor(self) -> ConfigColorHint:
         """
         Get the color used to draw the curve
         """
@@ -218,7 +218,7 @@ class PlotCurveItem(GraphicsObject):
             self.opts['shadowPen'] = fn.mkColor(shadowColor)
 
 
-    def getShadowColor(self) -> ConfigColorHint:
+    def shadowColor(self) -> ConfigColorHint:
         """
         Get the color used for drawing behind the primary pen
         """
@@ -238,7 +238,7 @@ class PlotCurveItem(GraphicsObject):
             self.opts['brush'] = fn.mkBrush(fillColor)
 
 
-    def getFillColor(self) -> ConfigColorHint:
+    def fillColor(self) -> ConfigColorHint:
         """
         Get the color used when filling
         """
@@ -250,7 +250,7 @@ class PlotCurveItem(GraphicsObject):
         """
         self.opts['mouseWidth'] = mouseWidth
 
-    def getMouseWidth(self) -> int:
+    def mouseWidth(self) -> int:
         """
         Get the width of shape responding to mouse click
         """
@@ -262,7 +262,7 @@ class PlotCurveItem(GraphicsObject):
         """
         self.opts['fillLevel'] = fillLevel
 
-    def getFillLevel(self) -> float:
+    def fillLevel(self) -> float:
         """
         Get the filling the area under the curve.
         """
@@ -274,7 +274,7 @@ class PlotCurveItem(GraphicsObject):
         """
         self.opts['fillOutline'] = fillOutline
 
-    def getFillOutline(self) -> bool:
+    def fillOutline(self) -> bool:
         """
         If True, an outline surrounding the `fillLevel` area is drawn.
         """

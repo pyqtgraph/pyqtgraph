@@ -428,7 +428,7 @@ class ScatterPlotItem(GraphicsObject):
     ##############################################################
 
 
-    def getEdgeColor(self) -> ConfigColorHint:
+    def edgeColor(self) -> ConfigColorHint:
         return self.opts['edgeColor']
 
 
@@ -436,7 +436,7 @@ class ScatterPlotItem(GraphicsObject):
         self.opts['edgeColor'] = color
 
 
-    def getFaceColor(self) -> ConfigColorHint:
+    def faceColor(self) -> ConfigColorHint:
         return self.opts['FaceColor']
 
 
@@ -451,7 +451,7 @@ class ScatterPlotItem(GraphicsObject):
         self.opts['antialias'] = antialias
 
 
-    def getAntialias(self) -> bool:
+    def antialias(self) -> bool:
         """
         Get if antialiasing
         """
@@ -579,7 +579,7 @@ class ScatterPlotItem(GraphicsObject):
         if update:
             self.updateSpots(dataSet)
 
-    def getSymbol(self) -> str:
+    def symbol(self) -> str:
         return self.opts['symbol']
 
 
@@ -606,7 +606,7 @@ class ScatterPlotItem(GraphicsObject):
         if update:
             self.updateSpots(dataSet)
 
-    def getSize(self) -> int:
+    def size(self) -> int:
         return self.opts['size']
 
 
