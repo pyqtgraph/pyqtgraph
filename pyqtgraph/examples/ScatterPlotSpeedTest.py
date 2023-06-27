@@ -5,15 +5,25 @@ For testing rapid updates of ScatterPlotItem under various conditions.
 (Scatter plots are still rather slow to draw; expect about 20fps)
 """
 
-import numpy as np
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtWidgets
-import pyqtgraph.parametertree as ptree
+import argparse
+import itertools
 import re
 
+import numpy as np
 from utils import FrameCounter
 
+import pyqtgraph as pg
+import pyqtgraph.parametertree as ptree
+from pyqtgraph.Qt import QtCore, QtWidgets
+
 translate = QtCore.QCoreApplication.translate
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--iterations', default=float('inf'), type=float,
+    help="Number of iterations to run before exiting"
+)
+args = parser.parse_args()
+iterations_counter = itertools.count()
 
 app = pg.mkQApp()
 
@@ -29,6 +39,7 @@ splitter.show()
 
 data = {}
 item = pg.ScatterPlotItem()
+
 hoverBrush = pg.mkBrush("y")
 ptr = 0
 timer = QtCore.QTimer()
@@ -37,7 +48,7 @@ def fmt(name):
     replace = r"\1 \2"
     name = re.sub(r"(\w)([A-Z])", replace, name)
     name = name.replace("_", " ")
-    return translate("ScatterPlot", name.title().strip() + ":    ")
+    return translate("ScatterPlot", f"{name.title().strip()}:    ")
 
 
 interactor = ptree.Interactor(
@@ -96,6 +107,11 @@ def getData(randomize=False):
 )
 def update(mode="Reuse Item"):
     global ptr
+
+    if next(iterations_counter) > args.iterations:
+        timer.stop()
+        app.quit()
+        return None
     if mode == "New Item":
         mkItem()
     elif mode == "Reuse Item":
@@ -110,7 +126,6 @@ def update(mode="Reuse Item"):
         item.pointsAt(new.pos())
         old.resetBrush()  # reset old's brush before setting new's to better simulate hovering
         new.setBrush(hoverBrush)
-
     ptr += 1
     framecnt.update()
 
@@ -121,7 +136,6 @@ def pausePlot(paused=False):
         timer.stop()
     else:
         timer.start()
-
 
 mkDataAndItem()
 timer.timeout.connect(update)

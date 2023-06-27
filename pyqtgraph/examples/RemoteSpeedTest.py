@@ -10,12 +10,21 @@ between the two cases. IF you have a multi-core CPU, it should be obvious that t
 remote case is much faster.
 """
 
+import argparse
+import itertools
+
 import numpy as np
+from utils import FrameCounter
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtWidgets
 
-from utils import FrameCounter
+parser = argparse.ArgumentParser()
+parser.add_argument('--iterations', default=float('inf'), type=float,
+    help="Number of iterations to run before exiting"
+)
+args = parser.parse_args()
+iterations_counter = itertools.count()
 
 app = pg.mkQApp()
 
@@ -46,6 +55,11 @@ rplt._setProxyOptions(deferGetattr=True)  ## speeds up access to rplt.plot
 view.setCentralItem(rplt)
 
 def update():
+    if next(iterations_counter) > args.iterations:
+        timer.stop()
+        app.quit()
+        return None
+
     data = np.random.normal(size=(10000,50)).sum(axis=1)
     data += 5 * np.sin(np.linspace(0, 10, data.shape[0]))
     

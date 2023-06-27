@@ -4,15 +4,15 @@ Update a simple plot as rapidly as possible to measure speed.
 """
 
 import argparse
+import itertools
 
 import numpy as np
+from utils import FrameCounter
 
 import pyqtgraph as pg
 import pyqtgraph.functions as fn
 import pyqtgraph.parametertree as ptree
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
-
-from utils import FrameCounter
 
 # defaults here result in the same configuration as the original PlotSpeedTest
 parser = argparse.ArgumentParser()
@@ -30,6 +30,9 @@ parser.set_defaults(use_opengl=None)
 parser.add_argument('--allow-opengl-toggle', action='store_true',
     help="""Allow on-the-fly change of OpenGL setting. This may cause unwanted side effects.
     """)
+parser.add_argument('--iterations', default=float('inf'), type=float,
+    help="Number of iterations to run before exiting"
+)
 args = parser.parse_args()
 
 if args.use_opengl is not None:
@@ -41,6 +44,7 @@ use_opengl = pg.getConfigOption('useOpenGL')
 sfmt = QtGui.QSurfaceFormat()
 sfmt.setSwapInterval(0)
 QtGui.QSurfaceFormat.setDefaultFormat(sfmt)
+
 
 class MonkeyCurveItem(pg.PlotCurveItem):
     def __init__(self, *args, **kwds):
@@ -81,6 +85,7 @@ pw.setWindowTitle('pyqtgraph example: PlotSpeedTest')
 pw.setLabel('bottom', 'Index', units='B')
 curve = MonkeyCurveItem(pen=default_pen, brush='b')
 pw.addItem(curve)
+iterations_counter = itertools.count()
 
 @interactor.decorate(
     nest=True,
@@ -108,6 +113,7 @@ def makeData(
 
 params.child('makeData').setOpts(title='Plot Options')
 
+
 @interactor.decorate(
     connect={'type': 'list', 'limits': ['all', 'pairs', 'finite', 'array']}
 )
@@ -118,12 +124,24 @@ def update(
 ):
     global ptr
 
+    if next(iterations_counter) > args.iterations:
+        # cleanly close down benchmark
+        timer.stop()
+        app.quit()
+        return None
+
     if connect == 'array':
         connect = connect_array
 
-    curve.setData(data[ptr], antialias=antialias, connect=connect, skipFiniteCheck=skipFiniteCheck)
+    curve.setData(
+        data[ptr],
+        antialias=antialias,
+        connect=connect,
+        skipFiniteCheck=skipFiniteCheck
+    )
     ptr = (ptr + 1) % data.shape[0]
     framecnt.update()
+
 
 @interactor.decorate(
     useOpenGL={'readonly': not args.allow_opengl_toggle},
@@ -143,7 +161,9 @@ def updateOptions(
     curve.setFillLevel(0.0 if fillLevel else None)
     curve.setMethod(plotMethod)
 
+
 makeData()
+
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
