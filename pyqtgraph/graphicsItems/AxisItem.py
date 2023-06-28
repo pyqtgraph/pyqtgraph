@@ -23,7 +23,7 @@ __all__ = ['AxisItem']
 
 
 optsHint = TypedDict('optsHint',
-                     {'color'     : ConfigColorHint,
+                     {'lineColor' : ConfigColorHint,
 
                       'tickAlpha' : float,
                       'tickColor' : ConfigColorHint,
@@ -162,17 +162,17 @@ class AxisItem(GraphicsWidget):
     #
     ##############################################################
 
-    def setColor(self, color: ConfigColorHint) -> None:
+    def setLineColor(self, lineColor: ConfigColorHint) -> None:
         """
-        Set the axis background color.
+        Set the axis lineColor.
         """
-        self.style['color'] = color
+        self.style['lineColor'] = lineColor
 
-    def color(self) -> ConfigColorHint:
+    def lineColor(self) -> ConfigColorHint:
         """
-        Get the current axis background color.
+        Get the current axis lineColor.
         """
-        return self.style['color']
+        return self.style['lineColor']
 
     def setTickAlpha(self, tickAlpha: Optional[Union[float, int]]) -> None:
         """
@@ -523,8 +523,8 @@ class AxisItem(GraphicsWidget):
 
         Parameters
         ----------
-        color :
-            Background color.
+        lineColor :
+            color of the line.
         tickAlpha : float or int or None
             If None, pyqtgraph will draw the ticks with the alpha it deems
             appropriate.  Otherwise, the alpha will be fixed at the value passed.
@@ -851,20 +851,19 @@ class AxisItem(GraphicsWidget):
 
     def pen(self) -> QtGui.QPen:
         if self._pen is None:
-            return fn.mkPen(configStyle['AxisItem']['color'])
+            return fn.mkPen(configStyle['AxisItem']['lineColor'])
         return fn.mkPen(self._pen)
 
     def setPen(self, *args, **kwargs) -> None:
         """
         Set the pen used for drawing text, axes, ticks, and grid lines.
-        If no arguments are given, the default foreground color will be used
         (see :func:`setConfigOption <pyqtgraph.setConfigOption>`).
         """
         self.picture = None
         if args or kwargs:
             self._pen = fn.mkPen(*args, **kwargs)
         else:
-            self._pen = fn.mkPen(configStyle['AxisItem']['color'])
+            self._pen = fn.mkPen(configStyle['AxisItem']['lineColor'])
         self.setTickLabelColor(self._pen.color().name()) #RRGGBB
         self._updateLabel()
 
@@ -876,7 +875,6 @@ class AxisItem(GraphicsWidget):
     def setTextPen(self, *args, **kwargs) -> None:
         """
         Set the pen used for drawing text.
-        If no arguments are given, the default foreground color will be used.
         """
         self.picture = None
         if args or kwargs:

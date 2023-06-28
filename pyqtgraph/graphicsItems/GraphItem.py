@@ -15,7 +15,7 @@ __all__ = ['GraphItem']
 
 optsHint = TypedDict('optsHint',
                      {'background' : ConfigColorHint,
-                      'color'      : ConfigColorHint,
+                      'lineColor'  : ConfigColorHint,
                       'antialias'  : bool},
                      total=False)
 # kwargs are not typed because mypy has not ye included Unpack[Typeddict]
@@ -64,17 +64,17 @@ class GraphItem(GraphicsObject):
         """
         return self.opts['background']
 
-    def setColor(self, color: ConfigColorHint) -> None:
+    def setLineColor(self, lineColor: ConfigColorHint) -> None:
         """
-        Set the color.
+        Set the lineColor.
         """
-        self.opts['color'] = color
+        self.opts['lineColor'] = lineColor
 
-    def color(self) -> ConfigColorHint:
+    def linecolor(self) -> ConfigColorHint:
         """
-        Get the current color.
+        Get the current lineColor.
         """
-        return self.opts['color']
+        return self.opts['lineColor']
 
     def setAntialias(self, antialias: bool) -> None:
         """
@@ -115,7 +115,7 @@ class GraphItem(GraphicsObject):
         background: ConfigColorHint or None, optional
             Color of the background.
             Any single argument accepted by :func:`mkPen <pyqtgraph.mkPen>` is allowed.
-        color : ConfigColorHint or None, optional
+        lineColor : ConfigColorHint or None, optional
             color of the lines between connected nodes.
             Any single argument accepted by :func:`mkPen <pyqtgraph.mkPen>` is allowed.
         antialias : bool or None, optional
@@ -127,7 +127,7 @@ class GraphItem(GraphicsObject):
 
         Examples
         --------
-        >>> setStyle(color='w', background='k')
+        >>> setStyle(lineColor='w', background='k')
         """
         for k, v in kwargs.items():
             # If the key is a valid entry of the stylesheet
@@ -220,7 +220,7 @@ class GraphItem(GraphicsObject):
                     p.drawLine(QtCore.QPointF(*pts[i][0]), QtCore.QPointF(*pts[i][1]))
             else:
                 if pen == 'default':
-                    pen = configStyle['GraphItem']['color']
+                    pen = configStyle['GraphItem']['lineColor']
                 p.setPen(fn.mkPen(pen))
                 pts = pts.reshape((pts.shape[0]*pts.shape[1], pts.shape[2]))
                 path = fn.arrayToQPath(x=pts[:,0], y=pts[:,1], connect='pairs')

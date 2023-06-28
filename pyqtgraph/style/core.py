@@ -8,7 +8,7 @@ import pyqtgraph as pg
 
 
 DEFAULT_STYLE      = 'default'
-# DEFAULT_STYLE      = 'matplotlib'
+DEFAULT_STYLE      = 'default_white'
 STYLE_EXTENSION    = 'pstyle'
 USER_LIBRARY_PATHS = 'stylelib'
 
@@ -124,3 +124,24 @@ def initItemStyle(item,
         fun = getattr(item, 'set{}{}'.format(key[:1].upper(),
                                              key[1:]))
         fun(val)
+
+
+def setConfigStyle(item: str,
+                   option: ConfigKeyHint,
+                   value: ConfigValueHint) -> None:
+    """
+    Set a style option of an item to value.
+
+    >>> setConfigStyle('GraphItem', 'background', 'k)
+
+    Parameters
+    ----------
+    item
+        The item to set
+    option
+        The item option to set
+    value
+        The value to which the option will be set
+    """
+
+    pg.configStyle[item][option] = value

@@ -34,12 +34,12 @@
 [GraphItem]
 ## Set all item values
 background : 'k'                  # background
-color      : (200, 200, 200, 255) # color of the lines between connected nodes
+lineColor  : (200, 200, 200, 255) # color of the lines between connected nodes
 antialias  : False                # if antialiased
 
 
 [AxisItem]
-color : (200, 200, 200, 255) # background color
+lineColor : (200, 200, 200, 255) # line color
 
 tickAlpha      : 0                    # alpha channel from 0 to 1
 tickColor      : (200, 200, 200, 255) # ticks color

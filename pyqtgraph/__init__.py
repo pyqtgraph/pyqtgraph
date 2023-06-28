@@ -10,6 +10,7 @@ __version__ = '0.13.4.dev0'
 import importlib
 import os
 import sys
+import warnings
 
 import numpy  # # pyqtgraph requires numpy
 
@@ -25,6 +26,18 @@ from .Qt import mkQApp
     #app = QtWidgets.QApplication([])
 
               ## (import here to avoid massive error dump later on if numpy is not available)
+
+
+
+### Set style options
+## All options related to style are set here
+## Style options must be initialized before the config options
+## Init default style
+from .style.core import (
+    loadDefaultStyle,
+    setConfigStyle
+)
+configStyle = loadDefaultStyle()
 
 
 
@@ -60,8 +73,20 @@ CONFIG_OPTIONS = {
                                   # 'off' or False: lines are never plotted in segments
 }
 
-
 def setConfigOption(opt, value):
+
+    # We keep old style options available with deprecation warning
+    if opt in ('foreground', 'background', 'antialias'):
+        warnings.warn('Setting style option "{}" through setConfigOptions is deprecated. Use setConfigStyle instead.',
+                       DeprecationWarning,
+                       stacklevel=2)
+        if opt in ('background', 'antialias'):
+            setConfigStyle('GraphItem', opt, value)
+        else:
+            setConfigStyle('GraphItem', 'lineColor', value)
+        return
+
+
     if opt not in CONFIG_OPTIONS:
         raise KeyError('Unknown configuration option "%s"' % opt)
     if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
@@ -82,18 +107,6 @@ def getConfigOption(opt):
     """Return the value of a single global configuration option.
     """
     return CONFIG_OPTIONS[opt]
-
-
-
-
-
-### Set style options
-## All options related to style are set here
-## Init default style
-from .style.core import loadDefaultStyle
-configStyle = loadDefaultStyle()
-
-
 
 
 
