@@ -4,7 +4,7 @@ numpy; python_version == '3.11'
 numpy~=1.22.0; python_version == '3.9'
 
 # image testing
-scipy==1.11.0
+scipy==1.11.1
 
 # optional high performance paths
 numba==0.57.1; python_version == '3.9'
