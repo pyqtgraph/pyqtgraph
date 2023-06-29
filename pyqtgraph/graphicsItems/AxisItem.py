@@ -936,26 +936,34 @@ class AxisItem(GraphicsWidget):
         else:
             tickBounds = linkedView.mapRectToItem(self, linkedView.boundingRect())
 
+        left_offset = -1.0
+        right_offset = 1.0
+        top_offset = -1.0
+        bottom_offset = 1.0
         if self.orientation == 'left':
-            span = (bounds.topRight(), bounds.bottomRight())
+            span = (bounds.topRight() + Point(left_offset, top_offset),
+                    bounds.bottomRight() + Point(left_offset, bottom_offset))
             tickStart = tickBounds.right()
             tickStop = bounds.right()
             tickDir = -1
             axis = 0
         elif self.orientation == 'right':
-            span = (bounds.topLeft(), bounds.bottomLeft())
+            span = (bounds.topLeft() + Point(right_offset, top_offset),
+                    bounds.bottomLeft() + Point(right_offset, bottom_offset))
             tickStart = tickBounds.left()
             tickStop = bounds.left()
             tickDir = 1
             axis = 0
         elif self.orientation == 'top':
-            span = (bounds.bottomLeft(), bounds.bottomRight())
+            span = (bounds.bottomLeft() + Point(left_offset, top_offset),
+                    bounds.bottomRight() + Point(right_offset, top_offset))
             tickStart = tickBounds.bottom()
             tickStop = bounds.bottom()
             tickDir = -1
             axis = 1
         elif self.orientation == 'bottom':
-            span = (bounds.topLeft(), bounds.topRight())
+            span = (bounds.topLeft() + Point(left_offset, bottom_offset),
+                    bounds.topRight() + Point(right_offset, bottom_offset))
             tickStart = tickBounds.top()
             tickStop = bounds.top()
             tickDir = 1
