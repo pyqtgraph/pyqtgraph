@@ -224,7 +224,7 @@ class TextItem(GraphicsObject):
         if not force and pt == self._lastTransform:
             return
 
-        t = pt.inverted()[0]
+        t = fn.invertQTransform(pt)
         # reset translation
         t.setMatrix(t.m11(), t.m12(), t.m13(), t.m21(), t.m22(), t.m23(), 0, 0, t.m33())
         
