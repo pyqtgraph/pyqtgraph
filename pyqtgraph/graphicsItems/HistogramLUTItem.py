@@ -351,7 +351,7 @@ class HistogramLUTItem(GraphicsWidget):
                 self.region.setRegion([mn, mx])
                 profiler('set region')
             else:
-                mn, mx = self.imageItem().levels
+                mn, mx = self.imageItem().getLevels()
                 self.region.setRegion([mn, mx])
         else:
             # plot one histogram for each channel
