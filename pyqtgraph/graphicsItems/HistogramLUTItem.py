@@ -282,7 +282,8 @@ class HistogramLUTItem(GraphicsWidget):
         HistogramLUTItem.
         """
         self.imageItem = weakref.ref(img)
-        img.sigImageChanged.connect(self.imageChanged)
+        if hasattr(img, 'sigImageChanged'):
+            img.sigImageChanged.connect(self.imageChanged)
         self._setImageLookupTable()
         self.regionChanged()
         self.imageChanged(autoLevel=True)
