@@ -475,6 +475,10 @@ class ViewBox(GraphicsWidget):
             self.sigStateChanged.emit(self)
             self.sigResized.emit(self)
 
+    def boundingRect(self):
+        br = super().boundingRect()
+        return br.adjusted(0, 0, +0.5, +0.5)
+
     def viewRange(self):
         """Return a the view's visible range as a list: [[xmin, xmax], [ymin, ymax]]"""
         return [x[:] for x in self.state['viewRange']]  ## return copy
