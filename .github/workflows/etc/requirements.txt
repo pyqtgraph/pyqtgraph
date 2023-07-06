@@ -13,7 +13,7 @@ numba==0.57.1; python_version == '3.9'
 pyopengl==3.1.7
 
 # supplimental tools
-matplotlib==3.7.1
+matplotlib==3.7.2
 h5py==3.9.0
 
 # testing
