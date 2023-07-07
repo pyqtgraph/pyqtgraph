@@ -1,4 +1,3 @@
-import itertools
 import warnings
 
 import numpy as np
@@ -14,32 +13,40 @@ __all__ = ['PColorMeshItem']
 
 class QuadInstances:
     def __init__(self):
-        self.polys = []
+        self.nrows = -1
+        self.ncols = -1
+        self.pointsarray = Qt.internals.PrimitiveArray(QtCore.QPointF, 2)
+        self.resize(0, 0)
 
-    def alloc(self, size):
-        self.polys.clear()
+    def resize(self, nrows, ncols):
+        if nrows == self.nrows and ncols == self.ncols:
+            return
 
-        # 2 * (size + 1) vertices, (x, y)
-        arr = np.empty((2 * (size + 1), 2), dtype=np.float64)
-        ptrs = list(map(Qt.compat.wrapinstance,
-            itertools.count(arr.ctypes.data, arr.strides[0]),
-            itertools.repeat(QtCore.QPointF, arr.shape[0])))
+        self.nrows = nrows
+        self.ncols = ncols
 
-        # arrange into 2 rows, (size + 1) vertices
-        points = [ptrs[:len(ptrs)//2], ptrs[len(ptrs)//2:]]
-        self.arr = arr.reshape((2, -1, 2))
+        # (nrows + 1) * (ncols + 1) vertices, (x, y)
+        self.pointsarray.resize((nrows+1)*(ncols+1))
+        points = self.pointsarray.instances()
+        # points is a flattened list of a 2d array of
+        # QPointF(s) of shape (nrows+1, ncols+1)
 
-        # pre-create quads from those 2 rows of QPointF(s)
-        for j in range(size):
-            bl, tl = points[0][j:j+2]
-            br, tr = points[1][j:j+2]
-            poly = (bl, br, tr, tl)
-            self.polys.append(poly)
+        # pre-create quads from those instances of QPointF(s).
+        # store the quads as a flattened list of a 2d array
+        # of polygons of shape (nrows, ncols)
+        polys = []
+        for r in range(nrows):
+            for c in range(ncols):
+                bl = points[(r+0)*(ncols+1)+(c+0)]
+                tl = points[(r+0)*(ncols+1)+(c+1)]
+                br = points[(r+1)*(ncols+1)+(c+0)]
+                tr = points[(r+1)*(ncols+1)+(c+1)]
+                poly = (bl, br, tr, tl)
+                polys.append(poly)
+        self.polys = polys
 
-    def array(self, size):
-        if size != len(self.polys):
-            self.alloc(size)
-        return self.arr
+    def ndarray(self):
+        return self.pointsarray.ndarray()
 
     def instances(self):
         return self.polys
@@ -144,8 +151,7 @@ class PColorMeshItem(GraphicsObject):
         else:
             self.cmap = colormap.get('viridis')
 
-        lut_qcolor = self.cmap.getLookupTable(nPts=256, mode=self.cmap.QCOLOR)
-        self.lut_qbrush = [QtGui.QBrush(x) for x in lut_qcolor]
+        self.lut_qcolor = self.cmap.getLookupTable(nPts=256, mode=self.cmap.QCOLOR)
 
         self.quads = QuadInstances()
 
@@ -198,7 +204,7 @@ class PColorMeshItem(GraphicsObject):
             self._dataBounds = ((xmn, xmx), (ymn, ymx))
 
         else:
-            ValueError('Data must been sent as (z) or (x, y, z)')
+            raise ValueError('Data must been sent as (z) or (x, y, z)')
 
 
     def setData(self, *args, **kwargs):
@@ -266,7 +272,7 @@ class PColorMeshItem(GraphicsObject):
 
         ## Prepare colormap
         # First we get the LookupTable
-        lut = self.lut_qbrush
+        lut = self.lut_qcolor
         # Second we associate each z value, that we normalize, to the lut
         scale = len(lut) - 1
         # Decide whether to autoscale the colormap or use the same levels as before
@@ -290,20 +296,23 @@ class PColorMeshItem(GraphicsObject):
         else:
             drawConvexPolygon = painter.drawConvexPolygon
 
-        memory = self.quads.array(self.z.shape[1])
+        self.quads.resize(self.z.shape[0], self.z.shape[1])
+        memory = self.quads.ndarray()
+        memory[..., 0] = self.x.ravel()
+        memory[..., 1] = self.y.ravel()
         polys = self.quads.instances()
 
-        # Go through all the data and draw the polygons accordingly
-        for i in range(self.z.shape[0]):
-            # populate 2 rows of values into points
-            memory[..., 0] = self.x[i:i+2, :]
-            memory[..., 1] = self.y[i:i+2, :]
+        # group indices of same coloridx together
+        color_indices, counts = np.unique(norm, return_counts=True)
+        sorted_indices = np.argsort(norm, axis=None)
 
-            brushes = [lut[z] for z in norm[i].tolist()]
-
-            for brush, poly in zip(brushes, polys):
-                painter.setBrush(brush)
-                drawConvexPolygon(poly)
+        offset = 0
+        for coloridx, cnt in zip(color_indices, counts):
+            indices = sorted_indices[offset:offset+cnt]
+            offset += cnt
+            painter.setBrush(lut[coloridx])
+            for idx in indices:
+                drawConvexPolygon(polys[idx])
 
         painter.end()
         self.update()
@@ -355,10 +364,9 @@ class PColorMeshItem(GraphicsObject):
 
     
     def setLookupTable(self, lut, update=True):
-        if lut is not self.lut_qbrush:
-            self.lut_qbrush = [QtGui.QBrush(x) for x in lut]
-            if update:
-                self._updateDisplayWithCurrentState()
+        self.lut_qcolor = lut[:]
+        if update:
+            self._updateDisplayWithCurrentState()
 
 
 
