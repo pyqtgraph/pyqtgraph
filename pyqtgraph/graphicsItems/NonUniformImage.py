@@ -108,7 +108,7 @@ class NonUniformImage(GraphicsObject):
 
         # get colormap, lut has precedence over cmap
         if self.lut is None:
-            lut = self.cmap.getLookupTable()
+            lut = self.cmap.getLookupTable(nPts=256)
         elif callable(self.lut):
             lut = self.lut(z)
         else:
