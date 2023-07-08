@@ -1,12 +1,12 @@
-import math
-
+import warnings
 import numpy as np
 
 from .. import functions as fn
-from .. import mkBrush, mkPen
 from ..colormap import ColorMap
+from .. import Qt
 from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
+from .HistogramLUTItem import HistogramLUTItem
 
 __all__ = ['NonUniformImage']
 
@@ -18,7 +18,6 @@ class NonUniformImage(GraphicsObject):
     commonly used to display 2-d or slices of higher dimensional data that
     have a regular but non-uniform grid e.g. measurements or simulation results.
     """
-
     def __init__(self, x, y, z, border=None):
 
         GraphicsObject.__init__(self)
@@ -38,28 +37,37 @@ class NonUniformImage(GraphicsObject):
             raise Exception("The length of x and y must match the shape of z.")
 
         # default colormap (black - white)
-        self.cmap = ColorMap(pos=[0.0, 1.0], color=[(0.0, 0.0, 0.0, 1.0), (1.0, 1.0, 1.0, 1.0)])
+        self.cmap = ColorMap(pos=[0.0, 1.0], color=[(0, 0, 0), (255, 255, 255)])
 
         self.data = (x, y, z)
+        self.levels = None
         self.lut = None
         self.border = border
-        self.generatePicture()
+        self.picture = None
 
-    def setLookupTable(self, lut, autoLevel=False):
-        lut.sigLevelsChanged.connect(self.generatePicture)
-        lut.gradient.sigGradientChanged.connect(self.generatePicture)
+        self.update()
+
+    def setLookupTable(self, lut, update=True, **kwargs):
+        # backwards compatibility hack
+        if isinstance(lut, HistogramLUTItem):
+            warnings.warn(
+                "NonUniformImage::setLookupTable(HistogramLUTItem) is deprecated "
+                "and will be removed in a future version of PyQtGraph. "
+                "use HistogramLUTItem::setImageItem(NonUniformImage) instead",
+                DeprecationWarning, stacklevel=2
+            )
+            lut.setImageItem(self)
+            return
+
         self.lut = lut
-
-        if autoLevel:
-            _, _, z = self.data
-            f = z[np.isfinite(z)]
-            lut.setLevels(f.min(), f.max())
-
-        self.generatePicture()
+        self.picture = None
+        if update:
+            self.update()
 
     def setColorMap(self, cmap):
         self.cmap = cmap
-        self.generatePicture()
+        self.picture = None
+        self.update()
 
     def getHistogram(self, **kwds):
         """Returns x and y arrays containing the histogram values for the current image.
@@ -72,62 +80,95 @@ class NonUniformImage(GraphicsObject):
 
         return hist[1][:-1], hist[0]
 
-    def generatePicture(self):
-
-        x, y, z = self.data
-
-        self.picture = QtGui.QPicture()
-        p = QtGui.QPainter(self.picture)
-        p.setPen(mkPen(None))
-
-        # normalize
-        if self.lut is not None:
-            mn, mx = self.lut.getLevels()
-        else:
-            f = z[np.isfinite(z)]
-            mn = f.min()
-            mx = f.max()
-
-        # draw the tiles
-        for i in range(x.size):
-            for j in range(y.size):
-
-                value = z[i, j]
-
-                if np.isneginf(value):
-                    value = 0.0
-                elif np.isposinf(value):
-                    value = 1.0
-                elif math.isnan(value):
-                    continue  # ignore NaN
-                else:
-                    value = (value - mn) / (mx - mn)  # normalize
-
-                if self.lut:
-                    color = self.lut.gradient.getColor(value)
-                else:
-                    color = self.cmap.mapToQColor(value)
-
-                p.setBrush(mkBrush(color))
-
-                # left, right, bottom, top
-                l = x[0] if i == 0 else (x[i - 1] + x[i]) / 2
-                r = (x[i] + x[i + 1]) / 2 if i < x.size - 1 else x[-1]
-                b = y[0] if j == 0 else (y[j - 1] + y[j]) / 2
-                t = (y[j] + y[j + 1]) / 2 if j < y.size - 1 else y[-1]
-
-                p.drawRect(QtCore.QRectF(l, t, r - l, b - t))
-
-        if self.border is not None:
-            p.setPen(self.border)
-            p.setBrush(fn.mkBrush(None))
-            p.drawRect(self.boundingRect())
-
-        p.end()
-
+    def setLevels(self, levels):
+        self.levels = levels
+        self.picture = None
         self.update()
 
+    def getLevels(self):
+        if self.levels is None:
+            z = self.data[2]
+            z = z[np.isfinite(z)]
+            self.levels = z.min(), z.max()
+        return self.levels
+
+    def generatePicture(self):
+        x, y, z = self.data
+
+        # pad x and y so that we don't need to special-case the edges
+        x = np.pad(x, 1, mode='edge')
+        y = np.pad(y, 1, mode='edge')
+
+        x = (x[:-1] + x[1:]) / 2
+        y = (y[:-1] + y[1:]) / 2
+
+        X, Y = np.meshgrid(x[:-1], y[:-1], indexing='ij')
+        W, H = np.meshgrid(np.diff(x), np.diff(y), indexing='ij')
+        Z = z
+
+        # get colormap, lut has precedence over cmap
+        if self.lut is None:
+            lut = self.cmap.getLookupTable(nPts=256)
+        elif callable(self.lut):
+            lut = self.lut(z)
+        else:
+            lut = self.lut
+
+        # normalize and quantize
+        mn, mx = self.getLevels()
+        rng = mx - mn
+        if rng == 0:
+            rng = 1
+        scale = len(lut) / rng
+        Z = fn.rescaleData(Z, scale, mn, dtype=int, clip=(0, len(lut)-1))
+
+        # replace nans positions with invalid lut index
+        invalid_coloridx = len(lut)
+        Z[np.isnan(z)] = invalid_coloridx
+
+        # pre-allocate to the largest array needed
+        color_indices, counts = np.unique(Z, return_counts=True)
+        rectarray = Qt.internals.PrimitiveArray(QtCore.QRectF, 4)
+        rectarray.resize(counts.max())
+
+        # sorted_indices effectively groups together the
+        # (flattened) indices of the same coloridx together.
+        sorted_indices = np.argsort(Z, axis=None)
+        for arr in X, Y, W, H:
+            arr.shape = -1      # in-place unravel
+
+        self.picture = QtGui.QPicture()
+        painter = QtGui.QPainter(self.picture)
+        painter.setPen(fn.mkPen(None))
+
+        # draw the tiles grouped by coloridx
+        offset = 0
+        for coloridx, cnt in zip(color_indices, counts):
+            if coloridx == invalid_coloridx:
+                continue
+            indices = sorted_indices[offset:offset+cnt]
+            offset += cnt
+            rectarray.resize(cnt)
+            memory = rectarray.ndarray()
+            memory[:,0] = X[indices]
+            memory[:,1] = Y[indices]
+            memory[:,2] = W[indices]
+            memory[:,3] = H[indices]
+
+            brush = fn.mkBrush(lut[coloridx])
+            painter.setBrush(brush)
+            painter.drawRects(*rectarray.drawargs())
+
+        if self.border is not None:
+            painter.setPen(self.border)
+            painter.setBrush(fn.mkBrush(None))
+            painter.drawRect(self.boundingRect())
+
+        painter.end()
+
     def paint(self, p, *args):
+        if self.picture is None:
+            self.generatePicture()
         p.drawPicture(0, 0, self.picture)
 
     def boundingRect(self):

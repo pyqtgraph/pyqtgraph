@@ -7,9 +7,7 @@ distributed sample points.
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.graphicsItems.GradientEditorItem import Gradients
 from pyqtgraph.graphicsItems.NonUniformImage import NonUniformImage
-from pyqtgraph.Qt import QtWidgets
 
 RPM2RADS = 2 * np.pi / 60
 RADS2RPM = 1 / RPM2RADS
@@ -35,37 +33,26 @@ P_loss = kfric * W + kfric3 * W ** 3 + (res * (TAU / psi) ** 2) + k_v * (V - v_r
 P_mech = TAU * W
 P_loss[P_mech > 1.5e5] = np.NaN
 
-# green - orange - red
-Gradients['gor'] = {'ticks': [(0.0, (74, 158, 71)), (0.5, (255, 230, 0)), (1, (191, 79, 76))], 'mode': 'rgb'}
-
 app = pg.mkQApp("NonUniform Image Example")
 
-win = QtWidgets.QMainWindow()
-cw = pg.GraphicsLayoutWidget()
+win = pg.PlotWidget()
 win.show()
 win.resize(600, 400)
-win.setCentralWidget(cw)
 win.setWindowTitle('pyqtgraph example: Non-uniform Image')
 
-p = cw.addPlot(title="Power Losses [W]", row=0, col=0)
-
-lut = pg.HistogramLUTItem(orientation="horizontal")
+p = win.getPlotItem()
+p.setTitle("Power Losses [W]")
 
 p.setMouseEnabled(x=False, y=False)
 
-cw.nextRow()
-cw.addItem(lut)
-
-# load the gradient
-lut.gradient.loadPreset('gor')
-
 image = NonUniformImage(w * RADS2RPM, tau, P_loss.T)
-image.setLookupTable(lut, autoLevel=True)
 image.setZValue(-1)
 p.addItem(image)
 
-h = image.getHistogram()
-lut.plot.setData(*h)
+# green - orange - red
+cmap = pg.ColorMap([0.0, 0.5, 1.0], [(74, 158, 71), (255, 230, 0), (191, 79, 76)])
+bar = pg.ColorBarItem(colorMap=cmap, orientation='h')
+bar.setImageItem(image, insert_in=p)
 
 p.showGrid(x=True, y=True)
 

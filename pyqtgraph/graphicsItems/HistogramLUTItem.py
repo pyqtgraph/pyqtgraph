@@ -282,7 +282,8 @@ class HistogramLUTItem(GraphicsWidget):
         HistogramLUTItem.
         """
         self.imageItem = weakref.ref(img)
-        img.sigImageChanged.connect(self.imageChanged)
+        if hasattr(img, 'sigImageChanged'):
+            img.sigImageChanged.connect(self.imageChanged)
         self._setImageLookupTable()
         self.regionChanged()
         self.imageChanged(autoLevel=True)
@@ -351,7 +352,7 @@ class HistogramLUTItem(GraphicsWidget):
                 self.region.setRegion([mn, mx])
                 profiler('set region')
             else:
-                mn, mx = self.imageItem().levels
+                mn, mx = self.imageItem().getLevels()
                 self.region.setRegion([mn, mx])
         else:
             # plot one histogram for each channel
