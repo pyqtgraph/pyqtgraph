@@ -2,12 +2,11 @@
 Demonstrates very basic use of PColorMeshItem
 """
 
-import time
-
 import numpy as np
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
+from utils import FrameCounter
 
 app = pg.mkQApp("PColorMesh Example")
 
@@ -77,9 +76,6 @@ win.addItem(bar_static,1,1,1,1)
 textitem = pg.TextItem(anchor=(1, 0))
 view_auto_scale.addItem(textitem)
 
-## Set the animation
-fps = 25 # Frame per second of the animation
-
 # Wave parameters
 wave_amplitude  = 3
 wave_speed      = 0.3
@@ -93,10 +89,6 @@ maxy = np.max(y) + wave_amplitude
 view_auto_scale.setYRange(miny, maxy)
 textitem.setPos(np.max(x), maxy)
 
-timer = QtCore.QTimer()
-timer.setSingleShot(True)
-# not using QTimer.singleShot() because of persistence on PyQt. see PR #1605
-
 textpos = None
 i=0
 def updateData():
@@ -104,30 +96,26 @@ def updateData():
     global textpos
     
     ## Display the new data set
-    t0 = time.perf_counter()
     color_noise = np.sin(i * 2*np.pi*color_noise_freq) 
     new_x = x
     new_y = y+wave_amplitude*np.cos(x/wave_length+i)
     new_z = np.exp(-(x-np.cos(i*color_speed)*xn)**2/1000)[:-1,:-1] + color_noise
-    t1 = time.perf_counter()
     pcmi_auto.setData(new_x,
                  new_y,
                  new_z)
     pcmi_consistent.setData(new_x,
                  new_y,
                  new_z)
-    t2 = time.perf_counter()
 
     i += wave_speed
+    framecnt.update()
 
-    textitem.setText(f'{(t2 - t1)*1000:.1f} ms')
-
-    # cap update rate at fps
-    delay = max(1000/fps - (t2 - t0), 0)
-    timer.start(int(delay))
-
+timer = QtCore.QTimer()
 timer.timeout.connect(updateData)
-updateData()
+timer.start()
+
+framecnt = FrameCounter()
+framecnt.sigFpsUpdate.connect(lambda fps: textitem.setText(f'{fps:.1f} fps'))
 
 if __name__ == '__main__':
     pg.exec()
