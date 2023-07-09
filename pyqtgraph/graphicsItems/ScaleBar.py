@@ -57,12 +57,11 @@ class ScaleBar(GraphicsWidgetAnchor, GraphicsObject):
     def boundingRect(self):
         return QtCore.QRectF()
 
-    def setParentItem(self, p):
-        ret = GraphicsObject.setParentItem(self, p)
-        if self.offset is not None:
+    def setParentItem(self, parent):
+        GraphicsObject.setParentItem(self, parent)
+        if parent is not None and self.offset is not None:
             offset = Point(self.offset)
             anchorx = 1 if offset[0] <= 0 else 0
             anchory = 1 if offset[1] <= 0 else 0
             anchor = (anchorx, anchory)
             self.anchor(itemPos=anchor, parentPos=anchor, offset=offset)
-        return ret
