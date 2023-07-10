@@ -10,6 +10,7 @@ __version__ = '0.13.4.dev0'
 import importlib
 import os
 import sys
+import warnings
 
 import numpy  # # pyqtgraph requires numpy
 
@@ -27,6 +28,21 @@ from .Qt import mkQApp
               ## (import here to avoid massive error dump later on if numpy is not available)
 
 
+
+### Set style options
+## All options related to style are set here
+## Style options must be initialized before the config options
+## Init default style
+from .style.core import (
+    loadDefaultStyle,
+    setConfigStyle
+)
+configStyle = loadDefaultStyle()
+
+
+
+### Set runing options
+## All options not related to style are set here
 ## in general openGL is poorly supported with Qt+GraphicsView.
 ## we only enable it where the performance benefit is critical.
 ## Note this only applies to 2D graphics; 3D graphics always use OpenGL.
@@ -40,10 +56,6 @@ else:
 CONFIG_OPTIONS = {
     'useOpenGL': useOpenGL, ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
     'leftButtonPan': True,  ## if false, left button drags a rubber band for zooming in viewbox
-    # foreground/background take any arguments to the 'mkColor' in /pyqtgraph/functions.py
-    'foreground': 'd',  ## default foreground color for axes, labels, etc.
-    'background': 'k',        ## default background for GraphicsWidget
-    'antialias': False,
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
     'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
@@ -61,8 +73,20 @@ CONFIG_OPTIONS = {
                                   # 'off' or False: lines are never plotted in segments
 }
 
-
 def setConfigOption(opt, value):
+
+    # We keep old style options available with deprecation warning
+    if opt in ('foreground', 'background', 'antialias'):
+        warnings.warn('Setting style option "{}" through setConfigOptions is deprecated. Use setConfigStyle instead.',
+                       DeprecationWarning,
+                       stacklevel=2)
+        if opt in ('background', 'antialias'):
+            setConfigStyle('GraphItem', opt, value)
+        else:
+            setConfigStyle('GraphItem', 'lineColor', value)
+        return
+
+
     if opt not in CONFIG_OPTIONS:
         raise KeyError('Unknown configuration option "%s"' % opt)
     if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
@@ -83,6 +107,7 @@ def getConfigOption(opt):
     """Return the value of a single global configuration option.
     """
     return CONFIG_OPTIONS[opt]
+
 
 
 def systemInfo():

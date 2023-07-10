@@ -1,18 +1,32 @@
+from collections import OrderedDict
 import itertools
 import math
-import weakref
-from collections import OrderedDict
-
 import numpy as np
+from typing import Union, TypedDict
+import weakref
+
 
 from .. import Qt, debug
 from .. import functions as fn
-from .. import getConfigOption
+from .. import configStyle
+from ..style.core import (
+    ConfigColorHint,
+    initItemStyle)
 from ..Point import Point
 from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
+
+Number = Union[float, int]
+
+optsHint = TypedDict('optsHint',
+                     {'edgeColor': ConfigColorHint,
+                      'antialias': bool,
+                      'symbol'   : str,
+                      'size'     : int,
+                      'faceColor': ConfigColorHint},
+                     total=False)
 
 
 ## Build all symbol paths
@@ -380,16 +394,17 @@ class ScatterPlotItem(GraphicsObject):
         self.opts = {
             'pxMode': True,
             'useCache': True,  ## If useCache is False, symbols are re-drawn on every paint.
-            'antialias': getConfigOption('antialias'),
             'compositionMode': None,
             'name': None,
-            'symbol': 'o',
-            'size': 7,
-            'pen': fn.mkPen(getConfigOption('foreground')),
-            'brush': fn.mkBrush(100, 100, 150),
+            'pen': fn.mkPen(configStyle['ScatterPlotItem']['edgeColor']),
+            'brush': fn.mkBrush(configStyle['ScatterPlotItem']['faceColor']),
             'hoverable': False,
             'tip': 'x: {x:.3g}\ny: {y:.3g}\ndata={data}'.format,
         }
+
+        # Get default stylesheet
+        initItemStyle(self, 'ScatterPlotItem', configStyle)
+
         self.opts.update(
             {'hover' + opt.title(): _DEFAULT_STYLE[opt] for opt in ['symbol', 'size', 'pen', 'brush']}
         )
@@ -397,11 +412,210 @@ class ScatterPlotItem(GraphicsObject):
         self.setData(*args, **kargs)
         profiler('setData')
 
+
+
         #self.setCacheMode(self.DeviceCoordinateCache)
 
         # track when the tooltip is cleared so we only clear it once
         # this allows another item in the VB to set the tooltip
         self._toolTipCleared = True
+
+
+    ##############################################################
+    #
+    #                   Style methods
+    #
+    ##############################################################
+
+
+    def edgeColor(self) -> ConfigColorHint:
+        return self.opts['edgeColor']
+
+
+    def setEdgeColor(self, color: ConfigColorHint):
+        self.opts['edgeColor'] = color
+
+
+    def faceColor(self) -> ConfigColorHint:
+        return self.opts['FaceColor']
+
+
+    def setFaceColor(self, color: ConfigColorHint):
+        self.opts['FaceColor'] = color
+
+
+    def setAntialias(self, antialias: bool) -> None:
+        """
+        Set the antialiasing
+        """
+        self.opts['antialias'] = antialias
+
+
+    def antialias(self) -> bool:
+        """
+        Get if antialiasing
+        """
+        return self.opts['antialias']
+
+
+    def setStyle(self, **kwargs) -> None:
+        """
+        Set the style of the LegendItem.
+
+        Parameters
+        ----------
+        antialias : bool
+            Whether to draw symbols with antialiasing. Note that if pxMode is
+            True, symbols are always rendered with antialiasing (since the
+            rendered symbols can be cached, this incurs very little performance
+            cost)
+        edgeColor
+            The color to use for drawing spot outlines.
+        faceColor
+            The color to use for filling spots.
+        size : int
+            The size of spots. If *pxMode* is True, this value is in pixels.
+            Otherwise, it is in the item's local coordinate system.
+        symbol : str
+            can be one of symbols. See `setSymbol` for a list of allowed
+            characters.
+        """
+        for k, v in kwargs.items():
+            # If the key is a valid entry of the stylesheet
+            if k in configStyle['ScatterPlotItem'].keys():
+                fun = getattr(self, 'set{}{}'.format(k[:1].upper(), k[1:]))
+                fun(v)
+            else:
+                raise ValueError('Your argument: "{}" is not a valid style argument.'.format(k))
+
+
+    def setPen(self, *args, **kargs):
+        """Set the pen(s) used to draw the outline around each spot.
+        If a list or array is provided, then the pen for each spot will be set separately.
+        Otherwise, the arguments are passed to pg.mkPen and used as the default pen for
+        all spots which do not have a pen explicitly set."""
+        update = kargs.pop('update', True)
+        dataSet = kargs.pop('dataSet', self.data)
+
+        if len(args) == 1 and (isinstance(args[0], np.ndarray) or isinstance(args[0], list)):
+            pens = args[0]
+            if 'mask' in kargs and kargs['mask'] is not None:
+                pens = pens[kargs['mask']]
+            if len(pens) != len(dataSet):
+                raise Exception("Number of pens does not match number of points (%d != %d)" % (len(pens), len(dataSet)))
+            dataSet['pen'] = list(map(_mkPen, pens))
+        else:
+            self.opts['pen'] = _mkPen(*args, **kargs)
+
+        dataSet['sourceRect'] = 0
+        if update:
+            self.updateSpots(dataSet)
+
+    def setBrush(self, *args, **kargs):
+        """Set the brush(es) used to fill the interior of each spot.
+        If a list or array is provided, then the brush for each spot will be set separately.
+        Otherwise, the arguments are passed to pg.mkBrush and used as the default brush for
+        all spots which do not have a brush explicitly set."""
+        update = kargs.pop('update', True)
+        dataSet = kargs.pop('dataSet', self.data)
+
+        if len(args) == 1 and (isinstance(args[0], np.ndarray) or isinstance(args[0], list)):
+            brushes = args[0]
+            if 'mask' in kargs and kargs['mask'] is not None:
+                brushes = brushes[kargs['mask']]
+            if len(brushes) != len(dataSet):
+                raise Exception("Number of brushes does not match number of points (%d != %d)" % (len(brushes), len(dataSet)))
+            dataSet['brush'] = list(map(_mkBrush, brushes))
+        else:
+            self.opts['brush'] = _mkBrush(*args, **kargs)
+
+        dataSet['sourceRect'] = 0
+        if update:
+            self.updateSpots(dataSet)
+
+    def setSymbol(self, symbol, update=True, dataSet=None, mask=None):
+        """Set the symbol(s) used to draw each spot.
+        If a list or array is provided, then the symbol for each spot will be set separately.
+        Otherwise, the argument will be used as the default symbol for
+        all spots which do not have a symbol explicitly set.
+
+        **Supported symbols:**
+
+        * 'o'  circle (default)
+        * 's'  square
+        * 't'  triangle
+        * 'd'  diamond
+        * '+'  plus
+        * 't1' triangle pointing upwards
+        * 't2'  triangle pointing right side
+        * 't3'  triangle pointing left side
+        * 'p'  pentagon
+        * 'h'  hexagon
+        * 'star'
+        * 'x'  cross
+        * 'arrow_up'
+        * 'arrow_right'
+        * 'arrow_down'
+        * 'arrow_left'
+        * 'crosshair'
+        * any QPainterPath to specify custom symbol shapes.
+
+        """
+        if dataSet is None:
+            dataSet = self.data
+
+        if isinstance(symbol, np.ndarray) or isinstance(symbol, list):
+            symbols = symbol
+            if mask is not None:
+                symbols = symbols[mask]
+            if len(symbols) != len(dataSet):
+                raise Exception("Number of symbols does not match number of points (%d != %d)" % (len(symbols), len(dataSet)))
+            dataSet['symbol'] = symbols
+        else:
+            self.opts['symbol'] = symbol
+            self._spotPixmap = None
+
+        dataSet['sourceRect'] = 0
+        if update:
+            self.updateSpots(dataSet)
+
+    def symbol(self) -> str:
+        return self.opts['symbol']
+
+
+    def setSize(self, size, update=True, dataSet=None, mask=None):
+        """Set the size(s) used to draw each spot.
+        If a list or array is provided, then the size for each spot will be set separately.
+        Otherwise, the argument will be used as the default size for
+        all spots which do not have a size explicitly set."""
+        if dataSet is None:
+            dataSet = self.data
+
+        if isinstance(size, np.ndarray) or isinstance(size, list):
+            sizes = size
+            if mask is not None:
+                sizes = sizes[mask]
+            if len(sizes) != len(dataSet):
+                raise Exception("Number of sizes does not match number of points (%d != %d)" % (len(sizes), len(dataSet)))
+            dataSet['size'] = sizes
+        else:
+            self.opts['size'] = size
+            self._spotPixmap = None
+
+        dataSet['sourceRect'] = 0
+        if update:
+            self.updateSpots(dataSet)
+
+    def size(self) -> int:
+        return self.opts['size']
+
+
+    ##############################################################
+    #
+    #                   Data methods
+    #
+    ##############################################################
+
 
     def setData(self, *args, **kargs):
         """
@@ -421,10 +635,10 @@ class ScatterPlotItem(GraphicsObject):
                                Otherwise, size is in scene coordinates and the spots scale with the view. To ensure
                                effective caching, QPen and QBrush objects should be reused as much as possible.
                                Default is True
-        *symbol*               can be one (or a list) of symbols. For a list of supported symbols, see 
+        *symbol*               can be one (or a list) of symbols. For a list of supported symbols, see
                                :func:`~ScatterPlotItem.setSymbol`. QPainterPath is also supported to specify custom symbol
                                shapes. To properly obey the position and size, custom symbols should be centered at (0,0) and
-                               width and height of 1.0. Note that it is also possible to 'install' custom shapes by setting 
+                               width and height of 1.0. Note that it is also possible to 'install' custom shapes by setting
                                ScatterPlotItem.Symbols[key] = shape.
         *pen*                  The pen (or list of pens) to use for drawing spot outlines.
         *brush*                The brush (or list of brushes) to use for filling spots.
@@ -593,119 +807,6 @@ class ScatterPlotItem(GraphicsObject):
     def name(self):
         return self.opts.get('name', None)
 
-    def setPen(self, *args, **kargs):
-        """Set the pen(s) used to draw the outline around each spot.
-        If a list or array is provided, then the pen for each spot will be set separately.
-        Otherwise, the arguments are passed to pg.mkPen and used as the default pen for
-        all spots which do not have a pen explicitly set."""
-        update = kargs.pop('update', True)
-        dataSet = kargs.pop('dataSet', self.data)
-
-        if len(args) == 1 and (isinstance(args[0], np.ndarray) or isinstance(args[0], list)):
-            pens = args[0]
-            if 'mask' in kargs and kargs['mask'] is not None:
-                pens = pens[kargs['mask']]
-            if len(pens) != len(dataSet):
-                raise Exception("Number of pens does not match number of points (%d != %d)" % (len(pens), len(dataSet)))
-            dataSet['pen'] = list(map(_mkPen, pens))
-        else:
-            self.opts['pen'] = _mkPen(*args, **kargs)
-
-        dataSet['sourceRect'] = 0
-        if update:
-            self.updateSpots(dataSet)
-
-    def setBrush(self, *args, **kargs):
-        """Set the brush(es) used to fill the interior of each spot.
-        If a list or array is provided, then the brush for each spot will be set separately.
-        Otherwise, the arguments are passed to pg.mkBrush and used as the default brush for
-        all spots which do not have a brush explicitly set."""
-        update = kargs.pop('update', True)
-        dataSet = kargs.pop('dataSet', self.data)
-
-        if len(args) == 1 and (isinstance(args[0], np.ndarray) or isinstance(args[0], list)):
-            brushes = args[0]
-            if 'mask' in kargs and kargs['mask'] is not None:
-                brushes = brushes[kargs['mask']]
-            if len(brushes) != len(dataSet):
-                raise Exception("Number of brushes does not match number of points (%d != %d)" % (len(brushes), len(dataSet)))
-            dataSet['brush'] = list(map(_mkBrush, brushes))
-        else:
-            self.opts['brush'] = _mkBrush(*args, **kargs)
-
-        dataSet['sourceRect'] = 0
-        if update:
-            self.updateSpots(dataSet)
-
-    def setSymbol(self, symbol, update=True, dataSet=None, mask=None):
-        """Set the symbol(s) used to draw each spot.
-        If a list or array is provided, then the symbol for each spot will be set separately.
-        Otherwise, the argument will be used as the default symbol for
-        all spots which do not have a symbol explicitly set.
-
-        **Supported symbols:**
-
-        * 'o'  circle (default)
-        * 's'  square
-        * 't'  triangle
-        * 'd'  diamond
-        * '+'  plus
-        * 't1' triangle pointing upwards
-        * 't2'  triangle pointing right side
-        * 't3'  triangle pointing left side
-        * 'p'  pentagon
-        * 'h'  hexagon
-        * 'star'
-        * 'x'  cross
-        * 'arrow_up'
-        * 'arrow_right'
-        * 'arrow_down'
-        * 'arrow_left'
-        * 'crosshair'
-        * any QPainterPath to specify custom symbol shapes.
-
-        """
-        if dataSet is None:
-            dataSet = self.data
-
-        if isinstance(symbol, np.ndarray) or isinstance(symbol, list):
-            symbols = symbol
-            if mask is not None:
-                symbols = symbols[mask]
-            if len(symbols) != len(dataSet):
-                raise Exception("Number of symbols does not match number of points (%d != %d)" % (len(symbols), len(dataSet)))
-            dataSet['symbol'] = symbols
-        else:
-            self.opts['symbol'] = symbol
-            self._spotPixmap = None
-
-        dataSet['sourceRect'] = 0
-        if update:
-            self.updateSpots(dataSet)
-
-    def setSize(self, size, update=True, dataSet=None, mask=None):
-        """Set the size(s) used to draw each spot.
-        If a list or array is provided, then the size for each spot will be set separately.
-        Otherwise, the argument will be used as the default size for
-        all spots which do not have a size explicitly set."""
-        if dataSet is None:
-            dataSet = self.data
-
-        if isinstance(size, np.ndarray) or isinstance(size, list):
-            sizes = size
-            if mask is not None:
-                sizes = sizes[mask]
-            if len(sizes) != len(dataSet):
-                raise Exception("Number of sizes does not match number of points (%d != %d)" % (len(sizes), len(dataSet)))
-            dataSet['size'] = sizes
-        else:
-            self.opts['size'] = size
-            self._spotPixmap = None
-
-        dataSet['sourceRect'] = 0
-        if update:
-            self.updateSpots(dataSet)
-
 
     def setPointsVisible(self, visible, update=True, dataSet=None, mask=None):
         """Set whether or not each spot is visible.
@@ -727,7 +828,7 @@ class ScatterPlotItem(GraphicsObject):
         dataSet['sourceRect'] = 0
         if update:
             self.updateSpots(dataSet)
-        
+
     def setPointData(self, data, dataSet=None, mask=None):
         if dataSet is None:
             dataSet = self.data
@@ -1205,7 +1306,7 @@ class SpotItem(object):
         """Set whether or not this spot is visible."""
         self._data['visible'] = visible
         self.updateItem()
-    
+
     def setData(self, data):
         """Set the user-data associated with this spot"""
         self._data['data'] = data

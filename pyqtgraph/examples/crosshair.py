@@ -1,5 +1,5 @@
 """
-Demonstrates some customized mouse interaction by drawing a crosshair that follows 
+Demonstrates some customized mouse interaction by drawing a crosshair that follows
 the mouse.
 """
 
@@ -11,7 +11,7 @@ import pyqtgraph as pg
 app = pg.mkQApp("Crosshair Example")
 win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: crosshair')
-label = pg.LabelItem(justify='right')
+label = pg.LabelItem(align='right')
 win.addItem(label)
 p1 = win.addPlot(row=1, col=0)
 # customize the averaged curve that can be activated from the context menu:
@@ -22,7 +22,7 @@ p2 = win.addPlot(row=2, col=0)
 
 region = pg.LinearRegionItem()
 region.setZValue(10)
-# Add the LinearRegionItem to the ViewBox, but tell the ViewBox to exclude this 
+# Add the LinearRegionItem to the ViewBox, but tell the ViewBox to exclude this
 # item when doing auto-range calculations.
 p2.addItem(region, ignoreBounds=True)
 
@@ -45,7 +45,7 @@ region.setClipItem(p2d)
 def update():
     region.setZValue(10)
     minX, maxX = region.getRegion()
-    p1.setXRange(minX, maxX, padding=0)    
+    p1.setXRange(minX, maxX, padding=0)
 
 region.sigRegionChanged.connect(update)
 
