@@ -26,7 +26,6 @@ setupOpts = dict(
         "Development Status :: 4 - Beta",
         "Environment :: Other Environment",
         "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Scientific/Engineering :: Visualization",
@@ -35,11 +34,9 @@ setupOpts = dict(
 )
 
 
-import distutils.dir_util
 import os
 import re
 import sys
-from distutils.command import build
 
 from setuptools import find_namespace_packages, setup
 from setuptools.command import install
@@ -52,20 +49,6 @@ import tools.setupHelpers as helpers
 version, forcedVersion, gitVersion, initVersion = helpers.getVersionStrings(pkg='pyqtgraph')
 
 
-
-class Build(build.build):
-    """
-    * Clear build path before building
-    """
-    def run(self):
-        global path
-
-        ## Make sure build directory is clean
-        buildPath = os.path.join(path, self.build_lib)
-        if os.path.isdir(buildPath):
-            distutils.dir_util.remove_tree(buildPath)
-        build.build.run(self)
-        
 
 class Install(install.install):
     """
@@ -113,7 +96,6 @@ class Install(install.install):
 setup(
     version=version,
     cmdclass={
-        'build': Build, 
         'install': Install,
         'deb': helpers.DebCommand, 
         'test': helpers.TestCommand,

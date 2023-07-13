@@ -121,7 +121,7 @@ To run the test suite, after installing the above dependencies run
 pytest tests
 ```
 
-In addition, the examples can be tested as well.  
+In addition, the examples can be tested as well.
 
 ```bash
 pytest pyqtgraph/examples
@@ -146,15 +146,23 @@ to be merged, it is expected that the CI passes.
 
 ### Benchmarks
 
-( *Still under development* ) To ensure this library is performant, we use
-[Air Speed Velocity (asv)](https://asv.readthedocs.io/en/stable/) to run benchmarks. For
-developing on core functions and classes, be aware of any impact your changes have on
-their speed. To configure and run asv:
+To ensure this library is performant, we use 
+[Air Speed Velocity (asv)](https://asv.readthedocs.io/en/stable/) to run 
+benchmarks. For developing on core functions and classes, be aware of any 
+impact your changes have on their speed. To configure and run asv:
 
 ```bash
-pip install asv
-python setup.py asv_config
-asv run
+$ pip install asv virtualenv setuptools
+$ python setup.py asv_config
+$ asv config
+$ asv run
 ```
 
-( TODO publish results )
+To view the results, from the root pyqtgraph directory run
+
+```bash
+$ asv publish
+$ python -m http.server --directory .asv/html 8000
+```
+
+You can open a browser and go to `localhost:8000` and view the results.
