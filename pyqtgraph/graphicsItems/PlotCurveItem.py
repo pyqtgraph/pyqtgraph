@@ -534,6 +534,8 @@ class PlotCurveItem(GraphicsObject):
         else:
             if self.yData.ndim == 1 and self.yData.shape != self.xData.shape:  ## allow difference of 1 for step mode plots
                 raise Exception("X and Y arrays must be the same shape--got %s and %s." % (self.xData.shape, self.yData.shape))
+            elif self.yData.ndim == 2 and self.yData.shape[1] != self.xData.shape[0]:
+                raise Exception("X array and Y matrix must be the same shape--got %s and ( ,%s)." % (self.xData.shape, self.yData.shape[1]))
 
         self.path = None
         self.fillPath = None
@@ -671,18 +673,22 @@ class PlotCurveItem(GraphicsObject):
             and not self.opts['antialias']
         )
 
-    def _getLineSegments(self):
-        if not self._lineSegmentsRendered:
-            x, y = self.getData()
+    def _getLineSegments(self, i=None):
+        x, y = self.getData()
+        if i is not None:
+            y = y[i]
+        if not self._lineSegmentsRendered:            
             if self.opts['stepMode']:
                 x, y = self._generateStepModeData(
                     self.opts['stepMode'],
                     x,
                     y,
                     baseline=self.opts['fillLevel']
-                )
+                )            
 
-            self._lineSegments = arrayToLineSegments(
+            self._lineSegmentsRendered = True
+
+        self._lineSegments = arrayToLineSegments(
                 x,
                 y,
                 connect=self.opts['connect'],
@@ -690,11 +696,9 @@ class PlotCurveItem(GraphicsObject):
                 out=self._lineSegments
             )
 
-            self._lineSegmentsRendered = True
-
         return self._lineSegments.drawargs()
 
-    def _getClosingSegments(self):
+    def _getClosingSegments(self, i=None):
         # this is only used for fillOutline
         # no point caching with so few elements generated
         segments = []
@@ -703,6 +707,8 @@ class PlotCurveItem(GraphicsObject):
 
         baseline = self.opts['fillLevel']
         x, y = self.getData()
+        if i is not None:
+            y = y[i]
         lx, rx = x[[0, -1]]
         ly, ry = y[[0, -1]]
 
@@ -832,18 +838,15 @@ class PlotCurveItem(GraphicsObject):
 
         do_fill = self.opts['brush'] is not None and self.opts['fillLevel'] is not None
         do_fill_outline = do_fill and self.opts['fillOutline']
+        do_y_matrix = isinstance(self.yData, np.ndarray) and self.yData.ndim > 1
+        total_lines = np.arange(self.yData.shape[0]) if do_y_matrix else [None]
 
         if do_fill:
-            y = self.yData
-            fill_paths = [None]
-            if isinstance(y, np.ndarray) and y.ndim > 1:
-                fill_paths = np.arange(y.shape[0])
-
-            for fill_path in fill_paths:
+            for line in total_lines:
                 if self._shouldUseFillPathList():                   
-                    paths = self._getFillPathList(fill_path)
+                    paths = self._getFillPathList(line)
                 else:
-                    paths = [self._getFillPath(fill_path)]
+                    paths = [self._getFillPath(line)]
 
                 profiler('generate fill path')
                 for path in paths:
@@ -860,12 +863,26 @@ class PlotCurveItem(GraphicsObject):
             if sp.style() != QtCore.Qt.PenStyle.NoPen:
                 p.setPen(sp)
                 if self._shouldUseDrawLineSegments(sp):
-                    p.drawLines(*self._getLineSegments())
+                    if do_y_matrix:
+                        for line in total_lines:
+                            p.drawLines(*self._getLineSegments(line))
+                    else:
+                        p.drawLines(*self._getLineSegments())
                     if do_fill_outline:
-                        p.drawLines(self._getClosingSegments())
+                        if do_y_matrix:
+                            for line in total_lines:
+                                p.drawLines(*self._getClosingSegments(line))
+                        else:
+                            p.drawLines(self._getClosingSegments())
                 else:
                     if do_fill_outline:
-                        p.drawPath(self._getFillPath())
+                        for line in total_lines:
+                            if self._shouldUseFillPathList():                   
+                                paths = self._getFillPathList(line)                                    
+                            else:
+                                paths = [self._getFillPath(line)]
+                            for path in paths:
+                                p.drawPath(path)
                     else:
                         path = self.getPath()
                     if isinstance(path, list):
@@ -880,12 +897,26 @@ class PlotCurveItem(GraphicsObject):
 
         p.setPen(cp)
         if self._shouldUseDrawLineSegments(cp):
-            p.drawLines(*self._getLineSegments())
+            if do_y_matrix:
+                for line in total_lines:
+                    p.drawLines(*self._getLineSegments(line))
+            else:
+                p.drawLines(*self._getLineSegments())
             if do_fill_outline:
-                p.drawLines(self._getClosingSegments())
+                if do_y_matrix:
+                    for line in total_lines:
+                        p.drawLines(*self._getClosingSegments(line))
+                else:
+                    p.drawLines(self._getClosingSegments())
         else:
             if do_fill_outline:
-                p.drawPath(self._getFillPath())
+                for line in total_lines:
+                    if self._shouldUseFillPathList():                   
+                        paths = self._getFillPathList(line)                            
+                    else:
+                        paths = [self._getFillPath(line)]
+                    for path in paths:
+                        p.drawPath(path)
             else:
                 path = self.getPath()
                 if isinstance(path, list):
