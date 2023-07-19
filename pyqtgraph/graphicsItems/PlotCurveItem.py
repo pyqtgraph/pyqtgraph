@@ -723,6 +723,7 @@ class PlotCurveItem(GraphicsObject):
     def _getFillPath(self, i=None):
 
         self_path = self.getPath()
+        p = self_path
         if isinstance(self_path, list) and i is not None:
             p = self_path[i]
         path = QtGui.QPainterPath(p)
