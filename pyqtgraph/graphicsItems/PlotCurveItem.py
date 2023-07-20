@@ -728,11 +728,18 @@ class PlotCurveItem(GraphicsObject):
             p = self_path[i]
         path = QtGui.QPainterPath(p)
         self.fillPath = path
-        if self.opts['fillLevel'].all() == 'enclosed':
-            return path
+        if i is None:
+            if self.opts['fillLevel'] == 'enclosed':
+                return path
+        else:
+            if self.opts['fillLevel'][i] == 'enclosed':
+                return path
 
+        baseline = None
         if isinstance(self_path, list) and i is not None:            
             baseline = self.opts['fillLevel'][i]
+        else:
+            baseline = self.opts['fillLevel']
 
         x, y = self.getData()
         if i is not None:
