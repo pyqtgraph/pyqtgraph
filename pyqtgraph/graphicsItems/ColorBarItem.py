@@ -5,8 +5,7 @@ import numpy as np
 
 from .. import colormap
 from .. import functions as fn
-from ..Qt import QtCore
-from .ImageItem import ImageItem
+from ..Qt import QtCore, QtGui, QtWidgets
 from .LinearRegionItem import LinearRegionItem
 from .PColorMeshItem import PColorMeshItem
 from .PlotItem import PlotItem
@@ -129,13 +128,12 @@ class ColorBarItem(PlotItem):
         self.axis.unlinkFromView()
         self.axis.setRange( self.values[0], self.values[1] )
 
-        self.bar = ImageItem(axisOrder='col-major')
         if self.horizontal:
-            self.bar.setImage( np.linspace(0, 1, 256).reshape( (-1,1) ) )
             if label is not None: self.getAxis('bottom').setLabel(label)
         else:
-            self.bar.setImage( np.linspace(0, 1, 256).reshape( (1,-1) ) )
             if label is not None: self.getAxis('left').setLabel(label)
+        self.bar = QtWidgets.QGraphicsPixmapItem()
+        self.bar.setShapeMode(self.bar.ShapeMode.BoundingRectShape)
         self.addItem(self.bar)
         if colorMap is not None: self.setColorMap(colorMap)
 
@@ -280,7 +278,10 @@ class ColorBarItem(PlotItem):
         # update color bar:
         self.axis.setRange( self.values[0], self.values[1] )
         if update_cmap and self._colorMap is not None:
-            self.bar.setLookupTable( self._colorMap.getLookupTable(nPts=256) )
+            lut = self._colorMap.getLookupTable(nPts=256, alpha=True)
+            lut = np.expand_dims(lut, axis=0 if self.horizontal else 1)
+            qimg = fn.ndarray_to_qimage(lut, QtGui.QImage.Format.Format_RGBA8888)
+            self.bar.setPixmap(QtGui.QPixmap.fromImage(qimg))
         # update assigned ImageItems, too:
         for img_weakref in self.img_list:
             img = img_weakref()
