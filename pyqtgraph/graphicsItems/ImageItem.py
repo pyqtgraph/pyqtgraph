@@ -52,6 +52,7 @@ class ImageItem(GraphicsObject):
         self._unrenderable = False
         self._xp = None  # either numpy or cupy, to match the image data
         self._defferedLevels = None
+        self._imageHasNans = None    # None : not yet known
 
         self.axisOrder = getConfigOption('imageAxisOrder')
         self._dataTransform = self._inverseDataTransform = None
@@ -401,6 +402,7 @@ class ImageItem(GraphicsObject):
             if self.image is None or image.dtype != self.image.dtype:
                 self._effectiveLut = None
             self.image = image
+            self._imageHasNans = None
             if self.image.shape[0] > 2**15-1 or self.image.shape[1] > 2**15-1:
                 if 'autoDownsample' not in kargs:
                     kargs['autoDownsample'] = True
@@ -613,7 +615,10 @@ class ImageItem(GraphicsObject):
                 break
 
             # awkward, but fastest numpy native nan evaluation
-            if xp.isnan(image.min()):
+            if self._imageHasNans is None:
+                self._imageHasNans = xp.isnan(image.min())
+
+            if self._imageHasNans:
                 # don't handle images with nans
                 # this should be an uncommon case
                 break
