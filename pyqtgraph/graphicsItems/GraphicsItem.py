@@ -280,7 +280,7 @@ class GraphicsItem(object):
         #pv = Point(dti.map(normView)-dti.map(Point(0,0))), Point(dti.map(normOrtho)-dti.map(Point(0,0)))
         pv = Point(dti.map(normView).p2()), Point(dti.map(normOrtho).p2())
         self._pixelVectorCache[1] = pv
-        self._pixelVectorCache[0] = dt
+        self._pixelVectorCache[0] = key
         self._pixelVectorGlobalCache[key] = pv
         return self._pixelVectorCache[1]
     
