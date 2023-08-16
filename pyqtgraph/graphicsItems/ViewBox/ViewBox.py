@@ -461,6 +461,8 @@ class ViewBox(GraphicsWidget):
             self._viewPixelSizeCache  = None
             self._matrixNeedsUpdate = True
 
+            self._resetTarget(force=True)
+
             self.linkedXChanged()
             self.linkedYChanged()
 
@@ -510,11 +512,11 @@ class ViewBox(GraphicsWidget):
             print("make qrectf failed:", self.state['targetRange'])
             raise
 
-    def _resetTarget(self):
+    def _resetTarget(self, force: bool = False):
         # Reset target range to exactly match current view range.
         # This is used during mouse interaction to prevent unpredictable
         # behavior (because the user is unaware of targetRange).
-        if self.state['aspectLocked'] is False: # (interferes with aspect locking)
+        if self.state['aspectLocked'] is False or force: # (interferes with aspect locking)
             self.state['targetRange'] = [self.state['viewRange'][0][:], self.state['viewRange'][1][:]]
             
     def _effectiveLimits(self):
@@ -1628,6 +1630,26 @@ class ViewBox(GraphicsWidget):
                 if dx != 0:
                     changed[0] = True
                 viewRange[0] = rangeX
+
+        # Ensure, that the new viewRange obeys all the limits
+        for axis in [0, 1]:
+            range = viewRange[axis][1] - viewRange[axis][0]
+            if minRng[axis] is not None and minRng[axis] > range:
+                viewRange[axis][1] = viewRange[axis][0] + minRng[axis]
+                self.state["targetRange"][axis] = viewRange[axis]
+            if maxRng[axis] is not None and maxRng[axis] < range:
+                viewRange[axis][1] = viewRange[axis][0] + maxRng[axis]
+                self.state["targetRange"][axis] = viewRange[axis]
+            if limits[axis][0] is not None and viewRange[axis][0] < limits[axis][0]:
+                delta = limits[axis][0] - viewRange[axis][0]
+                viewRange[axis][0] += delta
+                viewRange[axis][1] += delta
+                self.state["targetRange"][axis] = viewRange[axis]
+            if limits[axis][1] is not None and viewRange[axis][1] > limits[axis][1]:
+                delta = viewRange[axis][1] - limits[axis][1]
+                viewRange[axis][0] -= delta
+                viewRange[axis][1] -= delta
+                self.state["targetRange"][axis] = viewRange[axis]
 
         # Consider only as 'changed' if the differences are larger than floating point inaccuracies,
         # which regularly appear in magnitude of around 1e-15. Therefore, 1e-9 as factor was chosen
