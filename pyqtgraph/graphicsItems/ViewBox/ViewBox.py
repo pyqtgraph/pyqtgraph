@@ -461,8 +461,6 @@ class ViewBox(GraphicsWidget):
             self._viewPixelSizeCache  = None
             self._matrixNeedsUpdate = True
 
-            self._resetTarget(force=True)
-
             self.linkedXChanged()
             self.linkedYChanged()
 
@@ -1617,7 +1615,9 @@ class ViewBox(GraphicsWidget):
                     if maxRng[target] is not None and diff > maxRng[target] or \
                        minRng[target] is not None and diff < minRng[target]:
                         # tweak the target range down so we can still pan properly
-                        self.state['targetRange'][ax] = canidateRange[ax]
+                        viewRange[ax] = canidateRange[ax]
+                        self.state['viewRange'][ax] = viewRange[ax]
+                        self._resetTarget(force=True)
                         ax = target  # Switch the "fixed" axes
 
             if ax == 0:
