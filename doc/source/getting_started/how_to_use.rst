@@ -83,16 +83,16 @@ PyQtGraph supports two popular python wrappers for the Qt library: PyQt and PySi
 APIs and functionality, but for various reasons (discussed elsewhere) you may prefer to use one package or the other. When
 pyqtgraph is first imported, it automatically determines which library to use by making the fillowing checks:
     
-#. If PyQt5 is already imported, use that
-#. Else, if PySide2 is already imported, use that
+#. If PyQt6 is already imported, use that
 #. Else, if PySide6 is already imported, use that
-#. Else, if PyQt6 is already imported, use that
-#. Else, attempt to import PyQt5, PySide2, PySide6, PyQt6, in that order.
+#. Else, if PyQt5 is already imported, use that
+#. Else, if PySide2 is already imported, use that
+#. Else, attempt to import PyQt6, PySide6, PyQt5, PySide2, in that order.
 
 If you have both libraries installed on your system and you wish to force pyqtgraph to use one or the other, simply
 make sure it is imported before pyqtgraph::
     
-    import PySide2  ## this will force pyqtgraph to use PySide2 instead of PyQt5
+    import PySide2  ## this will force pyqtgraph to use PySide2 instead of PyQt6
     import pyqtgraph as pg
 
 
