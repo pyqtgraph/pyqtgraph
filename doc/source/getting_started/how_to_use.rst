@@ -81,7 +81,8 @@ PyQt and PySide
 
 PyQtGraph supports two popular python wrappers for the Qt library: PyQt and PySide. Both packages provide nearly identical 
 APIs and functionality, but for various reasons (discussed elsewhere) you may prefer to use one package or the other. When
-pyqtgraph is first imported, it automatically determines which library to use by making the fillowing checks:
+pyqtgraph is first imported, if the environment variable ``PYQTGRAPH_QT_LIB`` is not set, it automatically determines which
+library to use by making the following checks:
     
 #. If PyQt6 is already imported, use that
 #. Else, if PySide6 is already imported, use that
