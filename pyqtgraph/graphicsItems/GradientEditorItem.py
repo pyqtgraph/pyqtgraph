@@ -1,13 +1,14 @@
 import operator
 import weakref
-from collections import OrderedDict
 
 import numpy as np
 
 from .. import functions as fn
+from .. import colormap
 from ..colormap import ColorMap
 from ..Qt import QtCore, QtGui, QtWidgets
 from ..widgets.SpinBox import SpinBox
+from ..widgets.ColorMapButton import ColorMapMenu
 from .GraphicsWidget import GraphicsWidget
 from .GradientPresets import Gradients
 
@@ -437,35 +438,8 @@ class GradientEditorItem(TickSliderItem):
         self.hsvAction.setCheckable(True)
         self.hsvAction.triggered.connect(self._setColorModeToHSV)
             
-        self.menu = QtWidgets.QMenu()
-        
-        ## build context menu of gradients
-        l = self.length
-        self.length = 100
-        global Gradients
-        for g in Gradients:
-            px = QtGui.QPixmap(100, 15)
-            p = QtGui.QPainter(px)
-            self.restoreState(Gradients[g])
-            grad = self.getGradient()
-            brush = QtGui.QBrush(grad)
-            p.fillRect(QtCore.QRect(0, 0, 100, 15), brush)
-            p.end()
-            label = QtWidgets.QLabel()
-            label.setPixmap(px)
-            label.setContentsMargins(1, 1, 1, 1)
-            labelName = QtWidgets.QLabel(g)
-            hbox = QtWidgets.QHBoxLayout()
-            hbox.addWidget(labelName)
-            hbox.addWidget(label)
-            widget = QtWidgets.QWidget()
-            widget.setLayout(hbox)
-            act = QtWidgets.QWidgetAction(self)
-            act.setDefaultWidget(widget)
-            act.triggered.connect(self.contextMenuClicked)
-            act.name = g
-            self.menu.addAction(act)
-        self.length = l
+        self.menu = ColorMapMenu(showGradientSubMenu=True)
+        self.menu.triggered.connect(self.contextMenuClicked)
         self.menu.addSeparator()
         self.menu.addAction(self.rgbAction)
         self.menu.addAction(self.hsvAction)
@@ -515,11 +489,23 @@ class GradientEditorItem(TickSliderItem):
         #private
         self.menu.popup(ev.screenPos().toQPoint())
     
-    def contextMenuClicked(self, b=None):
+    def contextMenuClicked(self, action):
         #private
-        #global Gradients
-        act = self.sender()
-        self.loadPreset(act.name)
+
+        # ignore the extra added on actions
+        if action in [self.rgbAction, self.hsvAction]:
+            return
+
+        name, source = action.data()
+        if source == 'preset-gradient':
+            self.loadPreset(name)
+        else:
+            if name is None:
+                cmap = colormap.ColorMap(None, [0.0, 1.0])
+            else:
+                cmap = colormap.get(name, source=source)
+            self.setColorMap(cmap)
+            self.showTicks(False)
         
     @addGradientListToDocstring()
     def loadPreset(self, name):
