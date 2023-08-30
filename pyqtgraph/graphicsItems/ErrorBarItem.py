@@ -52,10 +52,10 @@ class ErrorBarItem(GraphicsObject):
         """
         # save the original data in case of the log mode set
         _orig_opts = opts.copy()
-        if _orig_opts['height'] is not None:
+        if _orig_opts.get('height', None) is not None:
             _orig_opts['top'] = _orig_opts['bottom'] = _orig_opts['height'] / 2
             _orig_opts['height'] = None
-        if _orig_opts['width'] is not None:
+        if _orig_opts.get('width', None) is not None:
             _orig_opts['left'] = _orig_opts['right'] = _orig_opts['width'] / 2
             _orig_opts['width'] = None
         self._orig_opts.update(_orig_opts)
