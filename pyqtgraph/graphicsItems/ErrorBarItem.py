@@ -1,3 +1,7 @@
+import copy
+
+import numpy as np
+
 from .. import functions as fn
 from .. import getConfigOption
 from ..Qt import QtGui
@@ -23,6 +27,7 @@ class ErrorBarItem(GraphicsObject):
             beam=None,
             pen=None
         )
+        self._orig_opts = {}
         self.setVisible(False)
         self.setData(**opts)
 
@@ -45,6 +50,16 @@ class ErrorBarItem(GraphicsObject):
         
         This method was added in version 0.9.9. For prior versions, use setOpts.
         """
+        # save the original data in case of the log mode set
+        _orig_opts = opts.copy()
+        if _orig_opts['height'] is not None:
+            _orig_opts['top'] = _orig_opts['bottom'] = _orig_opts['height'] / 2
+            _orig_opts['height'] = None
+        if _orig_opts['width'] is not None:
+            _orig_opts['left'] = _orig_opts['right'] = _orig_opts['width'] / 2
+            _orig_opts['width'] = None
+        self._orig_opts.update(_orig_opts)
+
         self.opts.update(opts)
         self.setVisible(all(self.opts[ax] is not None for ax in ['x', 'y']))
         self.path = None
@@ -56,6 +71,61 @@ class ErrorBarItem(GraphicsObject):
         # for backward compatibility
         self.setData(**opts)
         
+    def setLogMode(self, x=None, y=None):
+        if x is not None:
+            self.opts['left'] = copy.copy(self._orig_opts['left'])
+            self.opts['right'] = copy.copy(self._orig_opts['right'])
+            self.opts['x'] = copy.copy(self._orig_opts['x'])
+        if x is True:
+            _x = self.opts['x']
+            x_err
+            left = np.full(_x.shape, -np.inf, dtype=_x.dtype)
+            x_err = (np.full(_x.shape, self.opts['left'])
+                     if np.isscalar(self.opts['left'])
+                     else self.opts['left'].copy())
+            valid = (_x > 0) & (_x - x_err > 0)
+            left[valid] = np.log10(_x[valid]) - np.log10(_x[valid] - x_err[valid])
+            self.opts['left'] = left
+            x_err = (np.full(_x.shape, self.opts['right'])
+                     if np.isscalar(self.opts['right'])
+                     else self.opts['right'].copy())
+            valid = (_x > 0) & (_x + x_err > 0)
+            right = np.full(_x.shape, np.inf, dtype=_x.dtype)
+            right[valid] = np.log10(_x[valid] + x_err[valid]) - np.log10(_x[valid])
+            self.opts['right'] = right
+            valid = _x > 0
+            _x[valid] = np.log10(_x[valid])
+            _x[~valid] = np.nan
+            self.opts['x'] = _x
+
+        if y is not None:
+            self.opts['bottom'] = copy.deepcopy(self._orig_opts['bottom'])
+            self.opts['top'] = copy.deepcopy(self._orig_opts['top'])
+            self.opts['y'] = copy.deepcopy(self._orig_opts['y'])
+        if y is True:
+            _y = self.opts['y']
+            bottom = np.full(_y.shape, -np.inf, dtype=_y.dtype)
+            y_err = (np.full(_y.shape, self.opts['bottom'])
+                     if np.isscalar(self.opts['bottom'])
+                     else self.opts['bottom'].copy())
+            valid = (_y > 0) & (_y - y_err > 0)
+            bottom[valid] = np.log10(_y[valid]) - np.log10(_y[valid] - y_err[valid])
+            self.opts['bottom'] = bottom
+            y_err = (np.full(_y.shape, self.opts['top'])
+                     if np.isscalar(self.opts['top'])
+                     else self.opts['top'].copy())
+            valid = (_y > 0) & (_y + y_err > 0)
+            top = np.full(_y.shape, np.inf, dtype=_y.dtype)
+            top[valid] = np.log10(_y[valid] + y_err[valid]) - np.log10(_y[valid])
+            self.opts['top'] = top
+            valid = _y > 0
+            _y[valid] = np.log10(_y[valid])
+            _y[~valid] = np.nan
+            self.opts['y'] = _y
+
+        if x is not None or y is not None:
+            super().setData(**self.opts)
+
     def drawPath(self):
         p = QtGui.QPainterPath()
         
