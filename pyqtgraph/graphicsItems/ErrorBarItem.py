@@ -73,50 +73,54 @@ class ErrorBarItem(GraphicsObject):
         
     def setLogMode(self, x=None, y=None):
         if x is not None:
-            self.opts['left'] = copy.copy(self._orig_opts['left'])
-            self.opts['right'] = copy.copy(self._orig_opts['right'])
-            self.opts['x'] = copy.copy(self._orig_opts['x'])
-        if x is True:
+            self.opts['left'] = copy.copy(self._orig_opts.get('left', None))
+            self.opts['right'] = copy.copy(self._orig_opts.get('right', None))
+            self.opts['x'] = copy.copy(self._orig_opts.get('x', None))
+        if x is True and self.opts['x'] is not None:
             _x = self.opts['x']
-            left = np.full(_x.shape, -np.inf, dtype=_x.dtype)
-            x_err = (np.full(_x.shape, self.opts['left'])
-                     if np.isscalar(self.opts['left'])
-                     else self.opts['left'].copy())
-            valid = (_x > 0) & (_x - x_err > 0)
-            left[valid] = np.log10(_x[valid]) - np.log10(_x[valid] - x_err[valid])
-            self.opts['left'] = left
-            x_err = (np.full(_x.shape, self.opts['right'])
-                     if np.isscalar(self.opts['right'])
-                     else self.opts['right'].copy())
-            valid = (_x > 0) & (_x + x_err > 0)
-            right = np.full(_x.shape, np.inf, dtype=_x.dtype)
-            right[valid] = np.log10(_x[valid] + x_err[valid]) - np.log10(_x[valid])
-            self.opts['right'] = right
+            if self.opts['left'] is not None:
+                left = np.full(_x.shape, -np.inf, dtype=_x.dtype)
+                x_err = (np.full(_x.shape, self.opts['left'])
+                         if np.isscalar(self.opts['left'])
+                         else self.opts['left'].copy())
+                valid = (_x > 0) & (_x - x_err > 0)
+                left[valid] = np.log10(_x[valid]) - np.log10(_x[valid] - x_err[valid])
+                self.opts['left'] = left
+            if self.opts['right'] is not None:
+                x_err = (np.full(_x.shape, self.opts['right'])
+                         if np.isscalar(self.opts['right'])
+                         else self.opts['right'].copy())
+                valid = (_x > 0) & (_x + x_err > 0)
+                right = np.full(_x.shape, np.inf, dtype=_x.dtype)
+                right[valid] = np.log10(_x[valid] + x_err[valid]) - np.log10(_x[valid])
+                self.opts['right'] = right
             valid = _x > 0
             _x[valid] = np.log10(_x[valid])
             _x[~valid] = np.nan
             self.opts['x'] = _x
 
         if y is not None:
-            self.opts['bottom'] = copy.copy(self._orig_opts['bottom'])
-            self.opts['top'] = copy.copy(self._orig_opts['top'])
-            self.opts['y'] = copy.copy(self._orig_opts['y'])
-        if y is True:
+            self.opts['bottom'] = copy.copy(self._orig_opts.get('bottom', None))
+            self.opts['top'] = copy.copy(self._orig_opts.get('top', None))
+            self.opts['y'] = copy.copy(self._orig_opts.get('y', None))
+        if y is True and self.opts['y'] is not None:
             _y = self.opts['y']
-            bottom = np.full(_y.shape, -np.inf, dtype=_y.dtype)
-            y_err = (np.full(_y.shape, self.opts['bottom'])
-                     if np.isscalar(self.opts['bottom'])
-                     else self.opts['bottom'].copy())
-            valid = (_y > 0) & (_y - y_err > 0)
-            bottom[valid] = np.log10(_y[valid]) - np.log10(_y[valid] - y_err[valid])
-            self.opts['bottom'] = bottom
-            y_err = (np.full(_y.shape, self.opts['top'])
-                     if np.isscalar(self.opts['top'])
-                     else self.opts['top'].copy())
-            valid = (_y > 0) & (_y + y_err > 0)
-            top = np.full(_y.shape, np.inf, dtype=_y.dtype)
-            top[valid] = np.log10(_y[valid] + y_err[valid]) - np.log10(_y[valid])
-            self.opts['top'] = top
+            if self.opts['bottom'] is not None:
+                bottom = np.full(_y.shape, -np.inf, dtype=_y.dtype)
+                y_err = (np.full(_y.shape, self.opts['bottom'])
+                         if np.isscalar(self.opts['bottom'])
+                         else self.opts['bottom'].copy())
+                valid = (_y > 0) & (_y - y_err > 0)
+                bottom[valid] = np.log10(_y[valid]) - np.log10(_y[valid] - y_err[valid])
+                self.opts['bottom'] = bottom
+            if self.opts['top'] is not None:
+                y_err = (np.full(_y.shape, self.opts['top'])
+                         if np.isscalar(self.opts['top'])
+                         else self.opts['top'].copy())
+                valid = (_y > 0) & (_y + y_err > 0)
+                top = np.full(_y.shape, np.inf, dtype=_y.dtype)
+                top[valid] = np.log10(_y[valid] + y_err[valid]) - np.log10(_y[valid])
+                self.opts['top'] = top
             valid = _y > 0
             _y[valid] = np.log10(_y[valid])
             _y[~valid] = np.nan
