@@ -54,10 +54,8 @@ class ErrorBarItem(GraphicsObject):
         _orig_opts = opts.copy()
         if _orig_opts.get('height', None) is not None:
             _orig_opts['top'] = _orig_opts['bottom'] = _orig_opts['height'] / 2
-            _orig_opts['height'] = None
         if _orig_opts.get('width', None) is not None:
             _orig_opts['left'] = _orig_opts['right'] = _orig_opts['width'] / 2
-            _orig_opts['width'] = None
         self._orig_opts.update(_orig_opts)
 
         self.opts.update(opts)
@@ -76,7 +74,10 @@ class ErrorBarItem(GraphicsObject):
             self.opts['left'] = copy.copy(self._orig_opts.get('left', None))
             self.opts['right'] = copy.copy(self._orig_opts.get('right', None))
             self.opts['x'] = copy.copy(self._orig_opts.get('x', None))
+            self.opts['width'] = copy.copy(self._orig_opts.get('width', None))
         if x is True and self.opts['x'] is not None:
+            # to use 'left' and 'right'
+            self.opts['width'] = None
             _x = self.opts['x']
             if self.opts['left'] is not None:
                 x_err = (np.full(_x.shape, self.opts['left'])
@@ -103,7 +104,10 @@ class ErrorBarItem(GraphicsObject):
             self.opts['bottom'] = copy.copy(self._orig_opts.get('bottom', None))
             self.opts['top'] = copy.copy(self._orig_opts.get('top', None))
             self.opts['y'] = copy.copy(self._orig_opts.get('y', None))
+            self.opts['height'] = copy.copy(self._orig_opts.get('height', None))
         if y is True and self.opts['y'] is not None:
+            # to use 'top' and 'bottom'
+            self.opts['height'] = None
             _y = self.opts['y']
             if self.opts['bottom'] is not None:
                 y_err = (np.full(_y.shape, self.opts['bottom'])
