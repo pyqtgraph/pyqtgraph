@@ -84,7 +84,7 @@ class ErrorBarItem(GraphicsObject):
                          if np.isscalar(self.opts['left'])
                          else self.opts['left'].copy())
                 valid = (_x > 0) & (_x - x_err > 0)
-                left = np.full(_x.shape, -np.inf, dtype=_x.dtype)
+                left = np.full(_x.shape, np.inf, dtype=_x.dtype)
                 left[valid] = np.log10(_x[valid]) - np.log10(_x[valid] - x_err[valid])
                 self.opts['left'] = left
             if self.opts['right'] is not None:
@@ -114,7 +114,7 @@ class ErrorBarItem(GraphicsObject):
                          if np.isscalar(self.opts['bottom'])
                          else self.opts['bottom'].copy())
                 valid = (_y > 0) & (_y - y_err > 0)
-                bottom = np.full(_y.shape, -np.inf, dtype=_y.dtype)
+                bottom = np.full(_y.shape, np.inf, dtype=_y.dtype)
                 bottom[valid] = np.log10(_y[valid]) - np.log10(_y[valid] - y_err[valid])
                 self.opts['bottom'] = bottom
             if self.opts['top'] is not None:
