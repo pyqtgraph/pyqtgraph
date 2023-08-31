@@ -79,11 +79,11 @@ class ErrorBarItem(GraphicsObject):
         if x is True and self.opts['x'] is not None:
             _x = self.opts['x']
             if self.opts['left'] is not None:
-                left = np.full(_x.shape, -np.inf, dtype=_x.dtype)
                 x_err = (np.full(_x.shape, self.opts['left'])
                          if np.isscalar(self.opts['left'])
                          else self.opts['left'].copy())
                 valid = (_x > 0) & (_x - x_err > 0)
+                left = np.full(_x.shape, -np.inf, dtype=_x.dtype)
                 left[valid] = np.log10(_x[valid]) - np.log10(_x[valid] - x_err[valid])
                 self.opts['left'] = left
             if self.opts['right'] is not None:
@@ -106,11 +106,11 @@ class ErrorBarItem(GraphicsObject):
         if y is True and self.opts['y'] is not None:
             _y = self.opts['y']
             if self.opts['bottom'] is not None:
-                bottom = np.full(_y.shape, -np.inf, dtype=_y.dtype)
                 y_err = (np.full(_y.shape, self.opts['bottom'])
                          if np.isscalar(self.opts['bottom'])
                          else self.opts['bottom'].copy())
                 valid = (_y > 0) & (_y - y_err > 0)
+                bottom = np.full(_y.shape, -np.inf, dtype=_y.dtype)
                 bottom[valid] = np.log10(_y[valid]) - np.log10(_y[valid] - y_err[valid])
                 self.opts['bottom'] = bottom
             if self.opts['top'] is not None:
@@ -127,7 +127,7 @@ class ErrorBarItem(GraphicsObject):
             self.opts['y'] = _y
 
         if x is not None or y is not None:
-            super().setData(**self.opts)
+            self.setData(**self.opts)
 
     def drawPath(self):
         p = QtGui.QPainterPath()
