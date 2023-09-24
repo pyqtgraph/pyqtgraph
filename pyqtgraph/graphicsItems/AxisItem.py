@@ -750,11 +750,10 @@ class AxisItem(GraphicsWidget):
         if dif == 0:
             return []
         
-        self.tickDensity = 1.0
         ref_size = 300. # axes longer than this display more than the minimum number of major ticks
         minNumberOfIntervals = max(
             2.25,       # 2.0 ensures two tick marks. Fudged increase to 2.25 allows room for tick labels. 
-            2.25 * self.tickDensity * sqrt(size/ref_size) # sub-linear growth of tick spacing with size
+            2.25 * self._tickDensity * sqrt(size/ref_size) # sub-linear growth of tick spacing with size
         )
 
         majorMaxSpacing = dif / minNumberOfIntervals        
