@@ -1,4 +1,3 @@
-import warnings
 from collections.abc import Callable, Sequence
 from os import listdir, path
 
@@ -379,9 +378,10 @@ class ColorMap(object):
         
         Parameters
         ----------
-        pos: array_like of float in range 0 to 1, or None
+        pos: array_like of float, optional
             Assigned positions of specified colors. `None` sets equal spacing.
-        color: array_like of colors
+            Values need to be in range 0.0-1.0.
+        color: array_like of color_like
             List of colors, interpreted via :func:`mkColor() <pyqtgraph.mkColor>`.
         mapping: str or int, optional
             Controls how values outside the 0 to 1 range are mapped to colors.
@@ -391,11 +391,6 @@ class ColorMap(object):
             the colors assigned to 0 and 1 for all values below or above this range, respectively.
         """
         self.name = name # storing a name helps identify ColorMaps sampled by Palette
-        if mode is not None:
-            warnings.warn(
-                "'mode' argument is deprecated and does nothing.",
-                DeprecationWarning, stacklevel=2
-        )
         if pos is None:
             order = range(len(color))
             self.pos = np.linspace(0.0, 1.0, num=len(color))
@@ -487,16 +482,18 @@ class ColorMap(object):
         
         Parameters
         ----------
-        start : float (0.0 to 1.0)
+        start : float
                 Starting value that defines the 0.0 value of the new color map.
-        span  : float (-1.0 to 1.0)
-                span of the extracted region. The orignal color map will be trated as cyclical
-                if the extracted interval exceeds the 0.0 to 1.0 range. 
+                Possible value between 0.0 to 1.0
+        span  : float
+                Span of the extracted region. The original color map will be 
+                treated as cyclical if the extracted interval exceeds the 
+                0.0 to 1.0 range.  Possible values between -1.0 to 1.0.
         """
         pos, col = self.getStops( mode=ColorMap.FLOAT )
         start = clip_scalar(start, 0.0, 1.0)
         span  = clip_scalar(span, -1.0, 1.0)
-        
+
         if span == 0.0:
             raise ValueError("'length' needs to be non-zero")
         stop = (start + span)
@@ -567,14 +564,14 @@ class ColorMap(object):
 
         Returns
         -------
-        array of color.dtype
+        np.ndarray of {``ColorMap.BYTE``, ``ColorMap.FLOAT``, QColor}
             for `ColorMap.BYTE` or `ColorMap.FLOAT`:
 
             RGB values for each `data` value, arranged in the same shape as `data`.
-        list of QColor objects
+        list of QColor
             for `ColorMap.QCOLOR`:
 
-            Colors for each `data` value as Qcolor objects.
+            Colors for each `data` value as QColor objects.
         """
         if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
@@ -625,12 +622,12 @@ class ColorMap(object):
 
     def getByIndex(self, idx):
         """Retrieve a QColor by the index of the stop it is assigned to."""
-        return QtGui.QColor( *self.color[idx] )
+        return QtGui.QColor.fromRgbF( *self.color[idx] )
 
     def getGradient(self, p1=None, p2=None):
         """
         Returns a QtGui.QLinearGradient corresponding to this ColorMap.
-        The span and orientiation is given by two points in plot coordinates.
+        The span and orientation is given by two points in plot coordinates.
 
         When no parameters are given for `p1` and `p2`, the gradient is mapped to the
         `y` coordinates 0 to 1, unless the color map is defined for a more limited range.
@@ -640,11 +637,11 @@ class ColorMap(object):
 
         Parameters
         ----------
-        p1: QtCore.QPointF, default (0,0)
-            Starting point (value 0) of the gradient.
-        p2: QtCore.QPointF, default (dy,0)
+        p1: QtCore.QPointF, optional
+            Starting point (value 0) of the gradient. Default value is QPointF(0., 0.)
+        p2: QtCore.QPointF, optional
             End point (value 1) of the gradient. Default parameter `dy` is the span of ``max(pos) - min(pos)``
-            over which the color map is defined, typically `dy=1`.
+            over which the color map is defined, typically `dy=1`.  Default is QPointF(dy, 0.)
         """
         if p1 is None:
             p1 = QtCore.QPointF(0,0)
@@ -675,14 +672,16 @@ class ColorMap(object):
 
         Parameters
         ----------
-        span : tuple (min, max), default (0.0, 1.0)
+        span : tuple of float, optional
             Span of data values covered by the gradient:
 
               - Color map value 0.0 will appear at `min`,
               - Color map value 1.0 will appear at `max`.
+            
+            Default value is (0., 1.)
 
         orientation : str, default 'vertical'
-            Orientiation of the gradient:
+            Orientation of the gradient:
 
               - 'vertical': `span` corresponds to the `y` coordinate.
               - 'horizontal': `span` corresponds to the `x` coordinate.
@@ -704,17 +703,18 @@ class ColorMap(object):
 
         Parameters
         ----------
-        span : tuple (min, max), default (0.0, 1.0)
+        span : tuple of float
             Span of the data values covered by the gradient:
 
               - Color map value 0.0 will appear at `min`.
               - Color map value 1.0 will appear at `max`.
 
+            Default is (0., 1.)
         orientation : str, default 'vertical'
-            Orientiation of the gradient:
+            Orientation of the gradient:
 
               - 'vertical' creates a vertical gradient, where `span` corresponds to the `y` coordinate.
-              - 'horizontal' creates a horizontal gradient, where `span` correspnds to the `x` coordinate.
+              - 'horizontal' creates a horizontal gradient, where `span` corresponds to the `x` coordinate.
 
         width : int or float
             Width of the pen in pixels on screen.
@@ -781,23 +781,24 @@ class ColorMap(object):
             The starting value in the lookup table
         stop: float, default=1.0
             The final value in the lookup table
-        nPts: int, default is 512
+        nPts: int, default=512
             The number of points in the returned lookup table.
-        alpha: True, False, or None
+        alpha: bool, optional
             Specifies whether or not alpha values are included in the table.
             If alpha is None, it will be automatically determined.
-        mode: int or str, default is `ColorMap.BYTE`
+        mode: int or str, default='byte'
             Determines return type as described in :func:`map() <pyqtgraph.ColorMap.map>`, can be
             either `ColorMap.BYTE` (0 to 255), `ColorMap.FLOAT` (0.0 to 1.0) or `ColorMap.QColor`.
 
         Returns
         -------
-        array of color.dtype
+        np.ndarray of {``ColorMap.BYTE``, ``ColorMap.FLOAT``}
             for `ColorMap.BYTE` or `ColorMap.FLOAT`:
 
             RGB values for each `data` value, arranged in the same shape as `data`.
             If alpha values are included the array has shape (`nPts`, 4), otherwise (`nPts`, 3).
-        list of QColor objects
+    
+        list of QColor
             for `ColorMap.QCOLOR`:
 
             Colors for each `data` value as QColor objects.

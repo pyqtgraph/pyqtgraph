@@ -13,8 +13,6 @@ def test_isQObjectAlive():
     del o1
     assert not pg.Qt.isQObjectAlive(o2)
 
-@pytest.mark.skipif(pg.Qt.QT_LIB == 'PySide', reason='pysideuic does not appear to be '
-                                                     'packaged with conda')
 @pytest.mark.skipif(
     pg.Qt.QT_LIB == "PySide2"
     and tuple(map(int, pg.Qt.PySide2.__version__.split("."))) >= (5, 14) 

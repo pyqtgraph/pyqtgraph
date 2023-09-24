@@ -7,8 +7,8 @@ dirs = [
 
 path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 for a, b in dirs:
-     rst = [os.path.splitext(x)[0].lower() for x in os.listdir(os.path.join(path, 'documentation', 'source', a))]
-     py = [os.path.splitext(x)[0].lower() for x in os.listdir(os.path.join(path, b))]
+     rst = [os.path.splitext(x)[0].lower() for x in os.listdir(os.path.join(path, 'doc', 'source', a))]
+     py = [os.path.splitext(x)[0].lower() for x in os.listdir(os.path.join(path, "pyqtgraph", b))]
      print(a)
      for x in set(py) - set(rst):
          print( "    ", x)

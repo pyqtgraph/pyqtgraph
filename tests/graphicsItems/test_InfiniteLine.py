@@ -10,7 +10,8 @@ def test_InfiniteLine():
     pg.setConfigOption('mouseRateLimit', -1)
 
     # Test basic InfiniteLine API
-    plt = pg.plot()
+    plt = pg.PlotWidget()
+    plt.show()
     plt.setXRange(-10, 10)
     plt.setYRange(-10, 10)
     plt.resize(600, 600)
@@ -46,15 +47,16 @@ def test_InfiniteLine():
     pos = oline.mapToScene(pg.Point(2, 0))
     assert br.containsPoint(pos, QtCore.Qt.FillRule.OddEvenFill)
     px = pg.Point(-0.5, -1.0 / 3**0.5)
-    assert br.containsPoint(pos + 5 * px, QtCore.Qt.FillRule.OddEvenFill)
-    assert not br.containsPoint(pos + 7 * px, QtCore.Qt.FillRule.OddEvenFill)
+    assert br.containsPoint(pos + 1 * px, QtCore.Qt.FillRule.OddEvenFill)
+    assert not br.containsPoint(pos + 3 * px, QtCore.Qt.FillRule.OddEvenFill)
     plt.close()
 
 def test_mouseInteraction():
     # disable delay of mouse move events because events is called immediately in test
     pg.setConfigOption('mouseRateLimit', -1)
 
-    plt = pg.plot()
+    plt = pg.PlotWidget()
+    plt.show()
     plt.scene().minDragTime = 0  # let us simulate mouse drags very quickly.
     vline = plt.addLine(x=0, movable=True)
     hline = plt.addLine(y=0, movable=True)

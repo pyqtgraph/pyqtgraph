@@ -12,7 +12,7 @@ from .GraphicsWidget import GraphicsWidget
 
 translate = QtCore.QCoreApplication.translate
 
-__all__ = ['TickSliderItem', 'GradientEditorItem']
+__all__ = ['TickSliderItem', 'GradientEditorItem', 'addGradientListToDocstring']
 
 Gradients = OrderedDict([
     ('thermal', {'ticks': [(0.3333, (185, 0, 0, 255)), (0.6666, (255, 220, 0, 255)), (1, (255, 255, 255, 255)), (0, (0, 0, 0, 255))], 'mode': 'rgb'}),
@@ -28,6 +28,9 @@ Gradients = OrderedDict([
     ('inferno', {'ticks': [(0.0, (0, 0, 3, 255)), (0.25, (87, 15, 109, 255)), (0.5, (187, 55, 84, 255)), (0.75, (249, 142, 8, 255)), (1.0, (252, 254, 164, 255))], 'mode': 'rgb'}),
     ('plasma', {'ticks': [(0.0, (12, 7, 134, 255)), (0.25, (126, 3, 167, 255)), (0.5, (203, 71, 119, 255)), (0.75, (248, 149, 64, 255)), (1.0, (239, 248, 33, 255))], 'mode': 'rgb'}),
     ('magma', {'ticks': [(0.0, (0, 0, 3, 255)), (0.25, (80, 18, 123, 255)), (0.5, (182, 54, 121, 255)), (0.75, (251, 136, 97, 255)), (1.0, (251, 252, 191, 255))], 'mode': 'rgb'}),
+    # turbo from https://ai.googleblog.com/2019/08/turbo-improved-rainbow-colormap-for.html
+    ('turbo', {'ticks': [(0.0, (51, 27, 61, 255)), (0.125, (77, 110, 223, 255)), (0.25, (61, 185, 233, 255)), (0.375, (68, 238, 154, 255)), (0.5, (164, 250, 80, 255)),
+                         (0.625, (235, 206, 76, 255)), (0.75, (247, 129, 55, 255)), (0.875, (206, 58, 32, 255)), (1.0, (119, 21, 19, 255))], 'mode': 'rgb'}),
 ])
 
 def addGradientListToDocstring():
@@ -494,7 +497,7 @@ class GradientEditorItem(TickSliderItem):
         self.linkedGradients = {}
         
         self.sigTicksChanged.connect(self._updateGradientIgnoreArgs)
-        self.sigTicksChangeFinished.connect(self.sigGradientChangeFinished.emit)
+        self.sigTicksChangeFinished.connect(self.sigGradientChangeFinished)
 
     def showTicks(self, show=True):
         for tick in self.ticks.keys():

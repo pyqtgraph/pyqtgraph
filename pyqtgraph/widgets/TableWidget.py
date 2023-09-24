@@ -1,6 +1,5 @@
 import numpy as np
 
-from .. import metaarray
 from ..Qt import QtCore, QtGui, QtWidgets
 
 translate = QtCore.QCoreApplication.translate
@@ -350,15 +349,13 @@ class TableWidget(QtWidgets.QTableWidget):
         self.save(self.serialize(useSelection=False))
 
     def save(self, data):
-        fileName = QtWidgets.QFileDialog.getSaveFileName(
+        fileName, _ = QtWidgets.QFileDialog.getSaveFileName(
             self,
             f"{translate('TableWidget', 'Save As')}...",
             "",
             f"{translate('TableWidget', 'Tab-separated values')} (*.tsv)"
         )
-        if isinstance(fileName, tuple):
-            fileName = fileName[0]  # Qt4/5 API difference
-        if fileName == '':
+        if not fileName:
             return
         with open(fileName, 'w') as fd:
             fd.write(data)
@@ -481,32 +478,3 @@ class TableWidgetItem(QtWidgets.QTableWidgetItem):
             return self.value < other.value
         else:
             return self.text() < other.text()
-
-
-if __name__ == '__main__':
-    app = QtWidgets.QApplication([])
-    win = QtWidgets.QMainWindow()
-    t = TableWidget()
-    win.setCentralWidget(t)
-    win.resize(800,600)
-    win.show()
-    
-    ll = [[1,2,3,4,5]] * 20
-    ld = [{'x': 1, 'y': 2, 'z': 3}] * 20
-    dl = {'x': list(range(20)), 'y': list(range(20)), 'z': list(range(20))}
-    
-    a = np.ones((20, 5))
-    ra = np.ones((20,), dtype=[('x', int), ('y', int), ('z', int)])
-    
-    t.setData(ll)
-    
-    ma = metaarray.MetaArray(np.ones((20, 3)), info=[
-        {'values': np.linspace(1, 5, 20)}, 
-        {'cols': [
-            {'name': 'x'},
-            {'name': 'y'},
-            {'name': 'z'},
-        ]}
-    ])
-    t.setData(ma)
-    

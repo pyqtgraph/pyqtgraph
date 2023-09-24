@@ -10,11 +10,11 @@ __all__ = ['GLMeshItem']
 
 class GLMeshItem(GLGraphicsItem):
     """
-    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`
     
     Displays a 3D triangle mesh. 
     """
-    def __init__(self, **kwds):
+    def __init__(self, parentItem=None, **kwds):
         """
         ============== =====================================================
         **Arguments:**
@@ -47,7 +47,7 @@ class GLMeshItem(GLGraphicsItem):
             'computeNormals': True,
         }
         
-        GLGraphicsItem.__init__(self)
+        super().__init__(parentItem=parentItem)
         glopts = kwds.pop('glOptions', 'opaque')
         self.setGLOptions(glopts)
         shader = kwds.pop('shader', None)
@@ -192,7 +192,7 @@ class GLMeshItem(GLGraphicsItem):
                         glNormalPointerf(norms)
                     
                     if faces is None:
-                        glDrawArrays(GL_TRIANGLES, 0, np.product(verts.shape[:-1]))
+                        glDrawArrays(GL_TRIANGLES, 0, np.prod(verts.shape[:-1]))
                     else:
                         faces = faces.astype(np.uint32).flatten()
                         glDrawElements(GL_TRIANGLES, faces.shape[0], GL_UNSIGNED_INT, faces)

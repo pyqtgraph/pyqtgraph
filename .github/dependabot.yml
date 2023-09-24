@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      # Check for updates to GitHub Actions every weekday
+      interval: "daily"
+  - package-ecosystem: "pip"
+    directory: "/doc"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pip"
+    directory: ".github/workflows/etc"
+    ignore:
+      - dependency-name: "numpy"
+      # NEP-29 governs supported versions of NumPy
+    schedule:
+      interval: "daily"

@@ -6,19 +6,18 @@ is used by the view widget
 """
 
 import argparse
+import itertools
 import sys
-from time import perf_counter
 
 import numpy as np
+from utils import FrameCounter
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QT_LIB, QtCore, QtGui, QtWidgets
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 pg.setConfigOption('imageAxisOrder', 'row-major')
 
-import importlib
-
-ui_template = importlib.import_module(f'VideoTemplate_{QT_LIB.lower()}')
+import VideoTemplate_generic as ui_template
 
 try:
     import cupy as cp
@@ -49,7 +48,11 @@ parser.add_argument('--levels', default=None, type=lambda s: tuple([float(x) for
 parser.add_argument('--lut', default=False, action='store_true', help="Use color lookup table")
 parser.add_argument('--lut-alpha', default=False, action='store_true', help="Use alpha color lookup table", dest='lut_alpha')
 parser.add_argument('--size', default='512x512', type=lambda s: tuple([int(x) for x in s.split('x')]), help="WxH image dimensions default='512x512'")
+parser.add_argument('--iterations', default=float('inf'), type=float,
+    help="Number of iterations to run before exiting"
+)
 args = parser.parse_args(sys.argv[1:])
+iterations_counter = itertools.count()
 
 if RawImageGLWidget is not None:
     # don't limit frame rate to vsync
@@ -242,12 +245,15 @@ ui.framesSpin.valueChanged.connect(updateSize)
 ui.cudaCheck.toggled.connect(noticeCudaCheck)
 ui.numbaCheck.toggled.connect(noticeNumbaCheck)
 
-
 ptr = 0
-lastTime = perf_counter()
-fps = None
 def update():
-    global ui, ptr, lastTime, fps, LUT, img
+    global ptr
+    if next(iterations_counter) > args.iterations:
+        # cleanly close down benchmark
+        timer.stop()
+        app.quit()
+        return None
+
     if ui.lutCheck.isChecked():
         useLut = LUT
     else:
@@ -278,19 +284,14 @@ def update():
         #img.setImage(data[ptr%data.shape[0]], autoRange=False)
 
     ptr += 1
-    now = perf_counter()
-    dt = now - lastTime
-    lastTime = now
-    if fps is None:
-        fps = 1.0/dt
-    else:
-        s = np.clip(dt*3., 0, 1)
-        fps = fps * (1-s) + (1.0/dt) * s
-    ui.fpsLabel.setText('%0.2f fps' % fps)
-    app.processEvents()  ## force complete redraw for every plot
+    framecnt.update()
+
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
+
+framecnt = FrameCounter()
+framecnt.sigFpsUpdate.connect(lambda fps: ui.fpsLabel.setText(f'{fps:.1f} fps'))
 
 if __name__ == '__main__':
     pg.exec()

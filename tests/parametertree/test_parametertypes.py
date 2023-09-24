@@ -1,10 +1,11 @@
-import sys
+from unittest.mock import MagicMock
 
 import numpy as np
 
 import pyqtgraph as pg
 import pyqtgraph.parametertree as pt
 from pyqtgraph.functions import eq
+from pyqtgraph.parametertree.parameterTypes import ChecklistParameterItem
 from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp()
@@ -58,13 +59,11 @@ def test_types():
 
     # int
     types = ['int0', 'int', 'float', 'bigfloat', 'npfloat', 'npint', 'bool']
-    inttyps = int if sys.version[0] >= '3' else (int, long) 
-    check_param_types(param.child('int'), inttyps, int, 0, all_objs, types)
+    check_param_types(param.child('int'), int, int, 0, all_objs, types)
     
     # str  (should be able to make a string out of any type)
     types = all_objs.keys()
-    strtyp = str if sys.version[0] >= '3' else unicode
-    check_param_types(param.child('str'), strtyp, str, '', all_objs, types)
+    check_param_types(param.child('str'), str, str, '', all_objs, types)
     
     # bool  (should be able to make a boolean out of any type?)
     types = all_objs.keys()
@@ -164,3 +163,35 @@ def test_data_race():
     p.sigValueChanged.connect(override)
     pi.widget.setValue(2)
     assert p.value() == pi.widget.value() == 1
+
+
+def test_checklist_show_hide():
+    p = pt.Parameter.create(name='checklist', type='checklist', limits=["a", "b", "c"])
+    pi = ChecklistParameterItem(p, 0)
+    pi.setHidden = MagicMock()
+    p.hide()
+    pi.setHidden.assert_called_with(True)
+    assert not p.opts["visible"]
+    p.show()
+    pi.setHidden.assert_called_with(False)
+    assert p.opts["visible"]
+
+
+def test_pen_settings():
+    # Option from constructor
+    p = pt.Parameter.create(name='test', type='pen', width=5, additionalname='test')
+    assert p.pen.width() == 5
+    # Opts from dynamic update
+    p.setOpts(width=3)
+    assert p.pen.width() == 3
+    # Opts from changing child
+    p["width"] = 10
+    assert p.pen.width() == 10
+
+
+def test_recreate_from_savestate():
+    from pyqtgraph.examples import _buildParamTypes
+    created = _buildParamTypes.makeAllParamTypes()
+    state = created.saveState()
+    created2 = pt.Parameter.create(**state)
+    assert pg.eq(state, created2.saveState())

@@ -20,8 +20,17 @@ def BusyCursor():
     in_gui_thread = (app is not None) and (QtCore.QThread.currentThread() == app.thread())
     try:
         if in_gui_thread:
-            QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.CursorShape.WaitCursor))
+            guard = QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.CursorShape.WaitCursor))
+            # on PySide6 6.3.0, setOverrideCursor() returns a QOverrideCursorGuard object
+            # that, on its destruction, calls restoreOverrideCursor() if the user had not
+            # already done so.
+            # if the user wants to call it manually, they must do it via the returned object,
+            # and not via the QtWidgets.QApplication static method; otherwise the restore
+            # would get called twice.
         yield
     finally:
         if in_gui_thread:
-            QtWidgets.QApplication.restoreOverrideCursor()
+            if hasattr(guard, 'restoreOverrideCursor'):
+                guard.restoreOverrideCursor()
+            else:
+                QtWidgets.QApplication.restoreOverrideCursor()

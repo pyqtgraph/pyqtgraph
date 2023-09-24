@@ -118,10 +118,15 @@ def test_subArray():
     
     
 def test_rescaleData():
+    rng = np.random.default_rng(12345)
     dtypes = map(np.dtype, ('ubyte', 'uint16', 'byte', 'int16', 'int', 'float'))
     for dtype1 in dtypes:
         for dtype2 in dtypes:
-            data = (np.random.random(size=10) * 2**32 - 2**31).astype(dtype1)
+            if dtype1.kind in 'iu':
+                lim = np.iinfo(dtype1)
+                data = rng.integers(lim.min, lim.max, size=10, dtype=dtype1, endpoint=True)
+            else:
+                data = (rng.random(size=10) * 2**32 - 2**31).astype(dtype1)
             for scale, offset in [(10, 0), (10., 0.), (1, -50), (0.2, 0.5), (0.001, 0)]:
                 if dtype2.kind in 'iu':
                     lim = np.iinfo(dtype2)
@@ -287,7 +292,7 @@ def _handle_underflow(dtype, *elements):
     "xs, ys, connect, expected", [
         *(
             (
-                np.arange(6, dtype=dtype), np.arange(0, -6, step=-1, dtype=dtype), 'all',
+                np.arange(6, dtype=dtype), np.arange(0, -6, step=-1).astype(dtype), 'all',
                 _handle_underflow(dtype,
                                   (MoveToElement, 0.0, 0.0),
                                   (LineToElement, 1.0, -1.0),
@@ -300,7 +305,7 @@ def _handle_underflow(dtype, *elements):
         ),
         *(
             (
-                np.arange(6, dtype=dtype), np.arange(0, -6, step=-1, dtype=dtype), 'pairs',
+                np.arange(6, dtype=dtype), np.arange(0, -6, step=-1).astype(dtype), 'pairs',
                 _handle_underflow(dtype,
                                   (MoveToElement, 0.0, 0.0),
                                   (LineToElement, 1.0, -1.0),
@@ -313,7 +318,7 @@ def _handle_underflow(dtype, *elements):
         ),
         *(
             (
-                np.arange(5, dtype=dtype), np.arange(0, -5, step=-1, dtype=dtype), 'pairs',
+                np.arange(5, dtype=dtype), np.arange(0, -5, step=-1).astype(dtype), 'pairs',
                 _handle_underflow(dtype,
                                   (MoveToElement, 0.0, 0.0),
                                   (LineToElement, 1.0, -1.0),
@@ -344,7 +349,7 @@ def _handle_underflow(dtype, *elements):
         ),
         *(
             (
-                np.arange(5, dtype=dtype), np.arange(0, -5, step=-1, dtype=dtype), np.array([0, 1, 0, 1, 0]),
+                np.arange(5, dtype=dtype), np.arange(0, -5, step=-1).astype(dtype), np.array([0, 1, 0, 1, 0]),
                 _handle_underflow(dtype,
                                   (MoveToElement, 0.0, 0.0),
                                   (MoveToElement, 1.0, -1.0),
@@ -400,3 +405,7 @@ def test_ndarray_from_qimage():
         qimg.fill(0)
         arr = pg.functions.ndarray_from_qimage(qimg)
         assert arr.shape == (h, w)
+
+def test_colorDistance():
+    pg.colorDistance([pg.Qt.QtGui.QColor(0,0,0), pg.Qt.QtGui.QColor(255,0,0)])
+    pg.colorDistance([])

@@ -6,11 +6,7 @@ import signal
 import subprocess
 import sys
 import time
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
+import pickle
 
 from ..Qt import QT_LIB, mkQApp
 from ..util import cprint  # color printing for debugging
@@ -73,8 +69,9 @@ class Process(RemoteEventHandler):
                         for a python bug: http://bugs.python.org/issue3905
                         but has the side effect that child output is significantly
                         delayed relative to the parent output.
-        pyqtapis        Optional dictionary of PyQt API version numbers to set before
-                        importing pyqtgraph in the remote process.
+        pyqtapis        Formerly optional dictionary of PyQt API version numbers to set
+                        before importing pyqtgraph in the remote process.
+                        No longer has any effect.
         ==============  =============================================================
         """
         if target is None:
@@ -88,11 +85,6 @@ class Process(RemoteEventHandler):
         ## random authentication key
         authkey = os.urandom(20)
 
-        ## Windows seems to have a hard time with hmac 
-        if sys.platform.startswith('win'):
-            authkey = None
-
-        #print "key:", ' '.join([str(ord(x)) for x in authkey])
         ## Listen for connection from remote process (and find free port number)
         l = multiprocessing.connection.Listener(('localhost', 0), authkey=authkey)
         port = l.address[1]
@@ -144,7 +136,10 @@ class Process(RemoteEventHandler):
         # the multiprocessing connection. Technically, only the launched subprocess needs to
         # send its pid back. Practically, we hijack the ppid parameter to indicate to the
         # subprocess that pid exchange is needed.
-        xchg_pids = sys.platform == 'win32' and os.getenv('VIRTUAL_ENV') is not None
+        #
+        # We detect a virtual environment using sys.base_prefix, see https://docs.python.org/3/library/sys.html#sys.base_prefix
+        # See https://github.com/pyqtgraph/pyqtgraph/pull/2566 and https://github.com/spyder-ide/spyder/issues/20273
+        xchg_pids = sys.platform == 'win32' and sys.prefix != sys.base_prefix
 
         ## Send everything the remote process needs to start correctly
         data = dict(
@@ -156,7 +151,6 @@ class Process(RemoteEventHandler):
             path=sysPath, 
             qt_lib=QT_LIB,
             debug=procDebug,
-            pyqtapis=pyqtapis,
             )
         pickle.dump(data, self.proc.stdin)
         self.proc.stdin.close()

@@ -15,7 +15,7 @@ class ButtonItem(GraphicsObject):
         elif pixmap is not None:
             self.setPixmap(pixmap)
             
-        if width is not None:
+        if width is not None and self.pixmap.width():
             s = float(width) / self.pixmap.width()
             self.setScale(s)
         if parentItem is not None:
@@ -33,12 +33,12 @@ class ButtonItem(GraphicsObject):
         if self.enabled:
             self.clicked.emit(self)
         
-    def mouseHoverEvent(self, ev):
+    def hoverEvent(self, ev):
         if not self.enabled:
             return
         if ev.isEnter():
             self.setOpacity(1.0)
-        else:
+        elif ev.isExit():
             self.setOpacity(0.7)
 
     def disable(self):

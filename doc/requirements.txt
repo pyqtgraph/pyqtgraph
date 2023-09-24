@@ -1,5 +1,11 @@
-pyside2
+PyQt6==6.5.2
+sphinx==7.2.6
+pydata-sphinx-theme==0.13.3
+sphinx-design==0.5.0
+sphinxcontrib-images==0.9.4
+sphinx-favicon==1.0.1
+sphinx-autodoc-typehints
+sphinx-qt-documentation
+sphinxext-rediraffe
 numpy
 pyopengl
-sphinx==4.1.1
-sphinx_rtd_theme==0.5.2

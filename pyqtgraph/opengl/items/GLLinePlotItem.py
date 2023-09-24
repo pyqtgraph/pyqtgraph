@@ -10,9 +10,9 @@ __all__ = ['GLLinePlotItem']
 class GLLinePlotItem(GLGraphicsItem):
     """Draws line plots in 3D."""
     
-    def __init__(self, **kwds):
+    def __init__(self, parentItem=None, **kwds):
         """All keyword arguments are passed to setData()"""
-        GLGraphicsItem.__init__(self)
+        super().__init__(parentItem=parentItem)
         glopts = kwds.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
         self.pos = None
@@ -47,9 +47,16 @@ class GLLinePlotItem(GLGraphicsItem):
             if k not in args:
                 raise Exception('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
         self.antialias = False
-        for arg in args:
-            if arg in kwds:
-                setattr(self, arg, kwds[arg])
+        if 'pos' in kwds:
+            pos = kwds.pop('pos')
+            self.pos = np.ascontiguousarray(pos, dtype=np.float32)
+        if 'color' in kwds:
+            color = kwds.pop('color')
+            if isinstance(color, np.ndarray):
+                color = np.ascontiguousarray(color, dtype=np.float32)
+            self.color = color
+        for k, v in kwds.items():
+            setattr(self, k, v)
         self.update()
 
     def paint(self):
@@ -81,9 +88,9 @@ class GLLinePlotItem(GLGraphicsItem):
                 glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
                 
             if self.mode == 'line_strip':
-                glDrawArrays(GL_LINE_STRIP, 0, int(self.pos.size / self.pos.shape[-1]))
+                glDrawArrays(GL_LINE_STRIP, 0, self.pos.shape[0])
             elif self.mode == 'lines':
-                glDrawArrays(GL_LINES, 0, int(self.pos.size / self.pos.shape[-1]))
+                glDrawArrays(GL_LINES, 0, self.pos.shape[0])
             else:
                 raise Exception("Unknown line mode '%s'. (must be 'lines' or 'line_strip')" % self.mode)
                 

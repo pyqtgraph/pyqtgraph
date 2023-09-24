@@ -1,11 +1,10 @@
 #!/usr/bin/python
 
-from time import perf_counter
-
 import numpy as np
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
+from utils import FrameCounter
 
 app = pg.mkQApp("Infinite Line Performance")
 
@@ -22,29 +21,20 @@ for i in range(100):
 
 data = np.random.normal(size=(50, 5000))
 ptr = 0
-lastTime = perf_counter()
-fps = None
-
 
 def update():
-    global curve, data, ptr, p, lastTime, fps
+    global ptr
     curve.setData(data[ptr % 10])
     ptr += 1
-    now = perf_counter()
-    dt = now - lastTime
-    lastTime = now
-    if fps is None:
-        fps = 1.0/dt
-    else:
-        s = np.clip(dt*3., 0, 1)
-        fps = fps * (1-s) + (1.0/dt) * s
-    p.setTitle('%0.2f fps' % fps)
-    app.processEvents()  # force complete redraw for every plot
+    framecnt.update()
 
 
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
+
+framecnt = FrameCounter()
+framecnt.sigFpsUpdate.connect(lambda fps: p.setTitle(f'{fps:.1f} fps'))
 
 if __name__ == '__main__':
     pg.exec()

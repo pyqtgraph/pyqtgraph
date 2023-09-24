@@ -1,5 +1,4 @@
 import collections.abc
-import importlib
 import os
 import warnings
 import weakref
@@ -8,7 +7,7 @@ import numpy as np
 
 from ... import functions as fn
 from ... import icons
-from ...Qt import QT_LIB, QtCore, QtGui, QtWidgets
+from ...Qt import QtCore, QtWidgets
 from ...WidgetGroup import WidgetGroup
 from ...widgets.FileDialog import FileDialog
 from ..AxisItem import AxisItem
@@ -22,11 +21,9 @@ from ..PlotDataItem import PlotDataItem
 from ..ScatterPlotItem import ScatterPlotItem
 from ..ViewBox import ViewBox
 
-
 translate = QtCore.QCoreApplication.translate
 
-ui_template = importlib.import_module(
-    f'.plotConfigTemplate_{QT_LIB.lower()}', package=__package__)
+from . import plotConfigTemplate_generic as ui_template
 
 __all__ = ['PlotItem']
 
@@ -38,7 +35,7 @@ class PlotItem(GraphicsWidget):
     
     This class provides the ViewBox-plus-axes that appear when using
     :func:`pg.plot() <pyqtgraph.plot>`, :class:`PlotWidget <pyqtgraph.PlotWidget>`,
-    and :func:`GraphicsLayoutWidget.addPlot() <pyqtgraph.GraphicsLayoutWidget.addPlot>`.
+    and :func:`GraphicsLayout.addPlot() <pyqtgraph.GraphicsLayout.addPlot>`.
 
     It's main functionality is:
 
@@ -117,7 +114,6 @@ class PlotItem(GraphicsWidget):
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         
         ## Set up control buttons
-        path = os.path.dirname(__file__)
         self.autoBtn = ButtonItem(icons.getGraphPixmap('auto'), 14, self)
         self.autoBtn.mode = 'auto'
         self.autoBtn.clicked.connect(self.autoBtnClicked)
@@ -189,7 +185,6 @@ class PlotItem(GraphicsWidget):
         w = QtWidgets.QWidget()
         self.ctrl = c = ui_template.Ui_Form()
         c.setupUi(w)
-        dv = QtGui.QDoubleValidator(self)
         
         menuItems = [
             (translate("PlotItem", 'Transforms'), c.transformGroup),
@@ -201,17 +196,13 @@ class PlotItem(GraphicsWidget):
         ]
         
         
-        self.ctrlMenu = QtWidgets.QMenu()
-        
-        self.ctrlMenu.setTitle(translate("PlotItem", 'Plot Options'))
-        self.subMenus = []
+        self.ctrlMenu = QtWidgets.QMenu(translate("PlotItem", 'Plot Options'))
+
         for name, grp in menuItems:
-            sm = QtWidgets.QMenu(name)
+            sm = self.ctrlMenu.addMenu(name)
             act = QtWidgets.QWidgetAction(self)
             act.setDefaultWidget(grp)
             sm.addAction(act)
-            self.subMenus.append(sm)
-            self.ctrlMenu.addMenu(sm)
         
         self.stateGroup = WidgetGroup()
         for name, w in menuItems:
@@ -506,23 +497,12 @@ class PlotItem(GraphicsWidget):
             
     def viewStateChanged(self):
         self.updateButtons()
-            
-    def enableAutoScale(self):
-        """
-        Enable auto-scaling. The plot will continuously scale to fit the boundaries of its data.
-        """
-        warnings.warn(
-            'PlotItem.enableAutoScale is deprecated, and will be removed in 0.13'
-            'Use PlotItem.enableAutoRange(axis, enable) instead',
-            DeprecationWarning, stacklevel=2
-        )
-        self.vb.enableAutoRange(self.vb.XYAxes)
 
     def addItem(self, item, *args, **kargs):
         """
         Add a graphics item to the view box. 
-        If the item has plot data (:class:`~pyqtgrpah.PlotDataItem`, 
-        :class:`~pyqtgraph.PlotCurveItem`, :class:`~pyqtgraph.ScatterPlotItem`), 
+        If the item has plot data (:class:`PlotDataItem <pyqtgraph.PlotDataItem>` , 
+        :class:`~pyqtgraph.PlotCurveItem` , :class:`~pyqtgraph.ScatterPlotItem` ), 
         it may be included in analysis performed by the PlotItem.
         """
         if item in self.items:
@@ -555,7 +535,6 @@ class PlotItem(GraphicsWidget):
             item.setFftMode(self.ctrl.fftCheck.isChecked())
             item.setDownsampling(*self.downsampleMode())
             item.setClipToView(self.clipToViewMode())
-            item.setPointMode(self.pointMode())
             
             ## Hide older plots if needed
             self.updateDecimation()
@@ -572,27 +551,11 @@ class PlotItem(GraphicsWidget):
         if name is not None and hasattr(self, 'legend') and self.legend is not None:
             self.legend.addItem(item, name=name)            
 
-    def addDataItem(self, item, *args):
-        warnings.warn(
-            'PlotItem.addDataItem is deprecated and will be removed in 0.13. '
-            'Use PlotItem.addItem instead',
-            DeprecationWarning, stacklevel=2
-        )    
-        self.addItem(item, *args)
-        
     def listDataItems(self):
-        """Return a list of all data items (:class:`~pyqtgrpah.PlotDataItem`, 
-        :class:`~pyqtgraph.PlotCurveItem`, :class:`~pyqtgraph.ScatterPlotItem`, etc)
+        """Return a list of all data items (:class:`PlotDataItem <pyqtgraph.PlotDataItem>`, 
+        :class:`~pyqtgraph.PlotCurveItem` , :class:`~pyqtgraph.ScatterPlotItem` , etc)
         contained in this PlotItem."""
         return self.dataItems[:]
-        
-    def addCurve(self, c, params=None):
-        warnings.warn(
-            'PlotItem.addCurve is deprecated and will be removed in 0.13. '
-            'Use PlotItem.addItem instead.',
-            DeprecationWarning, stacklevel=2
-        )
-        self.addItem(c, params)
 
     def addLine(self, x=None, y=None, z=None, **kwds):
         """
@@ -678,7 +641,7 @@ class PlotItem(GraphicsWidget):
         :class:`~pyqtgraph.ViewBox`. Plots added after this will be automatically 
         displayed in the legend if they are created with a 'name' argument.
 
-        If a :class:`~pyqtGraph.LegendItem` has already been created using this method, 
+        If a :class:`~pyqtgraph.LegendItem` has already been created using this method, 
         that item will be returned rather than creating a new one.
 
         Accepts the same arguments as :func:`~pyqtgraph.LegendItem.__init__`.
@@ -697,10 +660,76 @@ class PlotItem(GraphicsWidget):
         A call like `plot.addColorBar(img, colorMap='viridis')` is a convenient
         method to assign and show a color map.
         """
-        from ..ColorBarItem import ColorBarItem # avoid circular import
+        from ..ColorBarItem import ColorBarItem  # avoid circular import
         bar = ColorBarItem(**kargs)
         bar.setImageItem( image, insert_in=self )
         return bar
+
+    def multiDataPlot(self, *, x=None, y=None, constKwargs=None, **kwargs):
+        """
+        Allow plotting multiple curves on the same plot, changing some kwargs
+        per curve.
+
+        Parameters
+        ----------
+        x, y: array_like
+            can be in the following formats:
+              - {x or y} = [n1, n2, n3, ...]: The named argument iterates through
+                ``n`` curves, while the unspecified argument is range(len(n)) for
+                each curve.
+              - x, [y1, y2, y3, ...]
+              - [x1, x2, x3, ...], [y1, y2, y3, ...]
+              - [x1, x2, x3, ...], y
+
+              where ``x_n`` and ``y_n`` are ``ndarray`` data for each curve. Since
+              ``x`` and ``y`` values are matched using ``zip``, unequal lengths mean
+              the longer array will be truncated. Note that 2D matrices for either x
+              or y are considered lists of curve
+              data.
+        constKwargs: dict, optional
+            A dict of {str: value} passed to each curve during ``plot()``.
+        kwargs: dict, optional
+            A dict of {str: iterable} where the str is the name of a kwarg and the
+            iterable is a list of values, one for each plotted curve.
+        """
+        if (x is not None and not len(x)) or (y is not None and not len(y)):
+            # Nothing to plot -- either x or y array will bail out early from
+            # zip() below.
+            return []
+        def scalarOrNone(val):
+            return val is None or (len(val) and np.isscalar(val[0]))
+
+        if scalarOrNone(x) and scalarOrNone(y):
+            raise ValueError(
+                "If both `x` and `y` represent single curves, use `plot` instead "
+                "of `multiPlot`."
+            )
+        curves = []
+        constKwargs = constKwargs or {}
+        xy: 'dict[str, list | None]' = dict(x=x, y=y)
+        for key, oppositeVal in zip(('x', 'y'), [y, x]):
+            oppositeVal: 'Iterable | None'
+            val = xy[key]
+            if val is None:
+                # Other curve has all data, make range that supports longest chain
+                val = range(max(len(curveN) for curveN in oppositeVal))
+            if np.isscalar(val[0]):
+                # x, [y1, y2, y3, ...] or [x1, x2, x3, ...], y
+                # Repeat the single curve to match length of opposite list
+                val = [val] * len(oppositeVal)
+            xy[key] = val
+        for ii, (xi, yi) in enumerate(zip(xy['x'], xy['y'])):
+            for kk in kwargs:
+                if len(kwargs[kk]) <= ii:
+                    raise ValueError(
+                        f"Not enough values for kwarg `{kk}`. "
+                        f"Expected {ii + 1:d} (number of curves to plot), got"
+                        f" {len(kwargs[kk]):d}"
+                    )
+            kwargsi = {kk: kwargs[kk][ii] for kk in kwargs}
+            constKwargs.update(kwargsi)
+            curves.append(self.plot(xi, yi, **constKwargs))
+        return curves
 
     def scatterPlot(self, *args, **kargs):
         if 'pen' in kargs:
@@ -741,93 +770,6 @@ class PlotItem(GraphicsWidget):
                     i = matches[0]
                     
                 self.paramList[p] = (i.checkState() == QtCore.Qt.CheckState.Checked)
-
-    def writeSvgCurves(self, fileName=None):
-        if fileName is None:
-            self._chooseFilenameDialog(handler=self.writeSvg)
-            return
-
-        if isinstance(fileName, tuple):
-            raise Exception("Not implemented yet..")
-        fileName = str(fileName)
-        PlotItem.lastFileDir = os.path.dirname(fileName)
-        
-        rect = self.vb.viewRect()
-        xRange = rect.left(), rect.right() 
-        
-        svg = ""
-
-        dx = max(rect.right(),0) - min(rect.left(),0)
-        ymn = min(rect.top(), rect.bottom())
-        ymx = max(rect.top(), rect.bottom())
-        dy = max(ymx,0) - min(ymn,0)
-        sx = 1.
-        sy = 1.
-        while dx*sx < 10:
-            sx *= 1000
-        while dy*sy < 10:
-            sy *= 1000
-        sy *= -1
-
-        with open(fileName, 'w') as fh:
-            # fh.write('<svg viewBox="%f %f %f %f">\n' % (rect.left() * sx,
-            #                                             rect.top() * sx,
-            #                                             rect.width() * sy,
-            #                                             rect.height()*sy))
-            fh.write('<svg>\n')
-            fh.write('<path fill="none" stroke="#000000" stroke-opacity="0.5" '
-                     'stroke-width="1" d="M%f,0 L%f,0"/>\n' % (
-                        rect.left() * sx, rect.right() * sx))
-            fh.write('<path fill="none" stroke="#000000" stroke-opacity="0.5" '
-                     'stroke-width="1" d="M0,%f L0,%f"/>\n' % (
-                        rect.top() * sy, rect.bottom() * sy))
-
-            for item in self.curves:
-                if isinstance(item, PlotCurveItem):
-                    color = item.pen.color()
-                    hrrggbb, opacity = color.name(), color.alphaF()
-                    x, y = item.getData()
-                    mask = (x > xRange[0]) * (x < xRange[1])
-                    mask[:-1] += mask[1:]
-                    m2 = mask.copy()
-                    mask[1:] += m2[:-1]
-                    x = x[mask]
-                    y = y[mask]
-
-                    x *= sx
-                    y *= sy
-
-                    # fh.write('<g fill="none" stroke="#%s" '
-                    #          'stroke-opacity="1" stroke-width="1">\n' % (
-                    #           color, ))
-                    fh.write('<path fill="none" stroke="%s" '
-                             'stroke-opacity="%f" stroke-width="1" '
-                             'd="M%f,%f ' % (hrrggbb, opacity, x[0], y[0]))
-                    for i in range(1, len(x)):
-                        fh.write('L%f,%f ' % (x[i], y[i]))
-
-                    fh.write('"/>')
-                    # fh.write("</g>")
-
-            for item in self.dataItems:
-                if isinstance(item, ScatterPlotItem):
-                    pRect = item.boundingRect()
-                    vRect = pRect.intersected(rect)
-
-                    for point in item.points():
-                        pos = point.pos()
-                        if not rect.contains(pos):
-                            continue
-                        color = point.brush.color()
-                        hrrggbb, opacity = color.name(), color.alphaF()
-                        x = pos.x() * sx
-                        y = pos.y() * sy
-
-                        fh.write('<circle cx="%f" cy="%f" r="1" fill="%s" '
-                                 'stroke="none" fill-opacity="%f"/>\n' % (
-                                    x, y, hrrggbb, opacity))
-
-            fh.write("</svg>\n")
 
     def writeSvg(self, fileName=None):
         if fileName is None:
@@ -1024,7 +966,7 @@ class PlotItem(GraphicsWidget):
         return ds, auto, method
         
     def setClipToView(self, clip):
-        """Set the default clip-to-view mode for all :class:`~pyqtgraph.PlotDataItem`s managed by this plot.
+        """Set the default clip-to-view mode for all :class:`~pyqtgraph.PlotDataItem` s managed by this plot.
         If *clip* is `True`, then PlotDataItems will attempt to draw only points within the visible
         range of the ViewBox."""
         self.ctrl.clipToViewCheck.setChecked(clip)
@@ -1125,6 +1067,26 @@ class PlotItem(GraphicsWidget):
     
     def menuEnabled(self):
         return self._menuEnabled
+
+    def setContextMenuActionVisible(self, name : str, visible : bool) -> None:
+        """
+        Changes the context menu action visibility
+
+        Parameters
+        ----------
+        name: str
+            Action name
+            must be one of 'Transforms', 'Downsample', 'Average','Alpha', 'Grid', or 'Points'
+        visible: bool
+            Determines if action will be display
+            True action is visible
+            False action is invisible.
+        """
+        translated_name = translate("PlotItem", name)
+        for action in self.ctrlMenu.actions():
+            if action.text() == translated_name:
+                action.setVisible(visible)
+                break
     
     def hoverEvent(self, ev):
         if ev.enter:
@@ -1209,7 +1171,6 @@ class PlotItem(GraphicsWidget):
         axis must be one of 'left', 'bottom', 'right', or 'top'
         """
         s = self.getScale(axis)
-        p = self.axes[axis]['pos']
         if show:
             s.show()
         else:
@@ -1225,21 +1186,24 @@ class PlotItem(GraphicsWidget):
         
         Parameters
         ----------
-        selection: boolean or tuple of booleans (left, top, right, bottom)
+        selection: bool or tuple of bool 
             Determines which AxisItems will be displayed.
+            If in tuple form, order is (left, top, right, bottom)
             A single boolean value will set all axes, 
             so that ``showAxes(True)`` configures the axes to draw a frame.
-        showValues: optional, boolean or tuple of booleans (left, top, right, bottom)
+        showValues: bool or tuple of bool, optional
             Determines if values will be displayed for the ticks of each axis.
             True value shows values for left and bottom axis (default).
             False shows no values.
+            If in tuple form, order is (left, top, right, bottom)
             None leaves settings unchanged.
             If not specified, left and bottom axes will be drawn with values.
-        size: optional, float or tuple of floats (width, height)
+        size: float or tuple of float, optional
             Reserves as fixed amount of space (width for vertical axis, height for horizontal axis)
             for each axis where tick values are enabled. If only a single float value is given, it
             will be applied for both width and height. If `None` is given instead of a float value,
             the axis reverts to automatic allocation of space.
+            If in tuple form, order is (width, height)
         """
         if selection is True: # shortcut: enable all axes, creating a frame
             selection = (True, True, True, True)
@@ -1274,15 +1238,7 @@ class PlotItem(GraphicsWidget):
                     elif axis_key in ('top', 'bottom'):
                         if show_value: ax.setHeight(size[1])
                         else         : ax.setHeight( None )
-
-    def showScale(self, *args, **kargs):
-        warnings.warn(
-            'PlotItem.showScale has been deprecated and will be removed in 0.13. '
-            'Use PlotItem.showAxis() instead',
-            DeprecationWarning, stacklevel=2
-        )    
-        return self.showAxis(*args, **kargs)
-            
+  
     def hideButtons(self):
         """Causes auto-scale button ('A' in lower-left corner) to be hidden for this PlotItem"""
         #self.ctrlBtn.hide()
@@ -1315,7 +1271,6 @@ class PlotItem(GraphicsWidget):
         return c
         
     def _plotMetaArray(self, arr, x=None, autoLabel=True, **kargs):
-        inf = arr.infoCopy()
         if arr.ndim != 1:
             raise Exception('can only automatically plot 1 dimensional arrays.')
         ## create curve

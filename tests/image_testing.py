@@ -20,7 +20,6 @@ import inspect
 import os
 import sys
 import time
-import warnings
 from pathlib import Path
 
 import numpy as np
@@ -385,16 +384,6 @@ class ImageTester(QtWidgets.QWidget):
 
     def failTest(self):
         self.lastKey = 'f'
-
-
-def getTestDataRepo():
-    warnings.warn(
-        "Test data data repo has been merged with the main repo"
-        "use getTestDataDirectory() instead, this method will be removed"
-        "in a future version of pyqtgraph",
-        DeprecationWarning, stacklevel=2
-    )
-    return getTestDataDirectory()
 
 
 def getTestDataDirectory():

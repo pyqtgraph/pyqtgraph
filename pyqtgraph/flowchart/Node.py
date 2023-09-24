@@ -1,6 +1,6 @@
 __all__ = ["Node", "NodeGraphicsItem"]
 
-import warnings
+import sys
 from collections import OrderedDict
 
 from .. import functions as fn
@@ -189,22 +189,6 @@ class Node(QtCore.QObject):
             self._graphicsItem = NodeGraphicsItem(self)
         return self._graphicsItem
     
-    ## this is just bad planning. Causes too many bugs.
-    def __getattr__(self, attr):
-        """Return the terminal with the given name"""
-        warnings.warn(
-            "Use of note.terminalName is deprecated, use node['terminalName'] instead"
-            "Will be removed from 0.13.0",
-            DeprecationWarning, stacklevel=2
-        )
-        
-        if attr not in self.terminals:
-            raise AttributeError(attr)
-        else:
-            import traceback
-            traceback.print_stack()
-            print("Warning: use of node.terminalName is deprecated; use node['terminalName'] instead.")
-            return self.terminals[attr]
             
     def __getitem__(self, item):
         #return getattr(self, item)
@@ -461,6 +445,13 @@ class TextItem(QtWidgets.QGraphicsTextItem):
                 self.on_update()
                 return
         super().keyPressEvent(ev)
+        
+    def mousePressEvent(self, ev):
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
+            self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextEditorInteraction)
+            self.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)  # focus text label
+        elif ev.button() == QtCore.Qt.MouseButton.RightButton:
+            self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.NoTextInteraction)
 
 
 #class NodeGraphicsItem(QtWidgets.QGraphicsItem):
@@ -491,7 +482,6 @@ class NodeGraphicsItem(GraphicsObject):
         self.nameItem = TextItem(self.node.name(), self, self.labelChanged)
         self.nameItem.setDefaultTextColor(QtGui.QColor(50, 50, 50))
         self.nameItem.moveBy(self.bounds.width()/2. - self.nameItem.boundingRect().width()/2., 0)
-        self.nameItem.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextEditorInteraction)
         self.updateTerminals()
         #self.setZValue(10)
 
@@ -587,29 +577,18 @@ class NodeGraphicsItem(GraphicsObject):
 
 
     def mouseClickEvent(self, ev):
-        #print "Node.mouseClickEvent called."
         if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
-            #print "    ev.button: left"
             sel = self.isSelected()
-            #ret = QtWidgets.QGraphicsItem.mousePressEvent(self, ev)
             self.setSelected(True)
             if not sel and self.isSelected():
-                #self.setBrush(QtGui.QBrush(QtGui.QColor(200, 200, 255)))
-                #self.emit(QtCore.SIGNAL('selected'))
-                #self.scene().selectionChanged.emit() ## for some reason this doesn't seem to be happening automatically
                 self.update()
-            #return ret
         
         elif ev.button() == QtCore.Qt.MouseButton.RightButton:
-            #print "    ev.button: right"
             ev.accept()
-            #pos = ev.screenPos()
             self.raiseContextMenu(ev)
-            #self.menu.popup(QtCore.QPoint(pos.x(), pos.y()))
             
     def mouseDragEvent(self, ev):
-        #print "Node.mouseDrag"
         if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
             self.setPos(self.pos()+self.mapToParent(ev.pos())-self.mapToParent(ev.lastPos()))
@@ -636,7 +615,6 @@ class NodeGraphicsItem(GraphicsObject):
             for k, t in self.terminals.items():
                 t[1].nodeMoved()
         return GraphicsObject.itemChange(self, change, val)
-            
 
     def getMenu(self):
         return self.menu
@@ -644,7 +622,7 @@ class NodeGraphicsItem(GraphicsObject):
     def raiseContextMenu(self, ev):
         menu = self.scene().addParentContextMenus(self, self.getMenu(), ev)
         pos = ev.screenPos()
-        menu.popup(QtCore.QPoint(pos.x(), pos.y()))
+        menu.popup(QtCore.QPoint(int(pos.x()), int(pos.y())))
         
     def buildMenu(self):
         self.menu = QtWidgets.QMenu()

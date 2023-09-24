@@ -27,7 +27,29 @@ The advantage is that there is less to do to get an exported file cleaned and re
 publication. Fonts are not vectorized (outlined), and window colors are white.
 
 """
-    
+
+
+_symbol_pg_to_mpl = {
+    'o'           : 'o',    # circle
+    's'           : 's',    # square
+    't'           : 'v',    # triangle_down
+    't1'          : '^',    # triangle_up
+    't2'          : '>',    # triangle_right
+    't3'          : '<',    # triangle_left
+    'd'           : 'd',    # thin_diamond
+    '+'           : 'P',    # plus (filled)
+    'x'           : 'X',    # x (filled)
+    'p'           : 'p',    # pentagon
+    'h'           : 'h',    # hexagon1
+    'star'        : '*',    # star
+    'arrow_up'    : 6,      # caretup
+    'arrow_right' : 5,      # caretright
+    'arrow_down'  : 7,      # caretdown
+    'arrow_left'  : 4,      # caretleft
+    'crosshair'   : 'o',    # circle
+}
+
+
 class MatplotlibExporter(Exporter):
     Name = "Matplotlib Window"
     windows = []
@@ -96,8 +118,7 @@ class MatplotlibExporter(Exporter):
                 linestyle = '-'
             color = pen.color().getRgbF()
             symbol = opts['symbol']
-            if symbol == 't':
-                symbol = '^'
+            symbol = _symbol_pg_to_mpl.get(symbol, "")
             symbolPen = fn.mkPen(opts['symbolPen'])
             symbolBrush = fn.mkBrush(opts['symbolBrush'])
             markeredgecolor = symbolPen.color().getRgbF()
@@ -109,7 +130,7 @@ class MatplotlibExporter(Exporter):
                 fillcolor = fillBrush.color().getRgbF()
                 ax.fill_between(x=x, y1=y, y2=opts['fillLevel'], facecolor=fillcolor)
             
-            pl = ax.plot(x, y, marker=symbol, color=color, linewidth=pen.width(), 
+            ax.plot(x, y, marker=symbol, color=color, linewidth=pen.width(), 
                     linestyle=linestyle, markeredgecolor=markeredgecolor, markerfacecolor=markerfacecolor,
                     markersize=markersize)
 
