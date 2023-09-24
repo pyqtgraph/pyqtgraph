@@ -1043,7 +1043,7 @@ class AxisItem(GraphicsWidget):
             else:
                 raise TypeError("Line Alpha should be of type None, float or int")
             tickPen = self.tickPen()
-            if tickPen.brush().style() == QtCore.Qt.SolidPattern: # only adjust simple color pens
+            if tickPen.brush().style() == QtCore.Qt.BrushStyle.SolidPattern: # only adjust simple color pens
                 tickPen = QtGui.QPen(tickPen) # copy to a new QPen
                 color = QtGui.QColor(tickPen.color()) # copy to a new QColor
                 color.setAlpha(int(lineAlpha)) # adjust opacity                
