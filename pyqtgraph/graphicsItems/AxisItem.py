@@ -1,5 +1,5 @@
 import weakref
-from math import ceil, floor, isfinite, log, log10
+from math import ceil, floor, isfinite, log, log10, sqrt
 
 import numpy as np
 
@@ -89,7 +89,8 @@ class AxisItem(GraphicsWidget):
         self.labelStyle = args
         self.logMode = False
 
-        self._tickLevels = None  ## used to override the automatic ticking system with explicit ticks
+        self._tickDensity = 1.0   # used to adjust scale the number of automatically generated ticks
+        self._tickLevels  = None  # used to override the automatic ticking system with explicit ticks
         self._tickSpacing = None  # used to override default tickSpacing method
         self.scale = 1.0
         self.autoSIPrefix = True
@@ -663,6 +664,21 @@ class AxisItem(GraphicsWidget):
         #p.setRenderHint(p.RenderHint.TextAntialiasing, True)
         self.picture.play(p)
 
+
+    def setTickDensity(self, density=1.0):
+        """
+        The default behavior is to show at least two major ticks for axes of up to 300 pixels in length, 
+        then add addtional major ticks, but space them out further as the available room increases.
+        (Internally, the targeted number of major ticks grows with the square root of the axes length.)
+
+        Setting a tick density different from the default value of `density = 1.0` scales the number of
+        major ticks that is targeted for display. This only affects the automatic generation of ticks.
+        """
+        self._tickDensity = density
+        self.picture = None
+        self.update()
+
+
     def setTicks(self, ticks):
         """Explicitly determine which ticks to display.
         This overrides the behavior specified by tickSpacing(), tickValues(), and tickStrings()
@@ -710,6 +726,7 @@ class AxisItem(GraphicsWidget):
         self.picture = None
         self.update()
 
+
     def tickSpacing(self, minVal, maxVal, size):
         """Return values describing the desired spacing and offset of ticks.
 
@@ -732,58 +749,50 @@ class AxisItem(GraphicsWidget):
         dif = abs(maxVal - minVal)
         if dif == 0:
             return []
-
-        ## decide optimal minor tick spacing in pixels (this is just aesthetics)
-        optimalTickCount = max(2., log(size))
-
-        ## optimal minor tick spacing
-        optimalSpacing = dif / optimalTickCount
-
-        ## the largest power-of-10 spacing which is smaller than optimal
-        p10unit = 10 ** floor(log10(optimalSpacing))
-
-        ## Determine major/minor tick spacings which flank the optimal spacing.
-        intervals = np.array([1., 2., 10., 20., 100.]) * p10unit
-        minorIndex = 0
-        while intervals[minorIndex+1] <= optimalSpacing:
-            minorIndex += 1
-
-        levels = [
-            (intervals[minorIndex+2], 0),
-            (intervals[minorIndex+1], 0),
-            #(intervals[minorIndex], 0)    ## Pretty, but eats up CPU
-        ]
-
-        if self.style['maxTickLevel'] >= 2:
-            ## decide whether to include the last level of ticks
-            minSpacing = min(size / 20., 30.)
-            maxTickCount = size / minSpacing
-            if dif / intervals[minorIndex] <= maxTickCount:
-                levels.append((intervals[minorIndex], 0))
-         
-        return levels
         
-        ##### This does not work -- switching between 2/5 confuses the automatic text-level-selection
-        ### Determine major/minor tick spacings which flank the optimal spacing.
-        #intervals = np.array([1., 2., 5., 10., 20., 50., 100.]) * p10unit
-        #minorIndex = 0
-        #while intervals[minorIndex+1] <= optimalSpacing:
-            #minorIndex += 1
+        self.tickDensity = 1.0
+        ref_size = 300. # axes longer than this display more than the minimum number of major ticks
+        minNumberOfIntervals = max(
+            2.25,       # 2.0 ensures two tick marks. Fudged increase to 2.25 allows room for tick labels. 
+            2.25 * self.tickDensity * sqrt(size/ref_size) # sub-linear growth of tick spacing with size
+        )
 
-        ### make sure we never see 5 and 2 at the same time
-        #intIndexes = [
-            #[0,1,3],
-            #[0,2,3],
-            #[2,3,4],
-            #[3,4,6],
-            #[3,5,6],
-        #][minorIndex]
+        majorMaxSpacing = dif / minNumberOfIntervals        
+        p10unit = 10 ** floor(log10(majorMaxSpacing))  
+        for majorScaleFactor in (5.0, 2.0, 1.0):
+            if majorScaleFactor * p10unit <= majorMaxSpacing:
+                break # find the first value that is smaller or equal
+        majorInterval = majorScaleFactor * p10unit
 
-        #return [
-            #(intervals[intIndexes[2]], 0),
-            #(intervals[intIndexes[1]], 0),
-            #(intervals[intIndexes[0]], 0)
-        #]
+        minorMinSpacing = 2 * dif/size   # no more than one minor tick per two pixels
+        if majorScaleFactor == 1.0:
+            trials = (0.5, 1.0) # if major interval is 1.0, try minor interval of 0.5, fall back to same as major interval
+        else:
+            trials = (1.0, 2.0, 5.0) # if major interval is 2.0 or 5.0, try minor interval of 1.0, increase as needed
+        for minorScaleFactor in trials:
+            minorInterval = minorScaleFactor * p10unit
+            if minorInterval >= minorMinSpacing:
+                break # find the first value that is larger or equal to allowed minimum of 1 per 2px
+        levels = [
+            (majorInterval, 0),
+            (minorInterval, 0)
+        ]
+        # extra ticks at 10% of major interval are pretty, but eat up CPU
+        if self.style['maxTickLevel'] >= 2: # consider only when enabled
+            if majorScaleFactor == 1.0:
+                trials = (0.1, 0.2, 0.5, 1.0) # start at 10% of major interval, increase if needed
+            elif majorScaleFactor == 2.0:
+                trials = (0.2, 0.5, 1.0, 2.0) # start at 10% of major interval, increase if needed
+            else:
+                trials = (0.5, 1.0, 2.0, 5.0) # start at 10% of major interval, increase if needed
+            for extraScaleFactor in trials:
+                extraInterval = extraScaleFactor * p10unit
+                if extraInterval >= minorMinSpacing or extraInterval == minorInterval:
+                    break # find the first value that is larger or equal to allowed minimum of 1 per 2px
+            if extraInterval < minorInterval: # add extra interval only if it is visible
+                levels.append((extraInterval, 0))
+        return levels
+    
 
     def tickValues(self, minVal, maxVal, size):
         """
