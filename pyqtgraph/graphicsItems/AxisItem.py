@@ -1043,11 +1043,11 @@ class AxisItem(GraphicsWidget):
             else:
                 raise TypeError("Line Alpha should be of type None, float or int")
             tickPen = self.tickPen()
-            # If tickPen is a simple color, create a copy with adjusted opacity:
-            if tickPen.brush().style() == QtCore.Qt.SolidPattern:
-                color = QtGui.QColor(tickPen.color())
-                color.setAlpha(int(lineAlpha))
-                tickPen = QtGui.QPen(color)
+            if tickPen.brush().style() == QtCore.Qt.SolidPattern: # only adjust simple color pens
+                tickPen = QtGui.QPen(tickPen) # copy to a new QPen
+                color = QtGui.QColor(tickPen.color()) # copy to a new QColor
+                color.setAlpha(int(lineAlpha)) # adjust opacity                
+                tickPen.setColor(color)
 
             for v in ticks:
                 ## determine actual position to draw this tick
