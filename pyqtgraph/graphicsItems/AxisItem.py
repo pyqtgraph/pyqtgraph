@@ -1042,6 +1042,12 @@ class AxisItem(GraphicsWidget):
                     raise ValueError("lineAlpha should be [0..255]")
             else:
                 raise TypeError("Line Alpha should be of type None, float or int")
+            tickPen = self.tickPen()
+            # If tickPen is a simple color, create a copy with adjusted opacity:
+            if tickPen.brush().style() == QtCore.Qt.SolidPattern:
+                color = QtGui.QColor(tickPen.color())
+                color.setAlpha(int(lineAlpha))
+                tickPen = QtGui.QPen(color)
 
             for v in ticks:
                 ## determine actual position to draw this tick
@@ -1057,10 +1063,6 @@ class AxisItem(GraphicsWidget):
                 p2[axis] = tickStop
                 if self.grid is False:
                     p2[axis] += tickLength*tickDir
-                tickPen = self.tickPen()
-                color = tickPen.color()
-                color.setAlpha(int(lineAlpha))
-                tickPen.setColor(color)
                 tickSpecs.append((tickPen, Point(p1), Point(p2)))
         profiler('compute ticks')
 
