@@ -33,14 +33,27 @@ def test_SpinBox_formatting(value, expected_text, opts):
     assert sb.value() == value
     assert sb.text() == expected_text
 
+
+def test_evalFunc():
+    sb = pg.SpinBox(evalFunc=lambda s: 100)
+
+    sb.lineEdit().setText('3')
+    sb.editingFinishedEvent()
+    assert sb.value() == 100
+
+    sb.lineEdit().setText('0')
+    sb.editingFinishedEvent()
+    assert sb.value() == 100
+
+
 @pytest.mark.parametrize("suffix", ["", "V"])
 def test_SpinBox_gui_set_value(suffix):
     sb = pg.SpinBox(suffix=suffix)
 
-    sb.lineEdit().setText('0.1' + suffix)
+    sb.lineEdit().setText(f'0.1{suffix}')
     sb.editingFinishedEvent()
     assert sb.value() == 0.1
 
-    sb.lineEdit().setText('0.1 m' + suffix)
+    sb.lineEdit().setText(f'0.1 m{suffix}')
     sb.editingFinishedEvent()
     assert sb.value() == 0.1e-3
