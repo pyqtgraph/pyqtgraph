@@ -81,7 +81,8 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             'prefix': '', ## string to be prepended to spin box value
             'suffix': '',
             'siPrefix': False,   ## Set to True to display numbers with SI prefix (ie, 100pA instead of 1e-10A)
-            
+            'scaleAtZero': None,
+
             'delay': 0.3, ## delay sending wheel update signals for 300ms
             
             'delayUntilEditFinished': True,   ## do not send signals until text editing has finished
@@ -133,6 +134,9 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        orders of magnitude, such as a Reynolds number, an SI
                        prefix is allowed with no suffix. Default is False.
         prefix         (str) String to be prepended to the spin box value. Default is an empty string.
+        scaleAtZero    (float) If siPrefix is also True, this option then sets the default SI prefix
+                       that a value of 0 will have applied (and thus the default scale of the first
+                       number the user types in after the SpinBox has been zeroed out).
         step           (float) The size of a single step. This is used when clicking the up/
                        down arrows, when rolling the mouse wheel, or when pressing 
                        keyboard arrows while the widget has keyboard focus. Note that
@@ -466,7 +470,9 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         if self.opts['siPrefix'] is True:
             # SI prefix was requested, so scale the value accordingly
 
-            if self.val == 0 and prev is not None:
+            if self.val == 0 and self.opts['scaleAtZero'] is not None:
+                (s, p) = fn.siScale(self.opts['scaleAtZero'])
+            elif self.val == 0 and prev is not None:
                 # special case: if it's zero use the previous prefix
                 (s, p) = fn.siScale(prev)
             else:
