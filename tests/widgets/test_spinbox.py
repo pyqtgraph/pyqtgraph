@@ -27,6 +27,8 @@ def test_SpinBox_defaults():
     (1.45e-9, 'i = 1.45e-09 A', dict(int=False, decimals=6, suffix='A', siPrefix=False, prefix='i =')),
     (0, '0 mV', dict(suffix='V', siPrefix=True, scaleAtZero=1e-3)),
     (0, '0 mV', dict(suffix='V', siPrefix=True, minStep=5e-6, scaleAtZero=1e-3)),
+    (0, '0 mV', dict(suffix='V', siPrefix=True, step=1e-3)),
+    (0, '0 mV', dict(suffix='V', dec=True, siPrefix=True, minStep=15e-3)),
 ])
 def test_SpinBox_formatting(value, expected_text, opts):
     sb = pg.SpinBox(**opts)

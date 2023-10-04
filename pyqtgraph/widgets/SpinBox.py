@@ -374,7 +374,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         changed = not fn.eq(value, prev)  # use fn.eq to handle nan
 
         if update and (changed or not bounded):
-            self.updateText(prev=prev)
+            self.updateText()
 
         if changed:
             self.sigValueChanging.emit(self, float(self.val))  ## change will be emitted in 300ms if there are no subsequent changes.
@@ -447,11 +447,11 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                     return False
         return True
 
-    def updateText(self, prev=None):
+    def updateText(self):
         # temporarily disable validation
         self.skipValidate = True
         
-        txt = self.formatText(prev=prev)
+        txt = self.formatText()
         
         # actually set the text
         self.lineEdit().setText(txt)
@@ -460,7 +460,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         # re-enable the validation
         self.skipValidate = False
         
-    def formatText(self, prev=None):
+    def formatText(self):
         # get the number of decimal places to print
         decimals = self.opts['decimals']
         suffix = self.opts['suffix']
@@ -471,11 +471,11 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         if self.opts['siPrefix'] is True:
             # SI prefix was requested, so scale the value accordingly
 
-            if self.val == 0 and self.opts['scaleAtZero'] is not None:
-                (s, p) = fn.siScale(self.opts['scaleAtZero'])
-            elif self.val == 0 and prev is not None:
-                # special case: if it's zero use the previous prefix
-                (s, p) = fn.siScale(prev)
+            if self.val == 0:
+                if self.opts['scaleAtZero'] is not None:
+                    (s, p) = fn.siScale(self.opts['scaleAtZero'])
+                else:
+                    (s, p) = fn.siScale(self._stepByValue(1))
             else:
                 (s, p) = fn.siScale(val)
             parts = {'value': val, 'suffix': suffix, 'decimals': decimals, 'siPrefix': p, 'scaledValue': s*val, 'prefix':prefix}
