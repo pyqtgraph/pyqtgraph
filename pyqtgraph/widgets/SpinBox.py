@@ -405,34 +405,35 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         return self.StepEnabledFlag.StepUpEnabled | self.StepEnabledFlag.StepDownEnabled        
     
     def stepBy(self, n):
-        if isinf(self.val) or isnan(self.val):
-            return
+        ## note all steps (arrow buttons, wheel, up/down keys..) emit delayed signals only.
+        self.setValue(self._stepByValue(n), delaySignal=True)
 
-        n = decimal.Decimal(int(n))   ## n must be integral number of steps.
-        s = [decimal.Decimal(-1), decimal.Decimal(1)][n >= 0]  ## determine sign of step
+    def _stepByValue(self, steps):
+        if isinf(self.val) or isnan(self.val):
+            return self.val
+        steps = int(steps)
+        sign = [decimal.Decimal(-1), decimal.Decimal(1)][steps >= 0]
         val = self.val
-        
-        for i in range(int(abs(n))):
+        for i in range(int(abs(steps))):
             if self.opts['dec']:
                 if val == 0:
                     step = self.opts['minStep']
                     exp = None
                 else:
                     vs = [decimal.Decimal(-1), decimal.Decimal(1)][val >= 0]
-                    #exp = decimal.Decimal(int(abs(val*(decimal.Decimal('1.01')**(s*vs))).log10()))
-                    fudge = decimal.Decimal('1.01')**(s*vs) ## fudge factor. at some places, the step size depends on the step sign.
+                    ## fudge factor. at some places, the step size depends on the step sign.
+                    fudge = decimal.Decimal('1.01') ** (sign * vs)
                     exp = abs(val * fudge).log10().quantize(1, decimal.ROUND_FLOOR)
-                    step = self.opts['step'] * decimal.Decimal(10)**exp
+                    step = self.opts['step'] * decimal.Decimal(10) ** exp
                 if 'minStep' in self.opts:
                     step = max(step, self.opts['minStep'])
-                val += s * step
-                #print "Exp:", exp, "step", step, "val", val
+                val += sign * step
             else:
-                val += s*self.opts['step']
-                
+                val += sign * self.opts['step']
+
             if 'minStep' in self.opts and abs(val) < self.opts['minStep']:
                 val = decimal.Decimal(0)
-        self.setValue(val, delaySignal=True)  ## note all steps (arrow buttons, wheel, up/down keys..) emit delayed signals only.
+        return val
 
     def valueInRange(self, value):
         if not isnan(value):
