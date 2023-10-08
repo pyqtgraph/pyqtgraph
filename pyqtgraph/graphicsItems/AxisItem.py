@@ -1,5 +1,5 @@
 import weakref
-from math import ceil, floor, isfinite, log, log10, sqrt
+from math import ceil, floor, isfinite, log10, sqrt, frexp, floor
 
 import numpy as np
 
@@ -756,18 +756,36 @@ class AxisItem(GraphicsWidget):
             2.25 * self._tickDensity * sqrt(size/ref_size) # sub-linear growth of tick spacing with size
         )
 
-        majorMaxSpacing = dif / minNumberOfIntervals        
-        p10unit = 10 ** floor(log10(majorMaxSpacing))  
-        for majorScaleFactor in (5.0, 2.0, 1.0):
-            if majorScaleFactor * p10unit <= majorMaxSpacing:
-                break # find the first value that is smaller or equal
-        majorInterval = majorScaleFactor * p10unit
+        majorMaxSpacing = dif / minNumberOfIntervals
 
-        minorMinSpacing = 2 * dif/size   # no more than one minor tick per two pixels
-        if majorScaleFactor == 1.0:
-            trials = (0.5, 1.0) # if major interval is 1.0, try minor interval of 0.5, fall back to same as major interval
+        # We want to calculate the power of 10 just below the maximum spacing.
+        # Then divide by ten so that the scale factors for subdivision all become intergers.
+        # p10unit = 10**( floor( log10(majorMaxSpacing) ) ) / 10
+
+        # And we want to do it without a log operation:        
+        mantissa, exp2 = frexp(majorMaxSpacing) # IEEE 754 float already knows its exponent, no need to calculate
+        p10unit = 10 ** ( # approximate a power of ten base factor just smaller than the given number
+            floor(            # int would truncate towards zero to give wrong results for negative exponents
+                (exp2-1)      # IEEE 754 exponent is ceiling of true exponent --> estimate floor by subtracting 1
+                / 3.32192809488736 # division by log2(10)=3.32 converts base 2 exponent to base 10 exponent
+            ) - 1             # subtract one extra power of ten so that we can work with integer scale factors >= 5
+        )                
+        # neglecting the mantissa can underestimate by one power of 10 when the true value is JUST above the threshold.
+        if 100. * p10unit <= majorMaxSpacing: # Cheaper to check this than to use a more complicated approximation.
+            majorScaleFactor = 10
+            p10unit *= 10.
         else:
-            trials = (1.0, 2.0, 5.0) # if major interval is 2.0 or 5.0, try minor interval of 1.0, increase as needed
+            for majorScaleFactor in (50, 20, 10):
+                if majorScaleFactor * p10unit <= majorMaxSpacing:
+                    break # find the first value that is smaller or equal
+        majorInterval = majorScaleFactor * p10unit
+        # manual sanity check: print(f"{majorMaxSpacing:.2e} > {majorInterval:.2e} = {majorScaleFactor:.2e} x {p10unit:.2e}")
+        
+        minorMinSpacing = 2 * dif/size   # no more than one minor tick per two pixels
+        if majorScaleFactor == 10:
+            trials = (5, 10) # if major interval is 1.0, try minor interval of 0.5, fall back to same as major interval
+        else:
+            trials = (10, 20, 50) # if major interval is 2.0 or 5.0, try minor interval of 1.0, increase as needed
         for minorScaleFactor in trials:
             minorInterval = minorScaleFactor * p10unit
             if minorInterval >= minorMinSpacing:
@@ -778,12 +796,15 @@ class AxisItem(GraphicsWidget):
         ]
         # extra ticks at 10% of major interval are pretty, but eat up CPU
         if self.style['maxTickLevel'] >= 2: # consider only when enabled
-            if majorScaleFactor == 1.0:
-                trials = (0.1, 0.2, 0.5, 1.0) # start at 10% of major interval, increase if needed
-            elif majorScaleFactor == 2.0:
-                trials = (0.2, 0.5, 1.0, 2.0) # start at 10% of major interval, increase if needed
-            else:
-                trials = (0.5, 1.0, 2.0, 5.0) # start at 10% of major interval, increase if needed
+            if majorScaleFactor == 10:
+                trials = (1, 2, 5, 10) # start at 10% of major interval, increase if needed
+            elif majorScaleFactor == 20:
+                trials = (2, 5, 10, 20) # start at 10% of major interval, increase if needed
+            elif majorScaleFactor == 50:
+                trials = (5, 10, 50) # start at 10% of major interval, increase if needed
+            else: # invalid value
+                trials = () # skip extra interval
+                extraInterval = minorInterval
             for extraScaleFactor in trials:
                 extraInterval = extraScaleFactor * p10unit
                 if extraInterval >= minorMinSpacing or extraInterval == minorInterval:
