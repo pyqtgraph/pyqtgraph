@@ -144,7 +144,7 @@ class AxisItem(GraphicsWidget):
 
                               * *True*  (default for horizontal axis): Hide tick labels which extend beyond the AxisItem's geometry rectangle.
                               * *False* (default for vertical axis): Labels may be drawn extending beyond the extent of the axis.
-                              * *(int)* sets the tolerance limit for how many pixels a label is allowed to exted beyond the axis. Defaults to 15 for `hideOverlappingLabels = False`.
+                              * *(int)* sets the tolerance limit for how many pixels a label is allowed to extend beyond the axis. Defaults to 15 for `hideOverlappingLabels = False`.
 
         tickFont              (QFont or None) Determines the font used for tick
                               values. Use None for the default font.
