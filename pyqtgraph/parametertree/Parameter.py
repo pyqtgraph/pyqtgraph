@@ -205,6 +205,7 @@ class Parameter(QtCore.QObject):
         self.names = {}   ## map name:child
         self.items = weakref.WeakKeyDictionary()  ## keeps track of tree items representing this parameter
         self._parent = None
+        self._touchedSinceReset = False
         self.treeStateChanges = []  ## cache of tree state changes to be delivered on next emit
         self.blockTreeChangeEmit = 0
         #self.monitoringChildren = False  ## prevent calling monitorChildren more than once
@@ -232,9 +233,6 @@ class Parameter(QtCore.QObject):
         self.sigNameChanged.connect(self._emitNameChanged)
         self.sigOptionsChanged.connect(self._emitOptionsChanged)
         self.sigContextMenu.connect(self._emitContextMenuChanged)
-
-        
-        #self.watchParam(self)  ## emit treechange signals if our own state changes
         
     def name(self):
         """Return the name of this Parameter."""
@@ -312,6 +310,7 @@ class Parameter(QtCore.QObject):
             value = self._interpretValue(value)
             if fn.eq(self.opts['value'], value):
                 return value
+            self._touchedSinceReset = True
             self.opts['value'] = value
             self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
         finally:
@@ -435,9 +434,12 @@ class Parameter(QtCore.QObject):
         finally:
             if blockSignals:
                 self.unblockTreeChangeSignal()
-            
-            
-        
+
+    def valueTouchedSinceResetToDefault(self):
+        """Return True if this parameter's value has been changed since the last time
+        it was reset to its default value."""
+        return self._touchedSinceReset
+
     def defaultValue(self):
         """Return the default value for this parameter."""
         return self.opts['default']
@@ -453,6 +455,7 @@ class Parameter(QtCore.QObject):
         """Set this parameter's value to the default."""
         if self.hasDefault():
             self.setValue(self.defaultValue())
+            self._touchedSinceReset = False
 
     def hasDefault(self):
         """Returns True if this parameter has a default value."""
@@ -569,7 +572,6 @@ class Parameter(QtCore.QObject):
         # revert to ParameterItem if both fail
         itemClass = self.itemClass or _PARAM_ITEM_TYPES.get(self.opts['type'], ParameterItem)
         return itemClass(self, depth)
-
 
     def addChild(self, child, autoIncrementName=None, existOk=False):
         """
