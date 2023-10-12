@@ -149,6 +149,10 @@ class Parameter(QtCore.QObject):
         value                        The value to initially assign to this Parameter.
         default                      The default value for this Parameter (most Parameters
                                      provide an option to 'reset to default').
+        pinValueToDefault            If True, then the value of this Parameter will always
+                                     be set to the default when the default changes,
+                                     unless the user has explicitly modified the value.
+                                     (default=False)
         children                     A list of children for this Parameter. Children
                                      may be given either as a Parameter instance or as a
                                      dictionary to pass to Parameter.create(). In this way,
@@ -193,6 +197,7 @@ class Parameter(QtCore.QObject):
             'expanded': True,
             'syncExpanded': False,
             'title': None,
+            'pinValueToDefault': False,
             #'limits': None,  ## This is a bad plan--each parameter type may have a different data type for limits.
         }
         value = opts.get('value', None)
@@ -205,7 +210,7 @@ class Parameter(QtCore.QObject):
         self.names = {}   ## map name:child
         self.items = weakref.WeakKeyDictionary()  ## keeps track of tree items representing this parameter
         self._parent = None
-        self._touchedSinceReset = False
+        self._modifiedSinceReset = False
         self.treeStateChanges = []  ## cache of tree state changes to be delivered on next emit
         self.blockTreeChangeEmit = 0
         #self.monitoringChildren = False  ## prevent calling monitorChildren more than once
@@ -222,6 +227,7 @@ class Parameter(QtCore.QObject):
         if 'default' not in self.opts:
             self.opts['default'] = None
             self.setDefault(self.opts['value'])
+        self._modifiedSinceReset = not self.valueIsDefault()
     
         ## Connect all state changed signals to the general sigStateChanged
         self.sigValueChanged.connect(self._emitValueChanged)
@@ -310,7 +316,7 @@ class Parameter(QtCore.QObject):
             value = self._interpretValue(value)
             if fn.eq(self.opts['value'], value):
                 return value
-            self._touchedSinceReset = True
+            self._modifiedSinceReset = True
             self.opts['value'] = value
             self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
         finally:
@@ -435,10 +441,10 @@ class Parameter(QtCore.QObject):
             if blockSignals:
                 self.unblockTreeChangeSignal()
 
-    def valueTouchedSinceResetToDefault(self):
+    def valueModifiedSinceResetToDefault(self):
         """Return True if this parameter's value has been changed since the last time
         it was reset to its default value."""
-        return self._touchedSinceReset
+        return self._modifiedSinceReset
 
     def defaultValue(self):
         """Return the default value for this parameter."""
@@ -455,7 +461,7 @@ class Parameter(QtCore.QObject):
         """Set this parameter's value to the default."""
         if self.hasDefault():
             self.setValue(self.defaultValue())
-            self._touchedSinceReset = False
+            self._modifiedSinceReset = False
 
     def hasDefault(self):
         """Returns True if this parameter has a default value."""
@@ -504,7 +510,8 @@ class Parameter(QtCore.QObject):
         Set any arbitrary options on this parameter.
         The exact behavior of this function will depend on the parameter type, but
         most parameters will accept a common set of options: value, name, limits,
-        default, readonly, removable, renamable, visible, enabled, expanded and syncExpanded.
+        default, readonly, removable, renamable, visible, enabled, expanded,
+        syncExpanded and pinValueToDefault.
         
         See :func:`Parameter.__init__ <pyqtgraph.parametertree.Parameter.__init__>`
         for more information on default options.

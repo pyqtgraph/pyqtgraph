@@ -1,17 +1,17 @@
 from functools import wraps
 
 import numpy as np
-import pyqtgraph as pg
 import pytest
 
+import pyqtgraph as pg
 from pyqtgraph import functions as fn
 from pyqtgraph.parametertree import (
     InteractiveFunction,
     Interactor,
-    interact,
+    Parameter,
     RunOptions,
+    interact,
 )
-from pyqtgraph.parametertree import Parameter
 from pyqtgraph.parametertree.Parameter import PARAM_TYPES
 from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
 from pyqtgraph.Qt import QtGui
@@ -38,6 +38,21 @@ def test_parameter_hasdefault():
     # default specified as None
     p = Parameter(default=None, **opts)
     assert not p.hasDefault()
+
+
+def test_parameter_touching_and_defaults():
+    p = Parameter(name="param", type=int, value=1, default=1)
+    assert p.valueModifiedSinceResetToDefault() is False
+    p.setValue(2)
+    assert p.valueModifiedSinceResetToDefault() is True
+    p.setToDefault()
+    assert p.valueModifiedSinceResetToDefault() is False
+    p.setValue(2)
+    p.setValue(1)
+    assert p.valueModifiedSinceResetToDefault() is True
+
+    p = Parameter(name="param", type=int, value=1, default=2)
+    assert p.valueModifiedSinceResetToDefault() is True
 
 
 def test_add_child():
