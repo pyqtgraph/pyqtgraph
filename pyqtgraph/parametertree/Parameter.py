@@ -456,6 +456,8 @@ class Parameter(QtCore.QObject):
             return
         self.opts['default'] = val
         self.sigDefaultChanged.emit(self, val)
+        if self.opts['pinValueToDefault'] and not self.valueModifiedSinceResetToDefault():
+            self.setToDefault()
 
     def setToDefault(self):
         """Set this parameter's value to the default."""

@@ -40,8 +40,8 @@ def test_parameter_hasdefault():
     assert not p.hasDefault()
 
 
-def test_parameter_touching_and_defaults():
-    p = Parameter(name="param", type=int, value=1, default=1)
+def test_parameter_pinning_and_defaults():
+    p = Parameter(name="param", type=int, value=1, default=1, pinValueToDefault=True)
     assert p.valueModifiedSinceResetToDefault() is False
     p.setValue(2)
     assert p.valueModifiedSinceResetToDefault() is True
@@ -50,9 +50,18 @@ def test_parameter_touching_and_defaults():
     p.setValue(2)
     p.setValue(1)
     assert p.valueModifiedSinceResetToDefault() is True
+    p.setToDefault()
+    p.setDefault(2)
+    assert p.valueModifiedSinceResetToDefault() is False
+    assert p.value() == 2
 
-    p = Parameter(name="param", type=int, value=1, default=2)
+    p = Parameter(name="param", type=int, value=1, default=2, pinValueToDefault=False)
     assert p.valueModifiedSinceResetToDefault() is True
+    p.setDefault(3)
+    assert p.value() == 1
+    p.setValue(3)
+    p.setDefault(1)
+    assert p.value() == 3
 
 
 def test_add_child():
