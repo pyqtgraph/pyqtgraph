@@ -192,6 +192,7 @@ class PenParameter(GroupParameter):
                     # that affects PySide 6.5.3
                     # Since the child param was freshly created by us, there can only have been one slot
                     # connected. So we can just disconnect all the slots without specifying which one.
+                    assert p.receivers(QtCore.SIGNAL("sigValueChanged(PyObject,PyObject)")) == 1
                     p.sigValueChanged.disconnect()
                 # Some widgets (e.g. checkbox, combobox) don't emit 'changing' signals, so tie to 'changed' as well
                 p.sigValueChanged.connect(newSetter)
