@@ -1,7 +1,7 @@
 import sys
 import time
 from collections import OrderedDict
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
 
@@ -19,12 +19,12 @@ MONTH_SPACING = 30 * DAY_SPACING
 YEAR_SPACING = 365 * DAY_SPACING
 
 if sys.platform == 'win32':
-    _epoch = datetime.fromtimestamp(0, UTC)
+    _epoch = datetime.fromtimestamp(0, timezone.utc)
     def utcfromtimestamp(timestamp):
         return _epoch + timedelta(seconds=timestamp)
 else:
     def utcfromtimestamp(timestamp):
-        return datetime.fromtimestamp(timestamp, UTC)
+        return datetime.fromtimestamp(timestamp, timezone.utc)
 
 MIN_REGULAR_TIMESTAMP = (datetime(1, 1, 1) - datetime(1970,1,1)).total_seconds()
 MAX_REGULAR_TIMESTAMP = (datetime(9999, 1, 1) - datetime(1970,1,1)).total_seconds()
