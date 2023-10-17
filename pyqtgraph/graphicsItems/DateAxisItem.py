@@ -23,7 +23,8 @@ if sys.platform == 'win32':
     def utcfromtimestamp(timestamp):
         return _epoch + timedelta(seconds=timestamp)
 else:
-    utcfromtimestamp = lambda timestamp: datetime.utcfromtimestamp(timestamp, UTC)
+    def utcfromtimestamp(timestamp):
+        return datetime.fromtimestamp(timestamp, UTC)
 
 MIN_REGULAR_TIMESTAMP = (datetime(1, 1, 1) - datetime(1970,1,1)).total_seconds()
 MAX_REGULAR_TIMESTAMP = (datetime(9999, 1, 1) - datetime(1970,1,1)).total_seconds()
