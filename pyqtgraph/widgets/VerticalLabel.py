@@ -53,7 +53,7 @@ class VerticalLabel(QtWidgets.QLabel):
         p.end()
         
         if self.orientation == 'vertical':
-            self.setMaximumWidth(self.hint.height())
+            self.setMaximumWidth(self.hint.height()+6)
             self.setMinimumWidth(0)
             self.setMaximumHeight(16777215)
             if self.forceWidth:
@@ -61,7 +61,7 @@ class VerticalLabel(QtWidgets.QLabel):
             else:
                 self.setMinimumHeight(0)
         else:
-            self.setMaximumHeight(self.hint.height())
+            self.setMaximumHeight(self.hint.height()+6)
             self.setMinimumHeight(0)
             self.setMaximumWidth(16777215)
             if self.forceWidth:
