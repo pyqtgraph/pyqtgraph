@@ -147,11 +147,17 @@ class WidgetParameterItem(ParameterItem):
         self.updateDefaultBtn()
 
     def updateDefaultBtn(self):
-        ## enable/disable default btn
         self.defaultBtn.setEnabled(
-            not self.param.valueIsDefault() and self.param.opts['enabled'] and self.param.writable())
+            (
+                (
+                    self.param.opts['pinValueToDefault']
+                    and self.param.valueModifiedSinceResetToDefault()
+                )
+                or not self.param.valueIsDefault()
+            )
+            and self.param.opts['enabled']
+            and self.param.writable())
 
-        # hide / show
         self.defaultBtn.setVisible(self.param.hasDefault() and not self.param.readonly())
 
     def updateDisplayLabel(self, value=None):
@@ -217,6 +223,7 @@ class WidgetParameterItem(ParameterItem):
 
     def defaultClicked(self):
         self.param.setToDefault()
+        self.updateDefaultBtn()
 
     def optsChanged(self, param, opts):
         """Called when any options are changed that are not
