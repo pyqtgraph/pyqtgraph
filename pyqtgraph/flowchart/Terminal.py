@@ -2,6 +2,9 @@ __all__ = ["Terminal", "TerminalGraphicsItem"]
 
 import weakref
 
+from typing import Optional, Literal, Sequence, Callable
+
+from .Node import Node
 from .. import functions as fn
 from ..graphicsItems.GraphicsObject import GraphicsObject
 from ..Point import Point
@@ -9,8 +12,20 @@ from ..Qt import QtCore, QtGui, QtWidgets
 
 translate = QtCore.QCoreApplication.translate
 
+
 class Terminal(object):
-    def __init__(self, node, name, io, optional=False, multi=False, pos=None, renamable=False, removable=False, multiable=False, bypass=None):
+    def __init__(
+            self,
+            node: Node,
+            name: str, io: Literal["in", "out"],
+            optional: bool = False,
+            multi: bool = False,
+            pos: Optional[Sequence[int]] = None,
+            renamable: bool = False,
+            removable: bool = False,
+            multiable: bool = False,
+            bypass: Optional[str] = None
+    ) -> None:
         """
         Construct a new terminal. 
         
@@ -41,29 +56,29 @@ class Terminal(object):
         self._connections = {}
         self._graphicsItem = TerminalGraphicsItem(self, parent=self._node().graphicsItem())
         self._bypass = bypass
-        
+
         if multi:
             self._value = {}  ## dictionary of terminal:value pairs.
         else:
-            self._value = None  
-        
+            self._value = None
+
         self.valueOk = None
         self.recolor()
-        
-    def value(self, term=None):
+
+    def value(self, term=None) -> Optional[dict]:
         """Return the value this terminal provides for the connected terminal"""
         if term is None:
             return self._value
-            
+
         if self.isMultiValue():
             return self._value.get(term, None)
         else:
             return self._value
 
-    def bypassValue(self):
+    def bypassValue(self) -> Optional[str]:
         return self._bypass
 
-    def setValue(self, val, process=True):
+    def setValue(self, val, process=True) -> None:
         """If this is a single-value terminal, val should be a single value.
         If this is a multi-value terminal, val should be a dict of terminal:value pairs"""
         if not self.isMultiValue():
@@ -75,13 +90,13 @@ class Terminal(object):
                 self._value = {}
             if val is not None:
                 self._value.update(val)
-            
+
         self.setValueAcceptable(None)  ## by default, input values are 'unchecked' until Node.update(). 
         if self.isInput() and process:
             self.node().update()
-            
+
         self.recolor()
-        
+
     def setOpts(self, **opts):
         self._renamable = opts.get('renamable', self._renamable)
         self._removable = opts.get('removable', self._removable)
@@ -89,15 +104,15 @@ class Terminal(object):
         if 'multi' in opts:
             self.setMultiValue(opts['multi'])
 
-    def connected(self, term):
+    def connected(self, term: 'Terminal') -> None:
         """Called whenever this terminal has been connected to another. (note--this function is called on both terminals)"""
         if self.isInput() and term.isOutput():
             self.inputChanged(term)
         if self.isOutput() and self.isMultiValue():
             self.node().update()
         self.node().connected(self, term)
-        
-    def disconnected(self, term):
+
+    def disconnected(self, term: 'Terminal') -> None:
         """Called whenever this terminal has been disconnected from another. (note--this function is called on both terminals)"""
         if self.isMultiValue() and term in self._value:
             del self._value[term]
@@ -107,82 +122,82 @@ class Terminal(object):
                 self.setValue(None)
         self.node().disconnected(self, term)
 
-    def inputChanged(self, term, process=True):
+    def inputChanged(self, term: 'Terminal', process: bool = True) -> None:
         """Called whenever there is a change to the input value to this terminal.
         It may often be useful to override this function."""
         if self.isMultiValue():
             self.setValue({term: term.value(self)}, process=process)
         else:
             self.setValue(term.value(self), process=process)
-            
-    def valueIsAcceptable(self):
+
+    def valueIsAcceptable(self) -> Optional[bool]:
         """Returns True->acceptable  None->unknown  False->Unacceptable"""
         return self.valueOk
-        
-    def setValueAcceptable(self, v=True):
+
+    def setValueAcceptable(self, v: bool = True) -> None:
         self.valueOk = v
         self.recolor()
-        
+
     def connections(self):
         return self._connections
-        
-    def node(self):
+
+    def node(self) -> Node:
         return self._node()
-        
-    def isInput(self):
+
+    def isInput(self) -> bool:
         return self._io == 'in'
-    
-    def isMultiValue(self):
+
+    def isMultiValue(self) -> bool:
         return self._multi
-    
-    def setMultiValue(self, multi):
+
+    def setMultiValue(self, multi) -> None:
         """Set whether this is a multi-value terminal."""
         self._multi = multi
         if not multi and len(self.inputTerminals()) > 1:
             self.disconnectAll()
-            
+
         for term in self.inputTerminals():
             self.inputChanged(term)
 
-    def isOutput(self):
+    def isOutput(self) -> bool:
         return self._io == 'out'
-        
-    def isRenamable(self):
+
+    def isRenamable(self) -> bool:
         return self._renamable
 
-    def isRemovable(self):
+    def isRemovable(self) -> bool:
         return self._removable
 
-    def isMultiable(self):
+    def isMultiable(self) -> bool:
         return self._multiable
 
-    def name(self):
+    def name(self) -> str:
         return self._name
-        
-    def graphicsItem(self):
+
+    def graphicsItem(self) -> 'TerminalGraphicsItem':
         return self._graphicsItem
-        
-    def isConnected(self):
+
+    def isConnected(self) -> bool:
         return len(self.connections()) > 0
-        
-    def connectedTo(self, term):
+
+    def connectedTo(self, term) -> bool:
         return term in self.connections()
-        
-    def hasInput(self):
+
+    def hasInput(self) -> bool:
         for t in self.connections():
             if t.isOutput():
                 return True
-        return False        
-        
-    def inputTerminals(self):
+        return False
+
+    def inputTerminals(self) -> list:
         """Return the terminal(s) that give input to this one."""
         return [t for t in self.connections() if t.isOutput()]
-        
-    def dependentNodes(self):
+
+    def dependentNodes(self) -> set:
         """Return the list of nodes which receive input from this terminal."""
         return set([t.node() for t in self.connections() if t.isInput()])
-        
-    def connectTo(self, term, connectionItem=None):
+
+    def connectTo(self, term: 'Terminal', connectionItem=None):
         try:
             if self.connectedTo(term):
                 raise Exception('Already connected')
@@ -192,26 +207,28 @@ class Terminal(object):
                 raise Exception("Can't connect to terminal on same node.")
             for t in [self, term]:
                 if t.isInput() and not t._multi and len(t.connections()) > 0:
-                    raise Exception("Cannot connect %s <-> %s: Terminal %s is already connected to %s (and does not allow multiple connections)" % (self, term, t, list(t.connections().keys())))
+                    raise Exception(
+                        "Cannot connect %s <-> %s: Terminal %s is already connected to %s (and does not allow multiple connections)" % (
+                            self, term, t, list(t.connections().keys())))
         except:
             if connectionItem is not None:
                 connectionItem.close()
             raise
-            
+
         if connectionItem is None:
             connectionItem = ConnectionItem(self.graphicsItem(), term.graphicsItem())
             self.graphicsItem().getViewBox().addItem(connectionItem)
         self._connections[term] = connectionItem
         term._connections[self] = connectionItem
-        
+
         self.recolor()
-        
+
         self.connected(term)
         term.connected(self)
-        
+
         return connectionItem
-        
-    def disconnectFrom(self, term):
+
+    def disconnectFrom(self, term: 'Terminal') -> None:
         if not self.connectedTo(term):
             return
         item = self._connections[term]
@@ -220,57 +237,58 @@ class Terminal(object):
         del term._connections[self]
         self.recolor()
         term.recolor()
-        
+
         self.disconnected(term)
         term.disconnected(self)
-            
-        
-    def disconnectAll(self):
+
+    def disconnectAll(self) -> None:
         for t in list(self._connections.keys()):
             self.disconnectFrom(t)
-        
-    def recolor(self, color=None, recurse=True):
+
+    def recolor(self, color: Optional[QtGui.QColor] = None, recurse: bool = True) -> None:
         if color is None:
-            if not self.isConnected():       ## disconnected terminals are black
-                color = QtGui.QColor(0,0,0)
-            elif self.isInput() and not self.hasInput():   ## input terminal with no connected output terminals 
-                color = QtGui.QColor(200,200,0)
-            elif self._value is None or fn.eq(self._value, {}):  ## terminal is connected but has no data (possibly due to processing error) 
-                color = QtGui.QColor(255,255,255)
-            elif self.valueIsAcceptable() is None:   ## terminal has data, but it is unknown if the data is ok
+            if not self.isConnected():  ## disconnected terminals are black
+                color = QtGui.QColor(0, 0, 0)
+            elif self.isInput() and not self.hasInput():  ## input terminal with no connected output terminals
                 color = QtGui.QColor(200, 200, 0)
-            elif self.valueIsAcceptable() is True:   ## terminal has good input, all ok
+            elif self._value is None or fn.eq(self._value,
+                                              {}):  ## terminal is connected but has no data (possibly due to processing error)
+                color = QtGui.QColor(255, 255, 255)
+            elif self.valueIsAcceptable() is None:  ## terminal has data, but it is unknown if the data is ok
+                color = QtGui.QColor(200, 200, 0)
+            elif self.valueIsAcceptable() is True:  ## terminal has good input, all ok
                 color = QtGui.QColor(0, 200, 0)
-            else:                                    ## terminal has bad input
+            else:  ## terminal has bad input
                 color = QtGui.QColor(200, 0, 0)
         self.graphicsItem().setBrush(QtGui.QBrush(color))
-        
+
         if recurse:
             for t in self.connections():
                 t.recolor(color, recurse=False)
-        
-    def rename(self, name):
+
+    def rename(self, name: str) -> None:
         oldName = self._name
         self._name = name
         self.node().terminalRenamed(self, oldName)
         self.graphicsItem().termRenamed(name)
-        
-    def __repr__(self):
+
+    def __repr__(self) -> str:
         return "<Terminal %s.%s>" % (str(self.node().name()), str(self.name()))
-        
-    def __hash__(self):
+
+    def __hash__(self) -> int:
         return id(self)
 
-    def close(self):
+    def close(self) -> None:
         self.disconnectAll()
         item = self.graphicsItem()
         if item.scene() is not None:
             item.scene().removeItem(item)
-        
-    def saveState(self):
-        return {'io': self._io, 'multi': self._multi, 'optional': self._optional, 'renamable': self._renamable, 'removable': self._removable, 'multiable': self._multiable}
 
-    def __lt__(self, other):
+    def saveState(self) -> dict:
+        return {'io': self._io, 'multi': self._multi, 'optional': self._optional, 'renamable': self._renamable,
+                'removable': self._removable, 'multiable': self._multiable}
+
+    def __lt__(self, other) -> bool:
         """When the terminal is multi value, the data passed to the DatTreeWidget for each input or output, is {Terminal: value}.
         To make this sortable, we provide the < operator.
         """
@@ -278,16 +296,16 @@ class Terminal(object):
 
 
 class TextItem(QtWidgets.QGraphicsTextItem):
-    def __init__(self, text, parent, on_update):
+    def __init__(self, text: str, parent: QtWidgets.QGraphicsTextItem, on_update: Optional[Callable]) -> None:
         super().__init__(text, parent)
         self.on_update = on_update
 
-    def focusOutEvent(self, ev):
+    def focusOutEvent(self, ev: QtGui.QFocusEvent) -> None:
         super().focusOutEvent(ev)
         if self.on_update is not None:
             self.on_update()
 
-    def keyPressEvent(self, ev):
+    def keyPressEvent(self, ev: QtGui.QKeyEvent) -> None:
         if ev.key() == QtCore.Qt.Key.Key_Enter or ev.key() == QtCore.Qt.Key.Key_Return:
             if self.on_update is not None:
                 self.on_update()
@@ -296,11 +314,11 @@ class TextItem(QtWidgets.QGraphicsTextItem):
 
 
 class TerminalGraphicsItem(GraphicsObject):
-    
-    def __init__(self, term, parent=None):
+
+    def __init__(self, term: Terminal, parent: Optional[QtWidgets.QGraphicsItem] = None):
         self.term = term
         GraphicsObject.__init__(self, parent)
-        self.brush = fn.mkBrush(0,0,0)
+        self.brush = fn.mkBrush(0, 0, 0)
         self.box = QtWidgets.QGraphicsRectItem(0, 0, 10, 10, self)
         on_update = self.labelChanged if self.term.isRenamable() else None
         self.label = TextItem(self.term.name(), self, on_update)
@@ -312,68 +330,67 @@ class TerminalGraphicsItem(GraphicsObject):
         self.setZValue(1)
         self.menu = None
 
-    def labelChanged(self):
+    def labelChanged(self) -> None:
         newName = self.label.toPlainText()
         if newName != self.term.name():
             self.term.rename(newName)
 
-    def termRenamed(self, name):
+    def termRenamed(self, name: str) -> None:
         self.label.setPlainText(name)
 
-    def setBrush(self, brush):
+    def setBrush(self, brush) -> None:
         self.brush = brush
         self.box.setBrush(brush)
 
-    def disconnect(self, target):
+    def disconnect(self, target) -> None:
         self.term.disconnectFrom(target.term)
 
     def boundingRect(self):
         br = self.box.mapRectToParent(self.box.boundingRect())
         lr = self.label.mapRectToParent(self.label.boundingRect())
         return br | lr
-        
-    def paint(self, p, *args):
+
+    def paint(self, p, *args) -> None:
         pass
-        
-    def setAnchor(self, x, y):
+
+    def setAnchor(self, x: float, y: float) -> None:
         pos = QtCore.QPointF(x, y)
         self.anchorPos = pos
         br = self.box.mapRectToParent(self.box.boundingRect())
         lr = self.label.mapRectToParent(self.label.boundingRect())
-        
-        
+
         if self.term.isInput():
-            self.box.setPos(pos.x(), pos.y()-br.height()/2.)
-            self.label.setPos(pos.x() + br.width(), pos.y() - lr.height()/2.)
+            self.box.setPos(pos.x(), pos.y() - br.height() / 2.)
+            self.label.setPos(pos.x() + br.width(), pos.y() - lr.height() / 2.)
         else:
-            self.box.setPos(pos.x()-br.width(), pos.y()-br.height()/2.)
-            self.label.setPos(pos.x()-br.width()-lr.width(), pos.y()-lr.height()/2.)
+            self.box.setPos(pos.x() - br.width(), pos.y() - br.height() / 2.)
+            self.label.setPos(pos.x() - br.width() - lr.width(), pos.y() - lr.height() / 2.)
         self.updateConnections()
-        
-    def updateConnections(self):
+
+    def updateConnections(self) -> None:
         for t, c in self.term.connections().items():
             c.updateLine()
-            
-    def mousePressEvent(self, ev):
-        #ev.accept()
-        ev.ignore() ## necessary to allow click/drag events to process correctly
 
-    def mouseClickEvent(self, ev):
+    def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
+        # ev.accept()
+        ev.ignore()  ## necessary to allow click/drag events to process correctly
+
+    def mouseClickEvent(self, ev: QtGui.QMouseEvent) -> None:
         if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
             self.label.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)
         elif ev.button() == QtCore.Qt.MouseButton.RightButton:
             ev.accept()
             self.raiseContextMenu(ev)
-            
-    def raiseContextMenu(self, ev):
+
+    def raiseContextMenu(self, ev) -> None:
         ## only raise menu if this terminal is removable
         menu = self.getMenu()
         menu = self.scene().addParentContextMenus(self, menu, ev)
         pos = ev.screenPos()
         menu.popup(QtCore.QPoint(int(pos.x()), int(pos.y())))
-        
-    def getMenu(self):
+
+    def getMenu(self) -> QtWidgets.QMenu:
         if self.menu is None:
             self.menu = QtWidgets.QMenu()
             self.menu.setTitle(translate("Context Menu", "Terminal"))
@@ -387,7 +404,7 @@ class TerminalGraphicsItem(GraphicsObject):
             multiAct.setCheckable(True)
             multiAct.setChecked(self.term.isMultiValue())
             multiAct.setEnabled(self.term.isMultiable())
-            
+
             multiAct.triggered.connect(self.toggleMulti)
             self.menu.addAction(multiAct)
             self.menu.multiAct = multiAct
@@ -395,25 +412,25 @@ class TerminalGraphicsItem(GraphicsObject):
                 multiAct.setEnabled = False
         return self.menu
 
-    def toggleMulti(self):
+    def toggleMulti(self) -> None:
         multi = self.menu.multiAct.isChecked()
         self.term.setMultiValue(multi)
-    
-    def removeSelf(self):
+
+    def removeSelf(self) -> None:
         self.term.node().removeTerminal(self.term)
-        
-    def mouseDragEvent(self, ev):
+
+    def mouseDragEvent(self, ev: QtGui.QMouseEvent) -> None:
         if ev.button() != QtCore.Qt.MouseButton.LeftButton:
             ev.ignore()
             return
-        
+
         ev.accept()
         if ev.isStart():
             if self.newConnection is None:
                 self.newConnection = ConnectionItem(self)
-                #self.scene().addItem(self.newConnection)
+                # self.scene().addItem(self.newConnection)
                 self.getViewBox().addItem(self.newConnection)
-                #self.newConnection.setParentItem(self.parent().parent())
+                # self.newConnection.setParentItem(self.parent().parent())
 
             self.newConnection.setTarget(self.mapToView(ev.pos()))
         elif ev.isFinish():
@@ -431,38 +448,39 @@ class TerminalGraphicsItem(GraphicsObject):
                             self.newConnection = None
                             raise
                         break
-                
+
                 if not gotTarget:
                     self.newConnection.close()
                 self.newConnection = None
         else:
             if self.newConnection is not None:
                 self.newConnection.setTarget(self.mapToView(ev.pos()))
-        
-    def hoverEvent(self, ev):
+
+    def hoverEvent(self, ev) -> None:
         if not ev.isExit() and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
-            ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton) ## we don't use the click, but we also don't want anyone else to use it.
+            ev.acceptClicks(
+                QtCore.Qt.MouseButton.LeftButton)  ## we don't use the click, but we also don't want anyone else to use it.
             ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)
             self.box.setBrush(fn.mkBrush('w'))
         else:
             self.box.setBrush(self.brush)
         self.update()
-        
+
     def connectPoint(self):
         ## return the connect position of this terminal in view coords
         return self.mapToView(self.mapFromItem(self.box, self.box.boundingRect().center()))
 
-    def nodeMoved(self):
+    def nodeMoved(self) -> None:
         for t, item in self.term.connections().items():
             item.updateLine()
 
 
 class ConnectionItem(GraphicsObject):
-    
-    def __init__(self, source, target=None):
+
+    def __init__(self, source, target=None) -> None:
         GraphicsObject.__init__(self)
         self.setFlags(
-            self.GraphicsItemFlag.ItemIsSelectable | 
+            self.GraphicsItemFlag.ItemIsSelectable |
             self.GraphicsItemFlag.ItemIsFocusable
         )
         self.source = source
@@ -479,27 +497,27 @@ class ConnectionItem(GraphicsObject):
             'hoverWidth': 1.0,
             'selectedColor': (200, 200, 0),
             'selectedWidth': 3.0,
-            }
+        }
         self.source.getViewBox().addItem(self)
         self.updateLine()
         self.setZValue(0)
-        
-    def close(self):
+
+    def close(self) -> None:
         if self.scene() is not None:
             self.scene().removeItem(self)
-        
-    def setTarget(self, target):
+
+    def setTarget(self, target) -> None:
         self.target = target
         self.updateLine()
-    
-    def setStyle(self, **kwds):
+
+    def setStyle(self, **kwds) -> None:
         self.style.update(kwds)
         if 'shape' in kwds:
             self.updateLine()
         else:
             self.update()
-    
-    def updateLine(self):
+
+    def updateLine(self) -> None:
         start = Point(self.source.connectPoint())
         if isinstance(self.target, TerminalGraphicsItem):
             stop = Point(self.target.connectPoint())
@@ -508,11 +526,11 @@ class ConnectionItem(GraphicsObject):
         else:
             return
         self.prepareGeometryChange()
-        
+
         self.path = self.generatePath(start, stop)
         self.shapePath = None
         self.update()
-        
+
     def generatePath(self, start, stop):
         path = QtGui.QPainterPath()
         path.moveTo(start)
@@ -524,21 +542,21 @@ class ConnectionItem(GraphicsObject):
             raise Exception('Invalid shape "%s"; options are "line" or "cubic"' % self.style['shape'])
         return path
 
-    def keyPressEvent(self, ev):
+    def keyPressEvent(self, ev: QtGui.QKeyEvent) -> None:
         if not self.isSelected():
             ev.ignore()
             return
-        
+
         if ev.key() == QtCore.Qt.Key.Key_Delete or ev.key() == QtCore.Qt.Key.Key_Backspace:
             self.source.disconnect(self.target)
             ev.accept()
         else:
             ev.ignore()
-    
-    def mousePressEvent(self, ev):
+
+    def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
         ev.ignore()
-        
-    def mouseClickEvent(self, ev):
+
+    def mouseClickEvent(self, ev: QtGui.QMouseEvent) -> None:
         if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
             sel = self.isSelected()
@@ -546,32 +564,32 @@ class ConnectionItem(GraphicsObject):
             self.setFocus()
             if not sel and self.isSelected():
                 self.update()
-                
+
     def hoverEvent(self, ev):
         if (not ev.isExit()) and ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton):
             self.hovered = True
         else:
             self.hovered = False
         self.update()
-            
+
     def boundingRect(self):
         return self.shape().boundingRect()
 
-    def viewRangeChanged(self):
+    def viewRangeChanged(self) -> None:
         self.shapePath = None
         self.prepareGeometryChange()
-        
-    def shape(self):
+
+    def shape(self) -> QtGui.QPainterPath:
         if self.shapePath is None:
             if self.path is None:
                 return QtGui.QPainterPath()
             stroker = QtGui.QPainterPathStroker()
             px = self.pixelWidth()
-            stroker.setWidth(px*8)
+            stroker.setWidth(px * 8)
             self.shapePath = stroker.createStroke(self.path)
         return self.shapePath
-        
-    def paint(self, p, *args):
+
+    def paint(self, p: QtWidgets.QGraphicsItem, *args) -> None:
         if self.isSelected():
             p.setPen(fn.mkPen(self.style['selectedColor'], width=self.style['selectedWidth']))
         else:
@@ -579,5 +597,5 @@ class ConnectionItem(GraphicsObject):
                 p.setPen(fn.mkPen(self.style['hoverColor'], width=self.style['hoverWidth']))
             else:
                 p.setPen(fn.mkPen(self.style['color'], width=self.style['width']))
-        
+
         p.drawPath(self.path)
