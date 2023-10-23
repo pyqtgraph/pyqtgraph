@@ -1,6 +1,9 @@
+from typing import Optional, Iterable, Union, Any
+
 import numpy as np
 
-from ... import ComboBox, PlotDataItem
+from ..Terminal import Terminal
+from ... import ComboBox, PlotDataItem, PlotWidget
 from ...graphicsItems.ScatterPlotItem import ScatterPlotItem
 from ...Qt import QtCore, QtGui, QtWidgets
 from ..Node import Node
@@ -11,24 +14,24 @@ class PlotWidgetNode(Node):
     """Connection to PlotWidget. Will plot arrays, and display event lists."""
     nodeName = 'PlotWidget'
     sigPlotChanged = QtCore.Signal(object)
-    
-    def __init__(self, name):
+
+    def __init__(self, name: str) -> None:
         Node.__init__(self, name, terminals={'In': {'io': 'in', 'multi': True}})
-        self.plot = None  # currently selected plot 
-        self.plots = {}   # list of available plots user may select from
-        self.ui = None 
-        self.items = {}
-        
-    def disconnected(self, localTerm, remoteTerm):
+        self.plot: Optional[PlotWidget] = None  # currently selected plot
+        self.plots: dict = {}  # list of available plots user may select from
+        self.ui: Optional[ComboBox] = None
+        self.items: dict = {}
+
+    def disconnected(self, localTerm: Terminal, remoteTerm: Terminal) -> None:
         if localTerm is self['In'] and remoteTerm in self.items:
             self.plot.removeItem(self.items[remoteTerm])
             del self.items[remoteTerm]
-        
-    def setPlot(self, plot):
-        #print "======set plot"
+
+    def setPlot(self, plot: Optional[PlotWidget]) -> None:
+        # print "======set plot"
         if plot == self.plot:
             return
-        
+
         # clear data from previous plot
         if self.plot is not None:
             for vid in list(self.items.keys()):
@@ -39,11 +42,11 @@ class PlotWidgetNode(Node):
         self.updateUi()
         self.update()
         self.sigPlotChanged.emit(self)
-        
-    def getPlot(self):
+
+    def getPlot(self) -> Optional[PlotWidget]:
         return self.plot
-        
-    def process(self, In, display=True):
+
+    def process(self, In: dict, display=True) -> None:  # type: ignore
         if display and self.plot is not None:
             items = set()
             # Add all new input items to selected plot
@@ -52,7 +55,7 @@ class PlotWidgetNode(Node):
                     continue
                 if type(vals) is not list:
                     vals = [vals]
-                    
+
                 for val in vals:
                     vid = id(val)
                     if vid in self.items and self.items[vid].scene() is self.plot.scene():
@@ -70,70 +73,71 @@ class PlotWidgetNode(Node):
                             item = self.plot.plot(val)
                         self.items[vid] = item
                         items.add(vid)
-                        
+
             # Any left-over items that did not appear in the input must be removed
             for vid in list(self.items.keys()):
                 if vid not in items:
                     self.plot.removeItem(self.items[vid])
                     del self.items[vid]
-            
-    def processBypassed(self, args):
+
+    def processBypassed(self, args: Any) -> dict:
         if self.plot is None:
-            return
+            return {}
         for item in list(self.items.values()):
             self.plot.removeItem(item)
         self.items = {}
-        
-    def ctrlWidget(self):
+        return {}
+
+    def ctrlWidget(self) -> ComboBox:  # type: ignore
         if self.ui is None:
             self.ui = ComboBox()
             self.ui.currentIndexChanged.connect(self.plotSelected)
             self.updateUi()
         return self.ui
-    
-    def plotSelected(self, index):
+
+    def plotSelected(self, index: Any) -> None:
         self.setPlot(self.ui.value())
-    
-    def setPlotList(self, plots):
+
+    def setPlotList(self, plots: dict) -> None:
         """
         Specify the set of plots (PlotWidget or PlotItem) that the user may
         select from.
-        
+
         *plots* must be a dictionary of {name: plot} pairs.
         """
         self.plots = plots
         self.updateUi()
-    
-    def updateUi(self):
+
+    def updateUi(self) -> None:
         # sets list and automatically preserves previous selection
         self.ui.setItems(self.plots)
         try:
             self.ui.setValue(self.plot)
         except ValueError:
             pass
-        
+
 
 class CanvasNode(Node):
     """Connection to a Canvas widget."""
     nodeName = 'CanvasWidget'
-    
-    def __init__(self, name):
+
+    def __init__(self, name: str) -> None:
         Node.__init__(self, name, terminals={'In': {'io': 'in', 'multi': True}})
         self.canvas = None
-        self.items = {}
-        
-    def disconnected(self, localTerm, remoteTerm):
+        self.items: dict = {}
+
+    def disconnected(self, localTerm: Terminal, remoteTerm: Terminal) -> None:
         if localTerm is self.In and remoteTerm in self.items:
             self.canvas.removeItem(self.items[remoteTerm])
             del self.items[remoteTerm]
-        
-    def setCanvas(self, canvas):
+
+    def setCanvas(self, canvas) -> None:  # type: ignore
         self.canvas = canvas
-        
-    def getCanvas(self):
+
+    def getCanvas(self):  # type: ignore
         return self.canvas
-        
-    def process(self, In, display=True):
+
+    def process(self, In: dict, display: bool = True) -> None:  # type: ignore
         if display:
             items = set()
             for name, vals in In.items():
@@ -141,7 +145,7 @@ class CanvasNode(Node):
                     continue
                 if type(vals) is not list:
                     vals = [vals]
-                
+
                 for val in vals:
                     vid = id(val)
                     if vid in self.items:
@@ -153,7 +157,7 @@ class CanvasNode(Node):
                         items.add(vid)
             for vid in list(self.items.keys()):
                 if vid not in items:
-                    #print "remove", self.items[vid]
+                    # print "remove", self.items[vid]
                     self.canvas.removeItem(self.items[vid])
                     del self.items[vid]
 
@@ -164,24 +168,22 @@ class PlotCurve(CtrlNode):
     uiTemplate = [
         ('color', 'color'),
     ]
-    
-    def __init__(self, name):
+
+    def __init__(self, name: str) -> None:
         CtrlNode.__init__(self, name, terminals={
             'x': {'io': 'in'},
             'y': {'io': 'in'},
             'plot': {'io': 'out'}
         })
         self.item = PlotDataItem()
-    
-    def process(self, x, y, display=True):
-        #print "scatterplot process"
+
+    def process(self, x, y, display: bool = True) -> dict:  # type: ignore
+        # print "scatterplot process"
         if not display:
             return {'plot': None}
-        
+
         self.item.setData(x, y, pen=self.ctrls['color'].color())
         return {'plot': self.item}
-        
-        
 
 
 class ScatterPlot(CtrlNode):
@@ -198,35 +200,33 @@ class ScatterPlot(CtrlNode):
         ('borderEnabled', 'check', {'value': False}),
         ('border', 'colormap', {}),
     ]
-    
-    def __init__(self, name):
+
+    def __init__(self, name: str) -> None:
         CtrlNode.__init__(self, name, terminals={
             'input': {'io': 'in'},
             'plot': {'io': 'out'}
         })
         self.item = ScatterPlotItem()
-        self.keys = []
-        
-        #self.ui = QtWidgets.QWidget()
-        #self.layout = QtWidgets.QGridLayout()
-        #self.ui.setLayout(self.layout)
-        
-        #self.xCombo = QtWidgets.QComboBox()
-        #self.yCombo = QtWidgets.QComboBox()
-        
-        
-    
-    def process(self, input, display=True):
-        #print "scatterplot process"
+        self.keys: Union[list, tuple, None] = []
+
+        # self.ui = QtWidgets.QWidget()
+        # self.layout = QtWidgets.QGridLayout()
+        # self.ui.setLayout(self.layout)
+
+        # self.xCombo = QtWidgets.QComboBox()
+        # self.yCombo = QtWidgets.QComboBox()
+
+    def process(self, input, display: bool = True) -> dict:  # type: ignore
+        # print "scatterplot process"
         if not display:
             return {'plot': None}
-            
+
         self.updateKeys(input[0])
-        
+
         x = str(self.ctrls['x'].currentText())
         y = str(self.ctrls['y'].currentText())
         size = str(self.ctrls['size'].currentText())
-        pen = QtGui.QPen(QtGui.QColor(0,0,0,0))
+        pen = QtGui.QPen(QtGui.QColor(0, 0, 0, 0))
         points = []
         for i in input:
             pt = {'pos': (i[x], i[y])}
@@ -240,16 +240,14 @@ class ScatterPlot(CtrlNode):
                 pt['brush'] = QtGui.QBrush(self.ctrls['color'].getColor(i))
             points.append(pt)
         self.item.setPxMode(not self.ctrls['absoluteSize'].isChecked())
-            
-        self.item.setPoints(points)
-        
-        return {'plot': self.item}
-        
-        
 
-    def updateKeys(self, data):
+        self.item.setPoints(points)
+
+        return {'plot': self.item}
+
+    def updateKeys(self, data: Union[dict, list, tuple, np.ndarray, np.void]) -> None:
         if isinstance(data, dict):
-            keys = list(data.keys())
+            keys: Union[list, tuple, None] = list(data.keys())
         elif isinstance(data, list) or isinstance(data, tuple):
             keys = data
         elif isinstance(data, np.ndarray) or isinstance(data, np.void):
@@ -257,7 +255,7 @@ class ScatterPlot(CtrlNode):
         else:
             print("Unknown data type:", type(data), data)
             return
-            
+
         for c in self.ctrls.values():
             c.blockSignals(True)
         for c in [self.ctrls['x'], self.ctrls['y'], self.ctrls['size']]:
@@ -266,45 +264,41 @@ class ScatterPlot(CtrlNode):
             for k in keys:
                 c.addItem(k)
                 if k == cur:
-                    c.setCurrentIndex(c.count()-1)
+                    c.setCurrentIndex(c.count() - 1)
         for c in [self.ctrls['color'], self.ctrls['border']]:
             c.setArgList(keys)
         for c in self.ctrls.values():
             c.blockSignals(False)
-                
-        self.keys = keys
-        
 
-    def saveState(self):
+        self.keys = keys
+
+    def saveState(self) -> dict:
         state = CtrlNode.saveState(self)
         return {'keys': self.keys, 'ctrls': state}
-        
-    def restoreState(self, state):
+
+    def restoreState(self, state: dict) -> None:
         self.updateKeys(state['keys'])
         CtrlNode.restoreState(self, state['ctrls'])
-        
-#class ImageItem(Node):
-    #"""Creates an ImageItem for display in a canvas from a file handle."""
-    #nodeName = 'Image'
-    
-    #def __init__(self, name):
-        #Node.__init__(self, name, terminals={
-            #'file': {'io': 'in'},
-            #'image': {'io': 'out'}
-        #})
-        #self.imageItem = graphicsItems.ImageItem()
-        #self.handle = None
-        
-    #def process(self, file, display=True):
-        #if not display:
-            #return {'image': None}
-            
-        #if file != self.handle:
-            #self.handle = file
-            #data = file.read()
-            #self.imageItem.updateImage(data)
-            
-        #pos = file.
-        
-        
-        
+
+# class ImageItem(Node):
+# """Creates an ImageItem for display in a canvas from a file handle."""
+# nodeName = 'Image'
+
+# def __init__(self, name):
+# Node.__init__(self, name, terminals={
+# 'file': {'io': 'in'},
+# 'image': {'io': 'out'}
+# })
+# self.imageItem = graphicsItems.ImageItem()
+# self.handle = None
+
+# def process(self, file, display=True):
+# if not display:
+# return {'image': None}
+
+# if file != self.handle:
+# self.handle = file
+# data = file.read()
+# self.imageItem.updateImage(data)
+
+# pos = file.
