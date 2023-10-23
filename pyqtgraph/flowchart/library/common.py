@@ -169,7 +169,7 @@ class PlottingCtrlNode(CtrlNode):
         remote.node().sigPlotChanged.disconnect(self.connectToPlot)
         self.disconnectFromPlot(remote.node().getPlot())
 
-    def connectToPlot(self, node: Node) -> None:
+    def connectToPlot(self, node: Optional[Node]) -> None:
         """Define what happens when the node is connected to a plot"""
         raise Exception("Must be re-implemented in subclass")
 

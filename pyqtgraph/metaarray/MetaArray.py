@@ -25,9 +25,10 @@ try:
     # Older h5py versions tucked Group and Dataset deeper inside the library:
     if not hasattr(h5py, 'Group'):
         import h5py.highlevel
+
         h5py.Group = h5py.highlevel.Group
         h5py.Dataset = h5py.highlevel.Dataset
-        
+
     HAVE_HDF5 = True
 except:
     USE_HDF5 = False
@@ -50,19 +51,24 @@ def axis(name=None, cols=None, values=None, units=None):
             if type(c) != list and type(c) != tuple:
                 c = [c]
             col = {}
-            for i in range(0,len(c)):
+            for i in range(0, len(c)):
                 col[cNameOrder[i]] = c[i]
             ax['cols'].append(col)
     return ax
 
+
 class sliceGenerator(object):
     """Just a compact way to generate tuples of slice objects."""
+
     def __getitem__(self, arg):
         return arg
+
     def __getslice__(self, arg):
         return arg
+
+
 SLICER = sliceGenerator()
-    
+
 
 class MetaArray(object):
     """N-dimensional array with meta data such as axis titles, units, and column names.
@@ -108,7 +114,7 @@ class MetaArray(object):
         Notice that in the second example, there is no need for an extra (4th) axis description
         since the actual values are described (name and units) in the column info for the first axis.
     """
-  
+
     version = u'2'
 
     # Default hdf5 compression to use when writing
@@ -118,33 +124,33 @@ class MetaArray(object):
     # (so by default, we use no compression)
     # May also be a tuple (filter, opts), such as ('gzip', 3)
     defaultCompression = None
-    
+
     ## Types allowed as axis or column names
     nameTypes = [str, tuple]
+
     @staticmethod
     def isNameType(var):
         return any(isinstance(var, t) for t in MetaArray.nameTypes)
-        
-        
+
     ## methods to wrap from embedded ndarray / HDF5 
     wrapMethods = set(['__eq__', '__ne__', '__le__', '__lt__', '__ge__', '__gt__'])
-  
+
     def __init__(self, data=None, info=None, dtype=None, file=None, copy=False, **kwargs):
         object.__init__(self)
         warnings.warn(
             'MetaArray is deprecated and will be removed in 0.14. '
             'Available though https://pypi.org/project/MetaArray/ as its own package.',
             DeprecationWarning, stacklevel=2
-        )    
+        )
         self._isHDF = False
-        
+
         if file is not None:
             self._data = None
             self.readFile(file, **kwargs)
             if kwargs.get("readAllData", True) and self._data is None:
                 raise Exception("File read failed: %s" % file)
         else:
-            self._info = info
+            self._info: list[dict] = info
             if (hasattr(data, 'implements') and data.implements('MetaArray')):
                 self._info = data._info
                 self._data = data.asarray()
@@ -155,7 +161,7 @@ class MetaArray(object):
 
         ## run sanity checks on info structure
         self.checkInfo()
-    
+
     def checkInfo(self):
         info = self._info
         if info is None:
@@ -169,9 +175,9 @@ class MetaArray(object):
                 info = list(info)
             except:
                 raise Exception("Info must be a list of axis specifications")
-            if len(info) < self.ndim+1:
-                info.extend([{}]*(self.ndim+1-len(info)))
-            elif len(info) > self.ndim+1:
+            if len(info) < self.ndim + 1:
+                info.extend([{}] * (self.ndim + 1 - len(info)))
+            elif len(info) > self.ndim + 1:
                 raise Exception("Info parameter must be list of length ndim+1 or less.")
             for i in range(len(info)):
                 if not isinstance(info[i], dict):
@@ -191,8 +197,9 @@ class MetaArray(object):
                     if not isinstance(info[i]['cols'], list):
                         info[i]['cols'] = list(info[i]['cols'])
                     if len(info[i]['cols']) != self.shape[i]:
-                        raise Exception('Length of column list for axis %d does not match data. (given %d, but should be %d)' %
-                                        (i, len(info[i]['cols']), self.shape[i]))
+                        raise Exception(
+                            'Length of column list for axis %d does not match data. (given %d, but should be %d)' %
+                            (i, len(info[i]['cols']), self.shape[i]))
             self._info = info
 
     def implements(self, name=None):
@@ -201,22 +208,24 @@ class MetaArray(object):
             return ['MetaArray']
         else:
             return name == 'MetaArray'
-  
+
     def __getitem__(self, ind):
         nInd = self._interpretIndexes(ind)
 
         a = self._data[nInd]
         if len(nInd) == self.ndim:
-            if np.all([not isinstance(ind, (slice, np.ndarray)) for ind in nInd]):  ## no slices; we have requested a single value from the array
+            if np.all([not isinstance(ind, (slice, np.ndarray)) for ind in
+                       nInd]):  ## no slices; we have requested a single value from the array
                 return a
-        
+
         ## indexing returned a sub-array; generate new info array to go with it
         info = []
         extraInfo = self._info[-1].copy()
-        for i in range(0, len(nInd)):   ## iterate over all axes
-            if type(nInd[i]) in [slice, list] or isinstance(nInd[i], np.ndarray):  ## If the axis is sliced, keep the info but chop if necessary
+        for i in range(0, len(nInd)):  ## iterate over all axes
+            if type(nInd[i]) in [slice, list] or isinstance(nInd[i],
+                                                            np.ndarray):  ## If the axis is sliced, keep the info but chop if necessary
                 info.append(self._axisSlice(i, nInd[i]))
-            else: ## If the axis is indexed, then move the information from that single index to the last info dictionary
+            else:  ## If the axis is indexed, then move the information from that single index to the last info dictionary
                 newInfo = self._axisSlice(i, nInd[i])
                 name = None
                 colName = None
@@ -244,29 +253,29 @@ class MetaArray(object):
                             extraInfo['name'] = str(name) + ': ' + str(colName)
                         else:
                             extraInfo['name'] = name
-                        
+
         info.append(extraInfo)
-        
+
         return MetaArray(a, info=info)
-  
+
     @property
     def ndim(self):
         return len(self.shape)  ## hdf5 objects do not have ndim property.
-            
+
     @property
     def shape(self):
         return self._data.shape
-        
+
     @property
     def dtype(self):
         return self._data.dtype
-        
+
     def __len__(self):
         return len(self._data)
-        
+
     def __getslice__(self, *args):
         return self.__getitem__(slice(*args))
-  
+
     def __setitem__(self, ind, val):
         nInd = self._interpretIndexes(ind)
         try:
@@ -274,19 +283,19 @@ class MetaArray(object):
         except:
             print(self, nInd, val)
             raise
-        
+
     def __getattr__(self, attr):
         if attr in self.wrapMethods:
             return getattr(self._data, attr)
         else:
             raise AttributeError(attr)
-        
+
     def __eq__(self, b):
         return self._binop('__eq__', b)
-        
+
     def __ne__(self, b):
         return self._binop('__ne__', b)
-        
+
     def __sub__(self, b):
         return self._binop('__sub__', b)
 
@@ -295,35 +304,37 @@ class MetaArray(object):
 
     def __mul__(self, b):
         return self._binop('__mul__', b)
-        
+
     def __div__(self, b):
         return self._binop('__div__', b)
-        
+
     def __truediv__(self, b):
         return self._binop('__truediv__', b)
-        
+
     def _binop(self, op, b):
         if isinstance(b, MetaArray):
             b = b.asarray()
         a = self.asarray()
         c = getattr(a, op)(b)
         if c.shape != a.shape:
-            raise Exception("Binary operators with MetaArray must return an array of the same shape (this shape is %s, result shape was %s)" % (a.shape, c.shape))
+            raise Exception(
+                "Binary operators with MetaArray must return an array of the same shape (this shape is %s, result shape was %s)" % (
+                a.shape, c.shape))
         return MetaArray(c, info=self.infoCopy())
-        
+
     def asarray(self):
         if isinstance(self._data, np.ndarray):
             return self._data
         else:
             return np.array(self._data)
-            
+
     def __array__(self, dtype=None):
         ## supports np.array(metaarray_instance) 
         if dtype is None:
             return self.asarray()
         else:
             return self.asarray().astype(dtype)
-  
+
     def axisValues(self, axis):
         """Return the list of values for an axis"""
         ax = self._interpretAxis(axis)
@@ -331,25 +342,25 @@ class MetaArray(object):
             return self._info[ax]['values']
         else:
             raise Exception('Array axis %s (%d) has no associated values.' % (str(axis), ax))
-  
+
     def xvals(self, axis):
         """Synonym for axisValues()"""
         return self.axisValues(axis)
-        
+
     def axisHasValues(self, axis):
         ax = self._interpretAxis(axis)
         return 'values' in self._info[ax]
-        
+
     def axisHasColumns(self, axis):
         ax = self._interpretAxis(axis)
         return 'cols' in self._info[ax]
-  
+
     def axisUnits(self, axis):
         """Return the units for axis"""
         ax = self._info[self._interpretAxis(axis)]
         if 'units' in ax:
             return ax['units']
-        
+
     def hasColumn(self, axis, col):
         ax = self._info[self._interpretAxis(axis)]
         if 'cols' in ax:
@@ -357,7 +368,7 @@ class MetaArray(object):
                 if c['name'] == col:
                     return True
         return False
-        
+
     def listColumns(self, axis=None):
         """Return a list of column names for axis. If axis is not specified, then return a dict of {axisName: (column names), ...}."""
         if axis is None:
@@ -372,14 +383,14 @@ class MetaArray(object):
         else:
             axis = self._interpretAxis(axis)
             return [c['name'] for c in self._info[axis]['cols']]
-        
+
     def columnName(self, axis, col):
         ax = self._info[self._interpretAxis(axis)]
         return ax['cols'][col]['name']
-        
+
     def axisName(self, n):
         return self._info[n].get('name', n)
-        
+
     def columnUnits(self, axis, column):
         """Return the units for column in axis"""
         ax = self._info[self._interpretAxis(axis)]
@@ -390,57 +401,56 @@ class MetaArray(object):
             raise Exception("Axis %s has no column named %s" % (str(axis), str(column)))
         else:
             raise Exception("Axis %s has no column definitions" % str(axis))
-  
+
     def rowsort(self, axis, key=0):
         """Return this object with all records sorted along axis using key as the index to the values to compare. Does not yet modify meta info."""
         ## make sure _info is copied locally before modifying it!
-    
+
         keyList = self[key]
         order = keyList.argsort()
         if type(axis) == int:
-            ind = [slice(None)]*axis
+            ind = [slice(None)] * axis
             ind.append(order)
         elif isinstance(axis, str):
             ind = (slice(axis, order),)
         else:
             raise TypeError("axis must be type (int, str)")
         return self[tuple(ind)]
-  
+
     def append(self, val, axis):
         """Return this object with val appended along axis. Does not yet combine meta info."""
         ## make sure _info is copied locally before modifying it!
-    
+
         s = list(self.shape)
         axis = self._interpretAxis(axis)
         s[axis] += 1
         n = MetaArray(tuple(s), info=self._info, dtype=self.dtype)
-        ind = [slice(None)]*self.ndim
-        ind[axis] = slice(None,-1)
+        ind = [slice(None)] * self.ndim
+        ind[axis] = slice(None, -1)
         n[tuple(ind)] = self
         ind[axis] = -1
         n[tuple(ind)] = val
         return n
-  
+
     def extend(self, val, axis):
         """Return the concatenation along axis of this object and val. Does not yet combine meta info."""
         ## make sure _info is copied locally before modifying it!
-    
+
         axis = self._interpretAxis(axis)
         return MetaArray(np.concatenate(self, val, axis), info=self._info)
-  
+
     def infoCopy(self, axis=None):
         """Return a deep copy of the axis meta info for this object"""
         if axis is None:
             return copy.deepcopy(self._info)
         else:
             return copy.deepcopy(self._info[self._interpretAxis(axis)])
-  
+
     def copy(self):
         return MetaArray(self._data.copy(), info=self.infoCopy())
-  
-  
+
     def _interpretIndexes(self, ind):
-        #print "interpret", ind
+        # print "interpret", ind
         if not isinstance(ind, tuple):
             ## a list of slices should be interpreted as a tuple of slices.
             if isinstance(ind, list) and len(ind) > 0 and isinstance(ind[0], slice):
@@ -448,51 +458,51 @@ class MetaArray(object):
             ## everything else can just be converted to a length-1 tuple
             else:
                 ind = (ind,)
-                
-        nInd = [slice(None)]*self.ndim
+
+        nInd = [slice(None)] * self.ndim
         numOk = True  ## Named indices not started yet; numbered sill ok
-        for i in range(0,len(ind)):
+        for i in range(0, len(ind)):
             (axis, index, isNamed) = self._interpretIndex(ind[i], i, numOk)
             nInd[axis] = index
             if isNamed:
                 numOk = False
         return tuple(nInd)
-      
+
     def _interpretAxis(self, axis):
         if isinstance(axis, (str, tuple)):
             return self._getAxis(axis)
         else:
             return axis
-  
+
     def _interpretIndex(self, ind, pos, numOk):
-        #print "Interpreting index", ind, pos, numOk
-        
+        # print "Interpreting index", ind, pos, numOk
+
         ## should probably check for int first to speed things up..
         if type(ind) is int:
             if not numOk:
                 raise Exception("string and integer indexes may not follow named indexes")
-            #print "  normal numerical index"
+            # print "  normal numerical index"
             return (pos, ind, False)
         if MetaArray.isNameType(ind):
             if not numOk:
                 raise Exception("string and integer indexes may not follow named indexes")
-            #print "  String index, column is ", self._getIndex(pos, ind)
+            # print "  String index, column is ", self._getIndex(pos, ind)
             return (pos, self._getIndex(pos, ind), False)
         elif type(ind) is slice:
-            #print "  Slice index"
+            # print "  Slice index"
             if MetaArray.isNameType(ind.start) or MetaArray.isNameType(ind.stop):  ## Not an actual slice!
-                #print "    ..not a real slice"
+                # print "    ..not a real slice"
                 axis = self._interpretAxis(ind.start)
-                #print "    axis is", axis
-                
+                # print "    axis is", axis
+
                 ## x[Axis:Column]
                 if MetaArray.isNameType(ind.stop):
-                    #print "    column name, column is ", self._getIndex(axis, ind.stop)
+                    # print "    column name, column is ", self._getIndex(axis, ind.stop)
                     index = self._getIndex(axis, ind.stop)
-                    
+
                 ## x[Axis:min:max]
                 elif (isinstance(ind.stop, float) or isinstance(ind.step, float)) and ('values' in self._info[axis]):
-                    #print "    axis value range"
+                    # print "    axis value range"
                     if ind.stop is None:
                         mask = self.xvals(axis) < ind.step
                     elif ind.step is None:
@@ -501,18 +511,18 @@ class MetaArray(object):
                         mask = (self.xvals(axis) >= ind.stop) * (self.xvals(axis) < ind.step)
                     ##print "mask:", mask
                     index = mask
-                    
+
                 ## x[Axis:columnIndex]
                 elif isinstance(ind.stop, int) or isinstance(ind.step, int):
-                    #print "    normal slice after named axis"
+                    # print "    normal slice after named axis"
                     if ind.step is None:
                         index = ind.stop
                     else:
                         index = slice(ind.stop, ind.step)
-                    
+
                 ## x[Axis: [list]]
                 elif type(ind.stop) is list:
-                    #print "    list of indexes from named axis"
+                    # print "    list of indexes from named axis"
                     index = []
                     for i in ind.stop:
                         if type(i) is int:
@@ -523,34 +533,34 @@ class MetaArray(object):
                             ## unrecognized type, try just passing on to array
                             index = ind.stop
                             break
-                
+
                 else:
-                    #print "    other type.. forward on to array for handling", type(ind.stop)
+                    # print "    other type.. forward on to array for handling", type(ind.stop)
                     index = ind.stop
-                #print "Axis %s (%s) : %s" % (ind.start, str(axis), str(type(index)))
-                #if type(index) is np.ndarray:
-                    #print "    ", index.shape
+                # print "Axis %s (%s) : %s" % (ind.start, str(axis), str(type(index)))
+                # if type(index) is np.ndarray:
+                # print "    ", index.shape
                 return (axis, index, True)
             else:
-                #print "  Looks like a real slice, passing on to array"
+                # print "  Looks like a real slice, passing on to array"
                 return (pos, ind, False)
         elif type(ind) is list:
-            #print "  List index., interpreting each element individually"
+            # print "  List index., interpreting each element individually"
             indList = [self._interpretIndex(i, pos, numOk)[1] for i in ind]
             return (pos, indList, False)
         else:
             if not numOk:
                 raise Exception("string and integer indexes may not follow named indexes")
-            #print "  normal numerical index"
+            # print "  normal numerical index"
             return (pos, ind, False)
-  
+
     def _getAxis(self, name):
         for i in range(0, len(self._info)):
             axis = self._info[i]
             if 'name' in axis and axis['name'] == name:
                 return i
         raise Exception("No axis named %s.\n  info=%s" % (name, self._info))
-  
+
     def _getIndex(self, axis, name):
         ax = self._info[axis]
         if ax is not None and 'cols' in ax:
@@ -558,33 +568,33 @@ class MetaArray(object):
                 if 'name' in ax['cols'][i] and ax['cols'][i]['name'] == name:
                     return i
         raise Exception("Axis %d has no column named %s.\n  info=%s" % (axis, name, self._info))
-  
+
     def _axisCopy(self, i):
         return copy.deepcopy(self._info[i])
-  
+
     def _axisSlice(self, i, cols):
-        #print "axisSlice", i, cols
+        # print "axisSlice", i, cols
         if 'cols' in self._info[i] or 'values' in self._info[i]:
             ax = self._axisCopy(i)
             if 'cols' in ax:
-                #print "  slicing columns..", array(ax['cols']), cols
+                # print "  slicing columns..", array(ax['cols']), cols
                 sl = np.array(ax['cols'])[cols]
                 if isinstance(sl, np.ndarray):
                     sl = list(sl)
                 ax['cols'] = sl
-                #print "  result:", ax['cols']
+                # print "  result:", ax['cols']
             if 'values' in ax:
                 ax['values'] = np.array(ax['values'])[cols]
         else:
             ax = self._info[i]
-        #print "     ", ax
+        # print "     ", ax
         return ax
-  
+
     def prettyInfo(self):
         s = ''
         titles = []
         maxl = 0
-        for i in range(len(self._info)-1):
+        for i in range(len(self._info) - 1):
             ax = self._info[i]
             axs = ''
             if 'name' in ax:
@@ -596,7 +606,7 @@ class MetaArray(object):
             titles.append(axs)
             if len(axs) > maxl:
                 maxl = len(axs)
-        
+
         for i in range(min(self.ndim, len(self._info) - 1)):
             ax = self._info[i]
             axs = titles[i]
@@ -625,9 +635,10 @@ class MetaArray(object):
             s += axs + "\n"
         s += str(self._info[-1])
         return s
-  
+
     def __repr__(self):
-        return "%s\n-----------------------------------------------\n%s" % (self.view(np.ndarray).__repr__(), self.prettyInfo())
+        return "%s\n-----------------------------------------------\n%s" % (
+        self.view(np.ndarray).__repr__(), self.prettyInfo())
 
     def __str__(self):
         return self.__repr__()
@@ -644,7 +655,6 @@ class MetaArray(object):
 
     def mean(self, axis=None, *args, **kargs):
         return self.axisCollapsingFn('mean', axis, *args, **kargs)
-            
 
     def min(self, axis=None, *args, **kargs):
         return self.axisCollapsingFn('min', axis, *args, **kargs)
@@ -657,12 +667,12 @@ class MetaArray(object):
             order = args[0]
         else:
             order = args
-        
+
         order = [self._interpretAxis(ax) for ax in order]
-        infoOrder = order  + list(range(len(order), len(self._info)))
+        infoOrder = order + list(range(len(order), len(self._info)))
         info = [self._info[i] for i in infoOrder]
         order = order + list(range(len(order), self.ndim))
-        
+
         try:
             if self._isHDF:
                 return MetaArray(np.array(self._data).transpose(order), info=info)
@@ -722,9 +732,9 @@ class MetaArray(object):
                 break
             meta += line
         ret = eval(meta)
-        #print ret
+        # print ret
         return ret
-    
+
     def _readData1(self, fd, meta, mmap=False, **kwds):
         ## Read array data from the file descriptor for MetaArray v1 files
         ## read in axis values for any axis that specifies a length
@@ -745,7 +755,7 @@ class MetaArray(object):
             subarr = np.frombuffer(fd.read(), dtype=meta['type'])
             subarr.shape = meta['shape']
         self._data = subarr
-            
+
     def _readData2(self, fd, meta, mmap=False, subset=None, **kwds):
         ## read in axis values
         dynAxis = None
@@ -798,21 +808,21 @@ class MetaArray(object):
                         break
                 if line == '':
                     break
-                    
+
                 ## evaluate line
                 inf = eval(line)
-                
+
                 ## read data block
-                #print "read %d bytes as %s" % (inf['len'], meta['type'])
+                # print "read %d bytes as %s" % (inf['len'], meta['type'])
                 if meta['type'] == 'object':
                     data = pickle.loads(fd.read(inf['len']))
                 else:
                     data = np.frombuffer(fd.read(inf['len']), dtype=meta['type'])
-                
+
                 if data.size != frameSize * inf['numFrames']:
-                    #print data.size, frameSize, inf['numFrames']
+                    # print data.size, frameSize, inf['numFrames']
                     raise Exception("Wrong frame size in MetaArray file! (frame %d)" % n)
-                    
+
                 ## read in data block
                 shape = list(frameShape)
                 shape[dynAxis] = inf['numFrames']
@@ -833,12 +843,12 @@ class MetaArray(object):
                         frames.append(data[tuple(newSubset)].copy())
                 else:
                     frames.append(data)
-                
+
                 n += inf['numFrames']
                 if 'xVals' in inf:
                     xVals.extend(inf['xVals'])
             subarr = np.concatenate(frames, axis=dynAxis)
-            if len(xVals)> 0:
+            if len(xVals) > 0:
                 ax['values'] = np.array(xVals, dtype=ax['values_type'])
             del ax['values_len']
             del ax['values_type']
@@ -846,60 +856,63 @@ class MetaArray(object):
         self._data = subarr
 
     def _readHDF5(self, fileName, readAllData=None, writable=False, **kargs):
-        if 'close' in kargs and readAllData is None: ## for backward compatibility
+        if 'close' in kargs and readAllData is None:  ## for backward compatibility
             readAllData = kargs['close']
-       
+
         if readAllData is True and writable is True:
             raise Exception("Incompatible arguments: readAllData=True and writable=True")
-        
+
         if not HAVE_HDF5:
             try:
-                assert writable==False
+                assert writable == False
                 assert readAllData != False
                 self._readHDF5Remote(fileName)
                 return
             except:
-                raise Exception("The file '%s' is HDF5-formatted, but the HDF5 library (h5py) was not found." % fileName)
-        
+                raise Exception(
+                    "The file '%s' is HDF5-formatted, but the HDF5 library (h5py) was not found." % fileName)
+
         ## by default, readAllData=True for files < 500MB
         if readAllData is None:
             size = os.stat(fileName).st_size
             readAllData = (size < 500e6)
-        
+
         if writable is True:
             mode = 'r+'
         else:
             mode = 'r'
         f = h5py.File(fileName, mode)
-        
+
         ver = f.attrs['MetaArray']
         try:
             ver = ver.decode('utf-8')
         except:
             pass
         if ver > MetaArray.version:
-            print("Warning: This file was written with MetaArray version %s, but you are using version %s. (Will attempt to read anyway)" % (str(ver), str(MetaArray.version)))
+            print(
+                "Warning: This file was written with MetaArray version %s, but you are using version %s. (Will attempt to read anyway)" % (
+                str(ver), str(MetaArray.version)))
         meta = MetaArray.readHDF5Meta(f['info'])
         self._info = meta
-        
+
         if writable or not readAllData:  ## read all data, convert to ndarray, close file
             self._data = f['data']
             self._openFile = f
         else:
             self._data = f['data'][:]
             f.close()
-            
+
     def _readHDF5Remote(self, fileName):
         ## Used to read HDF5 files via remote process.
         ## This is needed in the case that HDF5 is not importable due to the use of python-dbg.
         proc = getattr(MetaArray, '_hdf5Process', None)
-        
+
         if proc == False:
             raise Exception('remote read failed')
         if proc is None:
             from .. import multiprocess as mp
 
-            #print "new process"
+            # print "new process"
             proc = mp.Process(executable='/usr/bin/python')
             proc.setProxyOptions(deferGetattr=True)
             MetaArray._hdf5Process = proc
@@ -916,13 +929,14 @@ class MetaArray(object):
         else:
             mode = 'r'
         if off is None:
-            raise Exception("This dataset uses chunked storage; it can not be memory-mapped. (store using mappable=True)")
+            raise Exception(
+                "This dataset uses chunked storage; it can not be memory-mapped. (store using mappable=True)")
         return np.memmap(filename=data.file.filename, offset=off, dtype=data.dtype, shape=data.shape, mode=mode)
 
     @staticmethod
     def readHDF5Meta(root, mmap=False):
         data = {}
-        
+
         ## Pull list of values from attributes and child objects
         for k in root.attrs:
             val = root.attrs[k]
@@ -946,18 +960,18 @@ class MetaArray(object):
             else:
                 raise Exception("Don't know what to do with type '%s'" % str(type(obj)))
             data[k] = val
-        
+
         typ = root.attrs['_metaType_']
         try:
             typ = typ.decode('utf-8')
         except:
             pass
         del data['_metaType_']
-        
+
         if typ == 'dict':
             return data
         elif typ == 'list' or typ == 'tuple':
-            d2 = [None]*len(data)
+            d2 = [None] * len(data)
             for k in data:
                 d2[int(k)] = data[k]
             if typ == 'tuple':
@@ -973,7 +987,7 @@ class MetaArray(object):
             appendKeys: a list of keys (other than "values") for metadata to append to on the appendable axis.
             compression: None, 'gzip' (good compression), 'lzf' (fast compression), etc.
             chunks: bool or tuple specifying chunk shape
-        """        
+        """
         if USE_HDF5 is False:
             return self.writeMa(fileName, **opts)
         elif HAVE_HDF5 is True:
@@ -986,9 +1000,10 @@ class MetaArray(object):
         This feature is only available for HDF5 files."""
         f = h5py.File(fileName, 'r+')
         if f.attrs['MetaArray'] != MetaArray.version:
-            raise Exception("The file %s was created with a different version of MetaArray. Will not modify." % fileName)
+            raise Exception(
+                "The file %s was created with a different version of MetaArray. Will not modify." % fileName)
         del f['info']
-        
+
         self.writeHDF5Meta(f, 'info', self._info)
         f.close()
 
@@ -1000,13 +1015,13 @@ class MetaArray(object):
         else:
             copts = None
 
-        dsOpts = {  
+        dsOpts = {
             'compression': comp,
             'chunks': True,
         }
         if copts is not None:
             dsOpts['compression_opts'] = copts
-        
+
         ## if there is an appendable axis, then we can guess the desired chunk shape (optimized for appending)
         appAxis = opts.get('appendAxis', None)
         if appAxis is not None:
@@ -1014,7 +1029,7 @@ class MetaArray(object):
             cs = [min(100000, x) for x in self.shape]
             cs[appAxis] = 1
             dsOpts['chunks'] = tuple(cs)
-            
+
         ## if there are columns, then we can guess a different chunk shape
         ## (read one column at a time)
         else:
@@ -1023,19 +1038,19 @@ class MetaArray(object):
                 if 'cols' in self._info[i]:
                     cs[i] = 1
             dsOpts['chunks'] = tuple(cs)
-        
+
         ## update options if they were passed in
         for k in dsOpts:
             if k in opts:
-                dsOpts[k] = opts[k]        
-        
-        ## If mappable is in options, it disables chunking/compression
+                dsOpts[k] = opts[k]
+
+                ## If mappable is in options, it disables chunking/compression
         if opts.get('mappable', False):
             dsOpts = {
                 'chunks': None,
                 'compression': None
             }
-            
+
         ## set maximum shape to allow expansion along appendAxis
         append = False
         if appAxis is not None:
@@ -1047,12 +1062,13 @@ class MetaArray(object):
             dsOpts['maxshape'] = tuple(maxShape)
         else:
             dsOpts['maxshape'] = None
-            
+
         if append:
             f = h5py.File(fileName, 'r+')
             if f.attrs['MetaArray'] != MetaArray.version:
-                raise Exception("The file %s was created with a different version of MetaArray. Will not modify." % fileName)
-            
+                raise Exception(
+                    "The file %s was created with a different version of MetaArray. Will not modify." % fileName)
+
             ## resize data and write in new values
             data = f['data']
             shape = list(data.shape)
@@ -1061,7 +1077,7 @@ class MetaArray(object):
             sl = [slice(None)] * len(data.shape)
             sl[ax] = slice(-self.shape[ax], None)
             data[tuple(sl)] = self.view(np.ndarray)
-            
+
             ## add axis values if they are present.
             axKeys = ["values"]
             axKeys.extend(opts.get("appendKeys", []))
@@ -1075,14 +1091,15 @@ class MetaArray(object):
                     v.resize(shape)
                     v[-v2.shape[0]:] = v2
                 else:
-                    raise TypeError('Cannot append to axis info key "%s"; this key is not present in the target file.' % key)
+                    raise TypeError(
+                        'Cannot append to axis info key "%s"; this key is not present in the target file.' % key)
             f.close()
         else:
             f = h5py.File(fileName, 'w')
             f.attrs['MetaArray'] = MetaArray.version
-            #print dsOpts
+            # print dsOpts
             f.create_dataset('data', data=self.view(np.ndarray), **dsOpts)
-            
+
             ## dsOpts is used when storing meta data whenever an array is encountered
             ## however, 'chunks' will no longer be valid for these arrays if it specifies a chunk shape.
             ## 'maxshape' is right-out.
@@ -1103,7 +1120,7 @@ class MetaArray(object):
                 gr.attrs['_metaType_'] = 'list'
             else:
                 gr.attrs['_metaType_'] = 'tuple'
-            #n = int(np.log10(len(data))) + 1
+            # n = int(np.log10(len(data))) + 1
             for i in range(len(data)):
                 self.writeHDF5Meta(gr, str(i), data[i], **dsOpts)
         elif isinstance(data, dict):
@@ -1111,27 +1128,26 @@ class MetaArray(object):
             gr.attrs['_metaType_'] = 'dict'
             for k, v in data.items():
                 self.writeHDF5Meta(gr, k, v, **dsOpts)
-        elif isinstance(data, int) or isinstance(data, float) or isinstance(data, np.integer) or isinstance(data, np.floating):
+        elif isinstance(data, int) or isinstance(data, float) or isinstance(data, np.integer) or isinstance(data,
+                                                                                                            np.floating):
             root.attrs[name] = data
         else:
-            try:   ## strings, bools, None are stored as repr() strings
+            try:  ## strings, bools, None are stored as repr() strings
                 root.attrs[name] = repr(data)
             except:
                 print("Can not store meta data of type '%s' in HDF5. (key is '%s')" % (str(type(data)), str(name)))
-                raise 
+                raise
 
-        
     def writeMa(self, fileName, appendAxis=None, newFile=False):
         """Write an old-style .ma file"""
-        meta = {'shape':self.shape, 'type':str(self.dtype), 'info':self.infoCopy(), 'version':MetaArray.version}
+        meta = {'shape': self.shape, 'type': str(self.dtype), 'info': self.infoCopy(), 'version': MetaArray.version}
         axstrs = []
-        
+
         ## copy out axis values for dynamic axis if requested
         if appendAxis is not None:
             if MetaArray.isNameType(appendAxis):
                 appendAxis = self._interpretAxis(appendAxis)
-            
-            
+
             ax = meta['info'][appendAxis]
             ax['values_len'] = 'dynamic'
             if 'values' in ax:
@@ -1140,7 +1156,7 @@ class MetaArray(object):
                 del ax['values']
             else:
                 dynXVals = None
-                
+
         ## Generate axis data string, modify axis info so we know how to read it back in later
         for ax in meta['info']:
             if 'values' in ax:
@@ -1148,12 +1164,12 @@ class MetaArray(object):
                 ax['values_len'] = len(axstrs[-1])
                 ax['values_type'] = str(ax['values'].dtype)
                 del ax['values']
-                
+
         ## Decide whether to output the meta block for a new file
         if not newFile:
             ## If the file does not exist or its size is 0, then we must write the header
-            newFile = (not os.path.exists(fileName))  or  (os.stat(fileName).st_size == 0)
-        
+            newFile = (not os.path.exists(fileName)) or (os.stat(fileName).st_size == 0)
+
         ## write data to file
         if appendAxis is None or newFile:
             fd = open(fileName, 'wb')
@@ -1162,20 +1178,20 @@ class MetaArray(object):
                 fd.write(ax)
         else:
             fd = open(fileName, 'ab')
-        
+
         if self.dtype != object:
             dataStr = self.view(np.ndarray).tostring()
         else:
             dataStr = pickle.dumps(self.view(np.ndarray))
-        #print self.size, len(dataStr), self.dtype
+        # print self.size, len(dataStr), self.dtype
         if appendAxis is not None:
-            frameInfo = {'len':len(dataStr), 'numFrames':self.shape[appendAxis]}
+            frameInfo = {'len': len(dataStr), 'numFrames': self.shape[appendAxis]}
             if dynXVals is not None:
                 frameInfo['xVals'] = list(dynXVals)
-            fd.write('\n'+str(frameInfo)+'\n')
+            fd.write('\n' + str(frameInfo) + '\n')
         fd.write(dataStr)
         fd.close()
-        
+
     def writeCsv(self, fileName=None):
         """Write 2D array to CSV file or return the string if no filename is given"""
         if self.ndim > 2:
