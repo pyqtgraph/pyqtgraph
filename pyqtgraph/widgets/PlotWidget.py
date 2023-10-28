@@ -74,11 +74,17 @@ class PlotWidget(GraphicsView):
         self.setParent(None)
         super(PlotWidget, self).close()
 
-    def __getattr__(self, attr):  ## implicitly wrap methods from plotItem
-        if hasattr(self.plotItem, attr):
+    ## implicitly wrap methods from plotItem
+    ## the implementation prevents recursive calls to PlotWidget.__getattr__ that lead to a 
+    ## 'maximum recursion depth exceeded' when PlotWidget is used in a multiple inheritance 
+    ## schema - i.e., class SomeClass(PlotWidget, SomeOtherClass)
+    def __getattr__(self, attr): 
+        try:
             m = getattr(self.plotItem, attr)
-            if hasattr(m, '__call__'):
-                return m
+        except:
+            raise AttributeError(attr)
+        if hasattr(m, '__call__'):
+            return m
         raise AttributeError(attr)
     
     def viewRangeChanged(self, view, range):
