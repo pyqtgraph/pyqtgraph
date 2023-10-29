@@ -156,7 +156,8 @@ html_theme_options = {
     "navbar_end": ["theme-switcher", "navbar-icon-links"],
     "twitter_url": "https://twitter.com/pyqtgraph",
     "use_edit_page_button": False,
-    "secondary_sidebar_items": ["page-toc"]
+    "secondary_sidebar_items": ["page-toc"],
+    "navigation_with_keys": False
 }
 
 
