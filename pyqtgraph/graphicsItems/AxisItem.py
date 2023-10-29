@@ -849,13 +849,10 @@ class AxisItem(GraphicsWidget):
             ## remove any ticks that were present in higher levels
             ## we assume here that if the difference between a tick value and a previously seen tick value
             ## is less than spacing/100, then they are 'equal' and we can ignore the new tick.
-            try: # DEBUG
-                close = np.any(
-                    np.isclose(allValues, values[:, np.newaxis], rtol=0, atol=spacing/self.scale*0.01)
-                    , axis=-1
-                )
-            except TypeError as err: # DEBUG
-                raise TypeError(f'{err} - tickLevels were {tickLevels}')
+            close = np.any(
+                np.isclose(allValues, values[:, np.newaxis], rtol=0, atol=spacing/self.scale*0.01)
+                , axis=-1
+            )
             values = values[~close]
             allValues = np.concatenate([allValues, values])
             ticks.append((spacing/self.scale, values.tolist()))
