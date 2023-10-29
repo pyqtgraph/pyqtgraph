@@ -764,7 +764,7 @@ class AxisItem(GraphicsWidget):
 
         # And we want to do it without a log operation:        
         mantissa, exp2 = frexp(majorMaxSpacing) # IEEE 754 float already knows its exponent, no need to calculate
-        p10unit = 10 ** ( # approximate a power of ten base factor just smaller than the given number
+        p10unit = 10. ** ( # approximate a power of ten base factor just smaller than the given number
             floor(            # int would truncate towards zero to give wrong results for negative exponents
                 (exp2-1)      # IEEE 754 exponent is ceiling of true exponent --> estimate floor by subtracting 1
                 / 3.32192809488736 # division by log2(10)=3.32 converts base 2 exponent to base 10 exponent
