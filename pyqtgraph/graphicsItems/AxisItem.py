@@ -572,7 +572,7 @@ class AxisItem(GraphicsWidget):
             self.update()
 
     def linkedView(self):
-        """Return the ViewBox this axis is linked to"""
+        """Return the ViewBox this axis is linked to."""
         if self._linkedView is None:
             return None
         else:
@@ -668,7 +668,7 @@ class AxisItem(GraphicsWidget):
     def setTickDensity(self, density=1.0):
         """
         The default behavior is to show at least two major ticks for axes of up to 300 pixels in length, 
-        then add addtional major ticks, but space them out further as the available room increases.
+        then add additional major ticks, spacing them out further as the available room increases.
         (Internally, the targeted number of major ticks grows with the square root of the axes length.)
 
         Setting a tick density different from the default value of `density = 1.0` scales the number of
@@ -690,6 +690,7 @@ class AxisItem(GraphicsWidget):
                 ...
             ]
 
+        The two levels of major and minor ticks are expected. A third tier of additional ticks is optional.
         If *ticks* is None, then the default tick system will be used instead.
         """
         self._tickLevels = ticks
