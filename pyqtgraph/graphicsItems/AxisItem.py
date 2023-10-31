@@ -73,6 +73,7 @@ class AxisItem(GraphicsWidget):
             'maxTickLevel': 2,
             'maxTextLevel': 2,
             'tickAlpha': None,  ## If not none, use this alpha for all ticks.
+            'tickAntialiasing': False,  ## If not none, use this alpha for all ticks.
         }
 
         self.textWidth = 30  ## Keeps track of maximum width / height of tick text
@@ -1208,7 +1209,7 @@ class AxisItem(GraphicsWidget):
     def drawPicture(self, p, axisSpec, tickSpecs, textSpecs):
         profiler = debug.Profiler()
 
-        p.setRenderHint(p.RenderHint.Antialiasing, False)
+        p.setRenderHint(p.RenderHint.Antialiasing, self.style['tickAntialiasing'])
         p.setRenderHint(p.RenderHint.TextAntialiasing, True)
 
         ## draw long line along axis
