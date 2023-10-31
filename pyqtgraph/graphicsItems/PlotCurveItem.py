@@ -371,7 +371,7 @@ class PlotCurveItem(GraphicsObject):
 
     def setPen(self, *args, **kargs):
         """Set the pen used to draw the curve."""
-        if args[0] is None:
+        if args and args[0] is None:
             self.opts['pen'] = None
         else:
             self.opts['pen'] = fn.mkPen(*args, **kargs)
@@ -385,7 +385,7 @@ class PlotCurveItem(GraphicsObject):
         pen to be visible. Arguments are passed to 
         :func:`mkPen <pyqtgraph.mkPen>`
         """
-        if args[0] is None:
+        if args and args[0] is None:
             self.opts['shadowPen'] = None
         else:
             self.opts['shadowPen'] = fn.mkPen(*args, **kargs)
@@ -397,7 +397,7 @@ class PlotCurveItem(GraphicsObject):
         Sets the brush used when filling the area under the curve. All 
         arguments are passed to :func:`mkBrush <pyqtgraph.mkBrush>`.
         """
-        if args[0] is None:
+        if args and args[0] is None:
             self.opts['brush'] = None
         else:
             self.opts['brush'] = fn.mkBrush(*args, **kargs)

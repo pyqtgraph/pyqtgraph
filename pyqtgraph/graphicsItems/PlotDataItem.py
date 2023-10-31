@@ -504,7 +504,7 @@ class PlotDataItem(GraphicsObject):
         The argument can be a :class:`QtGui.QPen` or any combination of arguments accepted by 
         :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`.
         """
-        if args[0] is None:
+        if args and args[0] is None:
             pen = None
         else:
             pen = fn.mkPen(*args, **kargs)
@@ -519,7 +519,7 @@ class PlotDataItem(GraphicsObject):
         Sets the :class:`QtGui.QBrush` used to fill the area under the curve.
         See :func:`mkBrush() <pyqtgraph.mkBrush>`) for arguments.
         """
-        if args[0] is None:
+        if args and args[0] is None:
             brush = None
         else:
             brush = fn.mkBrush(*args, **kargs)
