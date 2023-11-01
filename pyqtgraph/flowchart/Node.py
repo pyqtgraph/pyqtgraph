@@ -482,6 +482,8 @@ class NodeGraphicsItem(GraphicsObject):
         self.nameItem = TextItem(self.node.name(), self, self.labelChanged)
         self.nameItem.setDefaultTextColor(QtGui.QColor(50, 50, 50))
         self.nameItem.moveBy(self.bounds.width()/2. - self.nameItem.boundingRect().width()/2., 0)
+        self.titleOffset = 25
+        self.nodeOffset = 12
         self.updateTerminals()
         #self.setZValue(10)
 
@@ -519,11 +521,9 @@ class NodeGraphicsItem(GraphicsObject):
         out = self.node.outputs()
         
         maxNode = max(len(inp), len(out))
-        titleOffset = 25
-        nodeOffset = 12
         
         # calculate new height
-        newHeight = titleOffset+maxNode*nodeOffset
+        newHeight = self.titleOffset + maxNode*self.nodeOffset
         
         # if current height is not equal to new height, update
         if not self.bounds.height() == newHeight:
@@ -538,7 +538,7 @@ class NodeGraphicsItem(GraphicsObject):
             #item.setZValue(self.zValue()+1)
             item.setAnchor(0, y)
             self.terminals[i] = (t, item)
-            y += nodeOffset
+            y += self.nodeOffset
         
         # Populate inputs
         y = titleOffset
@@ -548,7 +548,7 @@ class NodeGraphicsItem(GraphicsObject):
             item.setZValue(self.zValue())
             item.setAnchor(self.bounds.width(), y)
             self.terminals[i] = (t, item)
-            y += nodeOffset
+            y += self.nodeOffset
         
         #self.buildMenu()
         
