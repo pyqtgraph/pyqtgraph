@@ -1,9 +1,14 @@
+import math
 import warnings
-import numpy as np
+from typing import Optional
 
-from .. import functions as fn
-from ..colormap import ColorMap
+import numpy as np
+import numpy.typing as npt
+
 from .. import Qt
+from .. import functions as fn
+from .. import mkBrush, mkPen
+from ..colormap import ColorMap
 from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
 from .HistogramLUTItem import HistogramLUTItem
@@ -17,32 +22,86 @@ class NonUniformImage(GraphicsObject):
     GraphicsObject displaying an image with non-uniform sample points. It's
     commonly used to display 2-d or slices of higher dimensional data that
     have a regular but non-uniform grid e.g. measurements or simulation results.
+
     """
-    def __init__(self, x, y, z, border=None):
 
-        GraphicsObject.__init__(self)
 
-        # convert to numpy arrays
+    def __init__(self, x, y, z, border=None, **kwargs):
+        """
+        Create an image plot by drawing rectangles with specified x and y
+        boundaries.
+
+        Call signature
+
+        ``NonUniformImage(x, y, z, border)``
+
+        Parameters
+        ----------
+        x, y : array_like
+            1D array_like of monotonically increasing values of where the centers
+            of the 'pixels' should be. Exception for first and last element values
+            in the array that represent the boundaries.
+        z : array_like
+            2D array_like where the shape must equal (x.size, y.size). Value
+            represents the color that should be used::
+
+                                   x[i]        x[i+1]
+                                    |            |
+                            +-------------+-------------+
+                            |   z[i, j]   |  z[i+1, j]  |- y[j]
+                            +-------------+-------------+
+                            |  z[i, j-1]  | z[i+1, j-1] |- y[j-1]
+                            +-------------+-------------+
+
+        border : color_like, optional
+            Argument that can be relayed to :func:`mkPen <pyqtgraph.mkPen>`
+            that represents the border of the border drawn around the
+            NonUniformImageItem.  Default is None
+
+        See Also
+        --------
+        :class:`PColorMeshItem <pyqtgraph.PColorMeshItem>` - This item provides
+        similar functionality but instead of rectangles, it uses Polygons for
+        more customizable geometry.
+        """
+
+        super().__init__()
+
+                # convert to numpy arrays
         x = np.asarray(x, dtype=np.float64)
         y = np.asarray(y, dtype=np.float64)
         z = np.asarray(z, dtype=np.float64)
 
         if x.ndim != 1 or y.ndim != 1:
-            raise Exception("x and y must be 1-d arrays.")
+            raise ValueError("x and y must be 1-d arrays.")
+
+        self._dataBounds = None
+
+        border = kwargs.get("edgecolors")
+        if border is None:
+            self.edgecolors = border
+        else:
+            self.edgecolors = fn.mkPen(border)
+            # force the pen to be cosmetic. see discussion in
+            # https://github.com/pyqtgraph/pyqtgraph/pull/2586
+            self.edgecolors.setCosmetic(True)
+
+        self.antialiasing = kwargs.get("antialiasing", False)
 
         if np.any(np.diff(x) < 0) or np.any(np.diff(y) < 0):
-            raise Exception("The values in x and y must be monotonically increasing.")
+            raise ValueError("The values in x and y must be monotonically increasing.")
 
         if len(z.shape) != 2 or z.shape != (x.size, y.size):
-            raise Exception("The length of x and y must match the shape of z.")
+            raise ValueError("The length of x and y must match the shape of z.")
+
 
         # default colormap (black - white)
         self.cmap = ColorMap(pos=[0.0, 1.0], color=[(0, 0, 0), (255, 255, 255)])
 
         self.data = (x, y, z)
+        self._dataBounds = ((x[0], x[-1]), (y[0], y[-1]))
         self.levels = None
         self.lut = None
-        self.border = border
         self.picture = None
 
         self.update()
@@ -65,15 +124,24 @@ class NonUniformImage(GraphicsObject):
             self.update()
 
     def setColorMap(self, cmap):
+        """
+        Set the colormap for the NonUniformImage
+
+        Parameters
+        ----------
+        cmap
+            Specify the colormap to be used.
+        """
         self.cmap = cmap
         self.picture = None
         self.update()
 
     def getHistogram(self, **kwds):
-        """Returns x and y arrays containing the histogram values for the current image.
+        """
+        Returns x and y arrays containing the histogram values for the current image.
         For an explanation of the return format, see numpy.histogram().
         """
-
+        # hist = np.histogram(self.z, **kwds)
         z = self.data[2]
         z = z[np.isfinite(z)]
         hist = np.histogram(z, **kwds)
@@ -159,8 +227,8 @@ class NonUniformImage(GraphicsObject):
             painter.setBrush(brush)
             painter.drawRects(*rectarray.drawargs())
 
-        if self.border is not None:
-            painter.setPen(self.border)
+        if self.edgecolors is not None:
+            painter.setPen(self.edgecolors)
             painter.setBrush(fn.mkBrush(None))
             painter.drawRect(self.boundingRect())
 
@@ -171,6 +239,58 @@ class NonUniformImage(GraphicsObject):
             self.generatePicture()
         p.drawPicture(0, 0, self.picture)
 
+
+    def pixelPadding(self):
+        pen = self.edgecolors
+        no_pen = (pen is None) or (pen.style() == QtCore.Qt.PenStyle.NoPen)
+        return 0 if no_pen else (pen.widthF() or 1) * 0.5
+
     def boundingRect(self):
-        x, y, _ = self.data
-        return QtCore.QRectF(x[0], y[0], x[-1]-x[0], y[-1]-y[0])
+        xmin, xmax = self.dataBounds(ax=0)
+        if xmin is None or xmax is None:
+            return QtCore.QRectF()
+        ymin, ymax = self.dataBounds(ax=1)
+        if ymin is None or ymax is None:
+            return QtCore.QRectF()
+        px = py = 0
+        pxPad = self.pixelPadding()
+        if pxPad > 0:
+            px, py = self.pixelVectors()
+            px = 0 if px is None else px.length()
+            py = 0 if py is None else py.length()
+
+            px *= pxPad
+            py *= pxPad
+        return QtCore.QRectF(
+            xmin-px,
+            ymin-py,
+            (2 * px) + xmax - xmin,
+            (2 * py) + ymax - ymin
+        )
+
+    def width(self):
+        if self._dataBounds is None:
+            return 0
+        x_bounds = self._dataBounds[0]
+        return x_bounds[1] - x_bounds[0]
+
+    def height(self):
+        if self._dataBounds is None:
+            return 0
+        y_bounds = self._dataBounds[1]
+        return y_bounds[1] - y_bounds[0]
+
+    def dataBounds(
+            self,
+            ax: int,
+            frac: float = 1.0,
+            orthoRange: Optional[tuple[float, float]] = None
+    ) -> tuple[Optional[float], Optional[float]]:
+        return (None, None) if self._dataBounds is None else self._dataBounds[ax]
+
+    def _updateDisplayWithCurrentState(self, *args, **kwargs):
+        defaults = {
+            'autolevels': False
+        }
+        defaults.update(kwargs)
+        return self.setData(*args, **defaults)
