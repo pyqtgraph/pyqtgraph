@@ -14,10 +14,11 @@ class ButtonItem(GraphicsObject):
             self.setImageFile(imageFile)
         elif pixmap is not None:
             self.setPixmap(pixmap)
-            
-        if width is not None and self.pixmap.width():
-            s = float(width) / self.pixmap.width()
-            self.setScale(s)
+
+        self._width = width
+        if self._width is None:
+            self._width = self.pixmap.width() / self.pixmap.devicePixelRatio()
+
         if parentItem is not None:
             self.setParentItem(parentItem)
         self.setOpacity(0.7)
@@ -51,8 +52,10 @@ class ButtonItem(GraphicsObject):
         
     def paint(self, p, *args):
         p.setRenderHint(p.RenderHint.Antialiasing)
-        p.drawPixmap(0, 0, self.pixmap)
+        tgtRect = QtCore.QRectF(0, 0, self._width, self._width)
+        srcRect = QtCore.QRectF(self.pixmap.rect())
+        p.drawPixmap(tgtRect, self.pixmap, srcRect)
         
     def boundingRect(self):
-        return QtCore.QRectF(self.pixmap.rect())
+        return QtCore.QRectF(0, 0, self._width, self._width)
         
