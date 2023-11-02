@@ -531,7 +531,7 @@ class NodeGraphicsItem(GraphicsObject):
             self.update()
 
         # Populate inputs
-        y = titleOffset
+        y = self.titleOffset
         for i, t in inp.items():
             item = t.graphicsItem()
             item.setParentItem(self)
@@ -541,7 +541,7 @@ class NodeGraphicsItem(GraphicsObject):
             y += self.nodeOffset
         
         # Populate inputs
-        y = titleOffset
+        y = self.titleOffset
         for i, t in out.items():
             item = t.graphicsItem()
             item.setParentItem(self)
