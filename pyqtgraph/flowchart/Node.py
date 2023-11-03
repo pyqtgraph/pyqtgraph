@@ -482,13 +482,49 @@ class NodeGraphicsItem(GraphicsObject):
         self.nameItem = TextItem(self.node.name(), self, self.labelChanged)
         self.nameItem.setDefaultTextColor(QtGui.QColor(50, 50, 50))
         self.nameItem.moveBy(self.bounds.width()/2. - self.nameItem.boundingRect().width()/2., 0)
-        self.titleOffset = 25
-        self.nodeOffset = 12
+        self._titleOffset = 25
+        self._nodeOffset = 12
         self.updateTerminals()
         #self.setZValue(10)
 
         self.menu = None
         self.buildMenu()
+
+    def setTitleOffset(self, new_offset):
+        """
+        This method sets the rendering offset introduced after the title of the node.
+        This method automatically updates the terminal labels. The default for this value is 25px.
+
+        :param new_offset: The new offset to use in pixels at 100% scale.
+        """
+        self._titleOffset = new_offset
+        self.updateTerminals()
+
+    def titleOffset(self):
+        """
+        This method returns the current title offset in use.
+
+        :returns: The offset in px.
+        """
+        return self._titleOffset
+
+    def setTerminalOffset(self, new_offset):
+        """
+        This method sets the rendering offset introduced after every terminal of the node.
+        This method automatically updates the terminal labels. The default for this value is 12px.
+
+        :param new_offset: The new offset to use in pixels at 100% scale.
+        """
+        self._nodeOffset = new_offset
+        self.updateTerminals()
+
+    def terminalOffset(self):
+        """
+        This method returns the current terminal offset in use.
+
+        :returns: The offset in px.
+        """
+        return self._nodeOffset
         
         #self.node.sigTerminalRenamed.connect(self.updateActionMenu)
         
@@ -523,7 +559,7 @@ class NodeGraphicsItem(GraphicsObject):
         maxNode = max(len(inp), len(out))
         
         # calculate new height
-        newHeight = self.titleOffset + maxNode*self.nodeOffset
+        newHeight = self._titleOffset + maxNode*self._nodeOffset
         
         # if current height is not equal to new height, update
         if not self.bounds.height() == newHeight:
@@ -531,24 +567,24 @@ class NodeGraphicsItem(GraphicsObject):
             self.update()
 
         # Populate inputs
-        y = self.titleOffset
+        y = self._titleOffset
         for i, t in inp.items():
             item = t.graphicsItem()
             item.setParentItem(self)
             #item.setZValue(self.zValue()+1)
             item.setAnchor(0, y)
             self.terminals[i] = (t, item)
-            y += self.nodeOffset
+            y += self._nodeOffset
         
         # Populate inputs
-        y = self.titleOffset
+        y = self._titleOffset
         for i, t in out.items():
             item = t.graphicsItem()
             item.setParentItem(self)
             item.setZValue(self.zValue())
             item.setAnchor(self.bounds.width(), y)
             self.terminals[i] = (t, item)
-            y += self.nodeOffset
+            y += self._nodeOffset
         
         #self.buildMenu()
         
