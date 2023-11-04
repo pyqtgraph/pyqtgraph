@@ -2,7 +2,8 @@ __init__ = ["Flowchart", "FlowchartGraphicsItem", "FlowchartNode"]
 
 import os
 from collections import OrderedDict
-from typing import Optional, Union, Iterable, Unpack, Any
+from typing import Optional, Union, Iterable, Any
+from typing_extensions import Unpack
 
 from numpy import ndarray
 
