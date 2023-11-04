@@ -46,10 +46,10 @@ layout.addWidget(pw2, 1, 1)
 win.show()
 
 ## generate signal data to pass through the flowchart
-data = np.random.normal(size=1000)
+data: metaarray.MetaArray = np.random.normal(size=1000)  # type: ignore
 data[200:300] += 1
 data += np.sin(np.linspace(0, 100, 1000))
-data = metaarray.MetaArray(data, info=[{'name': 'Time', 'values': np.linspace(0, 1.0, len(data))}, {}])  # type: ignore
+data = metaarray.MetaArray(data, info=[{'name': 'Time', 'values': np.linspace(0, 1.0, len(data))}, {}])
 
 ## Feed data into the input terminal of the flowchart
 fc.setInput(dataIn=data)

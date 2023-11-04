@@ -39,13 +39,14 @@ exclude = '(Template|__init__.py)'
 packages = ["pyqtgraph"]
 show_error_codes = true
 strict = true
-disable_error_code = ["attr-defined", "union-attr"]
+disable_error_code = ["attr-defined", "union-attr", "misc", "unused-ignore"]
 ignore_errors = true
 ignore_missing_imports = true
 disallow_untyped_calls = false
 disallow_any_generics = false
 disallow_subclassing_any = false
 warn_return_any = false
+enable_incomplete_feature = ["Unpack"]
 
 [[tool.mypy.overrides]]
 module = "pyqtgraph.flowchart.*"    # the list will increase

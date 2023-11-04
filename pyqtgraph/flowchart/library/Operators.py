@@ -1,4 +1,5 @@
-from typing import Union, Unpack
+from typing import Union
+from typing_extensions import Unpack
 
 from ..Node import Node
 from .common import CtrlNode

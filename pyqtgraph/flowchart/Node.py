@@ -3,7 +3,8 @@ __all__ = ["Node", "NodeGraphicsItem"]
 import sys
 import types
 from collections import OrderedDict
-from typing import Optional, Any, Callable, Unpack, Union
+from typing import Optional, Any, Callable, Union
+from typing_extensions import Unpack
 
 from .. import functions as fn
 from ..GraphicsScene.mouseEvents import MouseClickEvent, MouseDragEvent

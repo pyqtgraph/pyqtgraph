@@ -2,9 +2,9 @@ __all__ = ["Terminal", "TerminalGraphicsItem"]
 
 import weakref
 
-from typing import Optional, Literal, Sequence, Callable, Unpack, Union, Any
+from typing import Optional, Literal, Sequence, Callable, Union, Any
+from typing_extensions import Unpack
 
-from .Node import Node
 from .. import functions as fn
 from ..GraphicsScene.mouseEvents import HoverEvent
 from ..graphicsItems.GraphicsItem import GraphicsItem
@@ -18,7 +18,7 @@ translate = QtCore.QCoreApplication.translate
 class Terminal(object):
     def __init__(
             self,
-            node: Node,
+            node: Any,
             name: str,
             io: Literal["in", "out"],
             optional: bool = False,
@@ -149,7 +149,7 @@ class Terminal(object):
     def connections(self) -> dict:
         return self._connections
 
-    def node(self) -> Optional[Node]:
+    def node(self) -> Optional[Any]:
         return self._node()
 
     def isInput(self) -> bool:
@@ -188,7 +188,7 @@ class Terminal(object):
     def isConnected(self) -> bool:
         return len(self.connections()) > 0
 
-    def connectedTo(self, term: Terminal) -> bool:
+    def connectedTo(self, term: 'Terminal') -> bool:
         return term in self.connections()
 
     def hasInput(self) -> bool:
