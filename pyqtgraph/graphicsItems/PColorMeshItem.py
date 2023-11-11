@@ -349,13 +349,6 @@ class PColorMeshItem(GraphicsObject):
         if self.qpicture is not None:
             p.drawPicture(0, 0, self.qpicture)
 
-
-    def setBorder(self, b):
-        self.border = fn.mkPen(b)
-        self.update()
-
-
-
     def width(self):
         if self._dataBounds is None:
             return 0
