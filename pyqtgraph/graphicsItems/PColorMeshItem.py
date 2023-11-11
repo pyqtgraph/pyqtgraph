@@ -219,32 +219,35 @@ class PColorMeshItem(GraphicsObject):
             The minimum and maximum levels are mapped to the lowest and highest colors 
             in the colormap. The autoLevels parameter is ignored if ``enableAutoLevels is False`` 
         """
+        old_bounds = self._dataBounds
+        self._prepareData(args)
+        boundsChanged = old_bounds != self._dataBounds
+
         autoLevels = kwargs.get('autoLevels', True)
+        self._rerender(autoLevels=autoLevels)
 
-        # Has the view bounds changed
-        shapeChanged = False
-        if self.qpicture is None:
-            shapeChanged = True
-        elif len(args)==1:
-            if args[0].shape[0] != self.x[:,1][-1] or args[0].shape[1] != self.y[0][-1]:
-                shapeChanged = True
-        elif len(args)==3:
-            if np.any(self.x != args[0]) or np.any(self.y != args[1]):
-                shapeChanged = True
+        if boundsChanged:
+            self.prepareGeometryChange()
+            self.informViewBoundsChanged()
 
-        if len(args)==0:
-            # No data was received.
-            if self.z is None:
-                # No data is currently displayed, 
-                # so other settings (like colormap) can not be updated
-                return
-        else:
-            # Got new data. Prepare it for plotting
-            self._prepareData(args)
+        self.update()
 
+    def _rerender(self, *, autoLevels):
+        self.qpicture = None
+        if self.z is not None:
+            if (self.levels is None) or (self.enableautolevels and autoLevels):
+                # Autoscale colormap
+                z_min = self.z.min()
+                z_max = self.z.max()
+                self.setLevels( (z_min, z_max), update=False)
+            self.qpicture = self._drawPicture()
 
-        self.qpicture = QtGui.QPicture()
-        painter = QtGui.QPainter(self.qpicture)
+    def _drawPicture(self) -> QtGui.QPicture:
+        # on entry, the following members are all valid: x, y, z, levels
+        # this function does not alter any state (besides using self.quads)
+
+        picture = QtGui.QPicture()
+        painter = QtGui.QPainter(picture)
         # We set the pen of all polygons once
         if self.edgecolors is None:
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
@@ -252,28 +255,17 @@ class PColorMeshItem(GraphicsObject):
             painter.setPen(self.edgecolors)
             if self.antialiasing:
                 painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-                
 
         ## Prepare colormap
         # First we get the LookupTable
         lut = self.lut_qcolor
         # Second we associate each z value, that we normalize, to the lut
         scale = len(lut) - 1
-        # Decide whether to autoscale the colormap or use the same levels as before
-        if (self.levels is None) or (self.enableautolevels and autoLevels):
-            # Autoscale colormap 
-            z_min = self.z.min()
-            z_max = self.z.max()
-            self.setLevels( (z_min, z_max), update=False)
-        else:
-            # Use consistent colormap scaling
-            z_min = self.levels[0]
-            z_max = self.levels[1]
-        rng = z_max - z_min
+        lo, hi = self.levels[0], self.levels[1]
+        rng = hi - lo
         if rng == 0:
             rng = 1
-        norm = fn.rescaleData(self.z, scale / rng, z_min,
-            dtype=int, clip=(0, len(lut)-1))
+        norm = fn.rescaleData(self.z, scale / rng, lo, dtype=int, clip=(0, len(lut)-1))
 
         if Qt.QT_LIB.startswith('PyQt'):
             drawConvexPolygon = lambda x : painter.drawConvexPolygon(*x)
@@ -299,24 +291,7 @@ class PColorMeshItem(GraphicsObject):
                 drawConvexPolygon(polys[idx])
 
         painter.end()
-        self.update()
-
-        self.prepareGeometryChange()
-        if shapeChanged:
-            self.informViewBoundsChanged()
-
-
-
-    def _updateDisplayWithCurrentState(self, *args, **kargs):
-        ## Used for re-rendering mesh from self.z.
-        ## For example when a new colormap is applied, or the levels are adjusted
-
-        defaults = {
-            'autoLevels': False,
-        }
-        defaults.update(kargs)
-        return self.setData(*args, **defaults)
-
+        return picture
 
 
     def setLevels(self, levels, update=True):
@@ -334,9 +309,8 @@ class PColorMeshItem(GraphicsObject):
         self.levels = levels
         self.sigLevelsChanged.emit(levels)
         if update:
-            self._updateDisplayWithCurrentState()
-
-
+            self._rerender(autoLevels=False)
+            self.update()
 
     def getLevels(self):
         """
@@ -351,9 +325,8 @@ class PColorMeshItem(GraphicsObject):
         self.cmap = None    # invalidate since no longer consistent with lut
         self.lut_qcolor = lut[:]
         if update:
-            self._updateDisplayWithCurrentState()
-
-
+            self._rerender(autoLevels=False)
+            self.update()
 
     def getColorMap(self):
         return self.cmap
@@ -373,10 +346,8 @@ class PColorMeshItem(GraphicsObject):
 
 
     def paint(self, p, *args):
-        if self.z is None:
-            return
-
-        p.drawPicture(0, 0, self.qpicture)
+        if self.qpicture is not None:
+            p.drawPicture(0, 0, self.qpicture)
 
 
     def setBorder(self, b):
