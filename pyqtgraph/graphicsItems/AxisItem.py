@@ -52,6 +52,9 @@ class AxisItem(GraphicsWidget):
             raise Exception("Orientation argument must be one of 'left', 'right', 'top', or 'bottom'.")
         if orientation in ['left', 'right']:
             self.label.setRotation(-90)
+            hide_overlapping_labels = False # allow labels on vertical axis to extend above and below the length of the axis
+        else:
+            hide_overlapping_labels = True # stop labels on horizontal axis from overlapping so vertical axis labels have room
 
         self.style = {
             'tickTextOffset': [5, 2],  ## (horizontal, vertical) spacing between text and axis
@@ -59,7 +62,7 @@ class AxisItem(GraphicsWidget):
             'tickTextHeight': 18,
             'autoExpandTextSpace': True,  ## automatically expand text space if needed
             'autoReduceTextSpace': True,
-            'hideOverlappingLabels': True,
+            'hideOverlappingLabels': hide_overlapping_labels,
             'tickFont': None,
             'stopAxisAtTick': (False, False),  ## whether axis is drawn to edge of box or to last tick
             'textFillLimits': [  ## how much of the axis to fill up with tick text, maximally.
@@ -138,9 +141,12 @@ class AxisItem(GraphicsWidget):
         autoExpandTextSpace   (bool) Automatically expand text space if the tick
                               strings become too long.
         autoReduceTextSpace   (bool) Automatically shrink the axis if necessary
-        hideOverlappingLabels (bool) Hide tick labels which overlap the AxisItems'
-                              geometry rectangle. If False, labels might be drawn
-                              overlapping with tick labels from neighboring plots.
+        hideOverlappingLabels (bool or int)
+
+                              * *True*  (default for horizontal axis): Hide tick labels which extend beyond the AxisItem's geometry rectangle.
+                              * *False* (default for vertical axis): Labels may be drawn extending beyond the extent of the axis.
+                              * *(int)* sets the tolerance limit for how many pixels a label is allowed to extend beyond the axis. Defaults to 15 for `hideOverlappingLabels = False`.
+
         tickFont              (QFont or None) Determines the font used for tick
                               values. Use None for the default font.
         stopAxisAtTick        (tuple: (bool min, bool max)) If True, the axis
@@ -625,7 +631,17 @@ class AxisItem(GraphicsWidget):
                 self.setRange(*newRange)
 
     def boundingRect(self):
-        m = 0 if self.style['hideOverlappingLabels'] else 15
+        m = 0
+        hide_overlapping_labels = self.style['hideOverlappingLabels']
+        if hide_overlapping_labels is True:
+            pass # skip further checks
+        elif hide_overlapping_labels is False:
+            m = 15
+        else:
+            try:
+                m = int( self.style['hideOverlappingLabels'] )
+            except ValueError: pass # ignore any non-numeric value
+
         linkedView = self.linkedView()
         if linkedView is None or self.grid is False:
             rect = self.mapRectFromParent(self.geometry())
@@ -637,7 +653,7 @@ class AxisItem(GraphicsWidget):
             elif self.orientation == 'right':
                 rect = rect.adjusted(min(0,tl), -m, 0, m)
             elif self.orientation == 'top':
-                rect = rect.adjusted(-15, 0, 15, -min(0,tl))
+                rect = rect.adjusted(-m, 0, m, -min(0,tl))
             elif self.orientation == 'bottom':
                 rect = rect.adjusted(-m, min(0,tl), m, 0)
             return rect
@@ -713,7 +729,7 @@ class AxisItem(GraphicsWidget):
             # two levels, all offsets = 0
             axis.setTickSpacing(5, 1)
             # three levels, all offsets = 0
-            axis.setTickSpacing([(3, 0), (1, 0), (0.25, 0)])
+            axis.setTickSpacing(levels=[(3, 0), (1, 0), (0.25, 0)])
             # reset to default
             axis.setTickSpacing()
         """
