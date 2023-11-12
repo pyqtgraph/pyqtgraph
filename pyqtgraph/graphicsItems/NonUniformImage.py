@@ -37,11 +37,11 @@ class NonUniformImage(GraphicsObject):
             raise Exception("The length of x and y must match the shape of z.")
 
         # default colormap (black - white)
-        self.cmap = ColorMap(pos=[0.0, 1.0], color=[(0, 0, 0), (255, 255, 255)])
+        self.cmap = ColorMap(None, [0.0, 1.0])
+        self.lut = self.cmap.getLookupTable(nPts=256)
 
         self.data = (x, y, z)
         self.levels = None
-        self.lut = None
         self.border = border
         self.picture = None
 
@@ -59,15 +59,15 @@ class NonUniformImage(GraphicsObject):
             lut.setImageItem(self)
             return
 
+        self.cmap = None    # invalidate since no longer consistent with lut
         self.lut = lut
         self.picture = None
         if update:
             self.update()
 
     def setColorMap(self, cmap):
+        self.setLookupTable(cmap.getLookupTable(nPts=256), update=True)
         self.cmap = cmap
-        self.picture = None
-        self.update()
 
     def getHistogram(self, **kwds):
         """Returns x and y arrays containing the histogram values for the current image.
@@ -106,13 +106,19 @@ class NonUniformImage(GraphicsObject):
         W, H = np.meshgrid(np.diff(x), np.diff(y), indexing='ij')
         Z = z
 
-        # get colormap, lut has precedence over cmap
-        if self.lut is None:
-            lut = self.cmap.getLookupTable(nPts=256)
-        elif callable(self.lut):
+        # get colormap
+        if callable(self.lut):
             lut = self.lut(z)
         else:
             lut = self.lut
+
+        if lut is None:
+            # lut can be None for a few reasons:
+            # 1) self.lut(z) can also return None on error
+            # 2) if a trivial gradient is being used, HistogramLUTItem calls
+            #    setLookupTable(None) as an optimization for ImageItem
+            cmap = ColorMap(None, [0.0, 1.0])
+            lut = cmap.getLookupTable(nPts=256)
 
         # normalize and quantize
         mn, mx = self.getLevels()
