@@ -7,7 +7,6 @@ from .. import colormap
 from .. import functions as fn
 from ..Qt import QtCore, QtGui, QtWidgets
 from .LinearRegionItem import LinearRegionItem
-from .PColorMeshItem import PColorMeshItem
 from .PlotItem import PlotItem
 
 __all__ = ['ColorBarItem']
@@ -288,10 +287,7 @@ class ColorBarItem(PlotItem):
             if img is None: continue # dereference weakref
             img.setLevels( self.values ) # (min,max) tuple
             if update_cmap and self._colorMap is not None:
-                if isinstance(img, PColorMeshItem):
-                    img.setLookupTable( self._colorMap.getLookupTable(nPts=256, mode=self._colorMap.QCOLOR) )
-                else:
-                    img.setLookupTable( self._colorMap.getLookupTable(nPts=256) )
+                img.setColorMap(self._colorMap)
 
     def _levelsChangedHandler(self, levels):
         """ internal: called when child item for some reason decides to update its levels without using ColorBarItem.
