@@ -41,7 +41,7 @@ class ColorBarItem(PlotItem):
 
     def __init__(self, values=None, width=25, colorMap=None, label=None,
                  interactive=True, limits=None, rounding=1,
-                 orientation='vertical', pen='w', hoverPen='r', hoverBrush='#FF000080', cmap=None ):
+                 orientation='vertical', pen='w', hoverPen='r', hoverBrush='#FF000080' ):
         """
         Creates a new ColorBarItem.
 
