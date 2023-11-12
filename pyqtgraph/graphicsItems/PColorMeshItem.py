@@ -348,6 +348,7 @@ class PColorMeshItem(GraphicsObject):
 
     
     def setLookupTable(self, lut, update=True):
+        self.cmap = None    # invalidate since no longer consistent with lut
         self.lut_qcolor = lut[:]
         if update:
             self._updateDisplayWithCurrentState()
@@ -357,7 +358,9 @@ class PColorMeshItem(GraphicsObject):
     def getColorMap(self):
         return self.cmap
 
-
+    def setColorMap(self, cmap):
+        self.setLookupTable(cmap.getLookupTable(nPts=256, mode=cmap.QCOLOR), update=True)
+        self.cmap = cmap
 
     def enableAutoLevels(self):
         self.enableautolevels = True
