@@ -253,45 +253,21 @@ def mkColor(*args):
             c = args[0]
             if len(c) == 1:
                 try:
-                    return Colors[c]
+                    return QtGui.QColor(Colors[c])  # return copy
                 except KeyError:
                     raise ValueError('No color named "%s"' % c)
-            have_alpha = len(c) in [5, 9] and c[0] == '#'  # "#RGBA" and "#RRGGBBAA"
-            if not have_alpha:
-                # try parsing SVG named colors, including "#RGB" and "#RRGGBB".
-                # note that QColor.setNamedColor() treats a 9-char hex string as "#AARRGGBB".
-                qcol = QtGui.QColor()
-                qcol.setNamedColor(c)
-                if qcol.isValid():
-                    return qcol
-                # on failure, fallback to pyqtgraph parsing
-                # this includes the deprecated case of non-#-prefixed hex strings
-            if c[0] == '#':
-                c = c[1:]
-            else:
+            # match hex color codes
+            match = re.match(r"#([0-9a-fA-F]{3,8})", c)
+            if not match or len(match.group(1)) not in [3, 4, 6, 8]:
                 raise ValueError(f"Unable to convert {c} to QColor")
-            if len(c) == 3:
-                r = int(c[0]*2, 16)
-                g = int(c[1]*2, 16)
-                b = int(c[2]*2, 16)
-                a = 255
-            elif len(c) == 4:
-                r = int(c[0]*2, 16)
-                g = int(c[1]*2, 16)
-                b = int(c[2]*2, 16)
-                a = int(c[3]*2, 16)
-            elif len(c) == 6:
-                r = int(c[0:2], 16)
-                g = int(c[2:4], 16)
-                b = int(c[4:6], 16)
-                a = 255
-            elif len(c) == 8:
-                r = int(c[0:2], 16)
-                g = int(c[2:4], 16)
-                b = int(c[4:6], 16)
-                a = int(c[6:8], 16)
-            else:
-                raise ValueError(f"Unknown how to convert string {c} to color")
+            c = match.group(1)
+            if len(c) < 6:
+                # convert RGBA to RRGGBBAA
+                c = "".join([x + x for x in c])
+            if len(c) < 8:
+                # convert RRGGBB to RRGGBBAA
+                c += "ff"
+            r, g, b, a = bytes.fromhex(c)
         elif isinstance(args[0], QtGui.QColor):
             return QtGui.QColor(args[0])
         elif np.issubdtype(type(args[0]), np.floating):
