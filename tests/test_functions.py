@@ -445,11 +445,10 @@ def test_colorDistance():
         (["#4488cc"], [68, 136, 204, 255]),
         (["#4488cc00"], [68, 136, 204, 0]),
         ([QtGui.QColor(1, 2, 3, 4)], [1, 2, 3, 4]),
+        (["steelblue"], [70, 130, 180, 255]),
+        (["lawngreen"], [124, 252, 0, 255]),
     ],
 )
 def test_mkColor(test_input, expected):
     qcol: QtGui.QColor = pg.functions.mkColor(*test_input)
-    assert qcol.red() == expected[0]
-    assert qcol.green() == expected[1]
-    assert qcol.blue() == expected[2]
-    assert qcol.alpha() == expected[3]
+    assert list(qcol.getRgb()) == expected

@@ -234,7 +234,7 @@ def mkColor(*args):
     types. Accepted arguments are:
     
     ================ ================================================
-     'c'             one of: r, g, b, c, m, y, k, w
+     'c'             one of: r, g, b, c, m, y, k, w or an SVG color keyword
      R, G, B, [A]    integers 0-255
      (R, G, B, [A])  tuple of integers 0-255
      float           greyscale, 0.0-1.0
@@ -256,6 +256,9 @@ def mkColor(*args):
                     return QtGui.QColor(Colors[c])  # return copy
                 except KeyError:
                     raise ValueError('No color named "%s"' % c)
+            # check if 'c' is an SVG color keyword
+            if hasattr(QtGui.QColorConstants.Svg, c):
+                return getattr(QtGui.QColorConstants.Svg, c)
             # match hex color codes
             match = re.match(r"#([0-9a-fA-F]{3,8})", c)
             if not match or len(match.group(1)) not in [3, 4, 6, 8]:
