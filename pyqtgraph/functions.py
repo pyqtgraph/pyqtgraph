@@ -256,21 +256,23 @@ def mkColor(*args):
                     return QtGui.QColor(Colors[c])  # return copy
                 except KeyError:
                     raise ValueError('No color named "%s"' % c)
-            # check if 'c' is an SVG color keyword
-            if hasattr(QtGui.QColorConstants.Svg, c):
-                return getattr(QtGui.QColorConstants.Svg, c)
             # match hex color codes
             match = re.match(r"#([0-9a-fA-F]{3,8})", c)
-            if not match or len(match.group(1)) not in [3, 4, 6, 8]:
+            if match and len(match.group(1)) in [3, 4, 6, 8]:
+                c = match.group(1)
+                if len(c) < 6:
+                    # convert RGBA to RRGGBBAA
+                    c = "".join([x + x for x in c])
+                if len(c) < 8:
+                    # convert RRGGBB to RRGGBBAA
+                    c += "ff"
+                r, g, b, a = bytes.fromhex(c)
+            else:
+                # 'c' might be an SVG color keyword
+                qcol = QtGui.QColor(c)
+                if qcol.isValid():
+                    return qcol
                 raise ValueError(f"Unable to convert {c} to QColor")
-            c = match.group(1)
-            if len(c) < 6:
-                # convert RGBA to RRGGBBAA
-                c = "".join([x + x for x in c])
-            if len(c) < 8:
-                # convert RRGGBB to RRGGBBAA
-                c += "ff"
-            r, g, b, a = bytes.fromhex(c)
         elif isinstance(args[0], QtGui.QColor):
             return QtGui.QColor(args[0])
         elif np.issubdtype(type(args[0]), np.floating):
