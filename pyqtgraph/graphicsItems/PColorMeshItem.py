@@ -125,7 +125,7 @@ class PColorMeshItem(GraphicsObject):
             self.edgecolors.setCosmetic(True)
         self.antialiasing = kwargs.get('antialiasing', False)
         self.levels = kwargs.get('levels', None)
-        self.enableautolevels = kwargs.get('enableAutoLevels', True)
+        self._defaultAutoLevels = kwargs.get('enableAutoLevels', True)
         
         if 'colorMap' in kwargs:
             cmap = kwargs.get('colorMap')
@@ -221,7 +221,7 @@ class PColorMeshItem(GraphicsObject):
         boundsChanged = old_bounds != self._dataBounds
 
         self._rerender(
-            autoLevels=kwargs.get('autoLevels', self.enableautolevels)
+            autoLevels=kwargs.get('autoLevels', self._defaultAutoLevels)
         )
 
         if boundsChanged:
@@ -334,14 +334,10 @@ class PColorMeshItem(GraphicsObject):
         self.cmap = cmap
 
     def enableAutoLevels(self):
-        self.enableautolevels = True
-
-
+        self._defaultAutoLevels = True
 
     def disableAutoLevels(self):
-        self.enableautolevels = False
-
-
+        self._defaultAutoLevels = False
 
     def paint(self, p, *args):
         if self.qpicture is not None:
