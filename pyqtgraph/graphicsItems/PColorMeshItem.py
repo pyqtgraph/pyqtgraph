@@ -91,7 +91,7 @@ class PColorMeshItem(GraphicsObject):
             Sets the minimum and maximum values to be represented by the colormap (min, max). 
             Values outside this range will be clipped to the colors representing min or max.
             ``None`` disables the limits, meaning that the colormap will autoscale 
-            each time ``setData()`` is called - unless ``enableAutoLevels=False``.
+            the next time ``setData()`` is called with new data.
         enableAutoLevels: bool, optional, default True
             Causes the colormap levels to autoscale whenever ``setData()`` is called. 
             It is possible to override this value on a per-change-basis by using the
