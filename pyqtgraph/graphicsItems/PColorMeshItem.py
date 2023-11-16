@@ -94,8 +94,8 @@ class PColorMeshItem(GraphicsObject):
             each time ``setData()`` is called - unless ``enableAutoLevels=False``.
         enableAutoLevels: bool, optional, default True
             Causes the colormap levels to autoscale whenever ``setData()`` is called. 
-            When enableAutoLevels is set to True, it is still possible to disable autoscaling
-            on a per-change-basis by using ``autoLevels=False`` when calling ``setData()``.
+            It is possible to override this value on a per-change-basis by using the
+            ``autoLevels`` keyword argument when calling ``setData()``.
             If ``enableAutoLevels==False`` and ``levels==None``, autoscaling will be 
             performed once when the first z data is supplied. 
         edgecolors : dict, optional
@@ -213,18 +213,16 @@ class PColorMeshItem(GraphicsObject):
 
             "ASCII from: <https://matplotlib.org/3.2.1/api/_as_gen/
                          matplotlib.pyplot.pcolormesh.html>".
-        autoLevels: bool, optional, default True
-            When set to True, PColorMeshItem will automatically select levels
-            based on the minimum and maximum values encountered in the data along the z axis.
-            The minimum and maximum levels are mapped to the lowest and highest colors 
-            in the colormap. The autoLevels parameter is ignored if ``enableAutoLevels is False`` 
+        autoLevels: bool, optional
+            If set, overrides the value of ``enableAutoLevels``
         """
         old_bounds = self._dataBounds
         self._prepareData(args)
         boundsChanged = old_bounds != self._dataBounds
 
-        autoLevels = kwargs.get('autoLevels', True)
-        self._rerender(autoLevels=autoLevels)
+        self._rerender(
+            autoLevels=kwargs.get('autoLevels', self.enableautolevels)
+        )
 
         if boundsChanged:
             self.prepareGeometryChange()
@@ -235,7 +233,7 @@ class PColorMeshItem(GraphicsObject):
     def _rerender(self, *, autoLevels):
         self.qpicture = None
         if self.z is not None:
-            if (self.levels is None) or (self.enableautolevels and autoLevels):
+            if (self.levels is None) or autoLevels:
                 # Autoscale colormap
                 z_min = self.z.min()
                 z_max = self.z.max()
