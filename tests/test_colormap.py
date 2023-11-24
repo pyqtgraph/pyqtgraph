@@ -1,5 +1,6 @@
 import pytest
 
+import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 
@@ -79,3 +80,15 @@ def test_ColorMap_getByIndex():
     cm = pg.ColorMap([0.0, 1.0], [(0,0,0), (255,0,0)])
     assert cm.getByIndex(0) == QtGui.QColor.fromRgbF(0.0, 0.0, 0.0, 1.0)
     assert cm.getByIndex(1) == QtGui.QColor.fromRgbF(1.0, 0.0, 0.0, 1.0)
+
+def test_round_trip():
+    # test that colormap survives a round trip.
+    # note that while both input and output are in BYTE,
+    # internally the colors are stored as float; thus
+    # there is a conversion BYTE -> float -> BYTE
+    nPts = 256
+    zebra = np.zeros((nPts, 3), dtype=np.uint8)
+    zebra[1::2, :] = 255
+    cmap = pg.ColorMap(None, zebra)
+    lut = cmap.getLookupTable(nPts=nPts)
+    assert np.all(lut == zebra)

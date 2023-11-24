@@ -1,37 +1,21 @@
 import operator
 import weakref
-from collections import OrderedDict
 
 import numpy as np
 
 from .. import functions as fn
+from .. import colormap
 from ..colormap import ColorMap
 from ..Qt import QtCore, QtGui, QtWidgets
 from ..widgets.SpinBox import SpinBox
+from ..widgets.ColorMapButton import ColorMapMenu
 from .GraphicsWidget import GraphicsWidget
+from .GradientPresets import Gradients
 
 translate = QtCore.QCoreApplication.translate
 
 __all__ = ['TickSliderItem', 'GradientEditorItem', 'addGradientListToDocstring']
 
-Gradients = OrderedDict([
-    ('thermal', {'ticks': [(0.3333, (185, 0, 0, 255)), (0.6666, (255, 220, 0, 255)), (1, (255, 255, 255, 255)), (0, (0, 0, 0, 255))], 'mode': 'rgb'}),
-    ('flame', {'ticks': [(0.2, (7, 0, 220, 255)), (0.5, (236, 0, 134, 255)), (0.8, (246, 246, 0, 255)), (1.0, (255, 255, 255, 255)), (0.0, (0, 0, 0, 255))], 'mode': 'rgb'}),
-    ('yellowy', {'ticks': [(0.0, (0, 0, 0, 255)), (0.2328863796753704, (32, 0, 129, 255)), (0.8362738179251941, (255, 255, 0, 255)), (0.5257586450247, (115, 15, 255, 255)), (1.0, (255, 255, 255, 255))], 'mode': 'rgb'} ),
-    ('bipolar', {'ticks': [(0.0, (0, 255, 255, 255)), (1.0, (255, 255, 0, 255)), (0.5, (0, 0, 0, 255)), (0.25, (0, 0, 255, 255)), (0.75, (255, 0, 0, 255))], 'mode': 'rgb'}),
-    ('spectrum', {'ticks': [(1.0, (255, 0, 255, 255)), (0.0, (255, 0, 0, 255))], 'mode': 'hsv'}),
-    ('cyclic', {'ticks': [(0.0, (255, 0, 4, 255)), (1.0, (255, 0, 0, 255))], 'mode': 'hsv'}),
-    ('greyclip', {'ticks': [(0.0, (0, 0, 0, 255)), (0.99, (255, 255, 255, 255)), (1.0, (255, 0, 0, 255))], 'mode': 'rgb'}),
-    ('grey', {'ticks': [(0.0, (0, 0, 0, 255)), (1.0, (255, 255, 255, 255))], 'mode': 'rgb'}),
-    # Perceptually uniform sequential colormaps from Matplotlib 2.0
-    ('viridis', {'ticks': [(0.0, (68, 1, 84, 255)), (0.25, (58, 82, 139, 255)), (0.5, (32, 144, 140, 255)), (0.75, (94, 201, 97, 255)), (1.0, (253, 231, 36, 255))], 'mode': 'rgb'}),
-    ('inferno', {'ticks': [(0.0, (0, 0, 3, 255)), (0.25, (87, 15, 109, 255)), (0.5, (187, 55, 84, 255)), (0.75, (249, 142, 8, 255)), (1.0, (252, 254, 164, 255))], 'mode': 'rgb'}),
-    ('plasma', {'ticks': [(0.0, (12, 7, 134, 255)), (0.25, (126, 3, 167, 255)), (0.5, (203, 71, 119, 255)), (0.75, (248, 149, 64, 255)), (1.0, (239, 248, 33, 255))], 'mode': 'rgb'}),
-    ('magma', {'ticks': [(0.0, (0, 0, 3, 255)), (0.25, (80, 18, 123, 255)), (0.5, (182, 54, 121, 255)), (0.75, (251, 136, 97, 255)), (1.0, (251, 252, 191, 255))], 'mode': 'rgb'}),
-    # turbo from https://ai.googleblog.com/2019/08/turbo-improved-rainbow-colormap-for.html
-    ('turbo', {'ticks': [(0.0, (51, 27, 61, 255)), (0.125, (77, 110, 223, 255)), (0.25, (61, 185, 233, 255)), (0.375, (68, 238, 154, 255)), (0.5, (164, 250, 80, 255)),
-                         (0.625, (235, 206, 76, 255)), (0.75, (247, 129, 55, 255)), (0.875, (206, 58, 32, 255)), (1.0, (119, 21, 19, 255))], 'mode': 'rgb'}),
-])
 
 def addGradientListToDocstring():
     """Decorator to add list of current pre-defined gradients to the end of a function docstring."""
@@ -454,35 +438,8 @@ class GradientEditorItem(TickSliderItem):
         self.hsvAction.setCheckable(True)
         self.hsvAction.triggered.connect(self._setColorModeToHSV)
             
-        self.menu = QtWidgets.QMenu()
-        
-        ## build context menu of gradients
-        l = self.length
-        self.length = 100
-        global Gradients
-        for g in Gradients:
-            px = QtGui.QPixmap(100, 15)
-            p = QtGui.QPainter(px)
-            self.restoreState(Gradients[g])
-            grad = self.getGradient()
-            brush = QtGui.QBrush(grad)
-            p.fillRect(QtCore.QRect(0, 0, 100, 15), brush)
-            p.end()
-            label = QtWidgets.QLabel()
-            label.setPixmap(px)
-            label.setContentsMargins(1, 1, 1, 1)
-            labelName = QtWidgets.QLabel(g)
-            hbox = QtWidgets.QHBoxLayout()
-            hbox.addWidget(labelName)
-            hbox.addWidget(label)
-            widget = QtWidgets.QWidget()
-            widget.setLayout(hbox)
-            act = QtWidgets.QWidgetAction(self)
-            act.setDefaultWidget(widget)
-            act.triggered.connect(self.contextMenuClicked)
-            act.name = g
-            self.menu.addAction(act)
-        self.length = l
+        self.menu = ColorMapMenu(showGradientSubMenu=True)
+        self.menu.triggered.connect(self.contextMenuClicked)
         self.menu.addSeparator()
         self.menu.addAction(self.rgbAction)
         self.menu.addAction(self.hsvAction)
@@ -532,11 +489,23 @@ class GradientEditorItem(TickSliderItem):
         #private
         self.menu.popup(ev.screenPos().toQPoint())
     
-    def contextMenuClicked(self, b=None):
+    def contextMenuClicked(self, action):
         #private
-        #global Gradients
-        act = self.sender()
-        self.loadPreset(act.name)
+
+        # ignore the extra added on actions
+        if action in [self.rgbAction, self.hsvAction]:
+            return
+
+        name, source = action.data()
+        if source == 'preset-gradient':
+            self.loadPreset(name)
+        else:
+            if name is None:
+                cmap = colormap.ColorMap(None, [0.0, 1.0])
+            else:
+                cmap = colormap.get(name, source=source)
+            self.setColorMap(cmap)
+            self.showTicks(False)
         
     @addGradientListToDocstring()
     def loadPreset(self, name):
