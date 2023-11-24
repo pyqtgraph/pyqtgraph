@@ -197,6 +197,7 @@ cfg = {
         'color': '#fff',
         'bool': False,
         'colormap': None,
+        'cmaplut' : 'viridis',
         'progress': 50,
         'font': 'Inter',
     }

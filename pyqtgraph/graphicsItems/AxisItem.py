@@ -1,5 +1,5 @@
 import weakref
-from math import ceil, floor, isfinite, log, log10
+from math import ceil, floor, isfinite, log10, sqrt, frexp, floor
 
 import numpy as np
 
@@ -52,6 +52,9 @@ class AxisItem(GraphicsWidget):
             raise Exception("Orientation argument must be one of 'left', 'right', 'top', or 'bottom'.")
         if orientation in ['left', 'right']:
             self.label.setRotation(-90)
+            hide_overlapping_labels = False # allow labels on vertical axis to extend above and below the length of the axis
+        else:
+            hide_overlapping_labels = True # stop labels on horizontal axis from overlapping so vertical axis labels have room
 
         self.style = {
             'tickTextOffset': [5, 2],  ## (horizontal, vertical) spacing between text and axis
@@ -59,7 +62,7 @@ class AxisItem(GraphicsWidget):
             'tickTextHeight': 18,
             'autoExpandTextSpace': True,  ## automatically expand text space if needed
             'autoReduceTextSpace': True,
-            'hideOverlappingLabels': True,
+            'hideOverlappingLabels': hide_overlapping_labels,
             'tickFont': None,
             'stopAxisAtTick': (False, False),  ## whether axis is drawn to edge of box or to last tick
             'textFillLimits': [  ## how much of the axis to fill up with tick text, maximally.
@@ -89,7 +92,8 @@ class AxisItem(GraphicsWidget):
         self.labelStyle = args
         self.logMode = False
 
-        self._tickLevels = None  ## used to override the automatic ticking system with explicit ticks
+        self._tickDensity = 1.0   # used to adjust scale the number of automatically generated ticks
+        self._tickLevels  = None  # used to override the automatic ticking system with explicit ticks
         self._tickSpacing = None  # used to override default tickSpacing method
         self.scale = 1.0
         self.autoSIPrefix = True
@@ -137,9 +141,12 @@ class AxisItem(GraphicsWidget):
         autoExpandTextSpace   (bool) Automatically expand text space if the tick
                               strings become too long.
         autoReduceTextSpace   (bool) Automatically shrink the axis if necessary
-        hideOverlappingLabels (bool) Hide tick labels which overlap the AxisItems'
-                              geometry rectangle. If False, labels might be drawn
-                              overlapping with tick labels from neighboring plots.
+        hideOverlappingLabels (bool or int)
+
+                              * *True*  (default for horizontal axis): Hide tick labels which extend beyond the AxisItem's geometry rectangle.
+                              * *False* (default for vertical axis): Labels may be drawn extending beyond the extent of the axis.
+                              * *(int)* sets the tolerance limit for how many pixels a label is allowed to extend beyond the axis. Defaults to 15 for `hideOverlappingLabels = False`.
+
         tickFont              (QFont or None) Determines the font used for tick
                               values. Use None for the default font.
         stopAxisAtTick        (tuple: (bool min, bool max)) If True, the axis
@@ -571,7 +578,7 @@ class AxisItem(GraphicsWidget):
             self.update()
 
     def linkedView(self):
-        """Return the ViewBox this axis is linked to"""
+        """Return the ViewBox this axis is linked to."""
         if self._linkedView is None:
             return None
         else:
@@ -624,7 +631,17 @@ class AxisItem(GraphicsWidget):
                 self.setRange(*newRange)
 
     def boundingRect(self):
-        m = 0 if self.style['hideOverlappingLabels'] else 15
+        m = 0
+        hide_overlapping_labels = self.style['hideOverlappingLabels']
+        if hide_overlapping_labels is True:
+            pass # skip further checks
+        elif hide_overlapping_labels is False:
+            m = 15
+        else:
+            try:
+                m = int( self.style['hideOverlappingLabels'] )
+            except ValueError: pass # ignore any non-numeric value
+
         linkedView = self.linkedView()
         if linkedView is None or self.grid is False:
             rect = self.mapRectFromParent(self.geometry())
@@ -636,7 +653,7 @@ class AxisItem(GraphicsWidget):
             elif self.orientation == 'right':
                 rect = rect.adjusted(min(0,tl), -m, 0, m)
             elif self.orientation == 'top':
-                rect = rect.adjusted(-15, 0, 15, -min(0,tl))
+                rect = rect.adjusted(-m, 0, m, -min(0,tl))
             elif self.orientation == 'bottom':
                 rect = rect.adjusted(-m, min(0,tl), m, 0)
             return rect
@@ -663,6 +680,21 @@ class AxisItem(GraphicsWidget):
         #p.setRenderHint(p.RenderHint.TextAntialiasing, True)
         self.picture.play(p)
 
+
+    def setTickDensity(self, density=1.0):
+        """
+        The default behavior is to show at least two major ticks for axes of up to 300 pixels in length, 
+        then add additional major ticks, spacing them out further as the available room increases.
+        (Internally, the targeted number of major ticks grows with the square root of the axes length.)
+
+        Setting a tick density different from the default value of `density = 1.0` scales the number of
+        major ticks that is targeted for display. This only affects the automatic generation of ticks.
+        """
+        self._tickDensity = density
+        self.picture = None
+        self.update()
+
+
     def setTicks(self, ticks):
         """Explicitly determine which ticks to display.
         This overrides the behavior specified by tickSpacing(), tickValues(), and tickStrings()
@@ -674,6 +706,7 @@ class AxisItem(GraphicsWidget):
                 ...
             ]
 
+        The two levels of major and minor ticks are expected. A third tier of additional ticks is optional.
         If *ticks* is None, then the default tick system will be used instead.
         """
         self._tickLevels = ticks
@@ -696,7 +729,7 @@ class AxisItem(GraphicsWidget):
             # two levels, all offsets = 0
             axis.setTickSpacing(5, 1)
             # three levels, all offsets = 0
-            axis.setTickSpacing([(3, 0), (1, 0), (0.25, 0)])
+            axis.setTickSpacing(levels=[(3, 0), (1, 0), (0.25, 0)])
             # reset to default
             axis.setTickSpacing()
         """
@@ -709,6 +742,7 @@ class AxisItem(GraphicsWidget):
         self._tickSpacing = levels
         self.picture = None
         self.update()
+
 
     def tickSpacing(self, minVal, maxVal, size):
         """Return values describing the desired spacing and offset of ticks.
@@ -732,58 +766,70 @@ class AxisItem(GraphicsWidget):
         dif = abs(maxVal - minVal)
         if dif == 0:
             return []
-
-        ## decide optimal minor tick spacing in pixels (this is just aesthetics)
-        optimalTickCount = max(2., log(size))
-
-        ## optimal minor tick spacing
-        optimalSpacing = dif / optimalTickCount
-
-        ## the largest power-of-10 spacing which is smaller than optimal
-        p10unit = 10 ** floor(log10(optimalSpacing))
-
-        ## Determine major/minor tick spacings which flank the optimal spacing.
-        intervals = np.array([1., 2., 10., 20., 100.]) * p10unit
-        minorIndex = 0
-        while intervals[minorIndex+1] <= optimalSpacing:
-            minorIndex += 1
-
-        levels = [
-            (intervals[minorIndex+2], 0),
-            (intervals[minorIndex+1], 0),
-            #(intervals[minorIndex], 0)    ## Pretty, but eats up CPU
-        ]
-
-        if self.style['maxTickLevel'] >= 2:
-            ## decide whether to include the last level of ticks
-            minSpacing = min(size / 20., 30.)
-            maxTickCount = size / minSpacing
-            if dif / intervals[minorIndex] <= maxTickCount:
-                levels.append((intervals[minorIndex], 0))
-         
-        return levels
         
-        ##### This does not work -- switching between 2/5 confuses the automatic text-level-selection
-        ### Determine major/minor tick spacings which flank the optimal spacing.
-        #intervals = np.array([1., 2., 5., 10., 20., 50., 100.]) * p10unit
-        #minorIndex = 0
-        #while intervals[minorIndex+1] <= optimalSpacing:
-            #minorIndex += 1
+        ref_size = 300. # axes longer than this display more than the minimum number of major ticks
+        minNumberOfIntervals = max(
+            2.25,       # 2.0 ensures two tick marks. Fudged increase to 2.25 allows room for tick labels. 
+            2.25 * self._tickDensity * sqrt(size/ref_size) # sub-linear growth of tick spacing with size
+        )
 
-        ### make sure we never see 5 and 2 at the same time
-        #intIndexes = [
-            #[0,1,3],
-            #[0,2,3],
-            #[2,3,4],
-            #[3,4,6],
-            #[3,5,6],
-        #][minorIndex]
+        majorMaxSpacing = dif / minNumberOfIntervals
 
-        #return [
-            #(intervals[intIndexes[2]], 0),
-            #(intervals[intIndexes[1]], 0),
-            #(intervals[intIndexes[0]], 0)
-        #]
+        # We want to calculate the power of 10 just below the maximum spacing.
+        # Then divide by ten so that the scale factors for subdivision all become intergers.
+        # p10unit = 10**( floor( log10(majorMaxSpacing) ) ) / 10
+
+        # And we want to do it without a log operation:        
+        mantissa, exp2 = frexp(majorMaxSpacing) # IEEE 754 float already knows its exponent, no need to calculate
+        p10unit = 10. ** ( # approximate a power of ten base factor just smaller than the given number
+            floor(            # int would truncate towards zero to give wrong results for negative exponents
+                (exp2-1)      # IEEE 754 exponent is ceiling of true exponent --> estimate floor by subtracting 1
+                / 3.32192809488736 # division by log2(10)=3.32 converts base 2 exponent to base 10 exponent
+            ) - 1             # subtract one extra power of ten so that we can work with integer scale factors >= 5
+        )                
+        # neglecting the mantissa can underestimate by one power of 10 when the true value is JUST above the threshold.
+        if 100. * p10unit <= majorMaxSpacing: # Cheaper to check this than to use a more complicated approximation.
+            majorScaleFactor = 10
+            p10unit *= 10.
+        else:
+            for majorScaleFactor in (50, 20, 10):
+                if majorScaleFactor * p10unit <= majorMaxSpacing:
+                    break # find the first value that is smaller or equal
+        majorInterval = majorScaleFactor * p10unit
+        # manual sanity check: print(f"{majorMaxSpacing:.2e} > {majorInterval:.2e} = {majorScaleFactor:.2e} x {p10unit:.2e}")
+        
+        minorMinSpacing = 2 * dif/size   # no more than one minor tick per two pixels
+        if majorScaleFactor == 10:
+            trials = (5, 10) # if major interval is 1.0, try minor interval of 0.5, fall back to same as major interval
+        else:
+            trials = (10, 20, 50) # if major interval is 2.0 or 5.0, try minor interval of 1.0, increase as needed
+        for minorScaleFactor in trials:
+            minorInterval = minorScaleFactor * p10unit
+            if minorInterval >= minorMinSpacing:
+                break # find the first value that is larger or equal to allowed minimum of 1 per 2px
+        levels = [
+            (majorInterval, 0),
+            (minorInterval, 0)
+        ]
+        # extra ticks at 10% of major interval are pretty, but eat up CPU
+        if self.style['maxTickLevel'] >= 2: # consider only when enabled
+            if majorScaleFactor == 10:
+                trials = (1, 2, 5, 10) # start at 10% of major interval, increase if needed
+            elif majorScaleFactor == 20:
+                trials = (2, 5, 10, 20) # start at 10% of major interval, increase if needed
+            elif majorScaleFactor == 50:
+                trials = (5, 10, 50) # start at 10% of major interval, increase if needed
+            else: # invalid value
+                trials = () # skip extra interval
+                extraInterval = minorInterval
+            for extraScaleFactor in trials:
+                extraInterval = extraScaleFactor * p10unit
+                if extraInterval >= minorMinSpacing or extraInterval == minorInterval:
+                    break # find the first value that is larger or equal to allowed minimum of 1 per 2px
+            if extraInterval < minorInterval: # add extra interval only if it is visible
+                levels.append((extraInterval, 0))
+        return levels
+    
 
     def tickValues(self, minVal, maxVal, size):
         """

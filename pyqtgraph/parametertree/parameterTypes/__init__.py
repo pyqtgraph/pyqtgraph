@@ -12,6 +12,7 @@ from .calendar import CalendarParameter, CalendarParameterItem
 from .checklist import ChecklistParameter, ChecklistParameterItem
 from .color import ColorParameter, ColorParameterItem
 from .colormap import ColorMapParameter, ColorMapParameterItem
+from .colormaplut import ColorMapLutParameter, ColorMapLutParameterItem
 from .file import FileParameter, FileParameterItem
 from .font import FontParameter, FontParameterItem
 from .list import ListParameter, ListParameterItem
@@ -37,6 +38,7 @@ registerParameterType('calendar',  CalendarParameter,    override=True)
 registerParameterType('checklist', ChecklistParameter,   override=True)
 registerParameterType('color',     ColorParameter,       override=True)
 registerParameterType('colormap',  ColorMapParameter,    override=True)
+registerParameterType('cmaplut',   ColorMapLutParameter, override=True)
 registerParameterType('file',      FileParameter,        override=True)
 registerParameterType('font',      FontParameter,        override=True)
 registerParameterType('list',      ListParameter,        override=True)

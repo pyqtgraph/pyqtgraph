@@ -34,3 +34,14 @@ known_third_party = ["QtCore", "QtGui", "QtWidgets"]
 [tool.pycln]
 all = true
 exclude = '(Template|__init__.py)'
+
+[tool.mypy]
+packages = ["pyqtgraph"]
+show_error_codes = true
+strict = true
+disable_error_code = ["attr-defined"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "pyqtgraph.flowchart.*" # the list will increase
+ignore_errors = true # will be changed to `false` when it's ready
