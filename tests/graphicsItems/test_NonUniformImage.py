@@ -86,7 +86,7 @@ def test_NonUniformImage_colormap():
     X, Y = np.meshgrid(x, y, indexing='ij')
     Z = X * Y
 
-    Z[:, 0] = [np.NINF, np.NAN, np.PINF]
+    Z[:, 0] = [-np.inf, np.nan, np.inf]
 
     image = NonUniformImage(x, y, Z, border=fn.mkPen('g'))
 
