@@ -45,7 +45,7 @@ from setuptools import find_namespace_packages, setup
 from setuptools.command import install
 
 path = os.path.split(__file__)[0]
-sys.path.insert(0, path)
+sys.path.append(path)
 import tools.setupHelpers as helpers
 
 ## Decide what version string to use in the build
