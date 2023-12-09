@@ -98,7 +98,7 @@ class PlotDataset(object):
         """
         Applies a logarithmic mapping transformation (base 10) if requested for the respective axis.
         This replaces the internal data. Values of ``-inf`` resulting from zeros in the original dataset are
-        replaced by ``np.NaN``.
+        replaced by ``np.nan``.
         
         Parameters
         ----------
