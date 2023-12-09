@@ -100,7 +100,7 @@ jobs:
     - name: "Install Linux VirtualDisplay"
       if: runner.os == 'Linux'
       run: |
-        sudo apt-get update -y
+        sudo apt-get update -y --allow-releaseinfo-change
         sudo apt-get install --no-install-recommends -y \
           libxkbcommon-x11-0 \
           x11-utils \
@@ -200,7 +200,7 @@ jobs:
       - name: "Install Linux VirtualDisplay"
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get update -y
+          sudo apt-get update -y --allow-releaseinfo-change
           sudo apt-get install -y --no-install-recommends \
             libxkbcommon-x11-0 \
             x11-utils \
