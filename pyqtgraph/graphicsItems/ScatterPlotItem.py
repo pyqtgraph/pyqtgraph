@@ -956,9 +956,10 @@ class ScatterPlotItem(GraphicsObject):
             if self.opts['useCache'] and self._exportOpts is False:
                 # Draw symbols from pre-rendered atlas
 
-                dpr = widget.devicePixelRatioF()
-                if dpr != self.fragmentAtlas.devicePixelRatio():
+                dpr = self.fragmentAtlas.devicePixelRatio()
+                if widget is not None and (dpr_new := widget.devicePixelRatioF()) != dpr:
                     # force a re-render if dpr changed
+                    dpr = dpr_new
                     self.fragmentAtlas.setDevicePixelRatio(dpr)
                     self.fragmentAtlas.clear()
                     self.data['sourceRect'] = 0
