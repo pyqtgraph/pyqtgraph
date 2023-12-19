@@ -64,6 +64,8 @@ pyqtgraph-0.13.2
 
 ### Bug Fixes
 
+* Fix class Handle mkPen width and cosmetic attributes had reset allowing customization by @pdmkdz in https://github.com/pyqtgraph/pyqtgraph/issues/1960
+* Fix passing a dict to handlePen by @pdmkdz in https://github.com/pyqtgraph/pyqtgraph/issues/2765
 * Fix renderView to not use mremap on FreeBSD by @yurivict in https://github.com/pyqtgraph/pyqtgraph/pull/2445
 * Fix action parameter button that is briefly made visible before getting a parent by @ntjess in https://github.com/pyqtgraph/pyqtgraph/pull/2451
 * Fix InfiniteLine bounding rect calculation by @ixjlyons in https://github.com/pyqtgraph/pyqtgraph/pull/2407
