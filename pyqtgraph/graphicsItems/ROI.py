@@ -1336,7 +1336,7 @@ class Handle(UIGraphicsItem):
     sigClicked = QtCore.Signal(object, object)   # self, event
     sigRemoveRequested = QtCore.Signal(object)   # self
     
-    def __init__(self, radius, typ=None, pen={'color': (200, 200, 220),'width':0, 'cosmetic':True},
+    def __init__(self, radius, typ=None, pen={'color': (200, 200, 220)},
                  hoverPen=(255, 255, 0), parent=None, deletable=False):
         self.rois = []
         self.radius = radius
