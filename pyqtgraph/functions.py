@@ -69,7 +69,7 @@ SI_PREFIX_EXPONENTS['u'] = -6
 FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
 INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
-    
+
 def siScale(x, minVal=1e-25, allowUnicode=True):
     """
     Return the recommended scale factor and SI prefix string for x.
@@ -255,18 +255,14 @@ def mkColor(*args):
                 try:
                     return QtGui.QColor(Colors[c])  # return copy
                 except KeyError:
-                    raise ValueError('No color named "%s"' % c)
-            # match hex color codes
-            match = re.match(r"#([0-9a-fA-F]{3,8})", c)
-            if match and len(match.group(1)) in [3, 4, 6, 8]:
-                c = match.group(1)
+                    raise ValueError('No color named "%s"' % c) from None
+            if c[0] == "#" and len(c) < 10:
+                # match hex color codes
+                c = c[1:]
                 if len(c) < 6:
                     # convert RGBA to RRGGBBAA
                     c = "".join([x + x for x in c])
-                if len(c) < 8:
-                    # convert RRGGBB to RRGGBBAA
-                    c += "ff"
-                r, g, b, a = bytes.fromhex(c)
+                return QtGui.QColor(*bytes.fromhex(c))
             else:
                 # 'c' might be an SVG color keyword
                 qcol = QtGui.QColor(c)
