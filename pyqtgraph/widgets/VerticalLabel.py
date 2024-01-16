@@ -1,6 +1,6 @@
 import warnings
 
-from ..Qt import QtCore, QtGui, QtWidgets
+from qtpy import QtCore, QtGui, QtWidgets
 
 __all__ = ['VerticalLabel']
 #class VerticalLabel(QtWidgets.QLabel):
@@ -51,23 +51,26 @@ class VerticalLabel(QtWidgets.QLabel):
             warnings.simplefilter("ignore")
             self.hint = p.drawText(rgn, align, self.text())
         p.end()
-        
+        size: QtCore.QSize = self.size()
         if self.orientation == 'vertical':
-            self.setMaximumWidth(self.hint.height()+6)
+            self.setMaximumWidth(self.hint.height())
             self.setMinimumWidth(0)
             self.setMaximumHeight(16777215)
             if self.forceWidth:
                 self.setMinimumHeight(self.hint.width())
             else:
                 self.setMinimumHeight(0)
+            size = QtCore.QSize(self.hint.height(), size.height())
         else:
-            self.setMaximumHeight(self.hint.height()+6)
+            self.setMaximumHeight(self.hint.height()+5)
             self.setMinimumHeight(0)
             self.setMaximumWidth(16777215)
             if self.forceWidth:
                 self.setMinimumWidth(self.hint.width())
             else:
                 self.setMinimumWidth(0)
+            size = QtCore.QSize(size.width(), self.hint.height()+5)
+        #self.resize(size)
 
     def sizeHint(self):
         if self.orientation == 'vertical':
@@ -80,3 +83,30 @@ class VerticalLabel(QtWidgets.QLabel):
                 return QtCore.QSize(self.hint.width(), self.hint.height())
             else:
                 return QtCore.QSize(50, 19)
+
+
+if __name__ == '__main__':
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    import qdarkstyle
+    app.setStyleSheet(qdarkstyle.load_stylesheet(qdarkstyle.DarkPalette))
+
+    label = QtWidgets.QLabel('mysuperlabel')
+    labelv = VerticalLabel('mysuperlabel', orientation='hor')
+    label.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop | QtCore.Qt.AlignmentFlag.AlignHCenter)
+    labelv.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop | QtCore.Qt.AlignmentFlag.AlignHCenter)
+    f = label.font()
+    f.setPixelSize(25)
+    label.setFont(f)
+    labelv.setFont(f)
+    label.show()
+    labelv.show()
+    QtWidgets.QApplication.processEvents()
+    print(f'label size hint: {label.sizeHint()}')
+    print(f'labelv size hint: {labelv.sizeHint()}')
+    print(f'label size: {label.size()}')
+    print(f'labelv size: {labelv.size()}')
+    print(f'label margins: {label.contentsMargins().top()}, {label.contentsMargins().bottom()}')
+    print(f'labelv margins: {labelv.contentsMargins().top()}, {labelv.contentsMargins().bottom()}')
+
+    sys.exit(app.exec())
