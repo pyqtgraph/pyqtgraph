@@ -330,7 +330,7 @@ def _handle_underflow(dtype, *elements):
         ),
         # NaN types don't coerce to integers, don't test for all types since that doesn't make sense
         (
-            np.arange(5), np.array([0, -1, np.NaN, -3, -4]), 'finite', (
+            np.arange(5), np.array([0, -1, np.nan, -3, -4]), 'finite', (
                 (MoveToElement, 0.0, 0.0),
                 (LineToElement, 1.0, -1.0),
                 (LineToElement, 1.0, -1.0),
@@ -339,7 +339,7 @@ def _handle_underflow(dtype, *elements):
             ) 
         ),
         (
-            np.array([0, 1, np.NaN, 3, 4]), np.arange(0, -5, step=-1), 'finite', (
+            np.array([0, 1, np.nan, 3, 4]), np.arange(0, -5, step=-1), 'finite', (
                 (MoveToElement, 0.0, 0.0),
                 (LineToElement, 1.0, -1.0),
                 (LineToElement, 1.0, -1.0),

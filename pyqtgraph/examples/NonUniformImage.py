@@ -31,7 +31,7 @@ V = np.ones_like(TAU) * v
 P_loss = kfric * W + kfric3 * W ** 3 + (res * (TAU / psi) ** 2) + k_v * (V - v_ref)
 
 P_mech = TAU * W
-P_loss[P_mech > 1.5e5] = np.NaN
+P_loss[P_mech > 1.5e5] = np.nan
 
 app = pg.mkQApp("NonUniform Image Example")
 
