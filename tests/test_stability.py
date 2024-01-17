@@ -8,13 +8,21 @@ The purpose of this is to attempt to generate segmentation faults.
 """
 import gc
 import sys
+import time
 import weakref
 from random import randint, seed
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtTest
+from pyqtgraph.util.garbage_collector import GarbageCollector
 
 app = pg.mkQApp()
+
+
+def test_garbage_collector():
+    GarbageCollector(interval=0.1)
+    time.sleep(1)
+
 
 seed(12345)
 
