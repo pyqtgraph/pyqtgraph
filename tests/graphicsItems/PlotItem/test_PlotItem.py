@@ -22,7 +22,7 @@ multi_data_plot_values = [
         sorted_randint(0, 20, 15),
         *[sorted_randint(0, 20, 15) for _ in range(4)],
     ],
-    np.row_stack([sorted_randint(20, 40, 15) for _ in range(6)]),
+    np.vstack([sorted_randint(20, 40, 15) for _ in range(6)]),
 ]
 
 

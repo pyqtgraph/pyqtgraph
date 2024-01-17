@@ -1209,6 +1209,13 @@ def clip_array(arr, vmin, vmax, out=None):
     else:
         return np.core.umath.clip(arr, vmin, vmax, out=out)
 
+if tuple(map(int, np.__version__.split(".")[:2])) >= (1, 25):
+    # The linked issue above has been closed as of 2023/04/25
+    # and states that the issue has been fixed.
+    # And furthermore, because NumPy 2.0 has made np.core private,
+    # we will just use the native np.clip
+    clip_array = np.clip
+
 
 def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
     """Refer to documentation for rescaleData()"""
@@ -1231,6 +1238,12 @@ def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
         lim32 = np.iinfo(np.int32)
         fits_int32 = lim32.min < dst_bounds[0] and dst_bounds[1] < lim32.max
 
+        if fits_int32 and clip is not None:
+            # this is for NumPy >= 2.0
+            # the clip limits should fit within the (integer) dtype
+            # of the data to be clipped
+            clip = [clip_scalar(v, lim32.min, lim32.max) for v in clip]
+
     it = np.nditer([data_in, data_out],
             flags=['external_loop', 'buffered'],
             op_flags=[['readonly'], ['writeonly', 'no_broadcast']],
@@ -1248,9 +1261,10 @@ def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
             if clip is not None:
                 if fits_int32:
                     # converts to int32, clips back to float32
-                    np.core.umath.clip(y.astype(np.int32), clip[0], clip[1], out=y)
+                    yin = y.astype(np.int32)
                 else:
-                    clip_array(y, clip[0], clip[1], out=y)
+                    yin = y
+                clip_array(yin, clip[0], clip[1], out=y)
 
     return data_out
 

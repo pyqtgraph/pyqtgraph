@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
       - name: Checkout
@@ -60,7 +60,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Setup Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         # Semantic version range syntax or exact version of a Python version
         python-version: ${{ matrix.python-version }}
@@ -100,7 +100,7 @@ jobs:
     - name: "Install Linux VirtualDisplay"
       if: runner.os == 'Linux'
       run: |
-        sudo apt-get update -y
+        sudo apt-get update -y --allow-releaseinfo-change
         sudo apt-get install --no-install-recommends -y \
           libxkbcommon-x11-0 \
           x11-utils \
@@ -170,7 +170,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: latest
           miniforge-variant: Mambaforge
@@ -200,7 +200,7 @@ jobs:
       - name: "Install Linux VirtualDisplay"
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get update -y
+          sudo apt-get update -y --allow-releaseinfo-change
           sudo apt-get install -y --no-install-recommends \
             libxkbcommon-x11-0 \
             x11-utils \
@@ -251,7 +251,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Build Wheel
@@ -270,7 +270,7 @@ jobs:
         # a pull request then we can checkout the head.
         fetch-depth: 2
     - name: Setup Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     - name: Install Dependencies
