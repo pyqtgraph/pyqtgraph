@@ -1,5 +1,6 @@
 import decimal
 import re
+import warnings
 from math import isinf, isnan
 
 from .. import functions as fn
@@ -447,11 +448,11 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                     return False
         return True
 
-    def updateText(self):
+    def updateText(self, **kwargs):
         # temporarily disable validation
         self.skipValidate = True
         
-        txt = self.formatText()
+        txt = self.formatText(**kwargs)
         
         # actually set the text
         self.lineEdit().setText(txt)
@@ -460,7 +461,13 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         # re-enable the validation
         self.skipValidate = False
         
-    def formatText(self):
+    def formatText(self, **kwargs):
+        if 'prev' in kwargs:
+            warnings.warn(
+                "updateText and formatText no longer take prev argument. This will error after January 2025.",
+                DeprecationWarning,
+                stacklevel=2
+            )  # TODO remove all kwargs handling here and updateText after January 2025
         # get the number of decimal places to print
         decimals = self.opts['decimals']
         suffix = self.opts['suffix']
