@@ -41,13 +41,15 @@ def test_parameter_hasdefault():
 
 
 def test_parameter_pinning_and_defaults():
-    p = Parameter(name="param", type=int, value=1, default=1, pinValueToDefault=True)
+    p = Parameter(
+        name="param", type=int, value=1, default=1, pinValueToDefault=True, treatInitialValueAsModified=False
+    )
     assert p.valueModifiedSinceResetToDefault() is False
     p.setValue(2)
     assert p.valueModifiedSinceResetToDefault() is True
     p.setToDefault()
     assert p.valueModifiedSinceResetToDefault() is False
-    p.setValue(2)
+    p.setValue(3)
     p.setValue(1)
     assert p.valueModifiedSinceResetToDefault() is True
     p.setToDefault()
@@ -55,13 +57,17 @@ def test_parameter_pinning_and_defaults():
     assert p.valueModifiedSinceResetToDefault() is False
     assert p.value() == 2
 
-    p = Parameter(name="param", type=int, value=1, default=2, pinValueToDefault=False)
+    p = Parameter(name="param", type=int, value=1, default=1)
+    assert p.valueModifiedSinceResetToDefault() is False
+
+    p = Parameter(name="param", type=int, value=1, default=2, treatInitialValueAsModified=False)
     assert p.valueModifiedSinceResetToDefault() is True
-    p.setDefault(3)
-    assert p.value() == 1
-    p.setValue(3)
-    p.setDefault(1)
-    assert p.value() == 3
+
+    p = Parameter(name="param", type=int, default=1, treatInitialValueAsModified=False)
+    assert p.valueModifiedSinceResetToDefault() is True
+
+    p = Parameter(name="param", type=int, value=1, default=1, treatInitialValueAsModified=True)
+    assert p.valueModifiedSinceResetToDefault() is True
 
 
 def test_add_child():

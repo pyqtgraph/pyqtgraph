@@ -153,6 +153,9 @@ class Parameter(QtCore.QObject):
                                      be set to the default when the default changes,
                                      unless the user has explicitly modified the value.
                                      (default=False)
+        treatInitialValueAsModified  If True, then the initial value of this Parameter will
+                                     be considered to have been modified regardless of
+                                     whether it is equal to the default. (default=False)
         children                     A list of children for this Parameter. Children
                                      may be given either as a Parameter instance or as a
                                      dictionary to pass to Parameter.create(). In this way,
@@ -227,9 +230,9 @@ class Parameter(QtCore.QObject):
         if 'default' not in self.opts:
             self.opts['default'] = None
             self.setDefault(self.opts['value'])
-        self._modifiedSinceReset = not self.valueIsDefault()
+        self._modifiedSinceReset = self.opts.get('treatInitialValueAsModified', False) or not self.valueIsDefault()
     
-        ## Connect all state changed signals to the general sigStateChanged
+        # Connect all state changed signals to the general sigStateChanged
         self.sigValueChanged.connect(self._emitValueChanged)
         self.sigChildAdded.connect(self._emitChildAddedChanged)
         self.sigChildRemoved.connect(self._emitChildRemovedChanged)
