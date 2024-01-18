@@ -2,7 +2,6 @@ import math
 import pickle
 
 from pyqtgraph import SRTTransform
-from pyqtgraph.parametertree import Parameter
 
 
 def test_SRTTransform():
