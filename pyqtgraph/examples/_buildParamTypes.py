@@ -9,7 +9,8 @@ _encounteredTypes = {'group'}
 def makeChild(chType, cfgDict):
     _encounteredTypes.add(chType)
     param = Parameter.create(name='widget', type=chType)
-    param.setDefault(param.value())
+    if param.hasValue():
+        param.setDefault(param.value())
 
     def setOpt(_param, _val):
         # Treat blank strings as "None" to allow 'unsetting' that option
@@ -26,9 +27,9 @@ def makeChild(chType, cfgDict):
         else:
             optsChildren.append(child)
             child.sigValueChanged.connect(setOpt)
-    # Poplate initial options
+    # Populate initial options
     for p in optsChildren:
-        setOpt(p, p.value())
+        setOpt(p, p.value() if p.hasValue() else None)
 
     grp = Parameter.create(name=f'Sample {chType.title()}', type='group', children=metaChildren + [param] + optsChildren)
     grp.setOpts(expanded=False)

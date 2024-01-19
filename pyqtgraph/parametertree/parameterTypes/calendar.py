@@ -51,6 +51,6 @@ class CalendarParameter(Parameter):
     def saveState(self, filter=None):
         state = super().saveState(filter)
         fmt = self._interpretFormat()
-        if state['value'] is not None:
+        if state.get('value', None) is not None:
             state['value'] = state['value'].toString(fmt)
         return state

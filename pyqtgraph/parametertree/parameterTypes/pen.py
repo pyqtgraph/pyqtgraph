@@ -1,13 +1,14 @@
 import re
 from contextlib import ExitStack
 
-from . import GroupParameterItem, WidgetParameterItem
-from .basetypes import GroupParameter, Parameter, ParameterItem
-from .qtenum import QtEnumParameter
 from ... import functions as fn
 from ...Qt import QtCore, QtWidgets
 from ...SignalProxy import SignalProxy
 from ...widgets.PenPreviewLabel import PenPreviewLabel
+from . import GroupParameterItem, WidgetParameterItem
+from .basetypes import GroupParameter, Parameter, ParameterItem
+from .qtenum import QtEnumParameter
+
 
 class PenParameterItem(GroupParameterItem):
     def __init__(self, param, depth):
@@ -164,7 +165,7 @@ class PenParameter(GroupParameter):
         for p in param:
             name = p.name()
             # Qt naming scheme uses isXXX for booleans
-            if isinstance(p.value(), bool):
+            if p.hasValue() and isinstance(p.value(), bool):
                 attrName = f'is{name.title()}'
             else:
                 attrName = name

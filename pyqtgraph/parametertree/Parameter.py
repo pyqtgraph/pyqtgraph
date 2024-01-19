@@ -43,6 +43,7 @@ def __reload__(old):
     PARAM_TYPES.update(old.get('PARAM_TYPES', {}))
     PARAM_NAMES.update(old.get('PARAM_NAMES', {}))
 
+
 class Parameter(QtCore.QObject):
     """
     A Parameter is the basic unit of data in a parameter tree. Each parameter has
@@ -54,7 +55,7 @@ class Parameter(QtCore.QObject):
     
     Note: It is fairly uncommon to use the Parameter class directly; mostly you 
     will use subclasses which provide specialized type and data handling. The static
-    pethod Parameter.create(...) is an easy way to generate instances of these subclasses.
+    method Parameter.create(...) is an easy way to generate instances of these subclasses.
        
     For more Parameter types, see ParameterTree.parameterTypes module.
     
@@ -316,6 +317,10 @@ class Parameter(QtCore.QObject):
     def _interpretValue(self, v):
         return v
 
+    def hasValue(self):
+        """Return True if this Parameter has a value set."""
+        return 'value' in self.opts
+
     def value(self):
         """
         Return the value of this Parameter. Raises ValueError if no value has been set.
@@ -327,7 +332,9 @@ class Parameter(QtCore.QObject):
         return self.opts['value']
 
     def getValues(self):
-        """Return a tree of all values that are children of this parameter"""
+        """
+        Return a tree of all values that are children of this parameter. Raises ValueError if any child has no value.
+        """
         vals = OrderedDict()
         for ch in self:
             vals[ch.name()] = (ch.value(), ch.getValues())
@@ -347,9 +354,12 @@ class Parameter(QtCore.QObject):
                 global PARAM_NAMES
                 state['type'] = PARAM_NAMES.get(type(self), None)
         elif filter == 'user':
-            state = {'value': self.value()}
+            if self.hasValue():
+                state = {'value': self.value()}
+            else:
+                state = {}
         else:
-            raise ValueError("Unrecognized filter argument: '%s'" % filter)
+            raise ValueError(f"Unrecognized filter argument: '{filter}'")
 
         ch = OrderedDict([(ch.name(), ch.saveState(filter=filter)) for ch in self])
         if len(ch) > 0:
@@ -469,11 +479,10 @@ class Parameter(QtCore.QObject):
         
     def valueIsDefault(self):
         """Returns True if this parameter's value is equal to the default value."""
-        try:
-            return fn.eq(self.value(), self.defaultValue())
-        except ValueError:
+        if not self.hasValue() or not self.hasDefault():
             return False
-        
+        return fn.eq(self.value(), self.defaultValue())
+
     def setLimits(self, limits):
         """Set limits on the acceptable values for this parameter. 
         The format of limits depends on the type of the parameter and
@@ -716,14 +725,15 @@ class Parameter(QtCore.QObject):
             num += 1
 
     def __iter__(self):
-        for ch in self.childs:
-            yield ch
+        yield from self.childs
 
     def __getitem__(self, names):
         """Get the value of a child parameter. The name may also be a tuple giving
         the path to a sub-parameter::
         
             value = param[('child', 'grandchild')]
+
+        Raises ValueError if the child value is not set.
         """
         if not isinstance(names, tuple):
             names = (names,)
@@ -751,9 +761,9 @@ class Parameter(QtCore.QObject):
         """
         try:
             param = self.names[names[0]]
-        except KeyError:
-            raise KeyError("Parameter %s has no child named %s" % (self.name(), names[0]))
-        
+        except KeyError as e:
+            raise KeyError(f"Parameter {self.name()} has no child named {names[0]}") from e
+
         if len(names) > 1:
             return param.child(*names[1:])
         else:
@@ -840,6 +850,7 @@ class Parameter(QtCore.QObject):
             self.treeStateChanges = []
             if len(changes) > 0:
                 self.sigTreeStateChanged.emit(self, changes)
+
 
 class SignalBlocker(object):
     def __init__(self, enterFn, exitFn):
