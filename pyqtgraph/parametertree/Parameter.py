@@ -340,7 +340,7 @@ class Parameter(QtCore.QObject):
                 DeprecationWarning,
                 stacklevel=2,
             )
-        return self.opts['value']
+        return self.opts.get('value')
 
     def getValues(self):
         """
@@ -465,7 +465,7 @@ class Parameter(QtCore.QObject):
             warnings.warn("Parameter has no default value. This will be a ValueError after January 2025.",
                           DeprecationWarning,
                           stacklevel=2)
-        return self.opts['default']
+        return self.opts.get('default')
         
     def setDefault(self, val, updatePristineValues=False):
         """Set the default value for this parameter. If updatePristineValues is True, then
