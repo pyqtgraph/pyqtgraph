@@ -148,13 +148,7 @@ class WidgetParameterItem(ParameterItem):
 
     def updateDefaultBtn(self):
         self.defaultBtn.setEnabled(
-            (
-                (
-                    self.param.opts['pinValueToDefault']
-                    and self.param.valueModifiedSinceResetToDefault()
-                )
-                or not self.param.valueIsDefault()
-            )
+            self.param.valueModifiedSinceResetToDefault()
             and self.param.opts['enabled']
             and self.param.writable())
 

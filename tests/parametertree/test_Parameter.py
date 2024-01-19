@@ -40,34 +40,71 @@ def test_parameter_hasdefault():
     assert not p.hasDefault()
 
 
-def test_parameter_pinning_and_defaults():
-    p = Parameter(
-        name="param", type=int, value=1, default=1, pinValueToDefault=True, treatInitialValueAsModified=False
-    )
-    assert p.valueModifiedSinceResetToDefault() is False
-    p.setValue(2)
-    assert p.valueModifiedSinceResetToDefault() is True
-    p.setToDefault()
-    assert p.valueModifiedSinceResetToDefault() is False
-    p.setValue(3)
-    p.setValue(1)
-    assert p.valueModifiedSinceResetToDefault() is True
-    p.setToDefault()
-    p.setDefault(2)
-    assert p.valueModifiedSinceResetToDefault() is False
-    assert p.value() == 2
-
+def test_parameter_defaults_and_pristineness():
+    # init with identical value and default
     p = Parameter(name="param", type=int, value=1, default=1)
+    assert p.valueModifiedSinceResetToDefault() is True
+    # init with different value and default
+    p = Parameter(name="param", type=int, value=1, default=2)
+    assert p.valueModifiedSinceResetToDefault() is True
+    # init with value only
+    p = Parameter(name="param", type=int, value=1)
+    assert p.valueModifiedSinceResetToDefault() is True
+    with pytest.raises(ValueError):
+        p.setToDefault()
+    # init with default only
+    p = Parameter(name="param", type=int, default=1)
     assert p.valueModifiedSinceResetToDefault() is False
 
-    p = Parameter(name="param", type=int, value=1, default=2, treatInitialValueAsModified=False)
+    # initially value is pristine since only a default was given
+    assert p.value() == 1
+    # update default, and allow the value to track since it is pristine
+    p.setDefault(2, updatePristineValues=True)
+    assert p.value() == 2
+    assert p.valueModifiedSinceResetToDefault() is False
+    # update default but do not allow the value to track
+    p.setDefault(3)  # by default, updatePristineValues=False
+    assert p.value() == 2
+    assert p.valueModifiedSinceResetToDefault() is True        
+    # update default again, explicitly requesting updatePristineValues=False
+    p.setToDefault()
+    assert p.valueModifiedSinceResetToDefault() is False
+    p.setDefault(4, updatePristineValues=False)
+    assert p.value() == 3
     assert p.valueModifiedSinceResetToDefault() is True
+    # update value directly, causing dirty state
+    p.setToDefault()
+    assert p.valueModifiedSinceResetToDefault() is False
+    p.setValue(5)
+    assert p.valueModifiedSinceResetToDefault() is True
+    p.setDefault(6, updatePristineValues=True)
+    assert p.value() == 5
+    assert p.valueModifiedSinceResetToDefault() is True
+    # test setting value to same as default value does not result in pristine state
+    p.setToDefault()
+    assert p.valueModifiedSinceResetToDefault() is False
+    p.setValue(0)
+    p.setValue(p.defaultValue())
+    assert p.valueModifiedSinceResetToDefault() is True
+    # test setToDefault
+    p.setToDefault()
+    assert p.valueModifiedSinceResetToDefault() is False
+    assert p.value() == p.defaultValue()
+    p.setDefault(7, updatePristineValues=True)
+    assert p.value() == 7
 
-    p = Parameter(name="param", type=int, default=1, treatInitialValueAsModified=False)
-    assert p.valueModifiedSinceResetToDefault() is True
-
-    p = Parameter(name="param", type=int, value=1, default=1, treatInitialValueAsModified=True)
-    assert p.valueModifiedSinceResetToDefault() is True
+    # init with neither value nor default
+    p = Parameter(name="param", type=int)
+    assert p.valueModifiedSinceResetToDefault() is False
+    with pytest.raises(ValueError):
+        p.value()
+    with pytest.raises(ValueError):
+        p.defaultValue()
+    with pytest.raises(ValueError):
+        p.setToDefault()
+    p.setDefault(8)
+    assert p.valueModifiedSinceResetToDefault() is False
+    assert p.value() == 8
 
 
 def test_add_child():
