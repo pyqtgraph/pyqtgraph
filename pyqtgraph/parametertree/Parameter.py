@@ -1,4 +1,5 @@
 import re
+import warnings
 import weakref
 from collections import OrderedDict
 
@@ -210,7 +211,14 @@ class Parameter(QtCore.QObject):
         self.setName(name)
 
         self.addChildren(self.opts.pop('children', []))
-        
+        if 'value' in self.opts and 'default' not in self.opts:
+            warnings.warn(
+                "Parameter has no default value. Pass a default, or use setDefault(). This will no longer set "
+                "an implicit default after January 2025.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self.opts['default'] = self.opts['value']
         value = self.opts.get('value', self.opts.get('default', None))
         modified = 'value' in self.opts
         if value is not None:
@@ -326,8 +334,11 @@ class Parameter(QtCore.QObject):
         Return the value of this Parameter. Raises ValueError if no value has been set.
         """
         if 'value' not in self.opts:
-            raise ValueError(
-                "Parameter has no value set. Pass an initial value or default, or use setValue() or setDefault()."
+            warnings.warn(
+                "Parameter has no value set. Pass an initial value or default, or use setValue() or setDefault(). "
+                "This will be an error after January 2025.",
+                DeprecationWarning,
+                stacklevel=2,
             )
         return self.opts['value']
 
@@ -451,7 +462,9 @@ class Parameter(QtCore.QObject):
     def defaultValue(self):
         """Return the default value for this parameter. Raises ValueError if no default."""
         if 'default' not in self.opts:
-            raise ValueError("Parameter has no default value.")
+            warnings.warn("Parameter has no default value. This will be a ValueError after January 2025.",
+                          DeprecationWarning,
+                          stacklevel=2)
         return self.opts['default']
         
     def setDefault(self, val, updatePristineValues=False):
