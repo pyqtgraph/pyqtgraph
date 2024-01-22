@@ -94,9 +94,6 @@ class ListParameter(Parameter):
 
         if opts.get('limits', None) is None:
             opts['limits'] = []
-        # TODO remove the following 'if' block after January 2025
-        if 'value' not in opts:
-            opts['value'] = opts['limits'][0] if len(opts['limits']) > 0 else None
         Parameter.__init__(self, **opts)
         self.setLimits(opts['limits'])
 
