@@ -49,6 +49,12 @@ class PenParameterItem(GroupParameterItem):
         )
 
 
+def cap_first(s: str):
+    if not s:
+        return s
+    return s[0].upper() + s[1:]
+
+
 class PenParameter(GroupParameter):
     """
     Controls the appearance of a QPen value.
@@ -132,8 +138,7 @@ class PenParameter(GroupParameter):
 
     def setOpts(self, **opts):
         # Transform opts into a value
-        penOpts = self.applyOptsToPen(**opts)
-        if penOpts:
+        if self.applyOptsToPen(**opts):
             self.setValue(self.pen)
         return super().setOpts(**opts)
 
@@ -178,7 +183,7 @@ class PenParameter(GroupParameter):
         if boundPen is not None:
             self.updateFromPen(param, boundPen)
             for p in param:
-                setName = f'set{p.name().capitalize()}'
+                setName = f'set{cap_first(p.name())}'
                 # Instead, set the parameter which will signal the old setter
                 setattr(boundPen, setName, p.setValue)
                 newSetter = self.penPropertySetter
@@ -202,7 +207,7 @@ class PenParameter(GroupParameter):
 
     def penPropertySetter(self, p, value):
         boundPen = self.pen
-        setName = f'set{p.name().capitalize()}'
+        setName = f'set{cap_first(p.name())}'
         # boundPen.setName has been monkey-patched
         # so we get the original setter from the class
         getattr(boundPen.__class__, setName)(boundPen, value)
