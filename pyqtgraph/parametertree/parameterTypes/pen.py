@@ -107,6 +107,8 @@ class PenParameter(GroupParameter):
         state = super().saveState(filter)
         opts = state.pop('children')
         state['value'] = tuple(o['value'] for o in opts.values())
+        if 'default' not in state:
+            state['default'] = state['value']  # TODO remove this after January 2025
         return state
 
     def restoreState(self, state, recursive=True, addChildren=True, removeChildren=True, blockSignals=True):
