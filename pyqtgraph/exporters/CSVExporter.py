@@ -18,7 +18,7 @@ class CSVExporter(Exporter):
     windows = []
     def __init__(self, item):
         Exporter.__init__(self, item)
-        self.params = Parameter(name='params', type='group', children=[
+        self.params = Parameter.create(name='params', type='group', children=[
             {'name': 'separator', 'title': translate("Exporter", 'separator'), 'type': 'list', 'value': 'comma', 'limits': ['comma', 'tab']},
             {'name': 'precision', 'title': translate("Exporter", 'precision'), 'type': 'int', 'value': 10, 'limits': [0, None]},
             {
