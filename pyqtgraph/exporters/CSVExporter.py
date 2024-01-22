@@ -25,7 +25,8 @@ class CSVExporter(Exporter):
                 'name': 'columnMode',
                 'title': translate("Exporter", 'columnMode'),
                 'type': 'list',
-                'limits': ['(x,y) per plot', '(x,y,y,y) for all plots']
+                'limits': ['(x,y) per plot', '(x,y,y,y) for all plots'],
+                'value': '(x,y) per plot',
             }
         ])
 
