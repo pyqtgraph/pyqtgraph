@@ -131,12 +131,13 @@ class RadioParameterItem(BoolParameterItem):
 # Proxy around radio/bool type so the correct item class gets instantiated
 class BoolOrRadioParameter(SimpleParameter):
 
-    def __init__(self, **kargs):
-        if kargs.get('type') == 'bool':
-            self.itemClass = BoolParameterItem
+    @property
+    def itemClass(self):
+        if self.opts.get('type') == 'bool':
+            return BoolParameterItem
         else:
-            self.itemClass = RadioParameterItem
-        super().__init__(**kargs)
+            return RadioParameterItem
+
 
 class ChecklistParameter(GroupParameter):
     """

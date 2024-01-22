@@ -6,6 +6,7 @@ from pyqtgraph.parametertree.parameterTypes import GroupParameter
 
 _encounteredTypes = {'group'}
 
+
 def makeChild(chType, cfgDict):
     _encounteredTypes.add(chType)
     param = Parameter.create(name='widget', type=chType)
@@ -31,9 +32,12 @@ def makeChild(chType, cfgDict):
     for p in optsChildren:
         setOpt(p, p.value() if p.hasValue() else None)
 
-    grp = Parameter.create(name=f'Sample {chType.title()}', type='group', children=metaChildren + [param] + optsChildren)
+    grp = Parameter.create(
+        name=f'Sample {chType.title()}', type='group', children=metaChildren + [param] + optsChildren
+    )
     grp.setOpts(expanded=False)
     return grp
+
 
 def makeMetaChild(name, cfgDict):
     children = []
@@ -47,6 +51,7 @@ def makeMetaChild(name, cfgDict):
     param = Parameter.create(name=name, type='group', children=children)
     param.setOpts(expanded=False)
     return param
+
 
 def makeAllParamTypes():
     children = []

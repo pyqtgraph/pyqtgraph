@@ -19,20 +19,20 @@ from pyqtgraph.Qt import QtGui
 pg.mkQApp()
 
 def test_parameter_hasdefault():
-    opts = {"name": "param", "type": int, "value": 1}
+    opts = {"name": "param", "type": 'int', "value": 1}
 
     # default unspecified
-    p = Parameter(**opts)
+    p = Parameter.create(**opts)
     # TODO after January 2025, this next line needs to reverse its assertion
     assert p.hasDefault()
 
     # default specified
-    p = Parameter(default=0, **opts)
+    p = Parameter.create(default=0, **opts)
     assert p.hasDefault()
     assert p.defaultValue() == 0
 
     # default specified as None
-    p = Parameter(default=None, **opts)
+    p = Parameter.create(default=None, **opts)
     assert not p.hasDefault()
     p.setDefault(2)
     assert p.hasDefault()
@@ -41,19 +41,19 @@ def test_parameter_hasdefault():
 
 def test_parameter_defaults_and_pristineness():
     # init with identical value and default
-    p = Parameter(name="param", type=int, value=1, default=1)
+    p = Parameter.create(name="param", type='int', value=1, default=1)
     assert p.valueModifiedSinceResetToDefault() is True
     # init with different value and default
-    p = Parameter(name="param", type=int, value=1, default=2)
+    p = Parameter.create(name="param", type='int', value=1, default=2)
     assert p.valueModifiedSinceResetToDefault() is True
     # init with value only
-    p = Parameter(name="param", type=int, value=1)
+    p = Parameter.create(name="param", type='int', value=1)
     assert p.valueModifiedSinceResetToDefault() is True
     # TODO after January 2025, uncomment the following lines
     # with pytest.raises(ValueError):
     #     p.setToDefault()
     # init with default only
-    p = Parameter(name="param", type=int, default=1)
+    p = Parameter.create(name="param", type='int', default=1)
     assert p.valueModifiedSinceResetToDefault() is False
 
     # initially value is pristine since only a default was given
@@ -94,7 +94,7 @@ def test_parameter_defaults_and_pristineness():
     assert p.value() == 7
 
     # init with neither value nor default
-    p = Parameter(name="param", type=int)
+    p = Parameter.create(name="param", type='int')
     assert p.valueModifiedSinceResetToDefault() is False
     # TODO after January 2025, uncomment the following lines
     # with pytest.raises(ValueError):

@@ -83,7 +83,7 @@ class PenParameter(GroupParameter):
     def _childrenFinishedChanging(self, paramAndValue):
         self.setValue(self.pen)
 
-    def setDefault(self, val):
+    def setDefault(self, val, **kwargs):
         pen = self._interpretValue(val)
         with self.treeChangeBlocker():
             # Block changes until all are finalized
@@ -93,8 +93,8 @@ class PenParameter(GroupParameter):
                     attrName = f'is{opt.title()}'
                 else:
                     attrName = opt
-                self.child(opt).setDefault(getattr(pen, attrName)())
-            out = super().setDefault(val)
+                self.child(opt).setDefault(getattr(pen, attrName)(), **kwargs)
+            out = super().setDefault(val, **kwargs)
         return out
 
     def saveState(self, filter=None):
@@ -164,8 +164,8 @@ class PenParameter(GroupParameter):
         optsPen = boundPen or fn.mkPen()
         for p in param:
             name = p.name()
-            # Qt naming scheme uses isXXX for booleans
-            if p.hasValue() and isinstance(p.value(), bool):
+            # Qt naming scheme uses isXxx for booleans
+            if p.type() == 'bool':
                 attrName = f'is{name.title()}'
             else:
                 attrName = name

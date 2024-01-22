@@ -1,6 +1,7 @@
 import re
 import warnings
 import weakref
+from abc import ABCMeta
 from collections import OrderedDict
 
 from .. import functions as fn
@@ -12,6 +13,7 @@ PARAM_NAMES = {}
 
 _PARAM_ITEM_TYPES = {}
 
+
 def registerParameterItemType(name, itemCls, parameterCls=None, override=False):
     """
     Similar to :func:`registerParameterType`, but works on ParameterItems. This is useful for Parameters where the
@@ -21,9 +23,17 @@ def registerParameterItemType(name, itemCls, parameterCls=None, override=False):
     """
     global _PARAM_ITEM_TYPES
     if name in _PARAM_ITEM_TYPES and not override:
-        raise Exception("Parameter item type '%s' already exists (use override=True to replace)" % name)
+        raise Exception(
+            f"Parameter item type '{name}' already exists (use override=True to replace)"
+        )
 
-    parameterCls = parameterCls or Parameter
+    if parameterCls is None:
+        warnings.warn(
+            "parameterCls is None. This will be an error after January 2025.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+    parameterCls = parameterCls or Parameter  # TODO remove this after Jan 2025
     _PARAM_ITEM_TYPES[name] = itemCls
     registerParameterType(name, parameterCls, override)
 
@@ -40,12 +50,17 @@ def registerParameterType(name, cls, override=False):
     PARAM_TYPES[name] = cls
     PARAM_NAMES[cls] = name
 
+
 def __reload__(old):
     PARAM_TYPES.update(old.get('PARAM_TYPES', {}))
     PARAM_NAMES.update(old.get('PARAM_NAMES', {}))
 
 
-class Parameter(QtCore.QObject):
+class _ParameterMeta(ABCMeta, type(QtCore.QObject)):
+    pass
+
+
+class Parameter(QtCore.QObject):  # TODO add ", metaclass=_ParameterMeta" after Jan 2025
     """
     A Parameter is the basic unit of data in a parameter tree. Each parameter has
     a name, a type, a value, and several other properties that modify the behavior of the 
@@ -88,8 +103,6 @@ class Parameter(QtCore.QObject):
     ## name, type, limits, etc.
     ## can also carry UI hints (slider vs spinbox, etc.)
 
-    itemClass = None
-    
     sigValueChanged = QtCore.Signal(object, object)  ## self, value   emitted when value is finished being edited
     sigValueChanging = QtCore.Signal(object, object)  ## self, value  emitted as value is being edited
     
@@ -132,11 +145,16 @@ class Parameter(QtCore.QObject):
         """
         typ = opts.get('type', None)
         if typ is None:
-            cls = Parameter
+            warnings.warn(
+                "Parameter type not specified. This will be an error after January 2025.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            cls = Parameter  # TODO remove this after Jan 2025
         else:
             cls = PARAM_TYPES[opts['type']]
         return cls(**opts)
-    
+
     def __init__(self, **opts):
         """
         Initialize a Parameter object. Although it is rare to directly create a
@@ -180,6 +198,13 @@ class Parameter(QtCore.QObject):
                                      (default=None; added in version 0.9.9)
         =======================      =========================================================
         """
+        if type(self) is Parameter:
+            warnings.warn(
+                "Parameter is an abstract class; use Parameter.create() instead of Parameter(). "
+                "This will be an error after January 2025.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         QtCore.QObject.__init__(self)
         
         self.opts = {
@@ -235,7 +260,16 @@ class Parameter(QtCore.QObject):
         self.sigNameChanged.connect(self._emitNameChanged)
         self.sigOptionsChanged.connect(self._emitOptionsChanged)
         self.sigContextMenu.connect(self._emitContextMenuChanged)
-        
+
+    @property
+    # TODO add the following after Jan 2025
+    # @abstractmethod
+    def itemClass(self):
+        """
+        The class of ParameterItem to use when displaying this parameter in a ParameterTree.
+        """
+        raise NotImplementedError()
+
     def name(self):
         """Return the name of this Parameter."""
         return self.opts['name']
