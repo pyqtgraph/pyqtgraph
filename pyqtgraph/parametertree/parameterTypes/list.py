@@ -92,13 +92,11 @@ class ListParameter(Parameter):
         self.forward = OrderedDict()  ## {name: value, ...}
         self.reverse = ([], [])       ## ([value, ...], [name, ...])
 
-        # Parameter uses 'limits' option to define the set of allowed values
-        if 'values' in opts:
-            warnings.warn('Using "values" to set limits is deprecated. Use "limits" instead.',
-                          DeprecationWarning, stacklevel=2)
-            opts['limits'] = opts['values']
         if opts.get('limits', None) is None:
             opts['limits'] = []
+        # TODO remove the following 'if' block after January 2025
+        if 'value' not in opts:
+            opts['value'] = opts['limits'][0] if len(opts['limits']) > 0 else None
         Parameter.__init__(self, **opts)
         self.setLimits(opts['limits'])
 
