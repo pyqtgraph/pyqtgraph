@@ -262,13 +262,15 @@ class Parameter(QtCore.QObject):  # TODO add ", metaclass=_ParameterMeta" after 
         self.sigContextMenu.connect(self._emitContextMenuChanged)
 
     @property
-    # TODO add the following after Jan 2025
+    # TODO maybe add the following after Jan 2025
     # @abstractmethod
     def itemClass(self):
         """
         The class of ParameterItem to use when displaying this parameter in a ParameterTree.
         """
-        raise NotImplementedError()
+        return ParameterItem
+        # TODO do the following after Jan 2025
+        # raise NotImplementedError()
 
     def name(self):
         """Return the name of this Parameter."""
