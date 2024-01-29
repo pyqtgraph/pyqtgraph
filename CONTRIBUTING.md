@@ -1,97 +1,141 @@
 # Contributing to PyQtGraph
 
-Contributions to pyqtgraph are welcome! Be kind and respectful! See [our Code of Conduct](CODE_OF_CONDUCT.md) for details.
+Contributions to pyqtgraph are welcome! Be kind and respectful! See 
+[our Code of Conduct](CODE_OF_CONDUCT.md) for details.
 
 Please use the following guidelines when preparing changes:
 
 ## Development Environment Creation
 
-First thing to do is fork the repository, and clone your own fork to your local computer.
+First thing to do is fork the repository, and clone your own fork to your 
+local computer.
 
 ```bash
-git clone https://github.com/<username>/pyqtgraph.git
-cd pyqtgraph
+$ git clone https://github.com/<username>/pyqtgraph.git
+$ cd pyqtgraph
 ```
 
-While there is nothing preventing users from using `conda` environments, as a general principle, we recommend using the `venv` module for creating an otherwise empty virtual environment.  Furthermore, at this time, WSL is not supported (it can likely be made to work, but you're on your own if you go down this route).
+While there is nothing preventing users from using `conda` environments, we 
+recommend using the `venv` module for creating a virtual environment. At this 
+time, WSL is not supported (it can likely be made to work, but you're on 
+your own if you go down this route).
 
 ```bash
-python3.9 -m venv .venv
-source .venv/bin/activate
+$ python3.11 -m venv .venv
+$ source .venv/bin/activate
 # on windows this would be .venv/Scripts/activate
-python -m pip install --upgrade wheel setuptools pip
-python -m pip install numpy scipy pyside6 -e .
+$ python -m pip install --upgrade setuptools pip
+$ python -m pip install numpy scipy PySide6-Essentials -e .
 ```
 
-Before making changes to the code-base, create a different branch with a name that should be unique (this makes it easier for maintainers to examine the proposed changes locally).
+Before making changes to the code-base, create a different branch with a name 
+that should be unique.
 
 ```bash
-git switch -c my-new-feature
+$ git switch -c my-new-feature
 ```
 
-When you're ready to submit the pull request, do so via the github, and the target of the pull request should be the `master` branch in the pyqtgraph repo.
+When you're ready to submit the pull request, do so via the GitHub, and the 
+target of the pull request should be the `master` branch in the pyqtgraph repo.
 
-Pull requests should include only a focused and related set of changes. Mixed features and unrelated changes may be rejected.
+Pull requests should include only a focused and related set of changes. Mixed 
+features and unrelated changes may be rejected.
 
-For major changes, it is recommended to discuss your plans on the mailing list or in a github issue/discussion before putting in too much effort.
+For major changes, it is recommended to discuss your plans on the GitHub discussion
+page before putting in significant effort.
 
-PyQtGraph has adopted [NEP-29](https://numpy.org/neps/nep-0029-deprecation_policy.html) which governs the timeline for phasing out support for numpy and python versions.
+### Supported Dependencies
+
+PyQtGraph has adopted [NEP-29](https://numpy.org/neps/nep-0029-deprecation_policy.html) 
+which governs the timeline for phasing out support for numpy and python versions.
+
+The [README](./README.md) specifies which Qt bindings are currently supported.  Also 
+see the [tox section](#tox)
 
 ## Documentation
 
-* Writing proper documentation and unit tests is highly encouraged. PyQtGraph uses [`pytest`](https://docs.pytest.org/) for testing.
-* Documentation is generated with sphinx, and usage of [numpy-docstyle](https://numpydoc.readthedocs.io/en/latest/format.html) is encouraged (many places in the library do not use this docstring style at present, it's a gradual process to migrate).
-* The docs built for this PR can be previewed by clicking on the "Details" link for the read-the-docs entry in the checks section of the PR conversation page.
+* Documentation is generated with sphinx, docstrings should use 
+[numpy-docstyle](https://numpydoc.readthedocs.io/en/latest/format.html) is encouraged 
+(many places in the library do not use this docstring style at present, it's a 
+gradual process to migrate).
+* The docs built for this PR can be previewed by clicking on the "Details" 
+link for the read-the-docs entry in the checks section of the PR conversation page.
 
 ## Templates
 
-PyQtGraph makes use of `.ui` files where are compiled using `uic`.  These files are identified by ending with `_generic.py` and have a `.ui` file next to them in the same directory.  In past versions of PyQtGraph, there was a file for each binding. These are generated using tools/rebuildUi.py.  Upon completion, the compiled files need to be modified such that they do not inherit from PyQt6 but from pyqtgraph's Qt abstraction layer.
+PyQtGraph makes use of `.ui` files where are compiled using `uic`.  These files 
+are identified by ending with `_generic.py` and have a `.ui` file next to them in 
+the same directory.  In past versions of PyQtGraph, there was a file for each 
+binding. These are generated using tools/rebuildUi.py. Upon completion, the compiled 
+files need to be modified such that they do not inherit from PyQt6 but from 
+PyQtGraph's Qt abstraction layer.
 
 ## Style guidelines
 
 ### Formatting ~~Rules~~ Suggestions
 
-* PyQtGraph prefers PEP8 for most style issues, but this is not enforced rigorously as long as the code is clean and readable.
-* Variable and Function/Methods that are intended to be part of the public API should be camelCase.
+* PyQtGraph prefers PEP8 for most style issues, but this is not enforced 
+    rigorously as long as the code is clean and readable.
+* Variable and Function/Methods that are intended to be part of the public API 
+    should be camelCase, and ideally should match the naming convention of the Qt
+    framework.
 * "Private" methods/variables should have a leading underscore (`_`) before the name.
 
 ### Pre-Commit
 
-PyQtGraph developers are highly encouraged to (but not required) to use [`pre-commit`](https://pre-commit.com/).  `pre-commit` does a number of checks when attempting to commit the code to being committed, such as ensuring no large files are accidentally added, address mixed-line-endings types and so on.  Check the [pre-commit documentation](https://pre-commit.com) on how to setup.
-
+PyQtGraph developers are highly encouraged to (but not required) to use 
+[`pre-commit`](https://pre-commit.com/).  `pre-commit` does a number of checks 
+when attempting to commit the code to being committed, such as ensuring no 
+large files are accidentally added, address mixed-line-endings types and so 
+on. Check the [pre-commit documentation](https://pre-commit.com) on a guide to
+configure.
 
 ## Testing
 
 ### Basic Setup
 
-* tox
-* pytest
-* pytest-cov
-* pytest-xdist
-* Optional: pytest-xvfb  (used on linux with headless displays)
+* `pytest`
+* Optional: `pytest-xdist` - used to run tests in parallel
+* Optional: `pytest-xvfb` - used on linux with headless displays
 
-To run the test suite, after installing the above dependencies run
+* To run the test suite, after installing the above dependencies run
 
 ```bash
-python -m pytest pyqtgraph/examples tests
+$ pytest pyqtgraph/examples tests
 ```
 
 ### Tox
 
-As PyQtGraph supports a wide array of Qt-bindings, and python versions, we make use of `tox` to test against as many supported configurations as feasible.  With tox installed, simply run `tox` and it will run through all the configurations.  This should be done if there is uncertainty regarding changes working on specific combinations of PyQt bindings and/or python versions.
+As PyQtGraph supports a wide array of Qt-bindings, and python versions, we 
+make use of `tox` to test against as many supported configurations as 
+feasible. With tox installed, simply run `tox` and it will run through all the 
+configurations.  This should be done if there is uncertainty regarding changes 
+working on specific combinations of PyQt bindings and/or python versions.
 
 ### Continuous Integration
 
-For our Continuous Integration, we utilize Github Actions.  Tested configurations are visible on [README](README.md).
+For our Continuous Integration, we utilize GitHub Actions for testing and
+Read the Docs for documentation.
 
 ### Benchmarks
 
-( *Still under development* ) To ensure this library is performant, we use [Air Speed Velocity (asv)](https://asv.readthedocs.io/en/stable/) to run benchmarks. For developing on core functions and classes, be aware of any impact your changes have on their speed. To configure and run asv:
+To ensure this library is performant, we use 
+[Air Speed Velocity (asv)](https://asv.readthedocs.io/en/stable/) to run 
+benchmarks. For developing on core functions and classes, be aware of any 
+impact your changes have on their speed. To configure and run asv:
 
 ```bash
-pip install asv
-python setup.py asv_config
-asv run
+$ pip install asv virtualenv
+$ python setup.py asv_config
+$ asv config
+$ asv run
 ```
 
-( TODO publish results )
+To view the results, from the root pyqtgraph directory run
+
+```bash
+$ asv publish
+$ python -m http.server --directory .asv/html 8000
+```
+
+You can open a browser and go to `localhost:8000` and view the results.
