@@ -762,8 +762,8 @@ class ROI(GraphicsObject):
             return self.pen
 
     def contextMenuEnabled(self):
-        return self.removable
-    
+        return self.removable or self.menu and len(self.menu.children()) > 1
+
     def raiseContextMenu(self, ev):
         if not self.contextMenuEnabled():
             return
@@ -776,13 +776,11 @@ class ROI(GraphicsObject):
         if self.menu is None:
             self.menu = QtWidgets.QMenu()
             self.menu.setTitle(translate("ROI", "ROI"))
-            remAct = QtGui.QAction(translate("ROI", "Remove ROI"), self.menu)
-            remAct.triggered.connect(self.removeClicked)
-            self.menu.addAction(remAct)
-            self.menu.remAct = remAct
-        # ROI menu may be requested when showing the handle context menu, so
-        # return the menu but disable it if the ROI isn't removable
-        self.menu.setEnabled(self.contextMenuEnabled())
+            if self.removable:
+                remAct = QtGui.QAction(translate("ROI", "Remove ROI"), self.menu)
+                remAct.triggered.connect(self.removeClicked)
+                self.menu.addAction(remAct)
+                self.menu.remAct = remAct
         return self.menu
 
     def removeClicked(self):
