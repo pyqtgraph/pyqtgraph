@@ -6,8 +6,8 @@ import pytest
 from numpy.testing import assert_array_almost_equal
 
 import pyqtgraph as pg
-from pyqtgraph.functions import arrayToQPath, eq
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.functions import arrayToQPath, eq, SignalBlock
+from pyqtgraph.Qt import QtCore, QtGui
 
 np.random.seed(12345)
 
@@ -409,3 +409,23 @@ def test_ndarray_from_qimage():
 def test_colorDistance():
     pg.colorDistance([pg.Qt.QtGui.QColor(0,0,0), pg.Qt.QtGui.QColor(255,0,0)])
     pg.colorDistance([])
+
+
+def test_signal_block_unconnected():
+    """Test that SignalBlock does not end up connecting an unconnected slot"""
+    class Sender(QtCore.QObject):
+        signal = QtCore.Signal()
+
+    class Receiver:
+        def __init__(self):
+            self.counter = 0
+
+        def slot(self):
+            self.counter += 1
+
+    sender = Sender()
+    receiver = Receiver()
+    with SignalBlock(sender.signal, receiver.slot):
+        pass
+    sender.signal.emit()
+    assert receiver.counter == 0
