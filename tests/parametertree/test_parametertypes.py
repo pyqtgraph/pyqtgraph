@@ -15,6 +15,11 @@ def _getWidget(param):
     return list(param.items.keys())[0].widget
 
 
+def test_typeless_param():
+    p = pt.Parameter.create(name='test', type=None, value=set())
+    p.setValue(range(4))
+
+
 def test_opts():
     paramSpec = [
         dict(name='bool', type='bool', readonly=True),
