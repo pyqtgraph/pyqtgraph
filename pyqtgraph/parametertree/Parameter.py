@@ -46,7 +46,7 @@ def registerParameterType(name, cls, override=False):
     """
     global PARAM_TYPES
     if name in PARAM_TYPES and not override:
-        raise Exception("Parameter type '%s' already exists (use override=True to replace)" % name)
+        raise ValueError(f"Parameter type '{name}' already exists (use override=True to replace)")
     PARAM_TYPES[name] = cls
     PARAM_NAMES[cls] = name
 
