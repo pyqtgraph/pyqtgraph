@@ -10,6 +10,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 
 app = pg.mkQApp()
 
+
 def _getWidget(param):
     return list(param.items.keys())[0].widget
 
@@ -18,6 +19,7 @@ def test_opts():
     paramSpec = [
         dict(name='bool', type='bool', readonly=True),
         dict(name='color', type='color', readonly=True),
+        dict(name='float', type='float', limits=None),
     ]
 
     param = pt.Parameter.create(name='params', type='group', children=paramSpec)
