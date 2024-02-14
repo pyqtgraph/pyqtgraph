@@ -3183,12 +3183,18 @@ def disconnect(signal, slot):
     """
     while True:
         try:
-            signal.disconnect(slot)
-            return True
+            success = signal.disconnect(slot)
+            if success is None:     # PyQt
+                success = True
         except (TypeError, RuntimeError):
-            slot = reload.getPreviousVersion(slot)
-            if slot is None:
-                return False
+            success = False
+
+        if success:
+            return True
+
+        slot = reload.getPreviousVersion(slot)
+        if slot is None:
+            return False
 
 
 class SignalBlock(object):

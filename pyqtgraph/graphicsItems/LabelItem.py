@@ -38,6 +38,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
 
         ==================== ==============================
         **Style Arguments:**
+        family               (str) example: 'Cantarell'
         color                (str) example: '#CCFF00'
         size                 (str) example: '8pt'
         bold                 (bool)
@@ -56,6 +57,8 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
             color = getConfigOption('foreground')
         color = fn.mkColor(color)
         optlist.append('color: ' + color.name(QtGui.QColor.NameFormat.HexArgb))
+        if 'family' in opts:
+            optlist.append('font-family: ' + opts['family'])
         if 'size' in opts:
             optlist.append('font-size: ' + opts['size'])
         if 'bold' in opts and opts['bold'] in [True, False]:

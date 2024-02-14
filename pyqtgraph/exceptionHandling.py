@@ -149,6 +149,7 @@ class ExceptionHandler(object):
 
 
 ## replace built-in excepthook only if this has not already been done
+# TODO this will never return False; the hook is set to the bound sys_excepthook method, not the instance itself
 if not (hasattr(sys.excepthook, 'implements') and sys.excepthook.implements('ExceptionHandler')):
     handler = ExceptionHandler()
     original_excepthook = handler.orig_sys_excepthook

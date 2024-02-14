@@ -9,7 +9,7 @@ from ... import debug as debug
 from ... import functions as fn
 from ... import getConfigOption
 from ...Point import Point
-from ...Qt import QtCore, QtGui, QtWidgets, isQObjectAlive
+from ...Qt import QtCore, QtGui, QtWidgets, isQObjectAlive, QT_LIB
 from ..GraphicsWidget import GraphicsWidget
 from ..ItemGroup import ItemGroup
 
@@ -1784,6 +1784,15 @@ class ViewBox(GraphicsWidget):
         for k in ViewBox.AllViews:
             if isQObjectAlive(k) and getConfigOption('crashWarning'):
                 sys.stderr.write('Warning: ViewBox should be closed before application exit.\n')
+
+            # PySide >= 6.7 prints a warning if we attempt to disconnect
+            # a signal that isn't connected.
+            if (
+                QT_LIB == 'PySide6' and
+                isQObjectAlive(k) and
+                k.receivers(QtCore.SIGNAL("destroyed()")) == 0
+            ):
+                continue
 
             try:
                 k.destroyed.disconnect()
