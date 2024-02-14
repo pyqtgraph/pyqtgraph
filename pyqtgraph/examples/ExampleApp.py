@@ -34,11 +34,7 @@ def charFormat(color, style='', background=None):
     """
     Return a QTextCharFormat with the given attributes.
     """
-    _color = QColor()
-    if type(color) is not str:
-        _color.setRgb(color[0], color[1], color[2])
-    else:
-        _color.setNamedColor(color)
+    _color = pg.functions.mkColor(color)
 
     _format = QTextCharFormat()
     _format.setForeground(_color)
