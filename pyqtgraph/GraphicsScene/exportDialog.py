@@ -51,10 +51,9 @@ class ExportDialog(QtWidgets.QWidget):
         self.selectBox.setVisible(True)
         if not self.shown:
             self.shown = True
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centre = QtWidgets.QDesktopWidget().availableGeometry(screen).center()
+            center = self.screen().availableGeometry().center()
             frame = self.frameGeometry()
-            frame.moveCenter(centre)
+            frame.moveCenter(center)
             self.move(frame.topLeft())
         
     def updateItemList(self, select=None):
