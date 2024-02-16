@@ -1,7 +1,6 @@
 import re
 import warnings
 import weakref
-from abc import ABCMeta
 from collections import OrderedDict
 
 from .. import functions as fn
@@ -23,7 +22,7 @@ def registerParameterItemType(name, itemCls, parameterCls=None, override=False):
     """
     global _PARAM_ITEM_TYPES
     if name in _PARAM_ITEM_TYPES and not override:
-        raise Exception(
+        raise ValueError(
             f"Parameter item type '{name}' already exists (use override=True to replace)"
         )
 
