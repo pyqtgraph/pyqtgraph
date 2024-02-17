@@ -283,7 +283,7 @@ def _handle_underflow(dtype, *elements):
         for ii in range(1, 3):
             coord = el[ii]
             if coord < 0:
-                coord = np.array(coord, dtype=dtype)
+                coord = np.array(coord).astype(dtype=dtype)
             newElement.append(float(coord))
         out.append(tuple(newElement))
     return out
