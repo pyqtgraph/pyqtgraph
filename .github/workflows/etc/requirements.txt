@@ -17,6 +17,6 @@ matplotlib==3.8.3
 h5py==3.10.0
 
 # testing
-pytest==8.0.0
+pytest==8.0.1
 pytest-xdist==3.5.0
 pytest-xvfb==3.0.0; sys_platform == 'linux'
