@@ -13,6 +13,7 @@ of how to build an ROI at the bottom of the file.
 
 import sys
 from math import atan2, cos, degrees, hypot, sin
+import warnings
 
 import numpy as np
 
@@ -75,8 +76,9 @@ class ROI(GraphicsObject):
                      handles). Default is False.
     maxBounds        (QRect, QRectF, or None) Specifies boundaries that the ROI 
                      cannot be dragged outside of by the user. Default is None.
-    snapSize         (float) The spacing of snap positions used when *scaleSnap*
-                     or *translateSnap* are enabled. Default is 1.0.
+    snapSize         (length-2 sequence) The spacing of snap positions used
+                     when *scaleSnap* or *translateSnap* are enabled. The
+                     default is (1.0, 1.0).
     scaleSnap        (bool) If True, the width and height of the ROI are forced
                      to be integer multiples of *snapSize* when being resized
                      by the user. Default is False.
@@ -139,7 +141,7 @@ class ROI(GraphicsObject):
     sigRemoveRequested = QtCore.Signal(object)
     
     def __init__(self, pos, size=Point(1, 1), angle=0.0, invertible=False,
-                 maxBounds=None, snapSize=1.0, scaleSnap=False,
+                 maxBounds=None, snapSize=(1.0, 1.0), scaleSnap=False,
                  translateSnap=False, rotateSnap=False, parent=None, pen=None,
                  hoverPen=None, handlePen=None, handleHoverPen=None,
                  movable=True, rotatable=True, resizable=True, removable=False,
@@ -184,12 +186,20 @@ class ROI(GraphicsObject):
         self.invertible = invertible
         self.maxBounds = maxBounds
         
-        self.snapSize = snapSize
         self.translateSnap = translateSnap
         self.rotateSnap = rotateSnap
         self.rotateSnapAngle = 15.0
         self.scaleSnap = scaleSnap
-        self.scaleSnapSize = snapSize
+
+        if type(snapSize) in (float, int):
+            warnings.warn(
+                'snapSize must be a length-2 sequence (float, float). '
+                f'A value of {snapSize} is specified.',
+                DeprecationWarning, stacklevel=2
+            )
+            snapSize = (snapSize, snapSize)
+        self._snapSize = snapSize
+        self._scaleSnapSize = snapSize
 
         # Implement mouse handling in a separate class to allow easier customization
         self.mouseDragHandler = MouseDragHandler(self)
@@ -258,7 +268,39 @@ class ROI(GraphicsObject):
     def angle(self):
         """Return the angle of the ROI in degrees."""
         return self.getState()['angle']
-        
+
+    @property
+    def snapSize(self):
+        """Return the `snapSize` of the ROI."""
+        return self._snapSize
+
+    @snapSize.setter
+    def snapSize(self, size):
+        """Backward compatibility setter for `snapSize`"""
+        if type(size) in (float, int):
+            warnings.warn(
+                'snapSize must be a length-2 sequence (float, float).',
+                DeprecationWarning, stacklevel=2
+            )
+            size = (size, size)
+        self._snapSize = size
+
+    @property
+    def scaleSnapSize(self):
+        """Return the `scaleSnapSize` of the ROI."""
+        return self._scaleSnapSize
+
+    @scaleSnapSize.setter
+    def scaleSnapSize(self, size):
+        """Backward compatibility setter for `scaleSnapSize`"""
+        if type(size) in (float, int):
+            warnings.warn(
+                'scaleSnapSize must be a length-2 sequence (float, float).',
+                DeprecationWarning, stacklevel=2
+            )
+            size = (size, size)
+        self._scaleSnapSize = size
+
     def setPos(self, pos, y=None, update=True, finish=True):
         """Set the position of the ROI (in the parent's coordinate system).
         
@@ -313,9 +355,8 @@ class ROI(GraphicsObject):
             raise TypeError("update argument must be bool")
         size = Point(size)
         if snap:
-            size[0] = round(size[0] / self.scaleSnapSize) * self.scaleSnapSize
-            size[1] = round(size[1] / self.scaleSnapSize) * self.scaleSnapSize
-
+            size[0] = np.floor(size[0] / self._scaleSnapSize[0]) * self._scaleSnapSize[0]
+            size[1] = np.floor(size[1] / self._scaleSnapSize[1]) * self._scaleSnapSize[1]
         if centerLocal is not None:
             oldSize = Point(self.state['size'])
             oldSize[0] = 1 if oldSize[0] == 0 else oldSize[0]
@@ -870,8 +911,8 @@ class ROI(GraphicsObject):
             
             ## snap 
             if self.scaleSnap or (modifiers & QtCore.Qt.KeyboardModifier.ControlModifier):
-                lp1[0] = round(lp1[0] / self.scaleSnapSize) * self.scaleSnapSize
-                lp1[1] = round(lp1[1] / self.scaleSnapSize) * self.scaleSnapSize
+                lp1[0] = np.floor(lp1[0] / self._scaleSnapSize[0]) * self._scaleSnapSize[0]
+                lp1[1] = np.floor(lp1[1] / self._scaleSnapSize[1]) * self._scaleSnapSize[1]
                 
             ## preserve aspect ratio (this can override snapping)
             if h['lockAspect'] or (modifiers & QtCore.Qt.KeyboardModifier.AltModifier):
@@ -974,12 +1015,12 @@ class ROI(GraphicsObject):
             if self.aspectLocked or h['center'][0] != h['pos'][0]:
                 newState['size'][0] = self.state['size'][0] * lp1.length() / lp0.length()
                 if self.scaleSnap:  # use CTRL only for angular snap here.
-                    newState['size'][0] = round(newState['size'][0] / self.snapSize) * self.snapSize
+                    newState['size'][0] = np.floor(newState['size'][0] / self._snapSize[0]) * self._snapSize[0]
 
             if self.aspectLocked or h['center'][1] != h['pos'][1]:
                 newState['size'][1] = self.state['size'][1] * lp1.length() / lp0.length()
                 if self.scaleSnap:  # use CTRL only for angular snap here.
-                    newState['size'][1] = round(newState['size'][1] / self.snapSize) * self.snapSize
+                    newState['size'][1] = np.floor(newState['size'][1] / self._snapSize[1]) * self._snapSize[1]
 
             if newState['size'][0] == 0:
                 newState['size'][0] = 1
@@ -1052,9 +1093,9 @@ class ROI(GraphicsObject):
         ## override this function for more interesting snap functionality..
         
         if snap is None or snap is True:
-            if self.snapSize is None:
+            if self._snapSize is None:
                 return pos
-            snap = Point(self.snapSize, self.snapSize)
+            snap = Point(self._snapSize[0], self._snapSize[1])
         
         return Point(
             round(pos[0] / snap[0]) * snap[0],
