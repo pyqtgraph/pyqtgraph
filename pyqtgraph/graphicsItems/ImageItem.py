@@ -640,7 +640,7 @@ class ImageItem(GraphicsObject):
 
         minVal, maxVal = levels
         if minVal == maxVal:
-            maxVal = xp.nextafter(maxVal, 2*maxVal)
+            maxVal = xp.nextafter(maxVal, 2*maxVal) if maxVal != 0 else numpy.finfo(maxVal).eps
         rng = maxVal - minVal
         rng = 1 if rng == 0 else rng
 
