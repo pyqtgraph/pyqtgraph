@@ -1468,14 +1468,15 @@ class Handle(UIGraphicsItem):
         self.path = QtGui.QPainterPath()
         ang = self.startAng
         dt = 2 * np.pi / self.sides
-        for i in range(0, self.sides+1):
+        for i in range(0, self.sides):
             x = size * cos(ang)
             y = size * sin(ang)
             ang += dt
             if i == 0:
                 self.path.moveTo(x, y)
             else:
-                self.path.lineTo(x, y)            
+                self.path.lineTo(x, y)
+        self.path.closeSubpath()
             
     def paint(self, p, opt, widget):
         p.setRenderHints(p.RenderHint.Antialiasing, True)
