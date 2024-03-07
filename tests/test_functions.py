@@ -278,12 +278,20 @@ _dtypes.extend(['uint8', 'uint16'])
 def _handle_underflow(dtype, *elements):
     """Wrapper around path description which converts underflow into proper points"""
     out = []
+    dtype = np.dtype(dtype)
+    # get the signed integer type of the same width
+    dtype_int = np.dtype(f'i{dtype.itemsize}')
     for el in elements:
         newElement = [el[0]]
         for ii in range(1, 3):
             coord = el[ii]
-            if coord < 0:
-                coord = np.array(coord).astype(dtype=dtype)
+            if dtype.kind == 'u' and coord < 0:
+                # coord is a float with a negative integral value.
+                # for unsigned integer types, we want negative values to
+                # wrap-around. to get consistent wrap-around behavior
+                # across different numpy versions and machine platforms,
+                # we first convert coord to a signed integer.
+                coord = np.array(coord, dtype=dtype_int).astype(dtype)
             newElement.append(float(coord))
         out.append(tuple(newElement))
     return out
