@@ -6,7 +6,7 @@ import xml.dom.minidom as xml
 
 import numpy as np
 
-from .. import PlotCurveItem, ScatterPlotItem, debug
+from .. import debug
 from .. import functions as fn
 from ..parametertree import Parameter
 from ..Qt import QtCore, QtGui, QtSvg, QtWidgets
@@ -218,35 +218,6 @@ def _generateItemSvg(item, nodes=None, root=None, options=None):
     else:
         childs = item.childItems()
 
-        dx = dy = 0.
-        sx = sy = 1.    
-
-        if isinstance(item, PlotCurveItem):
-            # Workaround for lack of precision in SVG numbers
-            # We shift curves to be centered about (0, 0) and scaled such that
-            # they fit within the region of float32 values that we can 
-            # distinguish between similar but different values
-            rect = item.viewRect()
-            x_range = rect.right() - rect.left()
-            dx =  rect.left() + (x_range / 2)
-
-            y_range = rect.top() - rect.bottom()
-            dy = rect.bottom() + y_range / 2 
-
-            sx = 1 / abs(x_range)
-            sy = 1 / abs(y_range)
-
-            item.blockSignals(True)
-
-            xDataOriginal = item.xData
-            yDataOriginal = item.yData
-            # use deepcopy of data to not mess with other references...
-            item.setData(
-                (xDataOriginal.copy() - dx) * sx, (yDataOriginal.copy() - dy) * sy
-            )
-            item.blockSignals(False)
-        
-        manipulate = QtGui.QTransform(1 / sx, 0, 0, 1 / sy, dx, dy)
         tr = itemTransform(item, item.scene())
         # offset to corner of root item
         if isinstance(root, QtWidgets.QGraphicsScene):
@@ -261,7 +232,8 @@ def _generateItemSvg(item, nodes=None, root=None, options=None):
         else:
             resize_x = resize_y = 1
         tr2 = QtGui.QTransform(resize_x, 0, 0, resize_y, -rootPos.x(), -rootPos.y())
-        tr = manipulate * tr * tr2
+        tr = tr * tr2
+        # tr = manipulate * tr * tr2
 
         arr = QtCore.QByteArray()
         buf = QtCore.QBuffer(arr)
