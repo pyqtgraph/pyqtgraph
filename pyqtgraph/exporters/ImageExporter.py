@@ -26,7 +26,7 @@ class ImageExporter(Exporter):
         if bgbrush.style() == QtCore.Qt.BrushStyle.NoBrush:
             bg.setAlpha(0)
 
-        self.params = Parameter(name='params', type='group', children=[
+        self.params = Parameter.create(name='params', type='group', children=[
             {'name': 'width', 'title': translate("Exporter", 'width'), 'type': 'int', 'value': int(tr.width()),
              'limits': (0, None)},
             {'name': 'height', 'title': translate("Exporter", 'height'), 'type': 'int', 'value': int(tr.height()),

@@ -28,7 +28,7 @@ class SVGExporter(Exporter):
         if bgbrush.style() == QtCore.Qt.BrushStyle.NoBrush:
             bg.setAlpha(0)
 
-        self.params = Parameter(name='params', type='group', children=[
+        self.params = Parameter.create(name='params', type='group', children=[
             {'name': 'background', 'title': translate("Exporter", 'background'), 'type': 'color', 'value': bg},
             {'name': 'width', 'title': translate("Exporter", 'width'), 'type': 'float', 'value': tr.width(),
              'limits': (0, None)},

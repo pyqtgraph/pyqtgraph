@@ -2,7 +2,7 @@ import builtins
 
 from ... import functions as fn
 from ... import icons
-from ...Qt import QtCore, QtGui, QtWidgets, mkQApp
+from ...Qt import QtCore, QtWidgets
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
 
@@ -17,6 +17,7 @@ class WidgetParameterItem(ParameterItem):
 
     This class can be subclassed by overriding makeWidget() to provide a custom widget.
     """
+
     def __init__(self, param, depth):
         ParameterItem.__init__(self, param, depth)
 
@@ -147,11 +148,11 @@ class WidgetParameterItem(ParameterItem):
         self.updateDefaultBtn()
 
     def updateDefaultBtn(self):
-        ## enable/disable default btn
         self.defaultBtn.setEnabled(
-            not self.param.valueIsDefault() and self.param.opts['enabled'] and self.param.writable())
+            self.param.valueModifiedSinceResetToDefault()
+            and self.param.opts['enabled']
+            and self.param.writable())
 
-        # hide / show
         self.defaultBtn.setVisible(self.param.hasDefault() and not self.param.readonly())
 
     def updateDisplayLabel(self, value=None):
@@ -217,6 +218,7 @@ class WidgetParameterItem(ParameterItem):
 
     def defaultClicked(self):
         self.param.setToDefault()
+        self.updateDefaultBtn()
 
     def optsChanged(self, param, opts):
         """Called when any options are changed that are not
@@ -269,15 +271,17 @@ class SimpleParameter(Parameter):
       - 'colormap'
     """
 
-    def __init__(self, *args, **kargs):
-        """
-        Initialize the parameter.
-
-        This is normally called implicitly through :meth:`Parameter.create`.
-        The keyword arguments available to :meth:`Parameter.__init__` are
-        applicable.
-        """
-        Parameter.__init__(self, *args, **kargs)
+    @property
+    def itemClass(self):
+        from .bool import BoolParameterItem
+        from .numeric import NumericParameterItem
+        from .str import StrParameterItem
+        return {
+            'bool': BoolParameterItem,
+            'int': NumericParameterItem,
+            'float': NumericParameterItem,
+            'str': StrParameterItem,
+        }[self.opts['type']]
 
     def _interpretValue(self, v):
         typ = self.opts['type']
@@ -399,7 +403,6 @@ class GroupParameterItem(ParameterItem):
                 self.addWidget.addItem(t)
         finally:
             self.addWidget.blockSignals(False)
-
 
 
 class GroupParameter(Parameter):

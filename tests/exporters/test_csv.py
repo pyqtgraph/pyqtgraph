@@ -55,6 +55,7 @@ def test_CSVExporter():
             assert (i >= len(x3) and vals[4] == '') or approxeq(float(vals[4]), x3[i])
             assert (i >= len(y3) and vals[5] == '') or approxeq(float(vals[5]), y3[i])
 
+
 def test_CSVExporter_with_ErrorBarItem():
     plt = pg.PlotWidget()
     plt.show()

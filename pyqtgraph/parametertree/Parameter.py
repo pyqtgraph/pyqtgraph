@@ -1,4 +1,5 @@
 import re
+import warnings
 import weakref
 from collections import OrderedDict
 
@@ -11,6 +12,7 @@ PARAM_NAMES = {}
 
 _PARAM_ITEM_TYPES = {}
 
+
 def registerParameterItemType(name, itemCls, parameterCls=None, override=False):
     """
     Similar to :func:`registerParameterType`, but works on ParameterItems. This is useful for Parameters where the
@@ -20,7 +22,9 @@ def registerParameterItemType(name, itemCls, parameterCls=None, override=False):
     """
     global _PARAM_ITEM_TYPES
     if name in _PARAM_ITEM_TYPES and not override:
-        raise Exception("Parameter item type '%s' already exists (use override=True to replace)" % name)
+        raise ValueError(
+            f"Parameter item type '{name}' already exists (use override=True to replace)"
+        )
 
     parameterCls = parameterCls or Parameter
     _PARAM_ITEM_TYPES[name] = itemCls
@@ -35,13 +39,15 @@ def registerParameterType(name, cls, override=False):
     """
     global PARAM_TYPES
     if name in PARAM_TYPES and not override:
-        raise Exception("Parameter type '%s' already exists (use override=True to replace)" % name)
+        raise ValueError(f"Parameter type '{name}' already exists (use override=True to replace)")
     PARAM_TYPES[name] = cls
     PARAM_NAMES[cls] = name
+
 
 def __reload__(old):
     PARAM_TYPES.update(old.get('PARAM_TYPES', {}))
     PARAM_NAMES.update(old.get('PARAM_NAMES', {}))
+
 
 class Parameter(QtCore.QObject):
     """
@@ -54,7 +60,7 @@ class Parameter(QtCore.QObject):
     
     Note: It is fairly uncommon to use the Parameter class directly; mostly you 
     will use subclasses which provide specialized type and data handling. The static
-    pethod Parameter.create(...) is an easy way to generate instances of these subclasses.
+    method Parameter.create(...) is an easy way to generate instances of these subclasses.
        
     For more Parameter types, see ParameterTree.parameterTypes module.
     
@@ -86,8 +92,6 @@ class Parameter(QtCore.QObject):
     ## name, type, limits, etc.
     ## can also carry UI hints (slider vs spinbox, etc.)
 
-    itemClass = None
-    
     sigValueChanged = QtCore.Signal(object, object)  ## self, value   emitted when value is finished being edited
     sigValueChanging = QtCore.Signal(object, object)  ## self, value  emitted as value is being edited
     
@@ -134,7 +138,7 @@ class Parameter(QtCore.QObject):
         else:
             cls = PARAM_TYPES[opts['type']]
         return cls(**opts)
-    
+
     def __init__(self, **opts):
         """
         Initialize a Parameter object. Although it is rare to directly create a
@@ -178,8 +182,6 @@ class Parameter(QtCore.QObject):
                                      (default=None; added in version 0.9.9)
         =======================      =========================================================
         """
-        
-        
         QtCore.QObject.__init__(self)
         
         self.opts = {
@@ -193,36 +195,39 @@ class Parameter(QtCore.QObject):
             'expanded': True,
             'syncExpanded': False,
             'title': None,
-            #'limits': None,  ## This is a bad plan--each parameter type may have a different data type for limits.
+            # The following intentionally excluded; each parameter type may have a different data type for limits.
+            # 'limits': None,
         }
-        value = opts.get('value', None)
         name = opts.get('name', None)
+        if not isinstance(name, str):
+            raise TypeError("Parameter must have a string name specified in opts.")
         self.opts.update(opts)
-        self.opts['value'] = None  # will be set later.
         self.opts['name'] = None
-        
+
         self.childs = []
         self.names = {}   ## map name:child
         self.items = weakref.WeakKeyDictionary()  ## keeps track of tree items representing this parameter
         self._parent = None
         self.treeStateChanges = []  ## cache of tree state changes to be delivered on next emit
         self.blockTreeChangeEmit = 0
-        #self.monitoringChildren = False  ## prevent calling monitorChildren more than once
-        
-        if not isinstance(name, str):
-            raise Exception("Parameter must have a string name specified in opts.")
         self.setName(name)
-        
+
         self.addChildren(self.opts.pop('children', []))
-        
+        if 'value' in self.opts and 'default' not in self.opts:
+            warnings.warn(
+                "Parameter has no default value. Pass a default, or use setDefault(). This will no longer set "
+                "an implicit default after January 2025.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self.opts['default'] = self.opts['value']
+        value = self.opts.get('value', self.opts.get('default', None))
+        modified = 'value' in self.opts
         if value is not None:
             self.setValue(value)
+        self._modifiedSinceReset = modified
 
-        if 'default' not in self.opts:
-            self.opts['default'] = None
-            self.setDefault(self.opts['value'])
-    
-        ## Connect all state changed signals to the general sigStateChanged
+        # Connect all state changed signals to the general sigStateChanged
         self.sigValueChanged.connect(self._emitValueChanged)
         self.sigChildAdded.connect(self._emitChildAddedChanged)
         self.sigChildRemoved.connect(self._emitChildRemovedChanged)
@@ -233,9 +238,13 @@ class Parameter(QtCore.QObject):
         self.sigOptionsChanged.connect(self._emitOptionsChanged)
         self.sigContextMenu.connect(self._emitContextMenuChanged)
 
-        
-        #self.watchParam(self)  ## emit treechange signals if our own state changes
-        
+    @property
+    def itemClass(self):
+        """
+        The class of ParameterItem to use when displaying this parameter in a ParameterTree.
+        """
+        return ParameterItem
+
     def name(self):
         """Return the name of this Parameter."""
         return self.opts['name']
@@ -257,12 +266,13 @@ class Parameter(QtCore.QObject):
     def setName(self, name):
         """Attempt to change the name of this parameter; return the actual name. 
         (The parameter may reject the name change or automatically pick a different name)"""
-        if self.opts['strictNaming']:
-            if len(name) < 1 or re.search(r'\W', name) or re.match(r'\d', name[0]):
-                raise Exception("Parameter name '%s' is invalid. (Must contain only alphanumeric and underscore characters and may not start with a number)" % name)
+        if self.opts['strictNaming'] and (len(name) < 1 or re.search(r'\W', name) or re.match(r'\d', name[0])):
+            raise ValueError(
+                f"Parameter name '{name}' is invalid. (Must contain only alphanumeric and underscore characters and "
+                f"may not start with a number)")
         parent = self.parent()
         if parent is not None:
-            name = parent._renameChild(self, name)  ## first ask parent if it's ok to rename
+            name = parent._renameChild(self, name)  # first ask parent if it's ok to rename
         if self.opts['name'] != name:
             self.opts['name'] = name
             self.sigNameChanged.emit(self, name)
@@ -285,7 +295,7 @@ class Parameter(QtCore.QObject):
         global PARAM_TYPES
         cls = PARAM_TYPES.get(typ, None)
         if cls is None:
-            raise Exception("Type name '%s' is not registered." % str(typ))
+            raise ValueError(f"Type name '{typ}' is not registered.")
         return self.__class__ is cls
         
     def childPath(self, child):
@@ -310,8 +320,9 @@ class Parameter(QtCore.QObject):
             if blockSignal is not None:
                 self.sigValueChanged.disconnect(blockSignal)
             value = self._interpretValue(value)
-            if fn.eq(self.opts['value'], value):
+            if fn.eq(self.opts.get('value', None), value):
                 return value
+            self._modifiedSinceReset = True
             self.opts['value'] = value
             self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
         finally:
@@ -323,14 +334,27 @@ class Parameter(QtCore.QObject):
     def _interpretValue(self, v):
         return v
 
+    def hasValue(self):
+        """Return True if this Parameter has a value set."""
+        return 'value' in self.opts
+
     def value(self):
         """
-        Return the value of this Parameter.
+        Return the value of this Parameter. Raises ValueError if no value has been set.
         """
-        return self.opts['value']
+        if 'value' not in self.opts:
+            warnings.warn(
+                "Parameter has no value set. Pass an initial value or default, or use setValue() or setDefault(). "
+                "This will be an error after January 2025.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        return self.opts.get('value')
 
     def getValues(self):
-        """Return a tree of all values that are children of this parameter"""
+        """
+        Return a tree of all values that are children of this parameter. Raises ValueError if any child has no value.
+        """
         vals = OrderedDict()
         for ch in self:
             vals[ch.name()] = (ch.value(), ch.getValues())
@@ -350,9 +374,12 @@ class Parameter(QtCore.QObject):
                 global PARAM_NAMES
                 state['type'] = PARAM_NAMES.get(type(self), None)
         elif filter == 'user':
-            state = {'value': self.value()}
+            if self.hasValue():
+                state = {'value': self.value()}
+            else:
+                state = {}
         else:
-            raise ValueError("Unrecognized filter argument: '%s'" % filter)
+            raise ValueError(f"Unrecognized filter argument: '{filter}'")
 
         ch = OrderedDict([(ch.name(), ch.saveState(filter=filter)) for ch in self])
         if len(ch) > 0:
@@ -435,33 +462,49 @@ class Parameter(QtCore.QObject):
         finally:
             if blockSignals:
                 self.unblockTreeChangeSignal()
-            
-            
-        
+
+    def valueModifiedSinceResetToDefault(self):
+        """Return True if this parameter's value has been changed since the last time
+        it was reset to its default value."""
+        return self._modifiedSinceReset
+
     def defaultValue(self):
-        """Return the default value for this parameter."""
-        return self.opts['default']
+        """Return the default value for this parameter. Raises ValueError if no default."""
+        if 'default' not in self.opts:
+            warnings.warn("Parameter has no default value. This will be a ValueError after January 2025.",
+                          DeprecationWarning,
+                          stacklevel=2)
+        return self.opts.get('default')
         
-    def setDefault(self, val):
-        """Set the default value for this parameter."""
-        if self.opts['default'] == val:
+    def setDefault(self, val, updatePristineValues=False):
+        """Set the default value for this parameter. If updatePristineValues is True, then
+        any values that haven't been modified since the last time they were reset to default
+        will be updated to the new default value (default: False)."""
+        if self.opts.get('default', None) == val:
             return
         self.opts['default'] = val
+        if 'value' not in self.opts or (updatePristineValues and not self.valueModifiedSinceResetToDefault()):
+            self.setToDefault()
+        if not self.valueIsDefault():
+            self._modifiedSinceReset = True
         self.sigDefaultChanged.emit(self, val)
 
     def setToDefault(self):
-        """Set this parameter's value to the default."""
-        if self.hasDefault():
+        """Set this parameter's value to the default. Raises ValueError if no default is set."""
+        with self.treeChangeBlocker():
             self.setValue(self.defaultValue())
+            self._modifiedSinceReset = False
 
     def hasDefault(self):
         """Returns True if this parameter has a default value."""
-        return self.opts['default'] is not None
+        return self.opts.get('default', None) is not None
         
     def valueIsDefault(self):
         """Returns True if this parameter's value is equal to the default value."""
+        if not self.hasValue() or not self.hasDefault():
+            return False
         return fn.eq(self.value(), self.defaultValue())
-        
+
     def setLimits(self, limits):
         """Set limits on the acceptable values for this parameter. 
         The format of limits depends on the type of the parameter and
@@ -501,7 +544,8 @@ class Parameter(QtCore.QObject):
         Set any arbitrary options on this parameter.
         The exact behavior of this function will depend on the parameter type, but
         most parameters will accept a common set of options: value, name, limits,
-        default, readonly, removable, renamable, visible, enabled, expanded and syncExpanded.
+        default, readonly, removable, renamable, visible, enabled, expanded and
+        syncExpanded.
         
         See :func:`Parameter.__init__ <pyqtgraph.parametertree.Parameter.__init__>`
         for more information on default options.
@@ -569,7 +613,6 @@ class Parameter(QtCore.QObject):
         # revert to ParameterItem if both fail
         itemClass = self.itemClass or _PARAM_ITEM_TYPES.get(self.opts['type'], ParameterItem)
         return itemClass(self, depth)
-
 
     def addChild(self, child, autoIncrementName=None, existOk=False):
         """
@@ -704,14 +747,15 @@ class Parameter(QtCore.QObject):
             num += 1
 
     def __iter__(self):
-        for ch in self.childs:
-            yield ch
+        yield from self.childs
 
     def __getitem__(self, names):
         """Get the value of a child parameter. The name may also be a tuple giving
         the path to a sub-parameter::
         
             value = param[('child', 'grandchild')]
+
+        Raises ValueError if the child value is not set.
         """
         if not isinstance(names, tuple):
             names = (names,)
@@ -739,9 +783,9 @@ class Parameter(QtCore.QObject):
         """
         try:
             param = self.names[names[0]]
-        except KeyError:
-            raise KeyError("Parameter %s has no child named %s" % (self.name(), names[0]))
-        
+        except KeyError as e:
+            raise KeyError(f"Parameter {self.name()} has no child named {names[0]}") from e
+
         if len(names) > 1:
             return param.child(*names[1:])
         else:
@@ -828,6 +872,7 @@ class Parameter(QtCore.QObject):
             self.treeStateChanges = []
             if len(changes) > 0:
                 self.sigTreeStateChanged.emit(self, changes)
+
 
 class SignalBlocker(object):
     def __init__(self, enterFn, exitFn):

@@ -12,7 +12,7 @@ class PrintExporter(Exporter):
     def __init__(self, item):
         Exporter.__init__(self, item)
         tr = self.getTargetRect()
-        self.params = Parameter(name='params', type='group', children=[
+        self.params = Parameter.create(name='params', type='group', children=[
             {'name': 'width', 'title': translate("Exporter", 'width'), 'type': 'float', 'value': 0.1,
              'limits': (0, None), 'suffix': 'm', 'siPrefix': True},
             {'name': 'height', 'title': translate("Exporter", 'height'), 'type': 'float',

@@ -1,17 +1,17 @@
 from functools import wraps
 
 import numpy as np
-import pyqtgraph as pg
 import pytest
 
+import pyqtgraph as pg
 from pyqtgraph import functions as fn
 from pyqtgraph.parametertree import (
     InteractiveFunction,
     Interactor,
-    interact,
+    Parameter,
     RunOptions,
+    interact,
 )
-from pyqtgraph.parametertree import Parameter
 from pyqtgraph.parametertree.Parameter import PARAM_TYPES
 from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
 from pyqtgraph.Qt import QtGui
@@ -19,25 +19,93 @@ from pyqtgraph.Qt import QtGui
 pg.mkQApp()
 
 def test_parameter_hasdefault():
-    opts = {"name": "param", "type": int, "value": 1}
+    opts = {"name": "param", "type": 'int', "value": 1}
 
     # default unspecified
-    p = Parameter(**opts)
+    p = Parameter.create(**opts)
+    # TODO after January 2025, this next line needs to reverse its assertion
     assert p.hasDefault()
-    assert p.defaultValue() == opts["value"]
-
-    p.setDefault(2)
-    assert p.hasDefault()
-    assert p.defaultValue() == 2
 
     # default specified
-    p = Parameter(default=0, **opts)
+    p = Parameter.create(default=0, **opts)
     assert p.hasDefault()
     assert p.defaultValue() == 0
 
     # default specified as None
-    p = Parameter(default=None, **opts)
+    p = Parameter.create(default=None, **opts)
     assert not p.hasDefault()
+    p.setDefault(2)
+    assert p.hasDefault()
+    assert p.defaultValue() == 2
+
+
+def test_parameter_defaults_and_pristineness():
+    # init with identical value and default
+    p = Parameter.create(name="param", type='int', value=1, default=1)
+    assert p.valueModifiedSinceResetToDefault() is True
+    # init with different value and default
+    p = Parameter.create(name="param", type='int', value=1, default=2)
+    assert p.valueModifiedSinceResetToDefault() is True
+    # init with value only
+    p = Parameter.create(name="param", type='int', value=1)
+    assert p.valueModifiedSinceResetToDefault() is True
+    # TODO after January 2025, uncomment the following lines
+    # with pytest.raises(ValueError):
+    #     p.setToDefault()
+    # init with default only
+    p = Parameter.create(name="param", type='int', default=1)
+    assert p.valueModifiedSinceResetToDefault() is False
+
+    # initially value is pristine since only a default was given
+    assert p.value() == 1
+    # update default, and allow the value to track since it is pristine
+    p.setDefault(2, updatePristineValues=True)
+    assert p.value() == 2
+    assert p.valueModifiedSinceResetToDefault() is False
+    # update default but do not allow the value to track
+    p.setDefault(3)  # by default, updatePristineValues=False
+    assert p.value() == 2
+    assert p.valueModifiedSinceResetToDefault() is True        
+    # update default again, explicitly requesting updatePristineValues=False
+    p.setToDefault()
+    assert p.valueModifiedSinceResetToDefault() is False
+    p.setDefault(4, updatePristineValues=False)
+    assert p.value() == 3
+    assert p.valueModifiedSinceResetToDefault() is True
+    # update value directly, causing dirty state
+    p.setToDefault()
+    assert p.valueModifiedSinceResetToDefault() is False
+    p.setValue(5)
+    assert p.valueModifiedSinceResetToDefault() is True
+    p.setDefault(6, updatePristineValues=True)
+    assert p.value() == 5
+    assert p.valueModifiedSinceResetToDefault() is True
+    # test setting value to same as default value does not result in pristine state
+    p.setToDefault()
+    assert p.valueModifiedSinceResetToDefault() is False
+    p.setValue(0)
+    p.setValue(p.defaultValue())
+    assert p.valueModifiedSinceResetToDefault() is True
+    # test setToDefault
+    p.setToDefault()
+    assert p.valueModifiedSinceResetToDefault() is False
+    assert p.value() == p.defaultValue()
+    p.setDefault(7, updatePristineValues=True)
+    assert p.value() == 7
+
+    # init with neither value nor default
+    p = Parameter.create(name="param", type='int')
+    assert p.valueModifiedSinceResetToDefault() is False
+    # TODO after January 2025, uncomment the following lines
+    # with pytest.raises(ValueError):
+    #     p.value()
+    # with pytest.raises(ValueError):
+    #     p.defaultValue()
+    # with pytest.raises(ValueError):
+    #     p.setToDefault()
+    p.setDefault(8)
+    assert p.valueModifiedSinceResetToDefault() is False
+    assert p.value() == 8
 
 
 def test_add_child():

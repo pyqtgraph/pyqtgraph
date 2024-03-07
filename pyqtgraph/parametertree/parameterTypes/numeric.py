@@ -27,7 +27,7 @@ class NumericParameterItem(WidgetParameterItem):
         for k in defs:
             if k in opts:
                 defs[k] = opts[k]
-        if 'limits' in opts:
+        if opts.get('limits') is not None:
             defs['min'], defs['max'] = opts['limits']
         w = SpinBox()
         w.setOpts(**defs)

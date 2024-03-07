@@ -3,9 +3,9 @@ import functools
 import inspect
 import pydoc
 
+from .. import functions as fn
 from . import Parameter
 from .parameterTypes import ActionGroupParameter
-from .. import functions as fn
 
 
 class PARAM_UNSET:
@@ -136,7 +136,7 @@ class InteractiveFunction:
             self.parameters[param.name()] = param
             param.sigValueChanged.connect(self.updateCachedParameterValues)
             # Populate initial values
-            self.parameterCache[param.name()] = param.value()
+            self.parameterCache[param.name()] = param.value() if param.hasValue() else None
 
     def removeParameters(self, clearCache=True):
         """

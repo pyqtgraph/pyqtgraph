@@ -131,12 +131,13 @@ class RadioParameterItem(BoolParameterItem):
 # Proxy around radio/bool type so the correct item class gets instantiated
 class BoolOrRadioParameter(SimpleParameter):
 
-    def __init__(self, **kargs):
-        if kargs.get('type') == 'bool':
-            self.itemClass = BoolParameterItem
+    @property
+    def itemClass(self):
+        if self.opts.get('type') == 'bool':
+            return BoolParameterItem
         else:
-            self.itemClass = RadioParameterItem
-        super().__init__(**kargs)
+            return RadioParameterItem
+
 
 class ChecklistParameter(GroupParameter):
     """
@@ -202,7 +203,7 @@ class ChecklistParameter(GroupParameter):
 
     def updateLimits(self, _param, limits):
         oldOpts = self.names
-        val = self.opts['value']
+        val = self.opts.get('value', None)
         # Make sure adding and removing children don't cause tree state changes
         self.blockTreeChangeSignal()
         self.clearChildren()
@@ -231,8 +232,6 @@ class ChecklistParameter(GroupParameter):
 
     def optsChanged(self, param, opts):
         if 'exclusive' in opts:
-            # Force set value to ensure updates
-            # self.opts['value'] = self._VALUE_UNSET
             self.updateLimits(None, self.opts.get('limits', []))
         if 'delay' in opts:
             self.valChangingProxy.setDelay(opts['delay'])

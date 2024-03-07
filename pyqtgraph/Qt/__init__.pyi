@@ -5,32 +5,40 @@ This stub file is to aid in the PyCharm auto-completion of the Qt imports.
 from typing import Union
 
 try:
-    from PyQt5 import QtCore, QtGui, QtWidgets
+    from PyQt5 import QtCore, QtGui, QtSvg, QtTest, QtWidgets
 
     QtCore = QtCore
     QtGui = QtGui
     QtWidgets = QtWidgets
+    QtTest = QtTest
+    QtSvg = QtSvg
 except ImportError:
     try:
-        from PyQt6 import QtCore, QtGui, QtWidgets
+        from PyQt6 import QtCore, QtGui, QtSvg, QtTest, QtWidgets
 
         QtCore = QtCore
         QtGui = QtGui
         QtWidgets = QtWidgets
+        QtTest = QtTest
+        QtSvg = QtSvg
     except ImportError:
         try:
-            from PySide2 import QtCore, QtGui, QtWidgets
+            from PySide2 import QtCore, QtGui, QtSvg, QtTest, QtWidgets
 
             QtCore = QtCore
             QtGui = QtGui
             QtWidgets = QtWidgets
+            QtTest = QtTest
+            QtSvg = QtSvg
         except ImportError:
             try:
-                from PySide6 import QtCore, QtGui, QtWidgets
+                from PySide6 import QtCore, QtGui, QtSvg, QtTest, QtWidgets
 
                 QtCore = QtCore
                 QtGui = QtGui
                 QtWidgets = QtWidgets
+                QtTest = QtTest
+                QtSvg = QtSvg
             except ImportError as e:
                 raise ImportError("No suitable qt binding found") from e
 
