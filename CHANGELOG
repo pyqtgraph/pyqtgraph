@@ -1,3 +1,198 @@
+pyqtgraph-0.13.4
+
+## What's Changed
+
+### Highlights
+
+* Optimize clip and downsample by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2719
+* Drop python 3.8 and numpy 1.20 support by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2740
+* speed up PColorMeshItem by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2768
+* NonUniformImage improvements by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2764
+* Fix 'import pyqtgraph.canvas' crash by @nicoddemus in https://github.com/pyqtgraph/pyqtgraph/pull/2934
+* Add LabelItem font family option by @misantroop in https://github.com/pyqtgraph/pyqtgraph/pull/2919
+
+
+### API/Behavior Changes
+
+* Drop python 3.8 and numpy 1.20 support by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2740
+* Add `dataBounds()` method to `TextItem` to make autoRange more predictable by @redruin1 in https://github.com/pyqtgraph/pyqtgraph/pull/2646
+* speed up PColorMeshItem by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2768
+* NonUniformImage improvements by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2764
+* Adapt hide icon (invisible eye) to style of other icons by @stephan-senkbeil in https://github.com/pyqtgraph/pyqtgraph/pull/2731
+* Add updatePristineValues arg to Parameter.setDefault by @outofculture in https://github.com/pyqtgraph/pyqtgraph/pull/2853
+* Allow ROI context menu to show if non-removable by @samtygier in https://github.com/pyqtgraph/pyqtgraph/pull/2932
+* Add LabelItem font family option by @misantroop in https://github.com/pyqtgraph/pyqtgraph/pull/2919
+* Center exportDialog using screen geometry by @MorbidCuriosity84 in https://github.com/pyqtgraph/pyqtgraph/pull/2930
+* Give siPrefix behavior to values of zero by @outofculture in https://github.com/pyqtgraph/pyqtgraph/pull/2842
+* make ColorBarItem agnostic of the image kind by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2879
+* Allow menu selection of ColorMap(s) by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2779
+* AxisItem: Add adjustable label overlap tolerances, vertical overlap by default by @NilsNemitz in https://github.com/pyqtgraph/pyqtgraph/pull/2836
+* chg: NodeGraphicsItem in Node.py by @Doralitze in https://github.com/pyqtgraph/pyqtgraph/pull/2869
+* ScatterPlotItem: implement hidpi pixmap by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2863
+* Axis ticker update by @NilsNemitz in https://github.com/pyqtgraph/pyqtgraph/pull/2827
+* Preserve tick pen by @NilsNemitz in https://github.com/pyqtgraph/pyqtgraph/pull/2828
+* Add turbo colormap to local ColorMaps and GradientEditorItem by @ptuemmler in https://github.com/pyqtgraph/pyqtgraph/pull/2778
+
+
+### Bug Fixes
+
+* GLViewWidget: fix mouse pos jumps when mouse tracking is off by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2698
+* TypeError when using multiple pens for different lines by @adriandavidauer in https://github.com/pyqtgraph/pyqtgraph/pull/2704
+* PySide6 6.5.1 compatibility updates by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2734
+* guard against auto-downsample oscillation by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2726
+* For SVG exports, shift PlotCurveItems to be about 0,0 by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2728
+* Update TextItem.py by @dingo9 in https://github.com/pyqtgraph/pyqtgraph/pull/2761
+* Fix invisible InfiniteLine at plot edges by @bbc131 in https://github.com/pyqtgraph/pyqtgraph/pull/2762
+* Fix #2786: proper handling of slider parameter suffix by @ntjess in https://github.com/pyqtgraph/pyqtgraph/pull/2796
+* fix: wrong key set to _pixelVectorCache by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2795
+* PlotCurveItem check if args is None first by @JayanthBontha in https://github.com/pyqtgraph/pyqtgraph/pull/2835
+* fixed recursive PlotWidget.__getattr__ calls by @nleclercq in https://github.com/pyqtgraph/pyqtgraph/pull/2860
+* Do not move PlotCurveItem to origin by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2950
+* close ROI handle subpath by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2949
+* Add updatePristineValues arg to Parameter.setDefault by @outofculture in https://github.com/pyqtgraph/pyqtgraph/pull/2853
+* Use non-deprecated method to access screen info by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2938
+* coerce to dtype after creation by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2939
+* disconnect only slots that got connected by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2923
+* Prevent containerChanged from collapsing an entire container tree by @UsYer in https://github.com/pyqtgraph/pyqtgraph/pull/2888
+* fix: paint method widget argument can be None by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2903
+* Fix 'import pyqtgraph.canvas' crash by @nicoddemus in https://github.com/pyqtgraph/pyqtgraph/pull/2934
+* Fix Python 3.12 `DeprecationWarning`: `datetime.datetime.utcfromtimestamp()` by @bersbersbers in https://github.com/pyqtgraph/pyqtgraph/pull/2848
+* convert QPointF to QPoint before calling mapToScene() by @sevas in https://github.com/pyqtgraph/pyqtgraph/pull/2870
+* Numpy > 1.20 by @MalteOlle in https://github.com/pyqtgraph/pyqtgraph/pull/2739
+* Fix resizing ViewBox if aspect locked + apply ViewBox limits immediately by @bbc131 in https://github.com/pyqtgraph/pyqtgraph/pull/2799
+
+
+### Misc
+
+* bump to dev version by @ntjess in https://github.com/pyqtgraph/pyqtgraph/pull/2693
+* Don't draw InfiniteLine anti-aliased if vertical or horizontal by @bbc131 in https://github.com/pyqtgraph/pyqtgraph/pull/2709
+* Optimize clip and downsample by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2719
+* WidgetGroup: avoid lambda by using self.sender() by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2694
+* keep track of respective finiteness of x and y by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2720
+* refactor GLViewWidget code into GLViewMixin by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2659
+* Fix NumPy warning in test_functions by @swt2c in https://github.com/pyqtgraph/pyqtgraph/pull/2746
+* generate random integers directly by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2748
+* Fix tox config, bump min numpy to 1.22 by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2755
+* Simplify fps computation by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2752
+* Add iterations argparse argument to benchmarks by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2418
+* export dialog - compare items by "is" rather than "==" (operator not implemented!) by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2758
+* workaround Python 3.11.4 flag inversion issue by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2760
+* use QGraphicsPixmapItem instead of ImageItem to draw colorbar by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2781
+* ImageItem: cache nan check by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2784
+* ImageItem: request for 256-entry lut by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2808
+* update gitignore setting by @longqzh in https://github.com/pyqtgraph/pyqtgraph/pull/2834
+* workaround PYSIDE-2487 for pen parameter by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2844
+* ButtonItem: draw pixmap to logical size by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2873
+* Allow release info change during apt-get update on ubuntu by @spchamp in https://github.com/pyqtgraph/pyqtgraph/pull/2893
+* various fixes for NumPy 2.0 by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2894
+* Fix typo invloved -> involved by @NilsIrl in https://github.com/pyqtgraph/pyqtgraph/pull/2905
+* Add int typehint to ClickRadius by @robtau in https://github.com/pyqtgraph/pyqtgraph/pull/2943
+* Refactor ImageItem QImage creation routines by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2944
+* Better editable install by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2935
+* Use QColor.fromString instead of deprecated QColor.setNamedColor by @zariiii9003 in https://github.com/pyqtgraph/pyqtgraph/pull/2877
+* Add pickling to SRTTransform by @outofculture in https://github.com/pyqtgraph/pyqtgraph/pull/2914
+* pcmi: refactor setData() by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2876
+
+
+### Docs
+
+* Update .readthedocs.yaml by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2732
+* Address pydata-sphinx-theme warning by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2861
+* Docs: Update Qt binding selection details by @veractor in https://github.com/pyqtgraph/pyqtgraph/pull/2807
+* Bump pyqt6 from 6.5.0 to 6.5.1 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2741
+* Bump pyqt6 from 6.5.1 to 6.5.2 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2780
+* Bump pyqt6 from 6.5.2 to 6.5.3 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2846
+* Bump pyqt6 from 6.5.3 to 6.6.0 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2862
+* Bump pyqt6 from 6.6.0 to 6.6.1 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2895
+* Bump sphinx from 6.1.3 to 6.2.1 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2705
+* Bump sphinx from 6.2.1 to 7.1.0 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2782
+* Bump sphinx from 7.1.0 to 7.1.2 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2791
+* Bump sphinx from 7.1.2 to 7.2.2 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2802
+* Bump sphinx from 7.2.2 to 7.2.3 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2806
+* Bump sphinx from 7.2.3 to 7.2.4 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2809
+* Bump sphinx from 7.2.4 to 7.2.5 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2813
+* Bump sphinx from 7.2.5 to 7.2.6 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2821
+* Bump pydata-sphinx-theme from 0.13.3 to 0.14.1 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2825
+* Bump pydata-sphinx-theme from 0.14.2 to 0.14.3 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2865
+* Bump pydata-sphinx-theme from 0.14.3 to 0.14.4 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2889
+* Bump pydata-sphinx-theme from 0.14.4 to 0.15.2 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2916
+* Bump sphinx-design from 0.4.1 to 0.5.0 in /doc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2783
+
+
+### Testing/CI
+
+* [CI] add mypy settings for CI by @longqzh in https://github.com/pyqtgraph/pyqtgraph/pull/2845
+* fix: test Python 3.10 against Qt 6.2 by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2837
+* cast float to signed int before to unsigned int by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2946
+* Bump pyopengl from 3.1.6 to 3.1.7 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2730
+* Bump h5py from 3.8.0 to 3.9.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2750
+* Bump h5py from 3.9.0 to 3.10.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2839
+* Bump pytest-xvfb from 2.0.0 to 3.0.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2735
+* Bump pytest from 7.3.0 to 7.3.1 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2696
+* Bump pytest from 7.3.1 to 7.3.2 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2743
+* Bump pytest from 7.3.2 to 7.4.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2753
+* Bump pytest from 7.4.0 to 7.4.2 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2817
+* Bump pytest from 7.4.2 to 7.4.3 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2856
+* Bump pytest from 7.4.3 to 8.0.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2922
+* Bump pytest from 8.0.0 to 8.0.1 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2942
+* Bump pytest from 8.0.1 to 8.0.2 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2945
+* Bump pytest from 8.0.2 to 8.1.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2948
+* Bump pytest-xdist from 3.2.1 to 3.3.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2722
+* Bump pytest-xdist from 3.3.0 to 3.3.1 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2727
+* Bump pytest-xdist from 3.3.1 to 3.4.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2880
+* Bump pytest-xdist from 3.4.0 to 3.5.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2886
+* Bump matplotlib from 3.7.1 to 3.7.2 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2766
+* Bump matplotlib from 3.7.2 to 3.7.3 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2818
+* Bump matplotlib from 3.7.3 to 3.8.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2823
+* Bump matplotlib from 3.8.0 to 3.8.1 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2868
+* Bump matplotlib from 3.8.1 to 3.8.2 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2885
+* Bump matplotlib from 3.8.2 to 3.8.3 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2937
+* Bump numba from 0.56.4 to 0.57.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2711
+* Bump numba from 0.57.0 to 0.57.1 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2751
+* Bump numba from 0.57.1 to 0.58.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2826
+* Bump numba from 0.58.0 to 0.58.1 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2851
+* Bump numba from 0.58.1 to 0.59.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2924
+* Bump scipy from 1.10.1 to 1.11.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2757
+* Bump scipy from 1.11.0 to 1.11.1 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2763
+* Bump scipy from 1.11.1 to 1.11.2 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2803
+* Bump scipy from 1.11.2 to 1.11.3 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2831
+* Bump scipy from 1.11.3 to 1.11.4 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2884
+* Bump scipy from 1.11.4 to 1.12.0 in /.github/workflows/etc by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2917
+* Bump actions/upload-artifact from 3 to 4 by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2902
+* Bump actions/checkout from 3 to 4 by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2814
+* Bump actions/cache from 3 to 4 by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2915
+* Bump actions/setup-python from 4 to 5 by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2898
+* Bump conda-incubator/setup-miniconda from 2 to 3 by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2890
+* Bump github/codeql-action from 2 to 3 by @dependabot in https://github.com/pyqtgraph/pyqtgraph/pull/2901
+
+
+## New Contributors
+* @adriandavidauer made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2704
+* @MalteOlle made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2739
+* @redruin1 made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2646
+* @dingo9 made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2761
+* @stephan-senkbeil made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2731
+* @ptuemmler made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2778
+* @veractor made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2807
+* @longqzh made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2834
+* @nleclercq made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2860
+* @bersbersbers made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2848
+* @JayanthBontha made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2835
+* @sevas made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2870
+* @Doralitze made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2869
+* @spchamp made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2893
+* @NilsIrl made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2905
+* @nicoddemus made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2934
+* @MorbidCuriosity84 made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2930
+* @UsYer made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2888
+* @misantroop made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2919
+* @zariiii9003 made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2877
+* @samtygier made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2932
+* @robtau made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2943
+
+**Full Changelog**: https://github.com/pyqtgraph/pyqtgraph/compare/pyqtgraph-0.13.3...pyqtgraph-0.13.4
+
+
 pyqtgraph-0.13.3
 
 ## What's Changed
