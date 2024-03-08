@@ -54,6 +54,7 @@ class ImageItem(GraphicsObject):
         self._xp = None  # either numpy or cupy, to match the image data
         self._defferedLevels = None
         self._imageHasNans = None    # None : not yet known
+        self._defaultAutoLevels = True
 
         self.axisOrder = getConfigOption('imageAxisOrder')
         self._dataTransform = self._inverseDataTransform = None
@@ -128,6 +129,14 @@ class ImageItem(GraphicsObject):
         if self.image is None:
             return QtCore.QRectF(0., 0., 0., 0.)
         return QtCore.QRectF(0., 0., float(self.width()), float(self.height()))
+
+    def setAutoLevels(self, bState):
+        """
+        Controls whether automatic image scaling takes place for this ImageItem,
+        if not otherwise overridden by ``autoLevels`` or ``levels`` keyword
+        arguments in a call to :func:`~pyqtgraph.ImageItem.setImage`.
+        """
+        self._defaultAutoLevels = bState
 
     def setLevels(self, levels, update=True):
         """
@@ -240,6 +249,8 @@ class ImageItem(GraphicsObject):
         ----------
             autoDownsample: bool
                 See :func:`~pyqtgraph.ImageItem.setAutoDownsample`.
+            autoLevels: bool
+                See :func:`~pyqtgraph.ImageItem.setAutoLevels`.
             axisOrder: str
                 | `'col-major'`: The shape of the array represents (width, height) of the image. This is the default.
                 | `'row-major'`: The shape of the array represents (height, width).
@@ -294,6 +305,8 @@ class ImageItem(GraphicsObject):
             self.setAutoDownsample(kargs['autoDownsample'])
         if 'rect' in kargs:
             self.setRect(kargs['rect'])
+        if 'autoLevels' in kargs:
+            self.setAutoLevels(kargs['autoLevels'])
         if update:
             self.update()
 
@@ -372,7 +385,8 @@ class ImageItem(GraphicsObject):
             
             If `False`, the search will be omitted.
 
-            The default is `False` if a ``levels`` keyword argument is given, and `True` otherwise.
+            The default is the value set by :func:`~pyqtgraph.ImageItem.setOpts`,
+            unless a ``levels`` keyword argument is given, which implies `False`.
         levelSamples: int, default 65536
             When determining minimum and maximum values, ImageItem
             only inspects a subset of pixels no larger than this number.
@@ -409,7 +423,8 @@ class ImageItem(GraphicsObject):
             if 'levels' in kargs:
                 autoLevels = False
             else:
-                autoLevels = True
+                autoLevels = self._defaultAutoLevels
+
         if autoLevels:
             level_samples = kargs.pop('levelSamples', 2**16) 
             mn, mx = self.quickMinMax( targetSize=level_samples )
