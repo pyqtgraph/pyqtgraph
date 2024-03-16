@@ -361,6 +361,8 @@ class ScatterPlotItem(GraphicsObject):
 
         self.picture = None   # QPicture used for rendering when pxmode==False
         self.fragmentAtlas = SymbolAtlas()
+        if screen := QtGui.QGuiApplication.primaryScreen():
+            self.fragmentAtlas.setDevicePixelRatio(screen.devicePixelRatio())
 
         dtype = [
             ('x', float),
