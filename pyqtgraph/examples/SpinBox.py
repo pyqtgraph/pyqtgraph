@@ -35,7 +35,7 @@ spins = [
      pg.SpinBox(value=1e9, siPrefix=True)),
     ("Float with custom formatting", 
      pg.SpinBox(value=23.07, format='${value:0.02f}',
-                regex=r'\\$?(?P<number>(-?\\d+(\\.\\d+)?)|(-?\\.\\d+))$')),
+                regex = r'\\$?(?P<number>(-?\d+(\.\d+)?)|(-?\.\d+))$')),
     ("Int with suffix",
      pg.SpinBox(value=999, step=1, int=True, suffix="V")),
     ("Int with custom formatting", 
