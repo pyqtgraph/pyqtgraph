@@ -39,3 +39,4 @@ Contents:
     valuelabel
     busycursor
     rawimagewidget
+    colormapmenu

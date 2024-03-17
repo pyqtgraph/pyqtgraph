@@ -4,11 +4,10 @@ import weakref
 import numpy as np
 
 from .. import functions as fn
-from .. import colormap
 from ..colormap import ColorMap
 from ..Qt import QtCore, QtGui, QtWidgets
 from ..widgets.SpinBox import SpinBox
-from ..widgets.ColorMapButton import ColorMapMenu
+from ..widgets.ColorMapMenu import ColorMapMenu
 from .GraphicsWidget import GraphicsWidget
 from .GradientPresets import Gradients
 
@@ -438,8 +437,8 @@ class GradientEditorItem(TickSliderItem):
         self.hsvAction.setCheckable(True)
         self.hsvAction.triggered.connect(self._setColorModeToHSV)
             
-        self.menu = ColorMapMenu(showGradientSubMenu=True)
-        self.menu.triggered.connect(self.contextMenuClicked)
+        self.menu = ColorMapMenu(showGradientSubMenu=True, showColorMapSubMenus=True)
+        self.menu.sigColorMapTriggered.connect(self.colorMapMenuClicked)
         self.menu.addSeparator()
         self.menu.addAction(self.rgbAction)
         self.menu.addAction(self.hsvAction)
@@ -489,21 +488,12 @@ class GradientEditorItem(TickSliderItem):
         #private
         self.menu.popup(ev.screenPos().toQPoint())
     
-    def contextMenuClicked(self, action):
+    def colorMapMenuClicked(self, cmap):
         #private
-
-        # ignore the extra added on actions
-        if action in [self.rgbAction, self.hsvAction]:
-            return
-
-        name, source = action.data()
-        if source == 'preset-gradient':
+        if cmap.name.startswith("preset-gradient:"):
+            name = cmap.name.split(":")[1]
             self.loadPreset(name)
         else:
-            if name is None:
-                cmap = colormap.ColorMap(None, [0.0, 1.0])
-            else:
-                cmap = colormap.get(name, source=source)
             self.setColorMap(cmap)
             self.showTicks(False)
         
