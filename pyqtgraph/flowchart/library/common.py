@@ -1,25 +1,28 @@
 __all__ = ["CtrlNode", "PlottingCtrlNode", "metaArrayWrapper"]
 
+from typing import Iterable, Optional, Callable, Sequence, Any
 import numpy as np
 
+from ..Terminal import Terminal
 from ...Qt import QtCore, QtWidgets
 
-#from ...SignalProxy import SignalProxy
+# from ...SignalProxy import SignalProxy
 from ...WidgetGroup import WidgetGroup
 from ...widgets.ColorButton import ColorButton
 from ...widgets.SpinBox import SpinBox
 
-#from ColorMapper import ColorMapper
+# from ColorMapper import ColorMapper
 from ..Node import Node
 
 try:
     import metaarray
+
     HAVE_METAARRAY = True
 except:
     HAVE_METAARRAY = False
 
 
-def generateUi(opts):
+def generateUi(opts: Iterable[Sequence]) -> tuple[QtWidgets.QWidget, WidgetGroup, dict[str, QtWidgets.QWidget]]:
     """Convenience function for generating common UI types"""
     widget = QtWidgets.QWidget()
     l = QtWidgets.QFormLayout()
@@ -35,8 +38,8 @@ def generateUi(opts):
             k, t, o = opt
         else:
             raise Exception("Widget specification must be (name, type) or (name, type, {opts})")
-            
-        ## clean out these options so they don't get sent to SpinBox
+
+        # clean out these options so they don't get sent to SpinBox
         hidden = o.pop('hidden', False)
         tip = o.pop('tip', None)
 
@@ -53,7 +56,7 @@ def generateUi(opts):
             if 'max' in o:
                 w.setMaximum(o['max'])
             if 'min' in o:
-                w.setMinimum(o['min'])                
+                w.setMinimum(o['min'])
             if 'value' in o:
                 w.setValue(o['value'])
         elif t == 'spin':
@@ -67,8 +70,8 @@ def generateUi(opts):
             w = QtWidgets.QComboBox()
             for i in o['values']:
                 w.addItem(i)
-        #elif t == 'colormap':
-            #w = ColorMapper()
+        # elif t == 'colormap':
+        #     w = ColorMapper()
         elif t == 'color':
             w = ColorButton()
         else:
@@ -82,7 +85,7 @@ def generateUi(opts):
             w.hide()
             label = l.labelForField(w)
             label.hide()
-            
+
         ctrls[k] = w
         w.rowNum = row
         row += 1
@@ -92,51 +95,51 @@ def generateUi(opts):
 
 class CtrlNode(Node):
     """Abstract class for nodes with auto-generated control UI"""
-    
+
     sigStateChanged = QtCore.Signal(object)
-    
-    def __init__(self, name, ui=None, terminals=None):
+
+    def __init__(self, name: str, ui: Optional[Sequence] = None, terminals: Optional[dict[str, dict]] = None) -> None:
         if terminals is None:
             terminals = {'In': {'io': 'in'}, 'Out': {'io': 'out', 'bypass': 'In'}}
         Node.__init__(self, name=name, terminals=terminals)
-        
+
         if ui is None:
             if hasattr(self, 'uiTemplate'):
                 ui = self.uiTemplate
             else:
                 ui = []
-        
+
         self.ui, self.stateGroup, self.ctrls = generateUi(ui)
         self.stateGroup.sigChanged.connect(self.changed)
-       
-    def ctrlWidget(self):
+
+    def ctrlWidget(self) -> QtWidgets.QWidget:
         return self.ui
-       
-    def changed(self):
+
+    def changed(self) -> None:
         self.update()
         self.sigStateChanged.emit(self)
 
-    def process(self, In, display=True):
+    def process(self, In: dict, display: bool = True) -> dict:  # type: ignore
         out = self.processData(In)
         return {'Out': out}
-    
-    def saveState(self):
+
+    def saveState(self) -> dict:
         state = Node.saveState(self)
         state['ctrl'] = self.stateGroup.state()
         return state
-    
-    def restoreState(self, state):
+
+    def restoreState(self, state: dict) -> None:
         Node.restoreState(self, state)
         if self.stateGroup is not None:
             self.stateGroup.setState(state.get('ctrl', {}))
-            
-    def hideRow(self, name):
+
+    def hideRow(self, name: str) -> None:
         w = self.ctrls[name]
         l = self.ui.layout().labelForField(w)
         w.hide()
         l.hide()
-        
-    def showRow(self, name):
+
+    def showRow(self, name: str) -> None:
         w = self.ctrls[name]
         l = self.ui.layout().labelForField(w)
         w.show()
@@ -145,43 +148,43 @@ class CtrlNode(Node):
 
 class PlottingCtrlNode(CtrlNode):
     """Abstract class for CtrlNodes that can connect to plots."""
-    
-    def __init__(self, name, ui=None, terminals=None):
-        #print "PlottingCtrlNode.__init__ called."
+
+    def __init__(self, name: str, ui: Optional[Sequence] = None, terminals: Optional[dict[str, dict]] = None):
+        # print "PlottingCtrlNode.__init__ called."
         CtrlNode.__init__(self, name, ui=ui, terminals=terminals)
         self.plotTerminal = self.addOutput('plot', optional=True)
-        
-    def connected(self, term, remote):
+
+    def connected(self, term: Terminal, remote: Terminal) -> None:
         CtrlNode.connected(self, term, remote)
         if term is not self.plotTerminal:
             return
         node = remote.node()
         node.sigPlotChanged.connect(self.connectToPlot)
-        self.connectToPlot(node)    
-        
-    def disconnected(self, term, remote):
+        self.connectToPlot(node)
+
+    def disconnected(self, term: Terminal, remote: Terminal) -> None:
         CtrlNode.disconnected(self, term, remote)
         if term is not self.plotTerminal:
             return
         remote.node().sigPlotChanged.disconnect(self.connectToPlot)
-        self.disconnectFromPlot(remote.node().getPlot())   
-       
-    def connectToPlot(self, node):
+        self.disconnectFromPlot(remote.node().getPlot())
+
+    def connectToPlot(self, node: Optional[Node]) -> None:
         """Define what happens when the node is connected to a plot"""
         raise Exception("Must be re-implemented in subclass")
-    
-    def disconnectFromPlot(self, plot):
+
+    def disconnectFromPlot(self, plot: Any) -> None:
         """Define what happens when the node is disconnected from a plot"""
         raise Exception("Must be re-implemented in subclass")
 
-    def process(self, In, display=True):
+    def process(self, In: dict, display: bool = True) -> dict:  # type: ignore
         out = CtrlNode.process(self, In, display)
         out['plot'] = None
         return out
 
 
-def metaArrayWrapper(fn):
-    def newFn(self, data, *args, **kargs):
+def metaArrayWrapper(fn: Callable) -> Callable:
+    def newFn(self, data, *args, **kargs):  # type: ignore
         if HAVE_METAARRAY and (hasattr(data, 'implements') and data.implements('MetaArray')):
             d1 = fn(self, data.view(np.ndarray), *args, **kargs)
             info = data.infoCopy()
@@ -192,4 +195,5 @@ def metaArrayWrapper(fn):
             return metaarray.MetaArray(d1, info=info)
         else:
             return fn(self, data, *args, **kargs)
+
     return newFn

@@ -136,6 +136,7 @@ setup(
     },
     install_requires = [
         'numpy>=1.22.0',
+        'typing-extensions'
     ],
     **setupOpts
 )
