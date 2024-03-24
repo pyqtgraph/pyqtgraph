@@ -6,7 +6,7 @@ from .util.cupy_helper import getCupy
 from .util.numba_helper import getNumbaFunctions
 
 
-def _apply_lut_for_uint16_mono(xp, image, lut):
+def _apply_lut_for_uint(xp, image, lut):
     # Note: compared to makeARGB(), we have already clipped the data to range
     augmented_alpha = False
 
@@ -40,6 +40,32 @@ def _apply_lut_for_uint16_mono(xp, image, lut):
     return image, augmented_alpha
 
 
+def _convert_lut_to_rgba(xp, lut):
+    # converts:
+    #   - None to (256, 4)
+    #   - uint8 (N,) to uint8 (N, 4)
+    #   - uint8 (N, 1) to uint8 (N, 4)
+    #   - uint8 (N, 3) to uint8 (N, 4)
+
+    N = lut.shape[0] if lut is not None else 256
+
+    if lut is None:
+        lut = xp.arange(N, dtype=xp.uint8)
+
+    # convert (N,) to (N, 1)
+    if lut.ndim == 1:
+        lut = lut[:, xp.newaxis]
+
+    assert lut.ndim == 2 and lut.shape[1] in (1, 3, 4)
+
+    if lut.shape[1] == 4:
+        return lut
+
+    out = xp.full((N, 4), 255, dtype=xp.uint8)
+    out[:, 0:3] = lut
+    return out
+
+
 def _convert_2dlut_to_1dlut(xp, lut):
     # converts:
     #   - uint8 (N, 1) to uint8 (N,)
@@ -61,7 +87,13 @@ def _convert_2dlut_to_1dlut(xp, lut):
     return lut, augmented_alpha
 
 
-def _rescale_float_mono(xp, image, levels, lut):
+def _rescale_and_lookup_float(xp, image, levels, lut, *, forceApplyLut):
+    # It is usually more performant to _not_ apply the lut and
+    # instead use it as an Indexed8 ColorTable. This is only
+    # applicable if the lut has <= 256 entries.
+
+    assert (not forceApplyLut) or (lut is not None)
+
     augmented_alpha = False
 
     # Decide on maximum scaled value
@@ -73,6 +105,14 @@ def _rescale_float_mono(xp, image, levels, lut):
         num_colors = 256
     dtype = xp.min_scalar_type(num_colors - 1)
 
+    # note: "dtype == uint16" ==> lut provided ==> mono-channel image
+    #       i.e. multi-channel image ==> lut is None ==> dtype == uint8
+    #
+    #       the library defaults to using 256-entry luts, so
+    #       "dtype == uint8" is the common case
+
+    apply_lut = forceApplyLut or dtype == xp.uint16
+
     minVal, maxVal = levels
     rng = maxVal - minVal
     rng = 1 if rng == 0 else rng
@@ -81,9 +121,10 @@ def _rescale_float_mono(xp, image, levels, lut):
     if (
         xp == numpy
         and image.flags.c_contiguous
-        and dtype == xp.uint16
+        and apply_lut
         and fn_numba is not None
     ):
+        # this path does rescale and apply lut in one step
         lut, augmented_alpha = _convert_2dlut_to_1dlut(xp, lut)
         image = fn_numba.rescale_and_lookup1d(image, scale / rng, minVal, lut)
         if image.dtype == xp.uint32:
@@ -96,8 +137,8 @@ def _rescale_float_mono(xp, image, levels, lut):
 
         levels = None
 
-        if image.dtype == xp.uint16 and image.ndim == 2:
-            image, augmented_alpha = _apply_lut_for_uint16_mono(xp, image, lut)
+        if apply_lut:
+            image, augmented_alpha = _apply_lut_for_uint(xp, image, lut)
             lut = None
 
         # image is now of type uint8
@@ -174,7 +215,7 @@ def _try_combine_lut(xp, image, levels, lut):
 
             # apply the effective lut early for the following types:
             if image.dtype == xp.uint16 and image.ndim == 2:
-                image, augmented_alpha = _apply_lut_for_uint16_mono(xp, image, efflut)
+                image, augmented_alpha = _apply_lut_for_uint(xp, image, efflut)
                 efflut = None
             return image, None, efflut, augmented_alpha
         else:
@@ -190,7 +231,7 @@ def _try_combine_lut(xp, image, levels, lut):
             return image, None, colors_lut, augmented_alpha
 
 
-def try_make_qimage(image, *, levels, lut):
+def try_make_qimage(image, *, levels, lut, transparentLocations=None):
     """
     Internal function to make an QImage from an ndarray without going
     through the full generality of makeARGB().
@@ -215,17 +256,32 @@ def try_make_qimage(image, *, levels, lut):
         if levels.ndim != 1:
             return None
 
+    # transparentLocations is only supported for 2D floating point images.
+    if (transparentLocations is not None) and not (image.dtype.kind == "f" and image.ndim == 2):
+        return None
+
     if lut is not None and lut.dtype != xp.uint8:
         raise ValueError("lut dtype must be uint8")
 
     augmented_alpha = False
 
     if image.dtype.kind == "f":
-        image, levels, lut, augmented_alpha = _rescale_float_mono(
-            xp, image, levels, lut
-        )
-        # on return, we will have an uint8 image with levels None.
-        # lut if not None will have <= 256 entries
+        if transparentLocations is None:
+            image, levels, lut, augmented_alpha = _rescale_and_lookup_float(
+                xp, image, levels, lut, forceApplyLut=False
+            )
+            # on return, we will have an uint8 image with levels None.
+            # lut if not None will have <= 256 entries
+        else:
+            # this path creates an alpha channel
+
+            lut = _convert_lut_to_rgba(xp, lut)
+            image, levels, lut, augmented_alpha = _rescale_and_lookup_float(
+                xp, image, levels, lut, forceApplyLut=True
+            )
+            assert levels is None
+            assert lut is None
+            image[..., 3][transparentLocations] = 0
 
     # if the image data is a small int, then we can combine levels + lut
     # into a single lut for better performance
