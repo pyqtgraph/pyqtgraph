@@ -47,6 +47,16 @@ def _convert_lut_to_rgba(xp, lut):
     #   - uint8 (N, 1) to uint8 (N, 4)
     #   - uint8 (N, 3) to uint8 (N, 4)
 
+    if not (
+        lut is None
+        or lut.ndim == 1
+        or (
+            lut.ndim == 2
+            and lut.shape[1] in (1, 3, 4)
+        )
+    ):
+        raise ValueError("unsupported lut shape")
+
     N = lut.shape[0] if lut is not None else 256
 
     if lut is None:
@@ -55,8 +65,6 @@ def _convert_lut_to_rgba(xp, lut):
     # convert (N,) to (N, 1)
     if lut.ndim == 1:
         lut = lut[:, xp.newaxis]
-
-    assert lut.ndim == 2 and lut.shape[1] in (1, 3, 4)
 
     if lut.shape[1] == 4:
         return lut
@@ -92,7 +100,8 @@ def _rescale_and_lookup_float(xp, image, levels, lut, *, forceApplyLut):
     # instead use it as an Indexed8 ColorTable. This is only
     # applicable if the lut has <= 256 entries.
 
-    assert (not forceApplyLut) or (lut is not None)
+    if forceApplyLut and lut is None:
+        raise ValueError("forceApplyLut True but lut not provided")
 
     augmented_alpha = False
 
