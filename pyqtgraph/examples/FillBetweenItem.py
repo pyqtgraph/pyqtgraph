@@ -20,7 +20,8 @@ gauss = np.exp(-x**2 / 20.)
 mn = mx = np.zeros(len(x))
 curves = [win.plot(x=x, y=np.zeros(len(x)), pen='k') for i in range(4)]
 brushes = [0.5, (100, 100, 255), 0.5]
-fills = [pg.FillBetweenItem(curves[i], curves[i+1], brushes[i]) for i in range(3)]
+fills = [pg.FillBetweenItem(curves[0], curves[3], brushes[0]),
+         pg.FillBetweenItem(curves[1], curves[2], brushes[1])]
 for f in fills:
     win.addItem(f)
 
