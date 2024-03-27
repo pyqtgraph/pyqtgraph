@@ -215,7 +215,7 @@ class ImageView(QtWidgets.QWidget):
             setattr(self, fn, getattr(self.view, fn))
 
         ## wrap functions from histogram
-        for fn in ['setHistogramRange', 'autoHistogramRange', 'getLookupTable', 'getLevels']:
+        for fn in ['setHistogramRange', 'getLookupTable', 'getLevels']:
             setattr(self, fn, getattr(self.ui.histogram, fn))
 
         self.timeLine.sigPositionChanged.connect(self.timeLineChanged)
@@ -251,6 +251,7 @@ class ImageView(QtWidgets.QWidget):
         ]
         
         self.roiClicked() ## initialize roi plot to correct shape / visibility
+        self._autoHistogramRange=True 
 
     def setImage(
             self,
@@ -263,7 +264,6 @@ class ImageView(QtWidgets.QWidget):
             pos=None,
             scale=None,
             transform=None,
-            autoHistogramRange=True,
             levelMode=None,
     ):
         """
@@ -373,7 +373,7 @@ class ImageView(QtWidgets.QWidget):
         profiler()
 
         self.currentIndex = 0
-        self.updateImage(autoHistogramRange=autoHistogramRange)
+        self.updateImage()
         if levels is None and autoLevels:
             self.autoLevels()
         if levels is not None:  ## this does nothing since getProcessedImage sets these values again.
@@ -824,14 +824,14 @@ class ImageView(QtWidgets.QWidget):
 
         self.sigTimeChanged.emit(ind, time)
 
-    def updateImage(self, autoHistogramRange=True):
+    def updateImage(self):
         ## Redraw image on screen
         if self.image is None:
             return
     
         image = self.getProcessedImage()
-        if autoHistogramRange:
-            self.ui.histogram.setHistogramRange(self.levelMin, self.levelMax)
+        if self._autoHistogramRange:
+            self.ui.histogram.setHistogramRange(self.levelMin, self.levelMax)       
         
         # Transpose image into order expected by ImageItem
         if self.imageItem.axisOrder == 'col-major':
@@ -945,3 +945,15 @@ class ImageView(QtWidgets.QWidget):
         Currently available gradients are:   
         """
         self.ui.histogram.gradient.loadPreset(name)
+
+    def autoHistogramRange(self):
+        """Enable auto-scaling on the histogram plot."""
+        self._autoHistogramRange = True 
+        # propgate the enable down to the Histogram object 
+        self.ui.histogram.autoHistogramRange()
+
+    def disableAutoHistogramRange(self):
+        """Disable auto-scaling on the histogram plot."""
+        self._autoHistogramRange = False
+        # propgate the diasable down to the Histogram object 
+        self.ui.histogram.disableAutoHistogramRange()
