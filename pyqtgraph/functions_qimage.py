@@ -126,17 +126,17 @@ def _rescale_and_lookup_float(xp, image, levels, lut, *, forceApplyLut):
     rng = maxVal - minVal
     rng = 1 if rng == 0 else rng
 
-    fn_numba = getNumbaFunctions()
     if (
-        xp == numpy
-        and image.flags.c_contiguous
-        and apply_lut
-        and fn_numba is not None
+        apply_lut
+        and xp == numpy
+        and (fn_numba := getNumbaFunctions()) is not None
     ):
         # this path does rescale and apply lut in one step
         lut, augmented_alpha = _convert_2dlut_to_1dlut(xp, lut)
         image = fn_numba.rescale_and_lookup1d(image, scale / rng, minVal, lut)
         if image.dtype == xp.uint32:
+            # "view" requires c contiguous for numpy < 1.23
+            image = xp.ascontiguousarray(image)
             image = image[..., xp.newaxis].view(xp.uint8)
         return image, None, None, augmented_alpha
     else:
