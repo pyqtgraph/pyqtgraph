@@ -8,33 +8,24 @@ from .util.numba_helper import getNumbaFunctions
 
 def _apply_lut_for_uint(xp, image, lut):
     # Note: compared to makeARGB(), we have already clipped the data to range
-    augmented_alpha = False
 
     # if lut is 1d, then lut[image] is fastest
     # if lut is 2d, then lut.take(image, axis=0) is faster than lut[image]
-
-    if not image.flags.c_contiguous:
-        image = lut.take(image, axis=0)
-
-        # if lut had dimensions (N, 1), then our resultant image would
-        # have dimensions (h, w, 1)
-        if image.ndim == 3 and image.shape[-1] == 1:
-            image = image[..., 0]
-
-        return image, augmented_alpha
-
-    # if we are contiguous, we can take a faster codepath where we
-    # ensure that the lut is 1d
-
     lut, augmented_alpha = _convert_2dlut_to_1dlut(xp, lut)
 
-    fn_numba = getNumbaFunctions()
-    if xp == numpy and fn_numba is not None:
+    if xp == numpy and (fn_numba := getNumbaFunctions()) is not None:
+        # numba "take" supports only the 1st 2 arguments of np.take,
+        # therefore we have to convert the lut to 1d.
+        # "take" will output a c contiguous array regardless of its input.
         image = fn_numba.numba_take(lut, image)
     else:
+        # advanced indexing is memory order aware.
+        # its output can be either C or F contiguous.
         image = lut[image]
 
     if image.dtype == xp.uint32:
+        # "view" requires c contiguous for numpy < 1.23
+        image = xp.ascontiguousarray(image)
         image = image[..., xp.newaxis].view(xp.uint8)
 
     return image, augmented_alpha
