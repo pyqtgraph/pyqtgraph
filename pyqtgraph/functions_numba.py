@@ -24,11 +24,10 @@ def rescaleData(data, scale, offset, dtype, clip):
 @numba.jit(nopython=True)
 def _rescale_and_lookup1d_function(data, scale, offset, lut, out):
     vmin, vmax = 0, lut.shape[0] - 1
-    for r in range(data.shape[0]):
-        for c in range(data.shape[1]):
-            val = (data[r, c] - offset) * scale
-            val = min(max(val, vmin), vmax)
-            out[r, c] = lut[int(val)]
+    for (x, y) in np.nditer((data, out)):
+        val = (x - offset) * scale
+        val = min(max(val, vmin), vmax)
+        y[...] = lut[int(val)]
 
 def rescale_and_lookup1d(data, scale, offset, lut):
     # data should be floating point and 2d
