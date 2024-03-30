@@ -64,12 +64,19 @@ class RawImageWidget(QtWidgets.QWidget):
             if (
                 not self.opts[1]    # no positional arguments
                 and {"levels", "lut"}.issuperset(self.opts[2])  # no kwargs besides levels and lut
-                and not (img.dtype.kind == "f" and xp.isnan(img.min()))
             ):
+                transparentLocations = None
+                if img.dtype.kind == "f" and xp.isnan(img.min()):
+                    nanmask = xp.isnan(img)
+                    if nanmask.ndim == 3:
+                        nanmask = nanmask.any(axis=2)
+                    transparentLocations = nanmask.nonzero()
+
                 qimage = functions_qimage.try_make_qimage(
                     img,
                     levels=self.opts[2].get("levels"),
                     lut=self.opts[2].get("lut"),
+                    transparentLocations=transparentLocations
                 )
 
             if qimage is None:
