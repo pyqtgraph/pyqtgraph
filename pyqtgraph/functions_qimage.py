@@ -94,11 +94,11 @@ def _rescale_and_lookup_float(xp, image, levels, lut, *, forceApplyLut):
 
     # Decide on maximum scaled value
     if lut is not None:
-        scale = lut.shape[0]
         num_colors = lut.shape[0]
+        max_scale_value = num_colors
     else:
-        scale = 255.0
         num_colors = 256
+        max_scale_value = 255.0
     dtype = xp.min_scalar_type(num_colors - 1)
 
     # note: "dtype == uint16" ==> lut provided ==> mono-channel image
@@ -112,23 +112,24 @@ def _rescale_and_lookup_float(xp, image, levels, lut, *, forceApplyLut):
     minVal, maxVal = levels
     rng = maxVal - minVal
     rng = 1 if rng == 0 else rng
+    offset = minVal
+    scale = max_scale_value / rng
 
-    if (
-        apply_lut
-        and xp == numpy
-        and (fn_numba := getNumbaFunctions()) is not None
-    ):
-        # this path does rescale and apply lut in one step
-        lut = _convert_2dlut_to_1dlut(xp, lut)
-        image = fn_numba.rescale_and_lookup1d(image, scale / rng, minVal, lut)
-        lut = None
-        if image.dtype == xp.uint32:
-            # "view" requires c contiguous for numpy < 1.23
-            image = xp.ascontiguousarray(image)
-            image = image[..., xp.newaxis].view(xp.uint8)
+    if xp == numpy and (fn_numba := getNumbaFunctions()) is not None:
+        if apply_lut:
+            # this path does rescale and apply lut in one step
+            lut = _convert_2dlut_to_1dlut(xp, lut)
+            image = fn_numba.rescale_and_lookup(image, scale, offset, lut)
+            lut = None
+            if image.dtype == xp.uint32:
+                # "view" requires c contiguous for numpy < 1.23
+                image = xp.ascontiguousarray(image)
+                image = image[..., xp.newaxis].view(xp.uint8)
+        else:
+            image = fn_numba.rescale_and_clip(image, scale, offset, 0, num_colors - 1)
     else:
         image = functions.rescaleData(
-            image, scale / rng, offset=minVal, dtype=dtype, clip=(0, num_colors - 1)
+            image, scale, offset, dtype=dtype, clip=(0, num_colors - 1)
         )
         if apply_lut:
             image = _apply_lut_for_uint(xp, image, lut)
@@ -165,14 +166,14 @@ def _combine_levels_and_lut(xp, image, levels, lut):
         minlev, maxlev = levels
     levdiff = maxlev - minlev
     levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
+    offset = minlev
 
     if colors_lut is None:
+        scale = 255.0 / levdiff
         if image.dtype == xp.ubyte and image.ndim == 2:
             # uint8 mono image
             ind = xp.arange(eflsize)
-            levels_lut = functions.rescaleData(
-                ind, scale=255.0 / levdiff, offset=minlev, dtype=xp.ubyte
-            )
+            levels_lut = functions.rescaleData(ind, scale, offset, dtype=xp.ubyte)
             # image data is not scaled. instead, levels_lut is used
             # as (grayscale) Indexed8 ColorTable to get the same effect.
             # due to the small size of the input to rescaleData(), we
@@ -181,13 +182,14 @@ def _combine_levels_and_lut(xp, image, levels, lut):
         else:
             # uint16 mono, uint8 rgb, uint16 rgb
             # rescale image data by computation instead of by memory lookup
-            image = functions.rescaleData(
-                image, scale=255.0 / levdiff, offset=minlev, dtype=xp.ubyte
-            )
+            if xp == numpy and (fn_numba := getNumbaFunctions()) is not None:
+                image = fn_numba.rescale_and_clip(image, scale, offset, 0, 255)
+            else:
+                image = functions.rescaleData(image, scale, offset, dtype=xp.ubyte)
             return image, colors_lut
     else:
         num_colors = colors_lut.shape[0]
-        effscale = num_colors / levdiff
+        scale = num_colors / levdiff
         lutdtype = xp.min_scalar_type(num_colors - 1)
 
         if image.dtype == xp.ubyte or lutdtype != xp.ubyte:
@@ -196,11 +198,7 @@ def _combine_levels_and_lut(xp, image, levels, lut):
             #   2) colors_lut has more entries than will fit within 8-bits
             ind = xp.arange(eflsize)
             levels_lut = functions.rescaleData(
-                ind,
-                scale=effscale,
-                offset=minlev,
-                dtype=lutdtype,
-                clip=(0, num_colors - 1),
+                ind, scale, offset, dtype=lutdtype, clip=(0, num_colors - 1),
             )
             efflut = colors_lut[levels_lut]
 
@@ -212,13 +210,12 @@ def _combine_levels_and_lut(xp, image, levels, lut):
         else:
             # uint16 image with colors_lut <= 256 entries
             # don't combine, we will use QImage ColorTable
-            image = functions.rescaleData(
-                image,
-                scale=effscale,
-                offset=minlev,
-                dtype=lutdtype,
-                clip=(0, num_colors - 1),
-            )
+            if xp == numpy and (fn_numba := getNumbaFunctions()) is not None:
+                image = fn_numba.rescale_and_clip(image, scale, offset, 0, num_colors - 1)
+            else:
+                image = functions.rescaleData(
+                    image, scale, offset, dtype=lutdtype, clip=(0, num_colors - 1),
+                )
             return image, colors_lut
 
 
