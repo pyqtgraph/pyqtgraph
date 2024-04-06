@@ -672,7 +672,7 @@ class ScatterPlotItem(GraphicsObject):
         * 'h'  hexagon
         * 'star'
         * '|' vertical line
-        * '-' horizontal line
+        * '_' horizontal line
         * 'x'  cross
         * 'arrow_up'
         * 'arrow_right'
