@@ -72,7 +72,7 @@ Symbols['arrow_down'] = tr.map(Symbols['arrow_right'])
 Symbols['arrow_left'] = tr.map(Symbols['arrow_down'])
 
 tr.rotate(90)
-Symbols['-'] = tr.map(Symbols['|'])
+Symbols['_'] = tr.map(Symbols['|'])
 _DEFAULT_STYLE = {'symbol': None, 'size': -1, 'pen': None, 'brush': None, 'visible': True}
 
 
