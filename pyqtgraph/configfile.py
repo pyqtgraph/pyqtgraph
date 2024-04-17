@@ -43,7 +43,7 @@ class ParseError(Exception):
 
 def writeConfigFile(data, fname):
     s = genString(data)
-    with open(fname, 'wt') as fd:
+    with open(fname, 'wt', encoding='utf-8') as fd:
         fd.write(s)
 
 
@@ -74,7 +74,7 @@ def readConfigFile(fname, **scope):
         
     try:
         #os.chdir(newDir)  ## bad.
-        with open(fname, "rt", errors="replace") as fd:
+        with open(fname, "rt", encoding='utf-8', errors="replace") as fd:
             s = fd.read()
         s = s.replace("\r\n", "\n")
         s = s.replace("\r", "\n")
@@ -91,7 +91,7 @@ def readConfigFile(fname, **scope):
 
 def appendConfigFile(data, fname):
     s = genString(data)
-    with open(fname, 'at') as fd:
+    with open(fname, 'at', encoding='utf-8') as fd:
         fd.write(s)
 
 
