@@ -260,6 +260,7 @@ from .WidgetGroup import *
 from .widgets.BusyCursor import *
 from .widgets.CheckTable import *
 from .widgets.ColorButton import *
+from .widgets.ColorMapMenu import ColorMapMenu
 from .widgets.ColorMapWidget import *
 from .widgets.ComboBox import *
 from .widgets.DataFilterWidget import *
