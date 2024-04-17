@@ -160,3 +160,11 @@ html[data-theme=dark] .sd-card .sd-card-header {
 html[data-theme=dark] .sd-card .sd-card-footer {
     background-color:var(--pst-color-background);
 }
+
+/* 
+  Hide TypeAlias Classes
+*/
+
+dt#ColorMapSpecifier {
+  visibility: hidden;
+}

@@ -134,12 +134,14 @@ class ColorMapMenu(QtWidgets.QMenu):
 
         Parameters
         ----------
-        userList: list of colormap specifiers, optional
-            Supported colormap specifiers are: `str`, ``(str, str)``, :class:`~pyqtgraph.ColorMap`.
-            Example: ["viridis", ("glasbey", "colorcet"), ("rainbow", "matplotlib")]
-        showGradientSubMenu: bool, default=False
+        userList : list of ColorMapSpecifier, optional
+            Supported values for ColorMapSpecifier are 
+            ``str``, ``(str, str)``, :class:`~pyqtgraph.ColorMap`
+            
+            Example: ``["viridis", ("glasbey", "colorcet"), ("rainbow", "matplotlib")]``
+        showGradientSubMenu : bool, default=False
             Adds legacy gradients in a submenu.
-        showColorMapSubMenus: bool, default=False
+        showColorMapSubMenus : bool, default=False
             Adds bundled colormaps and external (colorcet, matplotlib) colormaps in submenus.
         """
         super().__init__()

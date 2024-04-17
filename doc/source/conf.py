@@ -68,7 +68,8 @@ napoleon_type_aliases = {
     "callable": ":class:`collections.abc.Callable`",
     "np.ndarray": ":class:`numpy.ndarray`",
     'array_like': ':term:`array_like`',
-    'color_like': ':func:`pyqtgraph.mkColor`'
+    'color_like': ':func:`pyqtgraph.mkColor`',
+    # 'ColorMapSpecifier': ':class:`str`, (:class:`str`, :class:`str`), or :class:`~pyqtgraph.ColorMap`',
 }
 
 # The encoding of source files.
