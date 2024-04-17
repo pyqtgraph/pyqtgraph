@@ -1274,6 +1274,14 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
     else:
         work_dtype = np.float64
 
+    # from: https://numpy.org/devdocs/numpy_2_0_migration_guide.html#changes-to-numpy-data-type-promotion
+    #   np.array([3], dtype=np.float32) + np.float64(3) will now return a float64 array.
+    #   (The higher precision of the scalar is not ignored.)
+    # this affects us even though we are performing in-place operations.
+    # a solution mentioned in the link above is to convert to a Python scalar.
+    offset = float(offset)
+    scale = float(scale)
+
     cp = getCupy()
     if cp and cp.get_array_module(data) == cp:
         # Cupy does not support nditer
