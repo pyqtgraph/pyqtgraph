@@ -4,12 +4,16 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 
 
-def check_format(shape, dtype, levels, lut, expected_format):
-    data = np.zeros(shape, dtype=dtype)
+def check_image_format(data, levels, lut, expected_format):
     item = pg.ImageItem(axisOrder='row-major')
     item.setImage(data, autoLevels=False, lut=lut, levels=levels)
     item.render()
     assert item.qimage.format() == expected_format
+
+
+def check_format(shape, dtype, levels, lut, expected_format):
+    data = np.zeros(shape, dtype=dtype)
+    check_image_format(data, levels, lut, expected_format)
 
 
 def test_uint8():
@@ -92,11 +96,7 @@ def test_uint16():
     lut_rgba_l = np.random.randint(256, size=(257, 4), dtype=np.uint8)
 
     levels = None
-    try:
-        fmt_gray16 = Format.Format_Grayscale16
-    except AttributeError:
-        fmt_gray16 = Format.Format_ARGB32
-    check_format((h, w), dtype, levels, lut_none, fmt_gray16)
+    check_format((h, w), dtype, levels, lut_none, Format.Format_Grayscale16)
     check_format((h, w, 3), dtype, levels, lut_none, Format.Format_RGB888)
     check_format((h, w, 4), dtype, levels, lut_none, Format.Format_RGBA64)
 
@@ -150,7 +150,6 @@ def test_float32():
 
     check_format((h, w), dtype, levels, lut_none, Format.Format_Grayscale8)
     check_format((h, w, 3), dtype, levels, lut_none, Format.Format_RGB888)
-    check_format((h, w, 4), dtype, levels, lut_none, Format.Format_RGBA8888)
 
     check_format((h, w), dtype, levels, lut_mono1, Format.Format_Indexed8)
     check_format((h, w), dtype, levels, lut_mono2, Format.Format_Indexed8)
@@ -166,3 +165,20 @@ def test_float32():
     check_format((h, w), dtype, levels, lut_mono2_l, Format.Format_Grayscale8)
     check_format((h, w), dtype, levels, lut_rgb_l, Format.Format_RGBX8888)
     check_format((h, w), dtype, levels, lut_rgba_l, Format.Format_RGBA8888)
+
+    all_lut_types = [
+        lut_none,
+        lut_mono1, lut_mono2, lut_rgb, lut_rgba,
+        lut_mono1_s, lut_mono2_s, lut_rgb_s, lut_rgba_s,
+        lut_mono1_l, lut_mono2_l, lut_rgb_l, lut_rgba_l,
+    ]
+
+    nandata = np.zeros((h, w), dtype=dtype)
+    nandata[h//2, w//2] = np.nan
+    for lut in all_lut_types:
+        check_image_format(nandata, levels, lut, Format.Format_RGBA8888)
+
+    nandata = np.zeros((h, w, 3), dtype=dtype)
+    nandata[h//2, w//2, 1] = np.nan
+    for lut in all_lut_types:
+        check_image_format(nandata, levels, lut, Format.Format_RGBA8888)

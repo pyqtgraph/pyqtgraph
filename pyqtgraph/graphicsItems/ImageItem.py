@@ -54,6 +54,7 @@ class ImageItem(GraphicsObject):
         self._xp = None  # either numpy or cupy, to match the image data
         self._defferedLevels = None
         self._imageHasNans = None    # None : not yet known
+        self._imageNanLocations = None
 
         self.axisOrder = getConfigOption('imageAxisOrder')
         self._dataTransform = self._inverseDataTransform = None
@@ -396,6 +397,7 @@ class ImageItem(GraphicsObject):
             image = image.view()
             self.image = image
             self._imageHasNans = None
+            self._imageNanLocations = None
             if self.image.shape[0] > 2**15-1 or self.image.shape[1] > 2**15-1:
                 if 'autoDownsample' not in kargs:
                     kargs['autoDownsample'] = True
@@ -558,13 +560,13 @@ class ImageItem(GraphicsObject):
                 image.dtype.kind == 'f' and
                 self._xp.isnan(image.min())
             )
+            self._imageNanLocations = None
 
         qimage = None
 
         if lut is not None and lut.dtype != self._xp.uint8:
-            # Both _rescale_float_mono() and _try_combine_lut() assume that
-            # lut is of type uint8. It is considered a usage error if that
-            # is not the case.
+            # try_make_image() assumes that lut is of type uint8.
+            # It is considered a usage error if that is not the case.
             # However, the makeARGB() codepath has previously allowed such
             # a usage to work. Rather than fail outright, we delegate this
             # case to makeARGB().
@@ -576,6 +578,16 @@ class ImageItem(GraphicsObject):
 
         elif not self._imageHasNans:
             qimage = functions_qimage.try_make_qimage(image, levels=levels, lut=lut)
+
+        elif image.ndim in (2, 3):
+            # float images with nans
+            if self._imageNanLocations is None:
+                # the number of nans is expected to be small
+                nanmask = self._xp.isnan(image)
+                if nanmask.ndim == 3:
+                    nanmask = nanmask.any(axis=2)
+                self._imageNanLocations = nanmask.nonzero()
+            qimage = functions_qimage.try_make_qimage(image, levels=levels, lut=lut, transparentLocations=self._imageNanLocations)
 
         if qimage is not None:
             self._processingBuffer = None

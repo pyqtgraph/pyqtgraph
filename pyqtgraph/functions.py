@@ -1198,29 +1198,6 @@ def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
     """Refer to documentation for rescaleData()"""
     data_out = np.empty_like(data_in, dtype=out_dtype)
 
-    # integer clip operations are faster than float clip operations
-    # so test to see if we can perform integer clipping
-    fits_int32 = False
-    if data_in.dtype.kind in 'ui' and out_dtype.kind in 'ui':
-        # estimate whether data range after rescale will fit within an int32.
-        # this means that the input dtype should be an 8-bit or 16-bit integer type.
-        # casting to an int32 will lose the fractional part, therefore the
-        # output dtype must be an integer kind.
-        lim_in = np.iinfo(data_in.dtype)
-        # convert numpy scalar to python scalar to avoid overflow warnings
-        lo = offset.item(0) if isinstance(offset, np.number) else offset
-        dst_bounds = scale * (lim_in.min - lo), scale * (lim_in.max - lo)
-        if dst_bounds[1] < dst_bounds[0]:
-            dst_bounds = dst_bounds[1], dst_bounds[0]
-        lim32 = np.iinfo(np.int32)
-        fits_int32 = lim32.min < dst_bounds[0] and dst_bounds[1] < lim32.max
-
-        if fits_int32 and clip is not None:
-            # this is for NumPy >= 2.0
-            # the clip limits should fit within the (integer) dtype
-            # of the data to be clipped
-            clip = [clip_scalar(v, lim32.min, lim32.max) for v in clip]
-
     it = np.nditer([data_in, data_out],
             flags=['external_loop', 'buffered'],
             op_flags=[['readonly'], ['writeonly', 'no_broadcast']],
@@ -1236,12 +1213,7 @@ def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
 
             # Clip before converting dtype to avoid overflow
             if clip is not None:
-                if fits_int32:
-                    # converts to int32, clips back to float32
-                    yin = y.astype(np.int32)
-                else:
-                    yin = y
-                clip_array(yin, clip[0], clip[1], out=y)
+                clip_array(y, clip[0], clip[1], out=y)
 
     return data_out
 
