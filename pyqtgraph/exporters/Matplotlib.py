@@ -47,6 +47,8 @@ _symbol_pg_to_mpl = {
     'arrow_down'  : 7,      # caretdown
     'arrow_left'  : 4,      # caretleft
     'crosshair'   : 'o',    # circle
+    '|'           : '|',    # vertical line
+    '_'           : '_'     # horizontal line
 }
 
 

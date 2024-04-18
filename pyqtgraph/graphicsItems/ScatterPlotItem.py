@@ -16,7 +16,7 @@ __all__ = ['ScatterPlotItem', 'SpotItem']
 
 
 ## Build all symbol paths
-name_list = ['o', 's', 't', 't1', 't2', 't3', 'd', '+', 'x', 'p', 'h', 'star',
+name_list = ['o', 's', 't', 't1', 't2', 't3', 'd', '+', 'x', 'p', 'h', 'star', '|', '_',
              'arrow_up', 'arrow_right', 'arrow_down', 'arrow_left', 'crosshair']
 Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in name_list])
 Symbols['o'].addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
@@ -52,6 +52,7 @@ coords = {
              (-0.1816, 0.059), (-0.2939, 0.4045), (0, 0.1910),
              (0.2939, 0.4045), (0.1816, 0.059), (0.4755, -0.1545),
              (0.1123, -0.1545)],
+    '|': [(-0.1, 0.5),(0.1, 0.5), (0.1, -0.5), (-0.1, -0.5)],
     'arrow_up': [
         (-0.125, 0.125), (0, 0), (0.125, 0.125),
         (0.05, 0.125), (0.05, 0.5), (-0.05, 0.5), (-0.05, 0.125)
@@ -69,6 +70,9 @@ tr.rotate(45)
 Symbols['arrow_right'] = tr.map(Symbols['arrow_up'])
 Symbols['arrow_down'] = tr.map(Symbols['arrow_right'])
 Symbols['arrow_left'] = tr.map(Symbols['arrow_down'])
+
+# already rotated 90 degrees from earlier commands
+Symbols['_'] = tr.map(Symbols['|'])
 _DEFAULT_STYLE = {'symbol': None, 'size': -1, 'pen': None, 'brush': None, 'visible': True}
 
 
@@ -667,6 +671,8 @@ class ScatterPlotItem(GraphicsObject):
         * 'p'  pentagon
         * 'h'  hexagon
         * 'star'
+        * '|' vertical line
+        * '_' horizontal line
         * 'x'  cross
         * 'arrow_up'
         * 'arrow_right'
