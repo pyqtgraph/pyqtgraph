@@ -80,7 +80,6 @@ class FillBetweenItem(QtWidgets.QGraphicsPathItem):
         for p1, p2 in zip(ps1, ps2):
             intersection = p1.intersected(p2)
             if not intersection.isEmpty():
-                for i in range(intersection.size()):
-                    path.lineTo(intersection.at(i))
+                path.addPolygon(intersection)
             path.addPolygon(p1 + p2)       
         self.setPath(path)
