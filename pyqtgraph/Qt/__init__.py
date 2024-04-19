@@ -11,7 +11,6 @@ import subprocess
 import sys
 import time
 import warnings
-from importlib import resources
 
 PYSIDE = 'PySide'
 PYSIDE2 = 'PySide2'
@@ -378,46 +377,6 @@ def mkQApp(name=None):
         QAPP.paletteChanged.connect(onPaletteChange)
         QAPP.paletteChanged.emit(QAPP.palette())
 
-
-        # python 3.9 won't take "pyqtgraph.icons.peegee" directly
-        traverse_path = resources.files("pyqtgraph.icons")  
-        applicationIcon = QtGui.QIcon()
-
-        peegee_traverse_path = traverse_path.joinpath("peegee")
-
-        # as_file requires I feed in a file from the directory...
-        with resources.as_file(peegee_traverse_path.joinpath("peegee.svg")) as path:
-
-            # not actually interested in the filepath, but want the icon directory instead
-            icon_path = path.parent
-            applicationIcon.addFile(
-                os.fsdecode(icon_path / "pegee_icon_v01_128px.png"),
-                QtCore.QSize(128, 128)
-            )
-            applicationIcon.addFile(
-                os.fsdecode(icon_path / "pegee_icon_v01_128px@2x.png"),
-                QtCore.QSize(128, 128)
-            )
-            applicationIcon.addFile(
-                os.fsdecode(icon_path / "pegee_icon_v01_256px.png"),
-                QtCore.QSize(256, 256)
-            )
-            applicationIcon.addFile(
-                os.fsdecode(icon_path / "pegee_icon_v01_256px@2x.png"),
-                QtCore.QSize(256, 256)
-            )
-            applicationIcon.addFile(
-                os.fsdecode(icon_path / "pegee_icon_v01_512px.png"),
-                QtCore.QSize(512, 512)
-            )
-            applicationIcon.addFile(
-                os.fsdecode(icon_path / "pegee_icon_v01_512px@2x.png"),
-                QtCore.QSize(512, 512)
-            )
-            applicationIcon.addFile(
-                os.fsdecode(icon_path / "pegee_icon_v01_clean_svg.svg"),
-            )
-        QAPP.setWindowIcon(applicationIcon)
     if name is not None:
         QAPP.setApplicationName(name)
     return QAPP
