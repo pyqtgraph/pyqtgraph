@@ -310,7 +310,6 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.ui.codeView.setLayout(self.codeLayout)
         self.hl = PythonHighlighter(self.ui.codeView.document())
         app = QtWidgets.QApplication.instance()
-        app.paletteChanged.connect(self.updateTheme)
         policy = QtWidgets.QSizePolicy.Policy.Expanding
         self.codeLayout.addItem(QtWidgets.QSpacerItem(100,100, policy, policy), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
@@ -356,6 +355,20 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.ui.codeView.textChanged.connect(self.onTextChange)
         self.codeBtn.clicked.connect(self.runEditedCode)
         self.updateCodeViewTabWidth(self.ui.codeView.font())
+
+    def event(self, event):
+        if event.type() == QtCore.QEvent.Type.ApplicationPaletteChange:
+            app = QtWidgets.QApplication.instance()
+            try:
+                darkMode = app.styleHints().colorScheme() == QtCore.Qt.ColorScheme.Dark
+            except AttributeError:
+                palette = app.pallete()
+                windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
+                windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
+                darkMode = windowTextLightness > windowLightness
+            app.setProperty('darkMode', darkMode)
+            self.hl = PythonHighlighter(self.ui.codeView.document())
+        return super().event(event)
 
     def updateCodeViewTabWidth(self,font):
         """
@@ -476,9 +489,6 @@ class ExampleLoader(QtWidgets.QMainWindow):
         # finally, override application automatic detection
         app = QtWidgets.QApplication.instance()
         app.setProperty('darkMode', True)
-
-    def updateTheme(self):
-        self.hl = PythonHighlighter(self.ui.codeView.document())
 
     def populateTree(self, root, examples):
         bold_font = None

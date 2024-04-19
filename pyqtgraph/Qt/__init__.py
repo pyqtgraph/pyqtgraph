@@ -6,6 +6,7 @@ This module exists to smooth out some of the differences between Qt versions.
   you want to use.
 """
 import os
+import platform
 import re
 import subprocess
 import sys
@@ -52,7 +53,7 @@ if QT_LIB is None:
             pass
 
 if QT_LIB is None:
-    raise Exception("PyQtGraph requires one of PyQt5, PyQt6, PySide2 or PySide6; none of these packages could be imported.")
+    raise ImportError("PyQtGraph requires one of PyQt5, PyQt6, PySide2 or PySide6; none of these packages could be imported.")
 
 
 class FailedImport(object):
@@ -354,12 +355,6 @@ def mkQApp(name=None):
     """
     global QAPP
 
-    def onPaletteChange(palette):
-        color = palette.base().color()
-        app = QtWidgets.QApplication.instance()
-        darkMode = color.lightnessF() < 0.5
-        app.setProperty('darkMode', darkMode)
-
     QAPP = QtWidgets.QApplication.instance()
     if QAPP is None:
         # hidpi handling
@@ -375,9 +370,12 @@ def mkQApp(name=None):
             QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
 
         QAPP = QtWidgets.QApplication(sys.argv or ["pyqtgraph"])
-        QAPP.paletteChanged.connect(onPaletteChange)
-        QAPP.paletteChanged.emit(QAPP.palette())
-
+        QAPP.setStyle("fusion")
+        styleHints = QAPP.styleHints()
+        try:
+            styleHints.colorSchemeChagned.connect(lambda x: print(f"Color Scheme Changed to {x}"))
+        except AttributeError:
+            pass
 
         # python 3.9 won't take "pyqtgraph.icons.peegee" directly
         traverse_path = resources.files("pyqtgraph.icons")  
@@ -417,6 +415,11 @@ def mkQApp(name=None):
             applicationIcon.addFile(
                 os.fsdecode(icon_path / "peegee.svg"),
             )
+        if platform.system() == 'Windows':
+            import ctypes
+            myappid = "pyqtgraph.Qt.mkQApp"
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
         QAPP.setWindowIcon(applicationIcon)
     if name is not None:
         QAPP.setApplicationName(name)
