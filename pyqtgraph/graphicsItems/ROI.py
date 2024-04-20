@@ -1342,8 +1342,6 @@ class Handle(UIGraphicsItem):
         self.pen = fn.mkPen(pen)
         self.hoverPen = fn.mkPen(hoverPen)
         self.currentPen = self.pen
-        self.pen.setWidth(0)
-        self.pen.setCosmetic(True)
         self.isMoving = False
         self.sides, self.startAng = self.types[typ]
         self.buildPath()
