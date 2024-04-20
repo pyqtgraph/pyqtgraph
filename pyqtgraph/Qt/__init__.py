@@ -371,11 +371,6 @@ def mkQApp(name=None):
 
         QAPP = QtWidgets.QApplication(sys.argv or ["pyqtgraph"])
         QAPP.setStyle("fusion")
-        styleHints = QAPP.styleHints()
-        try:
-            styleHints.colorSchemeChagned.connect(lambda x: print(f"Color Scheme Changed to {x}"))
-        except AttributeError:
-            pass
 
         # python 3.9 won't take "pyqtgraph.icons.peegee" directly
         traverse_path = resources.files("pyqtgraph.icons")  
