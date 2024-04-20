@@ -393,23 +393,11 @@ def mkQApp(name=None):
                 QtCore.QSize(128, 128)
             )
             applicationIcon.addFile(
-                os.fsdecode(icon_path / "peegee_128px@2x.png"),
-                QtCore.QSize(128, 128)
-            )
-            applicationIcon.addFile(
                 os.fsdecode(icon_path / "peegee_256px.png"),
                 QtCore.QSize(256, 256)
             )
             applicationIcon.addFile(
-                os.fsdecode(icon_path / "peegee_256px@2x.png"),
-                QtCore.QSize(256, 256)
-            )
-            applicationIcon.addFile(
                 os.fsdecode(icon_path / "peegee_512px.png"),
-                QtCore.QSize(512, 512)
-            )
-            applicationIcon.addFile(
-                os.fsdecode(icon_path / "peegee_512px@2x.png"),
                 QtCore.QSize(512, 512)
             )
             applicationIcon.addFile(
