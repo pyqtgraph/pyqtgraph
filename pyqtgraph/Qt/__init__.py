@@ -409,6 +409,12 @@ def mkQApp(name=None):
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
         QAPP.setWindowIcon(applicationIcon)
+
+        # inspired from @ccordoba12 in the Spyder project
+        # Required for correct icon on GNOME/Wayland:
+        if hasattr(QAPP, 'setDesktopFileName'):
+            QAPP.setDesktopFileName('pyqtgraph')
+
     if name is not None:
         QAPP.setApplicationName(name)
     return QAPP
