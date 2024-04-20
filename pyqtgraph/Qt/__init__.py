@@ -364,7 +364,9 @@ def mkQApp(name=None):
             pass
         elif qtVersionCompare > (5, 14):
             os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
-            QtWidgets.QApplication.setHighDpiScaleFactorRoundingPolicy(QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+            QtWidgets.QApplication.setHighDpiScaleFactorRoundingPolicy(
+                QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+            )
         else:  # qt 5.12 and 5.13
             QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
             QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
@@ -372,43 +374,42 @@ def mkQApp(name=None):
         QAPP = QtWidgets.QApplication(sys.argv or ["pyqtgraph"])
         QAPP.setStyle("fusion")
 
+        # determine if dark mode
+        try:
+            darkMode = QAPP.styleHints().colorScheme() == QtCore.Qt.ColorScheme.Dark
+        except AttributeError:
+            palette = QAPP.palette()
+            windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
+            windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
+            darkMode = windowTextLightness > windowLightness
+        QAPP.setProperty('darkMode', darkMode)
+
+        # set the application icon
         # python 3.9 won't take "pyqtgraph.icons.peegee" directly
         traverse_path = resources.files("pyqtgraph.icons")  
-        applicationIcon = QtGui.QIcon()
-
         peegee_traverse_path = traverse_path.joinpath("peegee")
 
         # as_file requires I feed in a file from the directory...
-        with resources.as_file(peegee_traverse_path.joinpath("peegee.svg")) as path:
-
-            # not actually interested in the filepath, but want the icon directory instead
+        with resources.as_file(
+            peegee_traverse_path.joinpath("peegee.svg")
+        ) as path:
+            # need the parent directory, not the filepath
             icon_path = path.parent
-            applicationIcon.addFile(
-                os.fsdecode(icon_path / "peegee_128px.png"),
-                QtCore.QSize(128, 128)
-            )
-            applicationIcon.addFile(
-                os.fsdecode(icon_path / "peegee_256px.png"),
-                QtCore.QSize(256, 256)
-            )
-            applicationIcon.addFile(
-                os.fsdecode(icon_path / "peegee_512px.png"),
-                QtCore.QSize(512, 512)
-            )
-            applicationIcon.addFile(
-                os.fsdecode(icon_path / "peegee.svg"),
-            )
+
+        applicationIcon = QtGui.QIcon()
+        applicationIcon.addFile(
+            os.fsdecode(icon_path / "peegee.svg"),
+        )
+        for sz in [128, 256, 512]:
+            pathname = os.fsdecode(icon_path / f"peegee_{sz}px.png")
+            applicationIcon.addFile(pathname, QtCore.QSize(sz, sz))
+
+        # handles the icon showing up on the windows taskbar
         if platform.system() == 'Windows':
             import ctypes
             myappid = "pyqtgraph.Qt.mkQApp"
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-
         QAPP.setWindowIcon(applicationIcon)
-
-        # inspired from @ccordoba12 in the Spyder project
-        # Required for correct icon on GNOME/Wayland:
-        if hasattr(QAPP, 'setDesktopFileName'):
-            QAPP.setDesktopFileName('pyqtgraph')
 
     if name is not None:
         QAPP.setApplicationName(name)

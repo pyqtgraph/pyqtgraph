@@ -362,10 +362,11 @@ class ExampleLoader(QtWidgets.QMainWindow):
             try:
                 darkMode = app.styleHints().colorScheme() == QtCore.Qt.ColorScheme.Dark
             except AttributeError:
-                palette = app.pallete()
+                palette = app.palette()
                 windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
                 windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
                 darkMode = windowTextLightness > windowLightness
+                print(f"{darkMode=}")
             app.setProperty('darkMode', darkMode)
             self.hl = PythonHighlighter(self.ui.codeView.document())
         return super().event(event)
