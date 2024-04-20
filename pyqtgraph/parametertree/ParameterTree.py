@@ -30,9 +30,8 @@ class ParameterTree(TreeWidget):
         self.itemCollapsed.connect(self.itemCollapsedEvent)
         self.lastSel = None
         self.setRootIsDecorated(False)
-
+        self.setAlternatingRowColors(False)
         app = mkQApp()
-        app.paletteChanged.connect(self.updatePalette)
 
     def setParameters(self, param, showTop=True):
         """
@@ -133,16 +132,13 @@ class ParameterTree(TreeWidget):
         item = self.currentItem()
         if hasattr(item, 'contextMenuEvent'):
             item.contextMenuEvent(ev)
-            
-    def updatePalette(self):
-        """
-        called when application palette changes
-        This should ensure that the color theme of the OS is applied to the GroupParameterItems
-        should the theme chang while the application is running.
-        """
-        for item in self.listAllItems():
-            if isinstance(item, GroupParameterItem):
-                item.updateDepth(item.depth)
+    
+    def event(self, event):
+        if event.type() == QtCore.QEvent.Type.ApplicationFontChange:
+            for item in self.listAllItems():
+                if isinstance(item, GroupParameterItem):
+                    item.updateDepth(item.depth)
+        return super().event(event)
 
     def itemChangedEvent(self, item, col):
         if hasattr(item, 'columnChangedEvent'):
