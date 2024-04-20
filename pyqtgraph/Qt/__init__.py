@@ -372,10 +372,12 @@ def mkQApp(name=None):
             QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
 
         QAPP = QtWidgets.QApplication(sys.argv or ["pyqtgraph"])
-        QAPP.setStyle("fusion")
+        if QtVersion.startswith("6"):
+            QAPP.setStyle("fusion")
 
         # determine if dark mode
         try:
+            # this only works in Qt 6.5+
             darkMode = QAPP.styleHints().colorScheme() == QtCore.Qt.ColorScheme.Dark
         except AttributeError:
             palette = QAPP.palette()

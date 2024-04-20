@@ -21,7 +21,6 @@ class ParameterTree(TreeWidget):
         self.setAnimated(False)
         self.setColumnCount(2)
         self.setHeaderLabels(["Parameter", "Value"])
-        self.setAlternatingRowColors(True)
         self.paramSet = None
         self.header().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
         self.setHeaderHidden(not showHeader)
@@ -30,7 +29,6 @@ class ParameterTree(TreeWidget):
         self.itemCollapsed.connect(self.itemCollapsedEvent)
         self.lastSel = None
         self.setRootIsDecorated(False)
-        self.setAlternatingRowColors(False)
         app = mkQApp()
 
     def setParameters(self, param, showTop=True):
