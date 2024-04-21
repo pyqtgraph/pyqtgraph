@@ -30,13 +30,13 @@ This project supports:
 
 Currently this means:
 
-* Python 3.9+
+* Python 3.10+
 * Qt 5.15, 6.2+
 * [PyQt5](https://www.riverbankcomputing.com/software/pyqt/),
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
   [PySide2](https://wiki.qt.io/Qt_for_Python), or
   [PySide6](https://wiki.qt.io/Qt_for_Python)
-* [`numpy`](https://github.com/numpy/numpy) 1.22+
+* [`numpy`](https://github.com/numpy/numpy) 1.23+
 
 ### Optional added functionalities
 

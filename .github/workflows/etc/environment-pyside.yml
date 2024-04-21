@@ -2,7 +2,7 @@ name: test
 channels:
   - conda-forge
 dependencies:
-  - pyside2
+  - pyside6
   - qt-main
   - numpy
   - nomkl
