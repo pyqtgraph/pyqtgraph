@@ -1,3 +1,48 @@
+pyqtgraph-0.13.5
+
+## What's Changed
+
+### Highlights
+
+* add fastpath for float images with nans by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2970
+* Add peegee as mkQApp application icon by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2990
+* Add stubs for Qt modules by @maflAT in https://github.com/pyqtgraph/pyqtgraph/pull/2972
+* add ColorMapMenu to ColorBarItem by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2955
+
+
+### API/Behavior Changes
+
+* add ColorMapMenu to ColorBarItem by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2955
+* Add Vertical and Horizontal Line Symbols by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2985
+
+
+### Bug Fixes
+
+* Filling correction for Fillbetweenitem by @BousquetSophie in https://github.com/pyqtgraph/pyqtgraph/pull/2971
+* Fix SpinBox SyntaxWarnings #2962 by @aaryamantriescode in https://github.com/pyqtgraph/pyqtgraph/pull/2964
+* class Handle Fix allowing dict to be passed for handlePen and removing hard reset for width and cosmetic attributes by @pdmkdz in https://github.com/pyqtgraph/pyqtgraph/pull/2907
+* numpy 2.0: workaround regression in rescaleData by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2974
+
+
+### Misc
+
+* Add peegee as mkQApp application icon by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2990
+* Add stubs for Qt modules by @maflAT in https://github.com/pyqtgraph/pyqtgraph/pull/2972
+* set SymbolAtlas dpr to primary screen's dpr by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2965
+* ImageView example: use levelMode="rgba" by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2963
+* Remove deprecated use of paletteChanged by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2993
+* Set Application Icon on windows by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2992
+
+
+## New Contributors
+
+* @aaryamantriescode made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2964
+* @maflAT made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2972
+* @BousquetSophie made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2971
+* @pdmkdz made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2907
+
+**Full Changelog**: https://github.com/pyqtgraph/pyqtgraph/compare/pyqtgraph-0.13.4...pyqtgraph-0.13.5
+
 pyqtgraph-0.13.4
 
 ## What's Changed
