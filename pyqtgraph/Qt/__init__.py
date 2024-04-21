@@ -5,6 +5,7 @@ This module exists to smooth out some of the differences between Qt versions.
 * Allow you to import QtCore/QtGui from pyqtgraph.Qt without specifying which Qt wrapper
   you want to use.
 """
+import contextlib
 import os
 import platform
 import re
@@ -410,16 +411,52 @@ def mkQApp(name=None):
     try:
         # this only works in Qt 6.5+
         darkMode = QAPP.styleHints().colorScheme() == QtCore.Qt.ColorScheme.Dark
+        with contextlib.suppress(TypeError):
+            # some qt bindings raise a TypeError when using a UniqueConnection
+            # to an already connected signal/slot
+            QAPP.styleHints().colorSchemeChanged.connect(
+                _onColorSchemeChange,
+                type=QtCore.Qt.ConnectionType.UniqueConnection
+            )
     except AttributeError:
         palette = QAPP.palette()
         windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
         windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
         darkMode = windowTextLightness > windowLightness
+        with contextlib.suppress(TypeError):
+            # some qt bindings raise a TypeError when using a UniqueConnection
+            # to an already connected signal/slot
+            QAPP.paletteChanged.connect(
+                _onPaletteChange,
+                type=QtCore.Qt.ConnectionType.UniqueConnection
+            )
     QAPP.setProperty("darkMode", darkMode)
 
     if name is not None:
         QAPP.setApplicationName(name)
     return QAPP
+
+
+def _onPaletteChange(palette):
+    # Attempt to keep darkMode attribute up to date
+    # QEvent.Type.PaletteChanged/ApplicationPaletteChanged will be emitted after
+    # paletteChanged.emit()!
+    # Using API deprecated in Qt 6.0
+    app = mkQApp()
+    windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
+    windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
+    darkMode = windowTextLightness > windowLightness
+    app.setProperty('darkMode', darkMode)
+
+
+def _onColorSchemeChange(colorScheme):
+    # Attempt to keep darkMode attribute up to date
+    # QEvent.Type.PaletteChanged/ApplicationPaletteChanged will be emitted before
+    # QStyleHint().colorSchemeChanged.emit()!
+    # Uses Qt 6.5+ API
+    app = mkQApp()
+    darkMode = colorScheme == QtCore.Qt.ColorScheme.Dark
+    app.setProperty('darkMode', darkMode)
 
 
 # exec() is used within _loadUiType, so we define as exec_() here and rename in pg namespace
