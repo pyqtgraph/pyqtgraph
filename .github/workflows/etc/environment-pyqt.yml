@@ -3,7 +3,6 @@ channels:
   - conda-forge
 dependencies:
   - pyqt
-  - qt-main
   - numpy
   - nomkl
   - scipy
