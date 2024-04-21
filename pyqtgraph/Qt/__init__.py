@@ -5,6 +5,7 @@ This module exists to smooth out some of the differences between Qt versions.
 * Allow you to import QtCore/QtGui from pyqtgraph.Qt without specifying which Qt wrapper
   you want to use.
 """
+import contextlib
 import os
 import platform
 import re
@@ -357,6 +358,9 @@ def mkQApp(name=None):
 
     QAPP = QtWidgets.QApplication.instance()
     if QAPP is None:
+        # We do not have an already instantiated QApplication
+        # let's add some sane defaults
+
         # hidpi handling
         qtVersionCompare = tuple(map(int, QtVersion.split(".")))
         if qtVersionCompare > (6, 0):
@@ -372,17 +376,9 @@ def mkQApp(name=None):
             QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
 
         QAPP = QtWidgets.QApplication(sys.argv or ["pyqtgraph"])
-        QAPP.setStyle("fusion")
-
-        # determine if dark mode
-        try:
-            darkMode = QAPP.styleHints().colorScheme() == QtCore.Qt.ColorScheme.Dark
-        except AttributeError:
-            palette = QAPP.palette()
-            windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
-            windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
-            darkMode = windowTextLightness > windowLightness
-        QAPP.setProperty('darkMode', darkMode)
+        if QtVersion.startswith("6"):
+            # issues with dark mode + windows + qt5
+            QAPP.setStyle("fusion")
 
         # set the application icon
         # python 3.9 won't take "pyqtgraph.icons.peegee" directly
@@ -407,13 +403,60 @@ def mkQApp(name=None):
         # handles the icon showing up on the windows taskbar
         if platform.system() == 'Windows':
             import ctypes
-            myappid = "pyqtgraph.Qt.mkQApp"
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+            my_app_id = "pyqtgraph.Qt.mkQApp"
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_app_id)
         QAPP.setWindowIcon(applicationIcon)
+
+    # determine if dark mode
+    try:
+        # this only works in Qt 6.5+
+        darkMode = QAPP.styleHints().colorScheme() == QtCore.Qt.ColorScheme.Dark
+        with contextlib.suppress(TypeError):
+            # some qt bindings raise a TypeError when using a UniqueConnection
+            # to an already connected signal/slot
+            QAPP.styleHints().colorSchemeChanged.connect(
+                _onColorSchemeChange,
+                type=QtCore.Qt.ConnectionType.UniqueConnection
+            )
+    except AttributeError:
+        palette = QAPP.palette()
+        windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
+        windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
+        darkMode = windowTextLightness > windowLightness
+        with contextlib.suppress(TypeError):
+            # some qt bindings raise a TypeError when using a UniqueConnection
+            # to an already connected signal/slot
+            QAPP.paletteChanged.connect(
+                _onPaletteChange,
+                type=QtCore.Qt.ConnectionType.UniqueConnection
+            )
+    QAPP.setProperty("darkMode", darkMode)
 
     if name is not None:
         QAPP.setApplicationName(name)
     return QAPP
+
+
+def _onPaletteChange(palette):
+    # Attempt to keep darkMode attribute up to date
+    # QEvent.Type.PaletteChanged/ApplicationPaletteChanged will be emitted after
+    # paletteChanged.emit()!
+    # Using API deprecated in Qt 6.0
+    app = mkQApp()
+    windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
+    windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
+    darkMode = windowTextLightness > windowLightness
+    app.setProperty('darkMode', darkMode)
+
+
+def _onColorSchemeChange(colorScheme):
+    # Attempt to keep darkMode attribute up to date
+    # QEvent.Type.PaletteChanged/ApplicationPaletteChanged will be emitted before
+    # QStyleHint().colorSchemeChanged.emit()!
+    # Uses Qt 6.5+ API
+    app = mkQApp()
+    darkMode = colorScheme == QtCore.Qt.ColorScheme.Dark
+    app.setProperty('darkMode', darkMode)
 
 
 # exec() is used within _loadUiType, so we define as exec_() here and rename in pg namespace

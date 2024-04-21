@@ -114,7 +114,6 @@ def valueChanging(param, value):
 for child in p.child('Example Parameters'):
     if 'widget' in child.names:
         child.child('widget').sigValueChanging.connect(valueChanging)
-        
 
 def save():
     global state

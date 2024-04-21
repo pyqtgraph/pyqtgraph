@@ -463,5 +463,4 @@ def setPalette(app, style):
         p = style
     else:
         raise TypeError('style either be a string or QPalette')
-    app.paletteChanged.emit(p)
     app.setPalette(p)
