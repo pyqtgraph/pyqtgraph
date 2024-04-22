@@ -123,11 +123,11 @@ setup(
         'style': helpers.StyleCommand
     },
     packages=find_namespace_packages(include=['pyqtgraph', 'pyqtgraph.*']),
-    python_requires=">=3.10",
+    python_requires=">=3.9",
     package_dir={"pyqtgraph": "pyqtgraph"},
     package_data={
         'pyqtgraph.examples': ['optics/*.gz', 'relativity/presets/*.cfg'],
-        "pyqtgraph.icons": ["*.svg", "*.png"],
+        "pyqtgraph.icons": ["**/*.svg", "**/*.png"],
         "pyqtgraph": [
             "colors/maps/*.csv",
             "colors/maps/*.txt",
@@ -135,7 +135,7 @@ setup(
         ],
     },
     install_requires = [
-        'numpy>=1.23.0',
+        'numpy>=1.22.0',
     ],
     **setupOpts
 )
