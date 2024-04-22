@@ -237,7 +237,21 @@ def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
         assert corr >= minCorr
 
 
-def saveFailedTest(data, expect, filename):
+def saveFailedTest(data, expect, filename, save_comparison=False):
+    directory = os.path.dirname(filename)
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+    base, ext = os.path.splitext(filename)
+    if ext != ".png":
+        filename += ".png"
+
+    png = makePng(data)
+    with open(filename, "wb") as png_file:
+        png_file.write(png)
+    
+    if not save_comparison:
+        return None
+
     # concatenate data, expect, and diff into a single image
     ds = data.shape
     es = expect.shape
@@ -253,15 +267,10 @@ def saveFailedTest(data, expect, filename):
     diff = makeDiffImage(data, expect)
     img[2:2+diff.shape[0], -diff.shape[1]-2:-2] = diff
 
-    png = makePng(data)  # change `img` to `data` to save just the failed image
-    directory = os.path.dirname(filename)
-    if not os.path.isdir(directory):
-        os.makedirs(directory)
-    with open(filename + ".png", "wb") as png_file:
+    png = makePng(img)
+    with open(f"{base}_comparison.png", "wb") as png_file:
         png_file.write(png)
-    print("\nImage comparison failed. Test result: %s %s   Expected result: "
-        "%s %s" % (data.shape, data.dtype, expect.shape, expect.dtype))
-
+    return None
 
 def makePng(img):
     """Given an array like (H, W, 4), return a PNG-encoded byte string.
@@ -297,7 +306,7 @@ class ImageTester(QtWidgets.QWidget):
         
         QtWidgets.QWidget.__init__(self)
         self.resize(1200, 800)
-        #self.showFullScreen()
+        self.setWindowTitle("ImageTester")
         
         self.layout = QtWidgets.QGridLayout()
         self.setLayout(self.layout)
@@ -308,33 +317,45 @@ class ImageTester(QtWidgets.QWidget):
         self.label = QtWidgets.QLabel()
         self.layout.addWidget(self.label, 1, 0, 1, 2)
         self.label.setWordWrap(True)
-        font = QtGui.QFont("monospace", 14, QtGui.QFont.Weight.Bold)
+        font = QtGui.QFont("monospace", 14)
+        font.setStyleHint(QtGui.QFont.StyleHint.Monospace)
         self.label.setFont(font)
 
         self.passBtn = QtWidgets.QPushButton('Pass')
         self.failBtn = QtWidgets.QPushButton('Fail')
-        self.layout.addWidget(self.passBtn, 2, 0)
-        self.layout.addWidget(self.failBtn, 2, 1)
+        self.saveBtn = QtWidgets.QPushButton('Save Test Result Image')
+
+        self.btnBox = QtWidgets.QDialogButtonBox()
+        self.btnBox.addButton(self.passBtn, QtWidgets.QDialogButtonBox.ButtonRole.YesRole)
+        self.btnBox.addButton(self.failBtn, QtWidgets.QDialogButtonBox.ButtonRole.NoRole)
+        self.btnBox.addButton(self.saveBtn, QtWidgets.QDialogButtonBox.ButtonRole.AcceptRole)
         self.passBtn.clicked.connect(self.passTest)
         self.failBtn.clicked.connect(self.failTest)
+        self.saveBtn.clicked.connect(self.saveImage)
+        self.layout.addWidget(self.btnBox, 2, 0, 1, -1)
 
-        self.views = (self.view.addViewBox(row=0, col=0),
-                      self.view.addViewBox(row=0, col=1),
-                      self.view.addViewBox(row=0, col=2))
-        labelText = ['test output', 'standard', 'diff']
-        for i, v in enumerate(self.views):
+        self.plots = (
+            self.view.addPlot(title="Result", row=0, col=0),
+            self.view.addPlot(title="Baseline", row=0, col=1),
+            self.view.addPlot(title="Difference", row=0, col=2)
+        )
+
+        for plot in self.plots:
+            plot.hideButtons()
+            for axis in ['left', 'bottom', 'right', 'top']:
+                plot.hideAxis(axis)
+            v = plot.getViewBox()
             v.setAspectLocked(1)
             v.invertY()
             v.image = ImageItem(axisOrder='row-major')
             v.image.setAutoDownsample(True)
             v.addItem(v.image)
-            v.label = TextItem(labelText[i])
             v.setBackgroundColor(0.5)
 
-        self.views[1].setXLink(self.views[0])
-        self.views[1].setYLink(self.views[0])
-        self.views[2].setXLink(self.views[0])
-        self.views[2].setYLink(self.views[0])
+        self.plots[1].setXLink(self.plots[0])
+        self.plots[1].setYLink(self.plots[0])
+        self.plots[2].setXLink(self.plots[0])
+        self.plots[2].setYLink(self.plots[0])
 
     def test(self, im1, im2, message):
         """Ask the user to decide whether an image test passes or fails.
@@ -345,32 +366,42 @@ class ImageTester(QtWidgets.QWidget):
         then an exception is raised.
         """
         self.show()
+        message = f"Test Message: {message}"
         if im2 is None:
-            message += '\nImage1: %s %s   Image2: [no standard]' % (im1.shape, im1.dtype)
+            message += (
+                "\n"
+                + f"Result:   Dimensions={im1.shape}\tDType={im1.dtype}\n"
+                + "Baseline: [no standard]"
+            )
             im2 = np.zeros((1, 1, 3), dtype=np.ubyte)
         else:
-            message += '\nImage1: %s %s   Image2: %s %s' % (im1.shape, im1.dtype, im2.shape, im2.dtype)
+            message += (
+                "\n"
+                + f"Result:   Dimensions={im1.shape}\tDType={im1.dtype}\n"
+                + f"Baseline: Dimensions={im2.shape}\tDType={im2.dtype}"
+            )
         self.label.setText(message)
-        
-        self.views[0].image.setImage(im1)
-        self.views[1].image.setImage(im2)
+
+        self.plots[0].getViewBox().image.setImage(im1)
+        self.plots[1].getViewBox().image.setImage(im2)
         diff = makeDiffImage(im1, im2)
 
-        self.views[2].image.setImage(diff)
-        self.views[0].autoRange()
+        self.plots[2].getViewBox().image.setImage(diff)
+        self.plots[0].autoRange()
 
         while True:
             QtWidgets.QApplication.processEvents()
             lastKey = self.lastKey
-            
+
             self.lastKey = None
             if lastKey in ('f', 'esc') or not self.isVisible():
-                raise Exception("User rejected test result.")
+                raise ValueError("User rejected test result.")
             elif lastKey == 'p':
                 break
             time.sleep(0.03)
 
-        for v in self.views:
+        for plot in self.plots:
+            v = plot.getViewBox()
             v.image.setImage(np.zeros((1, 1, 3), dtype=np.ubyte))
 
     def keyPressEvent(self, event):
@@ -385,6 +416,24 @@ class ImageTester(QtWidgets.QWidget):
     def failTest(self):
         self.lastKey = 'f'
 
+    def saveImage(self):
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self,
+            "Save Test Image",
+            filter="Images (*png)",
+            options=QtWidgets.QFileDialog.Option.ReadOnly
+        )
+        if not filename:
+            # user cancelled out of the dialog
+            return None
+
+        _, ext = os.path.splitext(filename)
+        if ext != ".png":
+            filename = f"{filename}.png"
+        result = self.plots[0].getViewBox().image.image
+        expected = self.plots[1].getViewBox().image.image
+        saveFailedTest(result, expected, filename, save_comparison=True)
+        return None
 
 def getTestDataDirectory():
     dataPath = Path(__file__).absolute().parent / "images"
@@ -406,9 +455,9 @@ def scenegraphState(view, name):
 def itemState(root):
     state = str(root) + '\n'
     from pyqtgraph import ViewBox
-    state += 'bounding rect: ' + str(root.boundingRect()) + '\n'
+    state += f'bounding rect: {str(root.boundingRect())}' + '\n'
     if isinstance(root, ViewBox):
-        state += "view range: " + str(root.viewRange()) + '\n'
+        state += f"view range: {str(root.viewRange())}" + '\n'
     state += "transform:\n" + indent(transformStr(root.transform()).strip(), "  ") + '\n'
     for item in root.childItems():
         state += indent(itemState(item).strip(), "    ") + '\n'
