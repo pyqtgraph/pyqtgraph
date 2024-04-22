@@ -30,13 +30,13 @@ This project supports:
 
 Currently this means:
 
-* Python 3.9+
+* Python 3.10+
 * Qt 5.15, 6.2+
 * [PyQt5](https://www.riverbankcomputing.com/software/pyqt/),
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
   [PySide2](https://wiki.qt.io/Qt_for_Python), or
   [PySide6](https://wiki.qt.io/Qt_for_Python)
-* [`numpy`](https://github.com/numpy/numpy) 1.22+
+* [`numpy`](https://github.com/numpy/numpy) 1.23+
 
 ### Optional added functionalities
 
@@ -45,7 +45,7 @@ Through 3rd part libraries, additional functionality may be added to PyQtGraph, 
 | Library        | Added functionality |
 |----------------|-|
 | [`scipy`]      | <ul><li> Image processing through [`ndimage`]</li><li> Data array filtering through [`signal`] </li><ul> |
-| [`pyopengl`]   | <ul><li> 3D graphics </li><li> Faster image processing </li><li>Note: on macOS Big Sur only works with python 3.9.1+</li></ul> |
+| [`pyopengl`]   | <ul><li> 3D graphics </li><li> Faster image processing </li></ul> |
 | [`h5py`]       | <ul><li> Export in hdf5 format </li></ul> |
 | [`colorcet`]   | <ul><li> Add a collection of perceptually uniform colormaps </li></ul> |
 | [`matplotlib`] | <ul><li> Export of PlotItem in matplotlib figure </li><li> Add matplotlib collection of colormaps </li></ul> |
