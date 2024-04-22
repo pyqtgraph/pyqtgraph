@@ -1,3 +1,12 @@
+pyqtgraph-0.13.6
+
+## What's Changed
+
+* bdist_wheel needs to grab peegee icons by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3000
+
+
+**Full Changelog**: https://github.com/pyqtgraph/pyqtgraph/compare/pyqtgraph-0.13.5...pyqtgraph-0.13.6
+
 pyqtgraph-0.13.5
 
 ## What's Changed
