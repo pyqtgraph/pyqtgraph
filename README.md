@@ -10,7 +10,7 @@ A pure-Python graphics library for PyQt5/PyQt6/PySide2/PySide6
 
 Copyright 2024 PyQtGraph developers
 
-<http://www.pyqtgraph.org>
+<https://www.pyqtgraph.org>
 
 PyQtGraph is intended for use in mathematics / scientific / engineering applications.
 Despite being written entirely in python, the library is fast due to its
@@ -30,13 +30,13 @@ This project supports:
 
 Currently this means:
 
-* Python 3.10+
+* Python 3.9+
 * Qt 5.15, 6.2+
 * [PyQt5](https://www.riverbankcomputing.com/software/pyqt/),
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
   [PySide2](https://wiki.qt.io/Qt_for_Python), or
   [PySide6](https://wiki.qt.io/Qt_for_Python)
-* [`numpy`](https://github.com/numpy/numpy) 1.23+
+* [`numpy`](https://github.com/numpy/numpy) 1.22+
 
 ### Optional added functionalities
 
@@ -82,10 +82,7 @@ Installation Methods
   * Latest development version: `pip install git+https://github.com/pyqtgraph/pyqtgraph@master`
 * From conda
   * Last released version: `conda install -c conda-forge pyqtgraph`
-* To install system-wide from source distribution: `python setup.py install`
 * Many linux package repositories have release versions.
-* To use with a specific project, simply copy the PyQtGraph subdirectory
-  anywhere that is importable from your project.
 
 Documentation
 -------------
