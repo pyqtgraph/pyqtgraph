@@ -4,8 +4,6 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-from __future__ import division
-
 import decimal
 import math
 import re
@@ -1407,6 +1405,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
         nanMask = xp.isnan(data)
         if data.ndim > 2:
             nanMask = xp.any(nanMask, axis=-1)
+    
     # Apply levels if given
     if levels is not None:
         if isinstance(levels, xp.ndarray) and levels.ndim == 2:
@@ -1458,7 +1457,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
         dst_order = [2, 1, 0, 3]    # B,G,R,A (ARGB32 little endian)
     else:
         dst_order = [1, 2, 3, 0]    # A,R,G,B (ARGB32 big endian)
-        
+
     # copy data into image array
     fastpath = try_fastpath_argb(xp, data, imgData, useRGBA)
 
@@ -1478,7 +1477,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
             imgData[..., dst_order[i]] = data[..., i]
         
     profile('reorder channels')
-    
+
     # add opaque alpha channel if needed
     if data.ndim == 3 and data.shape[2] == 4:
         alpha = True
