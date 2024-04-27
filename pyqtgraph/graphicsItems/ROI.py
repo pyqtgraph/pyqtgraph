@@ -105,6 +105,10 @@ class ROI(GraphicsObject):
                      an option to remove the ROI. The ROI emits
                      sigRemoveRequested when this menu action is selected.
                      Default is False.
+    antialias        (bool) If True, the ROI will render using AntiAliasing,
+                     this is what is desired in almost all cases, the option is
+                     added for testing purposes.
+                     Default is True
     ================ ===========================================================
     
     
@@ -143,7 +147,7 @@ class ROI(GraphicsObject):
                  translateSnap=False, rotateSnap=False, parent=None, pen=None,
                  hoverPen=None, handlePen=None, handleHoverPen=None,
                  movable=True, rotatable=True, resizable=True, removable=False,
-                 aspectLocked=False):
+                 aspectLocked=False, antialias=True):
         GraphicsObject.__init__(self, parent)
         self.setAcceptedMouseButtons(QtCore.Qt.MouseButton.NoButton)
         pos = Point(pos)
@@ -154,6 +158,7 @@ class ROI(GraphicsObject):
         self.resizable = resizable
         self.removable = removable
         self.menu = None
+        self._antialias = antialias
         
         self.freeHandleMoved = False ## keep track of whether free handles have moved since last change signal was emitted.
         self.mouseHovering = False
@@ -611,7 +616,7 @@ class ROI(GraphicsObject):
         ## If a Handle was not supplied, create it now
         if 'item' not in info or info['item'] is None:
             h = Handle(self.handleSize, typ=info['type'], pen=self.handlePen,
-                       hoverPen=self.handleHoverPen, parent=self)
+                       hoverPen=self.handleHoverPen, parent=self, antialias=self._antialias)
             info['item'] = h
         else:
             h = info['item']
@@ -1067,8 +1072,10 @@ class ROI(GraphicsObject):
     def paint(self, p, opt, widget):
         # Note: don't use self.boundingRect here, because subclasses may need to redefine it.
         r = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
-        
-        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(
+            QtGui.QPainter.RenderHint.Antialiasing,
+            self._antialias
+        )
         p.setPen(self.currentPen)
         p.translate(r.left(), r.top())
         p.scale(r.width(), r.height())
@@ -1335,7 +1342,7 @@ class Handle(UIGraphicsItem):
     sigRemoveRequested = QtCore.Signal(object)   # self
     
     def __init__(self, radius, typ=None, pen=(200, 200, 220),
-                 hoverPen=(255, 255, 0), parent=None, deletable=False):
+                 hoverPen=(255, 255, 0), parent=None, deletable=False, antialias=True):
         self.rois = []
         self.radius = radius
         self.typ = typ
@@ -1346,6 +1353,7 @@ class Handle(UIGraphicsItem):
         self.sides, self.startAng = self.types[typ]
         self.buildPath()
         self._shape = None
+        self._antialias = antialias
         self.menu = self.buildMenu()
         
         UIGraphicsItem.__init__(self, parent=parent)
@@ -1477,9 +1485,11 @@ class Handle(UIGraphicsItem):
         self.path.closeSubpath()
             
     def paint(self, p, opt, widget):
-        p.setRenderHints(p.RenderHint.Antialiasing, True)
+        p.setRenderHint(
+            p.RenderHint.Antialiasing,
+            self._antialias
+        )
         p.setPen(self.currentPen)
-        
         p.drawPath(self.shape())
             
     def shape(self):
@@ -1488,7 +1498,9 @@ class Handle(UIGraphicsItem):
             if s is None:
                 return self.path
             self._shape = s
-            self.prepareGeometryChange()  ## beware--this can cause the view to adjust, which would immediately invalidate the shape.
+            # beware--this can cause the view to adjust,
+            # which would immediately invalidate the shape.
+            self.prepareGeometryChange()  
         return self._shape
     
     def boundingRect(self):
@@ -1839,12 +1851,14 @@ class EllipseROI(ROI):
         
     def paint(self, p, opt, widget):
         r = self.boundingRect()
-        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+
+        p.setRenderHint(
+            QtGui.QPainter.RenderHint.Antialiasing,
+            self._antialias
+        )
         p.setPen(self.currentPen)
-        
         p.scale(r.width(), r.height())## workaround for GL bug
         r = QtCore.QRectF(r.x()/r.width(), r.y()/r.height(), 1,1)
-        
         p.drawEllipse(r)
         
     def getArrayRegion(self, arr, img=None, axes=(0, 1), returnMappedCoords=False, **kwds):
@@ -2017,7 +2031,7 @@ class PolyLineROI(ROI):
         
     def addSegment(self, h1, h2, index=None):
         seg = _PolyLineSegment(handles=(h1, h2), pen=self.pen, hoverPen=self.hoverPen,
-                               parent=self, movable=False)
+                               parent=self, movable=False, antialias=self._antialias)
         if index is None:
             self.segments.append(seg)
         else:
@@ -2162,7 +2176,10 @@ class LineSegmentROI(ROI):
         self.movePoint(self.getHandles()[1], p2)
             
     def paint(self, p, *args):
-        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(
+            QtGui.QPainter.RenderHint.Antialiasing,
+            self._antialias
+        )
         p.setPen(self.currentPen)
         h1 = self.endpoints[0].pos()
         h2 = self.endpoints[1].pos()
@@ -2278,9 +2295,11 @@ class CrosshairROI(ROI):
     
     def paint(self, p, *args):
         radius = self.getState()['size'][1]
-        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(
+            QtGui.QPainter.RenderHint.Antialiasing,
+            self._antialias
+        )
         p.setPen(self.currentPen)
-        
         p.drawLine(Point(0, -radius), Point(0, radius))
         p.drawLine(Point(-radius, 0), Point(radius, 0))
         
@@ -2337,7 +2356,10 @@ class TriangleROI(ROI):
 
     def paint(self, p, *args):
         r = self.boundingRect()
-        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(
+            QtGui.QPainter.RenderHint.Antialiasing,
+            self._antialias
+        )
         p.scale(r.width(), r.height())
         p.setPen(self.currentPen)
         p.drawPolygon(self.poly)
