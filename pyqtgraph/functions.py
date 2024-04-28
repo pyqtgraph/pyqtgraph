@@ -1345,7 +1345,9 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
                    The default is False, which returns in ARGB order for use with QImage 
                    (Note that 'ARGB' is a term used by the Qt documentation; the *actual* order 
                    is BGRA).
-    maskNans       Enable or disable masking NaNs as transparent.
+    maskNans       Enable or disable masking NaNs as transparent. Converting NaN values to ints is
+                   undefined behavior per the C-standard, results may vary across platforms. Highly
+                   recommend leaving this option to the default value of True.
     ============== ==================================================================================
     """
     cp = getCupy()

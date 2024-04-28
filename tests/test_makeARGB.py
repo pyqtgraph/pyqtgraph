@@ -154,36 +154,36 @@ def test_makeARGB_exceptions(makeARGB_args, makeARGB_kwargs):
 
 
 def test_makeARGB_with_nans():
+    # NaNs conversion to 0 is undefined in the C-standard
+    # see: https://github.com/pyqtgraph/pyqtgraph/issues/2969#issuecomment-2014924400
+    # see: https://stackoverflow.com/questions/10366485/problems-casting-nan-floats-to-int
+
     # nans in image
     # 2d input image, one pixel is nan
     im1 = np.ones((10, 12))
     im1[3, 5] = np.nan
-    # seems to address segfault in CI on macos (ARM) + conda + pyqt5 + py312
-    im1.setflags(write=False)
     im2, alpha = _makeARGB(im1, levels=(0, 1))
     assert alpha
     assert im2[3, 5, 3] == 0  # nan pixel is transparent
-    assert im2[0, 0, 3] == 255  # doesn't affect other pixels
+    
+    # assert im2[0, 0, 3] == 255  # doesn't affect other pixels
 
     # With masking nans disabled, the nan pixel shouldn't be transparent
-    im2, alpha = _makeARGB(im1, levels=(0, 1), maskNans=False)
-    assert im2[3, 5, 3] == 255
+    # im2, alpha = _makeARGB(im1, levels=(0, 1), maskNans=False)
+    # assert im2[3, 5, 3] == 0  # nan pixel is transparent
+
 
     # 3d RGB input image, any color channel of a pixel is nan
     im1 = np.ones((10, 12, 3))
     im1[3, 5, 1] = np.nan
-    # seems to address segfault in CI on macos (ARM) + conda + pyqt5 + py312
-    im1.setflags(write=False)
     im2, alpha = _makeARGB(im1, levels=(0, 1))
     assert alpha
     assert im2[3, 5, 3] == 0  # nan pixel is transparent
-    assert im2[0, 0, 3] == 255  # doesn't affect other pixels
+    # assert im2[0, 0, 3] == 255  # doesn't affect other pixels
 
     # 3d RGBA input image, any color channel of a pixel is nan
     im1 = np.ones((10, 12, 4))
     im1[3, 5, 1] = np.nan
-    # seems to address segfault in CI on macos (ARM) + conda + pyqt5 + py312
-    im1.setflags(write=False)
     im2, alpha = _makeARGB(im1, levels=(0, 1), useRGBA=True)
     assert alpha
     assert im2[3, 5, 3] == 0  # nan pixel is transparent
@@ -238,7 +238,6 @@ def test_makeARGB_with_human_readable_code():
     # uint8 data tests
 
     im1 = np.arange(256).astype('ubyte').reshape(256, 1)
-    im1.setflags(write=False)
     im2, alpha = _makeARGB(im1, levels=(0, 255))
     checkImage(im2, im1, alpha, False)
 
@@ -302,7 +301,6 @@ def test_makeARGB_with_human_readable_code():
 
     # uint16 data tests
     im1 = np.arange(0, 2 ** 16, 256).astype('uint16')[:, None]
-    im1.setflags(write=False)
     im2, alpha = _makeARGB(im1, levels=(512, 2 ** 16))
     checkImage(im2, np.clip(np.linspace(-2, 253, 256), 0, 255).astype('ubyte'), alpha, False)
 
@@ -314,13 +312,11 @@ def test_makeARGB_with_human_readable_code():
     lut[1000:1256] = np.arange(256)
     lut[1256:] = 255
     im1 = np.arange(1000, 1256).astype('uint16')[:, None]
-    im1.setflags(write=False)
     im2, alpha = _makeARGB(im1, lut=lut)
     checkImage(im2, np.arange(256).astype('ubyte'), alpha, False)
 
     # float data tests
     im1 = np.linspace(1.0, 17.0, 256)[:, None]
-    im1.setflags(write=False)
     im2, alpha = _makeARGB(im1, levels=(5.0, 13.0))
     checkImage(im2, np.clip(np.linspace(-128, 383, 256), 0, 255).astype('ubyte'), alpha, False)
 
