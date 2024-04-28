@@ -34,7 +34,7 @@ __all__ = [
     'solve3DTransform', 'solveBilinearTransform',
     'clip_scalar', 'clip_array', 'rescaleData', 'applyLookupTable',
     'makeRGBA', 'makeARGB',
-    # 'try_fastpath_argb', 'ndarray_to_qimage',
+    # 'ndarray_to_qimage',
     'makeQImage',
     # 'ndarray_from_qimage',
     'imageToArray', 'colorToAlpha',
@@ -1360,7 +1360,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
     
     if lut is not None and not isinstance(lut, xp.ndarray):
         lut = xp.array(lut)
-    
+
     if levels is None:
         # automatically decide levels based on data dtype
         if data.dtype.kind == 'u':
@@ -1407,7 +1407,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
         nanMask = xp.isnan(data)
         if data.ndim > 2:
             nanMask = xp.any(nanMask, axis=-1)
-    
+
     # Apply levels if given
     if levels is not None:
         if isinstance(levels, xp.ndarray) and levels.ndim == 2:
@@ -1460,12 +1460,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
     else:
         dst_order = [1, 2, 3, 0]    # A,R,G,B (ARGB32 big endian)
 
-    # copy data into image array
-    fastpath = try_fastpath_argb(xp, data, imgData, useRGBA)
-
-    if fastpath:
-        pass
-    elif data.ndim == 2:
+    if data.ndim == 2:
         # This is tempting:
         #   imgData[..., :3] = data[..., xp.newaxis]
         # ..but it turns out this is faster:
@@ -1477,7 +1472,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
     else:
         for i in range(0, data.shape[2]):
             imgData[..., dst_order[i]] = data[..., i]
-        
+
     profile('reorder channels')
 
     # add opaque alpha channel if needed
@@ -1485,8 +1480,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
         alpha = True
     else:
         alpha = False
-        if not fastpath:    # fastpath has already filled it in
-            imgData[..., dst_order[3]] = 255
+        imgData[..., dst_order[3]] = 255
 
     # apply nan mask through alpha channel
     if nanMask is not None:
@@ -1499,50 +1493,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
 
     profile('alpha channel')
     return imgData, alpha
-
-
-def try_fastpath_argb(xp, ain, aout, useRGBA):
-    # we only optimize for certain cases
-    # return False if we did not handle it
-    can_handle = xp is np and ain.dtype == xp.ubyte and ain.flags['C_CONTIGUOUS']
-    if not can_handle:
-        return False
-
-    nrows, ncols = ain.shape[:2]
-    nchans = 1 if ain.ndim == 2 else ain.shape[2]
-
-    Format = QtGui.QImage.Format
-
-    if nchans == 1:
-        in_fmt = Format.Format_Grayscale8
-    elif nchans == 3:
-        in_fmt = Format.Format_RGB888
-    else:
-        in_fmt = Format.Format_RGBA8888
-
-    if useRGBA:
-        out_fmt = Format.Format_RGBA8888
-    else:
-        out_fmt = Format.Format_ARGB32
-
-    if in_fmt == out_fmt:
-        aout[:] = ain
-        return True
-
-    npixels_chunk = 512*1024
-    batch = int(npixels_chunk / ncols / nchans)
-    batch = max(1, batch)
-    row_beg = 0
-    while row_beg < nrows:
-        row_end = min(row_beg + batch, nrows)
-        ain_view = ain[row_beg:row_end, ...]
-        aout_view = aout[row_beg:row_end, ...]
-        qimg = QtGui.QImage(ain_view, ncols, ain_view.shape[0], ain.strides[0], in_fmt)
-        qimg = qimg.convertToFormat(out_fmt)
-        aout_view[:] = imageToArray(qimg, copy=False, transpose=False)
-        row_beg = row_end
-
-    return True
 
 
 def ndarray_to_qimage(arr, fmt):

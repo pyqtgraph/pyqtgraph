@@ -165,13 +165,11 @@ def test_makeARGB_with_nans():
     im2, alpha = _makeARGB(im1, levels=(0, 1))
     assert alpha
     assert im2[3, 5, 3] == 0  # nan pixel is transparent
-    
-    # assert im2[0, 0, 3] == 255  # doesn't affect other pixels
+    assert im2[0, 0, 3] == 255  # doesn't affect other pixels
 
     # With masking nans disabled, the nan pixel shouldn't be transparent
-    # im2, alpha = _makeARGB(im1, levels=(0, 1), maskNans=False)
-    # assert im2[3, 5, 3] == 0  # nan pixel is transparent
-
+    im2, alpha = _makeARGB(im1, levels=(0, 1), maskNans=False)
+    assert im2[3, 5, 3] == 255  # nan pixel is transparent
 
     # 3d RGB input image, any color channel of a pixel is nan
     im1 = np.ones((10, 12, 3))
@@ -179,7 +177,7 @@ def test_makeARGB_with_nans():
     im2, alpha = _makeARGB(im1, levels=(0, 1))
     assert alpha
     assert im2[3, 5, 3] == 0  # nan pixel is transparent
-    # assert im2[0, 0, 3] == 255  # doesn't affect other pixels
+    assert im2[0, 0, 3] == 255  # doesn't affect other pixels
 
     # 3d RGBA input image, any color channel of a pixel is nan
     im1 = np.ones((10, 12, 4))
