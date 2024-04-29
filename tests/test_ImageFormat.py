@@ -4,16 +4,13 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 
 
-def check_image_format(data, levels, lut, expected_format):
-    item = pg.ImageItem(axisOrder='row-major')
-    item.setImage(data, autoLevels=False, lut=lut, levels=levels)
-    item.render()
-    assert item.qimage.format() == expected_format
+rng = np.random.default_rng()
 
 
-def check_format(shape, dtype, levels, lut, expected_format):
+def check_format(shape, dtype, levels, lut, expected_format, *, transparentLocations=None):
     data = np.zeros(shape, dtype=dtype)
-    check_image_format(data, levels, lut, expected_format)
+    qimage = pg.functions_qimage.try_make_qimage(data, levels=levels, lut=lut, transparentLocations=transparentLocations)
+    assert qimage is not None and qimage.format() == expected_format
 
 
 def test_uint8():
@@ -22,22 +19,22 @@ def test_uint8():
     w, h = 192, 108
     lo, hi = 50, 200
     lut_none = None
-    lut_mono1 = np.random.randint(256, size=256, dtype=np.uint8)
-    lut_mono2 = np.random.randint(256, size=(256, 1), dtype=np.uint8)
-    lut_rgb = np.random.randint(256, size=(256, 3), dtype=np.uint8)
-    lut_rgba = np.random.randint(256, size=(256, 4), dtype=np.uint8)
+    lut_mono1 = rng.integers(256, size=256, dtype=np.uint8)
+    lut_mono2 = rng.integers(256, size=(256, 1), dtype=np.uint8)
+    lut_rgb = rng.integers(256, size=(256, 3), dtype=np.uint8)
+    lut_rgba = rng.integers(256, size=(256, 4), dtype=np.uint8)
 
     # lut with less than 256 entries
-    lut_mono1_s = np.random.randint(256, size=255, dtype=np.uint8)
-    lut_mono2_s = np.random.randint(256, size=(255, 1), dtype=np.uint8)
-    lut_rgb_s = np.random.randint(256, size=(255, 3), dtype=np.uint8)
-    lut_rgba_s = np.random.randint(256, size=(255, 4), dtype=np.uint8)
+    lut_mono1_s = rng.integers(256, size=255, dtype=np.uint8)
+    lut_mono2_s = rng.integers(256, size=(255, 1), dtype=np.uint8)
+    lut_rgb_s = rng.integers(256, size=(255, 3), dtype=np.uint8)
+    lut_rgba_s = rng.integers(256, size=(255, 4), dtype=np.uint8)
 
     # lut with more than 256 entries
-    lut_mono1_l = np.random.randint(256, size=257, dtype=np.uint8)
-    lut_mono2_l = np.random.randint(256, size=(257, 1), dtype=np.uint8)
-    lut_rgb_l = np.random.randint(256, size=(257, 3), dtype=np.uint8)
-    lut_rgba_l = np.random.randint(256, size=(257, 4), dtype=np.uint8)
+    lut_mono1_l = rng.integers(256, size=257, dtype=np.uint8)
+    lut_mono2_l = rng.integers(256, size=(257, 1), dtype=np.uint8)
+    lut_rgb_l = rng.integers(256, size=(257, 3), dtype=np.uint8)
+    lut_rgba_l = rng.integers(256, size=(257, 4), dtype=np.uint8)
 
     levels = None
     check_format((h, w), dtype, levels, lut_none, Format.Format_Grayscale8)
@@ -78,22 +75,22 @@ def test_uint16():
     lo, hi = 100, 10000
     lut_none = None
 
-    lut_mono1 = np.random.randint(256, size=256, dtype=np.uint8)
-    lut_mono2 = np.random.randint(256, size=(256, 1), dtype=np.uint8)
-    lut_rgb = np.random.randint(256, size=(256, 3), dtype=np.uint8)
-    lut_rgba = np.random.randint(256, size=(256, 4), dtype=np.uint8)
+    lut_mono1 = rng.integers(256, size=256, dtype=np.uint8)
+    lut_mono2 = rng.integers(256, size=(256, 1), dtype=np.uint8)
+    lut_rgb = rng.integers(256, size=(256, 3), dtype=np.uint8)
+    lut_rgba = rng.integers(256, size=(256, 4), dtype=np.uint8)
 
     # lut with less than 256 entries
-    lut_mono1_s = np.random.randint(256, size=255, dtype=np.uint8)
-    lut_mono2_s = np.random.randint(256, size=(255, 1), dtype=np.uint8)
-    lut_rgb_s = np.random.randint(256, size=(255, 3), dtype=np.uint8)
-    lut_rgba_s = np.random.randint(256, size=(255, 4), dtype=np.uint8)
+    lut_mono1_s = rng.integers(256, size=255, dtype=np.uint8)
+    lut_mono2_s = rng.integers(256, size=(255, 1), dtype=np.uint8)
+    lut_rgb_s = rng.integers(256, size=(255, 3), dtype=np.uint8)
+    lut_rgba_s = rng.integers(256, size=(255, 4), dtype=np.uint8)
 
     # lut with more than 256 entries
-    lut_mono1_l = np.random.randint(256, size=257, dtype=np.uint8)
-    lut_mono2_l = np.random.randint(256, size=(257, 1), dtype=np.uint8)
-    lut_rgb_l = np.random.randint(256, size=(257, 3), dtype=np.uint8)
-    lut_rgba_l = np.random.randint(256, size=(257, 4), dtype=np.uint8)
+    lut_mono1_l = rng.integers(256, size=257, dtype=np.uint8)
+    lut_mono2_l = rng.integers(256, size=(257, 1), dtype=np.uint8)
+    lut_rgb_l = rng.integers(256, size=(257, 3), dtype=np.uint8)
+    lut_rgba_l = rng.integers(256, size=(257, 4), dtype=np.uint8)
 
     levels = None
     check_format((h, w), dtype, levels, lut_none, Format.Format_Grayscale16)
@@ -129,22 +126,22 @@ def test_float32():
     lo, hi = -1, 1
     lut_none = None
 
-    lut_mono1 = np.random.randint(256, size=256, dtype=np.uint8)
-    lut_mono2 = np.random.randint(256, size=(256, 1), dtype=np.uint8)
-    lut_rgb = np.random.randint(256, size=(256, 3), dtype=np.uint8)
-    lut_rgba = np.random.randint(256, size=(256, 4), dtype=np.uint8)
+    lut_mono1 = rng.integers(256, size=256, dtype=np.uint8)
+    lut_mono2 = rng.integers(256, size=(256, 1), dtype=np.uint8)
+    lut_rgb = rng.integers(256, size=(256, 3), dtype=np.uint8)
+    lut_rgba = rng.integers(256, size=(256, 4), dtype=np.uint8)
 
     # lut with less than 256 entries
-    lut_mono1_s = np.random.randint(256, size=255, dtype=np.uint8)
-    lut_mono2_s = np.random.randint(256, size=(255, 1), dtype=np.uint8)
-    lut_rgb_s = np.random.randint(256, size=(255, 3), dtype=np.uint8)
-    lut_rgba_s = np.random.randint(256, size=(255, 4), dtype=np.uint8)
+    lut_mono1_s = rng.integers(256, size=255, dtype=np.uint8)
+    lut_mono2_s = rng.integers(256, size=(255, 1), dtype=np.uint8)
+    lut_rgb_s = rng.integers(256, size=(255, 3), dtype=np.uint8)
+    lut_rgba_s = rng.integers(256, size=(255, 4), dtype=np.uint8)
 
     # lut with more than 256 entries
-    lut_mono1_l = np.random.randint(256, size=257, dtype=np.uint8)
-    lut_mono2_l = np.random.randint(256, size=(257, 1), dtype=np.uint8)
-    lut_rgb_l = np.random.randint(256, size=(257, 3), dtype=np.uint8)
-    lut_rgba_l = np.random.randint(256, size=(257, 4), dtype=np.uint8)
+    lut_mono1_l = rng.integers(256, size=257, dtype=np.uint8)
+    lut_mono2_l = rng.integers(256, size=(257, 1), dtype=np.uint8)
+    lut_rgb_l = rng.integers(256, size=(257, 3), dtype=np.uint8)
+    lut_rgba_l = rng.integers(256, size=(257, 4), dtype=np.uint8)
 
     levels = [lo, hi]
 
@@ -173,12 +170,9 @@ def test_float32():
         lut_mono1_l, lut_mono2_l, lut_rgb_l, lut_rgba_l,
     ]
 
-    nandata = np.zeros((h, w), dtype=dtype)
-    nandata[h//2, w//2] = np.nan
-    for lut in all_lut_types:
-        check_image_format(nandata, levels, lut, Format.Format_RGBA8888)
+    center = (np.array([h//2]), np.array([w//2]))
 
-    nandata = np.zeros((h, w, 3), dtype=dtype)
-    nandata[h//2, w//2, 1] = np.nan
     for lut in all_lut_types:
-        check_image_format(nandata, levels, lut, Format.Format_RGBA8888)
+        check_format((h, w), dtype, levels, lut, Format.Format_RGBA8888, transparentLocations=center)
+
+    check_format((h, w, 3), dtype, levels, lut_none, Format.Format_RGBA8888, transparentLocations=center)
