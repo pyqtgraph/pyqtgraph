@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 88
-target-version = ['py310']
+target-version = ['py39']
 include = '\.pyi?$'
 exclude = '''
 
@@ -30,7 +30,7 @@ exclude = '''
 profile = "black"
 honor_noqa = true
 color_output = true
-py_version = 310
+py_version = 39
 src_paths = ["pyqtgraph", "tests"]
 skip_glob = ["**/*Template*.py", "**/colorama"]
 skip_gitignore = true
