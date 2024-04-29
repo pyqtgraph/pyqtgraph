@@ -15,6 +15,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  make_dash_docset:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - name: Install Build Dependencies
+      run: |
+        python -m pip install --upgrade doc2dash setuptools -r doc/requirements.txt 
+    - name: Build docset
+      run: |
+        make -C doc dash
+    - run: tar --exclude='.DS_Store' -cvzf pyqtgraph.tgz doc/pyqtgraph.docset
+    - name: Upload docset
+      uses: actions/upload-artifact@v4
+      with:
+        name: pyqtgraph.docset
+        path: pyqtgraph.tgz
   run-mypy:
     runs-on: ubuntu-latest
     steps:
