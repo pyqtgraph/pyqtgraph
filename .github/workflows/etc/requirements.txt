@@ -18,5 +18,5 @@ h5py==3.11.0
 
 # testing
 pytest==8.2.0
-pytest-xdist==3.5.0
+pytest-xdist==3.6.1
 pytest-xvfb==3.0.0; sys_platform == 'linux'
