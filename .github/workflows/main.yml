@@ -49,7 +49,7 @@ jobs:
             qt-version: "PyQt6~=6.2.0 PyQt6-Qt6~=6.2.0"
           - python-version: "3.11"
             qt-lib: "pyside"
-            qt-version: "PySide6~=6.4.0"
+            qt-version: "PySide6-Essentials~=6.4.0"
           - python-version: "3.12"
             qt-lib: "pyqt"
             qt-version: "PyQt6"
