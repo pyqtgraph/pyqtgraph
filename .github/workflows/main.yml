@@ -84,20 +84,9 @@ jobs:
     - name: "Install Windows-Mesa OpenGL DLL"
       if: runner.os == 'Windows'
       run: |
-        curl -LJO https://github.com/pal1000/mesa-dist-win/releases/download/19.2.7/mesa3d-19.2.7-release-msvc.7z
-        7z x mesa3d-19.2.7-release-msvc.7z
-        cd x64
-        xcopy opengl32.dll C:\windows\system32\mesadrv.dll*
-        xcopy opengl32.dll C:\windows\syswow64\mesadrv.dll*
-        REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DLL /t REG_SZ /d "mesadrv.dll" /f
-        REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DriverVersion /t REG_DWORD /d 1 /f
-        REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Flags /t REG_DWORD /d 1 /f
-        REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Version /t REG_DWORD /d 2 /f
-        REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DLL /t REG_SZ /d "mesadrv.dll" /f
-        REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DriverVersion /t REG_DWORD /d 1 /f
-        REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Flags /t REG_DWORD /d 1 /f 
-        REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Version /t REG_DWORD /d 2 /f 
-      shell: cmd
+        curl -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/24.0.6/mesa3d-24.0.6-release-msvc.7z
+        7z x mesa.7z -o*
+        powershell.exe mesa\systemwidedeploy.cmd 1
     - name: Install Dependencies
       run: |
         python -m pip install -r .github/workflows/etc/requirements.txt ${{ matrix.qt-version }} .
@@ -187,20 +176,10 @@ jobs:
       - name: "Install Windows-Mesa OpenGL DLL"
         if: runner.os == 'Windows'
         run: |
-          curl -LJO https://github.com/pal1000/mesa-dist-win/releases/download/19.2.7/mesa3d-19.2.7-release-msvc.7z
-          7z x mesa3d-19.2.7-release-msvc.7z
-          cd x64
-          xcopy opengl32.dll C:\windows\system32\mesadrv.dll*
-          xcopy opengl32.dll C:\windows\syswow64\mesadrv.dll*
-          REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DLL /t REG_SZ /d "mesadrv.dll" /f
-          REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DriverVersion /t REG_DWORD /d 1 /f
-          REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Flags /t REG_DWORD /d 1 /f
-          REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Version /t REG_DWORD /d 2 /f
-          REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DLL /t REG_SZ /d "mesadrv.dll" /f
-          REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DriverVersion /t REG_DWORD /d 1 /f
-          REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Flags /t REG_DWORD /d 1 /f 
-          REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Version /t REG_DWORD /d 2 /f 
-        shell: cmd
+          curl -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/24.0.6/mesa3d-24.0.6-release-msvc.7z
+          7z x mesa.7z -o*
+          powershell.exe mesa\systemwidedeploy.cmd 1
+        shell: pwsh
       - name: "Install Linux VirtualDisplay"
         if: runner.os == 'Linux'
         run: |
