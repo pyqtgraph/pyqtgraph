@@ -248,8 +248,13 @@ jobs:
           cache: pip
       - name: Build Wheel
         run: |
-          python -m pip install setuptools wheel
-          python setup.py bdist_wheel
+          pip install build
+          python -m build --wheel
+      - name: Upload Wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel
+          path: dist/*.whl
   
   analyze:
     name: analyze
