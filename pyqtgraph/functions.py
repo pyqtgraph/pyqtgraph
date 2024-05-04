@@ -3117,7 +3117,11 @@ def disconnect(signal, slot):
             success = signal.disconnect(slot)
             if success is None:     # PyQt
                 success = True
-        except (TypeError, RuntimeError):
+        except (
+            TypeError,
+            RuntimeError,
+            SystemError  # PySide6 6.7.1+ will emit this
+        ):
             success = False
 
         if success:
