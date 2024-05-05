@@ -139,18 +139,19 @@ jobs:
       if: runner.os != 'Linux'
     - name: Run Tests
       run: |
-        mkdir $SCREENSHOT_DIR
+        mkdir "$SCREENSHOT_DIR"
         pytest tests -v
         pytest pyqtgraph/examples -v -n 2
       shell: bash
     - name: Upload Screenshots
+      if: failure()
       uses: actions/upload-artifact@v4
       with:
         name: Screenshots (Python ${{ matrix.python-version }} - Qt-Bindings ${{ matrix.qt-lib }} - OS ${{ matrix.os }})
-        path: $SCREENSHOT_DIR
+        path: ${{ env.SCREENSHOT_DIR }}
         if-no-files-found: ignore
     env:
-      SCREENSHOT_DIR: ./screenshots
+      SCREENSHOT_DIR: screenshots
 
   test-conda:
     runs-on: ${{ matrix.os }}
@@ -169,72 +170,79 @@ jobs:
           - qt-lib: pyside
             environment-file: .github/workflows/etc/environment-pyside.yml
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - uses: conda-incubator/setup-miniconda@v3
-        with:
-          miniforge-version: latest
-          miniforge-variant: Mambaforge
-          environment-file: ${{ matrix.environment-file }}
-          auto-update-conda: false
-          python-version: "3.12"
-          use-mamba: true
-      - name: "Install Test Framework"
-        run: pip install pytest pytest-xdist
-      - name: "Install Windows-Mesa OpenGL DLL"
-        if: runner.os == 'Windows'
-        run: |
-          curl -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/24.0.6/mesa3d-24.0.6-release-msvc.7z
-          7z x mesa.7z -o*
-          powershell.exe mesa\systemwidedeploy.cmd 1
-        shell: pwsh
-      - name: "Install Linux VirtualDisplay"
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update -y --allow-releaseinfo-change
-          sudo apt-get install -y --no-install-recommends \
-            libxkbcommon-x11-0 \
-            x11-utils \
-            libyaml-dev \
-            libegl1-mesa \
-            libxcb-icccm4 \
-            libxcb-image0 \
-            libxcb-keysyms1 \
-            libxcb-randr0 \
-            libxcb-render-util0 \
-            libxcb-xinerama0 \
-            libopengl0 \
-            libxcb-cursor0
-          pip install pytest-xvfb
-      - name: 'Debug Info'
-        run: |
-          echo python location: `which python`
-          echo python version: `python --version`
-          echo pytest location: `which pytest`
-          echo installed packages
-          conda list
-          pip list
-          echo pyqtgraph system info
-          python -c "import pyqtgraph as pg; pg.systemInfo()"
-        env:
-          QT_DEBUG_PLUGINS: 1
-      - name: 'XVFB Display Info'
-        run: |
-          xvfb-run --server-args="-screen 0, 1920x1200x24 -ac +extension GLX +render -noreset" python -m pyqtgraph.util.glinfo
-          xvfb-run --server-args="-screen 0, 1920x1200x24 -ac +extension GLX +render -noreset" python -m pyqtgraph.util.get_resolution
-        if: runner.os == 'Linux'
-      - name: 'Display Info'
-        run: |
-          python -m pyqtgraph.util.glinfo
-          python -m pyqtgraph.util.get_resolution
-        if: runner.os != 'Linux'
-      - name: Run Tests
-        run: |
-          mkdir $SCREENSHOT_DIR
-          pytest tests -v
-          pytest pyqtgraph/examples -v -n 2
-        env:
-          SCREENSHOT_DIR: ./screenshots
+    - name: Checkout
+      uses: actions/checkout@v4
+    - uses: conda-incubator/setup-miniconda@v3
+      with:
+        miniforge-version: latest
+        miniforge-variant: Mambaforge
+        environment-file: ${{ matrix.environment-file }}
+        auto-update-conda: false
+        python-version: "3.12"
+        use-mamba: true
+    - name: "Install Test Framework"
+      run: pip install pytest pytest-xdist
+    - name: "Install Windows-Mesa OpenGL DLL"
+      if: runner.os == 'Windows'
+      run: |
+        curl -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/24.0.6/mesa3d-24.0.6-release-msvc.7z
+        7z x mesa.7z -o*
+        powershell.exe mesa\systemwidedeploy.cmd 1
+      shell: pwsh
+    - name: "Install Linux VirtualDisplay"
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update -y --allow-releaseinfo-change
+        sudo apt-get install -y --no-install-recommends \
+          libxkbcommon-x11-0 \
+          x11-utils \
+          libyaml-dev \
+          libegl1-mesa \
+          libxcb-icccm4 \
+          libxcb-image0 \
+          libxcb-keysyms1 \
+          libxcb-randr0 \
+          libxcb-render-util0 \
+          libxcb-xinerama0 \
+          libopengl0 \
+          libxcb-cursor0
+        pip install pytest-xvfb
+    - name: 'Debug Info'
+      run: |
+        echo python location: `which python`
+        echo python version: `python --version`
+        echo pytest location: `which pytest`
+        echo installed packages
+        conda list
+        pip list
+        echo pyqtgraph system info
+        python -c "import pyqtgraph as pg; pg.systemInfo()"
+      env:
+        QT_DEBUG_PLUGINS: 1
+    - name: 'XVFB Display Info'
+      run: |
+        xvfb-run --server-args="-screen 0, 1920x1200x24 -ac +extension GLX +render -noreset" python -m pyqtgraph.util.glinfo
+        xvfb-run --server-args="-screen 0, 1920x1200x24 -ac +extension GLX +render -noreset" python -m pyqtgraph.util.get_resolution
+      if: runner.os == 'Linux'
+    - name: 'Display Info'
+      run: |
+        python -m pyqtgraph.util.glinfo
+        python -m pyqtgraph.util.get_resolution
+      if: runner.os != 'Linux'
+    - name: Run Tests
+      run: |
+        mkdir "$SCREENSHOT_DIR"
+        pytest tests -v
+        pytest pyqtgraph/examples -v -n 2
+    - name: Upload Screenshots
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Screenshots (Conda - Qt-Bindings ${{ matrix.qt-lib }} - OS ${{ matrix.os }})
+        path: ${{ env.SCREENSHOT_DIR }}
+        if-no-files-found: ignore
+    env:
+      SCREENSHOT_DIR: screenshots
 
   build-wheel:
     name: build wheel
