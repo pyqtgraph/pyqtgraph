@@ -171,7 +171,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
                                 "PYQTGRAPH_AUDIT=1 to add this image." % stdFileName)
             if os.getenv('CI') is not None:
                 standardFile = os.path.join(os.getenv("SCREENSHOT_DIR", "screenshots"), standardFile)
-                saveFailedTest(image, stdImage, standardFile)
+                saveFailedTest(image, stdImage, standardFile, save_comparison=True)
             print(graphstate)
             raise
 

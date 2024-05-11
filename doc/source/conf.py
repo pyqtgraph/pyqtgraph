@@ -144,8 +144,8 @@ html_theme = 'pydata_sphinx_theme'
 
 # favicons
 favicons = [
-    "peegee_03_square_no_bg_32_cleaned.png",
-    "peegee_04_square_no_bg_180_cleaned.png",
+    "docset-icon.png",
+    "docset-icon@2x.png",
     "peegee_03_square_no_bg_32_cleaned.ico"
 ]
 
@@ -187,7 +187,6 @@ html_logo = os.path.join("images", "peegee_02.svg")
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-# html_favicon = "_static/peegee_03_square_no_bg_32_cleaned.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

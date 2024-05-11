@@ -1,0 +1,110 @@
+name: check_qt_prereleases
+
+on: workflow_dispatch
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
+
+concurrency: 
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  test-qt-prerelease:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        qt-lib: [pyqt6, pyside]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: "Install Linux VirtualDisplay"
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update -y --allow-releaseinfo-change
+        sudo apt-get install --no-install-recommends -y \
+          libxkbcommon-x11-0 \
+          x11-utils \
+          libyaml-dev \
+          libegl1-mesa \
+          libxcb-icccm4 \
+          libxcb-image0 \
+          libxcb-keysyms1 \
+          libxcb-randr0 \
+          libxcb-render-util0 \
+          libxcb-xinerama0 \
+          libopengl0 \
+          libxcb-cursor0 \
+    - name: "Install Windows-Mesa OpenGL DLL"
+      if: runner.os == 'Windows'
+      run: |
+        curl -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/24.0.6/mesa3d-24.0.6-release-msvc.7z
+        7z x mesa.7z -o*
+        powershell.exe mesa\systemwidedeploy.cmd 1
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install PySide6
+      if: matrix.qt-lib == 'pyside'
+      run: |
+        python -m pip install --no-index \
+        --find-links https://download.qt.io/snapshots/ci/pyside/dev/latest/pyside6/ \
+        --pre \
+        PySide6_Essentials
+      shell: bash
+    - name: Install PyQt6
+      if: matrix.qt-lib == 'pyqt6'
+      run: |
+        python -m pip install --index-url https://www.riverbankcomputing.com/pypi/simple/ \
+        --pre \
+        --only-binary=PyQt6 \
+        PyQt6
+      shell: bash
+    - name: Install Regular Dependencies
+      run: |
+        python -m pip install --pre numpy scipy pyopengl pytest .
+    - name: Install pytest-xvfb
+      run: |
+        python -m pip install pytest-xvfb
+      if: runner.os == 'Linux'
+    - name: 'Debug Info'
+      run: |
+        echo python location: `which python`
+        echo python version: `python --version`
+        echo pytest location: `which pytest`
+        echo installed packages
+        python -m pip list
+        echo pyqtgraph system info
+        python -c "import pyqtgraph as pg; pg.systemInfo()"
+      shell: bash
+      env:
+        QT_DEBUG_PLUGINS: 1
+    - name: 'XVFB Display Info'
+      run: |
+        xvfb-run --server-args="-screen 0, 1920x1200x24 -ac +extension GLX +render -noreset" python -m pyqtgraph.util.glinfo
+        xvfb-run --server-args="-screen 0, 1920x1200x24 -ac +extension GLX +render -noreset" python -m pyqtgraph.util.get_resolution
+      if: runner.os == 'Linux'
+    - name: 'Display Info'
+      run: |
+        python -m pyqtgraph.util.glinfo
+        python -m pyqtgraph.util.get_resolution
+      if: runner.os != 'Linux'
+    - name: Run Tests
+      run: |
+        mkdir "$SCREENSHOT_DIR"
+        pytest tests -v
+        pytest pyqtgraph/examples -v
+      shell: bash
+    - name: Upload Screenshots
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Screenshots - Qt-Bindings ${{ matrix.qt-lib }} - ${{ matrix.os }})
+        path: ${{ env.SCREENSHOT_DIR }}
+        if-no-files-found: ignore
+    env:
+      SCREENSHOT_DIR: screenshots
