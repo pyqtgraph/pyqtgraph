@@ -18,7 +18,6 @@ from . import Qt, debug, getConfigOption, reload
 from .metaarray import MetaArray
 from .Qt import QT_LIB, QtCore, QtGui
 from .util.cupy_helper import getCupy
-from .util.numba_helper import getNumbaFunctions
 
 # in order of appearance in this file.
 # add new functions to this list only if they are to reside in pg namespace.
@@ -1267,11 +1266,6 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
 
         # don't copy if no change in dtype
         return data_out.astype(out_dtype, copy=False)
-
-    numba_fn = getNumbaFunctions()
-    if numba_fn and clip is not None:
-        # if we got here by makeARGB(), clip will not be None at this point
-        return numba_fn.rescaleData(data, scale, offset, out_dtype, clip)
 
     return _rescaleData_nditer(data, scale, offset, work_dtype, out_dtype, clip)
 

@@ -10,11 +10,6 @@ from .makeARGB_test_data import EXPECTED_OUTPUTS, INPUTS, LEVELS, LUTS
 
 
 try:
-    import numba
-except ImportError:
-    pass
-
-try:
     import cupy
 except ImportError:
     pass
@@ -35,7 +30,6 @@ def _makeARGB(*args, **kwds):
 @pytest.mark.parametrize('acceleration', [
         pytest.param('numpy'),
         pytest.param('cupy', marks=pytest.mark.skipif('cupy' not in sys.modules, reason="CuPy not available")),
-        pytest.param('numba', marks=pytest.mark.skipif('numba' not in sys.modules, reason="numba not available"))
     ]
 )
 @pytest.mark.parametrize('dtype', [np.uint8, np.uint16, np.float32])
@@ -45,9 +39,7 @@ def _makeARGB(*args, **kwds):
 @pytest.mark.parametrize('scale', [None, 232, 13333])
 @pytest.mark.parametrize('use_rgba', [True, False])
 def test_makeARGB_against_generated_references(acceleration, dtype, in_fmt, level_name, lut_type, scale, use_rgba):
-    if acceleration == "numba":
-        setConfigOptions(useCupy=False, useNumba=True)
-    elif acceleration == "cupy":
+    if acceleration == "cupy":
         setConfigOptions(useCupy=True, useNumba=False)
     else:
         setConfigOptions(useCupy=False, useNumba=False)
