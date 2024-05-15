@@ -1001,8 +1001,11 @@ class PlotItem(GraphicsWidget):
                 )
                 # :MC: This could potentially be implemented, but it probably won't be a common issue.
             for name in state["transforms"]:
-                self.setDataTransformState(name, state["transforms"][name].get("enabled", False))
-                self.setDataTransformParams(name, **state["transforms"][name].get("paramsState", {}))
+                try:
+                    self.setDataTransformState(name, state["transforms"][name].get("enabled", False))
+                    self.setDataTransformParams(name, **state["transforms"][name].get("paramsState", {}))
+                except KeyError:
+                    warnings.warn(f"Unknown transform '{name}'")
 
         self.updateDownsampling()
         self.updateAlpha()
