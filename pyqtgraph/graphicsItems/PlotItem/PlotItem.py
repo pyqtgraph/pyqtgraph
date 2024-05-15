@@ -20,7 +20,6 @@ from ..LabelItem import LabelItem
 from ..LegendItem import LegendItem
 from ..PlotCurveItem import PlotCurveItem
 from ..PlotDataItem import PlotDataItem
-from ..ScatterPlotItem import ScatterPlotItem
 from ..ViewBox import ViewBox
 
 translate = QtCore.QCoreApplication.translate
@@ -1534,12 +1533,12 @@ _phasemap = lambda x, y: (y[:-1], np.diff(y) / np.diff(x))
 
 
 PlotItem.addDefaultDataTransformOption(
-    translate("Form", "dy/dx"),
+    translate("Form", "∂y/∂x"),
     _diff,
     order=60,
 )
 PlotItem.addDefaultDataTransformOption(
-    translate("Form", "d²y/dx²"),
+    translate("Form", "∂²y/∂x²"),
     lambda x, y: _diff(*_diff(x, y)),
     order=60,
 )
