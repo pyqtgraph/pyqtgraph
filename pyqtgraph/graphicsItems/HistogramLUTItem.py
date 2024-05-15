@@ -12,12 +12,12 @@ from .. import debug as debug
 from .. import functions as fn
 from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
-from .AxisItem import *
-from .GradientEditorItem import *
+from .AxisItem import AxisItem
+from .GradientEditorItem import GradientEditorItem
 from .GraphicsWidget import GraphicsWidget
-from .LinearRegionItem import *
-from .PlotCurveItem import *
-from .ViewBox import *
+from .LinearRegionItem import LinearRegionItem
+from .PlotCurveItem import PlotCurveItem
+from .ViewBox import ViewBox
 
 __all__ = ['HistogramLUTItem']
 
@@ -64,11 +64,11 @@ class HistogramLUTItem(GraphicsWidget):
 
     Attributes
     ----------
-    sigLookupTableChanged : signal
+    sigLookupTableChanged : QtCore.Signal
         Emits the HistogramLUTItem itself when the gradient changes
-    sigLevelsChanged : signal
+    sigLevelsChanged : QtCore.Signal
         Emits the HistogramLUTItem itself while the movable region is changing
-    sigLevelChangeFinished : signal
+    sigLevelChangeFinished : QtCore.Signal
         Emits the HistogramLUTItem itself when the movable region is finished changing
 
     See Also
@@ -195,7 +195,7 @@ class HistogramLUTItem(GraphicsWidget):
         level : float, optional
             Set the fill level. See :meth:`PlotCurveItem.setFillLevel
             <pyqtgraph.PlotCurveItem.setFillLevel>`. Only used if ``fill`` is True.
-        color : color, optional
+        color : color_like, optional
             Color to use for the fill when the histogram ``levelMode == "mono"``. See
             :meth:`PlotCurveItem.setBrush <pyqtgraph.PlotCurveItem.setBrush>`.
         """
@@ -282,7 +282,8 @@ class HistogramLUTItem(GraphicsWidget):
         HistogramLUTItem.
         """
         self.imageItem = weakref.ref(img)
-        img.sigImageChanged.connect(self.imageChanged)
+        if hasattr(img, 'sigImageChanged'):
+            img.sigImageChanged.connect(self.imageChanged)
         self._setImageLookupTable()
         self.regionChanged()
         self.imageChanged(autoLevel=True)
@@ -351,7 +352,7 @@ class HistogramLUTItem(GraphicsWidget):
                 self.region.setRegion([mn, mx])
                 profiler('set region')
             else:
-                mn, mx = self.imageItem().levels
+                mn, mx = self.imageItem().getLevels()
                 self.region.setRegion([mn, mx])
         else:
             # plot one histogram for each channel
@@ -437,7 +438,8 @@ class HistogramLUTItem(GraphicsWidget):
 
         # force this because calling self.setLevels might not set the imageItem
         # levels if there was no change to the region item
-        self.imageItem().setLevels(self.getLevels())
+        if self.imageItem() is not None:
+            self.imageItem().setLevels(self.getLevels())
 
         self.imageChanged()
         self.update()

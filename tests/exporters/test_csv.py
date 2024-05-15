@@ -17,7 +17,8 @@ def approxeq(a, b):
 
 
 def test_CSVExporter():
-    plt = pg.plot()
+    plt = pg.PlotWidget()
+    plt.show()
     y1 = [1,3,2,3,1,6,9,8,4,2]
     plt.plot(y=y1, name='myPlot')
 
@@ -54,8 +55,10 @@ def test_CSVExporter():
             assert (i >= len(x3) and vals[4] == '') or approxeq(float(vals[4]), x3[i])
             assert (i >= len(y3) and vals[5] == '') or approxeq(float(vals[5]), y3[i])
 
+
 def test_CSVExporter_with_ErrorBarItem():
-    plt = pg.plot()
+    plt = pg.PlotWidget()
+    plt.show()
     x=np.arange(5)
     y=np.array([1, 2, 3, 2, 1])
     top_error = np.array([2, 3, 3, 3, 2])

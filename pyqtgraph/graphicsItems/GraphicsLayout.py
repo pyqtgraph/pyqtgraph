@@ -149,10 +149,27 @@ class GraphicsLayout(GraphicsWidget):
         return self.rect()
 
     def itemIndex(self, item):
+        """Return the numerical index of GraphicsItem object passed in
+
+        Parameters
+        ----------
+        item : QGraphicsLayoutItem
+            Item to query the index position of
+
+        Returns
+        -------
+        int
+            Index of the item within the graphics layout
+
+        Raises
+        ------
+        ValueError
+            Raised if item could not be found inside the GraphicsLayout instance.
+        """
         for i in range(self.layout.count()):
             if self.layout.itemAt(i).graphicsItem() is item:
                 return i
-        raise Exception("Could not determine index of item " + str(item))
+        raise ValueError(f"Could not determine index of item {item}")
     
     def removeItem(self, item):
         """Remove *item* from the layout."""
@@ -171,6 +188,8 @@ class GraphicsLayout(GraphicsWidget):
         self.update()
     
     def clear(self):
+        """Remove all items from the layout and set the current row and column to 0
+        """
         for i in list(self.items.keys()):
             self.removeItem(i)
         self.currentRow = 0

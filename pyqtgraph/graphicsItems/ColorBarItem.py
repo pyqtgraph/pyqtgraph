@@ -5,10 +5,10 @@ import numpy as np
 
 from .. import colormap
 from .. import functions as fn
-from ..Qt import QtCore
-from .ImageItem import ImageItem
+from ..Qt import QtCore, QtGui, QtWidgets
 from .LinearRegionItem import LinearRegionItem
 from .PlotItem import PlotItem
+from ..widgets.ColorMapMenu import ColorMapMenu
 
 __all__ = ['ColorBarItem']
 
@@ -25,9 +25,10 @@ class ColorBarItem(PlotItem):
     A labeled axis is displayed directly next to the gradient to help identify values.
     Handles included in the color bar allow for interactive adjustment.
 
-    A ColorBarItem can be assigned one or more :class:`~pyqtgraph.ImageItem`s that will be displayed 
-    according to the selected color map and levels. The ColorBarItem can be used as a separate
-    element in a :class:`~pyqtgraph.GraphicsLayout` or added to the layout of a 
+    A ColorBarItem can be assigned one or more :class:`~pyqtgraph.ImageItem` s 
+    that will be displayed according to the selected color map and levels. The
+    ColorBarItem can be used as a separate element in a 
+    :class:`~pyqtgraph.GraphicsLayout` or added to the layout of a 
     :class:`~pyqtgraph.PlotItem` used to display image data with coordinate axes.
 
     =============================  =============================================
@@ -39,9 +40,10 @@ class ColorBarItem(PlotItem):
     sigLevelsChanged = QtCore.Signal(object)
     sigLevelsChangeFinished = QtCore.Signal(object)
 
-    def __init__(self, values=(0,1), width=25, colorMap=None, label=None,
+    def __init__(self, values=None, width=25, colorMap=None, label=None,
                  interactive=True, limits=None, rounding=1,
-                 orientation='vertical', pen='w', hoverPen='r', hoverBrush='#FF000080', cmap=None ):
+                 orientation='vertical', pen='w', hoverPen='r', hoverBrush='#FF000080',
+                 *, colorMapMenu=True):
         """
         Creates a new ColorBarItem.
 
@@ -49,29 +51,41 @@ class ColorBarItem(PlotItem):
         ----------
         colorMap: `str` or :class:`~pyqtgraph.ColorMap`
             Determines the color map displayed and applied to assigned ImageItem(s).
-        values: tuple of float
-            The range of image levels covered by the color bar, as ``(min, max)``.
-        width: float, default=25
+        values: tuple of float, optional
+            The range of values that will be represented by the color bar, as ``(min, max)``.
+            If no values are supplied, the default is to use user-specified values from 
+            an assigned image. If that does not exist, values will default to (0,1). 
+        width: float, default=25.0
             The width of the displayed color bar.
         label: str, optional
             Label applied to the color bar axis.
         interactive: bool, default=True
             If `True`, handles are displayed to interactively adjust the level range.
-        limits: `None` or `tuple of float`
+        limits: `tuple of float`, optional
             Limits the adjustment range to `(low, high)`, `None` disables the limit.
         rounding: float, default=1
             Adjusted range values are rounded to multiples of this value.
         orientation: str, default 'vertical'
             'horizontal' or 'h' gives a horizontal color bar instead of the default vertical bar
-        pen: :class:`Qpen` or argument to :func:`~pyqtgraph.mkPen`
+        pen: :class:`QPen` or color_like
             Sets the color of adjustment handles in interactive mode.
-        hoverPen: :class:`QPen` or argument to :func:`~pyqtgraph.mkPen`
-            Sets the color of adjustement handles when hovered over.
-        hoverBrush: :class:`QBrush` or argument to :func:`~pyqtgraph.mkBrush`
+        hoverPen: :class:`QPen` or color_like
+            Sets the color of adjustment handles when hovered over.
+        hoverBrush: :class:`QBrush` or color_like
             Sets the color of movable center region when hovered over.
+        colorMapMenu: `bool` or :class:`~pyqtgraph.ColorMapMenu`, default=True
+            Determines whether colormap menu functionality is enabled.
         """
         super().__init__()
         self.img_list  = [] # list of controlled ImageItems
+        self._actively_adjusted_values = False
+        if values is None:
+            # Use default values
+            # NOTE: User-specified values from the assigned item will be preferred over the default values of ColorBarItem
+            values = (0,1)
+        else:
+            # The user explicitly entered values, prefer these over values from assigned image.
+            self._actively_adjusted_values = True
         self.values    = values
         self._colorMap = None
         self.rounding  = rounding
@@ -87,6 +101,12 @@ class ColorBarItem(PlotItem):
                 self.lo_lim = self.rounding * math.floor( self.lo_lim/self.rounding )
             if self.hi_lim is not None:
                 self.hi_lim = self.rounding * math.ceil( self.hi_lim/self.rounding )
+
+        if not isinstance(colorMapMenu, (bool, ColorMapMenu)):
+            raise ValueError("colorMapMenu must be either bool or an ColorMapMenu instance")
+        self.colorMapMenu = colorMapMenu
+        if isinstance(self.colorMapMenu, ColorMapMenu):
+            self.colorMapMenu.sigColorMapTriggered.connect(self.setColorMap)
 
         self.disableAutoRange()
         self.hideButtons()
@@ -117,16 +137,16 @@ class ColorBarItem(PlotItem):
         self.axis.unlinkFromView()
         self.axis.setRange( self.values[0], self.values[1] )
 
-        self.bar = ImageItem(axisOrder='col-major')
         if self.horizontal:
-            self.bar.setImage( np.linspace(0, 1, 256).reshape( (-1,1) ) )
             if label is not None: self.getAxis('bottom').setLabel(label)
         else:
-            self.bar.setImage( np.linspace(0, 1, 256).reshape( (1,-1) ) )
             if label is not None: self.getAxis('left').setLabel(label)
+        self.bar = QtWidgets.QGraphicsPixmapItem()
+        self.bar.setShapeMode(self.bar.ShapeMode.BoundingRectShape)
         self.addItem(self.bar)
         if colorMap is not None: self.setColorMap(colorMap)
 
+        self.interactive = interactive
         if interactive:
             if self.horizontal:
                 align = 'vertical'
@@ -150,16 +170,23 @@ class ColorBarItem(PlotItem):
 
     def setImageItem(self, img, insert_in=None):
         """
-        Assigns an ImageItem or list of ImageItems to be represented and controlled
+        Assigns an item or list of items to be represented and controlled.
+        Supported "image items": class:`~pyqtgraph.ImageItem`, class:`~pyqtgraph.PColorMeshItem`
 
         Parameters
         ----------
-        image: :class:`~pyqtgraph.ImageItem` or list of `[ImageItem, ImageItem, ...]`
-            Assigns one or more ImageItems to this ColorBarItem.
+        image: :class:`~pyqtgraph.ImageItem` or list of :class:`~pyqtgraph.ImageItem`
+            Assigns one or more image items to this ColorBarItem.
             If a :class:`~pyqtgraph.ColorMap` is defined for ColorBarItem, this will be assigned to the 
-            ImageItems. Otherwise, the ColorBarItem will attempt to retrieve a color map from the ImageItems.
-            In interactive mode, ColorBarItem will control the levels of the assigned ImageItems, 
+            ImageItems. Otherwise, the ColorBarItem will attempt to retrieve a color map from the image items.
+            In interactive mode, ColorBarItem will control the levels of the assigned image items, 
             simultaneously if there is more than one.
+            If the ColorBarItem was initialized without a specified ``values`` parameter, it will attempt 
+            to retrieve a set of user-defined ``levels`` from one of the image items. If this fails,
+            the default values of ColorBarItem will be used as the (min, max) levels of the colorbar. 
+            Note that, for non-interactive ColorBarItems, levels may be overridden by image items with 
+            auto-scaling colors (defined by ``enableAutoLevels``). When using an interactive ColorBarItem
+            in an animated plot, auto-scaling for its assigned image items should be *manually* disabled.
         insert_in: :class:`~pyqtgraph.PlotItem`, optional
             If a PlotItem is given, the color bar is inserted on the right
             or bottom of the plot, depending on the specified orientation.
@@ -168,14 +195,28 @@ class ColorBarItem(PlotItem):
             self.img_list = [ weakref.ref(item) for item in img ]
         except TypeError: # failed to iterate, make a single-item list
             self.img_list = [ weakref.ref( img ) ]
-        if self._colorMap is None: # check if one of the assigned images has a defined color map
-            for img_weakref in self.img_list:
-                img = img_weakref()
-                if img is not None:
+        colormap_is_undefined = self._colorMap is None
+        for img_weakref in self.img_list:
+            img = img_weakref()
+            if img is not None:
+                if hasattr(img, "sigLevelsChanged"):
+                    img.sigLevelsChanged.connect(self._levelsChangedHandler)
+                
+                if colormap_is_undefined and hasattr(img, 'getColorMap'): # check if one of the assigned images has a defined color map
                     img_cm = img.getColorMap()
                     if img_cm is not None:
                         self._colorMap = img_cm
-                        break
+                        colormap_is_undefined = False
+                
+                if not self._actively_adjusted_values: 
+                    # check if one of the assigned images has a non-default set of levels
+                    if hasattr(img, 'getLevels'):
+                        img_levels = img.getLevels()
+
+                        if img_levels is not None:
+                            self.setLevels(img_levels, update_items=False)
+
+
         if insert_in is not None:
             if self.horizontal:
                 insert_in.layout.addItem( self, 5, 1 ) # insert in layout below bottom axis
@@ -204,7 +245,7 @@ class ColorBarItem(PlotItem):
         """
         return self._colorMap
 
-    def setLevels(self, values=None, low=None, high=None ):
+    def setLevels(self, values=None, low=None, high=None, update_items=True):
         """
         Sets the displayed range of image levels.
 
@@ -231,7 +272,11 @@ class ColorBarItem(PlotItem):
         if self.lo_lim is not None and lo_new < self.lo_lim: lo_new = self.lo_lim
         if self.hi_lim is not None and hi_new > self.hi_lim: hi_new = self.hi_lim
         self.values = self.lo_prv, self.hi_prv = (lo_new, hi_new)
-        self._update_items()
+        if update_items:
+            self._update_items()
+        else:
+            # update color bar only:
+            self.axis.setRange( self.values[0], self.values[1] )
 
     def levels(self):
         """ Returns the currently set levels as the tuple ``(low, high)``. """
@@ -242,14 +287,23 @@ class ColorBarItem(PlotItem):
         # update color bar:
         self.axis.setRange( self.values[0], self.values[1] )
         if update_cmap and self._colorMap is not None:
-            self.bar.setLookupTable( self._colorMap.getLookupTable(nPts=256) )
+            lut = self._colorMap.getLookupTable(nPts=256, alpha=True)
+            lut = np.expand_dims(lut, axis=0 if self.horizontal else 1)
+            qimg = fn.ndarray_to_qimage(lut, QtGui.QImage.Format.Format_RGBA8888)
+            self.bar.setPixmap(QtGui.QPixmap.fromImage(qimg))
         # update assigned ImageItems, too:
         for img_weakref in self.img_list:
             img = img_weakref()
             if img is None: continue # dereference weakref
             img.setLevels( self.values ) # (min,max) tuple
             if update_cmap and self._colorMap is not None:
-                img.setLookupTable( self._colorMap.getLookupTable(nPts=256) )
+                img.setColorMap(self._colorMap)
+
+    def _levelsChangedHandler(self, levels):
+        """ internal: called when child item for some reason decides to update its levels without using ColorBarItem.
+                      Will update colormap for the bar based on child items new levels """
+        if levels != self.values:
+            self.setLevels(levels, update_items=False)
 
     def _regionChanged(self):
         """ internal: snap adjusters back to default positions on release """
@@ -300,3 +354,15 @@ class ColorBarItem(PlotItem):
         self.values = (lo_new, hi_new)
         self._update_items()
         self.sigLevelsChanged.emit(self)
+
+    def mouseClickEvent(self, ev):
+        if self.colorMapMenu is False:  # disabled
+            return
+
+        if ev.button() == QtCore.Qt.MouseButton.RightButton:
+            if not isinstance(self.colorMapMenu, ColorMapMenu):
+                self.colorMapMenu = ColorMapMenu(showColorMapSubMenus=True)
+                self.colorMapMenu.sigColorMapTriggered.connect(self.setColorMap)
+            pos = ev.screenPos()
+            self.colorMapMenu.popup(pos.toPoint())
+            ev.accept()

@@ -25,7 +25,7 @@ class GarbageCollector(object):
 
         self.threshold = gc.get_threshold()
         gc.disable()
-        self.timer.start(interval * 1000)
+        self.timer.start(int(interval * 1000))
 
     def check(self):
         #return self.debug_cycles() # uncomment to just debug cycles

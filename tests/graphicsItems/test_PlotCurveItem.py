@@ -1,6 +1,7 @@
 import numpy as np
 
 import pyqtgraph as pg
+from pyqtgraph.graphicsItems.PlotCurveItem import arrayToLineSegments
 from tests.image_testing import assertImageApproved
 
 
@@ -12,6 +13,7 @@ def test_PlotCurveItem():
     v = p.addViewBox()
     data = np.array([1,4,2,3,np.inf,5,7,6,-np.inf,8,10,9,np.nan,-1,-2,0])
     c = pg.PlotCurveItem(data)
+    c.setSegmentedLineMode('off')   # test images assume non-segmented-line-mode
     v.addItem(c)
     v.autoRange()
     
@@ -35,3 +37,15 @@ def test_PlotCurveItem():
     assertImageApproved(p, 'plotcurveitem/connectarray', "Plot curve with connection array.")
 
     p.close()
+
+
+def test_arrayToLineSegments():
+    # test the boundary case where the dataset consists of a single point
+    xy = np.array([0.])
+    parray = arrayToLineSegments(xy, xy, connect='all', finiteCheck=True)
+    segs = parray.drawargs()
+    assert isinstance(segs, tuple) and len(segs) in [1, 2]
+    if len(segs) == 1:
+        assert len(segs[0]) == 0
+    elif len(segs) == 2:
+        assert segs[1] == 0

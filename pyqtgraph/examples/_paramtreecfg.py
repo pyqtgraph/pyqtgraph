@@ -132,6 +132,18 @@ cfg = {
         }
     },
 
+    'action': {
+        'shortcut': {
+            'type': 'str',
+            'value': "Ctrl+Shift+P",
+        },
+        'icon': {
+            'type': 'file',
+            'value': None,
+            'nameFilter': "Images (*.png *.jpg *.bmp *.jpeg *.svg)",
+        },
+    },
+
     'calendar': {
         'format': {
             'type': 'str',
@@ -185,8 +197,8 @@ cfg = {
         'color': '#fff',
         'bool': False,
         'colormap': None,
+        'cmaplut' : 'viridis',
         'progress': 50,
-        'action': None,
         'font': 'Inter',
     }
 }

@@ -30,6 +30,9 @@ plot.plot([11, 12, 13, 14, 15], pen=(253, 216, 53), symbolBrush=(253, 216, 53), 
 plot.plot([12, 13, 14, 15, 16], pen=(189, 189, 189), symbolBrush=(189, 189, 189), symbolPen='w', symbol='arrow_left', symbolSize=22, name="symbol='arrow_left'")
 plot.plot([13, 14, 15, 16, 17], pen=(187, 26, 95), symbolBrush=(187, 26, 95), symbolPen='w', symbol='arrow_up', symbolSize=22, name="symbol='arrow_up'")
 plot.plot([14, 15, 16, 17, 18], pen=(248, 187, 208), symbolBrush=(248, 187, 208), symbolPen='w', symbol='arrow_right', symbolSize=22, name="symbol='arrow_right'")
+plot.plot([15, 16, 17, 18, 19], pen=(255, 69, 58), symbolBrush=(255, 69, 58), symbolPen='w', symbol='|', symbolSize=14, name="symbol='|'")
+plot.plot([16, 17, 18, 19, 20], pen=(94, 92, 230), symbolBrush=(94, 92, 230), symbolPen='w', symbol='_', symbolSize=14, name="symbol='_'")
+
 plot.setXRange(-2, 4)
 
 if __name__ == '__main__':

@@ -6,9 +6,29 @@ import pytest
 import pyqtgraph as pg
 
 app = pg.mkQApp()
+rng = np.random.default_rng(1001)
 
 
-@pytest.mark.parametrize('orientation', ['left', 'right', 'top', 'bottom'])
+def sorted_randint(low, high, size):
+    return np.sort(rng.integers(low, high, size))
+
+
+def is_none_or_scalar(value):
+    return value is None or np.isscalar(value[0])
+
+
+multi_data_plot_values = [
+    None,
+    sorted_randint(0, 20, 15),
+    [
+        sorted_randint(0, 20, 15),
+        *[sorted_randint(0, 20, 15) for _ in range(4)],
+    ],
+    np.vstack([sorted_randint(20, 40, 15) for _ in range(6)]),
+]
+
+
+@pytest.mark.parametrize("orientation", ["left", "right", "top", "bottom"])
 def test_PlotItem_shared_axis_items(orientation):
     """Adding an AxisItem to multiple plots raises RuntimeError"""
     ax1 = pg.AxisItem(orientation)
@@ -53,6 +73,31 @@ def test_PlotItem_maxTraces():
     item.ctrl.forgetTracesCheck.setChecked(True)
     assert curve2 in item.curves, "curve2 should be in the item's curves"
     assert curve1 not in item.curves, "curve1 should not be in the item's curves"
+
+
+@pytest.mark.parametrize("xvalues", multi_data_plot_values)
+@pytest.mark.parametrize("yvalues", multi_data_plot_values)
+def test_PlotItem_multi_data_plot(xvalues, yvalues):
+    item = pg.PlotItem()
+    if is_none_or_scalar(xvalues) and is_none_or_scalar(yvalues):
+        with pytest.raises(ValueError):
+            item.multiDataPlot(x=xvalues, y=yvalues)
+            return
+    else:
+        curves = item.multiDataPlot(x=xvalues, y=yvalues, constKwargs={"pen": "r"})
+        check_idx = None
+        if xvalues is None:
+            check_idx = 0
+        elif yvalues is None:
+            check_idx = 1
+        if check_idx is not None:
+            for curve in curves:
+                data = curve.getData()
+                opposite_idx = 1 - check_idx
+                assert np.array_equal(
+                    data[check_idx], np.arange(len(data[opposite_idx]))
+                )
+                assert curve.opts["pen"] == "r"
 
 
 def test_PlotItem_preserve_external_visibility_control():
@@ -132,7 +177,7 @@ def test_nonfinite():
     y = np.array([1.0, 0.0, -1.0, np.inf, 2.0, np.nan, 0.0])
     pi = pg.PlotItem()
     pdi = pi.plot(x, y)
-    dataset = pdi.getDisplayDataset()
+    dataset = pdi._getDisplayDataset()
     _assert_equal_arrays(dataset.x, x)
     _assert_equal_arrays(dataset.y, y)
 
@@ -145,7 +190,7 @@ def test_nonfinite():
 
     pi.setDataTransformState("Log X", True)
     pi.setDataTransformState("Log Y", True)
-    dataset = pdi.getDisplayDataset()
+    dataset = pdi._getDisplayDataset()
     _assert_equal_arrays(dataset.x, x_log)
     _assert_equal_arrays(dataset.y, y_log)
 

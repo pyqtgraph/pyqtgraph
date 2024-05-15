@@ -1,15 +1,18 @@
+__all__ = ['GraphicsItem']
+
 import operator
 import weakref
 from collections import OrderedDict
 from functools import reduce
 from math import hypot
+from typing import Optional
+from xml.etree.ElementTree import Element
 
 from .. import functions as fn
 from ..GraphicsScene import GraphicsScene
 from ..Point import Point
 from ..Qt import QtCore, QtWidgets, isQObjectAlive
 
-__all__ = ['GraphicsItem']
 
 # Recipe from https://docs.python.org/3.8/library/collections.html#collections.OrderedDict
 # slightly adapted for Python 3.7 compatibility
@@ -152,8 +155,6 @@ class GraphicsItem(object):
             return self.sceneTransform()
             #return self.deviceTransform(view.viewportTransform())
 
-
-
     def getBoundingParents(self):
         """Return a list of parents to this item that have child clipping enabled."""
         p = self
@@ -279,7 +280,7 @@ class GraphicsItem(object):
         #pv = Point(dti.map(normView)-dti.map(Point(0,0))), Point(dti.map(normOrtho)-dti.map(Point(0,0)))
         pv = Point(dti.map(normView).p2()), Point(dti.map(normOrtho).p2())
         self._pixelVectorCache[1] = pv
-        self._pixelVectorCache[0] = dt
+        self._pixelVectorCache[0] = key
         self._pixelVectorGlobalCache[key] = pv
         return self._pixelVectorCache[1]
     
@@ -452,13 +453,16 @@ class GraphicsItem(object):
                 #print "   --> ", ch2.scene()
             #self.setChildScene(ch2)
 
-    def parentChanged(self):
+    def changeParent(self):
         """Called when the item's parent has changed. 
         This method handles connecting / disconnecting from ViewBox signals
         to make sure viewRangeChanged works properly. It should generally be 
         extended, not overridden."""
         self._updateView()
-        
+
+    def parentChanged(self):
+        # deprecated version of changeParent()
+        GraphicsItem.changeParent(self)
 
     def _updateView(self):
         ## called to see whether this item has a new view to connect to
@@ -489,10 +493,9 @@ class GraphicsItem(object):
 
         ## disconnect from previous view
         if oldView is not None:
-            for signal, slot in [('sigRangeChanged', self.viewRangeChanged),
-                                 ('sigDeviceRangeChanged', self.viewRangeChanged), 
-                                 ('sigTransformChanged', self.viewTransformChanged), 
-                                 ('sigDeviceTransformChanged', self.viewTransformChanged)]:
+            Device = 'Device' if hasattr(oldView, 'sigDeviceRangeChanged') else ''
+            for signal, slot in [(f'sig{Device}RangeChanged', self.viewRangeChanged),
+                                 (f'sig{Device}TransformChanged', self.viewTransformChanged)]:
                 try:
                     getattr(oldView, signal).disconnect(slot)
                 except (TypeError, AttributeError, RuntimeError):
@@ -603,3 +606,38 @@ class GraphicsItem(object):
 
     def getContextMenus(self, event):
         return [self.getMenu()] if hasattr(self, "getMenu") else []
+
+    def generateSvg(
+            self,
+            nodes: dict[str, Element]
+    ) -> Optional[tuple[Element, list[Element]]]:
+        """Method to override to manually specify the SVG writer mechanism.
+
+        Parameters
+        ----------
+        nodes
+            Dictionary keyed by the name of graphics items and the XML
+            representation of the the item that can be written as valid
+            SVG.
+        
+        Returns
+        -------
+        tuple
+            First element is the top level group for this item. The
+            second element is a list of xml Elements corresponding to the
+            child nodes of the item.
+        None
+            Return None if no XML is needed for rendering
+
+        Raises
+        ------
+        NotImplementedError
+            override method to implement in subclasses of GraphicsItem
+
+        See Also
+        --------
+        pyqtgraph.exporters.SVGExporter._generateItemSvg
+            The generic and default implementation
+
+        """
+        raise NotImplementedError

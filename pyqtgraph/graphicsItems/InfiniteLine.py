@@ -58,7 +58,7 @@ class InfiniteLine(GraphicsObject):
                         None to show no label (default is None). May optionally
                         include formatting strings to display the line value.
         labelOpts       A dict of keyword arguments to use when constructing the
-                        text label. See :class:`InfLineLabel`.
+                        text label. See :class:`InfLineLabel <pyqtgraph.graphicsItems.InfiniteLine.InfLineLabel>`.
         span            Optional tuple (min, max) giving the range over the view to draw
                         the line. For example, with a vertical line, use span=(0.5, 1)
                         to draw only on the top half of the view.
@@ -300,10 +300,12 @@ class InfiniteLine(GraphicsObject):
         vr = self.viewRect()  # bounds of containing ViewBox mapped to local coords.
         if vr is None:
             return QtCore.QRectF()
-        
-        px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
-        if px is None:
-            px = 0
+
+        # compute the pixel size orthogonal to the line
+        # this is more complicated than it seems, maybe it can be simplified
+        _, ortho = self.pixelVectors(direction=Point(1, 0))
+        px = 0 if ortho is None else ortho.y()
+
         pw = max(self.pen.width() / 2, self.hoverPen.width() / 2)
         w = (self._maxMarkerSize + pw + 1) * px
         br = QtCore.QRectF(vr)
@@ -335,7 +337,8 @@ class InfiniteLine(GraphicsObject):
         return self._boundingRect
 
     def paint(self, p, *args):
-        p.setRenderHint(p.RenderHint.Antialiasing)
+        if self.angle % 180 not in (0, 90):
+            p.setRenderHint(p.RenderHint.Antialiasing)
         
         left, right = self._endPoints
         pen = self.currentPen

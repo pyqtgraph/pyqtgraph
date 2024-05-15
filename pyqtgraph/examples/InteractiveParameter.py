@@ -5,7 +5,7 @@ from pyqtgraph.Qt import QtWidgets
 from pyqtgraph.parametertree import (
     Parameter,
     ParameterTree,
-    RunOpts,
+    RunOptions,
     InteractiveFunction,
     Interactor,
 )
@@ -33,7 +33,7 @@ def printResult(func):
 
 
 host = Parameter.create(name="Interactive Parameter Use", type="group")
-interactor = Interactor(parent=host)
+interactor = Interactor(parent=host, runOptions=RunOptions.ON_CHANGED)
 
 
 @interactor.decorate()
@@ -60,7 +60,7 @@ def ignoredAParam(a=10, b=20):
     return a * b
 
 
-@interactor.decorate(runOpts=RunOpts.ON_ACTION)
+@interactor.decorate(runOptions=RunOptions.ON_ACTION)
 @printResult
 def runOnButton(a=10, b=20):
     return a + b
@@ -91,7 +91,7 @@ with interactor.optsContext(titleFormat=str.upper):
 
 
 @interactor.decorate(
-    runOpts=(RunOpts.ON_CHANGED, RunOpts.ON_ACTION),
+    runOptions=(RunOptions.ON_CHANGED, RunOptions.ON_ACTION),
     a={"type": "list", "limits": [5, 10, 20]},
 )
 @printResult

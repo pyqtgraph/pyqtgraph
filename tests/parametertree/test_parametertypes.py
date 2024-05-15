@@ -1,22 +1,32 @@
-import sys
+from unittest.mock import MagicMock
 
 import numpy as np
 
 import pyqtgraph as pg
 import pyqtgraph.parametertree as pt
 from pyqtgraph.functions import eq
+from pyqtgraph.parametertree.parameterTypes import ChecklistParameterItem
 from pyqtgraph.Qt import QtCore, QtGui
+
+import pytest
 
 app = pg.mkQApp()
 
+
 def _getWidget(param):
     return list(param.items.keys())[0].widget
+
+
+def test_typeless_param():
+    p = pt.Parameter.create(name='test', type=None, value=set())
+    p.setValue(range(4))
 
 
 def test_opts():
     paramSpec = [
         dict(name='bool', type='bool', readonly=True),
         dict(name='color', type='color', readonly=True),
+        dict(name='float', type='float', limits=None),
     ]
 
     param = pt.Parameter.create(name='params', type='group', children=paramSpec)
@@ -163,6 +173,19 @@ def test_data_race():
     pi.widget.setValue(2)
     assert p.value() == pi.widget.value() == 1
 
+
+def test_checklist_show_hide():
+    p = pt.Parameter.create(name='checklist', type='checklist', limits=["a", "b", "c"])
+    pi = ChecklistParameterItem(p, 0)
+    pi.setHidden = MagicMock()
+    p.hide()
+    pi.setHidden.assert_called_with(True)
+    assert not p.opts["visible"]
+    p.show()
+    pi.setHidden.assert_called_with(False)
+    assert p.opts["visible"]
+
+
 def test_pen_settings():
     # Option from constructor
     p = pt.Parameter.create(name='test', type='pen', width=5, additionalname='test')
@@ -173,3 +196,14 @@ def test_pen_settings():
     # Opts from changing child
     p["width"] = 10
     assert p.pen.width() == 10
+
+@pytest.mark.skipif(
+    pg.Qt.QT_LIB == "PySide2" and pg.Qt.QtVersion.startswith("5.15"),
+    reason="Seems to segfault on conda + pyside2 on CI"
+)
+def test_recreate_from_savestate():
+    from pyqtgraph.examples import _buildParamTypes
+    created = _buildParamTypes.makeAllParamTypes()
+    state = created.saveState()
+    created2 = pt.Parameter.create(**state)
+    assert pg.eq(state, created2.saveState())

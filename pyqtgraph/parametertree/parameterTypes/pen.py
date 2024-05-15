@@ -1,26 +1,59 @@
 import re
 from contextlib import ExitStack
 
-from . import GroupParameterItem
-from .basetypes import GroupParameter, Parameter, ParameterItem
-from .qtenum import QtEnumParameter
 from ... import functions as fn
-from ...Qt import QtCore
+from ...Qt import QtCore, QtWidgets
 from ...SignalProxy import SignalProxy
 from ...widgets.PenPreviewLabel import PenPreviewLabel
+from . import GroupParameterItem, WidgetParameterItem
+from .basetypes import GroupParameter, Parameter, ParameterItem
+from .qtenum import QtEnumParameter
+
 
 class PenParameterItem(GroupParameterItem):
     def __init__(self, param, depth):
+        self.defaultBtn = self.makeDefaultButton()
         super().__init__(param, depth)
+        self.itemWidget = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)
+
         self.penLabel = PenPreviewLabel(param)
+        for child in self.penLabel, self.defaultBtn:
+            layout.addWidget(child)
+        self.itemWidget.setLayout(layout)
+
+    def optsChanged(self, param, opts):
+        if "enabled" in opts or "readonly" in opts:
+            self.updateDefaultBtn()
 
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
         tw = self.treeWidget()
         if tw is None:
             return
-        tw.setItemWidget(self, 1, self.penLabel
-                         )
+        tw.setItemWidget(self, 1, self.itemWidget)
+
+    defaultClicked = WidgetParameterItem.defaultClicked
+    makeDefaultButton = WidgetParameterItem.makeDefaultButton
+
+    def valueChanged(self, param, val):
+        self.updateDefaultBtn()
+
+    def updateDefaultBtn(self):
+        self.defaultBtn.setEnabled(
+            not self.param.valueIsDefault()
+            and self.param.opts["enabled"]
+            and self.param.writable()
+        )
+
+
+def cap_first(s: str):
+    if not s:
+        return s
+    return s[0].upper() + s[1:]
+
 
 class PenParameter(GroupParameter):
     """
@@ -46,15 +79,36 @@ class PenParameter(GroupParameter):
         if 'children' in opts:
             raise KeyError('Cannot set "children" argument in Pen Parameter opts')
         super().__init__(**opts, children=list(children))
-        self.valChangingProxy = SignalProxy(self.sigValueChanging, delay=1.0, slot=self._childrenFinishedChanging)
+        self.valChangingProxy = SignalProxy(
+            self.sigValueChanging,
+            delay=1.0,
+            slot=self._childrenFinishedChanging,
+            threadSafe=False,
+        )
 
     def _childrenFinishedChanging(self, paramAndValue):
-        self.sigValueChanged.emit(*paramAndValue)
+        self.setValue(self.pen)
+
+    def setDefault(self, val, **kwargs):
+        pen = self._interpretValue(val)
+        with self.treeChangeBlocker():
+            # Block changes until all are finalized
+            for opt in self.names:
+                # Booleans have different naming convention
+                if isinstance(self[opt], bool):
+                    attrName = f'is{opt.title()}'
+                else:
+                    attrName = opt
+                self.child(opt).setDefault(getattr(pen, attrName)(), **kwargs)
+            out = super().setDefault(val, **kwargs)
+        return out
 
     def saveState(self, filter=None):
         state = super().saveState(filter)
         opts = state.pop('children')
         state['value'] = tuple(o['value'] for o in opts.values())
+        if 'default' not in state:
+            state['default'] = state['value']  # TODO remove this after January 2025
         return state
 
     def restoreState(self, state, recursive=True, addChildren=True, removeChildren=True, blockSignals=True):
@@ -86,8 +140,7 @@ class PenParameter(GroupParameter):
 
     def setOpts(self, **opts):
         # Transform opts into a value
-        penOpts = self.applyOptsToPen(**opts)
-        if penOpts:
+        if self.applyOptsToPen(**opts):
             self.setValue(self.pen)
         return super().setOpts(**opts)
 
@@ -118,8 +171,8 @@ class PenParameter(GroupParameter):
         optsPen = boundPen or fn.mkPen()
         for p in param:
             name = p.name()
-            # Qt naming scheme uses isXXX for booleans
-            if isinstance(p.value(), bool):
+            # Qt naming scheme uses isXxx for booleans
+            if p.type() == 'bool':
                 attrName = f'is{name.title()}'
             else:
                 attrName = name
@@ -129,37 +182,38 @@ class PenParameter(GroupParameter):
             name = name.title().strip()
             p.setOpts(title=name, default=default)
 
-        def penPropertyWrapper(propertySetter):
-            def tiePenPropToParam(_, value):
-                propertySetter(value)
-                self.sigValueChanging.emit(self, self.pen)
-
-            return tiePenPropToParam
-
         if boundPen is not None:
             self.updateFromPen(param, boundPen)
             for p in param:
-                setter, setName = self._setterForParam(p.name(), boundPen, returnName=True)
+                setName = f'set{cap_first(p.name())}'
                 # Instead, set the parameter which will signal the old setter
                 setattr(boundPen, setName, p.setValue)
-                newSetter = penPropertyWrapper(setter)
+                newSetter = self.penPropertySetter
                 # Edge case: color picker uses a dialog with user interaction, so wait until full change there
                 if p.type() != 'color':
                     p.sigValueChanging.connect(newSetter)
                 # Force children to emulate self's value instead of being part of a tree like normal
-                p.sigValueChanged.disconnect(p._emitValueChanged)
+                try:
+                    p.sigValueChanged.disconnect(p._emitValueChanged)
+                except RuntimeError:
+                    # workaround https://bugreports.qt.io/projects/PYSIDE/issues/PYSIDE-2487
+                    # that affects PySide 6.5.3
+                    # Since the child param was freshly created by us, there can only have been one slot
+                    # connected. So we can just disconnect all the slots without specifying which one.
+                    assert p.receivers(QtCore.SIGNAL("sigValueChanged(PyObject,PyObject)")) == 1
+                    p.sigValueChanged.disconnect()
                 # Some widgets (e.g. checkbox, combobox) don't emit 'changing' signals, so tie to 'changed' as well
                 p.sigValueChanged.connect(newSetter)
 
         return param
 
-    @staticmethod
-    def _setterForParam(paramName, obj, returnName=False):
-        formatted = paramName[0].upper() + paramName[1:]
-        setter = getattr(obj, f'set{formatted}')
-        if returnName:
-            return setter, formatted
-        return setter
+    def penPropertySetter(self, p, value):
+        boundPen = self.pen
+        setName = f'set{cap_first(p.name())}'
+        # boundPen.setName has been monkey-patched
+        # so we get the original setter from the class
+        getattr(boundPen.__class__, setName)(boundPen, value)
+        self.sigValueChanging.emit(self, boundPen)
 
     @staticmethod
     def updateFromPen(param, pen):

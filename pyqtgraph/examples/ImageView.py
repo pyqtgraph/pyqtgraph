@@ -24,10 +24,11 @@ app = pg.mkQApp("ImageView Example")
 ## Create window with ImageView widget
 win = QtWidgets.QMainWindow()
 win.resize(800,800)
-imv = pg.ImageView()
+imv = pg.ImageView(discreteTimeLine=True, levelMode='rgba')
 win.setCentralWidget(imv)
 win.show()
 win.setWindowTitle('pyqtgraph example: ImageView')
+imv.setHistogramLabel("Histogram label goes here")
 
 ## Create random 3D data set with time varying signals
 dataRed = np.ones((100, 200, 200)) * np.linspace(90, 150, 100)[:, np.newaxis, np.newaxis]
@@ -42,20 +43,9 @@ data = np.concatenate(
 )
 
 
-## Display the data and assign each frame a time value from 1.0 to 3.0
+# Display the data and assign each frame a time value from 1.0 to 3.0
 imv.setImage(data, xvals=np.linspace(1., 3., data.shape[0]))
-
-## Set a custom color map
-colors = [
-    (0, 0, 0),
-    (45, 5, 61),
-    (84, 42, 55),
-    (150, 87, 60),
-    (208, 171, 141),
-    (255, 255, 255)
-]
-cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 6), color=colors)
-imv.setColorMap(cmap)
+imv.play(10)
 
 # Start up with an ROI
 imv.ui.roiBtn.setChecked(True)

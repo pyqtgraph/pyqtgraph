@@ -3,14 +3,15 @@ from collections.abc import Callable
 
 import numpy
 
+from .. import colormap
 from .. import debug as debug
 from .. import functions as fn
+from .. import functions_qimage
 from .. import getConfigOption
 from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
 from ..util.cupy_helper import getCupy
 from .GraphicsObject import GraphicsObject
-from .. import colormap
 
 translate = QtCore.QCoreApplication.translate
 
@@ -32,7 +33,7 @@ class ImageItem(GraphicsObject):
 
         Parameters
         ----------
-            image: array 
+            image: np.ndarray, optional
                 Image data
         """
         GraphicsObject.__init__(self)
@@ -52,14 +53,12 @@ class ImageItem(GraphicsObject):
         self._unrenderable = False
         self._xp = None  # either numpy or cupy, to match the image data
         self._defferedLevels = None
+        self._imageHasNans = None    # None : not yet known
+        self._imageNanLocations = None
 
         self.axisOrder = getConfigOption('imageAxisOrder')
         self._dataTransform = self._inverseDataTransform = None
         self._update_data_transforms( self.axisOrder ) # install initial transforms
-
-        # In some cases, we use a modified lookup table to handle both rescaling
-        # and LUT more efficiently
-        self._effectiveLut = None
 
         self.drawKernel = None
         self.border = None
@@ -104,7 +103,7 @@ class ImageItem(GraphicsObject):
     def setBorder(self, b):
         """
         Defines the border drawn around the image. Accepts all arguments supported by 
-        :func:`~pyqtgraph.functions.mkPen`.
+        :func:`~pyqtgraph.mkPen`.
         """
         self.border = fn.mkPen(b)
         self.update()
@@ -138,7 +137,7 @@ class ImageItem(GraphicsObject):
         
         Parameters
         ----------
-            levels: list_like
+            levels: array_like
                 - ``[blackLevel, whiteLevel]`` 
                   sets black and white levels for monochrome data and can be used with a lookup table.
                 - ``[[minR, maxR], [minG, maxG], [minB, maxB]]``
@@ -153,7 +152,6 @@ class ImageItem(GraphicsObject):
         if levels is not None:
             levels = self._xp.asarray(levels)
         self.levels = levels
-        self._effectiveLut = None
         if update:
             self.updateImage()
 
@@ -202,7 +200,6 @@ class ImageItem(GraphicsObject):
             if self._xp is not None:
                 lut = self._ensure_proper_substrate(lut, self._xp)
             self.lut = lut
-            self._effectiveLut = None
             if update:
                 self.updateImage()
 
@@ -253,18 +250,21 @@ class ImageItem(GraphicsObject):
                 See :func:`~pyqtgraph.ImageItem.setCompositionMode`
             colorMap: :class:`~pyqtgraph.ColorMap` or `str`
                 Sets a color map. A string will be passed to :func:`colormap.get() <pyqtgraph.colormap.get()>`
-            lut: array
+            lut: array_like
                 Sets a color lookup table to use when displaying the image.
                 See :func:`~pyqtgraph.ImageItem.setLookupTable`.
-            levels: list_like, usally [`min`, `max`]
-                Sets minimum and maximum values to use when rescaling the image data. By default, these will be set to 
-                the estimated minimum and maximum values in the image. If the image array has dtype uint8, no rescaling
-                is necessary. See :func:`~pyqtgraph.ImageItem.setLevels`.
-            opacity: float, 0.0-1.0
-                Overall opacity for an RGB image.
-            rect: :class:`QRectF`, :class:`QRect` or array_like of floats (`x`,`y`,`w`,`h`)
-                Displays the current image within the specified rectangle in plot coordinates.
-                See :func:`~pyqtgraph.ImageItem.setRect`.
+            levels: array_like
+                Shape of (min, max). Sets minimum and maximum values to use when
+                rescaling the image data. By default, these will be set to the
+                estimated minimum and maximum values in the image. If the image array
+                has dtype uint8, no rescaling is necessary. See
+                :func:`~pyqtgraph.ImageItem.setLevels`.
+            opacity: float
+                Overall opacity for an RGB image. Between 0.0-1.0.
+            rect: :class:`QRectF`, :class:`QRect` or array_like
+                Displays the current image within the specified rectangle in plot
+                coordinates. If ``array_like``, should be of the of ``floats 
+                (`x`,`y`,`w`,`h`)`` . See :func:`~pyqtgraph.ImageItem.setRect`.
             update : bool, optional
                 Controls if image immediately updates to reflect the new options.
         """
@@ -351,22 +351,21 @@ class ImageItem(GraphicsObject):
             imageitem.setImage(imagedata.T)
         
         or the interpretation of the data can be changed locally through the ``axisOrder`` keyword or by changing the 
-        `imageAxisOrder` :ref:`global configuration option <apiref_config>`.
+        `imageAxisOrder` :ref:`global configuration option <apiref_config>`
         
         All keywords supported by :func:`~pyqtgraph.ImageItem.setOpts` are also allowed here.
 
         Parameters
         ----------
-        image: array
+        image: np.ndarray, optional
             Image data given as NumPy array with an integer or floating
             point dtype of any bit depth. A 2-dimensional array describes single-valued (monochromatic) data.
             A 3-dimensional array is used to give individual color components. The third dimension must
             be of length 3 (RGB) or 4 (RGBA).
-
-        rect: QRectF, QRect or list_like of floats ``[x, y, w, h]``, optional
-            If given, sets translation and scaling to display the image within the specified rectangle. See 
-            :func:`~pyqtgraph.ImageItem.setRect`.
-
+        rect: QRectF or QRect or array_like, optional
+            If given, sets translation and scaling to display the image within the
+            specified rectangle. If ``array_like`` should be the form of floats
+            ``[x, y, w, h]`` See :func:`~pyqtgraph.ImageItem.setRect`
         autoLevels: bool, optional
             If `True`, ImageItem will automatically select levels based on the maximum and minimum values encountered 
             in the data. For performance reasons, this search subsamples the images and may miss individual bright or
@@ -375,12 +374,10 @@ class ImageItem(GraphicsObject):
             If `False`, the search will be omitted.
 
             The default is `False` if a ``levels`` keyword argument is given, and `True` otherwise.
-            
         levelSamples: int, default 65536
             When determining minimum and maximum values, ImageItem
             only inspects a subset of pixels no larger than this number.
             Setting this larger than the total number of pixels considers all values.
-            
         """
         profile = debug.Profiler()
 
@@ -398,9 +395,9 @@ class ImageItem(GraphicsObject):
                 self._processingBuffer = None
             shapeChanged = (processingSubstrateChanged or self.image is None or image.shape != self.image.shape)
             image = image.view()
-            if self.image is None or image.dtype != self.image.dtype:
-                self._effectiveLut = None
             self.image = image
+            self._imageHasNans = None
+            self._imageNanLocations = None
             if self.image.shape[0] > 2**15-1 or self.image.shape[1] > 2**15-1:
                 if 'autoDownsample' not in kargs:
                     kargs['autoDownsample'] = True
@@ -524,7 +521,7 @@ class ImageItem(GraphicsObject):
         if self.image.ndim == 2 or self.image.shape[2] == 1:
             self.lut = self._ensure_proper_substrate(self.lut, self._xp)
             if isinstance(self.lut, Callable):
-                lut = self._ensure_proper_substrate(self.lut(self.image), self._xp)
+                lut = self._ensure_proper_substrate(self.lut(self.image, 256), self._xp)
             else:
                 lut = self.lut
         else:
@@ -556,12 +553,20 @@ class ImageItem(GraphicsObject):
             image = image.swapaxes(0, 1)
 
         levels = self.levels
-        augmented_alpha = False
+
+        if self._imageHasNans is None:
+            # awkward, but fastest numpy native nan evaluation
+            self._imageHasNans = (
+                image.dtype.kind == 'f' and
+                self._xp.isnan(image.min())
+            )
+            self._imageNanLocations = None
+
+        qimage = None
 
         if lut is not None and lut.dtype != self._xp.uint8:
-            # Both _try_rescale_float() and _try_combine_lut() assume that
-            # lut is of type uint8. It is considered a usage error if that
-            # is not the case.
+            # try_make_image() assumes that lut is of type uint8.
+            # It is considered a usage error if that is not the case.
             # However, the makeARGB() codepath has previously allowed such
             # a usage to work. Rather than fail outright, we delegate this
             # case to makeARGB().
@@ -570,17 +575,19 @@ class ImageItem(GraphicsObject):
                 "be removed at some point in the future. Please open an issue if you "
                 "instead believe this to be worthy of protected inclusion in pyqtgraph.",
                 DeprecationWarning, stacklevel=2)
-        elif image.dtype.kind == 'f':
-            image, levels, lut, augmented_alpha = self._try_rescale_float(image, levels, lut)
-            # if we succeeded, we will have an uint8 image with levels None.
-            # lut if not None will have <= 256 entries
 
-        # if the image data is a small int, then we can combine levels + lut
-        # into a single lut for better performance
-        elif image.dtype in (self._xp.ubyte, self._xp.uint16):
-            image, levels, lut, augmented_alpha = self._try_combine_lut(image, levels, lut)
+        elif not self._imageHasNans:
+            qimage = functions_qimage.try_make_qimage(image, levels=levels, lut=lut)
 
-        qimage = self._try_make_qimage(image, levels, lut, augmented_alpha)
+        elif image.ndim in (2, 3):
+            # float images with nans
+            if self._imageNanLocations is None:
+                # the number of nans is expected to be small
+                nanmask = self._xp.isnan(image)
+                if nanmask.ndim == 3:
+                    nanmask = nanmask.any(axis=2)
+                self._imageNanLocations = nanmask.nonzero()
+            qimage = functions_qimage.try_make_qimage(image, levels=levels, lut=lut, transparentLocations=self._imageNanLocations)
 
         if qimage is not None:
             self._processingBuffer = None
@@ -600,263 +607,6 @@ class ImageItem(GraphicsObject):
 
         self._renderRequired = False
         self._unrenderable = False
-
-    def _try_rescale_float(self, image, levels, lut):
-        xp = self._xp
-        augmented_alpha = False
-
-        can_handle = False
-        while True:
-            if levels is None or levels.ndim != 1:
-                # float images always need levels
-                # can't handle multi-channel levels
-                break
-
-            # awkward, but fastest numpy native nan evaluation
-            if xp.isnan(image.min()):
-                # don't handle images with nans
-                # this should be an uncommon case
-                break
-
-            can_handle = True
-            break
-
-        if not can_handle:
-            return image, levels, lut, augmented_alpha
-
-        # Decide on maximum scaled value
-        if lut is not None:
-            scale = lut.shape[0]
-            num_colors = lut.shape[0]
-        else:
-            scale = 255.
-            num_colors = 256
-        dtype = xp.min_scalar_type(num_colors-1)
-
-        minVal, maxVal = levels
-        if minVal == maxVal:
-            maxVal = xp.nextafter(maxVal, 2*maxVal)
-        rng = maxVal - minVal
-        rng = 1 if rng == 0 else rng
-
-        fn_numba = fn.getNumbaFunctions()
-        if xp == numpy and image.flags.c_contiguous and dtype == xp.uint16 and fn_numba is not None:
-            lut, augmented_alpha = self._convert_2dlut_to_1dlut(lut)
-            image = fn_numba.rescale_and_lookup1d(image, scale/rng, minVal, lut)
-            if image.dtype == xp.uint32:
-                image = image[..., xp.newaxis].view(xp.uint8)
-            return image, None, None, augmented_alpha
-        else:
-            image = fn.rescaleData(image, scale/rng, offset=minVal, dtype=dtype, clip=(0, num_colors-1))
-
-            levels = None
-
-            if image.dtype == xp.uint16 and image.ndim == 2:
-                image, augmented_alpha = self._apply_lut_for_uint16_mono(image, lut)
-                lut = None
-
-            # image is now of type uint8
-            return image, levels, lut, augmented_alpha
-
-    def _try_combine_lut(self, image, levels, lut):
-        augmented_alpha = False
-        xp = self._xp
-
-        can_handle = False
-        while True:
-            if levels is not None and levels.ndim != 1:
-                # can't handle multi-channel levels
-                break
-            if image.dtype == xp.uint16 and levels is None and \
-                    image.ndim == 3 and image.shape[2] == 3:
-                # uint16 rgb can't be directly displayed, so make it
-                # pass through effective lut processing
-                levels = [0, 65535]
-            if levels is None and lut is None:
-                # nothing to combine
-                break
-
-            can_handle = True
-            break
-
-        if not can_handle:
-            return image, levels, lut, augmented_alpha
-
-        # distinguish between lut for levels and colors
-        levels_lut = None
-        colors_lut = lut
-
-        eflsize = 2**(image.itemsize*8)
-        if levels is None:
-            info = xp.iinfo(image.dtype)
-            minlev, maxlev = info.min, info.max
-        else:
-            minlev, maxlev = levels
-        levdiff = maxlev - minlev
-        levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
-
-        if colors_lut is None:
-            if image.dtype == xp.ubyte and image.ndim == 2:
-                # uint8 mono image
-                ind = xp.arange(eflsize)
-                levels_lut = fn.rescaleData(ind, scale=255./levdiff,
-                                        offset=minlev, dtype=xp.ubyte)
-                # image data is not scaled. instead, levels_lut is used
-                # as (grayscale) Indexed8 ColorTable to get the same effect.
-                # due to the small size of the input to rescaleData(), we
-                # do not bother caching the result
-                return image, None, levels_lut, augmented_alpha
-            else:
-                # uint16 mono, uint8 rgb, uint16 rgb
-                # rescale image data by computation instead of by memory lookup
-                image = fn.rescaleData(image, scale=255./levdiff,
-                                    offset=minlev, dtype=xp.ubyte)
-                return image, None, colors_lut, augmented_alpha
-        else:
-            num_colors = colors_lut.shape[0]
-            effscale = num_colors / levdiff
-            lutdtype = xp.min_scalar_type(num_colors - 1)
-
-            if image.dtype == xp.ubyte or lutdtype != xp.ubyte:
-                # combine if either:
-                #   1) uint8 mono image
-                #   2) colors_lut has more entries than will fit within 8-bits
-                if self._effectiveLut is None:
-                    ind = xp.arange(eflsize)
-                    levels_lut = fn.rescaleData(ind, scale=effscale,
-                                    offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
-                    efflut = colors_lut[levels_lut]
-                    self._effectiveLut = efflut
-                efflut = self._effectiveLut
-
-                # apply the effective lut early for the following types:
-                if image.dtype == xp.uint16 and image.ndim == 2:
-                    image, augmented_alpha = self._apply_lut_for_uint16_mono(image, efflut)
-                    efflut = None
-                return image, None, efflut, augmented_alpha
-            else:
-                # uint16 image with colors_lut <= 256 entries
-                # don't combine, we will use QImage ColorTable
-                image = fn.rescaleData(image, scale=effscale,
-                                offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
-                return image, None, colors_lut, augmented_alpha
-
-    def _apply_lut_for_uint16_mono(self, image, lut):
-        # Note: compared to makeARGB(), we have already clipped the data to range
-
-        xp = self._xp
-        augmented_alpha = False
-
-        # if lut is 1d, then lut[image] is fastest
-        # if lut is 2d, then lut.take(image, axis=0) is faster than lut[image]
-
-        if not image.flags.c_contiguous:
-            image = lut.take(image, axis=0)
-
-            # if lut had dimensions (N, 1), then our resultant image would
-            # have dimensions (h, w, 1)
-            if image.ndim == 3 and image.shape[-1] == 1:
-                image = image[..., 0]
-
-            return image, augmented_alpha
-
-        # if we are contiguous, we can take a faster codepath where we
-        # ensure that the lut is 1d
-
-        lut, augmented_alpha = self._convert_2dlut_to_1dlut(lut)
-
-        fn_numba = fn.getNumbaFunctions()
-        if xp == numpy and fn_numba is not None:
-            image = fn_numba.numba_take(lut, image)
-        else:
-            image = lut[image]
-
-        if image.dtype == xp.uint32:
-            image = image[..., xp.newaxis].view(xp.uint8)
-
-        return image, augmented_alpha
-
-    def _convert_2dlut_to_1dlut(self, lut):
-        # converts:
-        #   - uint8 (N, 1) to uint8 (N,)
-        #   - uint8 (N, 3) or (N, 4) to uint32 (N,)
-        # this allows faster lookup as 1d lookup is faster
-        xp = self._xp
-        augmented_alpha = False
-
-        if lut.ndim == 1:
-            return lut, augmented_alpha
-
-        if lut.shape[1] == 3:   # rgb
-            # convert rgb lut to rgba so that it is 32-bits
-            lut = xp.column_stack([lut, xp.full(lut.shape[0], 255, dtype=xp.uint8)])
-            augmented_alpha = True
-        if lut.shape[1] == 4:   # rgba
-            lut = lut.view(xp.uint32)
-        lut = lut.ravel()
-
-        return lut, augmented_alpha
-
-    def _try_make_qimage(self, image, levels, lut, augmented_alpha):
-        xp = self._xp
-
-        ubyte_nolvl = image.dtype == xp.ubyte and levels is None
-        is_passthru8 = ubyte_nolvl and lut is None
-        is_indexed8 = ubyte_nolvl and image.ndim == 2 and \
-            lut is not None and lut.shape[0] <= 256
-        is_passthru16 = image.dtype == xp.uint16 and levels is None and lut is None
-        can_grayscale16 = is_passthru16 and image.ndim == 2 and \
-            hasattr(QtGui.QImage.Format, 'Format_Grayscale16')
-        is_rgba64 = is_passthru16 and image.ndim == 3 and image.shape[2] == 4
-
-        # bypass makeARGB for supported combinations
-        supported = is_passthru8 or is_indexed8 or can_grayscale16 or is_rgba64
-        if not supported:
-            return None
-
-        if self._xp == getCupy():
-            image = image.get()
-
-        # worthwhile supporting non-contiguous arrays
-        image = numpy.ascontiguousarray(image)
-
-        fmt = None
-        ctbl = None
-        if is_passthru8:
-            # both levels and lut are None
-            # these images are suitable for display directly
-            if image.ndim == 2:
-                fmt = QtGui.QImage.Format.Format_Grayscale8
-            elif image.shape[2] == 3:
-                fmt = QtGui.QImage.Format.Format_RGB888
-            elif image.shape[2] == 4:
-                if augmented_alpha:
-                    fmt = QtGui.QImage.Format.Format_RGBX8888
-                else:
-                    fmt = QtGui.QImage.Format.Format_RGBA8888
-        elif is_indexed8:
-            # levels and/or lut --> lut-only
-            fmt = QtGui.QImage.Format.Format_Indexed8
-            if lut.ndim == 1 or lut.shape[1] == 1:
-                ctbl = [QtGui.qRgb(x,x,x) for x in lut.ravel().tolist()]
-            elif lut.shape[1] == 3:
-                ctbl = [QtGui.qRgb(*rgb) for rgb in lut.tolist()]
-            elif lut.shape[1] == 4:
-                ctbl = [QtGui.qRgba(*rgba) for rgba in lut.tolist()]
-        elif can_grayscale16:
-            # single channel uint16
-            # both levels and lut are None
-            fmt = QtGui.QImage.Format.Format_Grayscale16
-        elif is_rgba64:
-            # uint16 rgba
-            # both levels and lut are None
-            fmt = QtGui.QImage.Format.Format_RGBA64 # endian-independent
-        if fmt is None:
-            raise ValueError("unsupported image type")
-        qimage = fn.ndarray_to_qimage(image, fmt)
-        if ctbl is not None:
-            qimage.setColorTable(ctbl)
-        return qimage
 
     def paint(self, p, *args):
         profile = debug.Profiler()
@@ -898,7 +648,7 @@ class ImageItem(GraphicsObject):
         dimensions approximating `targetImageSize` for each axis.
 
         The `bins` argument and any extra keyword arguments are passed to
-        :func:`self.xp.histogram()`. If `bins` is `auto`, a bin number is automatically
+        :func:`numpy.histogram()`. If `bins` is `auto`, a bin number is automatically
         chosen based on the image characteristics:
 
           * Integer images will have approximately `targetHistogramSize` bins,

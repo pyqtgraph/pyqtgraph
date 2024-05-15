@@ -28,43 +28,67 @@ def resizeWindow(win, w, h, timeout=2.0):
 # We would like to use QTest for this purpose, but it seems to be broken.
 # See: http://stackoverflow.com/questions/16299779/qt-qgraphicsview-unit-testing-how-to-keep-the-mouse-in-a-pressed-state
 
-def mousePress(widget, pos, button, modifier=None):
+def mousePress(widget, pos: QtCore.QPointF, button, modifier=None):
     if isinstance(widget, QtWidgets.QGraphicsView):
         widget = widget.viewport()
+    global_pos = QtCore.QPointF(widget.mapToGlobal(pos.toPoint()))
     if modifier is None:
         modifier = QtCore.Qt.KeyboardModifier.NoModifier
-    event = QtGui.QMouseEvent(QtCore.QEvent.Type.MouseButtonPress, pos, button, QtCore.Qt.MouseButton.NoButton, modifier)
+    event = QtGui.QMouseEvent(
+        QtCore.QEvent.Type.MouseButtonPress,
+        pos,
+        global_pos,
+        button,
+        QtCore.Qt.MouseButton.NoButton,
+        modifier
+    )
     QtWidgets.QApplication.sendEvent(widget, event)
 
 
-def mouseRelease(widget, pos, button, modifier=None):
+def mouseRelease(widget, pos: QtCore.QPointF, button, modifier=None):
     if isinstance(widget, QtWidgets.QGraphicsView):
         widget = widget.viewport()
+    global_pos = QtCore.QPointF(widget.mapToGlobal(pos.toPoint()))
     if modifier is None:
         modifier = QtCore.Qt.KeyboardModifier.NoModifier
-    event = QtGui.QMouseEvent(QtCore.QEvent.Type.MouseButtonRelease, pos, button, QtCore.Qt.MouseButton.NoButton, modifier)
+    event = QtGui.QMouseEvent(
+        QtCore.QEvent.Type.MouseButtonRelease,
+        pos,
+        global_pos,
+        button,
+        QtCore.Qt.MouseButton.NoButton,
+        modifier
+    )
     QtWidgets.QApplication.sendEvent(widget, event)
 
 
-def mouseMove(widget, pos, buttons=None, modifier=None):
+def mouseMove(widget, pos: QtCore.QPointF, buttons=None, modifier=None):
     if isinstance(widget, QtWidgets.QGraphicsView):
         widget = widget.viewport()
+    global_pos = QtCore.QPointF(widget.mapToGlobal(pos.toPoint()))
     if modifier is None:
         modifier = QtCore.Qt.KeyboardModifier.NoModifier
     if buttons is None:
         buttons = QtCore.Qt.MouseButton.NoButton
-    event = QtGui.QMouseEvent(QtCore.QEvent.Type.MouseMove, pos, QtCore.Qt.MouseButton.NoButton, buttons, modifier)
+    event = QtGui.QMouseEvent(
+        QtCore.QEvent.Type.MouseMove,
+        pos,
+        global_pos,
+        QtCore.Qt.MouseButton.NoButton,
+        buttons,
+        modifier
+    )
     QtWidgets.QApplication.sendEvent(widget, event)
 
 
-def mouseDrag(widget, pos1, pos2, button, modifier=None):
+def mouseDrag(widget, pos1: QtCore.QPointF, pos2: QtCore.QPointF, button, modifier=None):
     mouseMove(widget, pos1)
     mousePress(widget, pos1, button, modifier)
     mouseMove(widget, pos2, button, modifier)
     mouseRelease(widget, pos2, button, modifier)
 
     
-def mouseClick(widget, pos, button, modifier=None):
+def mouseClick(widget, pos: QtCore.QPointF, button, modifier=None):
     mouseMove(widget, pos)
     mousePress(widget, pos, button, modifier)
     mouseRelease(widget, pos, button, modifier)

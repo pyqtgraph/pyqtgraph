@@ -10,12 +10,21 @@ between the two cases. IF you have a multi-core CPU, it should be obvious that t
 remote case is much faster.
 """
 
-from time import perf_counter
+import argparse
+import itertools
 
 import numpy as np
+from utils import FrameCounter
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtWidgets
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--iterations', default=float('inf'), type=float,
+    help="Number of iterations to run before exiting"
+)
+args = parser.parse_args()
+iterations_counter = itertools.count()
 
 app = pg.mkQApp()
 
@@ -45,11 +54,12 @@ rplt = view.pg.PlotItem()
 rplt._setProxyOptions(deferGetattr=True)  ## speeds up access to rplt.plot
 view.setCentralItem(rplt)
 
-lastUpdate = perf_counter()
-avgFps = 0.0
-
 def update():
-    global check, label, plt, lastUpdate, avgFps, rpltfunc
+    if next(iterations_counter) > args.iterations:
+        timer.stop()
+        app.quit()
+        return None
+
     data = np.random.normal(size=(10000,50)).sum(axis=1)
     data += 5 * np.sin(np.linspace(0, 10, data.shape[0]))
     
@@ -61,16 +71,15 @@ def update():
                                                       ## process.
     if lcheck.isChecked():
         lplt.plot(data, clear=True)
-        
-    now = perf_counter()
-    fps = 1.0 / (now - lastUpdate)
-    lastUpdate = now
-    avgFps = avgFps * 0.8 + fps * 0.2
-    label.setText("Generating %0.2f fps" % avgFps)
+
+    framecnt.update()
         
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
+
+framecnt = FrameCounter()
+framecnt.sigFpsUpdate.connect(lambda fps : label.setText(f"Generating {fps:.1f}"))
 
 if __name__ == '__main__':
     pg.exec()

@@ -1,6 +1,6 @@
 from .. import functions as fn
 from ..Qt import QtCore, QtGui
-from .UIGraphicsItem import *
+from .UIGraphicsItem import UIGraphicsItem
 
 __all__ = ['GradientLegend']
 

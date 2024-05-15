@@ -21,10 +21,10 @@ class HDF5Exporter(Exporter):
 
     def __init__(self, item):
         Exporter.__init__(self, item)
-        self.params = Parameter(name='params', type='group', children=[
+        self.params = Parameter.create(name='params', type='group', children=[
             {'name': 'Name', 'title': translate("Exporter", 'Name'), 'type': 'str', 'value': 'Export', },
             {'name': 'columnMode', 'title': translate("Exporter", 'columnMode'), 'type': 'list',
-             'limits': ['(x,y) per plot', '(x,y,y,y) for all plots']},
+             'limits': ['(x,y) per plot', '(x,y,y,y) for all plots'], 'value': '(x,y) per plot'},
         ])
         
     def parameters(self):

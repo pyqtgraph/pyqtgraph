@@ -1,4 +1,4 @@
-from ..Qt import QtGui, QtWidgets
+from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsWidget']
@@ -64,7 +64,7 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
             self._previousGeometry = geometry
         else:
             br = self._boundingRectCache
-        return br
+        return QtCore.QRectF(br)
 
     def shape(self):
         p = self._painterPathCache

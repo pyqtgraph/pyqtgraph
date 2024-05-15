@@ -1,5 +1,6 @@
 # based on https://github.com/art1415926535/PyQt5-syntax-highlighting
 
+import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 QRegExp = QtCore.QRegExp
@@ -14,11 +15,7 @@ def format(color, style=''):
     """
     Return a QTextCharFormat with the given attributes.
     """
-    _color = QColor()
-    if type(color) is not str:
-        _color.setRgb(color[0], color[1], color[2])
-    else:
-        _color.setNamedColor(color)
+    _color = pg.functions.mkColor(color)
 
     _format = QTextCharFormat()
     _format.setForeground(_color)

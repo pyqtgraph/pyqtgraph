@@ -20,6 +20,7 @@ class SliderParameterItem(WidgetParameterItem):
     def updateDisplayLabel(self, value=None):
         if value is None:
             value = self.param.value()
+        self.sliderLabel.setText(self.prettyTextValue(self.slider.value()))
         value = str(value)
         if self._suffix is None:
             suffixTxt = ''
@@ -27,9 +28,13 @@ class SliderParameterItem(WidgetParameterItem):
             suffixTxt = f' {self._suffix}'
         self.displayLabel.setText(value + suffixTxt)
 
+
     def setSuffix(self, suffix):
         self._suffix = suffix
-        self._updateLabel(self.slider.value())
+        # This may be called during widget construction in which case there is no
+        # displayLabel yet
+        if hasattr(self, 'displayLabel'):
+            self.updateDisplayLabel(self.slider.value())
 
     def makeWidget(self):
         param = self.param
@@ -39,7 +44,7 @@ class SliderParameterItem(WidgetParameterItem):
 
         self.slider = QtWidgets.QSlider()
         self.slider.setOrientation(QtCore.Qt.Orientation.Horizontal)
-        lbl = QtWidgets.QLabel()
+        lbl = self.sliderLabel = QtWidgets.QLabel()
         lbl.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
 
         w = QtWidgets.QWidget()
@@ -54,10 +59,7 @@ class SliderParameterItem(WidgetParameterItem):
         def getValue():
             return self.span[self.slider.value()].item()
 
-        def vChanged(v):
-            lbl.setText(self.prettyTextValue(v))
-
-        self.slider.valueChanged.connect(vChanged)
+        self.slider.valueChanged.connect(self.updateDisplayLabel)
 
         def onMove(pos):
             self.sigChanging.emit(self, self.span[pos].item())
@@ -109,7 +111,6 @@ class SliderParameterItem(WidgetParameterItem):
         w.setMaximum(len(span) - 1)
         if 'suffix' in opts:
             self.setSuffix(opts['suffix'])
-            self.slider.valueChanged.emit(self.slider.value())
 
     def limitsChanged(self, param, limits):
         self.optsChanged(param, dict(limits=limits))

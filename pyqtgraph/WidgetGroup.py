@@ -172,7 +172,7 @@ class WidgetGroup(QtCore.QObject):
         if signal is not None:
             if inspect.isfunction(signal) or inspect.ismethod(signal):
                 signal = signal(w)
-            signal.connect(self.mkChangeCallback(w))
+            signal.connect(self.widgetChanged)
         else:
             self.uncachedWidgets[w] = None
        
@@ -217,10 +217,8 @@ class WidgetGroup(QtCore.QObject):
         self.scales[widget] = scale
         self.setWidget(widget, val)
 
-    def mkChangeCallback(self, w):
-        return lambda *args: self.widgetChanged(w, *args)
-        
-    def widgetChanged(self, w, *args):
+    def widgetChanged(self, *args):
+        w = self.sender()
         n = self.widgetList[w]
         v1 = self.cache[n]
         v2 = self.readWidget(w)

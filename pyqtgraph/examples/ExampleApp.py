@@ -1,14 +1,16 @@
 import keyword
 import os
+import pkgutil
 import re
 import subprocess
 import sys
 from argparse import Namespace
 from collections import OrderedDict
 from functools import lru_cache
+from typing import Optional
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+from pyqtgraph.Qt import QT_LIB, QtCore, QtGui, QtWidgets
 
 app = pg.mkQApp()
 
@@ -16,10 +18,8 @@ app = pg.mkQApp()
 path = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, path)
 
-import utils
-
 import exampleLoaderTemplate_generic as ui_template
-
+import utils
 
 # based on https://github.com/art1415926535/PyQt5-syntax-highlighting
 
@@ -35,11 +35,7 @@ def charFormat(color, style='', background=None):
     """
     Return a QTextCharFormat with the given attributes.
     """
-    _color = QColor()
-    if type(color) is not str:
-        _color.setRgb(color[0], color[1], color[2])
-    else:
-        _color.setNamedColor(color)
+    _color = pg.functions.mkColor(color)
 
     _format = QTextCharFormat()
     _format.setForeground(_color)
@@ -299,6 +295,10 @@ def unnestedDict(exDict):
 
 
 class ExampleLoader(QtWidgets.QMainWindow):
+    # update qtLibCombo item order to match bindings in the UI file and recreate
+    # the templates files if you change bindings.
+    bindings = {'PyQt6': 0, 'PySide6': 1, 'PyQt5': 2, 'PySide2': 3}
+    modules = tuple(m.name for m in pkgutil.iter_modules())
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         self.ui = ui_template.Ui_Form()
@@ -311,7 +311,6 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.ui.codeView.setLayout(self.codeLayout)
         self.hl = PythonHighlighter(self.ui.codeView.document())
         app = QtWidgets.QApplication.instance()
-        app.paletteChanged.connect(self.updateTheme)
         policy = QtWidgets.QSizePolicy.Policy.Expanding
         self.codeLayout.addItem(QtWidgets.QSpacerItem(100,100, policy, policy), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
@@ -320,6 +319,9 @@ class ExampleLoader(QtWidgets.QMainWindow):
         textFil = self.ui.exampleFilter
         self.curListener = None
         self.ui.exampleFilter.setFocus()
+        self.ui.qtLibCombo.addItems(self.bindings.keys())
+        self.ui.qtLibCombo.setCurrentIndex(self.bindings[QT_LIB])
+
 
         def onComboChanged(searchType):
             if self.curListener is not None:
@@ -353,6 +355,45 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.ui.exampleTree.itemDoubleClicked.connect(self.loadFile)
         self.ui.codeView.textChanged.connect(self.onTextChange)
         self.codeBtn.clicked.connect(self.runEditedCode)
+        self.updateCodeViewTabWidth(self.ui.codeView.font())
+
+    def event(self, event: Optional[QtCore.QEvent]):
+        if event is None:
+            return super().event(None)
+        if event.type() in [
+            QtCore.QEvent.Type.ApplicationPaletteChange,
+        ]:
+            app = pg.mkQApp()
+            try:
+                darkMode = app.styleHints().colorScheme() == QtCore.Qt.ColorScheme.Dark
+            except AttributeError:
+                palette = app.palette()
+                windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
+                windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
+                darkMode = windowTextLightness > windowLightness
+            app.setProperty('darkMode', darkMode)
+            self.hl = PythonHighlighter(self.ui.codeView.document())
+        return super().event(event)
+
+    def updateCodeViewTabWidth(self,font):
+        """
+        Change the codeView tabStopDistance to 4 spaces based on the size of the current font
+        """
+        fm = QtGui.QFontMetrics(font)
+        tabWidth = fm.horizontalAdvance(' ' * 4)
+        # the default value is 80 pixels! that's more than 2x what we want.
+        self.ui.codeView.setTabStopDistance(tabWidth)
+
+    def showEvent(self, event) -> None:
+        super(ExampleLoader, self).showEvent(event)
+        disabledColor = QColor(QtCore.Qt.GlobalColor.red)
+        for name, idx in self.bindings.items():
+            disableBinding = name not in self.modules
+            if disableBinding:
+                item = self.ui.qtLibCombo.model().item(idx)
+                item.setData(disabledColor, QtCore.Qt.ItemDataRole.ForegroundRole)
+                item.setEnabled(False)
+                item.setToolTip(f'{item.text()} is not installed')
 
     def onTextChange(self):
         """
@@ -454,9 +495,6 @@ class ExampleLoader(QtWidgets.QMainWindow):
         app = QtWidgets.QApplication.instance()
         app.setProperty('darkMode', True)
 
-    def updateTheme(self):
-        self.hl = PythonHighlighter(self.ui.codeView.document())
-
     def populateTree(self, root, examples):
         bold_font = None
         for key, val in examples.items():
@@ -483,15 +521,11 @@ class ExampleLoader(QtWidgets.QMainWindow):
             return os.path.join(path, item.file)
         return None
 
-    def loadFile(self, edited=False):
-
-        qtLib = str(self.ui.qtLibCombo.currentText())
-
-        env = None
-        if qtLib != 'default':
-            env = dict(os.environ, PYQTGRAPH_QT_LIB=qtLib)
-        else:
-            env = dict(os.environ)
+    def loadFile(self, *, edited=False):
+        # make *edited* keyword-only so it is not confused for extra arguments
+        # sent by ui signals
+        qtLib = self.ui.qtLibCombo.currentText()
+        env = dict(os.environ, PYQTGRAPH_QT_LIB=qtLib)
         example_path = os.path.abspath(os.path.dirname(__file__))
         path = os.path.dirname(os.path.dirname(example_path))
         env['PYTHONPATH'] = f'{path}'
@@ -556,6 +590,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
             # Reset to original size
             font.setPointSize(10)
         self.ui.codeView.setFont(font)
+        self.updateCodeViewTabWidth(font)
         event.accept()
 
 def main():

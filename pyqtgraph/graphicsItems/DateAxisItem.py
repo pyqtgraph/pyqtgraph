@@ -1,7 +1,7 @@
 import sys
 import time
 from collections import OrderedDict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
 
@@ -19,11 +19,12 @@ MONTH_SPACING = 30 * DAY_SPACING
 YEAR_SPACING = 365 * DAY_SPACING
 
 if sys.platform == 'win32':
-    _epoch = datetime.utcfromtimestamp(0)
+    _epoch = datetime.fromtimestamp(0, timezone.utc)
     def utcfromtimestamp(timestamp):
         return _epoch + timedelta(seconds=timestamp)
 else:
-    utcfromtimestamp = datetime.utcfromtimestamp
+    def utcfromtimestamp(timestamp):
+        return datetime.fromtimestamp(timestamp, timezone.utc)
 
 MIN_REGULAR_TIMESTAMP = (datetime(1, 1, 1) - datetime(1970,1,1)).total_seconds()
 MAX_REGULAR_TIMESTAMP = (datetime(9999, 1, 1) - datetime(1970,1,1)).total_seconds()
@@ -157,7 +158,7 @@ class ZoomLevel:
         # minSpc indicates the minimum spacing (in seconds) between two ticks
         # to fullfill the maxTicksPerPt constraint of the DateAxisItem at the
         # current zoom level. This is used for auto skipping ticks.
-        allTicks = []
+        allTicks = np.array([])
         valueSpecs = []
         # back-project (minVal maxVal) to UTC, compute ticks then offset to
         # back to local time again
@@ -168,9 +169,15 @@ class ZoomLevel:
             # reposition tick labels to local time coordinates
             ticks += self.utcOffset
             # remove any ticks that were present in higher levels
-            tick_list = [x for x in ticks.tolist() if x not in allTicks]
-            allTicks.extend(tick_list)
-            valueSpecs.append((spec.spacing, tick_list))
+            # we assume here that if the difference between a tick value and a previously seen tick value
+            # is less than min-spacing/100, then they are 'equal' and we can ignore the new tick.
+            close = np.any(
+                np.isclose(allTicks, ticks[:, np.newaxis], rtol=0, atol=minSpc * 0.01),
+                axis=-1,
+            )
+            ticks = ticks[~close]
+            allTicks = np.concatenate([allTicks, ticks])
+            valueSpecs.append((spec.spacing, ticks.tolist()))
             # if we're skipping ticks on the current level there's no point in
             # producing lower level ticks
             if skipFactor > 1:

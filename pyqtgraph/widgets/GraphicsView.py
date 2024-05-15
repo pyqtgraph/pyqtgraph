@@ -357,7 +357,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         super().mouseMoveEvent(ev)
         if not self.mouseEnabled:
             return
-        self.sigSceneMouseMoved.emit(self.mapToScene(lpos))
+        self.sigSceneMouseMoved.emit(self.mapToScene(lpos.toPoint()))
             
         if self.clickAccepted:  ## Ignore event if an item in the scene has already claimed it.
             return
@@ -365,7 +365,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         if ev.buttons() == QtCore.Qt.MouseButton.RightButton:
             delta = Point(fn.clip_scalar(delta[0], -50, 50), fn.clip_scalar(-delta[1], -50, 50))
             scale = 1.01 ** delta
-            self.scale(scale[0], scale[1], center=self.mapToScene(self.mousePressPos))
+            self.scale(scale[0], scale[1], center=self.mapToScene(self.mousePressPos.toPoint()))
             self.sigDeviceRangeChanged.emit(self, self.range)
 
         elif ev.buttons() in [QtCore.Qt.MouseButton.MiddleButton, QtCore.Qt.MouseButton.LeftButton]:  ## Allow panning by left or mid button.

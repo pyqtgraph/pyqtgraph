@@ -1,3 +1,4 @@
+import warnings
 import weakref
 from time import perf_counter, perf_counter_ns
 
@@ -34,7 +35,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     sigMouseClicked(event) Emitted when the mouse is clicked over the scene. Use ev.pos() to
                            get the click position relative to the item that was clicked on,
                            or ev.scenePos() to get the click position in scene coordinates.
-                           See :class:`pyqtgraph.GraphicsScene.MouseClickEvent`.                        
+                           See :class:`pyqtgraph.GraphicsScene.mouseEvents.MouseClickEvent`.                        
     sigMouseMoved(pos)     Emitted when the mouse cursor moves over the scene. The position
                            is given in scene coordinates.
     sigMouseHover(items)   Emitted when the mouse is moved over the scene. Items is a list
@@ -83,7 +84,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     
     ExportDirectory = None
 
-    def __init__(self, clickRadius=2, moveDistance=5, parent=None):
+    def __init__(self, clickRadius: int = 2, moveDistance=5, parent=None):
         QtWidgets.QGraphicsScene.__init__(self, parent)
         self.setClickRadius(clickRadius)
         self.setMoveDistance(moveDistance)
@@ -116,14 +117,14 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.sigPrepareForPaint.emit()
     
 
-    def setClickRadius(self, r):
+    def setClickRadius(self, r: int):
         """
         Set the distance away from mouse clicks to search for interacting items.
         When clicking, the scene searches first for items that directly intersect the click position
         followed by any other items that are within a rectangle that extends r pixels away from the 
         click position. 
         """
-        self._clickRadius = r
+        self._clickRadius = int(r)
         
     def setMoveDistance(self, d):
         """
@@ -220,10 +221,18 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                 cev = [e for e in self.clickEvents if e.button() == ev.button()]
                 if cev:
                     if self.sendClickEvent(cev[0]):
-                        #print "sent click event"
                         ev.accept()
-                    self.clickEvents.remove(cev[0])
-                
+                    try:
+                        self.clickEvents.remove(cev[0])
+                    except ValueError:
+                        warnings.warn(
+                            ("A ValueError can occur here with errant "
+                             "QApplication.processEvent() calls, see "
+                            "https://github.com/pyqtgraph/pyqtgraph/pull/2580 "
+                            "for more information."),
+                            RuntimeWarning,
+                            stacklevel=2
+                        )
         if not ev.buttons():
             self.dragItem = None
             self.dragButtons = []
@@ -423,7 +432,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         r = self._clickRadius
         items_within_radius = []
         rgn = None
-        if r > 0.0:
+        if r > 0:
             rect = view.mapToScene(QtCore.QRect(0, 0, 2 * r, 2 * r)).boundingRect()
             w = rect.width()
             h = rect.height()

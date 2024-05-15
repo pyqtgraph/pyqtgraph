@@ -125,14 +125,14 @@ class TargetItem(UIGraphicsItem):
 
         Parameters
         ----------
-        args : tuple, list, QPointF, QPoint, pg.Point, or two floats
+        args : tuple or list or QtCore.QPointF or QtCore.QPoint or Point or float
             Two float values or a container that specifies ``(x, y)`` position where the
             TargetItem should be placed
 
         Raises
         ------
         TypeError
-            If args cannot be used to instantiate a pg.Point
+            If args cannot be used to instantiate a Point
         """
         try:
             newPos = Point(*args)
@@ -303,7 +303,7 @@ class TargetItem(UIGraphicsItem):
             displayed
             If a non-formatted string, then the text label will display ``text``, by
             default None
-        labelOpts : dictionary, optional
+        labelOpts : dict, optional
             These arguments are passed on to :class:`~pyqtgraph.TextItem`
         """
         if not text:
@@ -342,10 +342,11 @@ class TargetLabel(TextItem):
     offset : tuple or list or QPointF or QPoint
         Position to set the anchor of the TargetLabel away from the center of
         the target in pixels, by default it is (20, 0).
-    anchor : tuple, list, QPointF or QPoint
+    anchor : tuple or list or QPointF or QPoint
         Position to rotate the TargetLabel about, and position to set the
         offset value to see :class:`~pyqtgraph.TextItem` for more information.
-    kwargs : dict of arguments that are passed on to
+    kwargs : dict 
+        kwargs contains arguments that are passed onto
         :class:`~pyqtgraph.TextItem` constructor, excluding text parameter
     """
 

@@ -14,11 +14,6 @@ def test_isQObjectAlive():
     assert not pg.Qt.isQObjectAlive(o2)
 
 @pytest.mark.skipif(
-    pg.Qt.QT_LIB == 'PySide2'
-    and not pg.Qt.PySide2.__version__ .startswith(pg.Qt.QtCore.__version__),
-    reason='test fails on conda distributions'
-)
-@pytest.mark.skipif(
     pg.Qt.QT_LIB == "PySide2"
     and tuple(map(int, pg.Qt.PySide2.__version__.split("."))) >= (5, 14) 
     and tuple(map(int, pg.Qt.PySide2.__version__.split("."))) < (5, 14, 2, 2), 

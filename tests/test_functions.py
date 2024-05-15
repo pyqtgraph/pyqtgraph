@@ -6,8 +6,8 @@ import pytest
 from numpy.testing import assert_array_almost_equal
 
 import pyqtgraph as pg
-from pyqtgraph.functions import arrayToQPath, eq
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.functions import arrayToQPath, eq, SignalBlock
+from pyqtgraph.Qt import QtCore, QtGui
 
 np.random.seed(12345)
 
@@ -118,10 +118,15 @@ def test_subArray():
     
     
 def test_rescaleData():
+    rng = np.random.default_rng(12345)
     dtypes = map(np.dtype, ('ubyte', 'uint16', 'byte', 'int16', 'int', 'float'))
     for dtype1 in dtypes:
         for dtype2 in dtypes:
-            data = (np.random.random(size=10) * 2**32 - 2**31).astype(dtype1)
+            if dtype1.kind in 'iu':
+                lim = np.iinfo(dtype1)
+                data = rng.integers(lim.min, lim.max, size=10, dtype=dtype1, endpoint=True)
+            else:
+                data = (rng.random(size=10) * 2**32 - 2**31).astype(dtype1)
             for scale, offset in [(10, 0), (10., 0.), (1, -50), (0.2, 0.5), (0.001, 0)]:
                 if dtype2.kind in 'iu':
                     lim = np.iinfo(dtype2)
@@ -273,12 +278,20 @@ _dtypes.extend(['uint8', 'uint16'])
 def _handle_underflow(dtype, *elements):
     """Wrapper around path description which converts underflow into proper points"""
     out = []
+    dtype = np.dtype(dtype)
+    # get the signed integer type of the same width
+    dtype_int = np.dtype(f'i{dtype.itemsize}')
     for el in elements:
         newElement = [el[0]]
         for ii in range(1, 3):
             coord = el[ii]
-            if coord < 0:
-                coord = np.array(coord, dtype=dtype)
+            if dtype.kind == 'u' and coord < 0:
+                # coord is a float with a negative integral value.
+                # for unsigned integer types, we want negative values to
+                # wrap-around. to get consistent wrap-around behavior
+                # across different numpy versions and machine platforms,
+                # we first convert coord to a signed integer.
+                coord = np.array(coord, dtype=dtype_int).astype(dtype)
             newElement.append(float(coord))
         out.append(tuple(newElement))
     return out
@@ -287,7 +300,7 @@ def _handle_underflow(dtype, *elements):
     "xs, ys, connect, expected", [
         *(
             (
-                np.arange(6, dtype=dtype), np.arange(0, -6, step=-1, dtype=dtype), 'all',
+                np.arange(6, dtype=dtype), np.arange(0, -6, step=-1).astype(dtype), 'all',
                 _handle_underflow(dtype,
                                   (MoveToElement, 0.0, 0.0),
                                   (LineToElement, 1.0, -1.0),
@@ -300,7 +313,7 @@ def _handle_underflow(dtype, *elements):
         ),
         *(
             (
-                np.arange(6, dtype=dtype), np.arange(0, -6, step=-1, dtype=dtype), 'pairs',
+                np.arange(6, dtype=dtype), np.arange(0, -6, step=-1).astype(dtype), 'pairs',
                 _handle_underflow(dtype,
                                   (MoveToElement, 0.0, 0.0),
                                   (LineToElement, 1.0, -1.0),
@@ -313,7 +326,7 @@ def _handle_underflow(dtype, *elements):
         ),
         *(
             (
-                np.arange(5, dtype=dtype), np.arange(0, -5, step=-1, dtype=dtype), 'pairs',
+                np.arange(5, dtype=dtype), np.arange(0, -5, step=-1).astype(dtype), 'pairs',
                 _handle_underflow(dtype,
                                   (MoveToElement, 0.0, 0.0),
                                   (LineToElement, 1.0, -1.0),
@@ -325,7 +338,7 @@ def _handle_underflow(dtype, *elements):
         ),
         # NaN types don't coerce to integers, don't test for all types since that doesn't make sense
         (
-            np.arange(5), np.array([0, -1, np.NaN, -3, -4]), 'finite', (
+            np.arange(5), np.array([0, -1, np.nan, -3, -4]), 'finite', (
                 (MoveToElement, 0.0, 0.0),
                 (LineToElement, 1.0, -1.0),
                 (LineToElement, 1.0, -1.0),
@@ -334,7 +347,7 @@ def _handle_underflow(dtype, *elements):
             ) 
         ),
         (
-            np.array([0, 1, np.NaN, 3, 4]), np.arange(0, -5, step=-1), 'finite', (
+            np.array([0, 1, np.nan, 3, 4]), np.arange(0, -5, step=-1), 'finite', (
                 (MoveToElement, 0.0, 0.0),
                 (LineToElement, 1.0, -1.0),
                 (LineToElement, 1.0, -1.0),
@@ -344,7 +357,7 @@ def _handle_underflow(dtype, *elements):
         ),
         *(
             (
-                np.arange(5, dtype=dtype), np.arange(0, -5, step=-1, dtype=dtype), np.array([0, 1, 0, 1, 0]),
+                np.arange(5, dtype=dtype), np.arange(0, -5, step=-1).astype(dtype), np.array([0, 1, 0, 1, 0]),
                 _handle_underflow(dtype,
                                   (MoveToElement, 0.0, 0.0),
                                   (MoveToElement, 1.0, -1.0),
@@ -400,3 +413,69 @@ def test_ndarray_from_qimage():
         qimg.fill(0)
         arr = pg.functions.ndarray_from_qimage(qimg)
         assert arr.shape == (h, w)
+
+def test_colorDistance():
+    pg.colorDistance([pg.Qt.QtGui.QColor(0,0,0), pg.Qt.QtGui.QColor(255,0,0)])
+    pg.colorDistance([])
+
+
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [
+        (["r"], [255, 0, 0, 255]),
+        (["g"], [0, 255, 0, 255]),
+        (["b"], [0, 0, 255, 255]),
+        (["c"], [0, 255, 255, 255]),
+        (["m"], [255, 0, 255, 255]),
+        (["y"], [255, 255, 0, 255]),
+        (["k"], [0, 0, 0, 255]),
+        (["w"], [255, 255, 255, 255]),
+        (["d"], [150, 150, 150, 255]),
+        (["l"], [200, 200, 200, 255]),
+        (["s"], [100, 100, 150, 255]),
+        ([0.75], [191, 191, 191, 255]),
+        ([11, 22, 33], [11, 22, 33, 255]),
+        ([11, 22, 33, 44], [11, 22, 33, 44]),
+        ([(11, 22, 33)], [11, 22, 33, 255]),
+        ([(11, 22, 33, 44)], [11, 22, 33, 44]),
+        ([0], [255, 0, 0, 255]),
+        ([1], [255, 170, 0, 255]),
+        ([2], [170, 255, 0, 255]),
+        ([3], [0, 255, 0, 255]),
+        ([4], [0, 255, 170, 255]),
+        ([5], [0, 170, 255, 255]),
+        ([9], [255, 0, 0, 255]),
+        ([(0, 2)], [255, 0, 0, 255]),
+        ([(1, 2)], [0, 255, 255, 255]),
+        ([(2, 2)], [255, 0, 0, 255]),
+        (["#89a"], [136, 153, 170, 255]),
+        (["#89ab"], [136, 153, 170, 187]),
+        (["#4488cc"], [68, 136, 204, 255]),
+        (["#4488cc00"], [68, 136, 204, 0]),
+        ([QtGui.QColor(1, 2, 3, 4)], [1, 2, 3, 4]),
+        (["steelblue"], [70, 130, 180, 255]),
+        (["lawngreen"], [124, 252, 0, 255]),
+    ],
+)
+def test_mkColor(test_input, expected):
+    qcol: QtGui.QColor = pg.functions.mkColor(*test_input)
+    assert list(qcol.getRgb()) == expected
+
+def test_signal_block_unconnected():
+    """Test that SignalBlock does not end up connecting an unconnected slot"""
+    class Sender(QtCore.QObject):
+        signal = QtCore.Signal()
+
+    class Receiver:
+        def __init__(self):
+            self.counter = 0
+
+        def slot(self):
+            self.counter += 1
+
+    sender = Sender()
+    receiver = Receiver()
+    with SignalBlock(sender.signal, receiver.slot):
+        pass
+    sender.signal.emit()
+    assert receiver.counter == 0

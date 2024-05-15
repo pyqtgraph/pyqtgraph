@@ -4,10 +4,10 @@ Update a simple plot as rapidly as possible to measure speed.
 """
 
 import argparse
-from collections import deque
-from time import perf_counter
+import itertools
 
 import numpy as np
+from utils import FrameCounter
 
 import pyqtgraph as pg
 import pyqtgraph.functions as fn
@@ -30,11 +30,15 @@ parser.set_defaults(use_opengl=None)
 parser.add_argument('--allow-opengl-toggle', action='store_true',
     help="""Allow on-the-fly change of OpenGL setting. This may cause unwanted side effects.
     """)
+parser.add_argument('--iterations', default=float('inf'), type=float,
+    help="Number of iterations to run before exiting"
+)
 args = parser.parse_args()
 
 if args.use_opengl is not None:
     pg.setConfigOption('useOpenGL', args.use_opengl)
     pg.setConfigOption('enableExperimental', args.use_opengl)
+use_opengl = pg.getConfigOption('useOpenGL')
 
 # don't limit frame rate to vsync
 sfmt = QtGui.QSurfaceFormat()
@@ -73,18 +77,15 @@ splitter.addWidget(pt)
 splitter.addWidget(pw)
 splitter.show()
 
-interactor = ptree.Interactor(parent=params, nest=False)
+interactor = ptree.Interactor(
+    parent=params, nest=False, runOptions=ptree.RunOptions.ON_CHANGED
+)
 
 pw.setWindowTitle('pyqtgraph example: PlotSpeedTest')
 pw.setLabel('bottom', 'Index', units='B')
 curve = MonkeyCurveItem(pen=default_pen, brush='b')
 pw.addItem(curve)
-
-rollingAverageSize = 1000
-elapsed = deque(maxlen=rollingAverageSize)
-
-def resetTimings(*args):
-    elapsed.clear()
+iterations_counter = itertools.count()
 
 @interactor.decorate(
     nest=True,
@@ -93,7 +94,14 @@ def resetTimings(*args):
     fsample={'units': 'Hz'},
     frequency={'units': 'Hz'}
 )
-def makeData(noise=True, nsamples=5000, frames=50, fsample=1000.0, frequency=0.0, amplitude=5.0):
+def makeData(
+    noise=args.noise,
+    nsamples=args.nsamples,
+    frames=args.frames,
+    fsample=args.fsample,
+    frequency=args.frequency,
+    amplitude=args.amplitude,
+):
     global data, connect_array, ptr
     ttt = np.arange(frames * nsamples, dtype=np.float64) / fsample
     data = amplitude*np.sin(2*np.pi*frequency*ttt).reshape((frames, nsamples))
@@ -105,6 +113,7 @@ def makeData(noise=True, nsamples=5000, frames=50, fsample=1000.0, frequency=0.0
 
 params.child('makeData').setOpts(title='Plot Options')
 
+
 @interactor.decorate(
     connect={'type': 'list', 'limits': ['all', 'pairs', 'finite', 'array']}
 )
@@ -113,25 +122,26 @@ def update(
     connect='all',
     skipFiniteCheck=False
 ):
-    global curve, data, ptr, elapsed, fpsLastUpdate
+    global ptr
+
+    if next(iterations_counter) > args.iterations:
+        # cleanly close down benchmark
+        timer.stop()
+        app.quit()
+        return None
 
     if connect == 'array':
         connect = connect_array
 
-    # Measure
-    t_start = perf_counter()
-    curve.setData(data[ptr], antialias=antialias, connect=connect, skipFiniteCheck=skipFiniteCheck)
-    app.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents)
-    t_end = perf_counter()
-    elapsed.append(t_end - t_start)
+    curve.setData(
+        data[ptr],
+        antialias=antialias,
+        connect=connect,
+        skipFiniteCheck=skipFiniteCheck
+    )
     ptr = (ptr + 1) % data.shape[0]
+    framecnt.update()
 
-    # update fps at most once every 0.2 secs
-    if t_end - fpsLastUpdate > 0.2:
-        fpsLastUpdate = t_end
-        average = np.mean(elapsed)
-        fps = 1 / average
-        pw.setTitle('%0.2f fps - %0.1f ms avg' % (fps, average * 1_000))
 
 @interactor.decorate(
     useOpenGL={'readonly': not args.allow_opengl_toggle},
@@ -142,24 +152,27 @@ def updateOptions(
     curvePen=pg.mkPen(),
     plotMethod='pyqtgraph',
     fillLevel=False,
-    enableExperimental=False,
-    useOpenGL=False,
+    enableExperimental=use_opengl,
+    useOpenGL=use_opengl,
 ):
     pg.setConfigOption('enableExperimental', enableExperimental)
-    pg.setConfigOption('useOpenGL', useOpenGL)
+    pw.useOpenGL(useOpenGL)
     curve.setPen(curvePen)
     curve.setFillLevel(0.0 if fillLevel else None)
     curve.setMethod(plotMethod)
 
-params.sigTreeStateChanged.connect(resetTimings)
 
 makeData()
-
-fpsLastUpdate = perf_counter()
 
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
 
+framecnt = FrameCounter()
+framecnt.sigFpsUpdate.connect(lambda fps: pw.setTitle(f'{fps:.1f} fps'))
+
 if __name__ == '__main__':
+    # Splitter by default gives too small of a width to the parameter tree,
+    # so fix that right before the event loop
+    pt.setMinimumSize(225,0)
     pg.exec()

@@ -18,14 +18,15 @@ class CSVExporter(Exporter):
     windows = []
     def __init__(self, item):
         Exporter.__init__(self, item)
-        self.params = Parameter(name='params', type='group', children=[
+        self.params = Parameter.create(name='params', type='group', children=[
             {'name': 'separator', 'title': translate("Exporter", 'separator'), 'type': 'list', 'value': 'comma', 'limits': ['comma', 'tab']},
             {'name': 'precision', 'title': translate("Exporter", 'precision'), 'type': 'int', 'value': 10, 'limits': [0, None]},
             {
                 'name': 'columnMode',
                 'title': translate("Exporter", 'columnMode'),
                 'type': 'list',
-                'limits': ['(x,y) per plot', '(x,y,y,y) for all plots']
+                'limits': ['(x,y) per plot', '(x,y,y,y) for all plots'],
+                'value': '(x,y) per plot',
             }
         ])
 

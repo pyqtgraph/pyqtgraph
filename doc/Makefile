@@ -2,17 +2,18 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    =
-SPHINXBUILD   = sphinx-build
+SPHINXOPTS    ?= -n
+SPHINXBUILD   ?= sphinx-build
 PAPER         =
 BUILDDIR      = build
+SOURCEDIR	  = source
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
+ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCEDIR)
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest livehtml dash 
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -32,14 +33,35 @@ help:
 	@echo "  changes    to make an overview of all changed/added/deprecated items"
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
+	@echo "  livehtml   to create livehtml of docs that watches for changes"
 
 clean:
 	-rm -rf $(BUILDDIR)/*
 
+livehtml:
+	sphinx-autobuild -a "$(SOURCEDIR)" "$(BUILDDIR)/html" --watch doc/source/_static --open-browser
+
 html:
+	# this will not detect changes in theme files, static files and
+	# source code used with auto-doc
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+
+dash: clean
+	# this will create a docset of the documentation, used in documentation
+	# viewers such as dash or zeal, requires doc2dash to be installed
+	export BUILD_DASH_DOCSET=1;\
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/dash
+	doc2dash -n pyqtgraph\
+	 --index-page index.html\
+	 --online-redirect-url https://pyqtgraph.readthedocs.io/en/latest\
+	 --icon $(SOURCEDIR)/_static/docset-icon.png\
+	 --icon-2x $(SOURCEDIR)/_static/docset-icon@2x.png\
+	 --force\
+	 $(BUILDDIR)/dash
+	@echo
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml

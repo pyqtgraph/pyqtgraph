@@ -1,30 +1,111 @@
-import pytest
 from functools import wraps
-from pyqtgraph.parametertree import Parameter
-from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
-from pyqtgraph.parametertree import RunOpts, InteractiveFunction, Interactor, interact
 
+import numpy as np
+import pytest
+
+import pyqtgraph as pg
+from pyqtgraph import functions as fn
+from pyqtgraph.parametertree import (
+    InteractiveFunction,
+    Interactor,
+    Parameter,
+    RunOptions,
+    interact,
+)
+from pyqtgraph.parametertree.Parameter import PARAM_TYPES
+from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
+from pyqtgraph.Qt import QtGui
+
+pg.mkQApp()
 
 def test_parameter_hasdefault():
-    opts = {"name": "param", "type": int, "value": 1}
+    opts = {"name": "param", "type": 'int', "value": 1}
 
     # default unspecified
-    p = Parameter(**opts)
+    p = Parameter.create(**opts)
+    # TODO after January 2025, this next line needs to reverse its assertion
     assert p.hasDefault()
-    assert p.defaultValue() == opts["value"]
-
-    p.setDefault(2)
-    assert p.hasDefault()
-    assert p.defaultValue() == 2
 
     # default specified
-    p = Parameter(default=0, **opts)
+    p = Parameter.create(default=0, **opts)
     assert p.hasDefault()
     assert p.defaultValue() == 0
 
     # default specified as None
-    p = Parameter(default=None, **opts)
+    p = Parameter.create(default=None, **opts)
     assert not p.hasDefault()
+    p.setDefault(2)
+    assert p.hasDefault()
+    assert p.defaultValue() == 2
+
+
+def test_parameter_defaults_and_pristineness():
+    # init with identical value and default
+    p = Parameter.create(name="param", type='int', value=1, default=1)
+    assert p.valueModifiedSinceResetToDefault() is True
+    # init with different value and default
+    p = Parameter.create(name="param", type='int', value=1, default=2)
+    assert p.valueModifiedSinceResetToDefault() is True
+    # init with value only
+    p = Parameter.create(name="param", type='int', value=1)
+    assert p.valueModifiedSinceResetToDefault() is True
+    # TODO after January 2025, uncomment the following lines
+    # with pytest.raises(ValueError):
+    #     p.setToDefault()
+    # init with default only
+    p = Parameter.create(name="param", type='int', default=1)
+    assert p.valueModifiedSinceResetToDefault() is False
+
+    # initially value is pristine since only a default was given
+    assert p.value() == 1
+    # update default, and allow the value to track since it is pristine
+    p.setDefault(2, updatePristineValues=True)
+    assert p.value() == 2
+    assert p.valueModifiedSinceResetToDefault() is False
+    # update default but do not allow the value to track
+    p.setDefault(3)  # by default, updatePristineValues=False
+    assert p.value() == 2
+    assert p.valueModifiedSinceResetToDefault() is True        
+    # update default again, explicitly requesting updatePristineValues=False
+    p.setToDefault()
+    assert p.valueModifiedSinceResetToDefault() is False
+    p.setDefault(4, updatePristineValues=False)
+    assert p.value() == 3
+    assert p.valueModifiedSinceResetToDefault() is True
+    # update value directly, causing dirty state
+    p.setToDefault()
+    assert p.valueModifiedSinceResetToDefault() is False
+    p.setValue(5)
+    assert p.valueModifiedSinceResetToDefault() is True
+    p.setDefault(6, updatePristineValues=True)
+    assert p.value() == 5
+    assert p.valueModifiedSinceResetToDefault() is True
+    # test setting value to same as default value does not result in pristine state
+    p.setToDefault()
+    assert p.valueModifiedSinceResetToDefault() is False
+    p.setValue(0)
+    p.setValue(p.defaultValue())
+    assert p.valueModifiedSinceResetToDefault() is True
+    # test setToDefault
+    p.setToDefault()
+    assert p.valueModifiedSinceResetToDefault() is False
+    assert p.value() == p.defaultValue()
+    p.setDefault(7, updatePristineValues=True)
+    assert p.value() == 7
+
+    # init with neither value nor default
+    p = Parameter.create(name="param", type='int')
+    assert p.valueModifiedSinceResetToDefault() is False
+    # TODO after January 2025, uncomment the following lines
+    # with pytest.raises(ValueError):
+    #     p.value()
+    # with pytest.raises(ValueError):
+    #     p.defaultValue()
+    # with pytest.raises(ValueError):
+    #     p.setToDefault()
+    p.setDefault(8)
+    assert p.valueModifiedSinceResetToDefault() is False
+    assert p.value() == 8
 
 
 def test_add_child():
@@ -65,7 +146,7 @@ def test_unpack_parameter():
 
 
 def test_interact():
-    interactor = Interactor(runOpts=RunOpts.ON_ACTION)
+    interactor = Interactor(runOptions=RunOptions.ON_ACTION)
     value = None
 
     def retain(func):
@@ -99,14 +180,18 @@ def test_interact():
     a_interact = InteractiveFunction(a, closures=dict(x=lambda: myval))
     host = interactor(a_interact)
     assert "x" not in host.names
-    host.child("Run").activate()
+    host.activate()
     assert value == (5, 5)
     myval = 10
-    host.child("Run").activate()
+    host.activate()
     assert value == (10, 5)
 
     host = interactor(
-        a, x=10, y=50, ignores=["x"], runOpts=(RunOpts.ON_CHANGED, RunOpts.ON_CHANGING)
+        a,
+        x=10,
+        y=50,
+        ignores=["x"],
+        runOptions=(RunOptions.ON_CHANGED, RunOptions.ON_CHANGING),
     )
     for child in "x", "Run":
         assert child not in host.names
@@ -127,7 +212,7 @@ def test_interact():
         assert host.title() == "Group only"
         assert [p.title() is None for p in host]
 
-    with interactor.optsContext(runOpts=RunOpts.ON_CHANGED):
+    with interactor.optsContext(runOptions=RunOptions.ON_CHANGED):
         host = interactor(a, x=5)
         host["y"] = 20
         assert value == (5, 20)
@@ -140,7 +225,7 @@ def test_interact():
     host = interactor(kwargTest, a=10, test=3)
     for ch in "a", "b", "test":
         assert ch in host.names
-    host.child("Run").activate()
+    host.activate()
     assert value == 12
 
     host = GP.create(name="test deco", type="group")
@@ -153,10 +238,10 @@ def test_interact():
 
     assert "a" in host.names
     assert "x" in host.child("a").names
-    host.child("a", "Run").activate()
+    host.child("a").activate()
     assert value == 5
 
-    @interactor.decorate(nest=False, runOpts=RunOpts.ON_CHANGED)
+    @interactor.decorate(nest=False, runOptions=RunOptions.ON_CHANGED)
     @retain
     def b(y=6):
         return y
@@ -173,7 +258,7 @@ def test_interact():
     def override(**kwargs):
         return raw(**kwargs)
 
-    host = interactor(wraps(raw)(override), runOpts=RunOpts.ON_CHANGED)
+    host = interactor(wraps(raw)(override), runOptions=RunOptions.ON_CHANGED)
     assert "x" in host.names
     host["x"] = 100
     assert value == 100
@@ -183,23 +268,28 @@ def test_run():
     def a():
         """"""
 
-    interactor = Interactor(runOpts=RunOpts.ON_ACTION)
+    interactor = Interactor(runOptions=RunOptions.ON_ACTION)
 
     defaultRunBtn = Parameter.create(**interactor.runActionTemplate, name="Run")
-    btn = interactor(a)
-    assert btn.type() == defaultRunBtn.type()
+    group = interactor(a)
+    assert group.makeTreeItem(0).button.text() == defaultRunBtn.name()
 
     template = dict(defaultName="Test", type="action")
     with interactor.optsContext(runActionTemplate=template):
         x = interactor(a)
-    assert x.name() == "Test"
+    assert x.makeTreeItem(0).button.text() == "Test"
 
     parent = Parameter.create(name="parent", type="group")
     test2 = interactor(a, parent=parent, nest=False)
-    assert test2.parent() is parent
+    assert (
+        len(test2) == 1
+        and test2[0].name() == a.__name__
+        and test2[0].parent() is parent
+    )
 
     test2 = interactor(a, nest=False)
-    assert not test2.parent()
+    assert len(test2) == 1 and not test2[0].parent()
+
 
 def test_no_func_group():
     def inner(a=5, b=6):
@@ -215,22 +305,19 @@ def test_tips():
 
     interactor = Interactor()
 
-    btn = interactor(a, runOpts=RunOpts.ON_ACTION)
-    assert btn.opts["tip"] == a.__doc__
+    group = interactor(a, runOptions=RunOptions.ON_ACTION)
+    assert group.opts["tip"] == a.__doc__ and group.type() == "_actiongroup"
+
+    params = interactor(a, runOptions=RunOptions.ON_ACTION, nest=False)
+    assert len(params) == 1 and params[0].opts["tip"] == a.__doc__
 
     def a2(x=5):
-        """a simple tip"""
-
-    def a3(x=5):
         """
         A long docstring with a newline
         followed by more text won't result in a tooltip
         """
 
-    param = interactor(a2, runOpts=RunOpts.ON_ACTION)
-    assert param.opts["tip"] == a2.__doc__ and param.type() == "group"
-
-    param = interactor(a3)
+    param = interactor(a2)
     assert "tip" not in param.opts
 
 
@@ -243,7 +330,7 @@ def test_interactiveFunc():
         return a
 
     interactive = InteractiveFunction(myfunc)
-    host = interact(interactive, runOpts=[])
+    host = interact(interactive, runOptions=[])
 
     host["a"] = 7
     assert interactive.runFromAction() == 7
@@ -258,6 +345,11 @@ def test_interactiveFunc():
 
     assert not interactive.setDisconnected(True)
     assert interactive.setDisconnected(False)
+
+    host = interact(interactive, runOptions=RunOptions.ON_CHANGED)
+    interactive.disconnect()
+    host["a"] = 20
+    assert value == 10
 
 
 def test_badOptsContext():
@@ -296,7 +388,7 @@ def test_remove_params():
     def inner(a=4):
         RetainVal.a = a
 
-    host = interact(inner)
+    host = interact(inner, runOptions=RunOptions.ON_CHANGED)
     host["a"] = 5
     assert RetainVal.a == 5
 
@@ -354,6 +446,7 @@ def test_update_non_param_kwarg():
     def a(x=3, **kwargs):
         RetainVal.a = sum(kwargs.values()) + x
         return RetainVal.a
+
     a.parametersNeedRunKwargs = True
 
     host = interact(a)
@@ -372,10 +465,12 @@ def test_update_non_param_kwarg():
     # But the cache should still be up-to-date
     assert a() == 5
 
+
 def test_hookup_extra_params():
     @InteractiveFunction
     def a(x=5, **kwargs):
         return x + sum(kwargs.values())
+
     interact(a)
 
     p2 = Parameter.create(name="p2", type="int", value=3)
@@ -388,6 +483,13 @@ def test_class_interact():
     parent = Parameter.create(name="parent", type="group")
     interactor = Interactor(parent=parent, nest=False)
 
+    def outside_class_deco(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
     class A:
         def a(self, x=5):
             return x
@@ -396,9 +498,80 @@ def test_class_interact():
         def b(cls, y=5):
             return y
 
+        @outside_class_deco
+        def c(self, z=5):
+            return z
+
     a = A()
     ai = interactor.decorate()(a.a)
     assert ai() == a.a()
 
     bi = interactor.decorate()(A.b)
     assert bi() == A.b()
+
+    ci = interactor.decorate()(a.c)
+    assert ci() == a.c()
+
+
+def test_args_interact():
+    @interact.decorate()
+    def a(*args):
+        """"""
+
+    assert not (a.parameters or a.extra)
+    a()
+
+
+def test_interact_with_icon():
+    randomPixmap = QtGui.QPixmap(64, 64)
+    randomPixmap.fill(QtGui.QColor("red"))
+
+    parent = Parameter.create(name="parent", type="group")
+
+    @interact.decorate(
+        runActionTemplate=dict(icon=randomPixmap),
+        parent=parent,
+        runOptions=RunOptions.ON_ACTION,
+    )
+    def a():
+        """"""
+
+    groupItem = parent.child("a").itemClass(parent.child("a"), 1)
+    buttonPixmap = groupItem.button.icon().pixmap(randomPixmap.size())
+
+    # hold references to the QImages
+    images = [ pix.toImage() for pix in (randomPixmap, buttonPixmap) ]
+
+    imageBytes = [ fn.ndarray_from_qimage(img) for img in images ]
+    assert np.array_equal(*imageBytes)
+
+
+def test_interact_ignore_none_child():
+    class InteractorSubclass(Interactor):
+        def resolveAndHookupParameterChild(
+            self, functionGroup, childOpts, interactiveFunction
+        ):
+            if childOpts["type"] not in PARAM_TYPES:
+                # Optionally add to `extra` instead
+                return None
+            return super().resolveAndHookupParameterChild(
+                functionGroup, childOpts, interactiveFunction
+            )
+
+    interactor = InteractorSubclass()
+    out = interactor(lambda a=None: a, runOptions=[])
+    assert "a" not in out.names
+
+
+def test_interact_existing_parent():
+    lastValue = None
+
+    def a():
+        nonlocal lastValue
+        lastValue = 5
+
+    parent = Parameter.create(name="parent", type="group")
+    outParam = interact(a, parent=parent)
+    assert outParam in parent.names.values()
+    outParam.activate()
+    assert lastValue == 5

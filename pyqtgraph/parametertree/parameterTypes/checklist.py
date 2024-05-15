@@ -31,11 +31,8 @@ class ChecklistParameterItem(GroupParameterItem):
             self.metaBtnLayout.addWidget(btn)
             btn.clicked.connect(getattr(self, f'{title.lower()}AllClicked'))
 
-        self.metaBtns['default'] = WidgetParameterItem.makeDefaultButton(self)
+        self.metaBtns['default'] = self.makeDefaultButton()
         self.metaBtnLayout.addWidget(self.metaBtns['default'])
-
-    def defaultClicked(self):
-        self.param.setToDefault()
 
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
@@ -45,9 +42,13 @@ class ChecklistParameterItem(GroupParameterItem):
         tw.setItemWidget(self, 1, self.metaBtnWidget)
 
     def selectAllClicked(self):
+        # timer stop: see explanation on param.setToDefault()
+        self.param.valChangingProxy.timer.stop()
         self.param.setValue(self.param.reverse[0])
 
     def clearAllClicked(self):
+        # timer stop: see explanation on param.setToDefault()
+        self.param.valChangingProxy.timer.stop()
         self.param.setValue([])
 
     def insertChild(self, pos, item):
@@ -65,18 +66,37 @@ class ChecklistParameterItem(GroupParameterItem):
         self.btnGrp.removeButton(child.widget)
 
     def optsChanged(self, param, opts):
+        super().optsChanged(param, opts)
         if 'expanded' in opts:
             for btn in self.metaBtns.values():
                 btn.setVisible(opts['expanded'])
         exclusive = opts.get('exclusive', param.opts['exclusive'])
         enabled = opts.get('enabled', param.opts['enabled'])
-        for btn in self.metaBtns.values():
-            btn.setDisabled(exclusive or (not enabled))
+        for name, btn in self.metaBtns.items():
+            if name != 'default':
+                btn.setDisabled(exclusive or (not enabled))
         self.btnGrp.setExclusive(exclusive)
+        # "Limits" will force update anyway, no need to duplicate if it's present
+        if 'limits' not in opts and ('enabled' in opts or 'readonly' in opts):
+            self.updateDefaultBtn()
 
     def expandedChangedEvent(self, expanded):
         for btn in self.metaBtns.values():
             btn.setVisible(expanded)
+
+    def valueChanged(self, param, val):
+        self.updateDefaultBtn()
+
+    def updateDefaultBtn(self):
+        self.metaBtns["default"].setEnabled(
+            not self.param.valueIsDefault()
+            and self.param.opts["enabled"]
+            and self.param.writable()
+        )
+        return
+
+    makeDefaultButton = WidgetParameterItem.makeDefaultButton
+    defaultClicked = WidgetParameterItem.defaultClicked
 
 class RadioParameterItem(BoolParameterItem):
     """
@@ -111,12 +131,13 @@ class RadioParameterItem(BoolParameterItem):
 # Proxy around radio/bool type so the correct item class gets instantiated
 class BoolOrRadioParameter(SimpleParameter):
 
-    def __init__(self, **kargs):
-        if kargs.get('type') == 'bool':
-            self.itemClass = BoolParameterItem
+    @property
+    def itemClass(self):
+        if self.opts.get('type') == 'bool':
+            return BoolParameterItem
         else:
-            self.itemClass = RadioParameterItem
-        super().__init__(**kargs)
+            return RadioParameterItem
+
 
 class ChecklistParameter(GroupParameter):
     """
@@ -135,6 +156,11 @@ class ChecklistParameter(GroupParameter):
     itemClass = ChecklistParameterItem
 
     def __init__(self, **opts):
+        # Child options are populated through values, not explicit "children"
+        if 'children' in opts:
+            raise ValueError(
+                "Cannot pass 'children' to ChecklistParameter. Pass a 'value' key only."
+            )
         self.targetValue = None
         limits = opts.setdefault('limits', [])
         self.forward, self.reverse = ListParameter.mapping(limits)
@@ -150,7 +176,12 @@ class ChecklistParameter(GroupParameter):
             # Also, value calculation will be incorrect until children are added, so make sure to recompute
             self.setValue(value)
 
-        self.valChangingProxy = SignalProxy(self.sigValueChanging, delay=opts.get('delay', 1.0), slot=self._finishChildChanges)
+        self.valChangingProxy = SignalProxy(
+            self.sigValueChanging,
+            delay=opts.get('delay', 1.0),
+            slot=self._finishChildChanges,
+            threadSafe=False,
+        )
 
     def childrenValue(self):
         vals = [self.forward[p.name()] for p in self.children() if p.value()]
@@ -162,12 +193,17 @@ class ChecklistParameter(GroupParameter):
         else:
             return vals
 
-    def _onChildChanging(self, _ch, _val):
-        self.sigValueChanging.emit(self, self.childrenValue())
+    def _onChildChanging(self, child, value):
+        # When exclusive, ensure only this value is True
+        if self.opts['exclusive'] and value:
+            value = self.forward[child.name()]
+        else:
+            value = self.childrenValue()
+        self.sigValueChanging.emit(self, value)
 
     def updateLimits(self, _param, limits):
         oldOpts = self.names
-        val = self.opts['value']
+        val = self.opts.get('value', None)
         # Make sure adding and removing children don't cause tree state changes
         self.blockTreeChangeSignal()
         self.clearChildren()
@@ -191,36 +227,83 @@ class ChecklistParameter(GroupParameter):
 
     def _finishChildChanges(self, paramAndValue):
         param, value = paramAndValue
-        if self.opts['exclusive']:
-            val = self.reverse[0][self.reverse[1].index(param.name())]
-            return self.setValue(val)
         # Interpret value, fire sigValueChanged
-        return self.setValue(self.childrenValue())
+        return self.setValue(value)
 
     def optsChanged(self, param, opts):
         if 'exclusive' in opts:
-            # Force set value to ensure updates
-            # self.opts['value'] = self._VALUE_UNSET
             self.updateLimits(None, self.opts.get('limits', []))
         if 'delay' in opts:
             self.valChangingProxy.setDelay(opts['delay'])
-    
+
     def setValue(self, value, blockSignal=None):
         self.targetValue = value
-        exclusive = self.opts['exclusive']
-        # Will emit at the end, so no problem discarding existing changes
-        cmpVals = value if isinstance(value, list) else [value]
-        for ii in range(len(cmpVals)-1, -1, -1):
-            exists = any(fn.eq(cmpVals[ii], lim) for lim in self.reverse[0])
-            if not exists:
-                del cmpVals[ii]
-        names = [self.reverse[1][self.reverse[0].index(val)] for val in cmpVals]
-        if exclusive and len(names) > 1:
-            names = [names[0]]
-        elif exclusive and not len(names) and len(self.forward):
-            # An option is required during exclusivity
-            names = [self.reverse[1][0]]
+        if not isinstance(value, list):
+            value = [value]
+        names, values = self._intersectionWithLimits(value)
+        valueToSet = values
+
+        if self.opts['exclusive']:
+            if len(self.forward):
+                # Exclusive means at least one entry must exist, grab from limits
+                # if they exist
+                names.append(self.reverse[1][0])
+            if len(names) > 1:
+                names = names[:1]
+            if not len(names):
+                valueToSet = None
+            else:
+                valueToSet = self.forward[names[0]]
+
         for chParam in self:
             checked = chParam.name() in names
+            # Will emit at the end, so no problem discarding existing changes
             chParam.setValue(checked, self._onChildChanging)
-        super().setValue(self.childrenValue(), blockSignal)
+        super().setValue(valueToSet, blockSignal)
+
+    def _intersectionWithLimits(self, values: list):
+        """
+        Returns the (names, values) from limits that intersect with ``values``.
+        """
+        allowedNames = []
+        allowedValues = []
+        # Could be replaced by "value in self.reverse[0]" and "reverse[0].index",
+        # but this allows for using pg.eq to cover more diverse value options
+        for val in values:
+            for limitName, limitValue in zip(*self.reverse):
+                if fn.eq(limitValue, val):
+                    allowedNames.append(limitName)
+                    allowedValues.append(val)
+                    break
+        return allowedNames, allowedValues
+
+    def setToDefault(self):
+        # Since changing values are covered by a proxy, this method must be overridden
+        # to flush changes. Otherwise, setting to default while waiting for changes
+        # to finalize will override the request to take default values
+        self.valChangingProxy.timer.stop()
+        super().setToDefault()
+
+    def saveState(self, filter=None):
+        # Unlike the normal GroupParameter, child states shouldn't be separately
+        # preserved
+        state = super().saveState(filter)
+        state.pop("children", None)
+        return state
+
+    def restoreState(
+        self,
+        state,
+        recursive=True,
+        addChildren=True,
+        removeChildren=True,
+        blockSignals=True
+    ):
+        # Child management shouldn't happen through state
+        return super().restoreState(
+            state,
+            recursive,
+            addChildren=False,
+            removeChildren=False,
+            blockSignals=blockSignals
+        )

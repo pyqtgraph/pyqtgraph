@@ -1,18 +1,19 @@
 from OpenGL.GL import *  # noqa
 import numpy as np
+
 from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLImageItem']
 
 class GLImageItem(GLGraphicsItem):
     """
-    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`
     
     Displays image data as a textured quad.
     """
     
     
-    def __init__(self, data, smooth=False, glOptions='translucent'):
+    def __init__(self, data, smooth=False, glOptions='translucent', parentItem=None):
         """
         
         ==============  =======================================================================================
@@ -25,7 +26,7 @@ class GLImageItem(GLGraphicsItem):
         
         self.smooth = smooth
         self._needUpdate = False
-        GLGraphicsItem.__init__(self)
+        super().__init__(parentItem=parentItem)
         self.setData(data)
         self.setGLOptions(glOptions)
         self.texture = None

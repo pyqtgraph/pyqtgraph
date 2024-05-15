@@ -9,7 +9,7 @@ from ... import debug as debug
 from ... import functions as fn
 from ... import getConfigOption
 from ...Point import Point
-from ...Qt import QtCore, QtGui, QtWidgets, isQObjectAlive
+from ...Qt import QtCore, QtGui, QtWidgets, isQObjectAlive, QT_LIB
 from ..GraphicsWidget import GraphicsWidget
 from ..ItemGroup import ItemGroup
 
@@ -76,7 +76,7 @@ class ViewBox(GraphicsWidget):
     **Bases:** :class:`GraphicsWidget <pyqtgraph.GraphicsWidget>`
 
     Box that allows internal scaling/panning of children by mouse drag.
-    This class is usually created automatically as part of a :class:`PlotItem <pyqtgraph.PlotItem>` or :class:`Canvas <pyqtgraph.canvas.Canvas>` or with :func:`GraphicsLayout.addViewBox() <pyqtgraph.GraphicsLayout.addViewBox>`.
+    This class is usually created automatically as part of a :class:`PlotItem <pyqtgraph.PlotItem>` or :ref:`Canvas <Canvas>` or with :func:`GraphicsLayout.addViewBox() <pyqtgraph.GraphicsLayout.addViewBox>`.
 
     Features:
 
@@ -475,6 +475,10 @@ class ViewBox(GraphicsWidget):
             self.sigStateChanged.emit(self)
             self.sigResized.emit(self)
 
+    def boundingRect(self):
+        br = super().boundingRect()
+        return br.adjusted(0, 0, +0.5, +0.5)
+
     def viewRange(self):
         """Return a the view's visible range as a list: [[xmin, xmax], [ymin, ymax]]"""
         return [x[:] for x in self.state['viewRange']]  ## return copy
@@ -506,11 +510,11 @@ class ViewBox(GraphicsWidget):
             print("make qrectf failed:", self.state['targetRange'])
             raise
 
-    def _resetTarget(self):
+    def _resetTarget(self, force: bool = False):
         # Reset target range to exactly match current view range.
         # This is used during mouse interaction to prevent unpredictable
         # behavior (because the user is unaware of targetRange).
-        if self.state['aspectLocked'] is False: # (interferes with aspect locking)
+        if self.state['aspectLocked'] is False or force: # (interferes with aspect locking)
             self.state['targetRange'] = [self.state['viewRange'][0][:], self.state['viewRange'][1][:]]
             
     def _effectiveLimits(self):
@@ -593,7 +597,9 @@ class ViewBox(GraphicsWidget):
 
             # If we requested 0 range, try to preserve previous scale.
             # Otherwise just pick an arbitrary scale.
+            preserve = False
             if mn == mx:
+                preserve = True
                 dy = self.state['viewRange'][ax][1] - self.state['viewRange'][ax][0]
                 if dy == 0:
                     dy = 1
@@ -613,13 +619,14 @@ class ViewBox(GraphicsWidget):
                 raise Exception("Cannot set range [%s, %s]" % (str(mn), str(mx)))
 
             # Apply padding
-            if padding is None:
-                xpad = self.suggestPadding(ax)
-            else:
-                xpad = padding
-            p = (mx-mn) * xpad
-            mn -= p
-            mx += p
+            if not preserve:
+                if padding is None:
+                    xpad = self.suggestPadding(ax)
+                else:
+                    xpad = padding
+                p = (mx-mn) * xpad
+                mn -= p
+                mx += p
 
             # max range cannot be larger than bounds, if they are given
             if limits[ax][0] is not None and limits[ax][1] is not None:
@@ -841,7 +848,7 @@ class ViewBox(GraphicsWidget):
         (if *axis* is omitted, both axes will be changed).
         When enabled, the axis will automatically rescale when items are added/removed or change their shape.
         The argument *enable* may optionally be a float (0.0-1.0) which indicates the fraction of the data that should
-        be visible (this only works with items implementing a dataRange method, such as PlotDataItem).
+        be visible (this only works with items implementing a dataBounds method, such as PlotDataItem).
         """
         # support simpler interface:
         if x is not None or y is not None:
@@ -1438,7 +1445,7 @@ class ViewBox(GraphicsWidget):
             useX = True
             useY = True
 
-            if hasattr(item, 'dataBounds'):
+            if hasattr(item, 'dataBounds') and item.dataBounds is not None:
                 if frac is None:
                     frac = (1.0, 1.0)
                 xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
@@ -1608,7 +1615,9 @@ class ViewBox(GraphicsWidget):
                     if maxRng[target] is not None and diff > maxRng[target] or \
                        minRng[target] is not None and diff < minRng[target]:
                         # tweak the target range down so we can still pan properly
-                        self.state['targetRange'][ax] = canidateRange[ax]
+                        viewRange[ax] = canidateRange[ax]
+                        self.state['viewRange'][ax] = viewRange[ax]
+                        self._resetTarget(force=True)
                         ax = target  # Switch the "fixed" axes
 
             if ax == 0:
@@ -1621,6 +1630,26 @@ class ViewBox(GraphicsWidget):
                 if dx != 0:
                     changed[0] = True
                 viewRange[0] = rangeX
+
+        # Ensure, that the new viewRange obeys all the limits
+        for axis in [0, 1]:
+            range = viewRange[axis][1] - viewRange[axis][0]
+            if minRng[axis] is not None and minRng[axis] > range:
+                viewRange[axis][1] = viewRange[axis][0] + minRng[axis]
+                self.state["targetRange"][axis] = viewRange[axis]
+            if maxRng[axis] is not None and maxRng[axis] < range:
+                viewRange[axis][1] = viewRange[axis][0] + maxRng[axis]
+                self.state["targetRange"][axis] = viewRange[axis]
+            if limits[axis][0] is not None and viewRange[axis][0] < limits[axis][0]:
+                delta = limits[axis][0] - viewRange[axis][0]
+                viewRange[axis][0] += delta
+                viewRange[axis][1] += delta
+                self.state["targetRange"][axis] = viewRange[axis]
+            if limits[axis][1] is not None and viewRange[axis][1] > limits[axis][1]:
+                delta = viewRange[axis][1] - limits[axis][1]
+                viewRange[axis][0] -= delta
+                viewRange[axis][1] -= delta
+                self.state["targetRange"][axis] = viewRange[axis]
 
         # Consider only as 'changed' if the differences are larger than floating point inaccuracies,
         # which regularly appear in magnitude of around 1e-15. Therefore, 1e-9 as factor was chosen
@@ -1755,6 +1784,15 @@ class ViewBox(GraphicsWidget):
         for k in ViewBox.AllViews:
             if isQObjectAlive(k) and getConfigOption('crashWarning'):
                 sys.stderr.write('Warning: ViewBox should be closed before application exit.\n')
+
+            # PySide >= 6.7 prints a warning if we attempt to disconnect
+            # a signal that isn't connected.
+            if (
+                QT_LIB == 'PySide6' and
+                isQObjectAlive(k) and
+                k.receivers(QtCore.SIGNAL("destroyed()")) == 0
+            ):
+                continue
 
             try:
                 k.destroyed.disconnect()

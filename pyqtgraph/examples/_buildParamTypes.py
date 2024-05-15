@@ -6,10 +6,12 @@ from pyqtgraph.parametertree.parameterTypes import GroupParameter
 
 _encounteredTypes = {'group'}
 
+
 def makeChild(chType, cfgDict):
     _encounteredTypes.add(chType)
     param = Parameter.create(name='widget', type=chType)
-    param.setDefault(param.value())
+    if param.hasValue():
+        param.setDefault(param.value())
 
     def setOpt(_param, _val):
         # Treat blank strings as "None" to allow 'unsetting' that option
@@ -26,13 +28,16 @@ def makeChild(chType, cfgDict):
         else:
             optsChildren.append(child)
             child.sigValueChanged.connect(setOpt)
-    # Poplate initial options
+    # Populate initial options
     for p in optsChildren:
-        setOpt(p, p.value())
+        setOpt(p, p.value() if p.hasValue() else None)
 
-    grp = Parameter.create(name=f'Sample {chType.title()}', type='group', children=metaChildren + [param] + optsChildren)
+    grp = Parameter.create(
+        name=f'Sample {chType.title()}', type='group', children=metaChildren + [param] + optsChildren
+    )
     grp.setOpts(expanded=False)
     return grp
+
 
 def makeMetaChild(name, cfgDict):
     children = []
@@ -46,6 +51,7 @@ def makeMetaChild(name, cfgDict):
     param = Parameter.create(name=name, type='group', children=children)
     param.setOpts(expanded=False)
     return param
+
 
 def makeAllParamTypes():
     children = []
@@ -88,7 +94,11 @@ def makeAllParamTypes():
         btn = Parameter.create(name=f'{name} All', type='action')
         btn.sigActivated.connect(activate)
         params.insertChild(0, btn)
-    missing = set(PARAM_TYPES).difference(_encounteredTypes)
+    missing = [
+        typ
+        for typ in set(PARAM_TYPES).difference(_encounteredTypes)
+        if not typ.startswith("_")
+    ]
     if missing:
         raise RuntimeError(f'{missing} parameters are not represented')
     return params

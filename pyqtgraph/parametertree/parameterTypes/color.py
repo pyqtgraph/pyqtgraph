@@ -23,7 +23,10 @@ class ColorParameter(SimpleParameter):
         return fn.mkColor(v)
 
     def value(self):
-        return fn.mkColor(super().value())
+        value = super().value()
+        if value is None:
+            return None
+        return fn.mkColor(value)
 
     def saveState(self, filter=None):
         state = super().saveState(filter)

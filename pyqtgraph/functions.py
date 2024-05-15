@@ -4,8 +4,6 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-from __future__ import division
-
 import decimal
 import math
 import re
@@ -16,12 +14,10 @@ from collections import OrderedDict
 
 import numpy as np
 
-from . import Qt, debug, reload
-from . import getConfigOption
+from . import Qt, debug, getConfigOption, reload
 from .metaarray import MetaArray
 from .Qt import QT_LIB, QtCore, QtGui
 from .util.cupy_helper import getCupy
-from .util.numba_helper import getNumbaFunctions
 
 # in order of appearance in this file.
 # add new functions to this list only if they are to reside in pg namespace.
@@ -37,7 +33,7 @@ __all__ = [
     'solve3DTransform', 'solveBilinearTransform',
     'clip_scalar', 'clip_array', 'rescaleData', 'applyLookupTable',
     'makeRGBA', 'makeARGB',
-    # 'try_fastpath_argb', 'ndarray_to_qimage',
+    # 'ndarray_to_qimage',
     'makeQImage',
     # 'ndarray_from_qimage',
     'imageToArray', 'colorToAlpha',
@@ -70,7 +66,7 @@ SI_PREFIX_EXPONENTS['u'] = -6
 FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
 INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
-    
+
 def siScale(x, minVal=1e-25, allowUnicode=True):
     """
     Return the recommended scale factor and SI prefix string for x.
@@ -235,7 +231,7 @@ def mkColor(*args):
     types. Accepted arguments are:
     
     ================ ================================================
-     'c'             one of: r, g, b, c, m, y, k, w
+     'c'             one of: r, g, b, c, m, y, k, w or an SVG color keyword
      R, G, B, [A]    integers 0-255
      (R, G, B, [A])  tuple of integers 0-255
      float           greyscale, 0.0-1.0
@@ -254,45 +250,22 @@ def mkColor(*args):
             c = args[0]
             if len(c) == 1:
                 try:
-                    return Colors[c]
+                    return QtGui.QColor(Colors[c])  # return copy
                 except KeyError:
-                    raise ValueError('No color named "%s"' % c)
-            have_alpha = len(c) in [5, 9] and c[0] == '#'  # "#RGBA" and "#RRGGBBAA"
-            if not have_alpha:
-                # try parsing SVG named colors, including "#RGB" and "#RRGGBB".
-                # note that QColor.setNamedColor() treats a 9-char hex string as "#AARRGGBB".
-                qcol = QtGui.QColor()
-                qcol.setNamedColor(c)
+                    raise ValueError('No color named "%s"' % c) from None
+            if c[0] == "#" and len(c) < 10:
+                # match hex color codes
+                c = c[1:]
+                if len(c) < 6:
+                    # convert RGBA to RRGGBBAA
+                    c = "".join([x + x for x in c])
+                return QtGui.QColor(*bytes.fromhex(c))
+            else:
+                # 'c' might be an SVG color keyword
+                qcol = QtGui.QColor(c)
                 if qcol.isValid():
                     return qcol
-                # on failure, fallback to pyqtgraph parsing
-                # this includes the deprecated case of non-#-prefixed hex strings
-            if c[0] == '#':
-                c = c[1:]
-            else:
                 raise ValueError(f"Unable to convert {c} to QColor")
-            if len(c) == 3:
-                r = int(c[0]*2, 16)
-                g = int(c[1]*2, 16)
-                b = int(c[2]*2, 16)
-                a = 255
-            elif len(c) == 4:
-                r = int(c[0]*2, 16)
-                g = int(c[1]*2, 16)
-                b = int(c[2]*2, 16)
-                a = int(c[3]*2, 16)
-            elif len(c) == 6:
-                r = int(c[0:2], 16)
-                g = int(c[2:4], 16)
-                b = int(c[4:6], 16)
-                a = 255
-            elif len(c) == 8:
-                r = int(c[0:2], 16)
-                g = int(c[2:4], 16)
-                b = int(c[4:6], 16)
-                a = int(c[6:8], 16)
-            else:
-                raise ValueError(f"Unknown how to convert string {c} to color")
         elif isinstance(args[0], QtGui.QColor):
             return QtGui.QColor(args[0])
         elif np.issubdtype(type(args[0]), np.floating):
@@ -501,7 +474,7 @@ def colorCIELab(qcol):
 
     Returns
     -------
-    NumPy array 
+    np.ndarray 
         Color coordinates `[L, a, b]`.
     """
     srgb = qcol.getRgbF()[:3] # get sRGB values from QColor
@@ -536,7 +509,7 @@ def colorDistance(colors, metric='CIE76'):
     ----------
         colors: list of QColor
             Two or more colors to calculate the distances between.
-        metric: string, optional
+        metric: str, optional
             Metric used to determined the difference. Only 'CIE76' is supported at this time,
             where a distance of 2.3 is considered a "just noticeable difference".
             The default may change as more metrics become available.
@@ -547,7 +520,7 @@ def colorDistance(colors, metric='CIE76'):
         The `N-1` sequential distances between `N` colors.
     """
     metric = metric.upper()
-    if len(colors) < 1: return np.array([], dtype=np.float)
+    if len(colors) < 1: return np.array([], dtype=float)
     if metric == 'CIE76':
         dist = []
         lab1 = None
@@ -995,7 +968,7 @@ def interpolateArray(data, x, default=0.0, order=1):
             sax = f1 * dx[...,ax] + (1-f1) * (1-dx[...,ax])
             sax = sax.reshape(sax.shape + (1,) * (s.ndim-1-sax.ndim))
             s[ax] = sax
-        s = np.product(s, axis=0)
+        s = np.prod(s, axis=0)
         result = fieldData * s
         for i in range(md):
             result = result.sum(axis=0)
@@ -1193,12 +1166,6 @@ def clip_scalar(val, vmin, vmax):
     """ convenience function to avoid using np.clip for scalar values """
     return vmin if val < vmin else vmax if val > vmax else val
 
-# umath.clip was slower than umath.maximum(umath.minimum).
-# See https://github.com/numpy/numpy/pull/20134 for details.
-_win32_clip_workaround_needed = (
-    sys.platform == 'win32' and
-    tuple(map(int, np.__version__.split(".")[:2])) < (1, 22)
-)
 
 def clip_array(arr, vmin, vmax, out=None):
     # replacement for np.clip due to regression in
@@ -1213,36 +1180,20 @@ def clip_array(arr, vmin, vmax, out=None):
         return np.core.umath.minimum(arr, vmax, out=out)
     elif vmax is None:
         return np.core.umath.maximum(arr, vmin, out=out)
-    elif _win32_clip_workaround_needed:
-        if out is None:
-            out = np.empty(arr.shape, dtype=np.find_common_type([arr.dtype], [type(vmax)]))
-        out = np.core.umath.minimum(arr, vmax, out=out)
-        return np.core.umath.maximum(out, vmin, out=out)
-
     else:
         return np.core.umath.clip(arr, vmin, vmax, out=out)
+
+if tuple(map(int, np.__version__.split(".")[:2])) >= (1, 25):
+    # The linked issue above has been closed as of 2023/04/25
+    # and states that the issue has been fixed.
+    # And furthermore, because NumPy 2.0 has made np.core private,
+    # we will just use the native np.clip
+    clip_array = np.clip
 
 
 def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
     """Refer to documentation for rescaleData()"""
     data_out = np.empty_like(data_in, dtype=out_dtype)
-
-    # integer clip operations are faster than float clip operations
-    # so test to see if we can perform integer clipping
-    fits_int32 = False
-    if data_in.dtype.kind in 'ui' and out_dtype.kind in 'ui':
-        # estimate whether data range after rescale will fit within an int32.
-        # this means that the input dtype should be an 8-bit or 16-bit integer type.
-        # casting to an int32 will lose the fractional part, therefore the
-        # output dtype must be an integer kind.
-        lim_in = np.iinfo(data_in.dtype)
-        # convert numpy scalar to python scalar to avoid overflow warnings
-        lo = offset.item(0) if isinstance(offset, np.number) else offset
-        dst_bounds = scale * (lim_in.min - lo), scale * (lim_in.max - lo)
-        if dst_bounds[1] < dst_bounds[0]:
-            dst_bounds = dst_bounds[1], dst_bounds[0]
-        lim32 = np.iinfo(np.int32)
-        fits_int32 = lim32.min < dst_bounds[0] and dst_bounds[1] < lim32.max
 
     it = np.nditer([data_in, data_out],
             flags=['external_loop', 'buffered'],
@@ -1259,11 +1210,7 @@ def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
 
             # Clip before converting dtype to avoid overflow
             if clip is not None:
-                if fits_int32:
-                    # converts to int32, clips back to float32
-                    np.core.umath.clip(y.astype(np.int32), clip[0], clip[1], out=y)
-                else:
-                    clip_array(y, clip[0], clip[1], out=y)
+                clip_array(y, clip[0], clip[1], out=y)
 
     return data_out
 
@@ -1296,6 +1243,14 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
     else:
         work_dtype = np.float64
 
+    # from: https://numpy.org/devdocs/numpy_2_0_migration_guide.html#changes-to-numpy-data-type-promotion
+    #   np.array([3], dtype=np.float32) + np.float64(3) will now return a float64 array.
+    #   (The higher precision of the scalar is not ignored.)
+    # this affects us even though we are performing in-place operations.
+    # a solution mentioned in the link above is to convert to a Python scalar.
+    offset = float(offset)
+    scale = float(scale)
+
     cp = getCupy()
     if cp and cp.get_array_module(data) == cp:
         # Cupy does not support nditer
@@ -1312,11 +1267,6 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
         # don't copy if no change in dtype
         return data_out.astype(out_dtype, copy=False)
 
-    numba_fn = getNumbaFunctions()
-    if numba_fn and clip is not None:
-        # if we got here by makeARGB(), clip will not be None at this point
-        return numba_fn.rescaleData(data, scale, offset, out_dtype, clip)
-
     return _rescaleData_nditer(data, scale, offset, work_dtype, out_dtype, clip)
 
 
@@ -1329,8 +1279,8 @@ def applyLookupTable(data, lut):
 
     Parameters
     ----------
-    data : ndarray
-    lut : ndarray
+    data : np.ndarray
+    lut : np.ndarray
         Either cupy or numpy arrays are accepted, though this function has only
         consistently behaved correctly on windows with cuda toolkit version >= 11.1.
     """
@@ -1389,7 +1339,9 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
                    The default is False, which returns in ARGB order for use with QImage 
                    (Note that 'ARGB' is a term used by the Qt documentation; the *actual* order 
                    is BGRA).
-    maskNans       Enable or disable masking NaNs as transparent.
+    maskNans       Enable or disable masking NaNs as transparent. Converting NaN values to ints is
+                   undefined behavior per the C-standard, results may vary across platforms. Highly
+                   recommend leaving this option to the default value of True.
     ============== ==================================================================================
     """
     cp = getCupy()
@@ -1402,7 +1354,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
     
     if lut is not None and not isinstance(lut, xp.ndarray):
         lut = xp.array(lut)
-    
+
     if levels is None:
         # automatically decide levels based on data dtype
         if data.dtype.kind == 'u':
@@ -1449,6 +1401,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
         nanMask = xp.isnan(data)
         if data.ndim > 2:
             nanMask = xp.any(nanMask, axis=-1)
+
     # Apply levels if given
     if levels is not None:
         if isinstance(levels, xp.ndarray) and levels.ndim == 2:
@@ -1500,13 +1453,8 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
         dst_order = [2, 1, 0, 3]    # B,G,R,A (ARGB32 little endian)
     else:
         dst_order = [1, 2, 3, 0]    # A,R,G,B (ARGB32 big endian)
-        
-    # copy data into image array
-    fastpath = try_fastpath_argb(xp, data, imgData, useRGBA)
 
-    if fastpath:
-        pass
-    elif data.ndim == 2:
+    if data.ndim == 2:
         # This is tempting:
         #   imgData[..., :3] = data[..., xp.newaxis]
         # ..but it turns out this is faster:
@@ -1518,72 +1466,27 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
     else:
         for i in range(0, data.shape[2]):
             imgData[..., dst_order[i]] = data[..., i]
-        
+
     profile('reorder channels')
-    
+
     # add opaque alpha channel if needed
     if data.ndim == 3 and data.shape[2] == 4:
         alpha = True
     else:
         alpha = False
-        if not fastpath:    # fastpath has already filled it in
-            imgData[..., dst_order[3]] = 255
+        imgData[..., dst_order[3]] = 255
 
     # apply nan mask through alpha channel
     if nanMask is not None:
         alpha = True
-        # Workaround for https://github.com/cupy/cupy/issues/4693
-        if xp == cp:
+        # Workaround for https://github.com/cupy/cupy/issues/4693, fixed in cupy 10.0.0
+        if xp == cp and tuple(map(int, cp.__version__.split("."))) < (10, 0):
             imgData[nanMask, :, dst_order[3]] = 0
         else:
             imgData[nanMask, dst_order[3]] = 0
 
     profile('alpha channel')
     return imgData, alpha
-
-
-def try_fastpath_argb(xp, ain, aout, useRGBA):
-    # we only optimize for certain cases
-    # return False if we did not handle it
-    can_handle = xp is np and ain.dtype == xp.ubyte and ain.flags['C_CONTIGUOUS']
-    if not can_handle:
-        return False
-
-    nrows, ncols = ain.shape[:2]
-    nchans = 1 if ain.ndim == 2 else ain.shape[2]
-
-    Format = QtGui.QImage.Format
-
-    if nchans == 1:
-        in_fmt = Format.Format_Grayscale8
-    elif nchans == 3:
-        in_fmt = Format.Format_RGB888
-    else:
-        in_fmt = Format.Format_RGBA8888
-
-    if useRGBA:
-        out_fmt = Format.Format_RGBA8888
-    else:
-        out_fmt = Format.Format_ARGB32
-
-    if in_fmt == out_fmt:
-        aout[:] = ain
-        return True
-
-    npixels_chunk = 512*1024
-    batch = int(npixels_chunk / ncols / nchans)
-    batch = max(1, batch)
-    row_beg = 0
-    while row_beg < nrows:
-        row_end = min(row_beg + batch, nrows)
-        ain_view = ain[row_beg:row_end, ...]
-        aout_view = aout[row_beg:row_end, ...]
-        qimg = QtGui.QImage(ain_view, ncols, ain_view.shape[0], ain.strides[0], in_fmt)
-        qimg = qimg.convertToFormat(out_fmt)
-        aout_view[:] = imageToArray(qimg, copy=False, transpose=False)
-        row_beg = row_end
-
-    return True
 
 
 def ndarray_to_qimage(arr, fmt):
@@ -2050,17 +1953,17 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     
     Parameters
     ----------
-    x : (N,) ndarray
-        x-values to be plotted
-    y : (N,) ndarray
-        y-values to be plotted, must be same length as `x`
+    x : np.ndarray
+        x-values to be plotted of shape (N,)
+    y : np.ndarray
+        y-values to be plotted, must be same length as `x` of shape (N,)
     connect : {'all', 'pairs', 'finite', (N,) ndarray}, optional
         Argument detailing how to connect the points in the path. `all` will 
         have sequential points being connected.  `pairs` generates lines
         between every other point.  `finite` only connects points that are
         finite.  If an ndarray is passed, containing int32 values of 0 or 1,
         only values with 1 will connect to the previous point.  Def
-    finiteCheck : bool, default Ture
+    finiteCheck : bool, default True
         When false, the check for finite values will be skipped, which can
         improve performance. If nonfinite values are present in `x` or `y`,
         an empty QPainterPath will be generated.
@@ -2182,26 +2085,18 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     return path
 
 def ndarray_from_qpolygonf(polyline):
-    nbytes = 2 * len(polyline) * 8
-    if QT_LIB.startswith('PyQt'):
-        buffer = polyline.data()
-        if buffer is None:
-            buffer = Qt.sip.voidptr(0)
-        buffer.setsize(nbytes)
-    else:
-        ptr = polyline.data()
-        if ptr is None:
-            ptr = 0
-        buffer = Qt.shiboken.VoidPtr(ptr, nbytes, True)
-    memory = np.frombuffer(buffer, np.double).reshape((-1, 2))
-    return memory
+    # polyline.data() will be None if the pointer was null.
+    # voidptr(None) is the same as voidptr(0).
+    vp = Qt.compat.voidptr(polyline.data(), len(polyline)*2*8, True)
+    return np.frombuffer(vp, dtype=np.float64).reshape((-1, 2))
 
 def create_qpolygonf(size):
     polyline = QtGui.QPolygonF()
-    if QT_LIB.startswith('PyQt'):
-        polyline.fill(QtCore.QPointF(), size)
-    else:
+    if hasattr(polyline, 'resize'):
+        # (PySide) and (PyQt6 >= 6.3.1)
         polyline.resize(size)
+    else:
+        polyline.fill(QtCore.QPointF(), size)
     return polyline
 
 def arrayToQPolygonF(x, y):
@@ -3213,12 +3108,22 @@ def disconnect(signal, slot):
     """
     while True:
         try:
-            signal.disconnect(slot)
+            success = signal.disconnect(slot)
+            if success is None:     # PyQt
+                success = True
+        except (
+            TypeError,
+            RuntimeError,
+            SystemError  # PySide6 6.7.1+ will emit this
+        ):
+            success = False
+
+        if success:
             return True
-        except (TypeError, RuntimeError):
-            slot = reload.getPreviousVersion(slot)
-            if slot is None:
-                return False
+
+        slot = reload.getPreviousVersion(slot)
+        if slot is None:
+            return False
 
 
 class SignalBlock(object):

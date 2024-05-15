@@ -4,9 +4,9 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-from ..graphicsItems.PlotItem import *
+from ..graphicsItems.PlotItem import PlotItem
 from ..Qt import QtCore, QtWidgets
-from .GraphicsView import *
+from .GraphicsView import GraphicsView
 
 __all__ = ['PlotWidget']
 class PlotWidget(GraphicsView):
@@ -44,6 +44,9 @@ class PlotWidget(GraphicsView):
     other methods, use :func:`getPlotItem <pyqtgraph.PlotWidget.getPlotItem>`.
     """
     def __init__(self, parent=None, background='default', plotItem=None, **kargs):
+        ## start by instantiating the plotItem attribute in order to avoid recursive 
+        ## calls of PlotWidget.__getattr__ - which access self.plotItem!
+        self.plotItem = None
         """When initializing PlotWidget, *parent* and *background* are passed to 
         :func:`GraphicsWidget.__init__() <pyqtgraph.GraphicsWidget.__init__>`
         and all others are passed
@@ -97,6 +100,3 @@ class PlotWidget(GraphicsView):
     def getPlotItem(self):
         """Return the PlotItem contained within."""
         return self.plotItem
-        
-        
-        

@@ -2,13 +2,21 @@
 """
 Test the speed of rapidly updating multiple plot curves
 """
-
-from time import perf_counter
+import argparse
+import itertools
 
 import numpy as np
+from utils import FrameCounter
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--iterations', default=float('inf'), type=float,
+    help="Number of iterations to run before exiting"
+)
+args = parser.parse_args()
+iterations_counter = itertools.count()
 
 # pg.setConfigOptions(useOpenGL=True)
 app = pg.mkQApp("MultiPlot Speed Test")
@@ -36,30 +44,24 @@ plot.addItem(rgn)
 
 data = np.random.normal(size=(nPlots*23,nSamples))
 ptr = 0
-lastTime = perf_counter()
-fps = None
-count = 0
 def update():
-    global curve, data, ptr, plot, lastTime, fps, nPlots, count
-    count += 1
-
+    global ptr
+    if next(iterations_counter) > args.iterations:
+        timer.stop()
+        app.quit()
+        return None
     for i in range(nPlots):
         curves[i].setData(data[(ptr+i)%data.shape[0]])
 
     ptr += nPlots
-    now = perf_counter()
-    dt = now - lastTime
-    lastTime = now
-    if fps is None:
-        fps = 1.0/dt
-    else:
-        s = np.clip(dt*3., 0, 1)
-        fps = fps * (1-s) + (1.0/dt) * s
-    plot.setTitle('%0.2f fps' % fps)
-    #app.processEvents()  ## force complete redraw for every plot
+    framecnt.update()
+
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
+
+framecnt = FrameCounter()
+framecnt.sigFpsUpdate.connect(lambda fps: plot.setTitle(f'{fps:.1f} fps'))
 
 if __name__ == '__main__':
     pg.exec()
