@@ -13,7 +13,7 @@
 import os
 import sys
 import time
-from datetime import datetime
+import datetime
 
 from sphinx.application import Sphinx
 
@@ -35,14 +35,16 @@ import pyqtgraph
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
-    "sphinx.ext.napoleon",
+    "sphinx.ext.napoleon",  # has to be loaded before sphinx_autodoc_typehints
+    "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "sphinx_qt_documentation",
     "sphinx_design",
     "sphinx_favicon",
     "sphinxext.rediraffe",
     "sphinxcontrib.images",
-    "sphinx_autodoc_typehints"
+    'sphinx.ext.inheritance_diagram',
+    # 'sphinxcontrib.spelling'  # commenting out to allow for easy usage locally
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -63,14 +65,46 @@ nitpick_ignore_regex = [
     ("py:class", r"re\.Pattern"),  # doesn't seem to be a good ref in python docs
 ]
 
+napoleon_use_admonition_for_examples = True
+napoleon_use_admonition_for_notes = True
+napoleon_use_admonition_for_references = True
+napoleon_use_rtype = True
+napoleon_use_param = False
+napoleon_use_keyword = False
+napoleon_attr_annotations = True
+napoleon_use_ivar = True
+napoleon_custom_sections = [("Signals", "params_style")]
 napoleon_preprocess_types = True
 napoleon_type_aliases = {
-    "callable": ":class:`collections.abc.Callable`",
+    "callable": ":class:`~collections.abc.Callable`",
     "np.ndarray": ":class:`numpy.ndarray`",
     'array_like': ':term:`array_like`',
     'color_like': ':func:`pyqtgraph.mkColor`',
     # 'ColorMapSpecifier': ':class:`str`, (:class:`str`, :class:`str`), or :class:`~pyqtgraph.ColorMap`',
 }
+
+# makes things far more legible
+python_use_unqualified_type_names = True
+python_display_short_literal_types = True
+
+# spelling
+spelling_word_list_filename = [
+    'dictionaries/numpy.txt',
+    'dictionaries/PyQt6.QtCore.txt',
+    'dictionaries/PyQt6.QtGui.txt',
+    'dictionaries/PyQt6.QtWidgets.txt',
+    'dictionaries/pyqtgraph.txt',
+    'dictionaries/custom.txt'
+]
+
+graphviz_dot_args = ['-Gbgcolor=transparent']
+graphviz_output_format = 'svg'  
+inheritance_graph_attrs = dict(
+    rankdir="LR",
+    fontsize=14,
+    ratio='compress',
+    bgcolor='transparent',
+)
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
@@ -80,10 +114,12 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'pyqtgraph'
-now = datetime.utcfromtimestamp(
-    int(os.environ.get('SOURCE_DATE_EPOCH', time.time()))
+
+now = datetime.datetime.fromtimestamp(
+    int(os.environ.get('SOURCE_DATE_EPOCH', time.time())),
+    tz=datetime.timezone.utc
 )
-copyright = '2011 - {}, PyQtGraph developers'.format(now.year)
+copyright = f'2011 - {now.year}, PyQtGraph developers'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -128,12 +164,23 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
+# Automatically extract typehints when specified and place them in
+# descriptions of the relevant function/method.
+autodoc_typehints = "description"
+autodoc_typehints_format = 'short'
+autodoc_typehints_description_target = 'documented_params'
+autodoc_typehints_defaults = 'braces'
+autodoc_typehints_use_rtype = True
+
+
 autodoc_inherit_docstrings = False
 autodoc_mock_imports = [
     "scipy",
     "h5py",
     "matplotlib",
 ]
+
+# autodoc_type_aliases = {}
 
 
 # -- Options for HTML output ---------------------------------------------------
@@ -153,12 +200,23 @@ favicons = [
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    "github_url": "https://github.com/pyqtgraph/pyqtgraph",
     "navbar_end": ["theme-switcher", "navbar-icon-links"],
-    "twitter_url": "https://twitter.com/pyqtgraph",
     "use_edit_page_button": False,
     "secondary_sidebar_items": ["page-toc"],
-    "navigation_with_keys": False
+    "navigation_with_keys": False,
+    "icon_links" : [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/pyqtgraph/pyqtgraph",
+            "icon": "fa-brands fa-square-github",
+            "type": "fontawesome",
+        },
+        {
+            "name": "Mastodon",
+            "url": "https://fosstodon.org/@pyqtgraph",
+            "icon": "fa-brands fa-mastodon",
+        }
+    ]
 }
 
 

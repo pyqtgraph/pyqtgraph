@@ -9,6 +9,7 @@ build:
     python: "3"
   apt_packages:
     - libopengl0
+    - graphviz
 
 sphinx:
   fail_on_warning: true

@@ -58,7 +58,6 @@ Nat Methods 8, 441 (2011). https://doi.org/10.1038/nmeth.1618
 }
 
 /* Main index page overview cards */
-
 .sd-card {
   background: #fff;
   border-radius: 0;
@@ -134,7 +133,7 @@ types are assumed to be normal images.
 */
 html[data-theme=dark] img[src*='.svg']:not(.only-dark):not(.dark-light) {
     filter: brightness(0.8) invert(0.82) contrast(1.2);
-    background: unset
+    background: unset;
 }
 
 html[data-theme=dark] .MathJax_SVG *  {
@@ -142,7 +141,6 @@ html[data-theme=dark] .MathJax_SVG *  {
 }
 
 /* Main index page overview cards */
-
 html[data-theme=dark] .sd-card {
     background-color:var(--pst-color-background);
     border:  none
@@ -161,10 +159,23 @@ html[data-theme=dark] .sd-card .sd-card-footer {
     background-color:var(--pst-color-background);
 }
 
-/* 
-  Hide TypeAlias Classes
-*/
-
+/* Hide TypeAlias Classes */
 dt#ColorMapSpecifier {
   visibility: hidden;
+}
+
+/* Flip the colours on graphviz graphs on dark mode */
+html[data-theme="dark"] div.graphviz > object.inheritance {
+    filter: brightness(0.8) invert(0.82) contrast(1.2);
+    color-scheme: normal;
+}
+
+/* Make inheritance images have a scroll bar if necessary. */
+div.graphviz {
+    border: 1px solid #7f7f7f00;
+    max-height: 50em;
+    overflow: auto;
+}
+img.graphviz.inheritance {
+    max-width: none;
 }

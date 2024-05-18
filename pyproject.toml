@@ -50,3 +50,19 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "pyqtgraph.flowchart.*" # the list will increase
 ignore_errors = true # will be changed to `false` when it's ready
+
+[tool.numpydoc_validation]
+checks = [
+    'all',   # report on all checks, except the below
+    'EX01',  # allow absence of "Examples" section
+    'SA01',  # allow absence of "See Also" section
+    'GL08',  # allow absence of docstring
+    'ES01',  # allow absence of Extended Summary
+]
+# remember to use single quotes for regex in TOML
+exclude = [  # don't report on objects that match any of these regex
+]
+
+override_GL06 = [
+  'Signals' # allow sections to start with "Signals"
+]

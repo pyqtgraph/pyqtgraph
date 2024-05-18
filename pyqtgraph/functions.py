@@ -1986,11 +1986,12 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     a ``QDataStream`` object is created and the QDataStream >> QPainterPath
     operator is used to pass the data.  The memory format is as follows
 
-    numVerts(i4)
-    0(i4)   x(f8)   y(f8)    <-- 0 means this vertex does not connect
-    1(i4)   x(f8)   y(f8)    <-- 1 means this vertex connects to the previous vertex
-    ...
-    cStart(i4)   fillRule(i4)
+    .. code-block:
+        numVerts(i4)
+        0(i4)   x(f8)   y(f8)    <-- 0 means this vertex does not connect
+        1(i4)   x(f8)   y(f8)    <-- 1 means this vertex connects to the previous vertex
+        ...
+        cStart(i4)   fillRule(i4)
     
     see: https://github.com/qt/qtbase/blob/dev/src/gui/painting/qpainterpath.cpp
 
