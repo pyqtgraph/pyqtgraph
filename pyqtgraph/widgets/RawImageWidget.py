@@ -4,21 +4,23 @@ Copyright 2010-2016 Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-import numpy
+import importlib
+import numpy as np
 
 from .. import functions as fn
 from .. import functions_qimage
 from .. import getConfigOption, getCupy
-from ..Qt import QtCore, QtGui, QtWidgets
+from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
 
 try:
-    QOpenGLWidget = QtWidgets.QOpenGLWidget
-    from OpenGL.GL import *  # noqa
-
+    if QT_LIB in ["PyQt5", "PySide2"]:
+        QtOpenGL = QtGui
+        QtOpenGLWidgets = QtWidgets
+    else:
+        QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
+        QtOpenGLWidgets = importlib.import_module(f"{QT_LIB}.QtOpenGLWidgets")
     HAVE_OPENGL = True
-except (ImportError, AttributeError):
-    # Would prefer `except ImportError` here, but some versions of pyopengl generate
-    # AttributeError upon import
+except ModuleNotFoundError:
     HAVE_OPENGL = False
 
 __all__ = ['RawImageWidget']
@@ -58,7 +60,7 @@ class RawImageWidget(QtWidgets.QWidget):
             return
         if self.image is None:
             img = self.opts[0]
-            xp = self._cp.get_array_module(img) if self._cp else numpy
+            xp = self._cp.get_array_module(img) if self._cp else np
 
             qimage = None
             if (
@@ -108,7 +110,8 @@ class RawImageWidget(QtWidgets.QWidget):
 
 if HAVE_OPENGL:
     __all__.append('RawImageGLWidget')
-    class RawImageGLWidget(QOpenGLWidget):
+
+    class RawImageGLWidget(QtOpenGLWidgets.QOpenGLWidget):
         """
         Similar to RawImageWidget, but uses a GL widget to do all drawing.
         Performance varies between platforms; see examples/VideoSpeedTest for benchmarking.
@@ -116,13 +119,15 @@ if HAVE_OPENGL:
         Checks if setConfigOptions(imageAxisOrder='row-major') was set.
         """
 
-        def __init__(self, parent=None, scaled=False):
-            QOpenGLWidget.__init__(self, parent)
-            self.scaled = scaled
+        def __init__(self, parent=None, smooth=False):
+            super().__init__(parent)
             self.image = None
             self.uploaded = False
-            self.smooth = False
+            self.smooth = smooth
             self.opts = None
+
+            self.m_texture = QtOpenGL.QOpenGLTexture(QtOpenGL.QOpenGLTexture.Target.Target2D)
+            self.m_blitter = None
 
         def setImage(self, img, *args, **kargs):
             """
@@ -137,57 +142,64 @@ if HAVE_OPENGL:
             self.update()
 
         def initializeGL(self):
-            self.texture = glGenTextures(1)
+            ctx = self.context()
+
+            # in Python, slot will not get called during application termination
+            ctx.aboutToBeDestroyed.connect(self.cleanup)
+
+            profile = QtOpenGL.QOpenGLVersionProfile()
+            profile.setVersion(2, 0)
+            if QT_LIB == 'PySide2':
+                self.glfn = ctx.functions()
+            elif QT_LIB == 'PyQt5':
+                self.glfn = ctx.versionFunctions(profile)
+            else:
+                self.glfn = QtOpenGL.QOpenGLVersionFunctionsFactory.get(profile, ctx)
+
+            self.m_blitter = QtOpenGL.QOpenGLTextureBlitter()
+            self.m_blitter.create()
+
+        def cleanup(self):
+            # explicit call of cleanup() is needed during application termination
+            self.makeCurrent()
+            self.m_texture.destroy()
+            if self.m_blitter is not None:
+                self.m_blitter.destroy()
+                self.m_blitter = None
+            self.doneCurrent()
 
         def uploadTexture(self):
-            glEnable(GL_TEXTURE_2D)
-            glBindTexture(GL_TEXTURE_2D, self.texture)
-            if self.smooth:
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-            else:
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
-            # glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER)
-
-            ## Test texture dimensions first
-            # shape = self.image.shape
-            # glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, shape[0], shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
-            # if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
-                # raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
-
             h, w = self.image.shape[:2]
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, self.image)
-            glDisable(GL_TEXTURE_2D)
+
+            if self.m_texture.isCreated() and (w != self.m_texture.width() or h != self.m_texture.height()):
+                self.m_texture.destroy()
+
+            if not self.m_texture.isCreated():
+                self.m_texture.setFormat(QtOpenGL.QOpenGLTexture.TextureFormat.RGBAFormat)
+                self.m_texture.setSize(w, h)
+                self.m_texture.allocateStorage()
+
+            filt = QtOpenGL.QOpenGLTexture.Filter.Linear if self.smooth else QtOpenGL.QOpenGLTexture.Filter.Nearest
+            self.m_texture.setMinMagFilters(filt, filt)
+            self.m_texture.setWrapMode(QtOpenGL.QOpenGLTexture.WrapMode.ClampToBorder)
+            self.m_texture.setData(QtOpenGL.QOpenGLTexture.PixelFormat.RGBA, QtOpenGL.QOpenGLTexture.PixelType.UInt8, self.image)
+
             self.uploaded = True
 
         def paintGL(self):
-            glClear(GL_COLOR_BUFFER_BIT)
+            GL_COLOR_BUFFER_BIT = 0x4000
+            self.glfn.glClear(GL_COLOR_BUFFER_BIT)
 
             if self.image is None:
                 if self.opts is None:
                     return
                 img, args, kwds = self.opts
-                kwds['useRGBA'] = True
-                self.image, _ = fn.makeARGB(img, *args, **kwds)
+                self.image, _ = fn.makeRGBA(img, *args, **kwds)
 
             if not self.uploaded:
                 self.uploadTexture()
 
-            glEnable(GL_TEXTURE_2D)
-            glBindTexture(GL_TEXTURE_2D, self.texture)
-            glColor4f(1, 1, 1, 1)
-
-            glBegin(GL_QUADS)
-            glTexCoord2f(0, 1)
-            glVertex3f(-1, -1, 0)
-            glTexCoord2f(1, 1)
-            glVertex3f(1, -1, 0)
-            glTexCoord2f(1, 0)
-            glVertex3f(1, 1, 0)
-            glTexCoord2f(0, 0)
-            glVertex3f(-1, 1, 0)
-            glEnd()
-            glDisable(GL_TEXTURE_2D)
+            target = QtGui.QMatrix4x4()
+            self.m_blitter.bind()
+            self.m_blitter.blit(self.m_texture.textureId(), target, QtOpenGL.QOpenGLTextureBlitter.Origin.OriginTopLeft)
+            self.m_blitter.release()
