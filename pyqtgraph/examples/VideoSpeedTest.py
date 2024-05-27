@@ -74,6 +74,7 @@ if RawImageGLWidget is None:
 else:
     ui.rawGLImg = RawImageGLWidget()
     ui.stack.addWidget(ui.rawGLImg)
+    win.destroyed.connect(ui.rawGLImg.cleanup)
 
 # read in CLI args
 ui.cudaCheck.setChecked(args.cuda and _has_cupy)
