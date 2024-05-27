@@ -551,7 +551,7 @@ class GraphicsItem(object):
     def viewTransformChanged(self):
         """
         Called whenever the transformation matrix of the view has changed.
-        (eg, the view range has changed or the view was resized)
+        For example, when the view range has changed or the view was resized.
         Invalidates the viewRect cache.
         """
         self._cachedView = None

@@ -6,21 +6,33 @@ import pyqtgraph as pg
 import pyqtgraph.exporters as exp
 from pyqtgraph.Qt import QtGui, mkQApp
 
+mkQApp("ImageItem transform example")
+
 class MainWindow(pg.GraphicsLayoutWidget):
     """ example application main window """
     def __init__(self):
         super().__init__()
-        self.resize(420,400)
+        self.resize(440,400)
         self.show()
 
         plot = self.addPlot()
-        # Example: Transformed display of ImageItem
 
+        # Set To Larger Font
+        leftAxis = plot.getAxis('left')
+        bottomAxis = plot.getAxis('bottom')
+        font = QtGui.QFont("Roboto", 18)
+        leftAxis.setTickFont(font)
+        bottomAxis.setTickFont(font)
+
+        # Example: Transformed display of ImageItem
         tr = QtGui.QTransform()  # prepare ImageItem transformation:
         tr.scale(6.0, 3.0)       # scale horizontal and vertical axes
         tr.translate(-1.5, -1.5) # move 3x3 image to locate center at axis origin
 
-        img = pg.ImageItem( image=np.eye(3), levels=(0,1) ) # create example image
+        img = pg.ImageItem(
+            image=np.eye(3),
+            levels=(0,1)
+        ) # create example image
         img.setTransform(tr) # assign transform
 
         plot.addItem( img )  # add ImageItem to PlotItem
@@ -32,14 +44,11 @@ class MainWindow(pg.GraphicsLayoutWidget):
         self.timer.start(100)
     
     def export(self):
-        print('exporting')
         exporter = exp.ImageExporter(self.scene())
-        exporter.parameters()['width'] = 420
+        exporter.parameters()['width'] = 440
         exporter.export('example_imageitem_transform.png')
 
-mkQApp("ImageItem transform example")
 main_window = MainWindow()
 
-## Start Qt event loop
 if __name__ == '__main__':
     pg.exec()
