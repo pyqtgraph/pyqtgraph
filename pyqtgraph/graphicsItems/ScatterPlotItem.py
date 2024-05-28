@@ -508,6 +508,11 @@ class ScatterPlotItem(GraphicsObject):
         if 'spots' in kargs:
             numPts = len(kargs['spots'])
         elif 'y' in kargs and kargs['y'] is not None:
+            matrix_y = kargs['y']
+            if matrix_y.ndim == 2:
+                matrix_x = kargs['x']
+                kargs['x'] = np.tile(matrix_x, matrix_y.shape[0])
+                kargs['y'] = matrix_y.flatten()
             numPts = len(kargs['y'])
         else:
             kargs['x'] = []
