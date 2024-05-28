@@ -2,11 +2,13 @@ import collections.abc
 import os
 import warnings
 import weakref
+from collections import OrderedDict
 
 import numpy as np
 
 from ... import functions as fn
 from ... import icons
+from ...parametertree import Parameter, ParameterTree
 from ...Qt import QtCore, QtWidgets
 from ...WidgetGroup import WidgetGroup
 from ...widgets.FileDialog import FileDialog
@@ -18,14 +20,21 @@ from ..LabelItem import LabelItem
 from ..LegendItem import LegendItem
 from ..PlotCurveItem import PlotCurveItem
 from ..PlotDataItem import PlotDataItem
-from ..ScatterPlotItem import ScatterPlotItem
 from ..ViewBox import ViewBox
 
 translate = QtCore.QCoreApplication.translate
 
 from . import plotConfigTemplate_generic as ui_template
 
-__all__ = ['PlotItem']
+__all__ = [
+    'PlotItem',
+    # The following protected functions are exported for deprecated use in PlotDataItem:
+    "_diff",
+    "_fourierTransform",
+    "_logXTransform",
+    "_logYTransform",
+    "_phasemap",
+]
 
 
 class PlotItem(GraphicsWidget):
@@ -84,7 +93,54 @@ class PlotItem(GraphicsWidget):
     sigXRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox X range has changed
         
     lastFileDir = None
-    
+    _defaultTransforms = OrderedDict()
+
+    @classmethod
+    def addDefaultDataTransformOption(cls, name, dataTransform, updateAxisCallback=None, params=None, order=50):
+        """
+        Add an option to the context menu of all subsequently created PlotItems for a custom data transform.
+        Out of the box, PyQtGraph comes with dy/dx, d²y/dx², Cumulative Sum, Y vs Y' (phasemap), Power Spectrum (FFT),
+        Log X and Log Y transforms. The examples/Plotting.py example has reference implementations of a Butterworth and
+        Gaussian low-pass filter, as well, which both make use of the params argument.
+
+        See Also
+        --------
+        PlotItem.addDataTransformOption : For a description of the parameters and to add to a single plot.
+        PlotItem.removeDefaultDataTransformOption : To remove default data transforms.
+
+        Notes
+        -----
+        This does not affect already-instantiated plots. This will overwrite a previously configured transform with the
+        same name.
+        """
+        cls._defaultTransforms[name] = {
+            "dataTransform": dataTransform,
+            "updateAxisCallback": updateAxisCallback,
+            "params": params,
+            "order": order,
+        }
+
+    @classmethod
+    def removeDefaultDataTransformOption(cls, name):
+        """
+        Remove the named data transform from the context menu of all subsequently created PlotItems.
+
+        Parameters
+        ----------
+        name : str
+            Name of the transform to be removed.
+
+        See Also
+        --------
+        PlotItem.addDefaultDataTransformOption : To add default data transforms.
+
+        Notes
+        -----
+        This does not affect already-instantiated plots.
+"""
+        if name in cls._defaultTransforms:
+            del cls._defaultTransforms[name]
+
     def __init__(self, parent=None, name=None, labels=None, title=None, viewBox=None, axisItems=None, enableMenu=True, **kargs):
         """
         Create a new PlotItem. All arguments are optional.
@@ -168,8 +224,8 @@ class PlotItem(GraphicsWidget):
             self.layout.setColumnStretchFactor(i, 1)
         self.layout.setRowStretchFactor(2, 100)
         self.layout.setColumnStretchFactor(1, 100)
-        
 
+        self._transforms = OrderedDict()
         self.items = []
         self.curves = []
         self.itemMeta = weakref.WeakKeyDictionary()
@@ -203,10 +259,15 @@ class PlotItem(GraphicsWidget):
             act = QtWidgets.QWidgetAction(self)
             act.setDefaultWidget(grp)
             sm.addAction(act)
-        
+
+        for name, kwargs in sorted(self._defaultTransforms.items(), key=lambda v: v[1]["order"]):
+            self.addDataTransformOption(name, **kwargs)
+
         self.stateGroup = WidgetGroup()
         for name, w in menuItems:
-            self.stateGroup.autoAdd(w)
+            if w is not c.transformGroup:
+                # ParameterTrees don't get names, which autoAdd needs
+                self.stateGroup.autoAdd(w)
         
         self.fileDialog = None
         
@@ -217,12 +278,6 @@ class PlotItem(GraphicsWidget):
         c.xGridCheck.toggled.connect(self.updateGrid)
         c.yGridCheck.toggled.connect(self.updateGrid)
         c.gridAlphaSlider.valueChanged.connect(self.updateGrid)
-
-        c.fftCheck.toggled.connect(self.updateSpectrumMode)
-        c.logXCheck.toggled.connect(self.updateLogMode)
-        c.logYCheck.toggled.connect(self.updateLogMode)
-        c.derivativeCheck.toggled.connect(self.updateDerivativeMode)
-        c.phasemapCheck.toggled.connect(self.updatePhasemapMode)
 
         c.downsampleSpin.valueChanged.connect(self.updateDownsampling)
         c.downsampleCheck.toggled.connect(self.updateDownsampling)
@@ -253,8 +308,85 @@ class PlotItem(GraphicsWidget):
             self.setTitle(title)
         
         if len(kargs) > 0:
-            self.plot(**kargs)        
-        
+            self.plot(**kargs)
+
+    def addDataTransformOption(self, name, dataTransform, updateAxisCallback=None, params=None, order=50):
+        """
+        Add an option to the context menu for a custom data transform. This depends on the `addDataTransform` method
+        of the items contained in this PlotItem, which has a standard implementation in PlotDataItem.
+
+        Parameters
+        ----------
+        name : str
+            Unique name for this transform. Will be displayed to the user.
+        dataTransform : Callable[[np.ndarray, np.ndarray, ...], [np.ndarray, np.ndarray]]
+            Function which transforms data. Should accept two arguments, `x` and `y`, and it should return the two new
+            data arrays to be plotted. E.g.::
+            lambda x, y: (x[:-1], np.diff(y) / np.diff(x))
+
+            Note that the return arrays must be of equal length as each other. If a `params` arg is passed to
+            `addDataTransformOption`, this function can expect to have the parameters therein described to be passed as
+            named arguments.
+        updateAxisCallback : Callable[[AxisItem, bool, ...], None], optional
+            Function to call on every axis. First argument is the AxisItem being modified, second argument is whether
+            this particular transform is currently enabled. E.g.::
+            lambda axis, enabled: axis.setLogMode(y=enabled)
+
+            If a `params` arg is passed to `addDataTransformOption`, this function can expect to have the parameters
+            therein described to be passed as named arguments.
+        params : dict, optional
+            Pass in a parameter tree config (see: ParameterTree) to generate an additional UI for said parameters. These
+            parameters will then be passed into all invocations of the `dataTransform` and `updateAxisCallback`
+            functions as named parameters. Only flat, non-nested parameters are currently supported.
+        order : int, optional
+            Specify the order in which transforms should be applied. Default value is 50, which is before all the
+            default transforms. Should be in the 0-100 range. Ties resolve in the order they're added.
+
+        Returns
+        -------
+        None
+
+        See Also
+        --------
+        PlotItem.addDefaultDataTransformOption
+        """
+        if name in self._transforms:
+            raise ValueError(f"A transform with name '{name}' is already present.")
+        self._transforms[name] = {
+            "dataTransform": dataTransform,
+            "updateAxisCallback": updateAxisCallback,
+            "params": params,
+            "order": order,
+        }
+        row = self.ctrl.gridLayout.rowCount()
+        check = QtWidgets.QCheckBox(self.ctrl.transformGroup)
+        self._transforms[name]["checkbox"] = check
+        check.setObjectName(name)
+        check.setText(name)
+        self.ctrl.gridLayout.addWidget(check, row, 0, 2, 1)
+        if params is not None:
+            paramsParams = Parameter.create(name=f"{name} params", type="group", children=params)
+            paramsParams.setObjectName(name)
+            paramsUi = ParameterTree(showHeader=False)
+            paramsUi.addParameters(paramsParams, showTop=False)
+            paramsUi.setFrameStyle(QtWidgets.QFrame.Shadow.Raised | QtWidgets.QFrame.Shape.Panel)
+            self.ctrl.gridLayout.addWidget(paramsUi, row, 1, 1, 1)
+            paramsParams.sigTreeStateChanged.connect(self._handleDataTransformParamsUpdate)
+            self._transforms[name]["paramsParams"] = paramsParams
+            self._transforms[name]["paramsUi"] = paramsUi
+            self._transforms[name]["params"] = params
+            paramsParams.sigTreeStateChanged.emit(paramsParams, None)  # registers with all the data items
+        check.toggled.connect(self._handleDataTransformChecked)
+        check.toggled.emit(False)  # registers with all the data items and axes
+
+    # :MC: removeDataTransformOption was left unimplemented. Here are the concerns it will need to cover:
+    #  * gridLayout.rowCount (which is used for formatting above) doesn't automatically update
+    #  * make sure checkboxes and signal callbacks get GC'd
+    #  * rebuild menu without changing values?
+    #  * restoreState should remove options to match
+    #  * de-register data transforms
+    #  * de-axis-update
+
     def implements(self, interface=None):
         return interface in ['ViewBoxWrapper']
 
@@ -336,20 +468,27 @@ class PlotItem(GraphicsWidget):
         
     def setLogMode(self, x=None, y=None):
         """
+        DEPRECATED
+        Use `PlotItem.setDataTransformState("Log X", state)` (and/or `"Log Y"`) instead.
+
         Set log scaling for `x` and/or `y` axes.
         This informs PlotDataItems to transform logarithmically and switches
-        the axes to use log ticking. 
-        
+        the axes to use log ticking.
+
         Note that *no other items* in the scene will be affected by
         this; there is (currently) no generic way to redisplay a GraphicsItem
         with log coordinates.
-        
         """
+        warnings.warn(
+            'PlotItem.setLogMode is deprecated and will be removed. '
+            'Use PlotItem.setDataTransformState("Log X", state) (and/or "Log Y") instead.',
+            DeprecationWarning, stacklevel=2
+        )
         if x is not None:
-            self.ctrl.logXCheck.setChecked(x)
+            self.setDataTransformState(translate("Form", "Log X"), x)
         if y is not None:
-            self.ctrl.logYCheck.setChecked(y)
-        
+            self.setDataTransformState(translate("Form", "Log Y"), y)
+
     def showGrid(self, x=None, y=None, alpha=None):
         """
         Show or hide the grid for either axis.
@@ -501,8 +640,8 @@ class PlotItem(GraphicsWidget):
     def addItem(self, item, *args, **kargs):
         """
         Add a graphics item to the view box. 
-        If the item has plot data (:class:`PlotDataItem <pyqtgraph.PlotDataItem>` , 
-        :class:`~pyqtgraph.PlotCurveItem` , :class:`~pyqtgraph.ScatterPlotItem` ), 
+        If the item has plot data (:class:`PlotDataItem <pyqtgraph.PlotDataItem>` ,
+        :class:`~pyqtgraph.PlotCurveItem` , :class:`~pyqtgraph.ScatterPlotItem` ),
         it may be included in analysis performed by the PlotItem.
         """
         if item in self.items:
@@ -523,16 +662,34 @@ class PlotItem(GraphicsWidget):
             self.itemMeta[item] = params
             #item.setMeta(params)
             self.curves.append(item)
-            #self.addItem(c)
-            
-        if hasattr(item, 'setLogMode'):
-            item.setLogMode(self.ctrl.logXCheck.isChecked(), self.ctrl.logYCheck.isChecked())
-            
+
+        if hasattr(item, "addDataTransform"):
+            for transform in self._transforms:
+                params = self._paramsForDataTransform(transform)
+                item.addDataTransformParams(transform, **params)
+                if self._transforms[transform].get("enabled", False):
+                    item.addDataTransform(
+                        transform,
+                        self._transforms[transform]["order"],
+                        self._transforms[transform]["dataTransform"],
+                    )
+                else:
+                    item.removeDataTransform(transform)
+        elif hasattr(item, 'setLogMode'):
+            warnings.warn(
+                'setLogMode is deprecated and will be removed in the future. '
+                'Implement addDataTransform instead',
+                DeprecationWarning, stacklevel=2
+            )
+            item.setLogMode(
+                self._transforms.get(translate("Form", "Log X"), {}).get("enabled", False),
+                self._transforms.get(translate("Form", "Log Y"), {}).get("enabled", False),
+            )
+
         if isinstance(item, PlotDataItem):
             ## configure curve for this plot
             (alpha, auto) = self.alphaState()
             item.setAlpha(alpha, auto)
-            item.setFftMode(self.ctrl.fftCheck.isChecked())
             item.setDownsampling(*self.downsampleMode())
             item.setClipToView(self.clipToViewMode())
             
@@ -552,7 +709,7 @@ class PlotItem(GraphicsWidget):
             self.legend.addItem(item, name=name)            
 
     def listDataItems(self):
-        """Return a list of all data items (:class:`PlotDataItem <pyqtgraph.PlotDataItem>`, 
+        """Return a list of all data items (:class:`PlotDataItem <pyqtgraph.PlotDataItem>`,
         :class:`~pyqtgraph.PlotCurveItem` , :class:`~pyqtgraph.ScatterPlotItem` , etc)
         contained in this PlotItem."""
         return self.dataItems[:]
@@ -641,7 +798,7 @@ class PlotItem(GraphicsWidget):
         :class:`~pyqtgraph.ViewBox`. Plots added after this will be automatically 
         displayed in the legend if they are created with a 'name' argument.
 
-        If a :class:`~pyqtgraph.LegendItem` has already been created using this method, 
+        If a :class:`~pyqtgraph.LegendItem` has already been created using this method,
         that item will be returned rather than creating a new one.
 
         Accepts the same arguments as :func:`~pyqtgraph.LegendItem.__init__`.
@@ -820,6 +977,13 @@ class PlotItem(GraphicsWidget):
         state = self.stateGroup.state()
         state['paramList'] = self.paramList.copy()
         state['view'] = self.vb.getState()
+        state["transforms"] = {}
+        for k, v in self._transforms.items():
+            state["transforms"][k] = {
+                "enabled": v["enabled"],
+                "paramsState": self._paramsForDataTransform(k),
+                "paramsConfig": v.get("params", None),
+            }
         return state
         
     def restoreState(self, state):
@@ -827,13 +991,25 @@ class PlotItem(GraphicsWidget):
             self.paramList = state['paramList'].copy()
             
         self.stateGroup.setState(state)
-        self.updateSpectrumMode()
+
+        if "transforms" in state:
+            for missing in state["transforms"].keys() - self._transforms.keys():
+                warnings.warn(
+                    f"The '{missing}' transform cannot be restored on this PlotItem; its transform function needs "
+                    f"to be added via PlotItem.addDataTransformOption or PlotItem.addDefaultDataTransformOption."
+                )
+                # :MC: This could potentially be implemented, but it probably won't be a common issue.
+            for name in state["transforms"]:
+                try:
+                    self.setDataTransformState(name, state["transforms"][name].get("enabled", False))
+                    self.setDataTransformParams(name, **state["transforms"][name].get("paramsState", {}))
+                except KeyError:
+                    warnings.warn(f"Unknown transform '{name}'")
+
         self.updateDownsampling()
         self.updateAlpha()
         self.updateDecimation()
-        
-        if 'powerSpectrumGroup' in state:
-            state['fftCheck'] = state['powerSpectrumGroup']
+
         if 'gridGroup' in state:
             state['xGridCheck'] = state['gridGroup']
             state['yGridCheck'] = state['gridGroup']
@@ -853,45 +1029,51 @@ class PlotItem(GraphicsWidget):
 
     def widgetGroupInterface(self):
         return (None, PlotItem.saveState, PlotItem.restoreState)
-      
-    def updateSpectrumMode(self, b=None):
-        if b is None:
-            b = self.ctrl.fftCheck.isChecked()
-        for c in self.curves:
-            c.setFftMode(b)
-        self.enableAutoRange()
-        self.recomputeAverages()
-            
-    def updateLogMode(self):
-        x = self.ctrl.logXCheck.isChecked()
-        y = self.ctrl.logYCheck.isChecked()
+
+    def _handleDataTransformParamsUpdate(self):
+        name = self.sender().objectName()
+        params = self._paramsForDataTransform(name)
         for i in self.items:
-            if hasattr(i, 'setLogMode'):
-                i.setLogMode(x,y)
-        self.getAxis('bottom').setLogMode(x, y)
-        self.getAxis('top').setLogMode(x, y)
-        self.getAxis('left').setLogMode(x, y)
-        self.getAxis('right').setLogMode(x, y)
-        self.enableAutoRange()
-        self.recomputeAverages()
-    
-    def updateDerivativeMode(self):
-        d = self.ctrl.derivativeCheck.isChecked()
-        for i in self.items:
-            if hasattr(i, 'setDerivativeMode'):
-                i.setDerivativeMode(d)
+            if hasattr(i, "addDataTransformParams"):
+                i.addDataTransformParams(name, **params)
         self.enableAutoRange()
         self.recomputeAverages()
 
-    def updatePhasemapMode(self):
-        d = self.ctrl.phasemapCheck.isChecked()
+    def _paramsForDataTransform(self, name):
+        if "paramsParams" in self._transforms[name]:
+            return {
+                pname: pval[0]
+                for pname, pval in self._transforms[name]["paramsParams"].getValues().items()
+            }
+        return {}
+
+    def _handleDataTransformChecked(self, checked):
+        name = self.sender().objectName()
+        self._transforms[name]["enabled"] = checked
         for i in self.items:
-            if hasattr(i, 'setPhasemapMode'):
-                i.setPhasemapMode(d)
+            if hasattr(i, "addDataTransform"):
+                if checked:
+                    i.addDataTransform(
+                        name, self._transforms[name]["order"], self._transforms[name]["dataTransform"]
+                    )
+                else:
+                    i.removeDataTransform(name)
+        if self._transforms[name].get("updateAxisCallback", None) is not None:
+            for axis in self.axes.values():
+                self._transforms[name]["updateAxisCallback"](
+                    axis["item"], checked, **(self._paramsForDataTransform(name))
+                )
         self.enableAutoRange()
         self.recomputeAverages()
-        
-        
+
+    def setDataTransformState(self, name, enabled):
+        self._transforms[name]["checkbox"].setChecked(enabled)
+
+    def setDataTransformParams(self, name, **params):
+        for p in self._transforms[name].get("paramsParams", []):
+            if p.name() in params:
+                p.setValue(params[p.name()])
+
     def setDownsampling(self, ds=None, auto=None, mode=None):
         """
         Changes the default downsampling mode for all :class:`~pyqtgraph.PlotDataItem` managed by this plot.
@@ -1087,7 +1269,7 @@ class PlotItem(GraphicsWidget):
             if action.text() == translated_name:
                 action.setVisible(visible)
                 break
-    
+
     def hoverEvent(self, ev):
         if ev.enter:
             self.mouseHovering = True
@@ -1186,10 +1368,10 @@ class PlotItem(GraphicsWidget):
         
         Parameters
         ----------
-        selection: bool or tuple of bool 
+        selection: bool or tuple of bool
             Determines which AxisItems will be displayed.
             If in tuple form, order is (left, top, right, bottom)
-            A single boolean value will set all axes, 
+            A single boolean value will set all axes,
             so that ``showAxes(True)`` configures the axes to draw a frame.
         showValues: bool or tuple of bool, optional
             Determines if values will be displayed for the ticks of each axis.
@@ -1307,3 +1489,83 @@ class PlotItem(GraphicsWidget):
         self.fileDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         self.fileDialog.show()
         self.fileDialog.fileSelected.connect(handler)
+
+
+_diff = lambda x, y: (x[:-1], np.diff(y) / np.diff(x))
+
+
+def _logXTransform(x, y):
+    return _quietLogTransform(x), y
+
+
+def _logYTransform(x, y):
+    return x, _quietLogTransform(y)
+
+
+def _quietLogTransform(data):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)  # divide-by-zero, invalid negatives
+        ret = np.log10(data)
+        nonfinites = ~np.isfinite(ret)
+        if nonfinites.any():
+            ret[nonfinites] = np.nan  # set all non-finite values to NaN
+        return ret
+
+
+def _fourierTransform(x, y):
+    # Perform Fourier transform. If x values are not sampled uniformly,
+    # then use np.interp to resample before taking fft.
+    dx = np.diff(x)
+    uniform = not np.any(np.abs(dx-dx[0]) > (abs(dx[0]) / 1000.))
+    if not uniform:
+        x2 = np.linspace(x[0], x[-1], len(x))
+        y = np.interp(x2, x, y)
+        x = x2
+    n = y.size
+    f = np.fft.rfft(y) / n
+    d = float(x[-1]-x[0]) / (len(x)-1)
+    x = np.fft.rfftfreq(n, d)
+    y = np.abs(f)
+    return x, y
+
+
+_phasemap = lambda x, y: (y[:-1], np.diff(y) / np.diff(x))
+
+
+PlotItem.addDefaultDataTransformOption(
+    translate("Form", "∂y/∂x"),
+    _diff,
+    order=60,
+)
+PlotItem.addDefaultDataTransformOption(
+    translate("Form", "∂²y/∂x²"),
+    lambda x, y: _diff(*_diff(x, y)),
+    order=60,
+)
+PlotItem.addDefaultDataTransformOption(
+    translate("Form", "Cumulative Sum"),
+    lambda x, y: (x, np.cumsum(y)),
+    order=60,
+)
+PlotItem.addDefaultDataTransformOption(
+    translate("Form", "Y vs Y'"),
+    _phasemap,
+    order=70,
+)
+PlotItem.addDefaultDataTransformOption(
+    translate("Form", "Power Spectrum (FFT)"),
+    _fourierTransform,
+    order=80,
+)
+PlotItem.addDefaultDataTransformOption(
+    translate("Form", "Log X"),
+    _logXTransform,
+    lambda axis, checked: axis.setLogMode(x=checked),
+    order=90,
+)
+PlotItem.addDefaultDataTransformOption(
+    translate("Form", "Log Y"),
+    _logYTransform,
+    lambda axis, checked: axis.setLogMode(y=checked),
+    order=90,
+)

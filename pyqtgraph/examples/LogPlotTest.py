@@ -23,7 +23,7 @@ y = y[mask]
 p5.plot(x, y, pen=None, symbol='t', symbolPen=None, symbolSize=10, symbolBrush=(100, 100, 255, 50))
 p5.setLabel('left', "Y Axis", units='A')
 p5.setLabel('bottom', "Y Axis", units='s')
-p5.setLogMode(x=True, y=False)
+p5.setDataTransformState("Log X", True)
 
 
 if __name__ == '__main__':

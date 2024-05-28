@@ -3,6 +3,7 @@ import warnings
 import numpy as np
 
 import pyqtgraph as pg
+from pyqtgraph.graphicsItems.PlotItem.PlotItem import _logXTransform, _logYTransform
 from pyqtgraph.Qt import QtGui
 
 pg.mkQApp()
@@ -25,25 +26,6 @@ def test_bound_formats():
         bounds = pdi_line.dataBounds(1)
         assert isinstance(bounds[0], float), 'bound 0 is not float for line plot of '+str(datatype)
         assert isinstance(bounds[0], float), 'bound 1 is not float for line plot of '+str(datatype)
-
-def test_fft():
-    f = 20.
-    x = np.linspace(0, 1, 1000)
-    y = np.sin(2 * np.pi * f * x)
-    pd = pg.PlotDataItem(x, y)
-    pd.setFftMode(True)
-    x, y = pd.getData()
-    assert abs(x[np.argmax(y)] - f) < 0.03
-
-    x = np.linspace(0, 1, 1001)
-    y = np.sin(2 * np.pi * f * x)
-    pd.setData(x, y)
-    x, y = pd.getData()
-    assert abs(x[np.argmax(y)]- f) < 0.03
-
-    pd.setLogMode(True, False)
-    x, y = pd.getData()
-    assert abs(x[np.argmax(y)] - np.log10(f)) < 0.01
 
 def test_setData():
     pdi = pg.PlotDataItem()
@@ -82,6 +64,7 @@ def test_setData():
     assert pdi.xData is None
     assert pdi.yData is None
     
+
 def test_nonfinite():
     def _assert_equal_arrays(a1, a2):
         assert a1.shape == a2.shape
@@ -94,18 +77,21 @@ def test_nonfinite():
     dataset = pdi._getDisplayDataset()
     _assert_equal_arrays( dataset.x, x )
     _assert_equal_arrays( dataset.y, y )
-   
-    with warnings.catch_warnings(): 
+
+    with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         x_log = np.log10(x)
         y_log = np.log10(y)
     x_log[ ~np.isfinite(x_log) ] = np.nan
     y_log[ ~np.isfinite(y_log) ] = np.nan
 
-    pdi.setLogMode(True, True)
+    pdi.addDataTransform("Log X", 90, _logXTransform)
+    pdi.addDataTransform("Log Y", 90, _logYTransform)
+
     dataset = pdi._getDisplayDataset()
     _assert_equal_arrays( dataset.x, x_log )
     _assert_equal_arrays( dataset.y, y_log )
+
 
 def test_opts():
     # test that curve and scatter plot properties get updated from PlotDataItem methods

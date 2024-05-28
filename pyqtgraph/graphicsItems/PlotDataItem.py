@@ -1,6 +1,6 @@
+import bisect
 import math
 import warnings
-import bisect
 
 import numpy as np
 
@@ -12,7 +12,10 @@ from .GraphicsObject import GraphicsObject
 from .PlotCurveItem import PlotCurveItem
 from .ScatterPlotItem import ScatterPlotItem
 
+translate = QtCore.QCoreApplication.translate
+
 __all__ = ['PlotDataItem']
+
 
 class PlotDataset(object):
     """
@@ -58,7 +61,7 @@ class PlotDataset(object):
 
     def _updateDataRect(self):
         """ 
-        Finds bounds of plotable data and stores them as ``dataset._dataRect``, 
+        Finds bounds of plottable data and stores them as ``dataset._dataRect``,
         stores information about the presence of nonfinite data points.
             """
         if self.y is None or self.x is None:
@@ -94,41 +97,7 @@ class PlotDataset(object):
             self._updateDataRect()
         return self._dataRect
 
-    def applyLogMapping(self, logMode):
-        """
-        Applies a logarithmic mapping transformation (base 10) if requested for the respective axis.
-        This replaces the internal data. Values of ``-inf`` resulting from zeros in the original dataset are
-        replaced by ``np.nan``.
-        
-        Parameters
-        ----------
-        logmode: tuple or list of two bool
-            A `True` value requests log-scale mapping for the x and y axis (in this order).
-        """
-        if logMode[0]:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", RuntimeWarning)
-                self.x = np.log10(self.x)
-            nonfinites = ~np.isfinite( self.x )
-            if nonfinites.any():
-                self.x[nonfinites] = np.nan # set all non-finite values to NaN
-                all_x_finite = False
-            else:
-                all_x_finite = True
-            self.xAllFinite = all_x_finite
 
-        if logMode[1]:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", RuntimeWarning)
-                self.y = np.log10(self.y)
-            nonfinites = ~np.isfinite( self.y )
-            if nonfinites.any():
-                self.y[nonfinites] = np.nan # set all non-finite values to NaN
-                all_y_finite = False
-            else:
-                all_y_finite = True
-            self.yAllFinite = all_y_finite
-        
 class PlotDataItem(GraphicsObject):
     """
     **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
@@ -314,6 +283,8 @@ class PlotDataItem(GraphicsObject):
         self._dataset        = None # will hold a PlotDataset for the original data, accessed by getOriginalData()
         self._datasetMapped  = None # will hold a PlotDataset for data after mapping transforms (e.g. log scale)
         self._datasetDisplay = None # will hold a PlotDataset for data downsampled and limited for display, accessed by getData()
+        self._transforms = []  # List of tuples of (name, order, func)
+        self._transformParams = {}  # Optional params keyed by name
         self.curve = PlotCurveItem()
         self.scatter = ScatterPlotItem()
         self.curve.setParentItem(self)
@@ -337,11 +308,7 @@ class PlotDataItem(GraphicsObject):
         #self.clear()
         self.opts = {
             'connect': 'auto', # defaults to 'all', unless overridden to 'finite' for log-scaling
-            'skipFiniteCheck': False, 
-            'fftMode': False,
-            'logMode': [False, False],
-            'derivativeMode': False,
-            'phasemapMode': False,
+            'skipFiniteCheck': False,
             'alphaHint': 1.0,
             'alphaMode': False,
 
@@ -421,19 +388,42 @@ class PlotDataItem(GraphicsObject):
         self.setOpacity(alpha)
         #self.update()
 
+    def addDataTransform(self, name, order, func):
+        self._transforms.append((name, order, func))
+        self.noticeDataTransform()
+
+    def addDataTransformParams(self, name, **params):
+        self._transformParams[name] = params
+        self.noticeDataTransform()
+
+    def removeDataTransform(self, name):
+        self._transforms = [(n, o, f) for n, o, f in self._transforms if n != name]
+        self.noticeDataTransform()
+
+    def noticeDataTransform(self):
+        self._datasetMapped = None
+        self._datasetDisplay = None
+        self._adsLastValue = 1     # reset auto-downsample value
+        self.updateItems(styleUpdate=False)
+        self.informViewBoundsChanged()
+
     def setFftMode(self, state):
         """
         ``state = True`` enables mapping the data by a fast Fourier transform.
         If the `x` values are not equidistant, the data set is resampled at
         equal intervals. 
         """
-        if self.opts['fftMode'] == state:
-            return
-        self.opts['fftMode'] = state
-        self._datasetMapped  = None
-        self._datasetDisplay = None
-        self.updateItems(styleUpdate=False)
-        self.informViewBoundsChanged()
+        warnings.warn(
+            'PlotDataItem.setFftMode is deprecated and will be removed. '
+            'Use PlotItem.setDataTransformState("Power Spectrum (FFT)", state) instead.',
+            DeprecationWarning, stacklevel=2
+        )
+        if state:
+            from .PlotItem.PlotItem import _fourierTransform
+            self.addDataTransform(translate("Form", "Power Spectrum (FFT)"), 80, _fourierTransform)
+        else:
+            self.removeDataTransform(translate("Form", "Power Spectrum (FFT)"))
+        self.noticeDataTransform()
 
     def setLogMode(self, xState, yState):
         """
@@ -442,29 +432,41 @@ class PlotDataItem(GraphicsObject):
         is applied to the data. For negative or zero values, this results in a 
         `NaN` value.
         """
-        if self.opts['logMode'] == [xState, yState]:
-            return
-        self.opts['logMode'] = [xState, yState]
-        self._datasetMapped  = None  # invalidate mapped data
-        self._datasetDisplay = None  # invalidate display data
-        self._adsLastValue   = 1     # reset auto-downsample value
-        self.updateItems(styleUpdate=False)
-        self.informViewBoundsChanged()
+        warnings.warn(
+            'PlotDataItem.setLogMode is deprecated and will be removed. '
+            'Use PlotItem.setDataTransformState("Log X", state) (and/or "Log Y") instead.',
+            DeprecationWarning, stacklevel=2
+        )
+        if xState:
+            from .PlotItem.PlotItem import _logXTransform
+            self.addDataTransform(translate("Form", "Log X"), 90, _logXTransform)
+        else:
+            self.removeDataTransform(translate("Form", "Log X"))
+        if yState:
+            from .PlotItem.PlotItem import _logYTransform
+            self.addDataTransform(translate("Form", "Log Y"), 90, _logYTransform)
+        else:
+            self.removeDataTransform(translate("Form", "Log Y"))
+        self.noticeDataTransform()
 
-    def setDerivativeMode(self, state):
+
+    def setDeurivativeMode(self, state):
         """
         ``state = True`` enables derivative mode, where a mapping according to
         ``y_mapped = dy / dx`` is applied, with `dx` and `dy` representing the 
         differences between adjacent `x` and `y` values.
         """
-        if self.opts['derivativeMode'] == state:
-            return
-        self.opts['derivativeMode'] = state
-        self._datasetMapped  = None  # invalidate mapped data
-        self._datasetDisplay = None  # invalidate display data
-        self._adsLastValue   = 1     # reset auto-downsample value
-        self.updateItems(styleUpdate=False)
-        self.informViewBoundsChanged()
+        warnings.warn(
+            'PlotDataItem.setDerivativeMode is deprecated and will be removed. '
+            'Use PlotItem.setDataTransformState("dy/dx", state) instead.',
+            DeprecationWarning, stacklevel=2
+        )
+        if state:
+            from .PlotItem.PlotItem import _diff
+            self.addDataTransform(translate("Form", "dy/dx"), 60, _diff)
+        else:
+            self.removeDataTransform(translate("Form", "dy/dx"))
+        self.noticeDataTransform()
 
     def setPhasemapMode(self, state):
         """
@@ -473,14 +475,17 @@ class PlotDataItem(GraphicsObject):
         is applied, plotting the numerical derivative of the data over the 
         original `y` values.
         """
-        if self.opts['phasemapMode'] == state:
-            return
-        self.opts['phasemapMode'] = state
-        self._datasetMapped  = None  # invalidate mapped data
-        self._datasetDisplay = None  # invalidate display data
-        self._adsLastValue   = 1     # reset auto-downsample value
-        self.updateItems(styleUpdate=False)
-        self.informViewBoundsChanged()
+        warnings.warn(
+            'PlotDataItem.setPhasemapMode is deprecated and will be removed. '
+            'Use PlotItem.setDataTransformState("Y v. Y\'", state) instead.',
+            DeprecationWarning, stacklevel=2
+        )
+        if state:
+            from .PlotItem.PlotItem import _phasemap
+            self.addDataTransform(translate("Form", "Y v. Y'"), 70, _phasemap)
+        else:
+            self.removeDataTransform(translate("Form", "Y v. Y'"))
+        self.noticeDataTransform()
 
     def setPen(self, *args, **kargs):
         """
@@ -927,7 +932,7 @@ class PlotDataItem(GraphicsObject):
 
     def _getDisplayDataset(self):
         """
-        Returns a :class:`~.PlotDataset` object that contains data suitable for display 
+        Returns a :class:`~.PlotDataset` object that contains data suitable for display
         (after mapping and data reduction) as ``dataset.x`` and ``dataset.y``.
         Intended for internal use.
         """
@@ -940,8 +945,8 @@ class PlotDataItem(GraphicsObject):
             not (self.property('yViewRangeWasChanged') and self.opts['dynamicRangeLimit'] is not None)
         ):
             return self._datasetDisplay
-        
-        # Apply data mapping functions if mapped dataset is not yet available: 
+
+        # Apply data mapping functions if mapped dataset is not yet available:
         if self._datasetMapped is None:
             x = self._dataset.x
             y = self._dataset.y
@@ -950,27 +955,18 @@ class PlotDataItem(GraphicsObject):
             if x.dtype == bool:
                 x = x.astype(np.uint8)
 
-            if self.opts['fftMode']:
-                x,y = self._fourierTransform(x, y)
-                # Ignore the first bin for fft data if we have a logx scale
-                if self.opts['logMode'][0]:
-                    x=x[1:]
-                    y=y[1:]
+            for name, order, transform in sorted(self._transforms, key=lambda v: v[1]):
+                x, y = transform(x, y, **self._transformParams.get(name, {}))
 
-            if self.opts['derivativeMode']:  # plot dV/dt
-                y = np.diff(self._dataset.y)/np.diff(self._dataset.x)
-                x = x[:-1]
-            if self.opts['phasemapMode']:  # plot dV/dt vs V
-                x = self._dataset.y[:-1]
-                y = np.diff(self._dataset.y)/np.diff(self._dataset.x)
-
+            # TODO figure out if I need these
+            # dataset = PlotDataset(x, y, self._dataset.xAllFinite, self._dataset.yAllFinite)
+            #
+            # if True in self.opts['logMode']:
+            #     dataset.applyLogMapping( self.opts['logMode'] ) # Apply log scaling for x and/or y axis
             dataset = PlotDataset(x, y, self._dataset.xAllFinite, self._dataset.yAllFinite)
-            
-            if True in self.opts['logMode']:
-                dataset.applyLogMapping( self.opts['logMode'] ) # Apply log scaling for x and/or y axis
 
             self._datasetMapped = dataset
-        
+
         # apply processing that affects the on-screen display of data:
         x = self._datasetMapped.x
         y = self._datasetMapped.y
@@ -1208,22 +1204,7 @@ class PlotDataItem(GraphicsObject):
         if update_needed:
             self.updateItems(styleUpdate=False)
 
-    def _fourierTransform(self, x, y):
-        ## Perform Fourier transform. If x values are not sampled uniformly,
-        ## then use np.interp to resample before taking fft.
-        dx = np.diff(x)
-        uniform = not np.any(np.abs(dx-dx[0]) > (abs(dx[0]) / 1000.))
-        if not uniform:
-            x2 = np.linspace(x[0], x[-1], len(x))
-            y = np.interp(x2, x, y)
-            x = x2
-        n = y.size
-        f = np.fft.rfft(y) / n
-        d = float(x[-1]-x[0]) / (len(x)-1)
-        x = np.fft.rfftfreq(n, d)
-        y = np.abs(f)
-        return x, y
-        
+
 # helper functions:
 def dataType(obj):
     if hasattr(obj, '__len__') and len(obj) == 0:

@@ -74,7 +74,7 @@ def readConfigFile(fname, **scope):
         
     try:
         #os.chdir(newDir)  ## bad.
-        with open(fname, "rt") as fd:
+        with open(fname, "rt", errors="replace") as fd:
             s = fd.read()
         s = s.replace("\r\n", "\n")
         s = s.replace("\r", "\n")
