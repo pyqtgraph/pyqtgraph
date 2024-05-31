@@ -28,7 +28,7 @@ import pyqtgraph
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-#needs_sphinx = '1.0'
+# needs_sphinx = '1.0'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -65,22 +65,34 @@ nitpick_ignore_regex = [
     ("py:class", r"re\.Pattern"),  # doesn't seem to be a good ref in python docs
 ]
 
+# looks way better with pydata-sphinx-theme
 napoleon_use_admonition_for_examples = True
 napoleon_use_admonition_for_notes = True
 napoleon_use_admonition_for_references = True
+
 napoleon_use_rtype = True
+
+# if napoleon_use_param is True, there are issues, it merges
+# Parameters  Other Parameters, see  https://github.com/sphinx-doc/sphinx/issues/10330
 napoleon_use_param = False
-napoleon_use_keyword = False
-napoleon_attr_annotations = True
+
+# napoleon_use_keyword = False
+
+# makes so Attributes/Variables aren't rendered like methods, but like Parameters
 napoleon_use_ivar = True
-napoleon_custom_sections = [("Signals", "params_style")]
+
+# napoleon_attr_annotations = True
+napoleon_custom_sections = [
+    ("Signals", "params_style"),
+    ("Slots", "params_style")
+]
+
 napoleon_preprocess_types = True
 napoleon_type_aliases = {
     "callable": ":class:`~collections.abc.Callable`",
     "np.ndarray": ":class:`numpy.ndarray`",
     'array_like': ':term:`array_like`',
-    'color_like': ':func:`pyqtgraph.mkColor`',
-    # 'ColorMapSpecifier': ':class:`str`, (:class:`str`, :class:`str`), or :class:`~pyqtgraph.ColorMap`',
+    'color_like': ':obj:`~pyqtgraph.functions.color_like`',
 }
 
 # makes things far more legible
@@ -172,7 +184,6 @@ autodoc_typehints_description_target = 'documented_params'
 autodoc_typehints_defaults = 'braces'
 autodoc_typehints_use_rtype = True
 
-
 autodoc_inherit_docstrings = False
 autodoc_mock_imports = [
     "scipy",
@@ -196,15 +207,15 @@ favicons = [
     "peegee_03_square_no_bg_32_cleaned.ico"
 ]
 
+# make right side TOC work w/ long names, makes it so method names aren't clipped
+# e.g. PlotDataItem.setDerivativeMode() -> setDerivativeMode()
+toc_object_entries_show_parents = "hide"
+
 # Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
+# further.  For a list of options available for each theme, see the documentation.
 html_theme_options = {
-    "navbar_end": ["theme-switcher", "navbar-icon-links"],
-    "use_edit_page_button": False,
-    "secondary_sidebar_items": ["page-toc"],
-    "navigation_with_keys": False,
-    "icon_links" : [
+    "collapse_navigation": True,
+    "icon_links": [
         {
             "name": "GitHub",
             "url": "https://github.com/pyqtgraph/pyqtgraph",
@@ -215,8 +226,15 @@ html_theme_options = {
             "name": "Mastodon",
             "url": "https://fosstodon.org/@pyqtgraph",
             "icon": "fa-brands fa-mastodon",
+            "type": "fontawesome",
         }
-    ]
+    ],
+    "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    "navigation_depth": 2,
+    "navigation_with_keys": False,
+    "secondary_sidebar_items": ["page-toc"],
+    "show_toc_level": 2,
+    "use_edit_page_button": False,
 }
 
 
@@ -386,11 +404,11 @@ rediraffe_redirects = {
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
-#html_last_updated_fmt = '%b %d, %Y'
+# html_last_updated_fmt = '%b %d, %Y'
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
-#html_use_smartypants = True
+# html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
 if os.getenv("BUILD_DASH_DOCSET"):  # used for building dash docsets
