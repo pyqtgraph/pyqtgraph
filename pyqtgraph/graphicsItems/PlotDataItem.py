@@ -524,9 +524,9 @@ class PlotDataItem(GraphicsObject):
         self.curve.setParentItem(self)
         self.scatter.setParentItem(self)
 
-        self.curve.sigClicked.connect(self.curveClicked)
+        self.curve.sigClicked.connect(self.sigClicked)
         self.scatter.sigClicked.connect(self.scatterClicked)
-        self.scatter.sigHovered.connect(self.scatterHovered)
+        self.scatter.sigHovered.connect(self.sigPointsHovered)
         
         # update-required notifications are handled through properties to allow future 
         # management through the QDynamicPropertyChangeEvent sent on any change.
