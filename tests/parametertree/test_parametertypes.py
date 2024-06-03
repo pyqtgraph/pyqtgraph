@@ -109,7 +109,7 @@ def check_param_types(param, types, map_func, init, objs, keys):
     if not isinstance(types, tuple):
         types = (types,)
     assert val == init and type(val) in types
-    
+
     # test valid input types
     good_inputs = [objs[k] for k in keys if k in objs]
     good_outputs = map(map_func, good_inputs)
@@ -119,7 +119,7 @@ def check_param_types(param, types, map_func, init, objs, keys):
         if not (eq(val, y) and type(val) in types):
             raise Exception("Setting parameter %s with value %r should have resulted in %r (types: %r), "
                 "but resulted in %r (type: %r) instead." % (param, x, y, types, val, type(val)))
-        
+
     # test invalid input types
     for k,v in objs.items():
         if k in keys:
@@ -129,8 +129,10 @@ def check_param_types(param, types, map_func, init, objs, keys):
         except (TypeError, ValueError, OverflowError):
             continue
         except Exception as exc:
-            raise Exception("Setting %s parameter value to %r raised %r." % (param, v, exc))
-        
+            raise Exception(
+                "Setting %s parameter value to %r raised %r." % (param, v, exc)
+            ) from exc
+
         raise Exception("Setting %s parameter value to %r should have raised an exception." % (param, v))
         
         
