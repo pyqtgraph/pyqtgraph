@@ -163,6 +163,7 @@ if HAVE_OPENGL:
             # explicit call of cleanup() is needed during application termination
             self.makeCurrent()
             self.m_texture.destroy()
+            self.uploaded = False
             if self.m_blitter is not None:
                 self.m_blitter.destroy()
                 self.m_blitter = None
