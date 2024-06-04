@@ -86,12 +86,12 @@ def test_ImageItem(transpose=False):
     app.processEvents()
     assertImageApproved(w, 'imageitem/init', 'Init image item. View is auto-scaled, image axis 0 marked by 1 line, axis 1 is marked by 2 lines. Origin in bottom-left.')
     
-    # ..with colormap
+    # ... with colormap
     cmap = pg.ColorMap([0, 0.25, 0.75, 1], [[0, 0, 0, 255], [255, 0, 0, 255], [255, 255, 0, 255], [255, 255, 255, 255]])
     img.setLookupTable(cmap.getLookupTable())
     assertImageApproved(w, 'imageitem/lut', 'Set image LUT.')
     
-    # ..and different levels
+    # ... and different levels
     img.setLevels([dmax+9, dmax+13])
     assertImageApproved(w, 'imageitem/levels1', 'Levels show only axis lines.')
 
@@ -167,7 +167,7 @@ def test_ImageItem(transpose=False):
     assertImageApproved(w, 'imageitem/resolution_without_downsampling', 'Resolution test without downsampling.')
     
     img.setAutoDownsample(True)
-    assertImageApproved(w, 'imageitem/resolution_with_downsampling_x', 'Resolution test with downsampling axross x axis.')
+    assertImageApproved(w, 'imageitem/resolution_with_downsampling_x', 'Resolution test with downsampling across x axis.')
     assert img._lastDownsample == (4, 1)
     
     img.setImage(data.T, levels=[-1, 1])

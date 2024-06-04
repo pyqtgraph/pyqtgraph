@@ -17,7 +17,7 @@ def test_PlotCurveItem():
     v.addItem(c)
     v.autoRange()
     
-    # Check auto-range works. Some platform differences may be expected..
+    # Check auto-range works. Some platform differences may be expected.
     checkRange = np.array([[-1.1457564053237301, 16.145756405323731], [-3.076811473165955, 11.076811473165955]])
     assert np.allclose(v.viewRange(), checkRange)
     

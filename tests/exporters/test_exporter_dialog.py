@@ -19,7 +19,7 @@ def test_export_dialog():
         pos=pg.Qt.QtCore.QPointF(plt.mapFromGlobal(plt.geometry().center())),
         button=pg.Qt.QtCore.Qt.MouseButton.RightButton
     )
-    plt.scene().contextMenu[0].trigger() # show show dialog
+    plt.scene().contextMenu[0].trigger()  # show dialog
     plt.scene().showExportDialog()
     assert plt.scene().exportDialog.isVisible()
     plt.scene().exportDialog.close()

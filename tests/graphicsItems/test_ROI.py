@@ -61,7 +61,7 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     win = pg.GraphicsView()
     win.show()
     resizeWindow(win, 200, 400)
-    # Don't use Qt's layouts for testing--these generate unpredictable results.
+    # Don't use Qts' layouts for testing--these generate unpredictable results.
     # Instead, manually place the ViewBoxes
     vb1 = pg.ViewBox()
     win.scene().addItem(vb1)
@@ -315,8 +315,7 @@ def test_PolyLineROI(roi, name):
 
     plt.scene().minDragTime = 0  # let us simulate mouse drags very quickly.
 
-    # seemingly arbitrary requirements; might need longer wait time for some
-    # platforms..
+    # seemingly arbitrary requirements; might need longer wait time for some platforms.
     QtTest.QTest.qWaitForWindowExposed(plt)
     QtTest.QTest.qWait(100)
 

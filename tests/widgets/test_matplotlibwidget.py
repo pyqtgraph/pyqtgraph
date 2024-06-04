@@ -44,7 +44,7 @@ def assert_widget_fields(mplw, parent, figsize, dpi):
 def test_init_with_qwidget_arguments():
     """
     Ensures providing only the parent argument to the constructor properly
-    intializes the widget to match the QWidget constructor prototype.
+    initializes the widget to match the QWidget constructor prototype.
     """
     win = QtWidgets.QMainWindow()
 
@@ -55,7 +55,7 @@ def test_init_with_qwidget_arguments():
 
 def test_init_with_matplotlib_arguments():
     """
-    Tests the contructor that sets variables associated with Matplotlib and
+    Tests the constructor that sets variables associated with Matplotlib and
     abstracts away any details about the underlying QWidget parent class.
     """
     figsize = (1.0, 3.0)

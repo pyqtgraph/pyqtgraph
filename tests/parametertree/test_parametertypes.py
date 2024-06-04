@@ -102,7 +102,7 @@ def check_param_types(param, types, map_func, init, objs, keys):
             param.setValue().
         keys : list
             The list of keys indicating the valid objects in *objs*. When
-            param.setValue() is teasted with each value from *objs*, we expect
+            param.setValue() is tested with each value from *objs*, we expect
             an exception to be raised if the associated key is not in *keys*.
     """
     val = param.value()

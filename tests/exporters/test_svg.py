@@ -16,7 +16,7 @@ def test_plotscene(tmpdir):
     
     ex = pg.exporters.SVGExporter(w.scene())
 
-    tf = tmpdir.join("expot.svg")
+    tf = tmpdir.join("export.svg")
     ex.export(fileName=tf)
     # clean up after the test is done
     w.close()
@@ -66,5 +66,5 @@ def test_simple(tmpdir):
     grp2.addItem(rect3)
 
     ex = pg.exporters.SVGExporter(scene)
-    tf = tmpdir.join("expot.svg")
+    tf = tmpdir.join("export.svg")
     ex.export(fileName=tf)
