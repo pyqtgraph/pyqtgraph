@@ -135,8 +135,16 @@ def check_param_types(param, types, map_func, init, objs, keys):
 
         raise Exception("Setting %s parameter value to %r should have raised an exception." % (param, v))
         
-        
-def test_limits_enforcement():
+
+@pytest.mark.parametrize("k,v_in,v_out",[
+    ('float', -1, 0),
+    ('float',  2, 1),
+    ('int',   -1, 0),
+    ('int',    2, 1),
+    ('list', 'w', 'x'),
+    ('dict', 'w', 1)
+])
+def test_limits_enforcement(k, v_in, v_out):
     p = pt.Parameter.create(name='params', type='group', children=[
         dict(name='float', type='float', limits=[0, 1]),
         dict(name='int', type='int', bounds=[0, 1]),
@@ -145,14 +153,8 @@ def test_limits_enforcement():
     ])
     t = pt.ParameterTree()
     t.setParameters(p)
-    for k, vin, vout in [('float', -1, 0),
-                         ('float',  2, 1),
-                         ('int',   -1, 0),
-                         ('int',    2, 1),
-                         ('list',   'w', 'x'),
-                         ('dict',   'w', 1)]:
-        p[k] = vin
-        assert p[k] == vout
+    p[k] = v_in
+    assert p[k] == v_out
 
 
 def test_data_race():
