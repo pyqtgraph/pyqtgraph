@@ -201,10 +201,6 @@ def test_pen_settings():
     p["width"] = 10
     assert p.pen.width() == 10
 
-@pytest.mark.skipif(
-    pg.Qt.QT_LIB == "PySide2" and pg.Qt.QtVersion.startswith("5.15"),
-    reason="Seems to segfault on conda + pyside2 on CI"
-)
 def test_recreate_from_savestate():
     from pyqtgraph.examples import _buildParamTypes
     created = _buildParamTypes.makeAllParamTypes()
