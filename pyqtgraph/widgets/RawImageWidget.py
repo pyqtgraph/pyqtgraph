@@ -189,7 +189,13 @@ if HAVE_OPENGL:
 
         def paintGL(self):
             GL_COLOR_BUFFER_BIT = 0x4000
+            GL_BLEND = 0x0BE3
+            GL_SRC_ALPHA = 0x0302
+            GL_ONE_MINUS_SRC_ALPHA = 0x0303
+            self.glfn.glClearColor(1, 1, 1, 1)
             self.glfn.glClear(GL_COLOR_BUFFER_BIT)
+            self.glfn.glEnable(GL_BLEND)
+            self.glfn.glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, 1, GL_ONE_MINUS_SRC_ALPHA)
 
             if self.image is None:
                 if self.opts is None:
