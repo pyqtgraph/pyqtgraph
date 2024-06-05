@@ -102,14 +102,14 @@ def check_param_types(param, types, map_func, init, objs, keys):
             param.setValue().
         keys : list
             The list of keys indicating the valid objects in *objs*. When
-            param.setValue() is teasted with each value from *objs*, we expect
+            param.setValue() is tested with each value from *objs*, we expect
             an exception to be raised if the associated key is not in *keys*.
     """
     val = param.value()
     if not isinstance(types, tuple):
         types = (types,)
     assert val == init and type(val) in types
-    
+
     # test valid input types
     good_inputs = [objs[k] for k in keys if k in objs]
     good_outputs = map(map_func, good_inputs)
@@ -119,7 +119,7 @@ def check_param_types(param, types, map_func, init, objs, keys):
         if not (eq(val, y) and type(val) in types):
             raise Exception("Setting parameter %s with value %r should have resulted in %r (types: %r), "
                 "but resulted in %r (type: %r) instead." % (param, x, y, types, val, type(val)))
-        
+
     # test invalid input types
     for k,v in objs.items():
         if k in keys:
@@ -129,12 +129,22 @@ def check_param_types(param, types, map_func, init, objs, keys):
         except (TypeError, ValueError, OverflowError):
             continue
         except Exception as exc:
-            raise Exception("Setting %s parameter value to %r raised %r." % (param, v, exc))
-        
+            raise Exception(
+                "Setting %s parameter value to %r raised %r." % (param, v, exc)
+            ) from exc
+
         raise Exception("Setting %s parameter value to %r should have raised an exception." % (param, v))
         
-        
-def test_limits_enforcement():
+
+@pytest.mark.parametrize("k,v_in,v_out",[
+    ('float', -1, 0),
+    ('float',  2, 1),
+    ('int',   -1, 0),
+    ('int',    2, 1),
+    ('list', 'w', 'x'),
+    ('dict', 'w', 1)
+])
+def test_limits_enforcement(k, v_in, v_out):
     p = pt.Parameter.create(name='params', type='group', children=[
         dict(name='float', type='float', limits=[0, 1]),
         dict(name='int', type='int', bounds=[0, 1]),
@@ -143,14 +153,8 @@ def test_limits_enforcement():
     ])
     t = pt.ParameterTree()
     t.setParameters(p)
-    for k, vin, vout in [('float', -1, 0),
-                         ('float',  2, 1),
-                         ('int',   -1, 0),
-                         ('int',    2, 1),
-                         ('list',   'w', 'x'),
-                         ('dict',   'w', 1)]:
-        p[k] = vin
-        assert p[k] == vout
+    p[k] = v_in
+    assert p[k] == v_out
 
 
 def test_data_race():
@@ -197,10 +201,6 @@ def test_pen_settings():
     p["width"] = 10
     assert p.pen.width() == 10
 
-@pytest.mark.skipif(
-    pg.Qt.QT_LIB == "PySide2" and pg.Qt.QtVersion.startswith("5.15"),
-    reason="Seems to segfault on conda + pyside2 on CI"
-)
 def test_recreate_from_savestate():
     from pyqtgraph.examples import _buildParamTypes
     created = _buildParamTypes.makeAllParamTypes()

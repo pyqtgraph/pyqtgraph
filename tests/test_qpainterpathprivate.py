@@ -21,11 +21,6 @@ def test_qpainterpathprivate_read():
     assert memory['c'][0] == 0
     assert np.all(memory['c'][1:] == 1)
 
-
-@pytest.mark.skipif(
-    not hasattr(QtGui.QPainterPath, 'reserve'),
-    reason="needs Qt version >= 5.13"
-)
 def test_qpainterpathprivate_write():
     x0, y0 = 100, 200
     size = 100

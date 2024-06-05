@@ -153,7 +153,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
             print(graphstate)
 
         if os.getenv('PYQTGRAPH_AUDIT_ALL') == '1':
-            raise Exception("Image test passed, but auditing due to PYQTGRAPH_AUDIT_ALL evnironment variable.")
+            raise Exception("Image test passed, but auditing due to PYQTGRAPH_AUDIT_ALL environment variable.")
     except Exception:
         if os.getenv('PYQTGRAPH_AUDIT') == '1' or os.getenv('PYQTGRAPH_AUDIT_ALL') == '1':
             sys.excepthook(*sys.exc_info())

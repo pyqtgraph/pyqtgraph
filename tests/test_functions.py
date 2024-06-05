@@ -159,7 +159,7 @@ def test_eq():
             return False
         
     noteq = NotEq()
-    assert eq(noteq, noteq) # passes because they are the same object
+    assert eq(noteq, noteq)  # passes because they are the same object
     assert not eq(noteq, NotEq())
 
 

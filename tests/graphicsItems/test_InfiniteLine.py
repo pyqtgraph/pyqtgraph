@@ -16,7 +16,7 @@ def test_InfiniteLine():
     plt.setYRange(-10, 10)
     plt.resize(600, 600)
 
-    # seemingly arbitrary requirements; might need longer wait time for some platforms..
+    # seemingly arbitrary requirements; might need longer wait time for some platforms
     QtTest.QTest.qWaitForWindowExposed(plt)
     QtTest.QTest.qWait(100)
 

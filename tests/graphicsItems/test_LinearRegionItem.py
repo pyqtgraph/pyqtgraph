@@ -25,7 +25,7 @@ def test_clip_to_plot_data_item(orientation):
     # initial bounds for the LRI
     init_vals = (-1.5, 1.5)
 
-    # data for a PlotDataItem to clip to, both inside the inial bounds
+    # data for a PlotDataItem to clip to, both inside the initial bounds
     x = np.linspace(-1, 1, 10)
     y = np.linspace(1, 1.2, 10)
 

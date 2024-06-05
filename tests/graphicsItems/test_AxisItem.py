@@ -121,32 +121,24 @@ def test_AxisItem_tickFont(monkeypatch):
     app.processEvents()
     plot.close()
 
-
-def test_AxisItem_label_visibility():
+@pytest.mark.parametrize('orientation,label_kwargs,labelText,labelUnits', [
+    ('left', {}, '', '',),
+    ('left', dict(text='Position', units='mm'), 'Position', 'mm'),
+    ('left', dict(text=None, units=None), '', ''),
+    ('left', dict(text='Current', units=None), 'Current', ''),
+    ('left', dict(text='', units='V'), '', 'V')
+])
+def test_AxisItem_label_visibility(orientation, label_kwargs, labelText: str, labelUnits: str):
     """Test the visibility of the axis item using `setLabel`"""
-    axis = pg.AxisItem('left')
-    assert axis.labelText == ''
-    assert axis.labelUnits == ''
-    assert not axis.label.isVisible()
-    axis.setLabel(text='Position', units='mm')
-    assert axis.labelText == 'Position'
-    assert axis.labelUnits == 'mm'
-    assert axis.label.isVisible()
-    # XXX: `None` is converted to empty strings.
-    axis.setLabel(text=None, units=None)
-    assert axis.labelText == ''
-    assert axis.labelUnits == ''
-    assert not axis.label.isVisible()
-    axis.setLabel(text='Current', units=None)
-    assert axis.labelText == 'Current'
-    assert axis.labelUnits == ''
-    assert axis.label.isVisible()
-    axis.setLabel(text=None, units=None)
-    assert not axis.label.isVisible()
-    axis.setLabel(text='', units='V')
-    assert axis.labelText == ''
-    assert axis.labelUnits == 'V'
-    assert axis.label.isVisible()
+    axis = pg.AxisItem(orientation)
+    axis.setLabel(**label_kwargs)
+    assert axis.labelText == labelText
+    assert axis.labelUnits == labelUnits
+    assert (
+        axis.label.isVisible() 
+        if any(label_kwargs.values())
+        else not axis.label.isVisible()
+    )
 
 @pytest.mark.parametrize(
     "orientation,x,y,expected",

@@ -45,7 +45,7 @@ def test_makeARGB_against_generated_references(acceleration, dtype, in_fmt, leve
         setConfigOptions(useCupy=False, useNumba=False)
 
     if dtype == np.float32 and level_name is None:
-        pytest.skip(f"{dtype=} is not compatable with {level_name=}")
+        pytest.skip(f"{dtype=} is not compatible with {level_name=}")
 
     data = INPUTS[(dtype, in_fmt)]
     levels = LEVELS.get(level_name, None)
