@@ -1,8 +1,9 @@
 import numpy as np
+import pytest
 from numpy.testing import assert_almost_equal, assert_array_almost_equal
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtCore, QtGui
 
 testPoints = np.array([
                        [0, 0, 0],
@@ -38,16 +39,14 @@ def testMatrix():
     assert_array_almost_equal(tr3.getTranslation(), tr.getTranslation())
 
 
-def testMapTypes():
+@pytest.mark.parametrize("v", [
+    pg.Vector((0, 0, 0)),
+    QtGui.QVector3D(0, 0, 0),
+    np.array((0, 0, 0)),
+    QtCore.QPoint(0, 0),
+    QtCore.QPointF(0.0, 0.0),
+])
+def testMapTypes(v):
     tr = pg.SRTTransform3D()
-    v = pg.Vector((0, 0, 0))
     res = tr.map(v)
-    assert isinstance(res, pg.Vector)
-
-    v = QtGui.QVector3D(0, 0, 0)
-    res = tr.map(v)
-    assert isinstance(res, QtGui.QVector3D)
-
-    v = np.array((0, 0, 0))
-    res = tr.map(v)
-    assert isinstance(res, np.ndarray)
+    assert isinstance(res, type(v))
