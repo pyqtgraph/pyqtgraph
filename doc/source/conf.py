@@ -101,12 +101,12 @@ python_display_short_literal_types = True
 
 # spelling
 spelling_word_list_filename = [
-    'dictionaries/numpy.txt',
-    'dictionaries/PyQt6.QtCore.txt',
-    'dictionaries/PyQt6.QtGui.txt',
-    'dictionaries/PyQt6.QtWidgets.txt',
-    'dictionaries/pyqtgraph.txt',
-    'dictionaries/custom.txt'
+    'dictionaries/numpy.dic',
+    'dictionaries/PyQt6.QtCore.dic',
+    'dictionaries/PyQt6.QtGui.dic',
+    'dictionaries/PyQt6.QtWidgets.dic',
+    'dictionaries/pyqtgraph.dic',
+    'dictionaries/custom.dic'
 ]
 
 graphviz_dot_args = ['-Gbgcolor=transparent']
