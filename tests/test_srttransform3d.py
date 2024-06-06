@@ -27,7 +27,7 @@ def testMatrix():
 
     tr2 = pg.Transform3D(tr)
     assert np.all(tr.matrix() == tr2.matrix())
-    
+
     # This is the most important test:
     # The transition from Transform3D to SRTTransform3D is a tricky one.
     tr3 = pg.SRTTransform3D(tr2)
@@ -36,3 +36,18 @@ def testMatrix():
     assert_array_almost_equal(tr3.getRotation()[1], tr.getRotation()[1])
     assert_array_almost_equal(tr3.getScale(), tr.getScale())
     assert_array_almost_equal(tr3.getTranslation(), tr.getTranslation())
+
+
+def testMapTypes():
+    tr = pg.SRTTransform3D()
+    v = pg.Vector((0, 0, 0))
+    res = tr.map(v)
+    assert isinstance(res, pg.Vector)
+
+    v = QtGui.QVector3D(0, 0, 0)
+    res = tr.map(v)
+    assert isinstance(res, QtGui.QVector3D)
+
+    v = np.array((0, 0, 0))
+    res = tr.map(v)
+    assert isinstance(res, np.ndarray)

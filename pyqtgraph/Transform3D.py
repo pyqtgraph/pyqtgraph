@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from . import functions as fn
@@ -30,7 +32,7 @@ class Transform3D(QtGui.QMatrix4x4):
             return m[:3,:3]
         else:
             raise Exception("Argument 'nd' must be 2 or 3")
-        
+
     def map(self, obj):
         """
         Extends QMatrix4x4.map() to allow mapping (3, ...) arrays of coordinates
@@ -45,7 +47,7 @@ class Transform3D(QtGui.QMatrix4x4):
             v = QtGui.QMatrix4x4.map(self, Vector(obj))
             return type(obj)([v.x(), v.y(), v.z()])[:len(obj)]
         else:
-            return QtGui.QMatrix4x4.map(self, obj)
+            return type(obj)(QtGui.QMatrix4x4.map(self, obj))
             
     def inverted(self):
         inv, b = QtGui.QMatrix4x4.inverted(self)
