@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 
 from . import functions as fn
