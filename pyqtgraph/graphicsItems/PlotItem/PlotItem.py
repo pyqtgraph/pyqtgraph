@@ -552,7 +552,7 @@ class PlotItem(GraphicsWidget):
             self.legend.addItem(item, name=name)            
 
     def listDataItems(self):
-        """Return a list of all data items (:class:`PlotDataItem <pyqtgraph.PlotDataItem>`, 
+        """Return a list of all data items (:class:`~pyqtgraph.PlotDataItem`,
         :class:`~pyqtgraph.PlotCurveItem` , :class:`~pyqtgraph.ScatterPlotItem` , etc)
         contained in this PlotItem."""
         return self.dataItems[:]
@@ -611,8 +611,7 @@ class PlotItem(GraphicsWidget):
     def plot(self, *args, **kargs):
 #        **Additional arguments:**
         """
-        Add and return a new plot.
-        See :func:`PlotDataItem.__init__ <pyqtgraph.PlotDataItem.__init__>` for data arguments
+        Add and return a new plot. See :class:`PlotDataItem` for data arguments
         
         **Additional allowed arguments**
         

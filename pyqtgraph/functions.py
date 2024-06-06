@@ -12,6 +12,8 @@ import sys
 import warnings
 from collections import OrderedDict
 
+from typing import TypeAlias, TypedDict
+
 import numpy as np
 
 from . import Qt, debug, getConfigOption, reload
@@ -65,6 +67,28 @@ SI_PREFIX_EXPONENTS['u'] = -6
 
 FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
 INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
+
+class HueKeywordArgs(TypedDict):
+    hues: int
+    values: int
+    maxValue: int
+    minValue: int
+    maxHue: int
+    minHue: int
+    sat: int
+    alpha: int
+
+color_like: TypeAlias = (
+    QtGui.QColor 
+    | str 
+    | float
+    | int
+    | tuple[int, int, int]
+    | tuple[int, int, int, int]
+    | tuple[float, float, float]
+    | tuple[float, float, float, float]
+    | tuple[int, HueKeywordArgs]
+)
 
 
 def siScale(x, minVal=1e-25, allowUnicode=True):
@@ -223,9 +247,9 @@ class Color(QtGui.QColor):
         
     def __getitem__(self, ind):
         return (self.red, self.green, self.blue, self.alpha)[ind]()
-        
-    
-def mkColor(*args):
+
+
+def mkColor(*args) -> QtGui.QColor:
     """
     Convenience function for constructing QColor from a variety of argument 
     types. Accepted arguments are:
