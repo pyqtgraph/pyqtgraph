@@ -45,6 +45,8 @@ def testMatrix():
     np.array((0, 0, 0)),
     QtCore.QPoint(0, 0),
     QtCore.QPointF(0.0, 0.0),
+    (0, 0, 0),
+    [0, 0],
 ])
 def testMapTypes(v):
     tr = pg.SRTTransform3D()
