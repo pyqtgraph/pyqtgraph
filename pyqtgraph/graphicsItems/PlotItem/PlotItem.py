@@ -492,6 +492,7 @@ class PlotItem(GraphicsWidget):
         if self.autoBtn.mode == 'auto':
             self.enableAutoRange()
             self.autoBtn.hide()
+            self.vb.sigRangeChangedManually(self.vb.mouseEnabled()[:])
         else:
             self.disableAutoRange()
             
