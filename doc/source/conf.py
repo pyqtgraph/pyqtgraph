@@ -10,6 +10,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+import importlib.util
 import os
 import sys
 import time
@@ -17,13 +18,14 @@ import datetime
 
 from sphinx.application import Sphinx
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-path = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(path, '..', '..'))
-sys.path.insert(0, os.path.join(path, '..', 'extensions'))
-import pyqtgraph
+path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "pyqtgraph")
+spec = importlib.util.spec_from_file_location(
+    "pyqtgraph",
+    os.path.join(path, "__init__.py")
+)
+pyqtgraph = importlib.util.module_from_spec(spec)
+sys.modules["pyqtgraph"] = pyqtgraph
+spec.loader.exec_module(pyqtgraph)
 
 # -- General configuration -----------------------------------------------------
 
@@ -237,14 +239,12 @@ html_theme_options = {
     "use_edit_page_button": False,
 }
 
-
 if os.getenv("BUILD_DASH_DOCSET"):
     html_theme_options |= {
         'secondary_sidebar_items': [],
         "show_prev_next": False,
         "collapse_navigation": True,
     }
-
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
