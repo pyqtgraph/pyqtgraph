@@ -1286,6 +1286,12 @@ class ViewBox(GraphicsWidget):
             mask[axis] = self.state['mouseEnabled'][axis]
         else:
             mask = self.state['mouseEnabled'][:]
+
+        if not any(mask):
+            # if mouse zoom/pan is not enabled, ignore the event
+            ev.ignore()
+            return
+
         s = 1.02 ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
         s = [(None if m is False else s) for m in mask]
         center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
