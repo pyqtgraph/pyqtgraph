@@ -28,7 +28,6 @@ Contents:
     progressdialog
     filedialog
     joystickbutton
-    multiplotwidget
     verticallabel
     remotegraphicsview
     matplotlibwidget

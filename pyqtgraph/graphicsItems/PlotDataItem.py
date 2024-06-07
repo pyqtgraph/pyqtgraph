@@ -1142,14 +1142,11 @@ class PlotDataItem(GraphicsObject):
                 ]:
                     if k in data:
                         kwargs[k] = [d.get(k) for d in data]
-            elif dt == 'MetaArray':
-                y = data.view(np.ndarray)
-                x = data.xvals(0).view(np.ndarray)
             else:
                 raise TypeError('Invalid data type %s' % type(data))
 
         elif len(args) == 2:
-            seq = ('listOfValues', 'MetaArray', 'empty')
+            seq = ('listOfValues', 'empty')
             dtyp = dataType(args[0]), dataType(args[1])
             if dtyp[0] not in seq or dtyp[1] not in seq:
                 raise TypeError(
@@ -1160,30 +1157,18 @@ class PlotDataItem(GraphicsObject):
                     )
                 )
             if not isinstance(args[0], np.ndarray):
-                #x = np.array(args[0])
-                if dtyp[0] == 'MetaArray':
-                    x = args[0].asarray()
-                else:
-                    x = np.array(args[0])
+                x = np.array(args[0])
             else:
                 x = args[0].view(np.ndarray)
             if not isinstance(args[1], np.ndarray):
-                #y = np.array(args[1])
-                if dtyp[1] == 'MetaArray':
-                    y = args[1].asarray()
-                else:
-                    y = np.array(args[1])
+                y = np.array(args[1])
             else:
                 y = args[1].view(np.ndarray)
 
         if 'x' in kwargs:
             x = kwargs['x']
-            if dataType(x) == 'MetaArray':
-                x = x.asarray()
         if 'y' in kwargs:
             y = kwargs['y']
-            if dataType(y) == 'MetaArray':
-                y = y.asarray()
 
         profiler('interpret data')
         # pull in all style arguments.
@@ -1242,10 +1227,9 @@ class PlotDataItem(GraphicsObject):
                 
         if x is None or len(x) == 0:  # empty data is represented as None
             xData = None
-        else: # actual data is represented by ndarray
+        else:  # actual data is represented by ndarray
             if not isinstance(x, np.ndarray):
                 x = np.array(x)
-            # one last check to make sure there are no MetaArrays getting by
             xData = x.view(np.ndarray)
 
         if xData is None or yData is None:

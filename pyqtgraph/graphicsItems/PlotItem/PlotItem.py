@@ -1268,32 +1268,7 @@ class PlotItem(GraphicsWidget):
             raise Exception("X array must be 1D to plot (shape is %s)" % x.shape)
         c = PlotCurveItem(arr, x=x, **kargs)
         return c
-        
-    def _plotMetaArray(self, arr, x=None, autoLabel=True, **kargs):
-        if arr.ndim != 1:
-            raise Exception('can only automatically plot 1 dimensional arrays.')
-        ## create curve
-        try:
-            xv = arr.xvals(0)
-        except:
-            if x is None:
-                xv = np.arange(arr.shape[0])
-            else:
-                xv = x
-        c = PlotCurveItem(**kargs)
-        c.setData(x=xv, y=arr.view(np.ndarray))
-        
-        if autoLabel:
-            name = arr._info[0].get('name', None)
-            units = arr._info[0].get('units', None)
-            self.setLabel('bottom', text=name, units=units)
-            
-            name = arr._info[1].get('name', None)
-            units = arr._info[1].get('units', None)
-            self.setLabel('left', text=name, units=units)
-            
-        return c
-      
+
     def setExportMode(self, export, opts=None):
         GraphicsWidget.setExportMode(self, export, opts)
         self.updateButtons()

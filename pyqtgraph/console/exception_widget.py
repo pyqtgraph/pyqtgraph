@@ -221,10 +221,6 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
                 return False
             if filename.endswith('numpy/core/arrayprint.py') and function in ('_array2string'):
                 return False
-            if filename.endswith('MetaArray.py') and function == '__getattr__':
-                for name in ('__array_interface__', '__array_struct__', '__array__'):  ## numpy looks for these when converting objects to array
-                    if name in exc:
-                        return False
             if filename.endswith('flowchart/eq.py'):
                 return False
         if excType is TypeError:

@@ -313,9 +313,6 @@ class ImageView(QtWidgets.QWidget):
         """
         profiler = debug.Profiler()
 
-        if hasattr(img, 'implements') and img.implements('MetaArray'):
-            img = img.asarray()
-
         if not isinstance(img, np.ndarray):
             required = ['dtype', 'max', 'min', 'ndim', 'shape', 'size']
             if not all(hasattr(img, attr) for attr in required):

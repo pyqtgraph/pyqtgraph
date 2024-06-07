@@ -20,7 +20,6 @@ Contents:
     infiniteline
     roi
     graphicslayout
-    multiplotitem
     plotcurveitem
     scatterplotitem
     isocurveitem

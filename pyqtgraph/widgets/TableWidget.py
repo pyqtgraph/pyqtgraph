@@ -94,7 +94,6 @@ class TableWidget(QtWidgets.QTableWidget):
         
           * numpy arrays
           * numpy record arrays
-          * metaarrays
           * list-of-lists  [[1,2,3], [4,5,6]]
           * dict-of-lists  {'x': [1,2,3], 'y': [4,5,6]}
           * list-of-dicts  [{'x': 1, 'y': 4}, {'x': 2, 'y': 5}, ...]
@@ -202,14 +201,6 @@ class TableWidget(QtWidgets.QTableWidget):
             return lambda d: d.__iter__(), None
         elif isinstance(data, dict):
             return lambda d: iter(d.values()), list(map(str, data.keys()))
-        elif (hasattr(data, 'implements') and data.implements('MetaArray')):
-            if data.axisHasColumns(0):
-                header = [str(data.columnName(0, i)) for i in range(data.shape[0])]
-            elif data.axisHasValues(0):
-                header = list(map(str, data.xvals(0)))
-            else:
-                header = None
-            return self.iterFirstAxis, header
         elif isinstance(data, np.ndarray):
             return self.iterFirstAxis, None
         elif isinstance(data, np.void):

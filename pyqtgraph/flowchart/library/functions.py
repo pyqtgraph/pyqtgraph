@@ -1,20 +1,10 @@
 import numpy as np
 
-from ...metaarray import MetaArray
-
 
 def downsample(data, n, axis=0, xvals='subsample'):
     """Downsample by averaging points together across axis.
     If multiple axes are specified, runs once per axis.
-    If a metaArray is given, then the axis values can be either subsampled
-    or downsampled to match.
     """
-    ma = None
-    if (hasattr(data, 'implements') and data.implements('MetaArray')):
-        ma = data
-        data = data.view(np.ndarray)
-        
-    
     if hasattr(axis, '__len__'):
         if not hasattr(n, '__len__'):
             n = [n]*len(axis)
@@ -32,17 +22,7 @@ def downsample(data, n, axis=0, xvals='subsample'):
     #print d1.shape, s
     d1.shape = tuple(s)
     d2 = d1.mean(axis+1)
-    
-    if ma is None:
-        return d2
-    else:
-        info = ma.infoCopy()
-        if 'values' in info[axis]:
-            if xvals == 'subsample':
-                info[axis]['values'] = info[axis]['values'][::n][:nPts]
-            elif xvals == 'downsample':
-                info[axis]['values'] = downsample(info[axis]['values'], n)
-        return MetaArray(d2, info=info)
+    return d2
 
 
 def applyFilter(data, b, a, padding=100, bidir=True):
@@ -65,11 +45,7 @@ def applyFilter(data, b, a, padding=100, bidir=True):
     
     if padding > 0:
         d1 = d1[padding:-padding]
-        
-    if (hasattr(data, 'implements') and data.implements('MetaArray')):
-        return MetaArray(d1, info=data.infoCopy())
-    else:
-        return d1
+    return d1
     
 def besselFilter(data, cutoff, order=1, dt=None, btype='low', bidir=True):
     """return data passed through bessel filter"""
@@ -88,11 +64,7 @@ def besselFilter(data, cutoff, order=1, dt=None, btype='low', bidir=True):
     b,a = scipy.signal.bessel(order, cutoff * dt, btype=btype) 
     
     return applyFilter(data, b, a, bidir=bidir)
-    #base = data.mean()
-    #d1 = scipy.signal.lfilter(b, a, data.view(ndarray)-base) + base
-    #if (hasattr(data, 'implements') and data.implements('MetaArray')):
-        #return MetaArray(d1, info=data.infoCopy())
-    #return d1
+
 
 def butterworthFilter(data, wPass, wStop=None, gPass=2.0, gStop=20.0, order=1, dt=None, btype='low', bidir=True):
     """return data passed through bessel filter"""
@@ -157,9 +129,6 @@ def modeFilter(data, window=500, step=None, bins=None):
     remain = len(data) - step*(len(vals)-1) - l2
     chunks.append(np.linspace(vals[-1], vals[-1], remain))
     d2 = np.hstack(chunks)
-    
-    if (hasattr(data, 'implements') and data.implements('MetaArray')):
-        return MetaArray(d2, info=data.infoCopy())
     return d2
 
 def denoise(data, radius=2, threshold=4):
@@ -184,9 +153,6 @@ def denoise(data, radius=2, threshold=4):
     d6[radius:-radius] = d5
     d6[:radius] = d1[:radius]
     d6[-radius:] = d1[-radius:]
-    
-    if (hasattr(data, 'implements') and data.implements('MetaArray')):
-        return MetaArray(d6, info=data.infoCopy())
     return d6
 
 def adaptiveDetrend(data, x=None, threshold=3.0):
@@ -211,9 +177,6 @@ def adaptiveDetrend(data, x=None, threshold=3.0):
     lr = scipy.stats.linregress(x[mask], d[mask])
     base = lr[1] + lr[0]*x
     d4 = d - base
-    
-    if (hasattr(data, 'implements') and data.implements('MetaArray')):
-        return MetaArray(d4, info=data.infoCopy())
     return d4
     
 
@@ -239,9 +202,6 @@ def histogramDetrend(data, window=500, bins=50, threshold=3.0, offsetOnly=False)
     else:
         base = np.linspace(v[0], v[1], len(data))
         d3 = data.view(np.ndarray) - base
-    
-    if (hasattr(data, 'implements') and data.implements('MetaArray')):
-        return MetaArray(d3, info=data.infoCopy())
     return d3
     
 def concatenateColumns(data):
@@ -313,16 +273,9 @@ def suggestDType(x):
         return object
 
 def removePeriodic(data, f0=60.0, dt=None, harmonics=10, samples=4):
-    if (hasattr(data, 'implements') and data.implements('MetaArray')):
-        data1 = data.asarray()
-        if dt is None:
-            times = data.xvals('Time')
-            dt = times[1]-times[0]
-    else:
-        data1 = data
-        if dt is None:
-            raise Exception('Must specify dt for this data')
-    
+    data1 = data
+    if dt is None:
+        raise Exception('Must specify dt for this data')
     ft = np.fft.fft(data1)
     
     ## determine frequency step in fft data
@@ -346,11 +299,4 @@ def removePeriodic(data, f0=60.0, dt=None, harmonics=10, samples=4):
             ft[len(ft)-j] = re - im*1j
             
     data2 = np.fft.ifft(ft).real
-    
-    if (hasattr(data, 'implements') and data.implements('MetaArray')):
-        return metaarray.MetaArray(data2, info=data.infoCopy())
-    else:
-        return data2
-    
-    
-    
+    return data2
