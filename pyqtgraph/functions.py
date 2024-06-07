@@ -17,7 +17,6 @@ from typing import TypeAlias, TypedDict
 import numpy as np
 
 from . import Qt, debug, getConfigOption, reload
-from .metaarray import MetaArray
 from .Qt import QT_LIB, QtCore, QtGui
 from .util.cupy_helper import getCupy
 
@@ -652,8 +651,8 @@ def eq(a, b):
             return True
 
     # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.
-    aIsArr = isinstance(a, (np.ndarray, MetaArray))
-    bIsArr = isinstance(b, (np.ndarray, MetaArray))
+    aIsArr = isinstance(a, np.ndarray)
+    bIsArr = isinstance(b, np.ndarray)
     if (aIsArr or bIsArr) and type(a) != type(b):
         return False
 
@@ -711,16 +710,13 @@ def eq(a, b):
         return e
     elif t is np.bool_:
         return bool(e)
-    elif isinstance(e, np.ndarray) or (hasattr(e, 'implements') and e.implements('MetaArray')):
+    elif isinstance(e, np.ndarray):
         try:   ## disaster: if a is an empty array and b is not, then e.all() is True
             if a.shape != b.shape:
                 return False
         except:
             return False
-        if (hasattr(e, 'implements') and e.implements('MetaArray')):
-            return e.asarray().all()
-        else:
-            return e.all()
+        return e.all()
     else:
         raise TypeError("== operator returned type %s" % str(type(e)))
 
@@ -1772,15 +1768,8 @@ def gaussianFilter(data, sigma):
 def downsample(data, n, axis=0, xvals='subsample'):
     """Downsample by averaging points together across axis.
     If multiple axes are specified, runs once per axis.
-    If a metaArray is given, then the axis values can be either subsampled
-    or downsampled to match.
     """
     ma = None
-    if (hasattr(data, 'implements') and data.implements('MetaArray')):
-        ma = data
-        data = data.view(np.ndarray)
-        
-    
     if hasattr(axis, '__len__'):
         if not hasattr(n, '__len__'):
             n = [n]*len(axis)
@@ -1797,7 +1786,6 @@ def downsample(data, n, axis=0, xvals='subsample'):
     sl = [slice(None)] * data.ndim
     sl[axis] = slice(0, nPts*n)
     d1 = data[tuple(sl)]
-    #print d1.shape, s
     d1.shape = tuple(s)
     d2 = d1.mean(axis+1)
     
@@ -1810,7 +1798,7 @@ def downsample(data, n, axis=0, xvals='subsample'):
                 info[axis]['values'] = info[axis]['values'][::n][:nPts]
             elif xvals == 'downsample':
                 info[axis]['values'] = downsample(info[axis]['values'], n)
-        return MetaArray(d2, info=info)
+        return d2
 
 
 def _compute_backfill_indices(isfinite):

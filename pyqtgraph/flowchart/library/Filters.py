@@ -2,9 +2,8 @@ import numpy as np
 
 from ... import Point, PolyLineROI
 from ... import functions as pgfn
-from ... import metaarray as metaarray
 from . import functions
-from .common import CtrlNode, PlottingCtrlNode, metaArrayWrapper
+from .common import CtrlNode, PlottingCtrlNode
 
 
 class Downsample(CtrlNode):
@@ -100,7 +99,6 @@ class Mean(CtrlNode):
         ('n', 'intSpin', {'min': 1, 'max': 1000000})
     ]
     
-    @metaArrayWrapper
     def processData(self, data):
         n = self.ctrls['n'].value()
         return functions.rollingSum(data, n) / n
@@ -113,7 +111,6 @@ class Median(CtrlNode):
         ('n', 'intSpin', {'min': 1, 'max': 1000000})
     ]
     
-    @metaArrayWrapper
     def processData(self, data):
         try:
             import scipy.ndimage
@@ -128,7 +125,6 @@ class Mode(CtrlNode):
         ('window', 'intSpin', {'value': 500, 'min': 1, 'max': 1000000}),
     ]
     
-    @metaArrayWrapper
     def processData(self, data):
         return functions.modeFilter(data, self.ctrls['window'].value())
 
@@ -154,7 +150,6 @@ class Gaussian(CtrlNode):
         ('sigma', 'doubleSpin', {'min': 0, 'max': 1000000})
     ]
     
-    @metaArrayWrapper
     def processData(self, data):
         sigma = self.ctrls['sigma'].value()
         try:
@@ -169,20 +164,13 @@ class Derivative(CtrlNode):
     nodeName = 'DerivativeFilter'
     
     def processData(self, data):
-        if hasattr(data, 'implements') and data.implements('MetaArray'):
-            info = data.infoCopy()
-            if 'values' in info[0]:
-                info[0]['values'] = info[0]['values'][:-1]
-            return metaarray.MetaArray(data[1:] - data[:-1], info=info)
-        else:
-            return data[1:] - data[:-1]
+        return data[1:] - data[:-1]
 
 
 class Integral(CtrlNode):
     """Returns the pointwise integral of the input"""
     nodeName = 'IntegralFilter'
     
-    @metaArrayWrapper
     def processData(self, data):
         data[1:] += data[:-1]
         return data
@@ -192,7 +180,6 @@ class Detrend(CtrlNode):
     """Removes linear trend from the data"""
     nodeName = 'DetrendFilter'
     
-    @metaArrayWrapper
     def processData(self, data):
         try:
             from scipy.signal import detrend
@@ -334,9 +321,4 @@ class RemovePeriodic(CtrlNode):
                 ft[len(ft)-j] = re - im*1j
                 
         data2 = np.fft.ifft(ft).real
-        
-        ma = metaarray.MetaArray(data2, info=data.infoCopy())
-        return ma
-        
-        
-        
+        return data2

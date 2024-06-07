@@ -3,7 +3,7 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.13.8dev0'
+__version__ = '0.14.0dev0'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
@@ -227,7 +227,6 @@ from .graphicsItems.ItemGroup import *
 from .graphicsItems.LabelItem import *
 from .graphicsItems.LegendItem import *
 from .graphicsItems.LinearRegionItem import *
-from .graphicsItems.MultiPlotItem import *
 from .graphicsItems.PColorMeshItem import *
 from .graphicsItems.PlotCurveItem import *
 from .graphicsItems.PlotDataItem import *
@@ -246,7 +245,6 @@ from .GraphicsScene import GraphicsScene
 from .imageview import *
 
 # indirect imports known to be used outside of the library
-from .metaarray import MetaArray
 from .Point import Point
 from .Qt import isQObjectAlive
 from .SignalProxy import *
@@ -275,7 +273,6 @@ from .widgets.GroupBox import GroupBox
 from .widgets.HistogramLUTWidget import *
 from .widgets.JoystickButton import *
 from .widgets.LayoutWidget import *
-from .widgets.MultiPlotWidget import *
 from .widgets.PathButton import *
 from .widgets.PlotWidget import *
 from .widgets.ProgressDialog import *

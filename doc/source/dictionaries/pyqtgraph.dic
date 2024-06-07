@@ -568,7 +568,6 @@ MEDIUM
 MEMORY
 MESSAGE
 MESSAGES
-METAARRAY
 MINMAX
 MINOR
 MINUS
@@ -585,7 +584,6 @@ MODULATE
 MONTH
 MULT
 MULTISAMPLE
-MetaArray
 MouseDragHandler
 MouseEvent
 MultiLineROI
@@ -3092,7 +3090,6 @@ maxLen
 maxValue
 maybe
 menu
-metaarray
 method
 metric
 minHue
