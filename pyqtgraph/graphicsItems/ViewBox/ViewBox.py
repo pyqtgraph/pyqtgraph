@@ -76,7 +76,7 @@ class ViewBox(GraphicsWidget):
     **Bases:** :class:`GraphicsWidget <pyqtgraph.GraphicsWidget>`
 
     Box that allows internal scaling/panning of children by mouse drag.
-    This class is usually created automatically as part of a :class:`PlotItem <pyqtgraph.PlotItem>` or :ref:`Canvas <Canvas>` or with :func:`GraphicsLayout.addViewBox() <pyqtgraph.GraphicsLayout.addViewBox>`.
+    This class is usually created automatically as part of a :class:`PlotItem <pyqtgraph.PlotItem>` or with :func:`GraphicsLayout.addViewBox() <pyqtgraph.GraphicsLayout.addViewBox>`.
 
     Features:
 
