@@ -1769,7 +1769,6 @@ def downsample(data, n, axis=0, xvals='subsample'):
     """Downsample by averaging points together across axis.
     If multiple axes are specified, runs once per axis.
     """
-    ma = None
     if hasattr(axis, '__len__'):
         if not hasattr(n, '__len__'):
             n = [n]*len(axis)
@@ -1788,18 +1787,7 @@ def downsample(data, n, axis=0, xvals='subsample'):
     d1 = data[tuple(sl)]
     d1.shape = tuple(s)
     d2 = d1.mean(axis+1)
-    
-    if ma is None:
-        return d2
-    else:
-        info = ma.infoCopy()
-        if 'values' in info[axis]:
-            if xvals == 'subsample':
-                info[axis]['values'] = info[axis]['values'][::n][:nPts]
-            elif xvals == 'downsample':
-                info[axis]['values'] = downsample(info[axis]['values'], n)
-        return d2
-
+    return d2
 
 def _compute_backfill_indices(isfinite):
     # the presence of inf/nans result in an empty QPainterPath being generated
