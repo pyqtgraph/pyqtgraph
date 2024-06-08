@@ -21,14 +21,6 @@ PyQtGraph's flowcharts provide a visual programming environment similar in conce
 See the :ref:`flowchart` documentation and the flowchart examples for more information.
 
 
-.. _Canvas:
-
-Graphical Canvas
-----------------
-
-The Canvas is a system designed to allow the user to add/remove items to a 2D canvas similar to most vector graphics applications. Items can be translated/scaled/rotated and each item may define its own custom control interface.
-
-
 Dockable Widgets
 ----------------
 
