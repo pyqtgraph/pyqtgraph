@@ -62,7 +62,7 @@ class PlotDataset:
     
     After a search has been performed, typically during a call to
     :func:`dataRect() <pyqtgraph.PlotDataset.dataRect>`, ``dataset.containsNonfinite``
-    is ``True`` if any coordinate values are non-finite (e.g. NaN or inf) or ``False``
+    is ``True`` if any coordinate values are non-finite (e.g. ``NaN`` or ``Inf``) or ``False``
     if all values are finite. If no search has been performed yet,
     `dataset.containsNonfinite` is ``None``.
 
@@ -238,7 +238,9 @@ class PlotDataItem(GraphicsObject):
     large numbers of points. If you do encounter performance issues, consider the
     following.
 
-    * Use a :class:`QPen` with ``width=1``
+    * Use a :class:`QPen` with ``width=1``. All wider pens cause a loss in performance.
+      This loss can be partially mitigated by using fully opaque colors (``alphaF=1.0``),
+      solid lines, and no anti-aliasing. 
     * For scatter plots that use multiple pen or brush settings, passing a list of string
       representation to `symbolPen` or `symbolBrush` creates many internal :class:`QPen`
       and :class:`QBrush` objects. Instead, create the needed :class:`QPen` and
@@ -256,7 +258,7 @@ class PlotDataItem(GraphicsObject):
     ----------
     *args : tuple, optional
         Arguments representing the `x` and `y` data to be drawn. The following are
-        examples for initialize data.
+        examples for initializing data.
 
         * ``PlotDataItem(x, y)`` - `x` and `y` are array_like coordinate values.
         * ``PlotDataItem(x=x, y=y)`` - same as above, but using keyword arguments.
@@ -343,7 +345,7 @@ class PlotDataItem(GraphicsObject):
                     ``'auto'``
                     
                     - ``'auto'`` connects all points, but creates a break where a
-                      non-finite value (such as `NaN`) is present. If PlotDataItem has
+                      non-finite value (such as ``NaN``) is present. If PlotDataItem has
                       already inspected the dataset and found that all values are
                       numerical and finite, this information is used to avoid repeated
                       tests.
@@ -392,34 +394,34 @@ class PlotDataItem(GraphicsObject):
                     filled. Use ``None`` to disable.
         
         fillBrush   :class:`QBrush`, ``None`` or args accepted by
-                    :func:`~pyqtgraph.mkBrush`, default ``None``
+                    :func:`mkBrush <pyqtgraph.mkBrush>`, default ``None``
                     
-                    Brush used to fill the area specified by *fillLevel*.
+                    Brush used to fill the area specified by `fillLevel`.
 
         fillOutline ``bool``, default ``False``
 
                     ``True`` draws an outline surrounding the area specified
-                    by *fillLevel*, using the plot's `pen` and `shadowPen`.
+                    by `fillLevel`, using the plot's `pen` and `shadowPen`.
         
         =========== ====================================================================
 
-        Optimization Keyword Arguments.
+        *Optimization Keyword Arguments*
 
         =================== ============================================================
         Property            Description
         =================== ============================================================
         useCache            ``bool``, default ``True``
 
-                            Generated point graphics items are cached to improve
-                            performance.  Setting this to ``False`` can improve image
-                            quality in some situations.
+                            Generated point graphics of the scatter plot are cached to
+                            improve performance.  Setting this to ``False`` can improve
+                            image quality in some situations.
 
         antialias           ``bool``, default inherited from
                             ``pyqtgraph.getConfigOption('antialias')``
 
-                            Disabling can improve performance. In some cases, in
-                            particular when ``pxMode=True``, points will be rendered
-                            with antialiasing regardless of this setting.
+                            Disabling antialiasing can improve performance. In some
+                            cases, in particular when ``pxMode=True``, points will be 
+                            rendered with antialiasing regardless of this setting.
 
         autoDownsample      ``bool``, default ``False``
 
@@ -431,12 +433,12 @@ class PlotDataItem(GraphicsObject):
 
         downsample          ``int``, default ``1``
 
-                            Reduce the number of sample displayed by the given factor.
+                            Reduce the number of samples by the given factor.
                             See :meth:`setDownsampling` for more information.
 
         downsampleMethod    ``str``, default ``'peak'``
 
-                            Method by which to downsample data. See
+                            Method for downsampling data. See
                             :meth:`setDownsampling` for more information.
 
         clipToView          ``bool``, default ``False``
@@ -453,18 +455,21 @@ class PlotDataItem(GraphicsObject):
 
         dynamicRangeHyst    ``float``, default ``3.0``
         
-                            Permits changes in vertical zoom up to the given hysteresis
+                            Permit vertical zoom to change up to the given hysteresis
                             factor before the limit calculation is repeated. See
                             :meth:`setDynamicRangeLimit` for more information.
 
         skipFiniteCheck     ``bool``, default ``False``
 
-                            Skip the check for bypassing the checking and compensating
-                            for ``np.nan`` values.  If ``connect='auto'``, this item
-                            will be overridden.
+                            If `True`, the special handling of non-finite values such as
+                            ``NaN`` in :class:`~pyqtgraph.PlotCurveItem` is skipped. This
+                            speeds up the plot, but creates error or causes the plotting
+                            to fail entirely if any such values are present.
+                            If ``connect='auto'``, PlotDataItem manages the check and
+                            this item will be overridden.
         =================== ============================================================
 
-        Meta Keyword Arguments.
+        *Meta Keyword Arguments*
 
         =========== ====================================================================
         Property    Description
@@ -490,7 +495,7 @@ class PlotDataItem(GraphicsObject):
     sigPlotChanged : Signal
         Emits when the data in this item is updated.
     sigClicked : Signal
-        Emits when the item is clicked. This signal emits the
+        Emits when the item is clicked. This signal sends the
         :class:`~pyqtgraph.GraphicsScene.mouseEvents.MouseClickEvent`.
     sigPointsClicked : Signal
         Emits when a plot point is clicked. Sends the list of points under the
@@ -498,7 +503,7 @@ class PlotDataItem(GraphicsObject):
         :class:`~pyqtgraph.GraphicsScene.mouseEvents.MouseClickEvent`.
     sigPointsHovered : Signal
         Emits when a plot point is hovered over. Sends the list of points under the
-        mouse, s well as the :class:`~pyqtgraph.GraphicsScene.mouseEvents.HoverEvent`.
+        mouse, as well as the :class:`~pyqtgraph.GraphicsScene.mouseEvents.HoverEvent`.
     
     See Also
     --------
@@ -508,13 +513,12 @@ class PlotDataItem(GraphicsObject):
     Notes
     -----
     The fastest performance results for drawing lines that have a :class:`QPen` width of
-    1 pixel. 
+    1 pixel. If drawing a 1 pixel thick line, PyQtGraph converts the `x` and `y` data to a
+    :class:`QPainterPath` that is rendered.
     
-    If drawing a 1 pixel thick line, PyQtGraph converts the `x` and `y` data to a
-    :class:`QPainterPath` that is rendered. The render performance of
-    :class:`QPainterPath` when using a :class:`QPen` that has a width greater than 1 is
-    quite poor, but PyQtGraph falls back to constructing an array of :class:`QLine`
-    objects representing each line segment.  Using
+    The render performance of :class:`QPainterPath` when using a :class:`QPen` that has a
+    width greater than 1 is quite poor, but PyQtGraph can fall back to constructing an
+    array of :class:`QLine` objects representing each line segment.  Using
     :meth:`QPainter.drawLines <QPainter.drawLines>`, PyQtGraph is able to draw lines
     with thickness greater than 1 pixel with a smaller performance penalty.  
     
@@ -528,7 +532,7 @@ class PlotDataItem(GraphicsObject):
 
     If using lines with a thickness greater than 4 pixel, the :class:`QPen` instance
     will be modified such that ``pen.capStyle() == QtCore.Qt.PenCapStyle.RoundCap``.
-    There is a small performance penalty with this change.
+    There is a small additional performance penalty with this change.
     """
 
     sigPlotChanged = QtCore.Signal(object)
@@ -676,15 +680,16 @@ class PlotDataItem(GraphicsObject):
         """
         Set the opacity of the item to the value passed in.
 
-        This method is likely
-
         Parameters
         ----------
         alpha : float
             Value passed to :meth:`QGraphicsItem.setOpacity`.
+
         auto : bool
-            Argument tied to the auto alpha setting in the Context Menu.
-        
+            Receives the ``autoAlpha`` value from a parent
+            :class:`~pyqtgraph.ScatterPlotItem`, but has no function within PlotDataItem
+            itself.
+
         See Also
         --------
         :meth:`QGraphicsItem.setOpacity <QGraphicsItem.setOpacity>`
@@ -693,7 +698,7 @@ class PlotDataItem(GraphicsObject):
         if self.opts['alphaHint'] == alpha and self.opts['alphaMode'] == auto:
             return
         self.opts['alphaHint'] = alpha
-        self.opts['alphaMode'] = auto
+        self.opts['alphaMode'] = auto # 'alphaMode' option is never used or transferred, should be deprecated.
         self.setOpacity(alpha)
 
     def setFftMode(self, state: bool):
@@ -720,16 +725,16 @@ class PlotDataItem(GraphicsObject):
         """
         Enable log mode per axis.
 
-        When the log-mode is enabled for the respective axis, a mapping according to
-        ``mapped = np.log10(value)`` is applied to the data. For negative or zero
-        values, this results in ``NaN`` value.
+        When the log mode is enabled for the respective axis, a mapping according to
+        ``mapped = np.log10(value)`` is applied to the data. For each negative or zero
+        value, this results in a ``NaN`` value.
 
         Parameters
         ----------
         xState : bool
-            Enable log-mode on the x-axis.
+            Enable log mode on the x-axis.
         yState : bool
-            Enable log-mode on the y-axis.
+            Enable log mode on the y-axis.
         """
         if self.opts['logMode'] == [xState, yState]:
             return
@@ -791,14 +796,14 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         *args : tuple or None
-            Arguments relayed to :func:`~pyqtgraph.mkPen` if not ``None``. Use ``None``
-            to disable.
+            Arguments relayed to :func:`mkPen <pyqtgraph.mkPen>` if not ``None``. Use ``None``
+            to disable drawing of lines.
         **kwargs : dict
-            Keyword arguments relayed to :func:`~pyqtgraph.mkPen`.
+            Keyword arguments relayed to :func:`mkPen <pyqtgraph.mkPen>`.
         
         See Also
         --------
-        :func:`~pyqtgraph.mkPen`
+        :func:`mkPen <pyqtgraph.mkPen>`
             Function used to construct the :class:`QPen` instance.
         """
         pen = fn.mkPen(*args, **kwargs)
@@ -807,23 +812,23 @@ class PlotDataItem(GraphicsObject):
 
     def setShadowPen(self, *args, **kwargs):
         """
-        Set the shadow pen used to draw Lines between points.
+        Set the shadow pen used to draw lines between points.
 
         The shadow pen is often used for enhancing contrast or emphasizing data. The
-        line is drawn being the primary pen and should generally have a greater width
+        line is drawn behind the primary pen and should generally have a greater width
         than the primary pen.
 
         Parameters
         ----------
         *args : tuple or None
-            Arguments relayed to :func:`~pyqtgraph.mkPen` if not ``None``. Use ``None``
+            Arguments relayed to :func:`mkPen <pyqtgraph.mkPen>` if not ``None``. Use ``None``
             to disable.
         **kwargs : dict
-            Keyword arguments relayed to :func:`~pyqtgraph.mkPen`.
+            Keyword arguments relayed to :func:`mkPen <pyqtgraph.mkPen>`.
         
         See Also
         --------
-        :func:`~pyqtgraph.mkPen`
+        :func:`mkPen <pyqtgraph.mkPen>`
             Function used to construct the :class:`QPen` instance.
         """
         if args and args[0] is None:
@@ -835,21 +840,21 @@ class PlotDataItem(GraphicsObject):
 
     def setFillBrush(self, *args, **kwargs):
         """
-        Set the :class:`QBrush` used to in the fill area under the curve.
+        Set the :class:`QBrush` used to in the fill area under the curve if `fillLevel` is set.
 
         Parameters
         ----------
         *args : tuple
-            Arguments directed to :func:`~pyqtgraph.mkBrush`.
+            Arguments directed to :func:`mkBrush <pyqtgraph.mkBrush>`.
         **kwargs : dict
-            Arguments directed to :func:`~pyqtgraph.mkBrush`.
+            Arguments directed to :func:`mkBrush <pyqtgraph.mkBrush>`.
         
         See Also
         --------
-        :func:`~pyqtgraph.mkBrush`
-            See for supported arguments.
-        :func:`~pyqtgraph.mkColor`
-            See for supported color arguments.
+        :func:`mkBrush <pyqtgraph.mkBrush>`
+            for supported arguments.
+        :func:`mkColor <pyqtgraph.mkColor>`
+            for supported color arguments.
         """
         if args and args[0] is None:
             brush = None
@@ -867,20 +872,20 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         *args : tuple
-            Arguments directed to :func:`~pyqtgraph.mkBrush`.
+            Arguments directed to :func:`mkBrush <pyqtgraph.mkBrush>`.
         **kwargs : dict
-            Arguments directed to :func:`~pyqtgraph.mkBrush`.
+            Arguments directed to :func:`mkBrush <pyqtgraph.mkBrush>`.
 
         See Also
         --------
-        :func:`~pyqtgraph.mkBrush`
+        :func:`mkBrush <pyqtgraph.mkBrush>`
             Function used to construct the :class:`QBrush` instance.
         """
         self.setFillBrush(*args, **kwargs)
 
     def setFillLevel(self, level: float | None):
         """
-        Set the y-axis value to act as a boundary for the fill.
+        Enable filling the area under the curve and set its boundary.
 
         Parameters
         ----------
@@ -891,7 +896,7 @@ class PlotDataItem(GraphicsObject):
         See Also
         --------
         :class:`pyqtgraph.FillBetweenItem`
-            See for another :class:`~pyqtgraph.GraphicsItem` that fills in regions.
+            for another :class:`~pyqtgraph.GraphicsItem` that fills in regions.
         """
         if self.opts['fillLevel'] == level:
             return
@@ -903,7 +908,7 @@ class PlotDataItem(GraphicsObject):
         symbol: str | QtGui.QPainterPath | list[str | QtGui.QPainterPath]
     ):
         """
-        Set the symbol used for drawing the points.
+        Set the symbol or symbols for drawing the points.
 
         See :func:`pyqtgraph.ScatterPlotItem.setSymbol` for a full list of accepted
         arguments.
@@ -927,21 +932,22 @@ class PlotDataItem(GraphicsObject):
 
     def setSymbolPen(self, *args, **kwargs):
         """
-        Set the :class:`QPen` used to draw symbols.
+        Set the :class:`QPen` used to draw symbols. Setting a different
+        :class:`QPen` per point is not supported by this function.
 
         Parameters
         ----------
         *args : tuple
-            Arguments directed to :func:`~pyqtgraph.mkPen`.
+            Arguments directed to :func:`mkPen <pyqtgraph.mkPen>`.
         **kwargs : dict
-            Arguments directed to :func:`~pyqtgraph.mkPen`.
+            Arguments directed to :func:`mkPen <pyqtgraph.mkPen>`.
         
         See Also
         --------
-        :func:`~pyqtgraph.mkPen`
-            See for supported arguments.
-        :func:`~pyqtgraph.mkColor`
-            See for supported color arguments.
+        :func:`mkPen <pyqtgraph.mkPen>`
+            for supported arguments.
+        :func:`mkColor <pyqtgraph.mkColor>`
+            for supported color arguments.
         """
         pen = fn.mkPen(*args, **kwargs)
         if self.opts['symbolPen'] == pen:
@@ -951,21 +957,22 @@ class PlotDataItem(GraphicsObject):
 
     def setSymbolBrush(self, *args, **kwargs):
         """
-        Set the :class:`QBrush` used to fill symbols.
+        Set the :class:`QBrush` used to fill symbols. Setting a different
+        :class:`QBrush` per point is not supported by this function.
 
         Parameters
         ----------
         *args : tuple
-            Arguments directed to :func:`~pyqtgraph.mkBrush`.
+            Arguments directed to :func:`mkBrush <pyqtgraph.mkBrush>`.
         **kwargs : dict
-            Arguments directed to :func:`~pyqtgraph.mkBrush`.
+            Arguments directed to :func:`mkBrush <pyqtgraph.mkBrush>`.
         
         See Also
         --------
-        :func:`~pyqtgraph.mkBrush`
-            See for supported arguments.
-        :func:`~pyqtgraph.mkColor`
-            See for supported color arguments.
+        :func:`mkBrush <pyqtgraph.mkBrush>`
+            for supported arguments.
+        :func:`mkColor <pyqtgraph.mkColor>`
+            for supported color arguments.
         """
         brush = fn.mkBrush(*args, **kwargs)
         if self.opts['symbolBrush'] == brush:
@@ -976,13 +983,14 @@ class PlotDataItem(GraphicsObject):
 
     def setSymbolSize(self, size: int):
         """
-        Set the symbol size.
+        Set the symbol size or sizes.
 
         Parameters
         ----------
         size : int
-            The size to set the symbols to.  Size is in pixels or data-coordinates
-            depending on `pxMode` value used.
+            Diameter of the symbols, or array-like list of diameters. Diameter is
+            either in pixels or data-space coordinates depending on the value of
+            `pxMode`.
         """
         if self.opts['symbolSize'] == size:
             return
@@ -1003,11 +1011,11 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         ds : int or None, default None
-            Reduce the visible plot sample by this factor. To disable, set ``ds=1``.
+            Reduce the number of displayed data points by a factor `N=ds`. To disable, set ``ds=1``.
         auto : bool or None, default None
             If ``True``, automatically pick `ds` based on visible range.
         method : { 'subsample', 'mean', 'peak' }, default 'peak'
-            Specify the method by which to perform the downsampling calculation.
+            Specify the method of the downsampling calculation.
             
             * `subsample` - Downsample by taking the first of `N` samples. This method
               is the fastest, but least accurate.
@@ -1037,7 +1045,7 @@ class PlotDataItem(GraphicsObject):
 
     def setClipToView(self, state: bool):
         """
-        Clip the displayed data to the visible range in the x-axis.
+        Clip the displayed data to the visible range of the x-axis.
 
         This setting can result in significant performance improvements. 
 
@@ -1056,11 +1064,12 @@ class PlotDataItem(GraphicsObject):
         """
         Limit the off-screen positions of data points at large magnification.
 
-        This avoids errors with plots not displaying because their visibility is
-        incorrectly determined. The default setting repositions far-off points to be
-        within ±10^6 times the viewport height. 
+        This is intended to work around an upstream Qt issue:
+        When zoomed closely into plots with a much larger range of data, plots can fail 
+        to display entirely because they are incorrectly determined to be off-screen. 
+        The dynamic range limiting avoids this error by repositioning far-off points.
+        At default settings, points are restricted to ±10⁶ times the viewport height. 
 
-        This is intended to work around an upstream Qt issue.
 
         Parameters
         ----------
@@ -1069,8 +1078,8 @@ class PlotDataItem(GraphicsObject):
             the limit value. All values are relative to the viewport height. ``None``
             disables the check for a minimal increase in performance.
         hysteresis : float, default 3.0
-            Hysteresis factor that controls how much change in zoom level (vertical
-            height) is allowed before recalculating.
+            Hysteresis factor that controls how much change in zoom level (in terms of 
+            the visible y-axis range) is allowed before recalculating.
         
         Notes
         -----
@@ -1090,16 +1099,13 @@ class PlotDataItem(GraphicsObject):
         """
         Toggle performance option to bypass the finite check.
 
-        This option is intended to improve performance if the user knows that the `x`
-        and `y` data will not have non-finite values.
-
-        When it is known that the plot data passed to ``PlotDataItem`` contains only
-        finite numerical values, the ``skipFiniteCheck`` property can help speed up
-        plotting. If this flag is set and the data contains any non-finite values (such
-        as `NaN` or `Inf`), unpredictable behavior will occur. The data might not be
-        plotted, or there might be significant performance impact.
+        This option improves performance if it is known that the `x` and `y` data passed
+        to ``PlotDataItem`` will never contain any non-finite values. If the data does
+        contain any non-finite values (such as ``NaN`` or ``Inf``) while this flag is
+        set, unpredictable behavior will occur. The data might not be plotted, or there
+        might be significant performance impact.
         
-        In the default ``connect='auto'` mode, ``PlotDataItem`` will apply this setting
+        In the default ``connect='auto'`` mode, PlotDataItem will apply this setting
         automatically.
 
         Parameters
@@ -1141,9 +1147,9 @@ class PlotDataItem(GraphicsObject):
         See Also
         --------
         :class:`PlotDataItem`
-            Contains more detailed descriptions for accepted arguments.
+            for a detailed descriptions of accepted arguments.
         :func:`~pyqtgraph.arrayToQPath`
-            See for how the draw paths are constructed.
+            for how the draw paths are constructed.
         """
         profiler = debug.Profiler()
         y = None
@@ -1288,12 +1294,13 @@ class PlotDataItem(GraphicsObject):
 
     def updateItems(self, styleUpdate: bool = True):
         """
-        Method that is run after a graphics style was updated.
+        This method is called internally to redraw the curve and scatter plot when the
+        data or graphics style has been updated. 
 
         Parameters
         ----------
         styleUpdate : bool, default True
-            Indicates if the style was updated.
+            Indicates if the style was updated in addition to the data.
         """
 
         # override styleUpdate request and always enforce update until we have a
@@ -1382,14 +1389,19 @@ class PlotDataItem(GraphicsObject):
 
     def getOriginalDataset(self) -> tuple[None, None] | tuple[np.ndarray, np.ndarray]:
         """
-        Get the numpy data representation of the data provided.
+        Get the numpy array representation of the data provided to PlotDataItem.
 
         Returns
         -------
         xData : np.ndarray or None
-            Original representation of x-axis data.
+            representation of the original x-axis data.
         yData : np.ndarray or None
-            Original representation of y-axis data.
+            representation of the original y-axis data.
+
+        See Also
+        --------
+        :func:`getData`
+            returns the transformed data displayed on the screen instead.
         """
         dataset = self._dataset
         return (None, None) if dataset is None else (dataset.x, dataset.y)
@@ -1598,7 +1610,7 @@ class PlotDataItem(GraphicsObject):
 
     def getData(self) -> tuple[None, None] | tuple[np.ndarray, np.ndarray]:
         """
-        The data being rendered on the screen.
+        Get a representation of the data displayed on screen.
 
         Returns
         -------
@@ -1606,6 +1618,12 @@ class PlotDataItem(GraphicsObject):
             The x-axis data, after mapping and data reduction if present or ``None``.
         yData : np.ndarray or None
             The y-axis data, after mapping and data reduction if present or ``None``.
+
+        See Also
+        --------
+        :func:`getOriginalDataset`
+            returns the original data provided to PlotDataItem instead.
+
         """
         dataset = self._getDisplayDataset()
         return (None, None) if dataset is None else (dataset.x, dataset.y)
@@ -1676,7 +1694,8 @@ class PlotDataItem(GraphicsObject):
 
     def pixelPadding(self) -> int:
         """
-        Get the size (in pixels) that this item may draw beyond the current data.
+        Get the size (in pixels) that this item might draw beyond the current data,
+        typically due to the symbol size of the scatter plot.
 
         Returns
         -------
