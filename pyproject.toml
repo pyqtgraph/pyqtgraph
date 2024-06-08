@@ -26,6 +26,36 @@ exclude = '''
 )
 '''
 
+[tool.coverage.run]
+parallel = true
+branch = true
+relative_files = true
+source = [
+    "pyqtgraph"
+]
+omit = [
+    "./pyqtgraph/examples/*"
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+skip_empty = true
+
+exclude_also = [
+    # allow defensive code
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "return NotImplemented",
+    "if self.debug",
+    "def __repr__",
+
+    # typing-related code
+    "if False:",
+    "if TYPE_CHECKING",
+    "-> NoReturn:"
+]
+
 [tool.isort]
 profile = "black"
 honor_noqa = true
