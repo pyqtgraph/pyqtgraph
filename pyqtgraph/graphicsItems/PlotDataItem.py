@@ -687,7 +687,7 @@ class PlotDataItem(GraphicsObject):
 
         auto : bool
             Receives the ``autoAlpha`` value from a parent
-            :class:`~pyqtgraph.ScatterPlotItem`, but has no function within PlotDataItem
+            :class:`~pyqtgraph.PlotItem`, but has no function within PlotDataItem
             itself.
 
         See Also
