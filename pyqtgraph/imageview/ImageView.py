@@ -359,13 +359,7 @@ class ImageView(QtWidgets.QWidget):
         if xvals is not None:
             self.tVals = xvals
         elif axes['t'] is not None:
-            if hasattr(img, 'xvals'):
-                try:
-                    self.tVals = img.xvals(axes['t'])
-                except:
-                    self.tVals = np.arange(img.shape[axes['t']])
-            else:
-                self.tVals = np.arange(img.shape[axes['t']])
+            self.tVals = np.arange(img.shape[axes['t']])
 
         profiler()
 
