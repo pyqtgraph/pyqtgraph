@@ -61,7 +61,7 @@ class PlotDataset:
     ``dataset.y``.
     
     After a search has been performed, typically during a call to
-    :func:`dataRect() <pyqtgraph.PlotDataset.dataRect>`, ``dataset.containsNonfinite``
+    :meth:`dataRect <pyqtgraph.PlotDataset.dataRect>`, ``dataset.containsNonfinite``
     is ``True`` if any coordinate values are non-finite (e.g. ``NaN`` or ``Inf``) or 
     ``False`` if all values are finite. If no search has been performed yet,
     `dataset.containsNonfinite` is ``None``.
@@ -251,7 +251,7 @@ class PlotDataItem(GraphicsObject):
     * If you know that all points in your data set will have numerical, finite values,
       :meth:`setSkipFiniteCheck` can disable a check to identify points that require
       special treatment.  
-    * When passing `x` and `y` data to :func:`PlotDataItem.setData`, use
+    * When passing `x` and `y` data to :meth:`PlotDataItem.setData`, use
       :class:`numpy.ndarray` instead of python's built-in lists.
 
     **Bases:** :class:`~pyqtgraph.GraphicsObject`
@@ -290,7 +290,7 @@ class PlotDataItem(GraphicsObject):
         The supported keyword arguments can be grouped into several categories:
 
         *Point Style Keyword Arguments*, see
-        :func:`ScatterPlotItem.setData <pyqtgraph.ScatterPlotItem.setData>` for more
+        :meth:`ScatterPlotItem.setData <pyqtgraph.ScatterPlotItem.setData>` for more
         information.
     
         =========== ====================================================================
@@ -847,7 +847,7 @@ class PlotDataItem(GraphicsObject):
         """
         Set the :class:`QBrush` used to fill the area under the curve.
          
-        Use :func:`~setFillLevel` to enable filling and set the boundary value. 
+        Use :meth:`setFillLevel` to enable filling and set the boundary value. 
 
         Parameters
         ----------
@@ -876,7 +876,7 @@ class PlotDataItem(GraphicsObject):
 
     def setBrush(self, *args, **kwargs):
         """
-        An alias to :func:`~pyqtgraph.PlotDataItem.setFillBrush`.
+        An alias to :meth:`setFillBrush`.
 
         Parameters
         ----------
@@ -922,7 +922,7 @@ class PlotDataItem(GraphicsObject):
         """
         Set the symbol or symbols for drawing the points.
 
-        See :func:`pyqtgraph.ScatterPlotItem.setSymbol` for a full list of accepted
+        See :meth:`pyqtgraph.ScatterPlotItem.setSymbol` for a full list of accepted
         arguments.
 
         Parameters
@@ -934,7 +934,7 @@ class PlotDataItem(GraphicsObject):
         
         See Also
         --------
-        :func:`~pyqtgraph.ScatterPlotItem.setSymbol`
+        :meth:`pyqtgraph.ScatterPlotItem.setSymbol`
             Recognized symbols are detailed in the description of this method.
         """
         if self.opts['symbol'] == symbol:
@@ -1165,7 +1165,7 @@ class PlotDataItem(GraphicsObject):
         See Also
         --------
         :class:`PlotDataItem`
-            The arguments accepted by :func:`setData` are the same used during 
+            The arguments accepted by :meth:`setData` are the same used during 
             initialization, and are listed in the opening section.
         :func:`~pyqtgraph.arrayToQPath`
             Explains the constructions of the draw paths.
@@ -1422,7 +1422,7 @@ class PlotDataItem(GraphicsObject):
 
         See Also
         --------
-        :func:`getData`
+        :meth:`getData`
             This method returns the transformed data displayed on the screen instead.
         """
         dataset = self._dataset
@@ -1643,7 +1643,7 @@ class PlotDataItem(GraphicsObject):
 
         See Also
         --------
-        :func:`getOriginalDataset`
+        :meth:`getOriginalDataset`
             This method returns the original data provided to PlotDataItem instead.
         """
         dataset = self._getDisplayDataset()
