@@ -62,8 +62,8 @@ class PlotDataset:
     
     After a search has been performed, typically during a call to
     :func:`dataRect() <pyqtgraph.PlotDataset.dataRect>`, ``dataset.containsNonfinite``
-    is ``True`` if any coordinate values are non-finite (e.g. ``NaN`` or ``Inf``) or ``False``
-    if all values are finite. If no search has been performed yet,
+    is ``True`` if any coordinate values are non-finite (e.g. ``NaN`` or ``Inf``) or 
+    ``False`` if all values are finite. If no search has been performed yet,
     `dataset.containsNonfinite` is ``None``.
 
     Parameters
@@ -206,9 +206,11 @@ class PlotDataset:
 
 class PlotDataItem(GraphicsObject):
     """
-    PlotDataItem is PyQtGraph's primary way to plot 2D data. It provides a unified 
-    interface for displaying plot curves, scatter plots, or both. The library's
-    convenience functions such as :func:`pyqtgraph.plot` create PlotDataItem objects.
+    PlotDataItem is PyQtGraph's primary way to plot 2D data.
+    
+    It provides a unified interface for displaying plot curves, scatter plots, or both.
+    The library's convenience functions such as :func:`pyqtgraph.plot` create
+    PlotDataItem objects.
 
     .. code-block::
 
@@ -218,9 +220,9 @@ class PlotDataItem(GraphicsObject):
 
     The scatter plot renders a symbol for each point of the data. The curve connects
     adjacent points. This is realized by a combination of a
-    :class:`~pyqtgraph.ScatterPlotItem` and a :class:`~pyqtgraph.PlotCurveItem`. Although
-    these classes can be used individually, :class:`~pyqtgraph.PlotDataItem` is the
-    recommended way to interact with them.
+    :class:`~pyqtgraph.ScatterPlotItem` and a :class:`~pyqtgraph.PlotCurveItem`.
+    Although these classes can be used individually, :class:`~pyqtgraph.PlotDataItem`
+    is the recommended way to interact with them.
 
     PlotDataItem contains methods to transform the original data:
       
@@ -239,18 +241,18 @@ class PlotDataItem(GraphicsObject):
     following.
 
     * Use a :class:`QPen` with ``width=1``. All wider pens cause a loss in performance.
-      This loss can be partially mitigated by using fully opaque colors (``alphaF=1.0``),
-      solid lines, and no anti-aliasing. 
-    * For scatter plots that use multiple pen or brush settings, passing a list of string
-      representation to `symbolPen` or `symbolBrush` creates many internal :class:`QPen`
-      and :class:`QBrush` objects. Instead, create the needed :class:`QPen` and
-      :class:`QBrush` objects in advance and pass these as a list instead. This lets a 
-      smaller number of stored instances be reused.
+      This loss can be partially mitigated by using fully opaque colors 
+      (``alphaF=1.0``), solid lines, and no anti-aliasing. 
+    * For scatter plots that use multiple pen or brush settings, passing a list of
+      string representation to `symbolPen` or `symbolBrush` creates many internal
+      :class:`QPen` and :class:`QBrush` objects. Instead, create the needed
+      :class:`QPen` and :class:`QBrush` objects in advance and pass these as a list
+      instead. This lets a smaller number of stored instances be reused.
     * If you know that all points in your data set will have numerical, finite values,
       :meth:`setSkipFiniteCheck` can disable a check to identify points that require
       special treatment.  
     * When passing `x` and `y` data to :func:`PlotDataItem.setData`, use
-      :class:`numpy.ndarray` s instead of python's built-in lists.
+      :class:`numpy.ndarray` instead of python's built-in lists.
 
     **Bases:** :class:`~pyqtgraph.GraphicsObject`
 
@@ -265,7 +267,8 @@ class PlotDataItem(GraphicsObject):
         * ``PlotDataItem(y)`` - `y` values only, `x` is automatically set to
           ``np.arange(len(y))``.
         * ``PlotDataItem(np.ndarray((N, 2)))`` - single :class:`numpy.ndarray` with
-          shape ``(N, 2)``, where `x` is given by ``data[:, 0]`` and `y` by ``data[:, 1]``.
+          shape ``(N, 2)``, where `x` is given by ``data[:, 0]`` and `y` by
+          ``data[:, 1]``.
     
         Data can also be initialized with spot-style, per-point arguments.
 
@@ -306,7 +309,8 @@ class PlotDataItem(GraphicsObject):
         symbolPen   :class:`QPen` or arguments accepted by
                     :func:`mkPen <pyqtgraph.mkPen>`,
 
-                    list of :class:`QPen` or arguments to :func:`mkPen <pyqtgraph.mkPen>`,
+                    list of :class:`QPen` 
+                    or arguments to :func:`mkPen <pyqtgraph.mkPen>`,
 
                     or ``None``, default ``(200, 200, 200)``
                     
@@ -316,7 +320,8 @@ class PlotDataItem(GraphicsObject):
         symbolBrush :class:`QBrush`, or arguments accepted by
                     :func:`mkBrush <pyqtgraph.mkBrush>`,
 
-                    or list of :class:`QBrush` or arguments to :func:`mkBrush <pyqtgraph.mkBrush>`
+                    or list of :class:`QBrush`
+                    or arguments to :func:`mkBrush <pyqtgraph.mkBrush>`
                     
                     default ``(50, 50, 150)``
 
@@ -325,13 +330,13 @@ class PlotDataItem(GraphicsObject):
         
         symbolSize  ``int`` or ``list[int]``, default ``10``
 
-                    Diameter of the symbols, or array-like list of diameters. Diameter is
-                    either in pixels or data-space coordinates depending on the value of
-                    `pxMode`.
+                    Diameter of the symbols, or array-like list of diameters. Diameter
+                    is either in pixels or data-space coordinates depending on the value
+                    of `pxMode`.
         
         pxMode      ``bool``, default ``True``
 
-                    If ``True``, the `symbolSize` represents the diameter in pixels.  If
+                    If ``True``, the `symbolSize` represents the diameter in pixels. If
                     ``False``, the `symbolSize` represents the diameter in data
                     coordinates.
         =========== ====================================================================
@@ -433,7 +438,8 @@ class PlotDataItem(GraphicsObject):
 
         downsample          ``int``, default ``1``
 
-                            Reduce the number of samples by the given factor.
+                            Resample the data before plotting, reducing the number of 
+                            displayed elements by the specified factor.
                             See :meth:`setDownsampling` for more information.
 
         downsampleMethod    ``str``, default ``'peak'``
@@ -462,9 +468,9 @@ class PlotDataItem(GraphicsObject):
         skipFiniteCheck     ``bool``, default ``False``
 
                             If `True`, the special handling of non-finite values such as
-                            ``NaN`` in :class:`~pyqtgraph.PlotCurveItem` is skipped. This
-                            speeds up the plot, but creates error or causes the plotting
-                            to fail entirely if any such values are present.
+                            ``NaN`` in :class:`~pyqtgraph.PlotCurveItem` is skipped.
+                            This speeds up the plot, but creates error or causes the
+                            plotting to fail entirely if any such values are present.
                             If ``connect='auto'``, PlotDataItem manages the check and
                             this item will be overridden.
         =================== ============================================================
@@ -513,11 +519,11 @@ class PlotDataItem(GraphicsObject):
     Notes
     -----
     The fastest performance results for drawing lines that have a :class:`QPen` width of
-    1 pixel. If drawing a 1 pixel thick line, PyQtGraph converts the `x` and `y` data to a
-    :class:`QPainterPath` that is rendered.
+    1 pixel. If drawing a 1 pixel thick line, PyQtGraph converts the `x` and `y` data to
+    a :class:`QPainterPath` that is rendered.
     
-    The render performance of :class:`QPainterPath` when using a :class:`QPen` that has a
-    width greater than 1 is quite poor, but PyQtGraph can fall back to constructing an
+    The render performance of :class:`QPainterPath` when using a :class:`QPen` that has
+    a width greater than 1 is quite poor, but PyQtGraph can fall back to constructing an
     array of :class:`QLine` objects representing each line segment.  Using
     :meth:`QPainter.drawLines <QPainter.drawLines>`, PyQtGraph is able to draw lines
     with thickness greater than 1 pixel with a smaller performance penalty.  
@@ -796,15 +802,15 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         *args : tuple or None
-            Arguments relayed to :func:`mkPen <pyqtgraph.mkPen>` if not ``None``. Use ``None``
-            to disable drawing of lines.
+            Arguments relayed to :func:`mkPen <pyqtgraph.mkPen>` if not ``None``. Use
+            ``None`` to disable drawing of lines.
         **kwargs : dict
             Keyword arguments relayed to :func:`mkPen <pyqtgraph.mkPen>`.
         
         See Also
         --------
         :func:`mkPen <pyqtgraph.mkPen>`
-            Function used to construct the :class:`QPen` instance.
+            Convenience function constructing :class:`QPen` instances.
         """
         pen = fn.mkPen(*args, **kwargs)
         self.opts['pen'] = pen
@@ -821,15 +827,15 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         *args : tuple or None
-            Arguments relayed to :func:`mkPen <pyqtgraph.mkPen>` if not ``None``. Use ``None``
-            to disable.
+            Arguments relayed to :func:`mkPen <pyqtgraph.mkPen>` if not ``None``. Use
+            ``None`` to disable the shadow pen.
         **kwargs : dict
             Keyword arguments relayed to :func:`mkPen <pyqtgraph.mkPen>`.
         
         See Also
         --------
         :func:`mkPen <pyqtgraph.mkPen>`
-            Function used to construct the :class:`QPen` instance.
+            Convenience function constructing :class:`QPen` instances.
         """
         if args and args[0] is None:
             pen = None
@@ -840,7 +846,9 @@ class PlotDataItem(GraphicsObject):
 
     def setFillBrush(self, *args, **kwargs):
         """
-        Set the :class:`QBrush` used to in the fill area under the curve if `fillLevel` is set.
+        Set the :class:`QBrush` used to fill the area under the curve.
+         
+        Use :func:`~setFillLevel` to enable filling and set the boundary value. 
 
         Parameters
         ----------
@@ -852,9 +860,11 @@ class PlotDataItem(GraphicsObject):
         See Also
         --------
         :func:`mkBrush <pyqtgraph.mkBrush>`
-            for supported arguments.
+            For supported arguments see the convenience function constructing
+            :class:`QBrush` instances.
         :func:`mkColor <pyqtgraph.mkColor>`
-            for supported color arguments.
+            For supported color arguments see the convenience function constructing
+            :class:`QColor` instances.
         """
         if args and args[0] is None:
             brush = None
@@ -879,7 +889,8 @@ class PlotDataItem(GraphicsObject):
         See Also
         --------
         :func:`mkBrush <pyqtgraph.mkBrush>`
-            Function used to construct the :class:`QBrush` instance.
+            For supported arguments see the convenience function constructing
+            :class:`QBrush` instances.
         """
         self.setFillBrush(*args, **kwargs)
 
@@ -896,7 +907,9 @@ class PlotDataItem(GraphicsObject):
         See Also
         --------
         :class:`pyqtgraph.FillBetweenItem`
-            for another :class:`~pyqtgraph.GraphicsItem` that fills in regions.
+            This
+            :class:`~pyqtgraph.GraphicsItem` creates a filled in region between two
+            curves.
         """
         if self.opts['fillLevel'] == level:
             return
@@ -923,7 +936,7 @@ class PlotDataItem(GraphicsObject):
         See Also
         --------
         :func:`~pyqtgraph.ScatterPlotItem.setSymbol`
-            Method detailing accepted symbols.
+            Recognized symbols are detailed in the description of this method.
         """
         if self.opts['symbol'] == symbol:
             return
@@ -932,8 +945,9 @@ class PlotDataItem(GraphicsObject):
 
     def setSymbolPen(self, *args, **kwargs):
         """
-        Set the :class:`QPen` used to draw symbols. Setting a different
-        :class:`QPen` per point is not supported by this function.
+        Set the :class:`QPen` used to draw symbols.
+        
+        Setting a different :class:`QPen` per point is not supported by this function.
 
         Parameters
         ----------
@@ -945,9 +959,11 @@ class PlotDataItem(GraphicsObject):
         See Also
         --------
         :func:`mkPen <pyqtgraph.mkPen>`
-            for supported arguments.
+            For supported arguments see the convenience function constructing
+            :class:`QPen` instances.
         :func:`mkColor <pyqtgraph.mkColor>`
-            for supported color arguments.
+            For supported color arguments see the convenience function constructing
+            :class:`QColor` instances.
         """
         pen = fn.mkPen(*args, **kwargs)
         if self.opts['symbolPen'] == pen:
@@ -957,8 +973,9 @@ class PlotDataItem(GraphicsObject):
 
     def setSymbolBrush(self, *args, **kwargs):
         """
-        Set the :class:`QBrush` used to fill symbols. Setting a different
-        :class:`QBrush` per point is not supported by this function.
+        Set the :class:`QBrush` used to fill symbols.
+        
+        Setting a different :class:`QBrush` per point is not supported by this function.
 
         Parameters
         ----------
@@ -970,9 +987,11 @@ class PlotDataItem(GraphicsObject):
         See Also
         --------
         :func:`mkBrush <pyqtgraph.mkBrush>`
-            for supported arguments.
+            For supported arguments see the convenience function constructing
+            :class:`QBrush` instances.
         :func:`mkColor <pyqtgraph.mkColor>`
-            for supported color arguments.
+            For supported color arguments see the convenience function constructing
+            :class:`QColor` instances.
         """
         brush = fn.mkBrush(*args, **kwargs)
         if self.opts['symbolBrush'] == brush:
@@ -1011,7 +1030,8 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         ds : int or None, default None
-            Reduce the number of displayed data points by a factor `N=ds`. To disable, set ``ds=1``.
+            Reduce the number of displayed data points by a factor `N=ds`. To disable,
+            set ``ds=1``.
         auto : bool or None, default None
             If ``True``, automatically pick `ds` based on visible range.
         method : { 'subsample', 'mean', 'peak' }, default 'peak'
@@ -1069,7 +1089,6 @@ class PlotDataItem(GraphicsObject):
         to display entirely because they are incorrectly determined to be off-screen. 
         The dynamic range limiting avoids this error by repositioning far-off points.
         At default settings, points are restricted to ±10⁶ times the viewport height. 
-
 
         Parameters
         ----------
@@ -1147,9 +1166,10 @@ class PlotDataItem(GraphicsObject):
         See Also
         --------
         :class:`PlotDataItem`
-            for a detailed descriptions of accepted arguments.
+            The arguments accepted by :func:`setData` are the same used during 
+            initialization, and are listed in the opening section.
         :func:`~pyqtgraph.arrayToQPath`
-            for how the draw paths are constructed.
+            Explains the constructions of the draw paths.
         """
         profiler = debug.Profiler()
         y = None
@@ -1294,8 +1314,11 @@ class PlotDataItem(GraphicsObject):
 
     def updateItems(self, styleUpdate: bool = True):
         """
+        Update the displayed curve and scatter plot.
+
         This method is called internally to redraw the curve and scatter plot when the
-        data or graphics style has been updated. 
+        data or graphics style has been updated. It is not usally necessary to call this
+        from user code. 
 
         Parameters
         ----------
@@ -1394,14 +1417,14 @@ class PlotDataItem(GraphicsObject):
         Returns
         -------
         xData : np.ndarray or None
-            representation of the original x-axis data.
+            Representation of the original x-axis data.
         yData : np.ndarray or None
-            representation of the original y-axis data.
+            Representation of the original y-axis data.
 
         See Also
         --------
         :func:`getData`
-            returns the transformed data displayed on the screen instead.
+            This method returns the transformed data displayed on the screen instead.
         """
         dataset = self._dataset
         return (None, None) if dataset is None else (dataset.x, dataset.y)
@@ -1417,7 +1440,7 @@ class PlotDataItem(GraphicsObject):
         Returns
         ------- 
         :class:`PlotDataset`
-            Data suitable for display (after mapping and data reduction) as
+            Data suitable for display (including mapping and data reduction) as
             ``dataset.x`` and ``dataset.y``.
         """
         if self._dataset is None:
@@ -1622,8 +1645,7 @@ class PlotDataItem(GraphicsObject):
         See Also
         --------
         :func:`getOriginalDataset`
-            returns the original data provided to PlotDataItem instead.
-
+            This method returns the original data provided to PlotDataItem instead.
         """
         dataset = self._getDisplayDataset()
         return (None, None) if dataset is None else (dataset.x, dataset.y)
@@ -1694,8 +1716,10 @@ class PlotDataItem(GraphicsObject):
 
     def pixelPadding(self) -> int:
         """
-        Get the size (in pixels) that this item might draw beyond the current data,
-        typically due to the symbol size of the scatter plot.
+        Get the size (in pixels) that this item might draw beyond the data.
+        
+        The size of scatter plot symbols or width of the line plot make the
+        displayed image extend further than the extend of the raw data. 
 
         Returns
         -------
