@@ -467,7 +467,7 @@ class PlotDataItem(GraphicsObject):
 
         skipFiniteCheck     ``bool``, default ``False``
 
-                            If `True`, the special handling of non-finite values such as
+                            If ``True``, the special handling of non-finite values such as
                             ``NaN`` in :class:`~pyqtgraph.PlotCurveItem` is skipped.
                             This speeds up the plot, but creates error or causes the
                             plotting to fail entirely if any such values are present.
@@ -690,7 +690,6 @@ class PlotDataItem(GraphicsObject):
         ----------
         alpha : float
             Value passed to :meth:`QGraphicsItem.setOpacity`.
-
         auto : bool
             Receives the ``autoAlpha`` value from a parent
             :class:`~pyqtgraph.PlotItem`, but has no function within PlotDataItem
@@ -704,7 +703,7 @@ class PlotDataItem(GraphicsObject):
         if self.opts['alphaHint'] == alpha and self.opts['alphaMode'] == auto:
             return
         self.opts['alphaHint'] = alpha
-        self.opts['alphaMode'] = auto # 'alphaMode' option is never used or transferred, should be deprecated.
+        self.opts['alphaMode'] = auto
         self.setOpacity(alpha)
 
     def setFftMode(self, state: bool):
@@ -1006,7 +1005,7 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        size : int
+        size : int | list[int]
             Diameter of the symbols, or array-like list of diameters. Diameter is
             either in pixels or data-space coordinates depending on the value of
             `pxMode`.
