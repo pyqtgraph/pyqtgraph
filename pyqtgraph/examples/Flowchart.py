@@ -61,8 +61,8 @@ pw1Node.setPlotList(plotList)
 pw1Node.setPlot(pw1)
 
 pw2Node = fc.createNode('PlotWidget', pos=(150, -150))
-pw2Node.setPlot(pw2)
 pw2Node.setPlotList(plotList)
+pw2Node.setPlot(pw2)
 
 fNode = fc.createNode('GaussianFilter', pos=(0, 0))
 fNode.ctrls['sigma'].setValue(5)
