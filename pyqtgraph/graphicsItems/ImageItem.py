@@ -704,14 +704,22 @@ class ImageItem(GraphicsObject):
         else:
             lut = None
 
+        if self._imageHasNans is None:
+            # awkward, but fastest numpy native nan evaluation
+            self._imageHasNans = (
+                self.image.dtype.kind == 'f' and
+                self._xp.isnan(self.image.min())
+            )
+            self._imageNanLocations = None
+
         if self.autoDownsample:
             xds, yds = self._computeDownsampleFactors()
             if xds is None:
                 return
 
             axes = [1, 0] if self.axisOrder == 'row-major' else [0, 1]
-            image = fn.downsample(self.image, xds, axis=axes[0])
-            image = fn.downsample(image, yds, axis=axes[1])
+            image = fn.downsample(self.image, xds, axis=axes[0], has_nans=self._imageHasNans)
+            image = fn.downsample(image, yds, axis=axes[1], has_nans=self._imageHasNans)
             self._lastDownsample = (xds, yds)
 
             # Check if downsampling reduced the image size to zero due to inf values.
@@ -731,13 +739,6 @@ class ImageItem(GraphicsObject):
 
         levels = self.levels
 
-        if self._imageHasNans is None:
-            # awkward, but fastest numpy native nan evaluation
-            self._imageHasNans = (
-                image.dtype.kind == 'f' and
-                self._xp.isnan(image.min())
-            )
-            self._imageNanLocations = None
 
         qimage = None
 

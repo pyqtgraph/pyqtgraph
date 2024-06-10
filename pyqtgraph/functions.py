@@ -1765,7 +1765,7 @@ def gaussianFilter(data, sigma):
     return filtered + baseline
     
     
-def downsample(data, n, axis=0, xvals='subsample'):
+def downsample(data, n, axis=0, xvals='subsample', has_nans=False):
     """Downsample by averaging points together across axis.
     If multiple axes are specified, runs once per axis.
     """
@@ -1786,7 +1786,10 @@ def downsample(data, n, axis=0, xvals='subsample'):
     sl[axis] = slice(0, nPts*n)
     d1 = data[tuple(sl)]
     d1.shape = tuple(s)
-    d2 = d1.mean(axis+1)
+    if has_nans:
+        d2 = np.nanmean(d1, axis+1)
+    else:
+        d2 = d1.mean(axis+1)
     return d2
 
 def _compute_backfill_indices(isfinite):
