@@ -9,3 +9,4 @@ sphinx-qt-documentation
 sphinxext-rediraffe
 numpy
 pyopengl
+colorama

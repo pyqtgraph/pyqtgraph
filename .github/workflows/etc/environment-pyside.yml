@@ -7,4 +7,5 @@ dependencies:
   - nomkl
   - scipy
   - pyopengl
+  - colorama
   - pip
