@@ -1765,7 +1765,7 @@ def gaussianFilter(data, sigma):
     return filtered + baseline
     
     
-def downsample(data, n, axis=0, xvals='subsample', has_nans=False):
+def downsample(data, n, axis=0, xvals='subsample', *, has_nans=False):
     """Downsample by averaging points together across axis.
     If multiple axes are specified, runs once per axis.
     """
@@ -1773,7 +1773,7 @@ def downsample(data, n, axis=0, xvals='subsample', has_nans=False):
         if not hasattr(n, '__len__'):
             n = [n]*len(axis)
         for i in range(len(axis)):
-            data = downsample(data, n[i], axis[i])
+            data = downsample(data, n[i], axis[i], has_nans=has_nans)
         return data
     
     if n <= 1:
