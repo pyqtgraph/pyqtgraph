@@ -1,13 +1,12 @@
-from contextlib import suppress
-
 import json
 import os
 import re
 import shutil
 import subprocess
 import sys
+from contextlib import suppress
 from distutils import core
-from typing import Dict, Any
+from typing import Any, Dict
 
 from .generateChangelog import generateDebianChangelog
 
@@ -467,21 +466,27 @@ def getVersionStrings(pkg):
 DEFAULT_ASV: Dict[str, Any] = {
     "version": 1,
     "project": "pyqtgraph",
-    "project_url": "http://pyqtgraph.org/",
+    "project_url": "https://pyqtgraph.org/",
     "repo": ".",
     "branches": ["master"],
     "environment_type": "virtualenv",
-    "show_commit_url": "http://github.com/pyqtgraph/pyqtgraph/commit/",
-    # "pythons": ["3.7", "3.8", "3.9"],
+    "show_commit_url": "https://github.com/pyqtgraph/pyqtgraph/commit/",
+    "pythons": ["3.11"],
     "matrix": {
-        # "numpy": ["1.17", "1.18", "1.19", ""],
-        "numpy": "",
-        "pyqt5": ["", None],
-        "pyside2": ["", None],
+        "env": {
+            "PYQTGRAPH_QT_LIB": ["PySide2", "PySide6", "PyQt5", "PyQt6"]
+        },
+        "req": {
+            "numpy": "",
+            "pyqt6": "",
+            "pyqt5": "",
+            "pyside2": "",
+            "PySide6-Essentials": "",
+            "numba": [""]  # always have numba, parametrize not using it...
+        }
     },
     "exclude": [
-        {"pyqt5": "", "pyside2": ""},
-        {"pyqt5": None, "pyside2": None}
+        {"python": "3.11", "env": {"PYQTGRAPH_QT_LIB": "PySide2"}}
     ],
     "benchmark_dir": "benchmarks",
     "env_dir": ".asv/env",
@@ -508,7 +513,7 @@ class ASVConfigCommand(core.Command):
             match = re.search(r"release (\d{1,2}\.\d)", cuda_check.decode("utf-8"))
             ver = match.groups()[0]  # e.g. 11.0
             ver_str = ver.replace(".", "")  # e.g. 110
-            config["matrix"][f"cupy-cuda{ver_str}"] = ""
+            config["matrix"]["req"][f"cupy-cuda{ver_str[:-1]}x"] = [""]  # always have cupy, parametrize not using it
 
         with open("asv.conf.json", "w") as conf_file:
             conf_file.write(json.dumps(config, indent=2))
