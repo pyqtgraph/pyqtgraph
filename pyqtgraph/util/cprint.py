@@ -1,12 +1,11 @@
 """
 Cross-platform color text printing
-
-Based on colorama (see pyqtgraph/util/colorama/README.txt)
 """
 import sys
 
-from .colorama.win32 import windll
-from .colorama.winterm import WinColor, WinStyle, WinTerm
+from colorama.win32 import windll
+from colorama.winterm import WinColor, WinStyle, WinTerm
+
 
 _WIN = sys.platform.startswith('win')
 if windll is not None:
@@ -14,7 +13,13 @@ if windll is not None:
 else:
     _WIN = False
 
-def winset(reset=False, fore=None, back=None, style=None, stderr=False):
+def winset(
+    reset: bool = False,
+    fore: WinColor | None = None,
+    back: WinColor | None = None,
+    style: WinStyle | None = None,
+    stderr: bool = False
+):
     if reset:
         winterm.reset_all()
     if fore is not None:
@@ -26,10 +31,12 @@ def winset(reset=False, fore=None, back=None, style=None, stderr=False):
 
 ANSI = {}
 WIN = {}
-for i,color in enumerate(['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE']):
+for i, color in enumerate(
+    ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE']
+):
     globals()[color] = i
-    globals()['BR_' + color] = i + 8
-    globals()['BACK_' + color] = i + 40
+    globals()[f'BR_{color}'] = i + 8
+    globals()[f'BACK_{color}'] = i + 40
     ANSI[i] = "\033[%dm" % (30+i)
     ANSI[i+8] = "\033[2;%dm" % (30+i)
     ANSI[i+40] = "\033[%dm" % (40+i)
@@ -69,21 +76,14 @@ def cprint(stream, *args, **kwds):
         err = kwds.get('stderr', False)
 
     if hasattr(stream, 'isatty') and stream.isatty():
-        if _WIN:
-            # convert to win32 calls
-            for arg in args:
-                if isinstance(arg, str):
-                    stream.write(arg)
-                else:
-                    kwds = WIN[arg]
-                    winset(stderr=err, **kwds)
-        else:
-            # convert to ANSI
-            for arg in args:
-                if isinstance(arg, str):
-                    stream.write(arg)
-                else:
-                    stream.write(ANSI[arg])
+        for arg in args:
+            if isinstance(arg, str):
+                stream.write(arg)
+            elif _WIN:
+                kwds = WIN[arg]
+                winset(stderr=err, **kwds)
+            else:
+                stream.write(ANSI[arg])
     else:
         # ignore colors
         for arg in args:

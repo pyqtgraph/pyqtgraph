@@ -136,6 +136,7 @@ setup(
     },
     install_requires = [
         'numpy>=1.23.0',
+        'colorama'
     ],
     **setupOpts
 )
