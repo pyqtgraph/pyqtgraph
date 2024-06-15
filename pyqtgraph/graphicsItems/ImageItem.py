@@ -73,6 +73,7 @@ class ImageItem(GraphicsObject):
         self.levels = None  ## [min, max] or [[redMin, redMax], ...]
         self.lut = None
         self.autoDownsample = False
+        self.nanPolicy = 'ignore'
         self._colorMap = None # This is only set if a color map is assigned directly
         self._lastDownsample = (1, 1)
         self._processingBuffer = None
@@ -323,6 +324,24 @@ class ImageItem(GraphicsObject):
         self._renderRequired = True
         self.update()
 
+    def setNanPolicy(self, nanPolicy: str):
+        """
+        Control how NaN values are handled during downsampling for this ImageItem.
+
+        Parameters
+        ----------
+        nanPolicy : str
+            Must be one of ['ignore`, 'propagate']. If 'nanPolicy' is 'ignore', NaNs
+            are automatically ignored during downsampling, at the expense of
+            performance. If 'nanPolicy' is 'propagate', NaNs are kept during
+            downsampling. ImageItem is instantiated with nanPolicy set to 'ignore'.
+        """
+        assert nanPolicy in ['propagate', 'ignore'], (f"{nanPolicy=} must be one "
+                                                      f"of ['propagate', 'ignore']")
+        self.nanPolicy = nanPolicy
+        self._renderRequired = True
+        self.update()
+
     def setOpts(self, update: bool=True, **kwargs):
         """
         Set display and processing options for this ImageItem.
@@ -340,6 +359,7 @@ class ImageItem(GraphicsObject):
             keys include:
 
             * `autoDownsample` whose value is directed to :meth:`setAutoDownsample`
+            * `nanPolicy` whose value is directed to :meth:`setNanPolicy`
             * `axisOrder`, which needs to be one of {'row-major', 'col-major'},
               determines the relationship between the numpy axis and visual axis
               of the data.
@@ -357,6 +377,8 @@ class ImageItem(GraphicsObject):
         --------
         :meth:`setAutoDownsample`
             Accepts the value of ``kwargs['autoDownsample']``.
+        :meth:`setNanPolicy`
+            Accepts the value of ``kwargs['nanPolicy']``.
         :meth:`setBorder`
             Accepts the value of ``kwargs['border']``.
         :meth:`setColorMap`
@@ -399,6 +421,8 @@ class ImageItem(GraphicsObject):
             self.menu = None
         if 'autoDownsample' in kwargs:
             self.setAutoDownsample(kwargs['autoDownsample'])
+        if 'nanPolicy' in kwargs:
+            self.nanPolicy = kwargs['nanPolicy']
         if 'rect' in kwargs:
             self.setRect(kwargs['rect'])
         if update:
@@ -718,8 +742,9 @@ class ImageItem(GraphicsObject):
                 return
 
             axes = [1, 0] if self.axisOrder == 'row-major' else [0, 1]
-            image = fn.downsample(self.image, xds, axis=axes[0], has_nans=self._imageHasNans)
-            image = fn.downsample(image, yds, axis=axes[1], has_nans=self._imageHasNans)
+            nan_policy = self.nanPolicy if self._imageHasNans else 'propagate'
+            image = fn.downsample(self.image, xds, axis=axes[0], nanPolicy=nan_policy)
+            image = fn.downsample(image, yds, axis=axes[1], nanPolicy=nan_policy)
             self._lastDownsample = (xds, yds)
 
             # Check if downsampling reduced the image size to zero due to inf values.
