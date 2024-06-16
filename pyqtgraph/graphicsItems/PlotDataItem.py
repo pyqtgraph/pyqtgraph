@@ -853,18 +853,12 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         *args : tuple
-            Arguments directed to :func:`mkBrush <pyqtgraph.mkBrush>`.
+            :class:`QBrush` or parameters for a QBrush constructed by
+            :func:`mkBrush <pyqtgraph.mkBrush>`. Also accepts a color specifier
+            understood by :func:`mkColor <pyqtgraph.mkColor>`.
         **kwargs : dict
-            Arguments directed to :func:`mkBrush <pyqtgraph.mkBrush>`.
-        
-        See Also
-        --------
-        :func:`mkBrush <pyqtgraph.mkBrush>`
-            For supported arguments see the convenience function constructing
-            :class:`QBrush` instances.
-        :func:`mkColor <pyqtgraph.mkColor>`
-            For supported color arguments see the convenience function constructing
-            :class:`QColor` instances.
+            Alternative specification of arguments directed to
+            :func:`mkBrush <pyqtgraph.mkBrush>`.
         """
         if args and args[0] is None:
             brush = None
