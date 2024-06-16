@@ -304,12 +304,13 @@ class PlotDataItem(GraphicsObject):
 
                     The symbol to use for drawing points, or a list specifying a symbol
                     for each point. If used, ``str`` needs to be a string that
-                    :class:`~pyqtgraph.ScatterPlotItem` will recognize.
+                    :class:`~pyqtgraph.ScatterPlotItem` will recognize. ``None``
+                    disables the scatter plot.
         
-        symbolPen   :class:`QPen` or arguments accepted by
+        symbolPen   :class:`QPen`, or arguments accepted by
                     :func:`mkPen <pyqtgraph.mkPen>`,
 
-                    list of :class:`QPen` 
+                    list of :class:`QPen`, 
                     or arguments to :func:`mkPen <pyqtgraph.mkPen>`,
 
                     or ``None``, default ``(200, 200, 200)``
@@ -349,9 +350,9 @@ class PlotDataItem(GraphicsObject):
         connect     ``{ 'auto', 'finite', 'all', 'pairs', (N,) ndarray }``, default
                     ``'auto'``
                     
-                    Normally, the curve directly connects each point in sequence. 
-                    Any non-finite, non-plottable values such as ``NaN`` result in a
-                    gap. The ``connect`` argument modifies this behavior.
+                    Normally, the curve connects each point in sequence. Any non-finite,
+                    non-plottable values such as ``NaN`` result in a gap. The
+                    ``connect`` argument modifies this behavior.
                     
                     - ``'finite'`` and ``'auto'`` both give the normal behavior. The 
                       default ``auto`` mode enables PlotDataItem to avoid some
@@ -802,15 +803,11 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         *args : tuple or None
-            Arguments relayed to :func:`mkPen <pyqtgraph.mkPen>` if not ``None``. Use
-            ``None`` to disable drawing of lines.
+            :class:`QPen`, or parameters for a QPen constructed by 
+            :func:`mkPen <pyqtgraph.mkPen>`. Use ``None`` to disable drawing of lines.
         **kwargs : dict
-            Keyword arguments relayed to :func:`mkPen <pyqtgraph.mkPen>`.
-        
-        See Also
-        --------
-        :func:`mkPen <pyqtgraph.mkPen>`
-            Convenience function constructing :class:`QPen` instances.
+            Alternative specification of arguments directed to
+            :func:`mkPen <pyqtgraph.mkPen>`.
         """
         pen = fn.mkPen(*args, **kwargs)
         self.opts['pen'] = pen
@@ -827,15 +824,11 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         *args : tuple or None
-            Arguments relayed to :func:`mkPen <pyqtgraph.mkPen>` if not ``None``. Use
-            ``None`` to disable the shadow pen.
+            :class:`QPen`, or parameters for a QPen constructed by 
+            :func:`mkPen <pyqtgraph.mkPen>`. Use ``None`` to disable the shadow pen.
         **kwargs : dict
-            Keyword arguments relayed to :func:`mkPen <pyqtgraph.mkPen>`.
-        
-        See Also
-        --------
-        :func:`mkPen <pyqtgraph.mkPen>`
-            Convenience function constructing :class:`QPen` instances.
+            Alternative specification of arguments directed to
+            :func:`mkPen <pyqtgraph.mkPen>`.
         """
         if args and args[0] is None:
             pen = None
@@ -853,7 +846,7 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         *args : tuple
-            :class:`QBrush` or parameters for a QBrush constructed by
+            :class:`QBrush`, or parameters for a QBrush constructed by
             :func:`mkBrush <pyqtgraph.mkBrush>`. Also accepts a color specifier
             understood by :func:`mkColor <pyqtgraph.mkColor>`.
         **kwargs : dict
@@ -876,15 +869,12 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         *args : tuple
-            Arguments directed to :func:`mkBrush <pyqtgraph.mkBrush>`.
+            :class:`QBrush`, or parameters for a QBrush constructed by
+            :func:`mkBrush <pyqtgraph.mkBrush>`. Also accepts a color specifier
+            understood by :func:`mkColor <pyqtgraph.mkColor>`.
         **kwargs : dict
-            Arguments directed to :func:`mkBrush <pyqtgraph.mkBrush>`.
-
-        See Also
-        --------
-        :func:`mkBrush <pyqtgraph.mkBrush>`
-            For supported arguments see the convenience function constructing
-            :class:`QBrush` instances.
+            Alternative specification of arguments directed to
+            :func:`mkBrush <pyqtgraph.mkBrush>`.
         """
         self.setFillBrush(*args, **kwargs)
 
@@ -925,7 +915,8 @@ class PlotDataItem(GraphicsObject):
         symbol : str or :class:`QPainterPath` or list
             Symbol to draw as the points. If of type ``list``, it must be the same
             length as the number of points, and every element must be a recognized
-            string or of type :class:`QPainterPath`.
+            string or of type :class:`QPainterPath`. Use ``None`` to disable the scatter
+            plot.
         
         See Also
         --------
@@ -946,18 +937,11 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         *args : tuple
-            Arguments directed to :func:`mkPen <pyqtgraph.mkPen>`.
+            :class:`QPen`, or parameters for a QPen constructed by 
+            :func:`mkPen <pyqtgraph.mkPen>`.
         **kwargs : dict
-            Arguments directed to :func:`mkPen <pyqtgraph.mkPen>`.
-        
-        See Also
-        --------
-        :func:`mkPen <pyqtgraph.mkPen>`
-            For supported arguments see the convenience function constructing
-            :class:`QPen` instances.
-        :func:`mkColor <pyqtgraph.mkColor>`
-            For supported color arguments see the convenience function constructing
-            :class:`QColor` instances.
+            Alternative specification of arguments directed to
+            :func:`mkPen <pyqtgraph.mkPen>`.
         """
         pen = fn.mkPen(*args, **kwargs)
         if self.opts['symbolPen'] == pen:
@@ -974,18 +958,12 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         *args : tuple
-            Arguments directed to :func:`mkBrush <pyqtgraph.mkBrush>`.
+            :class:`QBrush`, or parameters for a QBrush constructed by
+            :func:`mkBrush <pyqtgraph.mkBrush>`. Also accepts a color specifier
+            understood by :func:`mkColor <pyqtgraph.mkColor>`.
         **kwargs : dict
-            Arguments directed to :func:`mkBrush <pyqtgraph.mkBrush>`.
-        
-        See Also
-        --------
-        :func:`mkBrush <pyqtgraph.mkBrush>`
-            For supported arguments see the convenience function constructing
-            :class:`QBrush` instances.
-        :func:`mkColor <pyqtgraph.mkColor>`
-            For supported color arguments see the convenience function constructing
-            :class:`QColor` instances.
+            Alternative specification of arguments directed to
+            :func:`mkBrush <pyqtgraph.mkBrush>`.
         """
         brush = fn.mkBrush(*args, **kwargs)
         if self.opts['symbolBrush'] == brush:
