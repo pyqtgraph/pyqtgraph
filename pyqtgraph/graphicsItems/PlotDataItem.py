@@ -349,21 +349,22 @@ class PlotDataItem(GraphicsObject):
         connect     ``{ 'auto', 'finite', 'all', 'pairs', (N,) ndarray }``, default
                     ``'auto'``
                     
-                    - ``'auto'`` connects all points, but creates a break where a
-                      non-finite value (such as ``NaN``) is present. If PlotDataItem has
-                      already inspected the dataset and found that all values are
-                      numerical and finite, this information is used to avoid repeated
-                      tests.
-                    - ``'finite'`` - also creates a break when a non-finite point is
-                      encountered, but detection of non-finite values is passed on to
+                    Normally, the curve directly connects each point in sequence. 
+                    Any non-finite, non-plottable values such as ``NaN`` result in a
+                    gap. The ``connect`` argument modifies this behavior.
+                    
+                    - ``'finite'`` and ``'auto'`` both give the normal behavior. The 
+                      default ``auto`` mode enables PlotDataItem to avoid some
+                      repeated tests for non-finite values in 
                       :class:`~pyqtgraph.PlotCurveItem`.
-                    - ``'all'`` - connects all points, ignoring non-finite values.  
+                    - ``'all'`` - ignores any non-finite values to plot an uninterrupted
+                      curve.  
                     - ``'pairs'`` - generates one line segment for each successive pair
                       of points.
-                    - :class:`~numpy.ndarray` - it should contain `N` elements of 
-                      integer or boolean dtypes, with values of ``0`` or ``1``. Values
-                      of ``1`` indicate that the respective point will be connected to
-                      the next.
+                    - :class:`~numpy.ndarray` - Individual connections can be specified
+                      by an array of length `N`, matching the number of points. After
+                      casting to Boolean, a value of ``True`` causes the respective
+                      point to be connected to the next.
 
         stepMode    ``{ 'left', 'right', 'center' }`` or ``None``, default ``None``
                     
