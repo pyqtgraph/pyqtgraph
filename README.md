@@ -109,6 +109,7 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [Joulescope](https://www.joulescope.com/)
 * [MaD GUI](https://github.com/mad-lab-fau/mad-gui)
 * [neurotic](https://neurotic.readthedocs.io)
+* [Bio Silicon Intelligence System](https://github.com/Unlimited-Research-Cooperative/Bio-Silicon-Synergetic-Intelligence-System)
 * [Orange3](https://orangedatamining.com/)
 * [PatchView](https://github.com/ZeitgeberH/patchview)
 * [pyplotter](https://github.com/pyplotter/pyplotter)
