@@ -1009,7 +1009,23 @@ class PlotCurveItem(GraphicsObject):
 
         proj = QtGui.QMatrix4x4()
         proj.ortho(0, widget.width(), widget.height(), 0, -999999, 999999)
-        mvp_curve = proj * QtGui.QMatrix4x4(self.sceneTransform())
+
+        tr = self.sceneTransform()
+        # OpenGL only sees the float32 version of our data, and this may cause
+        # precision issues. To mitigate this, we shift the origin of our data
+        # to the center of its bounds.
+        # Note that xc, yc are double precision Python floats. Subtracting them
+        # from the x, y ndarrays will automatically upcast the latter to double
+        # precision.
+        if glstate.render_cache is None:
+            # the origin point is calculated once per data change.
+            # once the data is uploaded, the origin point is fixed.
+            center = self.boundingRect().center()
+            xc, yc = center.x(), center.y()
+        else:
+            xc, yc, *_ = glstate.render_cache
+        tr.translate(xc, yc)
+        mvp_curve = proj * QtGui.QMatrix4x4(tr)
 
         mvp_stencil = proj
         rect = view.mapRectToScene(view.boundingRect())
@@ -1036,12 +1052,12 @@ class PlotCurveItem(GraphicsObject):
 
         if glstate.render_cache is None:
             if connect_kind == "pairs":
-                glstate.render_cache = (valid_pts,)
+                glstate.render_cache = (xc, yc, valid_pts,)
 
                 buf = np.empty((num_vtx_stencil + valid_pts, 2), dtype=np.float32)
                 pos = buf[num_vtx_stencil:, :]
-                pos[:, 0] = x
-                pos[:, 1] = y
+                pos[:, 0] = x - xc
+                pos[:, 1] = y - yc
 
             elif connect_kind == "all":
                 if not self.opts["skipFiniteCheck"]:
@@ -1049,16 +1065,16 @@ class PlotCurveItem(GraphicsObject):
                     if x.dtype.kind == 'f':
                         isfinite &= np.isfinite(x)
                     valid_pts = np.sum(isfinite)
-                glstate.render_cache = (valid_pts,)
+                glstate.render_cache = (xc, yc, valid_pts,)
 
                 buf = np.empty((num_vtx_stencil + valid_pts, 2), dtype=np.float32)
                 pos = buf[num_vtx_stencil:, :]
                 if valid_pts == num_pts:
-                    pos[:, 0] = x
-                    pos[:, 1] = y
+                    pos[:, 0] = x - xc
+                    pos[:, 1] = y - yc
                 else:
-                    pos[:, 0] = x[isfinite]
-                    pos[:, 1] = y[isfinite]
+                    pos[:, 0] = x[isfinite] - xc
+                    pos[:, 1] = y[isfinite] - yc
 
             elif connect_kind == "finite":
                 isfinite = np.isfinite(y)
@@ -1073,24 +1089,26 @@ class PlotCurveItem(GraphicsObject):
                 sidx += num_vtx_stencil
                 sidx = sidx[mask].tolist()
                 slen = slen[mask].tolist()
-                glstate.render_cache = (sidx, slen)
+                glstate.render_cache = (xc, yc, sidx, slen)
 
                 buf = np.empty((num_vtx_stencil + valid_pts, 2), dtype=np.float32)
                 pos = buf[num_vtx_stencil:, :]
-                pos[:, 0] = x
-                pos[:, 1] = y
+                pos[:, 0] = x - xc
+                pos[:, 1] = y - yc
 
             elif connect_kind == "array":
                 mask = np.asarray(self.opts["connect"], dtype=bool)[:num_pts-1]
                 valid_pts = 2 * np.sum(mask)
-                glstate.render_cache = (valid_pts,)
+                glstate.render_cache = (xc, yc, valid_pts,)
 
                 buf = np.empty((num_vtx_stencil + valid_pts, 2), dtype=np.float32)
                 pos = buf[num_vtx_stencil:, :]
-                pos[0::2, 0] = x[:-1][mask]
-                pos[1::2, 0] = x[1:][mask]
-                pos[0::2, 1] = y[:-1][mask]
-                pos[1::2, 1] = y[1:][mask]
+                xshift = x - xc
+                yshift = y - yc
+                pos[0::2, 0] = xshift[:-1][mask]
+                pos[1::2, 0] = xshift[1:][mask]
+                pos[0::2, 1] = yshift[:-1][mask]
+                pos[1::2, 1] = yshift[1:][mask]
 
         # upload VBO, minimally for the stencil
         if buf is not stencil_vtx:
@@ -1154,13 +1172,13 @@ class PlotCurveItem(GraphicsObject):
 
             match connect_kind:
                 case "pairs" | "array":
-                    valid_pts, = glstate.render_cache
+                    *_, valid_pts = glstate.render_cache
                     glf.glDrawArrays(GLC.GL_LINES, base, valid_pts)
                 case "all":
-                    valid_pts, = glstate.render_cache
+                    *_, valid_pts = glstate.render_cache
                     glf.glDrawArrays(GLC.GL_LINE_STRIP, base, valid_pts)
                 case "finite":
-                    sidx, slen = glstate.render_cache
+                    *_, sidx, slen = glstate.render_cache
                     if hasattr(glf, "glMultiDrawArrays") and not glstate.context.isOpenGLES():
                         glf.glMultiDrawArrays(GLC.GL_LINE_STRIP, sidx, slen, len(sidx))
                     else:

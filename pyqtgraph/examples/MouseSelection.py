@@ -17,7 +17,7 @@ plt.show()
 
 xint = np.arange(0, 1000) + 100_000_000
 xfloat = np.arange(0, 1000) + 1e8
-xfloat[[250, 500, 750]] = np.nan
+xfloat[(250, 500, 750),] = np.nan
 connect = np.ones(1000, dtype=bool)
 connect[3::4] = False
 curves = [
