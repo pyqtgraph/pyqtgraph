@@ -1,8 +1,7 @@
-from ..Qt import QtCore, QtGui, QtWidgets
+from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
 
-HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
+import importlib
 import math
-import sys
 import warnings
 
 import numpy as np
@@ -10,10 +9,124 @@ import numpy as np
 from .. import Qt, debug
 from .. import functions as fn
 from .. import getConfigOption
+from ..Qt import OpenGLConstants as GLC
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['PlotCurveItem']
 
+
+class OpenGLState:
+    VERT_SRC = """
+        attribute vec4 a_position;
+        uniform mat4 u_mvp;
+        void main() {
+            gl_Position = u_mvp * a_position;
+        }
+    """
+    FRAG_SRC = """
+        uniform highp vec4 u_color;
+        void main() {
+            gl_FragColor = u_color;
+        }
+    """
+
+    def __init__(self):
+        self.widget = None
+        self.context = None
+        self.functions = None
+        self.vbo_nbytes = 0
+        self.render_cache = None
+        self.m_vao = None
+        self.m_vbo = None
+        self.m_program = None
+
+    def setup(self, widget):
+        context = widget.context()
+        if self.widget is widget and self.context is context:
+            return self.functions
+
+        if self.context is not None:
+            self.context.aboutToBeDestroyed.disconnect(self.cleanup)
+            self.cleanup()
+
+        self.widget = widget
+        self.context = context
+        self.context.aboutToBeDestroyed.connect(self.cleanup)
+
+        self.functions = self.getFunctions(context)
+
+        if QT_LIB in ["PyQt5", "PySide2"]:
+            QtOpenGL = QtGui
+        else:
+            QtOpenGL = importlib.import_module(f'{QT_LIB}.QtOpenGL')
+
+        self.m_program = QtOpenGL.QOpenGLShaderProgram(self.widget)
+        self.m_program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, OpenGLState.VERT_SRC)
+        self.m_program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, OpenGLState.FRAG_SRC)
+        self.m_program.bindAttributeLocation("a_position", 0)
+        self.m_program.link()
+
+        self.m_vao = QtOpenGL.QOpenGLVertexArrayObject(self.widget)
+        self.m_vao.create()
+        self.m_vbo = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
+        self.m_vbo.create()
+        self.vbo_nbytes = 0
+
+        self.m_vao.bind()
+        self.m_vbo.bind()
+        loc_pos = self.m_program.attributeLocation("a_position")
+        self.m_program.enableAttributeArray(loc_pos)
+        self.m_program.setAttributeBuffer(loc_pos, GLC.GL_FLOAT, 0, 2)
+        self.m_vbo.release()
+        self.m_vao.release()
+
+        return self.functions
+
+    def getFunctions(self, context):
+        if QT_LIB == 'PyQt5':
+            # it would have been cleaner to call context.versionFunctions().
+            # however, when there are multiple PlotCurveItems, the following bug occurs:
+            # all except one of the C++ objects of the returned versionFunctions() get
+            # deleted.
+            import PyQt5._QOpenGLFunctions_2_0 as QtOpenGLFunctions
+            glf = QtOpenGLFunctions.QOpenGLFunctions_2_0()
+            glf.initializeOpenGLFunctions()
+        elif QT_LIB == 'PySide2':
+            import PySide2.QtOpenGLFunctions as QtOpenGLFunctions
+            glf = QtOpenGLFunctions.QOpenGLFunctions_2_0()
+            glf.initializeOpenGLFunctions()
+        else:
+            QtOpenGL = importlib.import_module(f'{QT_LIB}.QtOpenGL')
+            profile = QtOpenGL.QOpenGLVersionProfile()
+            profile.setVersion(2, 0)
+            glf = QtOpenGL.QOpenGLVersionFunctionsFactory.get(profile, context)
+
+        return glf
+
+    def setUniformValue(self, key, value):
+        # convenience function to mask the warnings
+        with warnings.catch_warnings():
+            # PySide2 : RuntimeWarning: SbkConverter: Unimplemented C++ array type.
+            warnings.simplefilter("ignore")
+            self.m_program.setUniformValue(key, value)
+
+    def cleanup(self):
+        if self.m_program is not None:
+            self.m_program.setParent(None)
+            self.m_program = None
+        if self.m_vbo is not None:
+            self.m_vbo.destroy()
+            self.m_vbo = None
+        if self.m_vao is not None:
+            self.m_vao.destroy()
+            self.m_vao = None
+
+        self.widget = None
+        self.context = None
+        self.functions = None
+
+    def verticesChanged(self, curve):
+        self.render_cache = None
 
 def arrayToLineSegments(x, y, connect, finiteCheck, out=None):
     if out is None:
@@ -152,6 +265,7 @@ class PlotCurveItem(GraphicsObject):
             self.opts['pen'] = fn.mkPen('w')
         self.setClickable(kargs.get('clickable', False))
         self.setData(*args, **kargs)
+        self.glstate = None
 
     def implements(self, interface=None):
         ints = ['plotData']
@@ -801,10 +915,24 @@ class PlotCurveItem(GraphicsObject):
         if self.xData is None or len(self.xData) == 0:
             return
 
-        if getConfigOption('enableExperimental'):
-            if HAVE_OPENGL and isinstance(widget, QtWidgets.QOpenGLWidget):
-                self.paintGL(p, opt, widget)
-                return
+        do_fill = self.opts['brush'] is not None and self.opts['fillLevel'] is not None
+        do_fill_outline = do_fill and self.opts['fillOutline']
+
+        if (
+            getConfigOption('enableExperimental')
+            and isinstance(widget, QtWidgets.QOpenGLWidget)
+            and not do_fill
+            and not self.opts['stepMode']
+        ):
+            if self.glstate is None:
+                self.glstate = OpenGLState()
+                self.sigPlotChanged.connect(self.glstate.verticesChanged)
+            p.beginNativePainting()
+            try:
+                self.paintGL(widget)
+            finally:
+                p.endNativePainting()
+            return
 
         if self._exportOpts is not False:
             aa = self._exportOpts.get('antialias', True)
@@ -816,9 +944,6 @@ class PlotCurveItem(GraphicsObject):
         cmode = self.opts['compositionMode']
         if cmode is not None:
             p.setCompositionMode(cmode)
-
-        do_fill = self.opts['brush'] is not None and self.opts['fillLevel'] is not None
-        do_fill_outline = do_fill and self.opts['fillOutline']
 
         if do_fill:
             if self._shouldUseFillPathList():
@@ -866,89 +991,202 @@ class PlotCurveItem(GraphicsObject):
                 p.drawPath(self.getPath())
         profiler('drawPath')
 
-    def paintGL(self, p, opt, widget):
-        p.beginNativePainting()
-        import OpenGL.GL as gl
+    def paintGL(self, widget):
+        if (view := self.getViewBox()) is None:
+            return
 
-        if sys.platform == 'win32':
-            # If Qt is built to dynamically load OpenGL, then the projection and
-            # modelview matrices are not setup.
-            # https://doc.qt.io/qt-6/windows-graphics.html
-            # https://code.woboq.org/qt6/qtbase/src/opengl/qopenglpaintengine.cpp.html
-            # Technically, we could enable it for all platforms, but for now, just
-            # enable it where it is required, i.e. Windows
-            gl.glMatrixMode(gl.GL_PROJECTION)
-            gl.glLoadIdentity()
-            gl.glOrtho(0, widget.width(), widget.height(), 0, -999999, 999999)
-            gl.glMatrixMode(gl.GL_MODELVIEW)
-            mat = QtGui.QMatrix4x4(self.sceneTransform())
-            gl.glLoadMatrixf(np.array(mat.data(), dtype=np.float32))
+        x, y = self.getData()
+        num_pts = len(x)
+        valid_pts = num_pts
+        num_vtx_stencil = 4
 
-        ## set clipping viewport
-        view = self.getViewBox()
-        if view is not None:
-            rect = view.mapRectToItem(self, view.boundingRect())
-            #gl.glViewport(int(rect.x()), int(rect.y()), int(rect.width()), int(rect.height()))
+        # minimum 2 pts to draw anything
+        if num_pts < 2:
+            return
 
-            #gl.glTranslate(-rect.x(), -rect.y(), 0)
+        glstate = self.glstate
+        glf = glstate.setup(widget)
 
-            gl.glEnable(gl.GL_STENCIL_TEST)
-            gl.glColorMask(gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE) # disable drawing to frame buffer
-            gl.glDepthMask(gl.GL_FALSE)  # disable drawing to depth buffer
-            gl.glStencilFunc(gl.GL_NEVER, 1, 0xFF)
-            gl.glStencilOp(gl.GL_REPLACE, gl.GL_KEEP, gl.GL_KEEP)
+        proj = QtGui.QMatrix4x4()
+        proj.ortho(0, widget.width(), widget.height(), 0, -999999, 999999)
 
-            ## draw stencil pattern
-            gl.glStencilMask(0xFF)
-            gl.glClear(gl.GL_STENCIL_BUFFER_BIT)
-            gl.glBegin(gl.GL_TRIANGLES)
-            gl.glVertex2f(rect.x(), rect.y())
-            gl.glVertex2f(rect.x()+rect.width(), rect.y())
-            gl.glVertex2f(rect.x(), rect.y()+rect.height())
-            gl.glVertex2f(rect.x()+rect.width(), rect.y()+rect.height())
-            gl.glVertex2f(rect.x()+rect.width(), rect.y())
-            gl.glVertex2f(rect.x(), rect.y()+rect.height())
-            gl.glEnd()
+        tr = self.sceneTransform()
+        # OpenGL only sees the float32 version of our data, and this may cause
+        # precision issues. To mitigate this, we shift the origin of our data
+        # to the center of its bounds.
+        # Note that xc, yc are double precision Python floats. Subtracting them
+        # from the x, y ndarrays will automatically upcast the latter to double
+        # precision.
+        if glstate.render_cache is None:
+            # the origin point is calculated once per data change.
+            # once the data is uploaded, the origin point is fixed.
+            center = self.boundingRect().center()
+            xc, yc = center.x(), center.y()
+        else:
+            xc, yc, *_ = glstate.render_cache
+        tr.translate(xc, yc)
+        mvp_curve = proj * QtGui.QMatrix4x4(tr)
 
-            gl.glColorMask(gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE)
-            gl.glDepthMask(gl.GL_TRUE)
-            gl.glStencilMask(0x00)
-            gl.glStencilFunc(gl.GL_EQUAL, 1, 0xFF)
+        mvp_stencil = proj
+        rect = view.mapRectToScene(view.boundingRect())
+        x0, y0, x1, y1 = rect.getCoords()
+        stencil_vtx = np.array([[x0, y0], [x1, y0], [x0, y1], [x1, y1]], dtype=np.float32)
 
-        try:
-            x, y = self.getData()
-            pos = np.empty((len(x), 2), dtype=np.float32)
-            pos[:,0] = x
-            pos[:,1] = y
-            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-            try:
-                gl.glVertexPointerf(pos)
-                pen = fn.mkPen(self.opts['pen'])
-                gl.glColor4f(*pen.color().getRgbF())
-                width = pen.width()
-                if pen.isCosmetic() and width < 1:
-                    width = 1
-                gl.glPointSize(width)
-                gl.glLineWidth(width)
+        vbo_nbytes_needed = (num_vtx_stencil + num_pts) * 2 * 4
 
-                # enable antialiasing if requested
-                if self._exportOpts is not False:
-                    aa = self._exportOpts.get('antialias', True)
+        connect_kind = self.opts["connect"]
+        if isinstance(connect_kind, np.ndarray):
+            connect_kind = "array"
+            vbo_nbytes_needed = (num_vtx_stencil + (num_pts-1) * 2) * 2 * 4
+
+        # resize (and invalidate) gpu buffers if needed.
+        # a reallocation can only occur together with a change in data.
+        # i.e. reallocation ==> change in data (render_cache is None)
+        if vbo_nbytes_needed != glstate.vbo_nbytes:
+            glstate.m_vbo.bind()
+            glstate.m_vbo.allocate(vbo_nbytes_needed)
+            glstate.m_vbo.release()
+            glstate.vbo_nbytes = vbo_nbytes_needed
+
+        buf = stencil_vtx
+
+        if glstate.render_cache is None:
+            if connect_kind == "pairs":
+                glstate.render_cache = (xc, yc, valid_pts,)
+
+                buf = np.empty((num_vtx_stencil + valid_pts, 2), dtype=np.float32)
+                pos = buf[num_vtx_stencil:, :]
+                pos[:, 0] = x - xc
+                pos[:, 1] = y - yc
+
+            elif connect_kind == "all":
+                if not self.opts["skipFiniteCheck"]:
+                    isfinite = np.isfinite(y)
+                    if x.dtype.kind == 'f':
+                        isfinite &= np.isfinite(x)
+                    valid_pts = np.sum(isfinite)
+                glstate.render_cache = (xc, yc, valid_pts,)
+
+                buf = np.empty((num_vtx_stencil + valid_pts, 2), dtype=np.float32)
+                pos = buf[num_vtx_stencil:, :]
+                if valid_pts == num_pts:
+                    pos[:, 0] = x - xc
+                    pos[:, 1] = y - yc
                 else:
-                    aa = self.opts['antialias']
-                if aa:
-                    gl.glEnable(gl.GL_LINE_SMOOTH)
-                    gl.glEnable(gl.GL_BLEND)
-                    gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-                    gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST)
-                else:
-                    gl.glDisable(gl.GL_LINE_SMOOTH)
+                    pos[:, 0] = x[isfinite] - xc
+                    pos[:, 1] = y[isfinite] - yc
 
-                gl.glDrawArrays(gl.GL_LINE_STRIP, 0, pos.shape[0])
-            finally:
-                gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        finally:
-            p.endNativePainting()
+            elif connect_kind == "finite":
+                isfinite = np.isfinite(y)
+                if x.dtype.kind == 'f':
+                    isfinite &= np.isfinite(x)
+                nonfinite_locs = np.nonzero(~isfinite)[0]
+                # pretend that there's a nonfinite before and after the array
+                nonfinite_locs = np.concatenate(([-1], nonfinite_locs, [num_pts]))
+                sidx = nonfinite_locs[:-1] + 1      # start index of segment
+                slen = np.diff(nonfinite_locs) - 1  # length of segment
+                mask = slen >= 2
+                sidx += num_vtx_stencil
+                sidx = sidx[mask].tolist()
+                slen = slen[mask].tolist()
+                glstate.render_cache = (xc, yc, sidx, slen)
+
+                buf = np.empty((num_vtx_stencil + valid_pts, 2), dtype=np.float32)
+                pos = buf[num_vtx_stencil:, :]
+                pos[:, 0] = x - xc
+                pos[:, 1] = y - yc
+
+            elif connect_kind == "array":
+                mask = np.asarray(self.opts["connect"], dtype=bool)[:num_pts-1]
+                valid_pts = 2 * np.sum(mask)
+                glstate.render_cache = (xc, yc, valid_pts,)
+
+                buf = np.empty((num_vtx_stencil + valid_pts, 2), dtype=np.float32)
+                pos = buf[num_vtx_stencil:, :]
+                xshift = x - xc
+                yshift = y - yc
+                pos[0::2, 0] = xshift[:-1][mask]
+                pos[1::2, 0] = xshift[1:][mask]
+                pos[0::2, 1] = yshift[:-1][mask]
+                pos[1::2, 1] = yshift[1:][mask]
+
+        # upload VBO, minimally for the stencil
+        if buf is not stencil_vtx:
+            buf[:num_vtx_stencil, :] = stencil_vtx
+        glstate.m_vbo.bind()
+        glstate.m_vbo.write(0, buf, buf.nbytes)
+        glstate.m_vbo.release()
+
+        glstate.m_program.bind()
+        glstate.m_vao.bind()
+
+        glstate.setUniformValue("u_mvp", mvp_stencil)
+
+        # set clipping viewport
+        glf.glEnable(GLC.GL_STENCIL_TEST)
+        glf.glColorMask(False, False, False, False) # disable drawing to frame buffer
+        glf.glDepthMask(False)  # disable drawing to depth buffer
+        glf.glStencilFunc(GLC.GL_NEVER, 1, 0xFF)
+        glf.glStencilOp(GLC.GL_REPLACE, GLC.GL_KEEP, GLC.GL_KEEP)
+
+        ## draw stencil pattern
+        glf.glStencilMask(0xFF)
+        glf.glClear(GLC.GL_STENCIL_BUFFER_BIT)
+        glf.glDrawArrays(GLC.GL_TRIANGLE_STRIP, 0, 4)
+
+        glf.glColorMask(True, True, True, True)
+        glf.glDepthMask(True)
+        glf.glStencilMask(0x00)
+        glf.glStencilFunc(GLC.GL_EQUAL, 1, 0xFF)
+
+        # enable antialiasing if requested
+        if self._exportOpts is not False:
+            aa = self._exportOpts.get('antialias', True)
+        else:
+            aa = self.opts['antialias']
+        if aa:
+            glf.glEnable(GLC.GL_LINE_SMOOTH)
+            glf.glEnable(GLC.GL_BLEND)
+            glf.glBlendFunc(GLC.GL_SRC_ALPHA, GLC.GL_ONE_MINUS_SRC_ALPHA)
+            glf.glHint(GLC.GL_LINE_SMOOTH_HINT, GLC.GL_NICEST)
+        else:
+            glf.glDisable(GLC.GL_LINE_SMOOTH)
+
+        glstate.setUniformValue("u_mvp", mvp_curve)
+
+        for pen_kind in ["shadowPen", "pen"]:
+            pen = self.opts[pen_kind]
+            if pen_kind == "pen":
+                pen = fn.mkPen(pen)
+            if pen is None or pen.style() == QtCore.Qt.PenStyle.NoPen:
+                continue
+            width = pen.widthF()
+            if pen.isCosmetic() and width < 1:
+                width = 1
+
+            glf.glLineWidth(width)
+            glstate.setUniformValue("u_color", pen.color())
+
+            # skip first 4 vertices that were for the stencil
+            base = num_vtx_stencil
+
+            match connect_kind:
+                case "pairs" | "array":
+                    *_, valid_pts = glstate.render_cache
+                    glf.glDrawArrays(GLC.GL_LINES, base, valid_pts)
+                case "all":
+                    *_, valid_pts = glstate.render_cache
+                    glf.glDrawArrays(GLC.GL_LINE_STRIP, base, valid_pts)
+                case "finite":
+                    *_, sidx, slen = glstate.render_cache
+                    if hasattr(glf, "glMultiDrawArrays") and not glstate.context.isOpenGLES():
+                        glf.glMultiDrawArrays(GLC.GL_LINE_STRIP, sidx, slen, len(sidx))
+                    else:
+                        # PyQt{5,6} didn't include glMultiDrawArrays
+                        for s, l in zip(sidx, slen):
+                            glf.glDrawArrays(GLC.GL_LINE_STRIP, s, l)
+
+        glstate.m_vao.release()
 
     def clear(self):
         self.xData = None  ## raw values
