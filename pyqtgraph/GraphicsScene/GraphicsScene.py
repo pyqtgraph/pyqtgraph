@@ -80,6 +80,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     sigItemAdded = QtCore.Signal(object)  ## emits the item object just added
     sigItemRemoved = QtCore.Signal(object)  ## emits the item object just removed
 
+    sigBackgroundChanged = QtCore.Signal(str)   ## emitted when the Background Color was changed via the context menu
     _addressCache = weakref.WeakValueDictionary()
     
     ExportDirectory = None
@@ -101,9 +102,21 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         
         self.contextMenu = [QtGui.QAction(QtCore.QCoreApplication.translate("GraphicsScene", "Export..."), self)]
         self.contextMenu[0].triggered.connect(self.showExportDialog)
+
+        self.setBackgroundAction = QtGui.QAction(
+            QtCore.QCoreApplication.translate("GraphicsScene", "Set Background color"), self
+        )
+        self.setBackgroundAction.triggered.connect(self.setBackgroundFromContextMenu)
+        self.contextMenu.append(self.setBackgroundAction)
         
         self.exportDialog = None
         self._lastMoveEventTime = 0
+
+    def setBackgroundFromContextMenu(self):
+        # TODO: Remove Debug Statements
+        print(self.parent)
+        print("BG Changed")
+        self.sigBackgroundChanged.emit("#ff000f")
         
     def render(self, *args):
         self.prepareForPaint()
