@@ -1771,6 +1771,8 @@ class PlotDataItem(GraphicsObject):
     def _fourierTransform(x, y):
         # Perform Fourier transform. If x values are not sampled uniformly,
         # then use np.interp to resample before taking fft.
+        if len(x) == 1: 
+            return np.array([0]), abs(y)
         dx = np.diff(x)
         uniform = not np.any(np.abs(dx - dx[0]) > (abs(dx[0]) / 1000.))
         if not uniform:
