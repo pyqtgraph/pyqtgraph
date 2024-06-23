@@ -2,6 +2,8 @@ import warnings
 import weakref
 from time import perf_counter, perf_counter_ns
 
+from PyQt6.QtWidgets import QColorDialog
+
 from .. import debug as debug
 from .. import getConfigOption
 from ..Point import Point
@@ -113,10 +115,17 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self._lastMoveEventTime = 0
 
     def setBackgroundFromContextMenu(self):
-        # TODO: Remove Debug Statements
-        print(self.parent)
-        print("BG Changed")
-        self.sigBackgroundChanged.emit("#ff000f")
+        # Open the color picker dialog
+        color = QColorDialog.getColor()
+
+        # Check if a valid color was selected
+        if color.isValid():
+            # Store the selected color as a hex string
+            selected_color_hex = color.name()  # Color in hex format
+
+            # Emit the signal with the selected color
+            self.sigBackgroundChanged.emit(selected_color_hex)
+
         
     def render(self, *args):
         self.prepareForPaint()
