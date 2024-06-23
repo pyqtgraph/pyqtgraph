@@ -2,7 +2,6 @@ import warnings
 import weakref
 from time import perf_counter, perf_counter_ns
 
-from PyQt6.QtWidgets import QColorDialog
 
 from .. import debug as debug
 from .. import getConfigOption
@@ -116,7 +115,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
     def setBackgroundFromContextMenu(self):
         # Open the color picker dialog
-        color = QColorDialog.getColor()
+        color = QtWidgets.QColorDialog.getColor()
 
         # Check if a valid color was selected
         if color.isValid():
