@@ -850,7 +850,7 @@ class PlotCurveItem(GraphicsObject):
         connect = self.opts['connect']
         return (
             # not meaningful to fill disjoint lines
-            isinstance(connect, str) and connect == 'all'
+            isinstance(connect, str) and connect in ['all', 'finite']
             # guard against odd-ball argument 'enclosed'
             and isinstance(self.opts['fillLevel'], (int, float))
         )
@@ -869,17 +869,6 @@ class PlotCurveItem(GraphicsObject):
                 baseline=None
             )
 
-        if not self.opts['skipFiniteCheck']:
-            mask = np.isfinite(x) & np.isfinite(y)
-            if not mask.all():
-                # we are only supporting connect='all',
-                # so remove non-finite values
-                x = x[mask]
-                y = y[mask]
-
-        if len(x) < 2:
-            return []
-
         # Set suitable chunk size for current configuration:
         #   * Without OpenGL split in small chunks
         #   * With OpenGL split in rather big chunks
@@ -888,10 +877,46 @@ class PlotCurveItem(GraphicsObject):
         # Values were found using 'PlotSpeedTest.py' example, see #2257.
         chunksize = 50 if not isinstance(widget, QtWidgets.QOpenGLWidget) else 5000
 
-        paths = self._fillPathList = []
+        connect_kind = self.opts['connect']
+        if isinstance(connect_kind, np.ndarray):
+            connect_kind = "array"
+
+        fillLevel = self.opts['fillLevel']
+        self._fillPathList = []
+        sidx = []
+        slen = []
+
+        if connect_kind == "all":
+            mask = np.isfinite(x) & np.isfinite(y)
+            if not mask.all():
+                # remove non-finite values
+                x = x[mask]
+                y = y[mask]
+            sidx = [0]
+            slen = [len(x)]
+
+        elif connect_kind == "finite":
+            isfinite = np.isfinite(x) & np.isfinite(y)
+            nonfinite_locs = np.nonzero(~isfinite)[0]
+            # pretend that there's a nonfinite before and after the array
+            nonfinite_locs = np.concatenate(([-1], nonfinite_locs, [len(x)]))
+            sidx = nonfinite_locs[:-1] + 1      # start index of segment
+            slen = np.diff(nonfinite_locs) - 1  # length of segment
+
+        for s, l in zip(sidx, slen):
+            if l < 2:
+                continue
+            xchunk = x[s:s+l]
+            ychunk = y[s:s+l]
+            pathlist = self._construct_finite_segment_FillPathList(xchunk, ychunk, fillLevel, chunksize)
+            self._fillPathList.extend(pathlist)
+
+        return self._fillPathList
+
+    def _construct_finite_segment_FillPathList(self, x, y, baseline, chunksize):
+        paths = []
         offset = 0
         xybuf = np.empty((chunksize+3, 2))
-        baseline = self.opts['fillLevel']
 
         while offset < len(x) - 1:
             subx = x[offset:offset + chunksize]
