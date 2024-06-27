@@ -106,11 +106,9 @@ Integration with PyQtGraph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 PyQtGraph utilizes QWidget subclasses to present graphics and plots. Consequently, the event-handling methods discussed can be directly integrated into PyQtGraph widgets. This integration enables sophisticated interactive features in applications that leverage PyQtGraph for visual data representation.
 
-Example: Handling Mouse Clicks in a PlotWidget
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Consider you want to implement an event triggered when a user clicks on a ``PlotWidget``. Here's how you might write the code:
 
-Example::
+
+Example: Handling Mouse Clicks in a PlotWidget::
 
     from PyQt6.QtWidgets import QApplication, QMainWindow
     from PyQt6.QtCore import Qt
