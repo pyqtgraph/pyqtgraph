@@ -90,6 +90,8 @@ http://qt-project.org/doc/qt-4.8/graphicsview.html#the-graphics-view-coordinate-
 
 Mouse and Keyboard Input
 ------------------------
+Basics of mouse and keyboard input in PyQt
+PyQt treats mouse and keyboard input as events that are processed by the application's event loop. Each widget in PyQt can respond to mouse and keyboard input by implementing specific event handlers:
 
 
 
