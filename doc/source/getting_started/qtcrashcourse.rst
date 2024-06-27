@@ -98,15 +98,13 @@ Mouse Events
 ^^^^^^^^^^^^
 These include clicks, movements, and mouse button releases. In PyQt, you can handle these events by overriding methods such as ``mousePressEvent``, ``mouseReleaseEvent``, and ``mouseMoveEvent``.
 
-Keyboard Inputs
+Keyboard Events
 ^^^^^^^^^^^^^^^
 Similarly, keyboard events can be managed by overriding methods like ``keyPressEvent`` and ``keyReleaseEvent``. These methods allow you to react to different keys being pressed, providing a way to implement shortcuts and other keyboard interactions within your application.
 
 Integration with PyQtGraph
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 PyQtGraph utilizes QWidget subclasses to present graphics and plots. Consequently, the event-handling methods discussed can be directly integrated into PyQtGraph widgets. This integration enables sophisticated interactive features in applications that leverage PyQtGraph for visual data representation.
-
-
 
 Example: Handling Mouse Clicks in a PlotWidget::
 
@@ -134,6 +132,48 @@ Example: Handling Mouse Clicks in a PlotWidget::
 
 This code snippet demonstrates initializing a basic PyQt6 application that responds to a left mouse button click, illustrating the practical application of handling mouse events in a PyQtGraph environment.
 
+Example:: 
+    from PyQt6.QtWidgets import QApplication, QMainWindow
+from PyQt6.QtCore import Qt
+import pyqtgraph as pg
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle('PyQtGraph Pan Example')  # Sets the window title
+        self.setGeometry(100, 100, 800, 600)  # Sets the window size
+
+        # Initialize a PlotWidget from pyqtgraph and set it as the central widget
+        self.plot_widget = pg.PlotWidget()
+        self.setCentralWidget(self.plot_widget)
+
+        # Add some data to plot
+        self.plot_widget.plot([1, 2, 3, 4, 5], [5, 6, 10, 8, 7])
+
+    def mousePressEvent(self, event):
+        # Check if the left mouse button was pressed
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.last_mouse_position = event.position()  # Store the last mouse position
+
+    def mouseMoveEvent(self, event):
+        # Ensure the last mouse position is defined
+        if not hasattr(self, 'last_mouse_position'):
+            return
+        
+        current_position = event.position()
+        delta = current_position - self.last_mouse_position
+
+        # Translate the plot view by the amount of mouse movement
+        self.plot_widget.plotItem.getViewBox().translateBy(x=-delta.x(), y=-delta.y())
+        self.last_mouse_position = current_position  # Update the last mouse position for the next move event
+
+# Initialize the QApplication
+app = QApplication([])
+window = MainWindow()
+window.show()
+
+# Start the event loop
+app.exec()
 
 
 
