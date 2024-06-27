@@ -91,34 +91,36 @@ http://qt-project.org/doc/qt-4.8/graphicsview.html#the-graphics-view-coordinate-
 Mouse and Keyboard Input
 ------------------------
 
+Events Overview
+^^^^^^^^^^^^^^^
+Understanding events in a Qt application is fundamental before delving into specific input handling such as mouse and keyboard:
 
-PyQt handles mouse and keyboard inputs as events, which are processed by the application's event loop. Each widget in PyQt can respond to these inputs by implementing specific event handlers.
+- Events in Qt are conceptualized as user interactions with the application, each represented by an event object (QEvent).
+- Various types of events correspond to different user interactions.
+- Event objects encapsulate details concerning the specific occurrence.
+- Dispatched to designated event handlers within the widget where the interaction occurs, these events allow for customizable responses.
+- Handlers may be extended or redefined to modify widget response to interactions.
 
 Mouse Events
 ^^^^^^^^^^^^
-These include clicks, movements, and mouse button releases. In PyQt, you can handle these events by overriding methods such as ``mousePressEvent``, ``mouseReleaseEvent``, and ``mouseMoveEvent``.
-
-Keyboard Events
-^^^^^^^^^^^^^^^
-Similarly, keyboard events can be managed by overriding methods like ``keyPressEvent`` and ``keyReleaseEvent``. These methods allow you to react to different keys being pressed, providing a way to implement shortcuts and other keyboard interactions within your application.
+Interactions such as clicks, movements, and button releases are managed by overriding methods including ``mousePressEvent``, ``mouseReleaseEvent``, ``mouseDoubleClickEvent``, and ``mouseMoveEvent``.
 
 Integration with PyQtGraph
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 PyQtGraph utilizes QWidget subclasses to present graphics and plots. Consequently, the event-handling methods discussed can be directly integrated into PyQtGraph widgets. This integration enables sophisticated interactive features in applications that leverage PyQtGraph for visual data representation.
 
 Example: Handling Mouse Clicks in a PlotWidget::
 
-    from PyQt6.QtWidgets import QApplication, QMainWindow
+    from PyQt6.QtWidgets import QApplication, QMainWindow # Should work with PyQt5 / PySide2 / PySide6 as well
     from PyQt6.QtCore import Qt
 
     class MainWindow(QMainWindow):
         def __init__(self):
             super().__init__()
-            self.setWindowTitle('Mouse and Keyboard Event Demo')
-            self.setGeometry(100, 100, 400, 300)
+            self.setWindowTitle('Mouse and Keyboard Event Demo') # Sets the Title of the window
+            self.setGeometry(100, 100, 400, 300) # Sets the position and size of the window
 
-        def mousePressEvent(self, event):
-            # This method checks if the mouse was pressed on the widget
+        def mousePressEvent(self, event): # This method checks if the left mouse button was pressed on the widget and prints the position of the click.
             if event.button() == Qt.MouseButton.LeftButton:
                 print("Left mouse button pressed at:", event.position())
 
@@ -126,55 +128,56 @@ Example: Handling Mouse Clicks in a PlotWidget::
     app = QApplication([])
     window = MainWindow()
     window.show()
-
-    # Start the event loop
-    app.exec()
+    app.exec()  # Start the event loop
 
 This code snippet demonstrates initializing a basic PyQt6 application that responds to a left mouse button click, illustrating the practical application of handling mouse events in a PyQtGraph environment.
 
-Example:: 
-    from PyQt6.QtWidgets import QApplication, QMainWindow
-from PyQt6.QtCore import Qt
-import pyqtgraph as pg
+Keyboard Events
+^^^^^^^^^^^^^^^
+Keyboard inputs are similarly handled by overriding ``keyPressEvent`` and ``keyReleaseEvent``, allowing applications to react to various keystrokes and facilitate shortcuts and other interactions.
 
-class MainWindow(QMainWindow):
+Integration with PyQtGraph
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Example: Handling Keyboard Inputs:: 
+
+    from PyQt6.QtWidgets import QApplication, QMainWindow # Should work with PyQt5 / PySide2 / PySide6 as well
+    from PyQt6.QtCore import Qt
+
+    class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('PyQtGraph Pan Example')  # Sets the window title
-        self.setGeometry(100, 100, 800, 600)  # Sets the window size
+        self.setWindowTitle('Keyboard Input Tracker')  # Sets the Title of the window
+        self.setGeometry(100, 100, 400, 300)  # Sets the position and size of the window
 
-        # Initialize a PlotWidget from pyqtgraph and set it as the central widget
-        self.plot_widget = pg.PlotWidget()
-        self.setCentralWidget(self.plot_widget)
+    def keyPressEvent(self, event): # Checks if a specific key was pressed
 
-        # Add some data to plot
-        self.plot_widget.plot([1, 2, 3, 4, 5], [5, 6, 10, 8, 7])
+        if event.key() == Qt.Key.Key_Escape:
+            print("Escape key was pressed.")
+        elif event.key() == Qt.Key.Key_Space:
+            print("Space bar was pressed.")
+        else:
+            print(f"Key pressed: {event.text()}") #The 'event.text()' method retrieves the character or characters associated with the key press, and then prints it to the console.
 
-    def mousePressEvent(self, event):
-        # Check if the left mouse button was pressed
-        if event.button() == Qt.MouseButton.LeftButton:
-            self.last_mouse_position = event.position()  # Store the last mouse position
+    # Initialize the QApplication
+    app = QApplication([])
+    window = MainWindow()
+    window.show()
+    app.exec() # Starts the event loop
 
-    def mouseMoveEvent(self, event):
-        # Ensure the last mouse position is defined
-        if not hasattr(self, 'last_mouse_position'):
-            return
-        
-        current_position = event.position()
-        delta = current_position - self.last_mouse_position
+Event Propagation
+^^^^^^^^^^^^^^^^^
+In PyQt, when an event is not handled by a widget, or the widget explicitly decides against handling it, the event is propagated to its parent widget. This process, commonly referred to as "bubbling," continues upward through the nested widgets until the event is either handled or reaches the main window.
 
-        # Translate the plot view by the amount of mouse movement
-        self.plot_widget.plotItem.getViewBox().translateBy(x=-delta.x(), y=-delta.y())
-        self.last_mouse_position = current_position  # Update the last mouse position for the next move event
+It is facilitated by methods such as ``.accept()`` and ``.ignore()``, which allow developers to exert precise control over the event flow. 
 
-# Initialize the QApplication
-app = QApplication([])
-window = MainWindow()
-window.show()
+Example: Custom Event Handling ::
 
-# Start the event loop
-app.exec()
-
+    class CustomButton(QPushButton):
+        def mousePressEvent(self, event):
+            event.accept() # The event is marked as handled, preventing further propagation
+            # Alternatively: 
+            event.ignore() # the event can be marked as unhandled, allowing it to propagate further
 
 
 QTimer, Multi-Threading
