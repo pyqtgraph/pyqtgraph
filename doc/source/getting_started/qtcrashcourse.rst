@@ -90,8 +90,51 @@ http://qt-project.org/doc/qt-4.8/graphicsview.html#the-graphics-view-coordinate-
 
 Mouse and Keyboard Input
 ------------------------
-Basics of mouse and keyboard input in PyQt
-PyQt treats mouse and keyboard input as events that are processed by the application's event loop. Each widget in PyQt can respond to mouse and keyboard input by implementing specific event handlers:
+
+
+PyQt handles mouse and keyboard inputs as events, which are processed by the application's event loop. Each widget in PyQt can respond to these inputs by implementing specific event handlers.
+
+Mouse Events
+^^^^^^^^^^^^
+These include clicks, movements, and mouse button releases. In PyQt, you can handle these events by overriding methods such as ``mousePressEvent``, ``mouseReleaseEvent``, and ``mouseMoveEvent``.
+
+Keyboard Inputs
+^^^^^^^^^^^^^^^
+Similarly, keyboard events can be managed by overriding methods like ``keyPressEvent`` and ``keyReleaseEvent``. These methods allow you to react to different keys being pressed, providing a way to implement shortcuts and other keyboard interactions within your application.
+
+Integration with PyQtGraph
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+PyQtGraph utilizes QWidget subclasses to present graphics and plots. Consequently, the event-handling methods discussed can be directly integrated into PyQtGraph widgets. This integration enables sophisticated interactive features in applications that leverage PyQtGraph for visual data representation.
+
+Example: Handling Mouse Clicks in a PlotWidget
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Consider you want to implement an event triggered when a user clicks on a ``PlotWidget``. Here's how you might write the code:
+
+Example::
+
+    from PyQt6.QtWidgets import QApplication, QMainWindow
+    from PyQt6.QtCore import Qt
+
+    class MainWindow(QMainWindow):
+        def __init__(self):
+            super().__init__()
+            self.setWindowTitle('Mouse and Keyboard Event Demo')
+            self.setGeometry(100, 100, 400, 300)
+
+        def mousePressEvent(self, event):
+            # This method checks if the mouse was pressed on the widget
+            if event.button() == Qt.MouseButton.LeftButton:
+                print("Left mouse button pressed at:", event.position())
+
+    # Initialize the QApplication
+    app = QApplication([])
+    window = MainWindow()
+    window.show()
+
+    # Start the event loop
+    app.exec()
+
+This code snippet demonstrates initializing a basic PyQt6 application that responds to a left mouse button click, illustrating the practical application of handling mouse events in a PyQtGraph environment.
 
 
 
