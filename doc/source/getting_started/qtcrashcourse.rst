@@ -105,7 +105,16 @@ Mouse Events
 ^^^^^^^^^^^^
 Mouse Events
 ^^^^^^^^^^^^
-Interactions such as clicks, movements, and button releases are managed by overriding methods including :meth:`QtWidget.mousePressEvent <https://doc.qt.io/qt-6/qwidget.html#mousePressEvent>`, :meth:`QtWidget.mouseReleaseEvent <https://doc.qt.io/qt-6/qwidget.html#mouseReleaseEvent>`, :meth:`QtWidget.mouseDoubleClickEvent <https://doc.qt.io/qt-6/qwidget.html#mouseDoubleClickEvent>`, and :meth:`QtWidget.mouseMoveEvent <https://doc.qt.io/qt-6/qwidget.html#mouseMoveEvent>`.
+Interactions such as clicks, movements, and button releases are managed by
+overriding methods including  mousePressEvent_ ,  
+mouseReleaseEvent_ , 
+mouseDoubleClickEvent_ ,  and 
+mouseMoveEvent_.
+
+.. _mousePressEvent: https://doc.qt.io/qt-6/qwidget.html#mousePressEvent
+.. _mouseReleaseEvent: https://doc.qt.io/qt-6/qwidget.html#mouseReleaseEvent
+.. _mouseDoubleClickEvent: https://doc.qt.io/qt-6/qwidget.html#mouseDoubleClickEvent
+.. _mouseMoveEvent: https://doc.qt.io/qt-6/qwidget.html#mouseMoveEvent
 
 Integration with PyQtGraph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -144,7 +153,12 @@ This code snippet demonstrates initializing a basic PyQt6 application that respo
 
 Keyboard Events
 ^^^^^^^^^^^^^^^
-Keyboard inputs are similarly handled by overriding :meth:`QtWidget.keyPressEvent <https://doc.qt.io/qt-6/qwidget.html#keyPressEvent>` and :meth:`QtWidget.keyReleaseEvent <https://doc.qt.io/qt-6/qwidget.html#keyReleaseEvent>`, allowing applications to react to various keystrokes and facilitate shortcuts and other interactions.
+Keyboard inputs are similarly handled by overriding 
+`keyPressEvent`_, and `keyReleaseEvent`_, allowing applications to 
+react to various keystrokes and facilitate shortcuts and other interactions.
+
+.. _keyPressEvent: https://doc.qt.io/qt-6/qwidget.html#keyPressEvent
+.. _keyReleaseEvent: https://doc.qt.io/qt-6/qwidget.html#keyReleaseEvent
 
 
 Integration with PyQtGraph
@@ -188,7 +202,12 @@ Event Propagation
 ^^^^^^^^^^^^^^^^^
 In PyQt, when an event is not handled by a widget, or the widget explicitly decides against handling it, the event is propagated to its parent widget. This process, commonly referred to as "bubbling," continues upward through the nested widgets until the event is either handled or reaches the main window.
 
-It is facilitated by methods such as :meth:`QEvent.accept <https://doc.qt.io/qt-6/qevent.html#accept>` and :meth:`QEvent.ignore <https://doc.qt.io/qt-6/qevent.html#ignore>`, which allow developers to exert precise control over the event flow.
+It is facilitated by methods such as 
+`accept`_, and `ignore`_, which allow developers to exert precise control over 
+the event flow.
+
+.. _accept: https://doc.qt.io/qt-6/qevent.html#accept
+.. _ignore: https://doc.qt.io/qt-6/qevent.html#ignore
 
 Example: Custom Event Handling ::
 
