@@ -182,6 +182,42 @@ Example: Custom Event Handling ::
 
 QTimer, Multi-Threading
 -----------------------
+Qtimer :  What is a Qtimer? Qtimer is simply a Qt class that provides a high-level interface for creating and managing timers in a Qt Application.
+This timers are used to perform an action periodically. 
+
+Where is is used? It can be used for tasks such as doing periodic data polling of the tasks, Updating the User-Interface, or triggering the events at
+regular intervals.
+
+Example of this executed by this code.
+
+import sys
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel
+from PyQt6.QtCore import QTimer, Qt
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("QTimer Example")
+        self.setGeometry(120, 120, 450, 250)
+        self.label = QLabel("Timer not begins", self)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setCentralWidget(self.label)
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_label)
+        self.timer.start(1000)  # Timer set to 1 second (1000 ms)
+
+    def update_label(self):
+        self.label.setText("Updated at: " + str(QTimer.remainingTime(self.timer)))
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
+
+This is the example of Qtimer and workable in Pycharm.
+
 
 
 Multi-threading vs Multi-processing in Qt
