@@ -217,8 +217,57 @@ if __name__ == "__main__":
     sys.exit(app.exec())
 
 This is the example of Qtimer and workable in Pycharm.
+------------------------------------------
+Multi-threading : Multi-threading simple by definition means running multiple threads simultaneously and concurrently within the same application.
+This could help keep the User-Interface responsive while running the operating long running or blocking operations in separate threads. 
 
+The Qt provides the QThread class to handle the threading. Its usefulness lies for the tasks such as network communication, file I/O, and other applications that run independently of the main GUI thread.
 
+For example, in this code below QThread is to update the Qlabel with the current time every second without blocking the main GUI thread.
 
+import sys
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
+from PyQt6.QtCore import QThread, pyqtSignal, Qt
+import time
+
+class Worker(QThread):
+    update_signal = pyqtSignal(str)
+
+    def run(self):
+        while True:
+            time.sleep(1)
+            current_time = time.strftime("%H:%M:%S")
+            self.update_signal.emit(current_time)
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Multi-Threading Ex")
+        self.setGeometry(170, 170, 400, 250)
+
+        self.label = QLabel("Thread has not started", self)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.label)
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+        self.worker = Worker()
+        self.worker.update_signal.connect(self.update_label)
+        self.worker.start()
+
+    def update_label(self, current_time):
+        self.label.setText("Current recent display Time: " + current_time)
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
+
+This code has been written and compiled in Pycharm and it perfectly gives the output for the Multi-threading example.
+-------------------------------------------------------------
 Multi-threading vs Multi-processing in Qt
 -----------------------------------------
