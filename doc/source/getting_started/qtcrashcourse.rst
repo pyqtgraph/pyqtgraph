@@ -268,8 +268,7 @@ if __name__ == "__main__":
     sys.exit(app.exec())
 
 This code has been written and compiled in Pycharm and it perfectly gives the output for the Multi-threading example.
-This example demonstrates using QTimer to periodically check the status of a QThread and update the QLabel with the current time, ensuring the UI remains responsive.
-
+This example demonstrates using QTimer to periodically check the status of a QThread and update the QLabel with the current recent time, ensuring the User-Interface remains responsive.
 By integrating QTimer and QThread, you can efficiently manage periodic tasks and long-running operations in a PyQt application, maintaining a smooth and responsive user interface.
 -------------------------------------------------------------
 Multi-threading vs Multi-processing in Qt
