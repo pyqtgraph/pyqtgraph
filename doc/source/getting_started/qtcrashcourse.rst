@@ -273,5 +273,69 @@ By integrating QTimer and QThread, you can efficiently manage periodic tasks and
 -------------------------------------------------------------
 Multi-threading vs Multi-processing in Qt
 
+Definitions
+Multi-Threading:
+Multi-threading enables an application to carry out multiple tasks simultaneously within a single process. Since threads operate in the same memory space, they are efficient and ideal for I/O-bound tasks such as network operations or file handling. In Qt, threads are managed using the QThread class.
+
+Multi-Processing:
+Multi-processing runs multiple processes at the same time, each with its own memory space. This approach is more resource-intensive compared to multi-threading but is better suited for CPU-bound tasks that require significant processing power. The multiprocessing module in Python is typically used for this purpose in Qt applications.
+
+When to Use Multi-Threading vs. Multi-Processing
+Use Multi-Threading When:
+
+The tasks are I/O-bound, such as file operations, network communication, or database access.
+You need to keep the user interface responsive while performing background tasks.
+Use Multi-Processing When:
+
+The tasks are CPU-bound, such as heavy computations or data processing.
+You want to avoid issues related to shared memory and race conditions that can arise with multi-threading.
+Multi-Threading Example
+Below is an example of a PyQt application that uses a background thread to update the user interface:
+
+import sys
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
+from PyQt6.QtCore import QThread, pyqtSignal, Qt
+import time
+
+class Worker(QThread):
+    update_signal = pyqtSignal(str)
+
+    def run(self):
+        while True:
+            time.sleep(1)
+            current_time = time.strftime("%H:%M:%S")
+            self.update_signal.emit(current_time)
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Multi-Threading Example")
+        self.setGeometry(180, 180, 400, 225)
+
+        self.label = QLabel("Thread not started", self)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.label)
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+        self.worker = Worker()
+        self.worker.update_signal.connect(self.update_label)
+        self.worker.start()
+
+    def update_label(self, current_time):
+        self.label.setText("Current recent display Time: " + current_time)
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
+
+In this example, a QThread is used to update the QLabel with the current time every second, keeping the UI responsive.
+
+
 
 -----------------------------------------
