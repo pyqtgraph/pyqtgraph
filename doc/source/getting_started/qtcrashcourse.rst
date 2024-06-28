@@ -267,7 +267,62 @@ if __name__ == "__main__":
     window.show()
     sys.exit(app.exec())
 
+For example :
+
+import sys
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
+from PyQt6.QtCore import QThread, QTimer, pyqtSignal, Qt
+import time
+
+class Worker(QThread):
+    update_signal = pyqtSignal(str)
+
+    def run(self):
+        while True:
+            time.sleep(1)
+            current_time = time.strftime("%H:%M:%S")
+            self.update_signal.emit(current_time)
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("QTimer and Multi-Threading Integrated Example")
+        self.setGeometry(180, 180, 460, 290)
+
+        self.label = QLabel("Thread not started", self)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.label)
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.check_thread)
+        self.timer.start(1000)  # Check every second
+
+        self.worker = Worker()
+        self.worker.update_signal.connect(self.update_label)
+        self.worker.start()
+
+    def update_label(self, current_time):
+        self.label.setText("Current recent display Time: " + current_time)
+
+    def check_thread(self):
+        if not self.worker.isRunning():
+            self.worker.start()
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
+
+
 This code has been written and compiled in Pycharm and it perfectly gives the output for the Multi-threading example.
 -------------------------------------------------------------
 Multi-threading vs Multi-processing in Qt
+
+
 -----------------------------------------
