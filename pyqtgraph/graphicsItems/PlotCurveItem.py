@@ -850,7 +850,7 @@ class PlotCurveItem(GraphicsObject):
         connect = self.opts['connect']
         return (
             # not meaningful to fill disjoint lines
-            isinstance(connect, str) and connect == 'all'
+            isinstance(connect, str) and connect in ['all', 'finite']
             # guard against odd-ball argument 'enclosed'
             and isinstance(self.opts['fillLevel'], (int, float))
         )
@@ -869,17 +869,6 @@ class PlotCurveItem(GraphicsObject):
                 baseline=None
             )
 
-        if not self.opts['skipFiniteCheck']:
-            mask = np.isfinite(x) & np.isfinite(y)
-            if not mask.all():
-                # we are only supporting connect='all',
-                # so remove non-finite values
-                x = x[mask]
-                y = y[mask]
-
-        if len(x) < 2:
-            return []
-
         # Set suitable chunk size for current configuration:
         #   * Without OpenGL split in small chunks
         #   * With OpenGL split in rather big chunks
@@ -888,10 +877,46 @@ class PlotCurveItem(GraphicsObject):
         # Values were found using 'PlotSpeedTest.py' example, see #2257.
         chunksize = 50 if not isinstance(widget, QtWidgets.QOpenGLWidget) else 5000
 
-        paths = self._fillPathList = []
+        connect_kind = self.opts['connect']
+        if isinstance(connect_kind, np.ndarray):
+            connect_kind = "array"
+
+        fillLevel = self.opts['fillLevel']
+        self._fillPathList = []
+        sidx = []
+        slen = []
+
+        if connect_kind == "all":
+            mask = np.isfinite(x) & np.isfinite(y)
+            if not mask.all():
+                # remove non-finite values
+                x = x[mask]
+                y = y[mask]
+            sidx = [0]
+            slen = [len(x)]
+
+        elif connect_kind == "finite":
+            isfinite = np.isfinite(x) & np.isfinite(y)
+            nonfinite_locs = np.nonzero(~isfinite)[0]
+            # pretend that there's a nonfinite before and after the array
+            nonfinite_locs = np.concatenate(([-1], nonfinite_locs, [len(x)]))
+            sidx = nonfinite_locs[:-1] + 1      # start index of segment
+            slen = np.diff(nonfinite_locs) - 1  # length of segment
+
+        for s, l in zip(sidx, slen):
+            if l < 2:
+                continue
+            xchunk = x[s:s+l]
+            ychunk = y[s:s+l]
+            pathlist = self._construct_finite_segment_FillPathList(xchunk, ychunk, fillLevel, chunksize)
+            self._fillPathList.extend(pathlist)
+
+        return self._fillPathList
+
+    def _construct_finite_segment_FillPathList(self, x, y, baseline, chunksize):
+        paths = []
         offset = 0
         xybuf = np.empty((chunksize+3, 2))
-        baseline = self.opts['fillLevel']
 
         while offset < len(x) - 1:
             subx = x[offset:offset + chunksize]
@@ -954,7 +979,11 @@ class PlotCurveItem(GraphicsObject):
         if cmode is not None:
             p.setCompositionMode(cmode)
 
-        do_fill = self.opts['brush'] is not None and self.opts['fillLevel'] is not None
+        brush = self.opts['brush']
+        do_fill = (
+            self.opts['fillLevel'] is not None
+            and not (brush is None or brush.style() == QtCore.Qt.BrushStyle.NoBrush)
+        )
         do_fill_outline = do_fill and self.opts['fillOutline']
 
         if do_fill:
@@ -965,42 +994,25 @@ class PlotCurveItem(GraphicsObject):
 
             profiler('generate fill path')
             for path in paths:
-                p.fillPath(path, self.opts['brush'])
+                p.fillPath(path, brush)
             profiler('draw fill path')
 
-        # Avoid constructing a shadow pen if it's not used.
-        if self.opts.get('shadowPen') is not None:
-            if isinstance(self.opts.get('shadowPen'), QtGui.QPen):
-                sp = self.opts['shadowPen']
-            else:
-                sp = fn.mkPen(self.opts['shadowPen'])
+        for pen_kind in ['shadowPen', 'pen']:
+            pen = self.opts[pen_kind]
+            if pen is None or pen.style() == QtCore.Qt.PenStyle.NoPen:
+                continue
+            p.setPen(pen)
 
-            if sp.style() != QtCore.Qt.PenStyle.NoPen:
-                p.setPen(sp)
-                if self._shouldUseDrawLineSegments(sp):
-                    p.drawLines(*self._getLineSegments())
-                    if do_fill_outline:
-                        p.drawLines(self._getClosingSegments())
+            if self._shouldUseDrawLineSegments(pen):
+                p.drawLines(*self._getLineSegments())
+                if do_fill_outline:
+                    p.drawLines(self._getClosingSegments())
+            else:
+                if do_fill_outline:
+                    p.drawPath(self._getFillPath())
                 else:
-                    if do_fill_outline:
-                        p.drawPath(self._getFillPath())
-                    else:
-                        p.drawPath(self.getPath())
+                    p.drawPath(self.getPath())
 
-        cp = self.opts['pen']
-        if not isinstance(cp, QtGui.QPen):
-            cp = fn.mkPen(cp)
-
-        p.setPen(cp)
-        if self._shouldUseDrawLineSegments(cp):
-            p.drawLines(*self._getLineSegments())
-            if do_fill_outline:
-                p.drawLines(self._getClosingSegments())
-        else:
-            if do_fill_outline:
-                p.drawPath(self._getFillPath())
-            else:
-                p.drawPath(self.getPath())
         profiler('drawPath')
 
     def paintGL(self, widget):
