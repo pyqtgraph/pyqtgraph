@@ -915,13 +915,22 @@ class PlotCurveItem(GraphicsObject):
         if self.xData is None or len(self.xData) == 0:
             return
 
-        do_fill = self.opts['brush'] is not None and self.opts['fillLevel'] is not None
-        do_fill_outline = do_fill and self.opts['fillOutline']
+        # opengl fill mode supports filling to a fillLevel
+        # for connect="all" and connect="finite" only.
+        opengl_supported_fill = (
+            self.opts['fillLevel'] is None  # not filling is always supported
+            or (
+                isinstance(self.opts['fillLevel'], (int, float))
+                and isinstance(self.opts['connect'], str)
+                and self.opts['connect'] in ['all', 'finite']
+                and not self.opts['fillOutline']
+            )
+        )
 
         if (
             getConfigOption('enableExperimental')
             and isinstance(widget, QtWidgets.QOpenGLWidget)
-            and not do_fill
+            and opengl_supported_fill
             and not self.opts['stepMode']
         ):
             if self.glstate is None:
@@ -944,6 +953,9 @@ class PlotCurveItem(GraphicsObject):
         cmode = self.opts['compositionMode']
         if cmode is not None:
             p.setCompositionMode(cmode)
+
+        do_fill = self.opts['brush'] is not None and self.opts['fillLevel'] is not None
+        do_fill_outline = do_fill and self.opts['fillOutline']
 
         if do_fill:
             if self._shouldUseFillPathList():
@@ -1039,6 +1051,15 @@ class PlotCurveItem(GraphicsObject):
             connect_kind = "array"
             vbo_nbytes_needed = (num_vtx_stencil + (num_pts-1) * 2) * 2 * 4
 
+        # filling is only supported for 'all' and 'finite'.
+        # it requires an additional 2 * num_pts of storage
+        # to create the triangle strip to be filled.
+        fillLevel = None
+        if connect_kind in ['all', 'finite']:
+            if isinstance(self.opts['fillLevel'], (int, float)):
+                fillLevel = float(self.opts['fillLevel'])
+                vbo_nbytes_needed += (2 * num_pts) * 2 * 4
+
         # resize (and invalidate) gpu buffers if needed.
         # a reallocation can only occur together with a change in data.
         # i.e. reallocation ==> change in data (render_cache is None)
@@ -1067,14 +1088,22 @@ class PlotCurveItem(GraphicsObject):
                     valid_pts = np.sum(isfinite)
                 glstate.render_cache = (xc, yc, valid_pts,)
 
-                buf = np.empty((num_vtx_stencil + valid_pts, 2), dtype=np.float32)
-                pos = buf[num_vtx_stencil:, :]
+                fill_pts = 0 if fillLevel is None else 2 * valid_pts
+                buf = np.empty((num_vtx_stencil + valid_pts + fill_pts, 2), dtype=np.float32)
+                pos = buf[num_vtx_stencil:num_vtx_stencil + valid_pts, :]
                 if valid_pts == num_pts:
                     pos[:, 0] = x - xc
                     pos[:, 1] = y - yc
                 else:
                     pos[:, 0] = x[isfinite] - xc
                     pos[:, 1] = y[isfinite] - yc
+
+                if fill_pts:
+                    fillpos = buf[num_vtx_stencil + valid_pts:, :]
+                    fillpos[0::2, 0] = pos[:, 0]
+                    fillpos[0::2, 1] = pos[:, 1]
+                    fillpos[1::2, 0] = pos[:, 0]
+                    fillpos[1::2, 1] = fillLevel - yc
 
             elif connect_kind == "finite":
                 isfinite = np.isfinite(y)
@@ -1086,15 +1115,22 @@ class PlotCurveItem(GraphicsObject):
                 sidx = nonfinite_locs[:-1] + 1      # start index of segment
                 slen = np.diff(nonfinite_locs) - 1  # length of segment
                 mask = slen >= 2
-                sidx += num_vtx_stencil
                 sidx = sidx[mask].tolist()
                 slen = slen[mask].tolist()
-                glstate.render_cache = (xc, yc, sidx, slen)
+                glstate.render_cache = (xc, yc, valid_pts, sidx, slen)
 
-                buf = np.empty((num_vtx_stencil + valid_pts, 2), dtype=np.float32)
-                pos = buf[num_vtx_stencil:, :]
+                fill_pts = 0 if fillLevel is None else 2 * valid_pts
+                buf = np.empty((num_vtx_stencil + valid_pts + fill_pts, 2), dtype=np.float32)
+                pos = buf[num_vtx_stencil:num_vtx_stencil + valid_pts, :]
                 pos[:, 0] = x - xc
                 pos[:, 1] = y - yc
+
+                if fill_pts:
+                    fillpos = buf[num_vtx_stencil + valid_pts:, :]
+                    fillpos[0::2, 0] = pos[:, 0]
+                    fillpos[0::2, 1] = pos[:, 1]
+                    fillpos[1::2, 0] = pos[:, 0]
+                    fillpos[1::2, 1] = fillLevel - yc
 
             elif connect_kind == "array":
                 mask = np.asarray(self.opts["connect"], dtype=bool)[:num_pts-1]
@@ -1139,6 +1175,32 @@ class PlotCurveItem(GraphicsObject):
         glf.glStencilMask(0x00)
         glf.glStencilFunc(GLC.GL_EQUAL, 1, 0xFF)
 
+        glstate.setUniformValue("u_mvp", mvp_curve)
+
+        # filling occurs first so that the curve outline gets painted over it.
+        for brush in [self.opts["brush"]]:
+            if fillLevel is None:
+                continue
+            if brush is None or brush.style() == QtCore.Qt.BrushStyle.NoBrush:
+                continue
+            glstate.setUniformValue("u_color", brush.color())
+
+            glf.glEnable(GLC.GL_BLEND)
+            glf.glBlendFuncSeparate(GLC.GL_SRC_ALPHA, GLC.GL_ONE_MINUS_SRC_ALPHA, 1, GLC.GL_ONE_MINUS_SRC_ALPHA)
+
+            # skip first 4 vertices that were for the stencil
+            base = num_vtx_stencil
+
+            if connect_kind == 'all':
+                *_, valid_pts = glstate.render_cache
+                glf.glDrawArrays(GLC.GL_TRIANGLE_STRIP, base + valid_pts, 2 * valid_pts)
+            elif connect_kind == 'finite':
+                *_, valid_pts, sidx, slen = glstate.render_cache
+                for s, l in zip(sidx, slen):
+                    glf.glDrawArrays(GLC.GL_TRIANGLE_STRIP, base + valid_pts + 2 * s, 2 * l)
+
+            glf.glDisable(GLC.GL_BLEND)
+
         # enable antialiasing if requested
         if self._exportOpts is not False:
             aa = self._exportOpts.get('antialias', True)
@@ -1152,12 +1214,8 @@ class PlotCurveItem(GraphicsObject):
         else:
             glf.glDisable(GLC.GL_LINE_SMOOTH)
 
-        glstate.setUniformValue("u_mvp", mvp_curve)
-
         for pen_kind in ["shadowPen", "pen"]:
             pen = self.opts[pen_kind]
-            if pen_kind == "pen":
-                pen = fn.mkPen(pen)
             if pen is None or pen.style() == QtCore.Qt.PenStyle.NoPen:
                 continue
             width = pen.widthF()
@@ -1180,11 +1238,12 @@ class PlotCurveItem(GraphicsObject):
                 case "finite":
                     *_, sidx, slen = glstate.render_cache
                     if hasattr(glf, "glMultiDrawArrays") and not glstate.context.isOpenGLES():
+                        sidx = [base + s for s in sidx]
                         glf.glMultiDrawArrays(GLC.GL_LINE_STRIP, sidx, slen, len(sidx))
                     else:
                         # PyQt{5,6} didn't include glMultiDrawArrays
                         for s, l in zip(sidx, slen):
-                            glf.glDrawArrays(GLC.GL_LINE_STRIP, s, l)
+                            glf.glDrawArrays(GLC.GL_LINE_STRIP, base + s, l)
 
         glstate.m_vao.release()
 
