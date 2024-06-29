@@ -1181,8 +1181,6 @@ class PlotCurveItem(GraphicsObject):
         for brush in [self.opts["brush"]]:
             if fillLevel is None:
                 continue
-            if brush is not None:
-                brush = fn.mkBrush(self.opts["brush"])
             if brush is None or brush.style() == QtCore.Qt.BrushStyle.NoBrush:
                 continue
             glstate.setUniformValue("u_color", brush.color())
@@ -1218,8 +1216,6 @@ class PlotCurveItem(GraphicsObject):
 
         for pen_kind in ["shadowPen", "pen"]:
             pen = self.opts[pen_kind]
-            if pen is not None:
-                pen = fn.mkPen(pen)
             if pen is None or pen.style() == QtCore.Qt.PenStyle.NoPen:
                 continue
             width = pen.widthF()
