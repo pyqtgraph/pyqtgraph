@@ -36,7 +36,7 @@ Currently this means:
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
   [PySide2](https://wiki.qt.io/Qt_for_Python), or
   [PySide6](https://wiki.qt.io/Qt_for_Python)
-* [`numpy`](https://github.com/numpy/numpy) 1.23+
+* [`numpy`](https://github.com/numpy/numpy) 1.24+
 
 ### Optional added functionalities
 

@@ -22,15 +22,15 @@ connect = np.ones(1000, dtype=bool)
 connect[3::4] = False
 curves = [
     pg.PlotCurveItem(x=xint, y=np.sin(np.linspace(0, 20, 1000)), pen='r', clickable=True, connect="pairs"),
-    pg.PlotCurveItem(x=xfloat, y=np.sin(np.linspace(1, 21, 1000)), pen='g', clickable=True, connect="finite"),
-    pg.PlotCurveItem(x=xfloat, y=np.sin(np.linspace(2, 22, 1000)), pen='b', clickable=True, connect="all"),
+    pg.PlotCurveItem(x=xfloat, y=np.sin(np.linspace(1, 21, 1000)), pen='g', clickable=True, connect="finite", fillLevel=0, brush=(50,50,200,100)),
+    pg.PlotCurveItem(x=xfloat, y=np.sin(np.linspace(2, 22, 1000)), pen='c', clickable=True, connect="all"),
     pg.PlotCurveItem(x=xint, y=np.sin(np.linspace(3, 23, 1000)), pen='y', clickable=True, connect=connect),
 ]
               
 def plotClicked(curve):
     for i, c in enumerate(curves):
         width = 3 if c is curve else 1
-        c.setPen('rgby'[i], width=width)
+        c.setPen('rgcy'[i], width=width)
     
 for c in curves:
     plt.addItem(c)

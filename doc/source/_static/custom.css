@@ -69,10 +69,6 @@ Nat Methods 8, 441 (2011). https://doi.org/10.1038/nmeth.1618
   text-align: center;
 }
 
-.sd-card .sd-card-header .sd-card-text {
-  margin: 0px;
-}
-
 .sd-card .sd-card-img-top {
   height: 52px;
   width: 52px;
@@ -83,7 +79,6 @@ Nat Methods 8, 441 (2011). https://doi.org/10.1038/nmeth.1618
 .sd-card .sd-card-header {
   border: none;
   background-color:white;
-  color: #150458 !important;
   font-size: var(--pst-font-size-h5);
   font-weight: bold;
   padding: 2.5rem 0rem 0.5rem 0rem;
@@ -141,33 +136,18 @@ html[data-theme=dark] .MathJax_SVG *  {
 }
 
 /* Main index page overview cards */
+html[data-theme=dark] .sd-shadow-sm {
+  box-shadow: 0 .1rem 0.5rem rgba(250, 250, 250, .2) !important
+}
+
 html[data-theme=dark] .sd-card {
     background-color:var(--pst-color-background);
     border:  none
 }
 
-html[data-theme=dark] .sd-shadow-sm {
-    box-shadow: 0 .1rem 0.5rem rgba(250, 250, 250, .2) !important
-}
-
-html[data-theme=dark] .sd-card .sd-card-header {
-    background-color:var(--pst-color-background);
-    color: #150458 !important;
-}
-
-html[data-theme=dark] .sd-card .sd-card-footer {
-    background-color:var(--pst-color-background);
-}
-
 /* Hide TypeAlias Classes */
 dt#ColorMapSpecifier {
   visibility: hidden;
-}
-
-/* Flip the colours on graphviz graphs on dark mode */
-html[data-theme="dark"] div.graphviz > object.inheritance {
-    filter: brightness(0.8) invert(0.82) contrast(1.2);
-    color-scheme: normal;
 }
 
 /* Make inheritance images have a scroll bar if necessary. */
