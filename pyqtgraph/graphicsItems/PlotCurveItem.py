@@ -979,7 +979,11 @@ class PlotCurveItem(GraphicsObject):
         if cmode is not None:
             p.setCompositionMode(cmode)
 
-        do_fill = self.opts['brush'] is not None and self.opts['fillLevel'] is not None
+        brush = self.opts['brush']
+        do_fill = (
+            self.opts['fillLevel'] is not None
+            and not (brush is None or brush.style() == QtCore.Qt.BrushStyle.NoBrush)
+        )
         do_fill_outline = do_fill and self.opts['fillOutline']
 
         if do_fill:
@@ -990,42 +994,25 @@ class PlotCurveItem(GraphicsObject):
 
             profiler('generate fill path')
             for path in paths:
-                p.fillPath(path, self.opts['brush'])
+                p.fillPath(path, brush)
             profiler('draw fill path')
 
-        # Avoid constructing a shadow pen if it's not used.
-        if self.opts.get('shadowPen') is not None:
-            if isinstance(self.opts.get('shadowPen'), QtGui.QPen):
-                sp = self.opts['shadowPen']
-            else:
-                sp = fn.mkPen(self.opts['shadowPen'])
+        for pen_kind in ['shadowPen', 'pen']:
+            pen = self.opts[pen_kind]
+            if pen is None or pen.style() == QtCore.Qt.PenStyle.NoPen:
+                continue
+            p.setPen(pen)
 
-            if sp.style() != QtCore.Qt.PenStyle.NoPen:
-                p.setPen(sp)
-                if self._shouldUseDrawLineSegments(sp):
-                    p.drawLines(*self._getLineSegments())
-                    if do_fill_outline:
-                        p.drawLines(self._getClosingSegments())
+            if self._shouldUseDrawLineSegments(pen):
+                p.drawLines(*self._getLineSegments())
+                if do_fill_outline:
+                    p.drawLines(self._getClosingSegments())
+            else:
+                if do_fill_outline:
+                    p.drawPath(self._getFillPath())
                 else:
-                    if do_fill_outline:
-                        p.drawPath(self._getFillPath())
-                    else:
-                        p.drawPath(self.getPath())
+                    p.drawPath(self.getPath())
 
-        cp = self.opts['pen']
-        if not isinstance(cp, QtGui.QPen):
-            cp = fn.mkPen(cp)
-
-        p.setPen(cp)
-        if self._shouldUseDrawLineSegments(cp):
-            p.drawLines(*self._getLineSegments())
-            if do_fill_outline:
-                p.drawLines(self._getClosingSegments())
-        else:
-            if do_fill_outline:
-                p.drawPath(self._getFillPath())
-            else:
-                p.drawPath(self.getPath())
         profiler('drawPath')
 
     def paintGL(self, widget):
