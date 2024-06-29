@@ -120,9 +120,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         This method performs the following steps:
         1. Opens a QColorDialog to present a color picker to the user.
         2. Checks if the user has selected a valid color.
-        3. If a valid color is selected:
-           a. Retrieves the selected color as a hex string.
-           b. Emits a signal (`sigBackgroundChanged`) with the selected color in hex format.
+        3. If a valid color is selected, it retrives color as a hex string and emits a signal with the color.
     
         Note:
         - The QColorDialog is a standard dialog provided by the Qt framework that allows users to select a color.
