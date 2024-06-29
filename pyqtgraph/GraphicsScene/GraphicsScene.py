@@ -137,10 +137,10 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         # Check if a valid color was selected
         if color.isValid():
             # Store the selected color as a hex string
-            selected_color_hex = color.name()  # Color in hex format
+            selectedColorHex = color.name()  # Color in hex format
 
             # Emit the signal with the selected color
-            self.sigBackgroundChanged.emit(selected_color_hex)
+            self.sigBackgroundChanged.emit(selectedColorHex)
 
         
     def render(self, *args):
