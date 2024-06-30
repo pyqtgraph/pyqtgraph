@@ -345,6 +345,64 @@ Below is an example of a PyQt application that uses a background thread to updat
 
 In this example, a QThread is used to update the QLabel with the current time every second, keeping the UI responsive.
 
+Multi-threading in PyQt
+^^^^^^^^^^^^^^^^^^^^^^^
+
+**Advantages:**
+^^^^^^^^^^^^^^^
+
+**Shared Memory:**
+Threads share the same memory, making it easy to share data without needing special communication methods. 
+
+**Lower Overhead:**
+Threads are lighter and quicker to create and manage compared to processes, which is efficient for smaller tasks. 
+
+**Qt Support:**
+PyQt offers strong support for threading with QThread and related classes like QtConcurrent, QMutex, and QSemaphore. 
+
+**Disadvantages:**
+^^^^^^^^^^^^^^^
+**Complexity:**
+Synchronizing threads can be tricky and prone to errors such as deadlocks and race conditions. 
+
+**Global Interpreter Lock (GIL):**
+In PyQt, the GIL restricts Python bytecode execution to one thread at a time, limiting performance benefits. 
+
+**Shared Resources:**
+Threads sharing the same memory can lead to problems if they access shared resources simultaneously without proper synchronization.
+
+Multi-processing in PyQt
+^^^^^^^^^^^^^^^^^^^^^^^
+
+**Advantages:**
+^^^^^^^^^^^^^^^
+
+**Isolation:**
+
+Each process has its own memory, so tasks don’t interfere with each other. 
+
+**No GIL:**
+
+Multi-processing bypasses the GIL, allowing true parallel execution of Python code. 
+
+**Stability:**
+
+A crash in one process doesn't affect other processes, enhancing overall application stability. 
+
+**Disadvantages:**
+^^^^^^^^^^^^^^^
+
+**Higher Overhead:**
+
+Creating and managing processes takes more resources and time compared to threads. 
+
+**Complex Communication:**
+
+Sharing data between processes requires more complex methods like pipes, sockets, or shared memory. 
+
+**Resource Usage:**
+
+Processes consume more system resources (memory, handles) than threads.
 
 
 -----------------------------------------
