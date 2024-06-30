@@ -224,9 +224,11 @@ Example: Custom Event Handling ::
 
     class CustomButton(QPushButton):
         def mousePressEvent(self, event):
-            event.accept()  # The event is marked as handled, preventing further propagation
+            event.accept()  # The event is marked as handled, preventing further 
+                            # propagation
             # Alternatively:
-            event.ignore()  # the event can be marked as unhandled, allowing it to propagate
+            event.ignore()  # the event can be marked as unhandled, allowing it to 
+                            # propagate
 
 
 
