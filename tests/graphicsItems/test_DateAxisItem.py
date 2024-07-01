@@ -1,3 +1,6 @@
+import locale
+from contextlib import contextmanager
+from functools import lru_cache
 from itertools import product
 from unittest import mock
 
@@ -5,12 +8,21 @@ import pytest
 
 import pyqtgraph as pg
 from pyqtgraph.graphicsItems.DateAxisItem import (
+    DAY_HOUR_ZOOM_LEVEL,
     DAY_SPACING,
     HMS_ZOOM_LEVEL,
     HOUR_MINUTE_ZOOM_LEVEL,
     HOUR_SPACING,
+    MINUTE_SPACING,
+    MONTH_SPACING,
+    MS_SPACING,
     MS_ZOOM_LEVEL,
     SEC_PER_YEAR,
+    SECOND_SPACING,
+    WEEK_SPACING,
+    YEAR_SPACING,
+    TickSpec,
+    ZoomLevel,
     calculateUtcOffset,
     getPreferredOffsetFromUtc,
     shiftLocalTimeToUtcTime,
@@ -21,16 +33,61 @@ from pyqtgraph.Qt.QtGui import QFont, QFontMetrics
 app = pg.mkQApp()
 
 
-@pytest.fixture
-def date_axis():
+def makeDateAxis():
     axis = pg.DateAxisItem()
     axis.fontMetrics = QFontMetrics(QFont())
-    yield axis
+    axis.zoomLevel = None
+    return axis
+
+
+@lru_cache
+def densityForZoomLevel(level):
+    axis = makeDateAxis()
+    density = 3600
+    while axis.zoomLevel != level and density > 1:
+        axis.setZoomLevelForDensity(density)
+        density -= 1
+    return density
+
+
+def getViewLengthInPxForZoomLevel(level, valuesRange):
+    return valuesRange / densityForZoomLevel(level)
 
 
 def assert_subarray(subarray, array):
     start = array.index(subarray[0])
     assert array[start:start+len(subarray)] == subarray
+
+
+@contextmanager
+def inTimezone(timezone):
+
+    def fromSecsSinceEpochLocal(timestamp):
+        return QDateTime.fromMSecsSinceEpoch(timestamp * 1000).toTimeZone(timezone)
+
+    with mock.patch.object(QDateTime, "fromSecsSinceEpoch", fromSecsSinceEpochLocal):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def reset_zoom_levels_utc_offsets():
+    for level in (
+        DAY_HOUR_ZOOM_LEVEL,
+        HOUR_MINUTE_ZOOM_LEVEL,
+        HMS_ZOOM_LEVEL,
+        MS_ZOOM_LEVEL,
+    ):
+        level.utcOffset = None
+
+
+@pytest.fixture
+def dateAxis():
+    return makeDateAxis()
+
+
+@pytest.fixture(autouse=True)
+def use_en_us_locale():
+    locale.setlocale(locale.LC_TIME, "en_US")
 
 
 def test_preferred_utc_offset_respects_chosen_offset():
@@ -55,9 +112,6 @@ def test_utc_offset_works_with_float_timestamp():
 def test_shift_local_time_to_utc_time_does_what_it_promises_to_do():
     timeZone = QTimeZone(b"UTC+4")
 
-    def fromSecsSinceEpochLocal(timestamp):
-        return QDateTime.fromMSecsSinceEpoch(timestamp * 1000).toTimeZone(timeZone)
-
     startDate = QDateTime(QDate(1970, 1, 2), QTime(2, 0), timeZone)
     goalDate = QDateTime(QDate(1970, 1, 1), QTime(22, 0), timeZone)
     assert (
@@ -65,10 +119,10 @@ def test_shift_local_time_to_utc_time_does_what_it_promises_to_do():
         and startDate.toUTC().date() == goalDate.date()
     )
 
-    fromEpochSecs = "pyqtgraph.graphicsItems.DateAxisItem.QDateTime.fromSecsSinceEpoch"
-    with mock.patch(fromEpochSecs, fromSecsSinceEpochLocal):
+    with inTimezone(timeZone):
         shifted = shiftLocalTimeToUtcTime(startDate.toSecsSinceEpoch())
-        assert shifted == goalDate.toSecsSinceEpoch()
+
+    assert shifted == goalDate.toSecsSinceEpoch()
 
 
 @pytest.mark.parametrize(
@@ -98,16 +152,11 @@ def test_shift_local_time_to_utc_time_does_what_it_promises_to_do():
             ["Sun 25"],
             ["01:00", "02:00", "04:00", "05:00", "06:00"],
         ),
-        # Qt wants to go backwards at 00:01 to 23:01,
-        # but according to
-        # https://www.timeanddate.com/time/change/canada/st-johns?year=1986
-        # it should be from 02:00 to 01:00. Maybe Qt bug, maybe website is wrong
-        # maybe those are different time zones and everything is fine
         (
             QTimeZone(b"America/St_Johns"),
-            QDate(1986, 10, 26),
-            ["Sun 26"],
-            ["00:00", "01:00", "02:00", "03:00", "04:00"],
+            QDate(2012, 11, 4),
+            ["Sun 04"],
+            ["01:00", "01:00", "02:00", "03:00", "04:00"],
         ),
         (
             QTimeZone(b"America/St_Johns"),
@@ -142,26 +191,23 @@ def test_maps_tick_values_to_local_times(
     transitionDate,
     expectedDayTickStrings,
     expectedHourTickStrings,
-    date_axis,
+    dateAxis,
 ):
-
-    def fromSecsSinceEpochLocal(timestamp):
-        return QDateTime.fromMSecsSinceEpoch(timestamp * 1000).toTimeZone(timeZone)
-
     minTime = QDateTime(transitionDate, QTime(0, 0, 0, 0), timeZone).toSecsSinceEpoch()
     maxTime = QDateTime(transitionDate, QTime(4, 0, 0, 0), timeZone).toSecsSinceEpoch()
 
-    fromEpochSecs = "pyqtgraph.graphicsItems.DateAxisItem.QDateTime.fromSecsSinceEpoch"
-    with mock.patch(fromEpochSecs, fromSecsSinceEpochLocal):
-        xvals = [x for x in range(minTime, maxTime + 3600, 3600)]
-        lengthInPixels = 600
-        tickValues = date_axis.tickValues(xvals[0] - 1, xvals[-1] + 1, lengthInPixels)
+    xvals = list(range(minTime, maxTime + 3600, 3600))
+    timeRange = maxTime - minTime
+    lengthInPixels = getViewLengthInPxForZoomLevel(HOUR_MINUTE_ZOOM_LEVEL, timeRange)
+
+    with inTimezone(timeZone):
+        tickValues = dateAxis.tickValues(xvals[0] - 1, xvals[-1] + 1, lengthInPixels)
         for spacing, ticks in tickValues:
             if spacing == DAY_SPACING:
-                tickStrings = date_axis.tickStrings(ticks, 1, DAY_SPACING)
+                tickStrings = dateAxis.tickStrings(ticks, 1, DAY_SPACING)
                 assert_subarray(expectedDayTickStrings, tickStrings)
             elif spacing == HOUR_SPACING:
-                tickStrings = date_axis.tickStrings(ticks, 1, spacing)
+                tickStrings = dateAxis.tickStrings(ticks, 1, spacing)
                 assert_subarray(expectedHourTickStrings, tickStrings)
 
 
@@ -175,78 +221,85 @@ def test_maps_tick_values_to_local_times(
     ),
     ids=("Berlin", "Chatham", "St_Johns", "Lord_Howe"),
 )
-def test_maps_hour_ticks_to_local_times_when_skip_greater_than_one(timeZone, date_axis):
-
-    def fromSecsSinceEpochLocal(timestamp):
-        return QDateTime.fromMSecsSinceEpoch(timestamp * 1000).toTimeZone(timeZone)
-
+def test_maps_hour_ticks_to_local_times_when_skip_greater_than_one(timeZone, dateAxis):
     date = QDate(2023, 5, 10)
     minTime = QDateTime(date, QTime(0, 0, 0, 0), timeZone).toSecsSinceEpoch()
     maxTime = QDateTime(date, QTime(18, 0, 0, 0), timeZone).toSecsSinceEpoch()
 
-    fromEpochSecs = "pyqtgraph.graphicsItems.DateAxisItem.QDateTime.fromSecsSinceEpoch"
-    with mock.patch(fromEpochSecs, fromSecsSinceEpochLocal):
-        xvals = [x for x in range(minTime, maxTime + 3600, 3600)]
+    xvals = list(range(minTime, maxTime + 3600, 3600))
+    timeRange = maxTime - minTime
+    lengthInPixels = getViewLengthInPxForZoomLevel(DAY_HOUR_ZOOM_LEVEL, timeRange)
 
-        lengthInPixels = 200
-        tickValues = date_axis.tickValues(xvals[0] - 1, xvals[-1] + 1, lengthInPixels)
+    with inTimezone(timeZone):
+        tickValues = dateAxis.tickValues(xvals[0] - 1, xvals[-1] + 1, lengthInPixels)
         for spacing, ticks in tickValues:
             if spacing == HOUR_SPACING:
-                tickStrings = date_axis.tickStrings(ticks, 1, spacing)
+                tickStrings = dateAxis.tickStrings(ticks, 1, spacing)
                 assert_subarray(["06:00", "12:00", "18:00"], tickStrings)
 
 
 @pytest.mark.parametrize(
-    ("autoSkip", "expectedHourTickStrings"),
+    ("zoomLevel", "expectedHourTickStrings"),
     (
-        (1, ["01:00", "02:00", "03:00", "04:00", "05:00"]),
-        (6, ["06:00", "12:00", "18:00"]),
+        (HOUR_MINUTE_ZOOM_LEVEL, ["01:00", "02:00", "03:00", "04:00", "05:00"]),
+        (DAY_HOUR_ZOOM_LEVEL, ["06:00", "12:00", "18:00"]),
     ),
 )
-def test_custom_utc_offset_works(autoSkip, expectedHourTickStrings, date_axis):
-    size_px = 600 if autoSkip == 1 else 200
-    maxHour = 4 if autoSkip == 1 else 18
+def test_custom_utc_offset_works(zoomLevel, expectedHourTickStrings, dateAxis):
+    maxHour = 4 if zoomLevel == HOUR_MINUTE_ZOOM_LEVEL else 18
 
     utcZone = QTimeZone(b"UTC")
     date = QDate(2001, 1, 1)
     minTime = QDateTime(date, QTime(0, 0, 0, 0), utcZone).toSecsSinceEpoch()
     maxTime = QDateTime(date, QTime(maxHour, 0, 0, 0), utcZone).toSecsSinceEpoch()
 
-    xvals = [x for x in range(minTime, maxTime + 3600, 3600)]
+    size_px = getViewLengthInPxForZoomLevel(zoomLevel, maxTime - minTime)
+    xvals = list(range(minTime, maxTime + 3600, 3600))
+    dateAxis.utcOffset = -3600
 
-    date_axis.utcOffset = -3600
-    for spacing, ticks in date_axis.tickValues(xvals[0] - 1, xvals[-1] + 1, size_px):
+    for spacing, ticks in dateAxis.tickValues(xvals[0] - 1, xvals[-1] + 1, size_px):
         if spacing == DAY_SPACING:
-            tickStrings = date_axis.tickStrings(ticks, 1, DAY_SPACING)
+            tickStrings = dateAxis.tickStrings(ticks, 1, DAY_SPACING)
             assert_subarray(["Mon 01"], tickStrings)
         elif spacing == HOUR_SPACING:
-            tickStrings = date_axis.tickStrings(ticks, 1, spacing)
+            tickStrings = dateAxis.tickStrings(ticks, 1, spacing)
             assert_subarray(expectedHourTickStrings, tickStrings)
 
 
-def test_time_range_is_not_extended_for_minutes_and_ms():
+@pytest.mark.parametrize(
+    ("localZone", "spacing", "expectedExtentionInHours"),
+    (
+        (QTimeZone(b"UTC+7"), MS_SPACING, 0),
+        (QTimeZone(b"UTC+5"), SECOND_SPACING, 0),
+        (QTimeZone(b"UTC+3"), MINUTE_SPACING, 0),
+        (QTimeZone(b"UTC+7"), HOUR_SPACING, 7),
+        (QTimeZone(b"UTC+6"), DAY_SPACING, 6),
+        (QTimeZone(b"UTC+5"), WEEK_SPACING, 5),
+        (QTimeZone(b"UTC+4"), MONTH_SPACING, 4),
+        (QTimeZone(b"UTC+3"), YEAR_SPACING, 3),
+
+        (QTimeZone(b"UTC"), MS_SPACING, 0),
+        (QTimeZone(b"UTC"), SECOND_SPACING, 0),
+        (QTimeZone(b"UTC"), MINUTE_SPACING, 0),
+        (QTimeZone(b"UTC"), HOUR_SPACING, 0),
+        (QTimeZone(b"UTC"), DAY_SPACING, 0),
+        (QTimeZone(b"UTC"), WEEK_SPACING, 0),
+        (QTimeZone(b"UTC"), MONTH_SPACING, 0),
+        (QTimeZone(b"UTC"), YEAR_SPACING, 0),
+    ),
+)
+def test_extendTimeRangeForSpec_repsects_utc_offset_and_spacings(
+    localZone, spacing, expectedExtentionInHours,
+):
     utcZone = QTimeZone(b"UTC")
     date = QDate(2001, 1, 1)
     minTime = QDateTime(date, QTime(0, 0, 0, 0), utcZone).toSecsSinceEpoch()
     maxTime = QDateTime(date, QTime(18, 0, 0, 0), utcZone).toSecsSinceEpoch()
 
-    for zoom in (MS_ZOOM_LEVEL, HOUR_MINUTE_ZOOM_LEVEL, HMS_ZOOM_LEVEL):
-        for spec in zoom.tickSpecs:
-            if spec.spacing >= HOUR_SPACING:
-                continue
-            newRange = zoom.extendTimeRangeForSpec(spec, minTime, maxTime)
-            assert newRange == (minTime, maxTime)
+    spec = TickSpec(spacing, lambda: None, lambda: None)
+    zoom = ZoomLevel([spec], "")
 
-
-def test_time_range_is_extended_for_hour():
-    utcZone = QTimeZone(b"UTC")
-    date = QDate(2001, 1, 1)
-    minTime = QDateTime(date, QTime(0, 0, 0, 0), utcZone).toSecsSinceEpoch()
-    maxTime = QDateTime(date, QTime(18, 0, 0, 0), utcZone).toSecsSinceEpoch()
-
-    for spec in HOUR_MINUTE_ZOOM_LEVEL.tickSpecs:
-        if spec.spacing < HOUR_SPACING:
-            continue
-        newRange = HOUR_MINUTE_ZOOM_LEVEL.extendTimeRangeForSpec(spec, minTime, maxTime)
-        extMin, extMax = newRange
-        assert extMin < minTime and extMax > maxTime
+    with inTimezone(localZone):
+        extMin, extMax = zoom.extendTimeRangeForSpec(spec, minTime, maxTime)
+    assert extMax - maxTime == expectedExtentionInHours * 3600
+    assert minTime - extMin == expectedExtentionInHours * 3600
