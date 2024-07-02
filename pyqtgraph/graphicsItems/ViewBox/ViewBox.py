@@ -590,7 +590,6 @@ class ViewBox(GraphicsWidget):
         # limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
         minRng = [self.state['limits']['xRange'][0], self.state['limits']['yRange'][0]]
         maxRng = [self.state['limits']['xRange'][1], self.state['limits']['yRange'][1]]
-
         for ax, range in changes.items():
             mn = min(range)
             mx = max(range)
@@ -1580,6 +1579,14 @@ class ViewBox(GraphicsWidget):
                     maxRng[axis] = min(maxRng[axis], limits[axis][1] - limits[axis][0])
                 else:
                     maxRng[axis] = limits[axis][1] - limits[axis][0]
+        for axis in [0,1]:
+            if minRng[axis] is not None:
+                if(minRng[axis] > viewRange[axis][1] - viewRange[axis][0]):
+                    viewRange[axis][1] = viewRange[axis][0] + minRng[axis]
+            
+            if maxRng[axis] is not None:
+                if(maxRng[axis] < viewRange[axis][1] - viewRange[axis][0]):
+                    viewRange[axis][1] = viewRange[axis][0] + maxRng[axis]
 
         if aspect is not False and 0 not in [aspect, tr.height(), bounds.height(), bounds.width()]:
 
