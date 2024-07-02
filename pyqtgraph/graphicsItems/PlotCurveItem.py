@@ -160,7 +160,17 @@ def arrayToLineSegments(x, y, connect, finiteCheck, out=None):
             # each non-finite point affects the segment before and after
             connect_array = mask[:-1] & mask[1:]
 
-    elif connect in ['pairs', 'array']:
+    elif connect == 'pairs':
+        if not all_finite:
+            # ensure that we have an even number of elements
+            npairs = len(x) // 2
+            mask = mask[:npairs*2]
+            # remove pair if at least one point within pair is non-finite
+            mask.reshape((-1, 2))[:] = (mask[0::2] & mask[1::2])[:, np.newaxis]
+            x = x[:npairs*2][mask]
+            y = y[:npairs*2][mask]
+
+    elif connect == 'array':
         if not all_finite:
             # replicate the behavior of arrayToQPath
             backfill_idx = fn._compute_backfill_indices(mask)
