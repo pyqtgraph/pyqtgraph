@@ -152,8 +152,8 @@ class ZoomLevel:
         self.utcOffset = None
         self.exampleText = exampleText
 
-    def extendTimeRangeForSpec(self, spec, minVal, maxVal):
-        if spec.spacing < HOUR_SPACING:
+    def extendTimeRangeForSpacing(self, spacing, minVal, maxVal):
+        if spacing < HOUR_SPACING:
             return minVal, maxVal
 
         extendedMax = maxVal + abs(getPreferredOffsetFromUtc(maxVal, self.utcOffset))
@@ -184,8 +184,8 @@ class ZoomLevel:
         for spec in self.tickSpecs:
             # extend time range, so that if distance to certain local hour
             # stretches due to DST change, this hour is still included in ticks
-            extendedMin, extendedMax = self.extendTimeRangeForSpec(spec, minVal, maxVal)
-            ticks, skipFactor = spec.makeTicks(extendedMin, extendedMax, minSpc)
+            extendedRange = self.extendTimeRangeForSpacing(spec.spacing, minVal, maxVal)
+            ticks, skipFactor = spec.makeTicks(*extendedRange, minSpc)
             ticks = self.moveTicksToLocalTimeCoords(ticks, spec.spacing, skipFactor)
             # remove any ticks that were present in higher levels
             # we assume here that if the difference between a tick value and a previously seen tick value

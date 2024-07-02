@@ -21,7 +21,6 @@ from pyqtgraph.graphicsItems.DateAxisItem import (
     SECOND_SPACING,
     WEEK_SPACING,
     YEAR_SPACING,
-    TickSpec,
     ZoomLevel,
     applyOffsetFromUtc,
     calculateUtcOffset,
@@ -288,7 +287,7 @@ def test_custom_utc_offset_works(zoomLevel, expectedHourTickStrings, dateAxis):
         (QTimeZone(b"UTC"), YEAR_SPACING, 0),
     ),
 )
-def test_extendTimeRangeForSpec_repsects_utc_offset_and_spacings(
+def test_extendTimeRangeForSpacing_repsects_utc_offset(
     localZone, spacing, expectedExtentionInHours,
 ):
     utcZone = QTimeZone(b"UTC")
@@ -296,10 +295,9 @@ def test_extendTimeRangeForSpec_repsects_utc_offset_and_spacings(
     minTime = QDateTime(date, QTime(0, 0, 0, 0), utcZone).toSecsSinceEpoch()
     maxTime = QDateTime(date, QTime(18, 0, 0, 0), utcZone).toSecsSinceEpoch()
 
-    spec = TickSpec(spacing, lambda: None, lambda: None)
-    zoom = ZoomLevel([spec], "")
+    zoom = ZoomLevel([], "")
 
     with inTimezone(localZone):
-        extMin, extMax = zoom.extendTimeRangeForSpec(spec, minTime, maxTime)
+        extMin, extMax = zoom.extendTimeRangeForSpacing(spacing, minTime, maxTime)
     assert extMax - maxTime == expectedExtentionInHours * 3600
     assert minTime - extMin == expectedExtentionInHours * 3600
