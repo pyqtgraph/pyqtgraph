@@ -23,9 +23,9 @@ from pyqtgraph.graphicsItems.DateAxisItem import (
     YEAR_SPACING,
     TickSpec,
     ZoomLevel,
+    applyOffsetFromUtc,
     calculateUtcOffset,
     getPreferredOffsetFromUtc,
-    shiftLocalTimeToUtcTime,
 )
 from pyqtgraph.Qt.QtCore import QDate, QDateTime, QTime, QTimeZone
 from pyqtgraph.Qt.QtGui import QFont, QFontMetrics
@@ -120,7 +120,7 @@ def test_shift_local_time_to_utc_time_does_what_it_promises_to_do():
     )
 
     with inTimezone(timeZone):
-        shifted = shiftLocalTimeToUtcTime(startDate.toSecsSinceEpoch())
+        shifted = applyOffsetFromUtc(startDate.toSecsSinceEpoch())
 
     assert shifted == goalDate.toSecsSinceEpoch()
 

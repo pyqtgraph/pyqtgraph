@@ -165,7 +165,7 @@ class ZoomLevel:
             return ticks
 
         if (spacing == HOUR_SPACING and skipFactor > 1) or spacing > HOUR_SPACING:
-            ticks += [shiftedOffsetFromUtc(tick, self.utcOffset) for tick in ticks]
+            ticks += [applyOffsetToUtc(tick, self.utcOffset) for tick in ticks]
         elif spacing == HOUR_SPACING:
             ticks += [offsetToLocalHour(tick) for tick in ticks]
             minutesIsZero = [offsetToLocalHour(tick) == 0 for tick in ticks]
@@ -261,7 +261,7 @@ def offsetToLocalHour(timestamp):
     return -roundedToHour.secsTo(local.time())
 
 
-def shiftLocalTimeToUtcTime(timestamp):
+def applyOffsetFromUtc(timestamp):
     """
     UTC+4
     1970-01-02 02:00 (local) == 1970-01-01 22:00 (UTC) -> 1970-01-01 22:00 (local)
@@ -276,9 +276,9 @@ def shiftLocalTimeToUtcTime(timestamp):
     return repositioned.toSecsSinceEpoch()
 
 
-def shiftedOffsetFromUtc(timestamp, preferred_offset=None):
-    shifted = shiftLocalTimeToUtcTime(timestamp)
-    return getPreferredOffsetFromUtc(shifted, preferred_offset)
+def applyOffsetToUtc(timestamp, preferred_offset=None):
+    delocalized = applyOffsetFromUtc(timestamp)
+    return getPreferredOffsetFromUtc(delocalized, preferred_offset)
 
 
 class DateAxisItem(AxisItem):
