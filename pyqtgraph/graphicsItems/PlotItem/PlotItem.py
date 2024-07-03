@@ -71,12 +71,13 @@ class PlotItem(GraphicsWidget):
     
     The ViewBox itself can be accessed by calling :func:`getViewBox() <pyqtgraph.PlotItem.getViewBox>` 
     
-    ==================== =======================================================================
+    ======================= =======================================================================
     **Signals:**
-    sigYRangeChanged     wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
-    sigXRangeChanged     wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
-    sigRangeChanged      wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
-    ==================== =======================================================================
+    sigYRangeChanged        wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
+    sigXRangeChanged        wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
+    sigRangeChanged         wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
+    sigRangeChangedManually wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
+    ======================= =======================================================================
     """
     
     sigRangeChanged = QtCore.Signal(object, object)    ## Emitted when the ViewBox range has changed
