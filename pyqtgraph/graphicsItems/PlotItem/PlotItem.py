@@ -82,6 +82,7 @@ class PlotItem(GraphicsWidget):
     sigRangeChanged = QtCore.Signal(object, object)    ## Emitted when the ViewBox range has changed
     sigYRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox Y range has changed
     sigXRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox X range has changed
+    sigRangeChangedManually = QtCore.Signal(object)    ## Emitted when the ViewBox range is changed via user interaction
         
     lastFileDir = None
     
@@ -139,6 +140,7 @@ class PlotItem(GraphicsWidget):
         self.vb.sigRangeChanged.connect(self.sigRangeChanged)
         self.vb.sigXRangeChanged.connect(self.sigXRangeChanged)
         self.vb.sigYRangeChanged.connect(self.sigYRangeChanged)
+        self.vb.sigRangeChangedManually.connect(self.sigRangeChangedManually)
         
         self.layout.addItem(self.vb, 2, 1)
         self.alpha = 1.0
@@ -492,7 +494,7 @@ class PlotItem(GraphicsWidget):
         if self.autoBtn.mode == 'auto':
             self.enableAutoRange()
             self.autoBtn.hide()
-            self.vb.sigRangeChangedManually.emit(self.vb.mouseEnabled()[:])
+            self.sigRangeChangedManually.emit(self.vb.mouseEnabled()[:])
         else:
             self.disableAutoRange()
             
