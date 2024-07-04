@@ -152,7 +152,9 @@ class ZoomLevel:
         self.utcOffset = None
         self.exampleText = exampleText
 
-    def extendTimeRangeForSpacing(self, spacing, minVal, maxVal):
+    def extendTimeRangeForSpacing(
+            self, spacing: int, minVal: int | float, maxVal: int | float,
+    ) -> tuple[int | float, int | float]:
         if spacing < HOUR_SPACING:
             return minVal, maxVal
 
@@ -160,7 +162,9 @@ class ZoomLevel:
         extendedMin = minVal - abs(getPreferredOffsetFromUtc(minVal, self.utcOffset))
         return extendedMin, extendedMax
 
-    def moveTicksToLocalTimeCoords(self, ticks, spacing, skipFactor):
+    def moveTicksToLocalTimeCoords(
+            self, ticks: np.ndarray, spacing: int, skipFactor: int,
+    ) -> np.ndarray:
         if len(ticks) == 0:
             return ticks
 
@@ -232,36 +236,42 @@ MS_ZOOM_LEVEL = ZoomLevel([
 ], "99:99:99")
 
 
-def fromSecsSinceEpoch(timestamp):
+def fromSecsSinceEpoch(timestamp: float | int) -> QDateTime:
     try:
         return QDateTime.fromSecsSinceEpoch(round(timestamp))
     except OverflowError:
         return QDateTime()
 
 
-def calculateUtcOffset(timestamp):
+def calculateUtcOffset(timestamp: float | int) -> int:
     return -fromSecsSinceEpoch(timestamp).offsetFromUtc()
 
 
-def getPreferredOffsetFromUtc(timestamp, preferred_offset=None):
+def getPreferredOffsetFromUtc(
+        timestamp: float | int,
+        preferred_offset: int | None = None,
+) -> int:
     """Retrieve the utc offset respecting the daylight saving time"""
     if preferred_offset is not None:
         return preferred_offset
     return calculateUtcOffset(timestamp)
 
 
-def adjustTimestampToPreferredUtcOffset(timestamp, offest=None):
+def adjustTimestampToPreferredUtcOffset(
+        timestamp: float | int,
+        offest: int | None = None,
+) -> int | float:
     return timestamp - getPreferredOffsetFromUtc(timestamp, offest)
 
 
-def offsetToLocalHour(timestamp):
+def offsetToLocalHour(timestamp: float | int) -> int:
     local = fromSecsSinceEpoch(timestamp)
     roundedToHour = local.time()
     roundedToHour.setHMS(roundedToHour.hour(), 0, 0)
     return -roundedToHour.secsTo(local.time())
 
 
-def applyOffsetFromUtc(timestamp):
+def applyOffsetFromUtc(timestamp: float | int) -> int:
     """
     UTC+4
     1970-01-02 02:00 (local) == 1970-01-01 22:00 (UTC) -> 1970-01-01 22:00 (local)
@@ -276,7 +286,10 @@ def applyOffsetFromUtc(timestamp):
     return repositioned.toSecsSinceEpoch()
 
 
-def applyOffsetToUtc(timestamp, preferred_offset=None):
+def applyOffsetToUtc(
+        timestamp: float | int,
+        preferred_offset: int | None = None,
+) -> int:
     delocalized = applyOffsetFromUtc(timestamp)
     return getPreferredOffsetFromUtc(delocalized, preferred_offset)
 

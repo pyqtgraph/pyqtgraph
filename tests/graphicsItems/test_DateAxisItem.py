@@ -20,6 +20,7 @@ from pyqtgraph.graphicsItems.DateAxisItem import (
     SEC_PER_YEAR,
     SECOND_SPACING,
     WEEK_SPACING,
+    YEAR_MONTH_ZOOM_LEVEL,
     YEAR_SPACING,
     ZoomLevel,
     applyOffsetFromUtc,
@@ -35,7 +36,7 @@ app = pg.mkQApp()
 def makeDateAxis():
     axis = pg.DateAxisItem()
     axis.fontMetrics = QFontMetrics(QFont())
-    axis.zoomLevel = None
+    axis.zoomLevel = YEAR_MONTH_ZOOM_LEVEL
     return axis
 
 
@@ -85,8 +86,8 @@ def dateAxis():
 
 
 @pytest.fixture(autouse=True)
-def use_en_us_locale():
-    locale.setlocale(locale.LC_TIME, "en_US")
+def use_c_locale():
+    locale.setlocale(locale.LC_TIME, "C")
 
 
 def test_preferred_utc_offset_respects_chosen_offset():
@@ -108,7 +109,7 @@ def test_utc_offset_works_with_float_timestamp():
     assert -16 * 3600 <= calculateUtcOffset(123456.0734) <= 16 * 3600
 
 
-def test_shift_local_time_to_utc_time_does_what_it_promises_to_do():
+def test_applyOffsetFromUtc_does_what_it_promises_to_do():
     timeZone = QTimeZone(b"UTC+4")
 
     startDate = QDateTime(QDate(1970, 1, 2), QTime(2, 0), timeZone)
