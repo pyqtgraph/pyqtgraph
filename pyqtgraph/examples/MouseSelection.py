@@ -8,7 +8,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
 pg.setConfigOptions(useOpenGL=True, enableExperimental=True)
 
-pg.mkQApp()
+app = pg.mkQApp()
 plt = pg.PlotWidget()
 plt.setWindowTitle('pyqtgraph example: Plot data selection')
 # shift plot area by adding title to test that the OpenGL code handles it
@@ -36,7 +36,9 @@ for c in curves:
     plt.addItem(c)
     c.sigClicked.connect(plotClicked)
 
-# reparent the PlotWidget to test that the OpenGL code is able to handle it
+# force a render followed by a reparent of the PlotWidget
+# to test that the OpenGL code is able to handle it
+app.processEvents()
 win = QtWidgets.QMainWindow()
 win.setCentralWidget(plt)
 win.show()
