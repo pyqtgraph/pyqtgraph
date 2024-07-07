@@ -111,6 +111,8 @@ class OpenGLState:
             self.m_program.setUniformValue(key, value)
 
     def cleanup(self):
+        # this method should restore the state back to __init__
+
         if self.m_program is not None:
             self.m_program.setParent(None)
             self.m_program = None
@@ -124,6 +126,8 @@ class OpenGLState:
         self.widget = None
         self.context = None
         self.functions = None
+        self.vbo_nbytes = 0
+        self.render_cache = None
 
     def verticesChanged(self, curve):
         self.render_cache = None
