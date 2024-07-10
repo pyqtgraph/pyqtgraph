@@ -172,8 +172,7 @@ class ZoomLevel:
             ticks += [applyOffsetToUtc(tick, self.utcOffset) for tick in ticks]
         elif spacing == HOUR_SPACING:
             ticks += [offsetToLocalHour(tick) for tick in ticks]
-            minutesIsZero = [offsetToLocalHour(tick) == 0 for tick in ticks]
-            ticks = ticks[minutesIsZero]
+            ticks = np.array([tick for tick in ticks if offsetToLocalHour(tick) == 0])
         return ticks
 
     def tickValues(self, minVal, maxVal, minSpc):
