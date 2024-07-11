@@ -384,7 +384,6 @@ class PColorMeshItem(GraphicsObject):
             getConfigOption('enableExperimental')
             and isinstance(widget, QtWidgets.QOpenGLWidget)
             and self.cmap is not None   # don't support setting colormap by setLookupTable
-            and self.edgecolors is None # don't support drawing of edges
         ):
             if self.glstate is None:
                 self.glstate = OpenGLState()
@@ -393,6 +392,19 @@ class PColorMeshItem(GraphicsObject):
                 self.paintGL(widget)
             finally:
                 painter.endNativePainting()
+
+            if (
+                self.edgecolors is not None
+                and self.edgecolors.style() != QtCore.Qt.PenStyle.NoPen
+            ):
+                painter.setPen(self.edgecolors)
+                if self.antialiasing:
+                    painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+                for idx in range(self.x.shape[0]):
+                    painter.drawPolyline(fn.arrayToQPolygonF(self.x[idx, :], self.y[idx, :]))
+                for idx in range(self.x.shape[1]):
+                    painter.drawPolyline(fn.arrayToQPolygonF(self.x[:, idx], self.y[:, idx]))
+
             return
 
         if self.qpicture is None:
