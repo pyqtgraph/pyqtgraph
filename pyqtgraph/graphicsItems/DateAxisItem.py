@@ -1,10 +1,10 @@
 import sys
-import time
 from collections import OrderedDict
 from datetime import datetime, timedelta, timezone
 
 import numpy as np
 
+from ..Qt.QtCore import QDateTime
 from .AxisItem import AxisItem
 
 __all__ = ['DateAxisItem']
@@ -101,7 +101,7 @@ class TickSpec:
         spacing       approximate (average) tick spacing
         stepper       a stepper function that takes a utc time stamp and a step
                       steps number n to compute the start of the next unit. You
-                      can use the make_X_stepper functions to create common
+                      can use the makeXStepper functions to create common
                       steppers.
         format        a strftime compatible format string which will be used to
                       convert tick locations to date/time strings
@@ -136,7 +136,7 @@ class TickSpec:
                 if spc > minSpc:
                     return int(f)
             factors *= 10
-        
+
 
 class ZoomLevel:
     """ Generates the ticks which appear in a specific zoom level """
@@ -149,8 +149,31 @@ class ZoomLevel:
 
         """
         self.tickSpecs = tickSpecs
-        self.utcOffset = 0
+        self.utcOffset = None
         self.exampleText = exampleText
+
+    def extendTimeRangeForSpacing(
+            self, spacing: int, minVal: int | float, maxVal: int | float,
+    ) -> tuple[int | float, int | float]:
+        if spacing < HOUR_SPACING:
+            return minVal, maxVal
+
+        extendedMax = maxVal + abs(getPreferredOffsetFromUtc(maxVal, self.utcOffset))
+        extendedMin = minVal - abs(getPreferredOffsetFromUtc(minVal, self.utcOffset))
+        return extendedMin, extendedMax
+
+    def moveTicksToLocalTimeCoords(
+            self, ticks: np.ndarray, spacing: int, skipFactor: int,
+    ) -> np.ndarray:
+        if len(ticks) == 0:
+            return ticks
+
+        if (spacing == HOUR_SPACING and skipFactor > 1) or spacing > HOUR_SPACING:
+            ticks += [applyOffsetToUtc(tick, self.utcOffset) for tick in ticks]
+        elif spacing == HOUR_SPACING:
+            ticks += [offsetToLocalHour(tick) for tick in ticks]
+            ticks = np.array([tick for tick in ticks if offsetToLocalHour(tick) == 0])
+        return ticks
 
     def tickValues(self, minVal, maxVal, minSpc):
         # return tick values for this format in the range minVal, maxVal
@@ -160,14 +183,13 @@ class ZoomLevel:
         # current zoom level. This is used for auto skipping ticks.
         allTicks = np.array([])
         valueSpecs = []
-        # back-project (minVal maxVal) to UTC, compute ticks then offset to
-        # back to local time again
-        utcMin = minVal - self.utcOffset
-        utcMax = maxVal - self.utcOffset
+
         for spec in self.tickSpecs:
-            ticks, skipFactor = spec.makeTicks(utcMin, utcMax, minSpc)
-            # reposition tick labels to local time coordinates
-            ticks += self.utcOffset
+            # extend time range, so that if distance to certain local hour
+            # stretches due to DST change, this hour is still included in ticks
+            extendedRange = self.extendTimeRangeForSpacing(spec.spacing, minVal, maxVal)
+            ticks, skipFactor = spec.makeTicks(*extendedRange, minSpc)
+            ticks = self.moveTicksToLocalTimeCoords(ticks, spec.spacing, skipFactor)
             # remove any ticks that were present in higher levels
             # we assume here that if the difference between a tick value and a previously seen tick value
             # is less than min-spacing/100, then they are 'equal' and we can ignore the new tick.
@@ -213,27 +235,75 @@ MS_ZOOM_LEVEL = ZoomLevel([
 ], "99:99:99")
 
 
-def getOffsetFromUtc():
+def fromSecsSinceEpoch(timestamp: float | int) -> QDateTime:
+    try:
+        return QDateTime.fromSecsSinceEpoch(round(timestamp))
+    except OverflowError:
+        return QDateTime()
+
+
+def calculateUtcOffset(timestamp: float | int) -> int:
+    return -fromSecsSinceEpoch(timestamp).offsetFromUtc()
+
+
+def getPreferredOffsetFromUtc(
+        timestamp: float | int,
+        preferred_offset: int | None = None,
+) -> int:
     """Retrieve the utc offset respecting the daylight saving time"""
-    ts = time.localtime()
-    if ts.tm_isdst:
-        utc_offset = time.altzone
-    else:
-        utc_offset = time.timezone
-    return utc_offset
+    if preferred_offset is not None:
+        return preferred_offset
+    return calculateUtcOffset(timestamp)
+
+
+def adjustTimestampToPreferredUtcOffset(
+        timestamp: float | int,
+        offest: int | None = None,
+) -> int | float:
+    return timestamp - getPreferredOffsetFromUtc(timestamp, offest)
+
+
+def offsetToLocalHour(timestamp: float | int) -> int:
+    local = fromSecsSinceEpoch(timestamp)
+    roundedToHour = local.time()
+    roundedToHour.setHMS(roundedToHour.hour(), 0, 0)
+    return -roundedToHour.secsTo(local.time())
+
+
+def applyOffsetFromUtc(timestamp: float | int) -> int:
+    """
+    UTC+4
+    1970-01-02 02:00 (local) == 1970-01-01 22:00 (UTC) -> 1970-01-01 22:00 (local)
+
+    NB: it won't work correctly for timestamps that represent same local time
+    (when time goes backwards)
+    """
+    local = fromSecsSinceEpoch(timestamp)
+    utcDate = local.toUTC().date()
+    utcTime = local.toUTC().time()
+    repositioned = QDateTime(utcDate, utcTime, local.timeZone())
+    return repositioned.toSecsSinceEpoch()
+
+
+def applyOffsetToUtc(
+        timestamp: float | int,
+        preferred_offset: int | None = None,
+) -> int:
+    delocalized = applyOffsetFromUtc(timestamp)
+    return getPreferredOffsetFromUtc(delocalized, preferred_offset)
 
 
 class DateAxisItem(AxisItem):
     """
     **Bases:** :class:`AxisItem <pyqtgraph.AxisItem>`
-    
+
     An AxisItem that displays dates from unix timestamps.
 
     The display format is adjusted automatically depending on the current time
     density (seconds/point) on the axis. For more details on changing this
     behaviour, see :func:`setZoomLevelForDensity() <pyqtgraph.DateAxisItem.setZoomLevelForDensity>`.
-    
-    Can be added to an existing plot e.g. via 
+
+    Can be added to an existing plot e.g. via
     :func:`setAxisItems({'bottom':axis}) <pyqtgraph.PlotItem.setAxisItems>`.
 
     """
@@ -241,18 +311,15 @@ class DateAxisItem(AxisItem):
     def __init__(self, orientation='bottom', utcOffset=None, **kwargs):
         """
         Create a new DateAxisItem.
-        
+
         For `orientation` and `**kwargs`, see
         :func:`AxisItem.__init__ <pyqtgraph.AxisItem.__init__>`.
-        
+
         """
 
         super(DateAxisItem, self).__init__(orientation, **kwargs)
-        # Set the zoom level to use depending on the time density on the axis
-        if utcOffset is None:
-            utcOffset = getOffsetFromUtc()
         self.utcOffset = utcOffset
-        
+        # Set the zoom level to use depending on the time density on the axis
         self.zoomLevels = OrderedDict([
             (np.inf,      YEAR_MONTH_ZOOM_LEVEL),
             (5 * 3600*24, MONTH_DAY_ZOOM_LEVEL),
@@ -262,16 +329,20 @@ class DateAxisItem(AxisItem):
             (1,           MS_ZOOM_LEVEL),
             ])
         self.autoSIPrefix = False
-    
+
     def tickStrings(self, values, scale, spacing):
         tickSpecs = self.zoomLevel.tickSpecs
         tickSpec = next((s for s in tickSpecs if s.spacing == spacing), None)
         try:
-            dates = [utcfromtimestamp(v - self.utcOffset) for v in values]
+            dates = [
+                utcfromtimestamp(adjustTimestampToPreferredUtcOffset(v, self.utcOffset))
+                for v in values
+            ]
         except (OverflowError, ValueError, OSError):
             # should not normally happen
-            return ['%g' % ((v-self.utcOffset)//SEC_PER_YEAR + 1970) for v in values]
-            
+            offset = self.utcOffset or 0
+            return ['%g' % ((v-offset)//SEC_PER_YEAR + 1970) for v in values]
+
         formatStrings = []
         for x in dates:
             try:
@@ -295,9 +366,9 @@ class DateAxisItem(AxisItem):
     def setZoomLevelForDensity(self, density):
         """
         Setting `zoomLevel` and `minSpacing` based on given density of seconds per pixel
-        
+
         The display format is adjusted automatically depending on the current time
-        density (seconds/point) on the axis. You can customize the behaviour by 
+        density (seconds/point) on the axis. You can customize the behaviour by
         overriding this function or setting a different set of zoom levels
         than the default one. The `zoomLevels` variable is a dictionary with the
         maximal distance of ticks in seconds which are allowed for each zoom level
@@ -305,7 +376,7 @@ class DateAxisItem(AxisItem):
         selection, override this function.
         """
         padding = 10
-        
+
         # Size in pixels a specific tick label will take
         if self.orientation in ['bottom', 'top']:
             def sizeOf(text):
@@ -313,7 +384,7 @@ class DateAxisItem(AxisItem):
         else:
             def sizeOf(text):
                 return self.fontMetrics.boundingRect(text).height() + padding
-        
+
         # Fallback zoom level: Years/Months
         self.zoomLevel = YEAR_MONTH_ZOOM_LEVEL
         for maximalSpacing, zoomLevel in self.zoomLevels.items():
@@ -322,38 +393,38 @@ class DateAxisItem(AxisItem):
             # Test if zoom level is too fine grained
             if maximalSpacing/size < density:
                 break
-            
+
             self.zoomLevel = zoomLevel
-        
+
         # Set up zoomLevel
         self.zoomLevel.utcOffset = self.utcOffset
-        
+
         # Calculate minimal spacing of items on the axis
         size = sizeOf(self.zoomLevel.exampleText)
         self.minSpacing = density*size
-        
+
     def linkToView(self, view):
         """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
         self._linkToView_internal(view) # calls original linkToView code
-        
+
         # Set default limits
         _min = MIN_REGULAR_TIMESTAMP
         _max = MAX_REGULAR_TIMESTAMP
-        
+
         if self.orientation in ['right', 'left']:
             view.setLimits(yMin=_min, yMax=_max)
         else:
             view.setLimits(xMin=_min, xMax=_max)
-        
+
     def generateDrawSpecs(self, p):
         # Get font metrics from QPainter
         # Not happening in "paint", as the QPainter p there is a different one from the one here,
         # so changing that font could cause unwanted side effects
         if self.style['tickFont'] is not None:
             p.setFont(self.style['tickFont'])
-        
+
         self.fontMetrics = p.fontMetrics()
-        
+
         # Get font scale factor by current window resolution
-        
+
         return super(DateAxisItem, self).generateDrawSpecs(p)
