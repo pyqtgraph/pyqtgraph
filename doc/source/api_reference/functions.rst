@@ -58,6 +58,8 @@ Coordinate Transformation
 
 .. autofunction:: pyqtgraph.solveBilinearTransform
 
+.. autofunction:: pyqtgraph.invertQTransform
+
 SI Unit Conversion Functions
 ----------------------------
 
