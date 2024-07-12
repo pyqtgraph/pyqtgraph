@@ -1,18 +1,26 @@
 Qt Crash Course
 ===============
 
-PyQtGraph makes extensive use of Qt for generating nearly all of its visual output and interfaces. Qt's documentation is very well written and we encourage all pyqtgraph developers to familiarize themselves with it. The purpose of this section is to provide an introduction to programming with Qt (using either PyQt or PySide) for the pyqtgraph developer.
+PyQtGraph makes extensive use of Qt for generating nearly all of its visual output and
+interfaces. Qt's documentation is very well written and we encourage all pyqtgraph
+developers to familiarize themselves with it. The purpose of this section is to provide
+an introduction to programming with Qt (using either PyQt or PySide) for the pyqtgraph
+developer.
 
 QWidgets and Layouts
 --------------------
 
 A Qt GUI is almost always composed of a few basic components:
     
-* A window. This is often provided by QMainWindow, but note that all QWidgets can be displayed in their window by simply calling widget.show() if the widget does not have a parent. 
+* A window. This is often provided by QMainWindow, but note that all QWidgets can be
+  displayed in their window by simply calling widget.show() if the widget does not have
+  a parent. 
 * Multiple QWidget instances such as QPushButton, QLabel, QComboBox, etc. 
-* QLayout instances (optional, but strongly encouraged) which automatically manage the positioning of widgets to allow the GUI to resize in a usable way.
+* QLayout instances (optional, but strongly encouraged) which automatically manage the
+  positioning of widgets to allow the GUI to resize in a usable way.
 
-PyQtGraph fits into this scheme by providing its own QWidget subclasses to be inserted into your GUI.
+PyQtGraph fits into this scheme by providing its own QWidget subclasses to be inserted
+into your GUI.
 
 
 Example::
@@ -49,17 +57,27 @@ Example::
     app.exec()  # or app.exec_() for PyQt5 / PySide2
 
 
-More complex interfaces may be designed graphically using Qt Designer, which allows you to simply drag widgets into your window to define its appearance.
+More complex interfaces may be designed graphically using Qt Designer, which allows you
+to simply drag widgets into your window to define its appearance.
 
 
 Naming Conventions
 ------------------
 
-Virtually every class in pyqtgraph is an extension of base classes provided by Qt. When reading the documentation, remember that all of Qt's classes start with the letter 'Q', whereas pyqtgraph's classes do not. When reading through the methods for any class, it is often helpful to see which Qt base classes are used and look through the Qt documentation as well.
+Virtually every class in pyqtgraph is an extension of base classes provided by Qt. When
+reading the documentation, remember that all of Qt's classes start with the letter 'Q',
+whereas pyqtgraph's classes do not. When reading through the methods for any class, it
+is often helpful to see which Qt base classes are used and look through the Qt
+documentation as well.
 
-Most of Qt's classes define signals which can be difficult to tell apart from regular methods. Almost all signals explicity defined by pyqtgraph are named beginning with 'sig' to indicate that these signals are not defined at the Qt level.
+Most of Qt's classes define signals which can be difficult to tell apart from regular
+methods. Almost all signals explicitly defined by pyqtgraph are named beginning with
+'sig' to indicate that these signals are not defined at the Qt level.
 
-In most cases, classes which end in 'Widget' are subclassed from QWidget and can therefore be used as a GUI element in a Qt window. Classes which end in 'Item' are subclasses of QGraphicsItem and can only be displayed within a QGraphicsView instance (such as GraphicsLayoutWidget or PlotWidget). 
+In most cases, classes which end in 'Widget' are subclassed from QWidget and can
+therefore be used as a GUI element in a Qt window. Classes which end in 'Item' are
+subclasses of QGraphicsItem and can only be displayed within a QGraphicsView instance
+(such as GraphicsLayoutWidget or PlotWidget). 
 
 
 Signals, Slots, and Events
@@ -93,34 +111,47 @@ Mouse and Keyboard Input
 
 Events Overview
 ^^^^^^^^^^^^^^^
-Understanding events in a Qt application is fundamental before delving into specific input handling such as mouse and keyboard:
+Understanding events in a Qt application is fundamental before delving into specific
+input handling such as mouse and keyboard:
 
-- Events in Qt are conceptualized as user interactions with the application, each represented by an event object (QEvent).
+- Events in Qt are conceptualized as user interactions with the application, each
+  represented by an event object (QEvent).
 - Various types of events correspond to different user interactions.
 - Event objects encapsulate details concerning the specific occurrence.
-- Dispatched to designated event handlers within the widget where the interaction occurs, these events allow for customizable responses.
+- Dispatched to designated event handlers within the widget where the interaction
+  occurs, these events allow for customizable responses.
 - Handlers may be extended or redefined to modify widget response to interactions.
 
 Mouse Events
 ^^^^^^^^^^^^
-Interactions such as clicks, movements, and button releases are managed by overriding methods including ``mousePressEvent``, ``mouseReleaseEvent``, ``mouseDoubleClickEvent``, and ``mouseMoveEvent``.
+Interactions such as clicks, movements, and button releases are managed by overriding
+methods including ``mousePressEvent``, ``mouseReleaseEvent``, ``mouseDoubleClickEvent``,
+and ``mouseMoveEvent``.
 
 Integration with PyQtGraph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-PyQtGraph utilizes QWidget subclasses to present graphics and plots. Consequently, the event-handling methods discussed can be directly integrated into PyQtGraph widgets. This integration enables sophisticated interactive features in applications that leverage PyQtGraph for visual data representation.
+PyQtGraph utilizes QWidget subclasses to present graphics and plots. Consequently, the
+event-handling methods discussed can be directly integrated into PyQtGraph widgets. This
+integration enables sophisticated interactive features in applications that leverage
+PyQtGraph for visual data representation.
 
 Example: Handling Mouse Clicks in a PlotWidget::
 
-    from PyQt6.QtWidgets import QApplication, QMainWindow # Should work with PyQt5 / PySide2 / PySide6 as well
+    from PyQt6.QtWidgets import QApplication, QMainWindow 
+    # Should work with PyQt5 / PySide2 / PySide6 as well
     from PyQt6.QtCore import Qt
 
     class MainWindow(QMainWindow):
         def __init__(self):
             super().__init__()
-            self.setWindowTitle('Mouse and Keyboard Event Demo') # Sets the Title of the window
-            self.setGeometry(100, 100, 400, 300) # Sets the position and size of the window
+            # Set the Title of the window
+            self.setWindowTitle('Mouse and Keyboard Event Demo')
+            # Set the position and size of the window
+            self.setGeometry(100, 100, 400, 300)
 
-        def mousePressEvent(self, event): # This method checks if the left mouse button was pressed on the widget and prints the position of the click.
+        # This method checks if the left mouse button was pressed on the widget and
+        # prints the position of the click.
+        def mousePressEvent(self, event):
             if event.button() == Qt.MouseButton.LeftButton:
                 print("Left mouse button pressed at:", event.position())
 
@@ -130,25 +161,32 @@ Example: Handling Mouse Clicks in a PlotWidget::
     window.show()
     app.exec()  # Start the event loop
 
-This code snippet demonstrates initializing a basic PyQt6 application that responds to a left mouse button click, illustrating the practical application of handling mouse events in a PyQtGraph environment.
+This code snippet demonstrates initializing a basic PyQt6 application that responds to a
+left mouse button click, illustrating the practical application of handling mouse events
+in a PyQtGraph environment.
 
 Keyboard Events
 ^^^^^^^^^^^^^^^
-Keyboard inputs are similarly handled by overriding ``keyPressEvent`` and ``keyReleaseEvent``, allowing applications to react to various keystrokes and facilitate shortcuts and other interactions.
+Keyboard inputs are similarly handled by overriding ``keyPressEvent`` and
+``keyReleaseEvent``, allowing applications to react to various keystrokes and facilitate
+shortcuts and other interactions.
 
 Integration with PyQtGraph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Example: Handling Keyboard Inputs:: 
 
-    from PyQt6.QtWidgets import QApplication, QMainWindow # Should work with PyQt5 / PySide2 / PySide6 as well
+    from PyQt6.QtWidgets import QApplication, QMainWindow
+    # Should work with PyQt5 / PySide2 / PySide6 as well
     from PyQt6.QtCore import Qt
 
     class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('Keyboard Input Tracker')  # Sets the Title of the window
-        self.setGeometry(100, 100, 400, 300)  # Sets the position and size of the window
+        # Set the Title of the window
+        self.setWindowTitle('Keyboard Input Tracker')
+        # Sets the position and size of the window
+        self.setGeometry(100, 100, 400, 300)
 
     def keyPressEvent(self, event): # Checks if a specific key was pressed
 
@@ -157,7 +195,9 @@ Example: Handling Keyboard Inputs::
         elif event.key() == Qt.Key.Key_Space:
             print("Space bar was pressed.")
         else:
-            print(f"Key pressed: {event.text()}") #The 'event.text()' method retrieves the character or characters associated with the key press, and then prints it to the console.
+            # The 'event.text()' method retrieves the character or characters associated
+            # with the key press, and then prints it to the console.
+            print(f"Key pressed: {event.text()}")
 
     # Initialize the QApplication
     app = QApplication([])
@@ -167,27 +207,35 @@ Example: Handling Keyboard Inputs::
 
 Event Propagation
 ^^^^^^^^^^^^^^^^^
-In PyQt, when an event is not handled by a widget, or the widget explicitly decides against handling it, the event is propagated to its parent widget. This process, commonly referred to as "bubbling," continues upward through the nested widgets until the event is either handled or reaches the main window.
+In PyQt, when an event is not handled by a widget, or the widget explicitly decides
+against handling it, the event is propagated to its parent widget. This process,
+commonly referred to as "bubbling," continues upward through the nested widgets until
+the event is either handled or reaches the main window.
 
-It is facilitated by methods such as ``.accept()`` and ``.ignore()``, which allow developers to exert precise control over the event flow. 
+It is facilitated by methods such as ``.accept()`` and ``.ignore()``, which allow
+developers to exert precise control over the event flow. 
 
 Example: Custom Event Handling ::
 
     class CustomButton(QPushButton):
         def mousePressEvent(self, event):
-            event.accept() # The event is marked as handled, preventing further propagation
-            # Alternatively: 
-            event.ignore() # the event can be marked as unhandled, allowing it to propagate further
+            # The event is marked as handled, preventing further propagation
+            event.accept()
+
+            # Alternatively the event can be marked as unhandled, allowing it to 
+            # propagate further
+            event.ignore()
 
 QTimer, Multi-Threading
 -----------------------
 QTimer
 ^^^^^^
-Qtimer is simply a Qt class that provides a high-level interface for creating and managing timers in a Qt Application.
-This timers are used to perform an action periodically.
+Qtimer is simply a Qt class that provides a high-level interface for creating and
+managing timers in a Qt Application. This timers are used to perform an action
+periodically.
 
-Where is is used? It can be used for tasks such as doing periodic data polling of the tasks, updating the User-Interface, or triggering the events at
-regular intervals.
+Where is is used? It can be used for tasks such as doing periodic data polling of the
+tasks, updating the User-Interface, or triggering the events at regular intervals.
 
 Example of this executed by this code::
 
@@ -221,14 +269,19 @@ Example of this executed by this code::
 This is the example of Qtimer and workable in Pycharm.
 
 Multi-threading
-^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
-Multi-threading simple by definition means running multiple threads simultaneously and concurrently within the same application.
-This could help keep the User-Interface responsive while running the operating long running or blocking operations in separate threads.
+Multi-threading simple by definition means running multiple threads simultaneously and
+concurrently within the same application. This could help keep the User-Interface
+responsive while running the operating long running or blocking operations in separate
+threads.
 
-The Qt provides the QThread class to handle the threading. Its usefulness lies for the tasks such as network communication, file I/O, and other applications that run independently of the main GUI thread.
+The Qt provides the QThread class to handle the threading. Its usefulness lies for the
+tasks such as network communication, file I/O, and other applications that run
+independently of the main GUI thread.
 
-For example, in this code below QThread is to update the Qlabel with the current time every second without blocking the main GUI thread::
+For example, in this code below QThread is to update the Qlabel with the current time
+every second without blocking the main GUI thread::
 
     import sys
     from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
@@ -272,34 +325,47 @@ For example, in this code below QThread is to update the Qlabel with the current
         window.show()
         sys.exit(app.exec())
 
-This code has been written and compiled in Pycharm and it perfectly gives the output for the Multi-threading example.
-This example demonstrates using QTimer to periodically check the status of a QThread and update the QLabel with the current recent time, ensuring the User-Interface remains responsive.
-By integrating QTimer and QThread, you can efficiently manage periodic tasks and long-running operations in a PyQt application, maintaining a smooth and responsive user interface.
+This code has been written and compiled in Pycharm and it perfectly gives the output for
+the Multi-threading example. This example demonstrates using QTimer to periodically
+check the status of a QThread and update the QLabel with the current recent time,
+ensuring the User-Interface remains responsive. By integrating QTimer and QThread, you
+can efficiently manage periodic tasks and long-running operations in a PyQt application,
+maintaining a smooth and responsive user interface.
 
 Multi-threading vs Multi-processing in Qt
-----------------------------------------
+-----------------------------------------
 
 **Definitions**
 
 **Multi-Threading:**
-Multi-threading enables an application to carry out multiple tasks simultaneously within a single process. Since threads operate in the same memory space, they are efficient and ideal for I/O-bound tasks such as network operations or file handling. In Qt, threads are managed using the QThread class.
+Multi-threading enables an application to carry out multiple tasks simultaneously within
+a single process. Since threads operate in the same memory space, they are efficient and
+ideal for I/O-bound tasks such as network operations or file handling. In Qt, threads
+are managed using the QThread class.
 
 **Multi-Processing:**
-Multi-processing runs multiple processes at the same time, each with its own memory space. This approach is more resource-intensive compared to multi-threading but is better suited for CPU-bound tasks that require significant processing power. The multiprocessing module in Python is typically used for this purpose in Qt applications.
+Multi-processing runs multiple processes at the same time, each with its own memory
+space. This approach is more resource-intensive compared to multi-threading but is
+better suited for CPU-bound tasks that require significant processing power. The
+multiprocessing module in Python is typically used for this purpose in Qt applications.
 
 **When to Use Multi-Threading vs. Multi-Processing**
 
 Use Multi-Threading When:
 
-The tasks are I/O-bound, such as file operations, network communication, or database access.
-You need to keep the user interface responsive while performing background tasks.
+The tasks are I/O-bound, such as file operations, network communication, or database
+access. You need to keep the user interface responsive while performing background
+tasks.
 
 Use Multi-Processing When:
 
-The tasks are CPU-bound, such as heavy computations or data processing.
-You want to avoid issues related to shared memory and race conditions that can arise with multi-threading.
+* The tasks are CPU-bound, such as heavy computations or data processing.
+* You want to avoid issues related to shared memory and race conditions that can arise
+  with multi-threading.
+
 Multi-Threading Example
-Below is an example of a PyQt application that uses a background thread to update the user interface::
+Below is an example of a PyQt application that uses a background thread to update the 
+user interface::
 
     import sys
     from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
@@ -343,7 +409,8 @@ Below is an example of a PyQt application that uses a background thread to updat
             window.show()
             sys.exit(app.exec())
 
-In this example, a QThread is used to update the QLabel with the current time every second, keeping the UI responsive.
+In this example, a QThread is used to update the QLabel with the current time every
+second, keeping the UI responsive.
 
 Multi-threading in PyQt
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -352,34 +419,40 @@ Multi-threading in PyQt
 ^^^^^^^^^^^^^^^
 
 **Shared Memory:**
-Threads share the same memory, making it easy to share data without needing special communication methods. 
+Threads share the same memory, making it easy to share data without needing special
+communication methods. 
 
 **Lower Overhead:**
-Threads are lighter and quicker to create and manage compared to processes, which is efficient for smaller tasks. 
+Threads are lighter and quicker to create and manage compared to processes, which is
+efficient for smaller tasks. 
 
 **Qt Support:**
-PyQt offers strong support for threading with QThread and related classes like QtConcurrent, QMutex, and QSemaphore. 
+PyQt offers strong support for threading with QThread and related classes like
+QtConcurrent, QMutex, and QSemaphore. 
 
 **Disadvantages:**
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
 **Complexity:**
-Synchronizing threads can be tricky and prone to errors such as deadlocks and race conditions. 
+Synchronizing threads can be tricky and prone to errors such as deadlocks and race
+conditions. 
 
 **Global Interpreter Lock (GIL):**
-In PyQt, the GIL restricts Python bytecode execution to one thread at a time, limiting performance benefits. 
+In PyQt, the GIL restricts Python bytecode execution to one thread at a time, limiting
+performance benefits. 
 
 **Shared Resources:**
-Threads sharing the same memory can lead to problems if they access shared resources simultaneously without proper synchronization.
+Threads sharing the same memory can lead to problems if they access shared resources
+simultaneously without proper synchronization.
 
 Multi-processing in PyQt
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Advantages:**
 ^^^^^^^^^^^^^^^
 
 **Isolation:**
 
-Each process has its own memory, so tasks don’t interfere with each other. 
+Each process has its own memory, so tasks don't interfere with each other. 
 
 **No GIL:**
 
@@ -387,10 +460,11 @@ Multi-processing bypasses the GIL, allowing true parallel execution of Python co
 
 **Stability:**
 
-A crash in one process doesn't affect other processes, enhancing overall application stability. 
+A crash in one process doesn't affect other processes, enhancing overall application
+stability. 
 
 **Disadvantages:**
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
 
 **Higher Overhead:**
 
@@ -398,11 +472,9 @@ Creating and managing processes takes more resources and time compared to thread
 
 **Complex Communication:**
 
-Sharing data between processes requires more complex methods like pipes, sockets, or shared memory. 
+Sharing data between processes requires more complex methods like pipes, sockets, or
+shared memory. 
 
 **Resource Usage:**
 
 Processes consume more system resources (memory, handles) than threads.
-
-
------------------------------------------
