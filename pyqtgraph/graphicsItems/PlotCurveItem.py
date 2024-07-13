@@ -88,8 +88,10 @@ class OpenGLState:
             # however, when there are multiple PlotCurveItems, the following bug occurs:
             # all except one of the C++ objects of the returned versionFunctions() get
             # deleted.
-            import PyQt5._QOpenGLFunctions_2_0 as QtOpenGLFunctions
-            glf = QtOpenGLFunctions.QOpenGLFunctions_2_0()
+            suffix = "ES2" if context.isOpenGLES() else "2_0"
+            modname = f"QOpenGLFunctions_{suffix}"
+            QtOpenGLFunctions = importlib.import_module(f"PyQt5._{modname}")
+            glf = getattr(QtOpenGLFunctions, modname)()
             glf.initializeOpenGLFunctions()
         elif QT_LIB == 'PySide2':
             import PySide2.QtOpenGLFunctions as QtOpenGLFunctions
