@@ -652,7 +652,6 @@ class OpenGLState:
     """
 
     VERT_SRC = """
-        #version 140
         in vec4 a_position;
         in float a_luminance;
         flat out float v_luminance;
@@ -664,7 +663,9 @@ class OpenGLState:
         }
     """
     FRAG_SRC = """
-        #version 140
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
         flat in float v_luminance;
         out vec4 FragColor;
         uniform sampler2D u_texture;
@@ -704,12 +705,27 @@ class OpenGLState:
         else:
             QtOpenGL = importlib.import_module(f'{QT_LIB}.QtOpenGL')
 
-        if self.use_ibo is not False and self.context.format().version() >= (3, 1):
-            VERT_SRC, FRAG_SRC = OpenGLState.VERT_SRC, OpenGLState.FRAG_SRC
-            self.use_ibo = True
+        is_opengles = self.context.isOpenGLES()
+        gl_version = self.context.format().version()
+        if not is_opengles and gl_version >= (3, 1):
+            moderngl = True
+        elif is_opengles and gl_version >= (3, 0):
+            moderngl = True
         else:
-            VERT_SRC, FRAG_SRC = OpenGLState.VERT_SRC_COMPAT, OpenGLState.FRAG_SRC_COMPAT
+            moderngl = False
             self.use_ibo = False
+
+        if self.use_ibo and moderngl:
+            if not is_opengles:
+                glsl_version = "#version 140"
+            else:
+                glsl_version = "#version 300 es"
+            VERT_SRC = "\n".join([glsl_version, OpenGLState.VERT_SRC])
+            FRAG_SRC = "\n".join([glsl_version, OpenGLState.FRAG_SRC])
+        else:
+            VERT_SRC = OpenGLState.VERT_SRC_COMPAT
+            FRAG_SRC = OpenGLState.FRAG_SRC_COMPAT
+
         self.m_program = QtOpenGL.QOpenGLShaderProgram(self.context)
         self.m_program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, VERT_SRC)
         self.m_program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, FRAG_SRC)
