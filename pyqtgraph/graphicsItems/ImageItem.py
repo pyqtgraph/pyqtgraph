@@ -324,7 +324,7 @@ class ImageItem(GraphicsObject):
         self._renderRequired = True
         self.update()
 
-    def getNanPolicy(self) -> str:
+    def nanPolicy(self) -> str:
         """
         Retrieve the string representing the current NaN policy.
 
