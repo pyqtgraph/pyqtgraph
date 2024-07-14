@@ -116,7 +116,7 @@ class ViewBox(GraphicsWidget):
         *border*           (QPen) Do draw a border around the view, give any
                            single argument accepted by :func:`mkPen <pyqtgraph.mkPen>`
         *lockAspect*       (False or float) The aspect ratio to lock the view
-                           coorinates to. (or False to allow the ratio to change)
+                           coordinates to. (or False to allow the ratio to change)
         *enableMouse*      (bool) Whether mouse can be used to scale/pan the view
         *invertY*          (bool) See :func:`invertY <pyqtgraph.ViewBox.invertY>`
         *invertX*          (bool) See :func:`invertX <pyqtgraph.ViewBox.invertX>`
@@ -1294,7 +1294,9 @@ class ViewBox(GraphicsWidget):
 
         s = 1.02 ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
         s = [(None if m is False else s) for m in mask]
-        center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
+        inv = fn.np_invert_qtransform(self.childGroup.transform())
+        inv = fn.turnInfToSysMax(inv)
+        center = Point(fn.np_map(inv, ev.pos()))
 
         self._resetTarget()
         self.scaleBy(s, center)
@@ -1349,8 +1351,8 @@ class ViewBox(GraphicsWidget):
                     self.updateScaleBox(ev.buttonDownPos(), ev.pos())
             else:
                 tr = self.childGroup.transform()
-                tr = fn.invertQTransform(tr)
-                tr = tr.map(dif*mask) - tr.map(Point(0,0))
+                tr = fn.np_invert_qtransform(tr)
+                tr = fn.np_map(tr, Point(*(dif*mask))) - fn.np_map(tr, Point(0,0))
 
                 x = tr.x() if mask[0] == 1 else None
                 y = tr.y() if mask[1] == 1 else None
@@ -1370,12 +1372,12 @@ class ViewBox(GraphicsWidget):
             s = ((mask * 0.02) + 1) ** dif
 
             tr = self.childGroup.transform()
-            tr = fn.invertQTransform(tr)
+            tr = fn.np_invert_qtransform(tr)
 
             x = s[0] if mouseEnabled[0] == 1 else None
             y = s[1] if mouseEnabled[1] == 1 else None
 
-            center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.MouseButton.RightButton)))
+            center = Point(fn.np_map(tr, ev.buttonDownPos(QtCore.Qt.MouseButton.RightButton)))
             self._resetTarget()
             self.scaleBy(x=x, y=y, center=center)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
@@ -1697,7 +1699,11 @@ class ViewBox(GraphicsWidget):
         vr = self.viewRect()
         if vr.height() == 0 or vr.width() == 0:
             return
-        scale = Point(bounds.width()/vr.width(), bounds.height()/vr.height())
+
+        x_scale = fn.turnInfToSysMax(bounds.width() / vr.width())
+        y_scale = fn.turnInfToSysMax(bounds.height() / vr.height())
+
+        scale = Point(x_scale, y_scale)
         if not self.state['yInverted']:
             scale = scale * Point(1, -1)
         if self.state['xInverted']:
