@@ -1786,10 +1786,10 @@ def downsample(data, n, axis=0, xvals='subsample', *, nanPolicy='ignore'):
     sl[axis] = slice(0, nPts*n)
     d1 = data[tuple(sl)]
     d1.shape = tuple(s)
-    if nanPolicy == 'ignore':
-        d2 = np.nanmean(d1, axis+1)
-    elif nanPolicy == 'propagate':
+    if nanPolicy == 'propagate':
         d2 = d1.mean(axis+1)
+    elif nanPolicy == 'ignore':
+        d2 = np.nanmean(d1, axis+1)
     else:
         raise ValueError(f"Keyword argument {nanPolicy=} must be one of ['propagate', 'ignore'].")
     return d2

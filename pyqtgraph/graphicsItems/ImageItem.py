@@ -73,7 +73,7 @@ class ImageItem(GraphicsObject):
         self.levels = None  ## [min, max] or [[redMin, redMax], ...]
         self.lut = None
         self.autoDownsample = False
-        self.nanPolicy = 'ignore'
+        self.nanPolicy = 'propagate'
         self._colorMap = None # This is only set if a color map is assigned directly
         self._lastDownsample = (1, 1)
         self._processingBuffer = None
@@ -334,7 +334,8 @@ class ImageItem(GraphicsObject):
             Must be one of ['ignore`, 'propagate']. If 'nanPolicy' is 'ignore', NaNs
             are automatically ignored during downsampling, at the expense of
             performance. If 'nanPolicy' is 'propagate', NaNs are kept during
-            downsampling. ImageItem is instantiated with nanPolicy set to 'ignore'.
+            downsampling. Unless a different policy was specified, a new ImageItem is
+            created with ``nanPolicy='propagate'``.
         """
         assert nanPolicy in ['propagate', 'ignore'], (f"{nanPolicy=} must be one "
                                                       f"of ['propagate', 'ignore']")
