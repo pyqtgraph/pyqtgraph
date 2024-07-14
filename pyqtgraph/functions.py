@@ -2935,6 +2935,52 @@ def invertQTransform(tr):
         return _pinv_fallback(tr)
     
 
+def turnInfToSysMax(val):
+    """Turns infinite values into sys.float_info.max and -infinite values into -sys.float_info.max.
+       Used for QPointF and QTransform or normal float values.
+    """
+    if isinstance(val, QtCore.QPointF):
+        return QtCore.QPointF(turnInfToSysMax(val.x()), turnInfToSysMax(val.y()))
+    if isinstance(val, QtGui.QTransform):
+        return QtGui.QTransform(turnInfToSysMax(val.m11()), turnInfToSysMax(val.m12()), turnInfToSysMax(val.m13()),
+                                turnInfToSysMax(val.m21()), turnInfToSysMax(val.m22()), turnInfToSysMax(val.m23()),
+                                turnInfToSysMax(val.m31()), turnInfToSysMax(val.m32()), turnInfToSysMax(val.m33()))
+    if val == math.inf:
+        return sys.float_info.max
+    if val == -math.inf:
+        return -sys.float_info.max
+    return val
+
+
+def np_invert_qtransform(tr):
+    """
+    Inverts a QTransform without using the Qt API. This is useful when the Qt API fails to invert a matrix and produces NaNs.
+    """
+    np_inv_tr = np.linalg.inv(np.array([[tr.m11(), tr.m12(), tr.m13()],
+                                       [tr.m21(), tr.m22(), tr.m23()],
+                                       [tr.m31(), tr.m32(), tr.m33()]]))
+    q_transform = QtGui.QTransform(*np_inv_tr.ravel().tolist())
+    q_transform = turnInfToSysMax(q_transform)
+    return q_transform
+
+def np_map(tr, pos):
+    """
+    Maps a QPointF using a QTransform without using the Qt API. This is useful when the Qt API fails to map a point and produces NaNs.
+    """
+    new_x = turnInfToSysMax(tr.m11() * pos.x()) + turnInfToSysMax(tr.m21() * pos.y()) + turnInfToSysMax(tr.dx())
+    new_y = turnInfToSysMax(tr.m22() * pos.y()) + turnInfToSysMax(tr.m12() * pos.x()) + tr.dy()
+
+    new_x = turnInfToSysMax(new_x)
+    new_y = turnInfToSysMax(new_y)
+
+    if tr.isAffine():
+        w = tr.m13() * pos.x() + tr.m23() * pos.y() + tr.m33()
+        w = turnInfToSysMax(w)
+        new_x /= w
+        new_y /= w
+
+    return QtCore.QPointF(new_x, new_y)
+
 def pseudoScatter(data, spacing=None, shuffle=True, bidir=False, method='exact'):
     """Return an array of position values needed to make beeswarm or column scatter plots.
     
