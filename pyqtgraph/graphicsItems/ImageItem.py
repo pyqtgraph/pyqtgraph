@@ -73,7 +73,7 @@ class ImageItem(GraphicsObject):
         self.levels = None  ## [min, max] or [[redMin, redMax], ...]
         self.lut = None
         self.autoDownsample = False
-        self.nanPolicy = 'propagate'
+        self._nanPolicy = 'propagate'
         self._colorMap = None # This is only set if a color map is assigned directly
         self._lastDownsample = (1, 1)
         self._processingBuffer = None
@@ -324,6 +324,19 @@ class ImageItem(GraphicsObject):
         self._renderRequired = True
         self.update()
 
+    def getNanPolicy(self) -> str:
+        """
+        Retrieve the string representing the current NaN policy.
+
+        See :meth:setNanPolicy.
+
+        Returns
+        -------
+        { 'propagate', 'omit' }
+            The NaN policy that this ImageItem uses during downsampling.
+        """
+        return self._nanPolicy
+
     def setNanPolicy(self, nanPolicy: str):
         """
         Control how NaN values are handled during downsampling for this ImageItem.
@@ -338,7 +351,7 @@ class ImageItem(GraphicsObject):
         """
         if nanPolicy not in ['propagate', 'omit']:
             raise ValueError(f"{nanPolicy=} must be one of {'propagate', 'omit'}")
-        self.nanPolicy = nanPolicy
+        self._nanPolicy = nanPolicy
         self._renderRequired = True
         self.update()
 
@@ -422,7 +435,7 @@ class ImageItem(GraphicsObject):
         if 'autoDownsample' in kwargs:
             self.setAutoDownsample(kwargs['autoDownsample'])
         if 'nanPolicy' in kwargs:
-            self.nanPolicy = kwargs['nanPolicy']
+            self.setNanPolicy(kwargs['nanPolicy'])
         if 'rect' in kwargs:
             self.setRect(kwargs['rect'])
         if update:
@@ -742,7 +755,7 @@ class ImageItem(GraphicsObject):
                 return
 
             axes = [1, 0] if self.axisOrder == 'row-major' else [0, 1]
-            nan_policy = self.nanPolicy if self._imageHasNans else 'propagate'
+            nan_policy = self._nanPolicy if self._imageHasNans else 'propagate'
             image = fn.downsample(self.image, xds, axis=axes[0], nanPolicy=nan_policy)
             image = fn.downsample(image, yds, axis=axes[1], nanPolicy=nan_policy)
             self._lastDownsample = (xds, yds)
