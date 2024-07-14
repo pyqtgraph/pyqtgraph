@@ -232,6 +232,7 @@ class ViewBox(GraphicsWidget):
         self._viewPixelSizeCache  = None
 
         self._reachedMaxZoom = [False, False]
+        self._smallestZoom = [sys.float_info.min * 200, sys.float_info.min * 200]
 
     @property
     def rbScaleBox(self):
@@ -696,17 +697,17 @@ class ViewBox(GraphicsWidget):
         (by default, this value is between the default padding and 0.1 depending on the size of the ViewBox)
         """
 
-        if 0 < max < sys.float_info.min:
-            max = sys.float_info.min
+        if 0 < max < self._smallestZoom[1]:
+            max = self._smallestZoom[1]
 
-        if 0 < min < sys.float_info.min:
-            min = sys.float_info.min
+        if 0 < min < self._smallestZoom[1]:
+            min = self._smallestZoom[1]
 
-        if -sys.float_info.min < min < 0:
-            min = -sys.float_info.min
+        if -self._smallestZoom[1] < min < 0:
+            min = -self._smallestZoom[1]
 
-        if -sys.float_info.min < max < 0:
-            max = -sys.float_info.min
+        if -self._smallestZoom[1] < max < 0:
+            max = -self._smallestZoom[1]
 
         self.setRange(yRange=[min, max], update=update, padding=padding)
 
@@ -716,17 +717,17 @@ class ViewBox(GraphicsWidget):
         The *padding* argument causes the range to be set larger by the fraction specified.
         (by default, this value is between the default padding and 0.1 depending on the size of the ViewBox)
         """
-        if 0 < max < sys.float_info.min:
-            max = sys.float_info.min
+        if 0 < max < self._smallestZoom[0]:
+            max = self._smallestZoom[0]
 
-        if 0 < min < sys.float_info.min:
-            min = sys.float_info.min
+        if 0 < min < self._smallestZoom[0]:
+            min = self._smallestZoom[0]
 
-        if -sys.float_info.min < min < 0:
-            min = -sys.float_info.min
+        if -self._smallestZoom[0] < min < 0:
+            min = -self._smallestZoom[0]
 
-        if -sys.float_info.min < max < 0:
-            max = -sys.float_info.min
+        if -self._smallestZoom[0] < max < 0:
+            max = -self._smallestZoom[0]
 
         self.setRange(xRange=[min, max], update=update, padding=padding)
 
@@ -1002,20 +1003,20 @@ class ViewBox(GraphicsWidget):
                     if k == 'yRange':
                         max_zoom_index = 1
 
-                    if 0 < args[k][0] < sys.float_info.min:
-                        args[k][0] = sys.float_info.min
+                    if 0 < args[k][0] < self._smallestZoom[0]:
+                        args[k][0] = self._smallestZoom[0]
                         self._reachedMaxZoom[max_zoom_index] = True
 
-                    if 0 < args[k][1] < sys.float_info.min:
-                        args[k][1] = sys.float_info.min
+                    if 0 < args[k][1] < self._smallestZoom[1]:
+                        args[k][1] = self._smallestZoom[1]
                         self._reachedMaxZoom[max_zoom_index] = True
 
-                    if -sys.float_info.min < args[k][0] < 0:
-                        args[k][0] = -sys.float_info.min
+                    if -self._smallestZoom[0] < args[k][0] < 0:
+                        args[k][0] = -self._smallestZoom[0]
                         self._reachedMaxZoom[max_zoom_index] = True
 
-                    if -sys.float_info.min < args[k][1] < 0:
-                        args[k][1] = -sys.float_info.min
+                    if -self._smallestZoom[1] < args[k][1] < 0:
+                        args[k][1] = -self._smallestZoom[1]
                         self._reachedMaxZoom[max_zoom_index] = True
 
                     if not math.isfinite(args[k][0]) or not math.isfinite(args[k][1]):
@@ -1763,11 +1764,11 @@ class ViewBox(GraphicsWidget):
         x_scale = fn.turnInfToSysMax(bounds.width() / vr.width())
         y_scale = fn.turnInfToSysMax(bounds.height() / vr.height())
 
-        if abs(x_scale) == sys.float_info.max:
+        if abs(x_scale) > sys.float_info.max / 2:
             self._reachedMaxZoom[0] = True
         else:
             self._reachedMaxZoom[0] = False
-        if abs(y_scale) == sys.float_info.max:
+        if abs(y_scale) > sys.float_info.max / 2:
             self._reachedMaxZoom[1] = True
         else:
             self._reachedMaxZoom[1] = False
