@@ -330,15 +330,14 @@ class ImageItem(GraphicsObject):
 
         Parameters
         ----------
-        nanPolicy : str
-            Must be one of ['ignore`, 'propagate']. If 'nanPolicy' is 'ignore', NaNs
-            are automatically ignored during downsampling, at the expense of
-            performance. If 'nanPolicy' is 'propagate', NaNs are kept during
-            downsampling. Unless a different policy was specified, a new ImageItem is
-            created with ``nanPolicy='propagate'``.
+        nanPolicy : { 'propagate', 'omit' }
+            If 'nanPolicy' is 'ignore', NaNs are automatically ignored during
+            downsampling, at the expense of performance. If 'nanPolicy' is 'propagate',
+            NaNs are kept during downsampling. Unless a different policy was specified,
+            a new ImageItem is created with ``nanPolicy='propagate'``.
         """
-        assert nanPolicy in ['propagate', 'ignore'], (f"{nanPolicy=} must be one "
-                                                      f"of ['propagate', 'ignore']")
+        if nanPolicy not in ['propagate', 'omit']:
+            raise ValueError(f"{nanPolicy=} must be one of {'propagate', 'omit'}")
         self.nanPolicy = nanPolicy
         self._renderRequired = True
         self.update()
