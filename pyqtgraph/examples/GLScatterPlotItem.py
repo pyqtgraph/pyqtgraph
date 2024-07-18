@@ -98,6 +98,13 @@ def update():
     color[:,1] = np.clip(z * 1.0, 0, 1)
     color[:,2] = np.clip(z ** 3, 0, 1)
     sp3.setData(pos=pos3, color=color)
+    # If the timer frequency is fast enough for the Qt platform (in case
+    # the frequency is increased or if the desktop is overloaded), the GUI
+    # might get stuck because the event loop won't manage to respond to
+    # events such as window resize etc while the timer is running. This
+    # forces the timer to process the GUI events and to provide a smooth
+    # experience. 
+    app.processEvents()
     
 t = QtCore.QTimer()
 t.timeout.connect(update)

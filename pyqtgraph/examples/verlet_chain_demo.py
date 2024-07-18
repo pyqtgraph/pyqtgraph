@@ -91,6 +91,13 @@ def update():
     s = 0.9
     sim.pos[0] = sim.pos[0] * s + mousepos * (1.0-s)
     sim.update()
+    # If the timer frequency is fast enough for the Qt platform (in case
+    # the frequency is increased or if the desktop is overloaded), the GUI
+    # might get stuck because the event loop won't manage to respond to
+    # events such as window resize etc while the timer is running. This
+    # forces the timer to process the GUI events and to provide a smooth
+    # experience. 
+    app.processEvents()
 
 app = pg.mkQApp()
 win = pg.GraphicsLayoutWidget()

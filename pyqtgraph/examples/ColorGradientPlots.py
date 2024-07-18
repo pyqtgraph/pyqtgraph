@@ -138,8 +138,15 @@ class MainWindow(pg.GraphicsLayoutWidget):
                 dic['buf'][0:idx_b] = new_data[len_1:] # second part of data at re-start
             dic['ptr'] = idx_b
             dic['crv'].setData( dic['buf'] )
+        # If the timer frequency is fast enough for the Qt platform (in case
+        # the frequency is increased or if the desktop is overloaded), the GUI
+        # might get stuck because the event loop won't manage to respond to
+        # events such as window resize etc while the timer is running. This
+        # forces the timer to process the GUI events and to provide a smooth
+        # experience. 
+        app.processEvents()
 
-mkQApp("Gradient plotting example")
+app = mkQApp("Gradient plotting example")
 main_window = MainWindow()
 
 ## Start Qt event loop

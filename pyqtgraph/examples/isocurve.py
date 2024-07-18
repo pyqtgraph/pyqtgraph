@@ -44,6 +44,13 @@ def update():
     img.setImage(data[ptr], levels=imgLevels)
     for c in curves:
         c.setData(data[ptr])
+    # If the timer frequency is fast enough for the Qt platform (in case
+    # the frequency is increased or if the desktop is overloaded), the GUI
+    # might get stuck because the event loop won't manage to respond to
+    # events such as window resize etc while the timer is running. This
+    # forces the timer to process the GUI events and to provide a smooth
+    # experience. 
+    app.processEvents()
 
 timer = QtCore.QTimer()
 timer.timeout.connect(update)

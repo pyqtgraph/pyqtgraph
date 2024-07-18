@@ -50,6 +50,13 @@ def updateData():
     elapsed_now = now - updateTime
     updateTime = now
     elapsed = elapsed * 0.9 + elapsed_now * 0.1
+    # If the timer frequency is fast enough for the Qt platform (in case
+    # the frequency is increased or if the desktop is overloaded), the GUI
+    # might get stuck because the event loop won't manage to respond to
+    # events such as window resize etc while the timer is running. This
+    # forces the timer to process the GUI events and to provide a smooth
+    # experience. 
+    app.processEvents()
 
     # print(f"{1 / elapsed:.1f} fps")
     

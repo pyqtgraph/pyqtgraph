@@ -137,6 +137,13 @@ class RelativityGUI(QtWidgets.QWidget):
             self.animTimer.start(int(self.animDt*1000))
         else:
             self.animTimer.stop()
+        # If the timer frequency is fast enough for the Qt platform (in case
+        # the frequency is increased or if the desktop is overloaded), the GUI
+        # might get stuck because the event loop won't manage to respond to
+        # events such as window resize etc while the timer is running. This
+        # forces the timer to process the GUI events and to provide a smooth
+        # experience. 
+        app.processEvents()
             
     def stepAnimation(self):
         now = perf_counter()
