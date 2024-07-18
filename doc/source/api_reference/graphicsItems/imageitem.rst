@@ -74,6 +74,7 @@ The following guidance should be observed if performance is an important factor
 
 * For floating point `image` arrays, prefer `float32` dtype to `float64` and avoid
   ``NaN`` values.
+
 * Enable Numba with :python:`pyqtgraph.setConfigOption('useNumba', True)`
 
   * JIT compilation will only accelerate repeated image display.
