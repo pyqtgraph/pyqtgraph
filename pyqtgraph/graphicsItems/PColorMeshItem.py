@@ -495,13 +495,12 @@ class PColorMeshItem(GraphicsObject):
         tr.translate(xc, yc)
         mvp = proj * QtGui.QMatrix4x4(tr)
 
-        if glstate.use_ibo:
+        if glstate.flat_shading:
             vtx_array_shape = X.shape
-            num_ind_mesh = np.prod(Z.shape) * 6
         else:
-            vtx_array_shape = Z.shape + (6,)
-            num_ind_mesh = 0
+            vtx_array_shape = Z.shape + (4,)
         num_vtx_mesh = np.prod(vtx_array_shape)
+        num_ind_mesh = np.prod(Z.shape) * 6
 
         # resize (and invalidate) gpu buffers if needed.
         # a reallocation can only occur together with a change in data.
@@ -514,7 +513,7 @@ class PColorMeshItem(GraphicsObject):
             glstate.m_vbo_lum.allocate(num_vtx_mesh * 1 * 4)
             glstate.m_vbo_lum.release()
 
-            if glstate.use_ibo:
+            if glstate.flat_shading:
                 # let the bottom-left of each quad be its "anchor".
                 # then each quad is made up of 2 triangles
                 #   (TR, TL, BL); (BR, TR, BL)
@@ -528,10 +527,21 @@ class PColorMeshItem(GraphicsObject):
                 dim1 = np.arange(Z.shape[1], dtype=np.uint32)[np.newaxis, :, np.newaxis]
                 dim2 = np.array([stride + 1, stride + 0, 0, 1, stride + 1, 0], dtype=np.uint32)[np.newaxis, np.newaxis, :]
                 buf_ind = dim0 + dim1 + dim2
+            else:
+                # for each quad, we store 4 vertices contiguously (BL, BR, TL, TR)
+                # then each quad is made up of 2 triangles
+                #   (TR, TL, BL); (BR, TR, BL)
+                # that have indices
+                #   (3, 2, 0); (1, 3, 0)
+                strides = np.cumprod(vtx_array_shape[::-1])[::-1]
+                dim0 = np.arange(0, strides[0], strides[1], dtype=np.uint32)[:, np.newaxis, np.newaxis]
+                dim1 = np.arange(0, strides[1], strides[2], dtype=np.uint32)[np.newaxis, :, np.newaxis]
+                dim2 = np.array([3, 2, 0, 1, 3, 0], dtype=np.uint32)[np.newaxis, np.newaxis, :]
+                buf_ind = dim0 + dim1 + dim2
 
-                glstate.m_vbo_ind.bind()
-                glstate.m_vbo_ind.allocate(buf_ind, buf_ind.nbytes)
-                glstate.m_vbo_ind.release()
+            glstate.m_vbo_ind.bind()
+            glstate.m_vbo_ind.allocate(buf_ind, buf_ind.nbytes)
+            glstate.m_vbo_ind.release()
 
             dirty_bits &= ~DirtyFlag.DIM
 
@@ -543,7 +553,7 @@ class PColorMeshItem(GraphicsObject):
         if DirtyFlag.XY in dirty_bits:
             pos = np.empty(vtx_array_shape + (2,), dtype=np.float32)
 
-            if glstate.use_ibo:
+            if glstate.flat_shading:
                 pos[..., 0] = X - xc
                 pos[..., 1] = Y - yc
             else:
@@ -551,9 +561,7 @@ class PColorMeshItem(GraphicsObject):
                 pos[..., 0, :] = XY[:-1, :-1, :] # BL
                 pos[..., 1, :] = XY[1:, :-1, :]  # BR
                 pos[..., 2, :] = XY[:-1, 1:, :]  # TL
-                pos[..., 3, :] = XY[1:, :-1, :]  # BR
-                pos[..., 4, :] = XY[1:, 1:, :]   # TR
-                pos[..., 5, :] = XY[:-1, 1:, :]  # TL
+                pos[..., 3, :] = XY[1:, 1:, :]   # TR
 
             glstate.m_vbo_pos.bind()
             glstate.m_vbo_pos.write(0, pos, pos.nbytes)
@@ -564,7 +572,7 @@ class PColorMeshItem(GraphicsObject):
         if DirtyFlag.Z in dirty_bits:
             lum = np.empty(vtx_array_shape, dtype=np.float32)
 
-            if glstate.use_ibo:
+            if glstate.flat_shading:
                 lum[:-1, :-1] = Z
             else:
                 lum[..., :] = np.expand_dims(Z, axis=2)
@@ -591,11 +599,9 @@ class PColorMeshItem(GraphicsObject):
 
         OpenGLHelpers.setUniformValue(program, "u_mvp", mvp)
 
-        if glstate.use_ibo:
-            NULL = compat.voidptr(0) if QT_LIB.startswith("PySide") else None
-            glfn.glDrawElements(GLC.GL_TRIANGLES, num_ind_mesh, GLC.GL_UNSIGNED_INT, NULL)
-        else:
-            glfn.glDrawArrays(GLC.GL_TRIANGLES, 0, num_vtx_mesh)
+        NULL = compat.voidptr(0) if QT_LIB.startswith("PySide") else None
+        glfn.glDrawElements(GLC.GL_TRIANGLES, num_ind_mesh, GLC.GL_UNSIGNED_INT, NULL)
+
         glstate.m_vao.release()
 
 
@@ -673,7 +679,7 @@ class OpenGLState(QtCore.QObject):
             moderngl = False
 
         if moderngl:
-            self.use_ibo = True
+            self.flat_shading = True
             if not is_opengles:
                 glsl_version = "#version 140"
             else:
@@ -681,7 +687,7 @@ class OpenGLState(QtCore.QObject):
             VERT_SRC = "\n".join([glsl_version, OpenGLState.VERT_SRC])
             FRAG_SRC = "\n".join([glsl_version, OpenGLState.FRAG_SRC])
         else:
-            self.use_ibo = False
+            self.flat_shading = False
             VERT_SRC = OpenGLState.VERT_SRC_COMPAT
             FRAG_SRC = OpenGLState.FRAG_SRC_COMPAT
 
