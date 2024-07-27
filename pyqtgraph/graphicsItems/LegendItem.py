@@ -29,6 +29,9 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
 
     """
 
+    sigDoubleClicked = QtCore.Signal(object, object)
+    sigSampleClicked = QtCore.Signal(object)
+
     def __init__(self, size=None, offset=None, horSpacing=25, verSpacing=0,
                  pen=None, brush=None, labelTextColor=None, frame=True,
                  labelTextSize='9pt', colCount=1, sampleType=None, **kwargs):
@@ -218,6 +221,10 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             sample = item
         else:
             sample = self.sampleType(item)
+
+        if hasattr(sample, 'sigClicked'):
+            sample.sigClicked.connect(self.sampleClickEvent)
+
         self.items.append((sample, label))
         self._addItemToLayout(sample, label)
         self.updateSize()
@@ -339,10 +346,19 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             dpos = ev.pos() - ev.lastPos()
             self.autoAnchor(self.pos() + dpos)
 
+    def mouseDoubleClickEvent(self, ev):
+        self.sigDoubleClicked.emit(self, ev)
+        ev.accept()
+
+    def sampleClickEvent(self, sampleItem):
+        self.sigSampleClicked.emit(sampleItem)
+
 
 class ItemSample(GraphicsWidget):
     """Class responsible for drawing a single item in a LegendItem (sans label)
     """
+
+    sigClicked = QtCore.Signal(object)
 
     def __init__(self, item):
         GraphicsWidget.__init__(self)
@@ -395,3 +411,5 @@ class ItemSample(GraphicsWidget):
 
         event.accept()
         self.update()
+        self.sigClicked.emit(self.item)
+
