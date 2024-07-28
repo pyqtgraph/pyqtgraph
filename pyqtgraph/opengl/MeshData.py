@@ -312,7 +312,7 @@ class MeshData(object):
         ## I think generally this should be discouraged..
         faces = self._vertexesIndexedByFaces
         verts = {}  ## used to remember the index of each vertex position
-        self._faces = np.empty(faces.shape[:2], dtype=np.uint)
+        self._faces = np.empty(faces.shape[:2], dtype=np.uint32)
         self._vertexes = []
         self._vertexFaces = []
         self._faceNormals = None
@@ -335,7 +335,7 @@ class MeshData(object):
     
     #def _setUnindexedFaces(self, faces, vertexes, vertexColors=None, faceColors=None):
         #self._vertexes = vertexes #[QtGui.QVector3D(*v) for v in vertexes]
-        #self._faces = faces.astype(np.uint)
+        #self._faces = faces.astype(np.uint32)
         #self._edges = None
         #self._vertexFaces = None
         #self._faceNormals = None
@@ -372,7 +372,7 @@ class MeshData(object):
         if not self.hasFaceIndexedData():
             ## generate self._edges from self._faces
             nf = len(self._faces)
-            edges = np.empty(nf*3, dtype=[('i', np.uint, 2)])
+            edges = np.empty(nf*3, dtype=[('i', np.uint32, 2)])
             edges['i'][0:nf] = self._faces[:,:2]
             edges['i'][nf:2*nf] = self._faces[:,1:3]
             edges['i'][-nf:,0] = self._faces[:,2]
@@ -387,7 +387,7 @@ class MeshData(object):
             #print self._edges
         elif self._vertexesIndexedByFaces is not None:
             verts = self._vertexesIndexedByFaces
-            edges = np.empty((verts.shape[0], 3, 2), dtype=np.uint)
+            edges = np.empty((verts.shape[0], 3, 2), dtype=np.uint32)
             nf = verts.shape[0]
             edges[:,0,0] = np.arange(nf) * 3
             edges[:,0,1] = edges[:,0,0] + 1
@@ -454,7 +454,7 @@ class MeshData(object):
         verts = verts.reshape((rows+1)*cols, 3)[cols-1:-(cols-1)]  ## remove redundant vertexes from top and bottom
         
         ## compute faces
-        faces = np.empty((rows*cols*2, 3), dtype=np.uint)
+        faces = np.empty((rows*cols*2, 3), dtype=np.uint32)
         rowtemplate1 = ((np.arange(cols).reshape(cols, 1) + np.array([[0, 1, 0]])) % cols) + np.array([[0, 0, cols]])
         rowtemplate2 = ((np.arange(cols).reshape(cols, 1) + np.array([[0, 1, 1]])) % cols) + np.array([[cols, 0, cols]])
         for row in range(rows):
@@ -492,7 +492,7 @@ class MeshData(object):
         verts[...,1] = r * np.sin(th) # y = r sin(th)
         verts = verts.reshape((rows+1)*cols, 3) # just reshape: no redundant vertices...
         ## compute faces
-        faces = np.empty((rows*cols*2, 3), dtype=np.uint)
+        faces = np.empty((rows*cols*2, 3), dtype=np.uint32)
         rowtemplate1 = ((np.arange(cols).reshape(cols, 1) + np.array([[0, 1, 0]])) % cols) + np.array([[0, 0, cols]])
         rowtemplate2 = ((np.arange(cols).reshape(cols, 1) + np.array([[0, 1, 1]])) % cols) + np.array([[cols, 0, cols]])
         for row in range(rows):
