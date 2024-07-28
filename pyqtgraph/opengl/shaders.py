@@ -247,7 +247,7 @@ def initShaders():
                 }
             """),
         ], uniforms={'colorMap': [1, 1, 1, 1, 0.5, 1, 1, 0, 1]}),
-        ShaderProgram('pointSprite', [   ## allows specifying point size using normal.x
+        ShaderProgram('pointSprite', [   ## allows specifying point size using attribute "a_size"
             ## See:
             ##
             ##  http://stackoverflow.com/questions/9609423/applying-part-of-a-texture-sprite-sheet-texture-map-to-a-point-sprite-in-ios
@@ -255,20 +255,57 @@ def initShaders():
             ##
             ##
             VertexShader("""
+                #version 120
+                uniform mat4 u_mvp;
+                attribute vec4 a_position;
+                attribute vec4 a_color;
+                attribute float a_size;
+                varying vec4 v_color;
+
                 void main() {
-                    gl_FrontColor=gl_Color;
-                    gl_PointSize = gl_Normal.x;
-                    gl_Position = ftransform();
+                    gl_Position = u_mvp * a_position;
+                    v_color = a_color;
+                    gl_PointSize = a_size;
                 } 
             """),
-            #FragmentShader("""
-                ##version 120
-                #uniform sampler2D texture;
-                #void main ( )
-                #{
-                    #gl_FragColor = texture2D(texture, gl_PointCoord) * gl_Color;
-                #}
-            #""")
+            FragmentShader("""
+                #version 120
+                varying vec4 v_color;
+                void main()
+                {
+                    vec2 xy = (gl_PointCoord - 0.5) * 2.0;
+                    float mask = step(-1.0, -dot(xy, xy));
+                    gl_FragColor = vec4(v_color.rgb, v_color.a * mask);
+                }
+            """)
+        ]),
+
+        ShaderProgram('pointSprite-es2', [
+            # the code is the same as for 'pointSprite', but the OpenGL Desktop
+            # version needs "#version 120".
+            VertexShader("""
+                uniform mat4 u_mvp;
+                attribute vec4 a_position;
+                attribute vec4 a_color;
+                attribute float a_size;
+                varying vec4 v_color;
+
+                void main() {
+                    gl_Position = u_mvp * a_position;
+                    v_color = a_color;
+                    gl_PointSize = a_size;
+                }
+            """),
+            FragmentShader("""
+                precision mediump float;
+                varying vec4 v_color;
+                void main()
+                {
+                    vec2 xy = (gl_PointCoord - 0.5) * 2.0;
+                    float mask = step(-1.0, -dot(xy, xy));
+                    gl_FragColor = vec4(v_color.rgb, v_color.a * mask);
+                }
+            """)
         ]),
     ]
 
