@@ -45,11 +45,11 @@ def legendDoubleClicked(legend, event):
 
     dialog = QInputDialog()
     dialog.setWindowTitle("Input Dialog")
-    dialog.setInputMode(QInputDialog.IntInput)
+    dialog.setInputMode(QInputDialog.InputMode.IntInput)
     dialog.setLabelText('Enter Label Font Size:')
     dialog.setIntValue(current_font_size)
 
-    if dialog.exec() == QInputDialog.Accepted:
+    if dialog.exec() == QInputDialog.DialogCode.Accepted:
         font_size = dialog.intValue()
         legend.setLabelTextSize('%dpt' % font_size)
         legend_items = legend.items.copy()
