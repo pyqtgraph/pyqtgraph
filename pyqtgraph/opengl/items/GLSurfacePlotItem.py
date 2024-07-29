@@ -88,7 +88,7 @@ class GLSurfacePlotItem(GLMeshItem):
         ## Generate vertex and face array
         if self._vertexes is None:
             newVertexes = True
-            self._vertexes = np.empty((self._z.shape[0], self._z.shape[1], 3), dtype=float)
+            self._vertexes = np.empty((self._z.shape[0], self._z.shape[1], 3), dtype=np.float32)
             self.generateFaces()
             self._meshdata.setFaces(self._faces)
             updateMesh = True

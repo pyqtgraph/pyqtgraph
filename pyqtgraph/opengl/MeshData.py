@@ -440,7 +440,7 @@ class MeshData(object):
         Return a MeshData instance with vertexes and faces computed
         for a spherical surface.
         """
-        verts = np.empty((rows+1, cols, 3), dtype=float)
+        verts = np.empty((rows+1, cols, 3), dtype=np.float32)
         
         ## compute vertexes
         phi = (np.arange(rows+1) * np.pi / rows).reshape(rows+1, 1)
@@ -479,7 +479,7 @@ class MeshData(object):
         for a cylindrical surface.
         The cylinder may be tapered with different radii at each end (truncated cone)
         """
-        verts = np.empty((rows+1, cols, 3), dtype=float)
+        verts = np.empty((rows+1, cols, 3), dtype=np.float32)
         if isinstance(radius, int):
             radius = [radius, radius] # convert to list
         ## compute vertexes
