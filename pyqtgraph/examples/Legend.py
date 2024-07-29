@@ -2,6 +2,8 @@
 Demonstrates basic use of LegendItem
 """
 
+from pyqtgraph.Qt.QtWidgets import QInputDialog
+
 import numpy as np
 
 import pyqtgraph as pg
@@ -35,6 +37,41 @@ legend.addItem(bg1, 'bar')
 legend.addItem(c1, 'curve1')
 legend.addItem(c2, 'curve2')
 legend.addItem(s1, 'scatter')
+
+
+def legendDoubleClicked(legend, event):
+    # update legend font size and redraw
+    current_font_size = int(legend.labelTextSize().replace('pt', ''))
+
+    dialog = QInputDialog()
+    dialog.setWindowTitle("Input Dialog")
+    dialog.setInputMode(QInputDialog.IntInput)
+    dialog.setLabelText('Enter Label Font Size:')
+    dialog.setIntValue(current_font_size)
+
+    if dialog.exec() == QInputDialog.Accepted:
+        font_size = dialog.intValue()
+        legend.setLabelTextSize('%dpt' % font_size)
+        legend_items = legend.items.copy()
+        legend.clear()
+        # re-add items to update labels and redraw
+        for sample, label in legend_items:
+            legend.addItem(sample.item, label.text)
+
+    event.accept()
+
+
+def legendSampleClicked(plot_data_item):
+    # indicate plot data item visibility
+    if plot_data_item.isVisible():
+        print('"%s" is visible' % plot_data_item.name())
+    else:
+        print('"%s" is not visible' % plot_data_item.name())
+
+
+legend.sigDoubleClicked.connect(legendDoubleClicked)
+legend.sigSampleClicked.connect(legendSampleClicked)
+
 
 if __name__ == '__main__':
     pg.exec()
