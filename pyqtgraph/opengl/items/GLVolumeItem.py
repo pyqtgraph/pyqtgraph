@@ -1,8 +1,17 @@
+import ctypes
+import importlib
+
 from OpenGL.GL import *  # noqa
 import numpy as np
 
-from ...Qt import QtGui
+from ...Qt import QtGui, QT_LIB
+from .. import shaders
 from ..GLGraphicsItem import GLGraphicsItem
+
+if QT_LIB in ["PyQt5", "PySide2"]:
+    QtOpenGL = QtGui
+else:
+    QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
 
 __all__ = ['GLVolumeItem']
 
@@ -24,22 +33,23 @@ class GLVolumeItem(GLGraphicsItem):
         ==============  =======================================================================================
         """
         
+        super().__init__()
+        self.setGLOptions(glOptions)
         self.sliceDensity = sliceDensity
         self.smooth = smooth
         self.data = None
         self._needUpload = False
         self.texture = None
-        super().__init__(parentItem=parentItem)
-        self.setGLOptions(glOptions)
+        self.m_vbo_position = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
+        self.setParentItem(parentItem)
         self.setData(data)
-        
+
     def setData(self, data):
         self.data = data
         self._needUpload = True
         self.update()
         
     def _uploadData(self):
-        glEnable(GL_TEXTURE_3D)
         if self.texture is None:
             self.texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_3D, self.texture)
@@ -53,24 +63,33 @@ class GLVolumeItem(GLGraphicsItem):
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER)
         shape = self.data.shape
-        
-        ## Test texture dimensions first
-        glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_RGBA, shape[0], shape[1], shape[2], 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
-        if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0, GL_TEXTURE_WIDTH) == 0:
-            raise Exception("OpenGL failed to create 3D texture (%dx%dx%d); too large for this hardware." % shape[:3])
+
+        context = QtGui.QOpenGLContext.currentContext()
+        if not context.isOpenGLES():
+            ## Test texture dimensions first
+            glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_RGBA, shape[0], shape[1], shape[2], 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
+            if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0, GL_TEXTURE_WIDTH) == 0:
+                raise Exception("OpenGL failed to create 3D texture (%dx%dx%d); too large for this hardware." % shape[:3])
         
         data = np.ascontiguousarray(self.data.transpose((2,1,0,3)))
         glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, shape[0], shape[1], shape[2], 0, GL_RGBA, GL_UNSIGNED_BYTE, data)
-        glDisable(GL_TEXTURE_3D)
         
+        all_vertices = []
+
         self.lists = {}
         for ax in [0,1,2]:
             for d in [-1, 1]:
-                l = glGenLists(1)
-                self.lists[(ax,d)] = l
-                glNewList(l, GL_COMPILE)
-                self.drawVolume(ax, d)
-                glEndList()
+                vertices = self.drawVolume(ax, d)
+                self.lists[(ax,d)] = (len(all_vertices), len(vertices))
+                all_vertices.extend(vertices)
+
+        pos = np.array(all_vertices, dtype=np.float32)
+        vbo = self.m_vbo_position
+        if not vbo.isCreated():
+            vbo.create()
+        vbo.bind()
+        vbo.allocate(pos, pos.nbytes)
+        vbo.release()
         
         self._needUpload = False
         
@@ -82,16 +101,10 @@ class GLVolumeItem(GLGraphicsItem):
             self._uploadData()
         
         self.setupGLState()
-        
-        glEnable(GL_TEXTURE_3D)
-        glBindTexture(GL_TEXTURE_3D, self.texture)
-        
-        #glEnable(GL_DEPTH_TEST)
-        #glDisable(GL_CULL_FACE)
-        #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        #glEnable( GL_BLEND )
-        #glEnable( GL_ALPHA_TEST )
-        glColor4f(1,1,1,1)
+
+        mat_modelview = glGetFloatv(GL_MODELVIEW_MATRIX)
+        mat_projection = glGetFloatv(GL_PROJECTION_MATRIX)
+        mat_mvp = mat_modelview @ mat_projection
 
         view = self.view()
         center = QtGui.QVector3D(*[x/2. for x in self.data.shape[:3]])
@@ -100,9 +113,32 @@ class GLVolumeItem(GLGraphicsItem):
         cam = np.array([cam.x(), cam.y(), cam.z()])
         ax = np.argmax(abs(cam))
         d = 1 if cam[ax] > 0 else -1
-        glCallList(self.lists[(ax,d)])  ## draw axes
-        glDisable(GL_TEXTURE_3D)
-                
+        offset, num_vertices = self.lists[(ax,d)]
+
+        shader = shaders.getShaderProgram('texture3d')
+        loc_pos = glGetAttribLocation(shader.program(), "a_position")
+        loc_tex = glGetAttribLocation(shader.program(), "a_texcoord")
+        self.m_vbo_position.bind()
+        glVertexAttribPointer(loc_pos, 3, GL_FLOAT, False, 6*4, None)
+        glVertexAttribPointer(loc_tex, 3, GL_FLOAT, False, 6*4, ctypes.c_void_p(3*4))
+        self.m_vbo_position.release()
+        enabled_locs = [loc_pos, loc_tex]
+
+        glBindTexture(GL_TEXTURE_3D, self.texture)
+
+        for loc in enabled_locs:
+            glEnableVertexAttribArray(loc)
+
+        with shader:
+            glUniformMatrix4fv(shader.uniform("u_mvp"), 1, False, mat_mvp)
+
+            glDrawArrays(GL_TRIANGLES, offset, num_vertices)
+
+        for loc in enabled_locs:
+            glDisableVertexAttribArray(loc)
+
+        glBindTexture(GL_TEXTURE_3D, 0)
+
     def drawVolume(self, ax, d):
         imax = [0,1,2]
         imax.remove(ax)
@@ -131,8 +167,9 @@ class GLVolumeItem(GLGraphicsItem):
         r = list(range(slices))
         if d == -1:
             r = r[::-1]
-            
-        glBegin(GL_QUADS)
+
+        vertices = []
+
         tzVals = np.linspace(nudge[ax], 1.0-nudge[ax], slices)
         vzVals = np.linspace(0, self.data.shape[ax], slices)
         for i in r:
@@ -149,80 +186,9 @@ class GLVolumeItem(GLGraphicsItem):
             vp[2][ax] = w
             vp[3][ax] = w
             
-            
-            glTexCoord3f(*tp[0])
-            glVertex3f(*vp[0])
-            glTexCoord3f(*tp[1])
-            glVertex3f(*vp[1])
-            glTexCoord3f(*tp[2])
-            glVertex3f(*vp[2])
-            glTexCoord3f(*tp[3])
-            glVertex3f(*vp[3])
-        glEnd()
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        ## Interesting idea:
-        ## remove projection/modelview matrixes, recreate in texture coords. 
-        ## it _sorta_ works, but needs tweaking.
-        #mvm = glGetDoublev(GL_MODELVIEW_MATRIX)
-        #pm = glGetDoublev(GL_PROJECTION_MATRIX)
-        #m = QtGui.QMatrix4x4(mvm.flatten()).inverted()[0]
-        #p = QtGui.QMatrix4x4(pm.flatten()).inverted()[0]
-        
-        #glMatrixMode(GL_PROJECTION)
-        #glPushMatrix()
-        #glLoadIdentity()
-        #N=1
-        #glOrtho(-N,N,-N,N,-100,100)
-        
-        #glMatrixMode(GL_MODELVIEW)
-        #glLoadIdentity()
-        
-        
-        #glMatrixMode(GL_TEXTURE)
-        #glLoadIdentity()
-        #glMultMatrixf(m.copyDataTo())
-        
-        #view = self.view()
-        #w = view.width()
-        #h = view.height()
-        #dist = view.opts['distance']
-        #fov = view.opts['fov']
-        #nearClip = dist * .1
-        #farClip = dist * 5.
-        #r = nearClip * np.tan(fov)
-        #t = r * h / w
-        
-        #p = QtGui.QMatrix4x4()
-        #p.frustum( -r, r, -t, t, nearClip, farClip)
-        #glMultMatrixf(p.inverted()[0].copyDataTo())
-        
-        
-        #glBegin(GL_QUADS)
-        
-        #M=1
-        #for i in range(500):
-            #z = i/500.
-            #w = -i/500.
-            #glTexCoord3f(-M, -M, z)
-            #glVertex3f(-N, -N, w)
-            #glTexCoord3f(M, -M, z)
-            #glVertex3f(N, -N, w)
-            #glTexCoord3f(M, M, z)
-            #glVertex3f(N, N, w)
-            #glTexCoord3f(-M, M, z)
-            #glVertex3f(-N, N, w)
-        #glEnd()
-        #glDisable(GL_TEXTURE_3D)
+            # assuming 0-1-2-3 are the BL, BR, TR, TL vertices of a quad
+            for idx in [0, 1, 3, 1, 2, 3]:  # 2 triangles per quad
+                vtx = tuple(vp[idx]) + tuple(tp[idx])
+                vertices.append(vtx)
 
-        #glMatrixMode(GL_PROJECTION)
-        #glPopMatrix()
-        
-        
+        return vertices
