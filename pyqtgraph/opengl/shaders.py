@@ -33,7 +33,31 @@ def initShaders():
                 }
             """)
         ]),
-        
+
+        ShaderProgram('texture2d', [
+            VertexShader("""
+                uniform mat4 u_mvp;
+                attribute vec4 a_position;
+                attribute vec2 a_texcoord;
+                varying vec2 v_texcoord;
+                void main() {
+                    gl_Position = u_mvp * a_position;
+                    v_texcoord = a_texcoord;
+                }
+            """),
+            FragmentShader("""
+                #ifdef GL_ES
+                precision mediump float;
+                #endif
+                uniform sampler2D u_texture;
+                varying vec2 v_texcoord;
+                void main()
+                {
+                    gl_FragColor = texture2D(u_texture, v_texcoord);
+                }
+            """)
+        ]),
+
         ## increases fragment alpha as the normal turns orthogonal to the view
         ## this is useful for viewing shells that enclose a volume (such as isosurfaces)
         ShaderProgram('balloon', [
