@@ -1,6 +1,5 @@
 import enum
 import importlib
-import warnings
 
 import numpy as np
 
@@ -9,8 +8,14 @@ from .. import functions as fn
 from .. import getConfigOption
 from ..Qt import compat
 from ..Qt import OpenGLConstants as GLC
-from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
+from ..Qt import OpenGLHelpers
+from ..Qt import QtCore, QtGui, QT_LIB
 from .GraphicsObject import GraphicsObject
+
+if QT_LIB in ["PyQt5", "PySide2"]:
+    QtOpenGL = QtGui
+else:
+    QtOpenGL = importlib.import_module(f'{QT_LIB}.QtOpenGL')
 
 __all__ = ['PColorMeshItem']
 
@@ -382,11 +387,11 @@ class PColorMeshItem(GraphicsObject):
 
         if (
             getConfigOption('enableExperimental')
-            and isinstance(widget, QtWidgets.QOpenGLWidget)
+            and isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
             and self.cmap is not None   # don't support setting colormap by setLookupTable
         ):
             if self.glstate is None:
-                self.glstate = OpenGLState()
+                self.glstate = OpenGLState(widget)
             painter.beginNativePainting()
             try:
                 self.paintGL(widget)
@@ -459,16 +464,13 @@ class PColorMeshItem(GraphicsObject):
         if (view := self.getViewBox()) is None:
             return
 
-        num_vtx_stencil = 4
         X, Y, Z = self.x, self.y, self.z
 
         glstate = self.glstate
-        glf = glstate.setup(widget.context())
+        glstate.setup(widget.context())
+        glfn = widget.getFunctions()
+        program = widget.retrieveProgram("PColorMeshItem")
 
-        proj = QtGui.QMatrix4x4()
-        proj.ortho(0, widget.width(), widget.height(), 0, -999999, 999999)
-
-        tr = self.sceneTransform()
         # OpenGL only sees the float32 version of our data, and this may cause
         # precision issues. To mitigate this, we shift the origin of our data
         # to the center of its bounds.
@@ -486,59 +488,62 @@ class PColorMeshItem(GraphicsObject):
             center = self.boundingRect().center()
             origin = center.x(), center.y()
 
+        proj = QtGui.QMatrix4x4()
+        proj.ortho(widget.rect())
+        tr = self.sceneTransform()
         xc, yc = origin
         tr.translate(xc, yc)
-        mvp_curve = proj * QtGui.QMatrix4x4(tr)
+        mvp = proj * QtGui.QMatrix4x4(tr)
 
-        mvp_stencil = proj
-        rect = view.mapRectToScene(view.boundingRect())
-        x0, y0, x1, y1 = rect.getCoords()
-        stencil_vtx = np.array([[x0, y0], [x1, y0], [x0, y1], [x1, y1]], dtype=np.float32)
-        stencil_lum = np.zeros((num_vtx_stencil, 1), dtype=np.float32)
-
-        if glstate.use_ibo:
+        if glstate.flat_shading:
             vtx_array_shape = X.shape
-            num_ind_mesh = np.prod(Z.shape) * 6
         else:
-            vtx_array_shape = Z.shape + (6,)
-            num_ind_mesh = 0
+            vtx_array_shape = Z.shape + (4,)
         num_vtx_mesh = np.prod(vtx_array_shape)
+        num_ind_mesh = np.prod(Z.shape) * 6
 
         # resize (and invalidate) gpu buffers if needed.
         # a reallocation can only occur together with a change in data.
         # i.e. reallocation ==> change in data (render_cache is None)
         if DirtyFlag.DIM in dirty_bits:
-            vbo_num_vtx = num_vtx_stencil + num_vtx_mesh
             glstate.m_vbo_pos.bind()
-            glstate.m_vbo_pos.allocate(vbo_num_vtx * 2 * 4)
+            glstate.m_vbo_pos.allocate(num_vtx_mesh * 2 * 4)
             glstate.m_vbo_pos.release()
             glstate.m_vbo_lum.bind()
-            glstate.m_vbo_lum.allocate(vbo_num_vtx * 1 * 4)
+            glstate.m_vbo_lum.allocate(num_vtx_mesh * 1 * 4)
             glstate.m_vbo_lum.release()
 
-            if glstate.use_ibo:
+            if glstate.flat_shading:
                 # let the bottom-left of each quad be its "anchor".
                 # then each quad is made up of 2 triangles
                 #   (TR, TL, BL); (BR, TR, BL)
                 # that have indices
                 #   (stride + 1, stride + 0, 0); (1, stride + 1, 0)
-                # where "0" is the relative index of BR
+                # where "0" is the relative index of BL
                 # and "stride" advances to the next row
                 # note that both triangles are created such that their 3rd vertex is at "BL"
                 stride = Z.shape[1] + 1
                 dim0 = np.arange(0, Z.shape[0]*stride, stride, dtype=np.uint32)[:, np.newaxis, np.newaxis]
                 dim1 = np.arange(Z.shape[1], dtype=np.uint32)[np.newaxis, :, np.newaxis]
-                dim2 = np.array([stride + 1, stride + 0, 0, 1, stride + 1, 0], dtype=np.uint32)[np.newaxis, np.newaxis, :] + num_vtx_stencil
+                dim2 = np.array([stride + 1, stride + 0, 0, 1, stride + 1, 0], dtype=np.uint32)[np.newaxis, np.newaxis, :]
+                buf_ind = dim0 + dim1 + dim2
+            else:
+                # for each quad, we store 4 vertices contiguously (BL, BR, TL, TR)
+                # then each quad is made up of 2 triangles
+                #   (TR, TL, BL); (BR, TR, BL)
+                # that have indices
+                #   (3, 2, 0); (1, 3, 0)
+                strides = np.cumprod(vtx_array_shape[::-1])[::-1]
+                dim0 = np.arange(0, strides[0], strides[1], dtype=np.uint32)[:, np.newaxis, np.newaxis]
+                dim1 = np.arange(0, strides[1], strides[2], dtype=np.uint32)[np.newaxis, :, np.newaxis]
+                dim2 = np.array([3, 2, 0, 1, 3, 0], dtype=np.uint32)[np.newaxis, np.newaxis, :]
                 buf_ind = dim0 + dim1 + dim2
 
-                glstate.m_vbo_ind.bind()
-                glstate.m_vbo_ind.allocate(buf_ind, buf_ind.nbytes)
-                glstate.m_vbo_ind.release()
+            glstate.m_vbo_ind.bind()
+            glstate.m_vbo_ind.allocate(buf_ind, buf_ind.nbytes)
+            glstate.m_vbo_ind.release()
 
             dirty_bits &= ~DirtyFlag.DIM
-
-        buf_pos = stencil_vtx
-        buf_lum = stencil_lum
 
         if DirtyFlag.LUT in dirty_bits:
             lut = self.cmap.getLookupTable(nPts=256, alpha=True)
@@ -546,11 +551,9 @@ class PColorMeshItem(GraphicsObject):
             dirty_bits &= ~DirtyFlag.LUT
 
         if DirtyFlag.XY in dirty_bits:
-            buf_pos = np.empty((num_vtx_stencil + num_vtx_mesh, 2), dtype=np.float32)
-            buf_pos[:num_vtx_stencil, :] = stencil_vtx
-            pos = buf_pos[num_vtx_stencil:, :].reshape(vtx_array_shape + (2,))
+            pos = np.empty(vtx_array_shape + (2,), dtype=np.float32)
 
-            if glstate.use_ibo:
+            if glstate.flat_shading:
                 pos[..., 0] = X - xc
                 pos[..., 1] = Y - yc
             else:
@@ -558,80 +561,51 @@ class PColorMeshItem(GraphicsObject):
                 pos[..., 0, :] = XY[:-1, :-1, :] # BL
                 pos[..., 1, :] = XY[1:, :-1, :]  # BR
                 pos[..., 2, :] = XY[:-1, 1:, :]  # TL
-                pos[..., 3, :] = XY[1:, :-1, :]  # BR
-                pos[..., 4, :] = XY[1:, 1:, :]   # TR
-                pos[..., 5, :] = XY[:-1, 1:, :]  # TL
+                pos[..., 3, :] = XY[1:, 1:, :]   # TR
+
+            glstate.m_vbo_pos.bind()
+            glstate.m_vbo_pos.write(0, pos, pos.nbytes)
+            glstate.m_vbo_pos.release()
 
             dirty_bits &= ~DirtyFlag.XY
 
         if DirtyFlag.Z in dirty_bits:
-            buf_lum = np.empty((num_vtx_stencil + num_vtx_mesh, 1), dtype=np.float32)
-            buf_lum[:num_vtx_stencil, :] = stencil_lum
-            lum = buf_lum[num_vtx_stencil:, :].reshape(vtx_array_shape)
+            lum = np.empty(vtx_array_shape, dtype=np.float32)
 
-            if glstate.use_ibo:
+            if glstate.flat_shading:
                 lum[:-1, :-1] = Z
             else:
                 lum[..., :] = np.expand_dims(Z, axis=2)
 
-            dirty_bits &= ~DirtyFlag.Z
+            glstate.m_vbo_lum.bind()
+            glstate.m_vbo_lum.write(0, lum, lum.nbytes)
+            glstate.m_vbo_lum.release()
 
-        # upload VBO, minimally for the stencil
-        glstate.m_vbo_pos.bind()
-        glstate.m_vbo_pos.write(0, buf_pos, buf_pos.nbytes)
-        glstate.m_vbo_pos.release()
-        glstate.m_vbo_lum.bind()
-        glstate.m_vbo_lum.write(0, buf_lum, buf_lum.nbytes)
-        glstate.m_vbo_lum.release()
+            dirty_bits &= ~DirtyFlag.Z
 
         glstate.render_cache = [origin, dirty_bits]
 
-        glstate.m_texture.bind()
-        glstate.m_program.bind()
-        glstate.m_vao.bind()
+        widget.drawStencil(view)
 
-        glstate.setUniformValue("u_mvp", mvp_stencil)
+        glstate.m_vao.bind()
+        glstate.m_texture.bind()
+        program.bind()
 
         lo, hi = self.levels
         rng = hi - lo
         if rng == 0:
             rng = 1
-        glstate.setUniformValue("u_rescale", QtGui.QVector2D(1/rng, lo))
+        OpenGLHelpers.setUniformValue(program, "u_rescale", QtGui.QVector2D(1/rng, lo))
 
-        # set clipping viewport
-        glf.glEnable(GLC.GL_STENCIL_TEST)
-        glf.glColorMask(False, False, False, False) # disable drawing to frame buffer
-        glf.glDepthMask(False)  # disable drawing to depth buffer
-        glf.glStencilFunc(GLC.GL_NEVER, 1, 0xFF)
-        glf.glStencilOp(GLC.GL_REPLACE, GLC.GL_KEEP, GLC.GL_KEEP)
+        OpenGLHelpers.setUniformValue(program, "u_mvp", mvp)
 
-        ## draw stencil pattern
-        glf.glStencilMask(0xFF)
-        glf.glClear(GLC.GL_STENCIL_BUFFER_BIT)
-        glf.glDrawArrays(GLC.GL_TRIANGLE_STRIP, 0, num_vtx_stencil)
+        NULL = compat.voidptr(0) if QT_LIB.startswith("PySide") else None
+        glfn.glDrawElements(GLC.GL_TRIANGLES, num_ind_mesh, GLC.GL_UNSIGNED_INT, NULL)
 
-        glf.glColorMask(True, True, True, True)
-        glf.glDepthMask(True)
-        glf.glStencilMask(0x00)
-        glf.glStencilFunc(GLC.GL_EQUAL, 1, 0xFF)
-
-        glstate.setUniformValue("u_mvp", mvp_curve)
-
-        if glstate.use_ibo:
-            NULL = compat.voidptr(0) if QT_LIB.startswith("PySide") else None
-            glf.glDrawElements(GLC.GL_TRIANGLES, num_ind_mesh, GLC.GL_UNSIGNED_INT, NULL)
-        else:
-            glf.glDrawArrays(GLC.GL_TRIANGLES, num_vtx_stencil, num_vtx_mesh)
         glstate.m_vao.release()
 
-        # destroy the texture to avoid the following warning:
-        # "QOpenGLTexturePrivate::destroy() called without a current context."
-        # this is inefficient... but better slow than to have a leak.
-        glstate.m_texture.destroy()
-        glstate.render_cache[1] |= DirtyFlag.LUT
 
-
-class OpenGLState:
+class OpenGLState(QtCore.QObject):
     VERT_SRC_COMPAT = """
         attribute vec4 a_position;
         attribute float a_luminance;
@@ -674,22 +648,19 @@ class OpenGLState:
         }
     """
 
-    def __init__(self):
+    def __init__(self, parent):
+        super().__init__(parent)
         self.context = None
-        self.functions = None
         self.render_cache = None
-        self.m_vao = None
-        self.m_vbo_pos = None
-        self.m_vbo_lum = None
-        self.m_vbo_ind = None
-        self.m_texture = None
-        self.m_program = None
-
-        self.use_ibo = True
+        self.m_vao = QtOpenGL.QOpenGLVertexArrayObject(self)
+        self.m_vbo_pos = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
+        self.m_vbo_lum = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
+        self.m_vbo_ind = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.IndexBuffer)
+        self.m_texture = QtOpenGL.QOpenGLTexture(QtOpenGL.QOpenGLTexture.Target.Target2D)
 
     def setup(self, context):
         if self.context is context:
-            return self.functions
+            return
 
         if self.context is not None:
             self.context.aboutToBeDestroyed.disconnect(self.cleanup)
@@ -697,13 +668,6 @@ class OpenGLState:
 
         self.context = context
         self.context.aboutToBeDestroyed.connect(self.cleanup)
-
-        self.functions = self.getFunctions(context)
-
-        if QT_LIB in ["PyQt5", "PySide2"]:
-            QtOpenGL = QtGui
-        else:
-            QtOpenGL = importlib.import_module(f'{QT_LIB}.QtOpenGL')
 
         is_opengles = self.context.isOpenGLES()
         gl_version = self.context.format().version()
@@ -713,9 +677,9 @@ class OpenGLState:
             moderngl = True
         else:
             moderngl = False
-            self.use_ibo = False
 
-        if self.use_ibo and moderngl:
+        if moderngl:
+            self.flat_shading = True
             if not is_opengles:
                 glsl_version = "#version 140"
             else:
@@ -723,87 +687,54 @@ class OpenGLState:
             VERT_SRC = "\n".join([glsl_version, OpenGLState.VERT_SRC])
             FRAG_SRC = "\n".join([glsl_version, OpenGLState.FRAG_SRC])
         else:
+            self.flat_shading = False
             VERT_SRC = OpenGLState.VERT_SRC_COMPAT
             FRAG_SRC = OpenGLState.FRAG_SRC_COMPAT
 
-        self.m_program = QtOpenGL.QOpenGLShaderProgram(self.context)
-        self.m_program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, VERT_SRC)
-        self.m_program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, FRAG_SRC)
-        self.m_program.link()
+        glwidget = self.parent()
+        program = glwidget.retrieveProgram("PColorMeshItem")
+        if program is None:
+            program = QtOpenGL.QOpenGLShaderProgram()
+            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, VERT_SRC)
+            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, FRAG_SRC)
+            program.bindAttributeLocation("a_position", 0)
+            program.bindAttributeLocation("a_luminance", 1)
+            program.link()
+        glwidget.storeProgram("PColorMeshItem", program)
 
-        self.m_vao = QtOpenGL.QOpenGLVertexArrayObject(self.context)
         self.m_vao.create()
-        self.m_vbo_pos = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
         self.m_vbo_pos.create()
-        self.m_vbo_lum = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
         self.m_vbo_lum.create()
-        self.m_vbo_ind = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.IndexBuffer)
         self.m_vbo_ind.create()
 
+
+        loc_pos, loc_lum = 0, 1
         self.m_vao.bind()
         self.m_vbo_ind.bind()
         self.m_vbo_pos.bind()
-        loc_pos = self.m_program.attributeLocation("a_position")
-        self.m_program.enableAttributeArray(loc_pos)
-        self.m_program.setAttributeBuffer(loc_pos, GLC.GL_FLOAT, 0, 2)
+        program.enableAttributeArray(loc_pos)
+        program.setAttributeBuffer(loc_pos, GLC.GL_FLOAT, 0, 2)
         self.m_vbo_pos.release()
-        loc_lum = self.m_program.attributeLocation("a_luminance")
         self.m_vbo_lum.bind()
-        self.m_program.enableAttributeArray(loc_lum)
-        self.m_program.setAttributeBuffer(loc_lum, GLC.GL_FLOAT, 0, 1)
+        program.enableAttributeArray(loc_lum)
+        program.setAttributeBuffer(loc_lum, GLC.GL_FLOAT, 0, 1)
         self.m_vbo_lum.release()
         self.m_vao.release()
         self.m_vbo_ind.release()
 
-        self.m_texture = QtOpenGL.QOpenGLTexture(QtOpenGL.QOpenGLTexture.Target.Target2D)
-
-        return self.functions
-
-    def getFunctions(self, context):
-        if QT_LIB == 'PyQt5':
-            # it would have been cleaner to call context.versionFunctions().
-            # however, when there are multiple GraphicsItems, the following bug occurs:
-            # all except one of the C++ objects of the returned versionFunctions() get
-            # deleted.
-            suffix = "ES2" if context.isOpenGLES() else "2_0"
-            modname = f"QOpenGLFunctions_{suffix}"
-            QtOpenGLFunctions = importlib.import_module(f"PyQt5._{modname}")
-            glf = getattr(QtOpenGLFunctions, modname)()
-            glf.initializeOpenGLFunctions()
-        elif QT_LIB == 'PySide2':
-            import PySide2.QtOpenGLFunctions as QtOpenGLFunctions
-            glf = QtOpenGLFunctions.QOpenGLFunctions_2_0()
-            glf.initializeOpenGLFunctions()
-        else:
-            QtOpenGL = importlib.import_module(f'{QT_LIB}.QtOpenGL')
-            profile = QtOpenGL.QOpenGLVersionProfile()
-            profile.setVersion(2, 0)
-            glf = QtOpenGL.QOpenGLVersionFunctionsFactory.get(profile, context)
-
-        return glf
-
-    def setUniformValue(self, key, value):
-        # convenience function to mask the warnings
-        with warnings.catch_warnings():
-            # PySide2 : RuntimeWarning: SbkConverter: Unimplemented C++ array type.
-            warnings.simplefilter("ignore")
-            self.m_program.setUniformValue(key, value)
-
     def cleanup(self):
         # this method should restore the state back to __init__
+        glwidget = self.parent()
+        glwidget.makeCurrent()
 
-        if self.m_program is not None:
-            self.m_program.setParent(None)
-            self.m_program = None
         for name in ['m_texture', 'm_vbo_pos', 'm_vbo_lum', 'm_vbo_ind', 'm_vao']:
             obj = getattr(self, name)
-            if obj is not None:
-                obj.destroy()
-                setattr(self, name, None)
+            obj.destroy()
 
         self.context = None
-        self.functions = None
         self.render_cache = None
+
+        glwidget.doneCurrent()
 
     def setTextureLut(self, lut):
         tex = self.m_texture
