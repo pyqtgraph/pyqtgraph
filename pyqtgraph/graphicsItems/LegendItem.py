@@ -222,8 +222,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         else:
             sample = self.sampleType(item)
 
-        if hasattr(sample, 'sigClicked'):
-            sample.sigClicked.connect(self.sampleClickEvent)
+        sample.sigClicked.connect(self.sigSampleClicked)
 
         self.items.append((sample, label))
         self._addItemToLayout(sample, label)
@@ -349,9 +348,6 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     def mouseDoubleClickEvent(self, ev):
         self.sigDoubleClicked.emit(self, ev)
         ev.accept()
-
-    def sampleClickEvent(self, sampleItem):
-        self.sigSampleClicked.emit(sampleItem)
 
 
 class ItemSample(GraphicsWidget):
