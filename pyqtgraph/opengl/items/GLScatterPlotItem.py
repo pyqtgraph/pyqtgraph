@@ -92,9 +92,8 @@ class GLScatterPlotItem(GLGraphicsItem):
 
         self.setupGLState()
 
-        mat_modelview = glGetFloatv(GL_MODELVIEW_MATRIX)
-        mat_projection = glGetFloatv(GL_PROJECTION_MATRIX)
-        mat_mvp = mat_modelview @ mat_projection
+        mat_mvp = self.mvpMatrix()
+        mat_mvp = np.array(mat_mvp.data(), dtype=np.float32)
 
         context = QtGui.QOpenGLContext.currentContext()
         sformat = context.format()

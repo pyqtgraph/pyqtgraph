@@ -203,11 +203,11 @@ class GLMeshItem(GLGraphicsItem):
         self.setupGLState()
         
         self.parseMeshData()        
-        
-        mat_modelview = glGetFloatv(GL_MODELVIEW_MATRIX)
-        mat_projection = glGetFloatv(GL_PROJECTION_MATRIX)
-        mat_mvp = mat_modelview @ mat_projection
-        mat_normal = np.linalg.inv(mat_modelview[:3, :3]).T.copy()
+
+        mat_mvp = self.mvpMatrix()
+        mat_mvp = np.array(mat_mvp.data(), dtype=np.float32)
+        mat_normal = self.modelViewMatrix().normalMatrix()
+        mat_normal = np.array(mat_normal.data(), dtype=np.float32)
 
         if self.opts['drawFaces'] and self.vertexes is not None:
             shader = self.shader()
