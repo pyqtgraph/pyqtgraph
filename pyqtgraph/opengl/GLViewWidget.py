@@ -45,6 +45,9 @@ class GLViewMixin:
         self.keyTimer = QtCore.QTimer()
         self.keyTimer.timeout.connect(self.evalKeyState)
 
+        self._modelViewStack = []
+        self._projectionStack = []
+
     def deviceWidth(self):
         dpr = self.devicePixelRatioF()
         return int(self.width() * dpr)
@@ -125,8 +128,8 @@ class GLViewMixin:
         
     def setProjection(self, region=None):
         m = self.projectionMatrix(region)
-        glMatrixMode(GL_PROJECTION)
-        glLoadMatrixf(np.array(m.data(), dtype=np.float32))
+        self._projectionStack.clear()
+        self._projectionStack.append(m)
 
     def projectionMatrix(self, region=None):
         if region is None:
@@ -153,8 +156,8 @@ class GLViewMixin:
         
     def setModelview(self):
         m = self.viewMatrix()
-        glMatrixMode(GL_MODELVIEW)
-        glLoadMatrixf(np.array(m.data(), dtype=np.float32))
+        self._modelViewStack.clear()
+        self._modelViewStack.append(m)
         
     def viewMatrix(self):
         tr = QtGui.QMatrix4x4()
@@ -168,6 +171,12 @@ class GLViewMixin:
         center = self.opts['center']
         tr.translate(-center.x(), -center.y(), -center.z())
         return tr
+
+    def currentModelView(self):
+        return self._modelViewStack[-1]
+
+    def currentProjection(self):
+        return self._projectionStack[-1]
 
     def itemsAt(self, region=None):
         """
@@ -234,16 +243,12 @@ class GLViewMixin:
                 finally:
                     glPopAttrib()
             else:
-                glMatrixMode(GL_MODELVIEW)
-                glPushMatrix()
+                self._modelViewStack.append(self.currentModelView() * i.transform())
                 try:
-                    tr = i.transform()
-                    glMultMatrixf(np.array(tr.data(), dtype=np.float32))
                     self.drawItemTree(i, useItemNames=useItemNames)
                 finally:
-                    glMatrixMode(GL_MODELVIEW)
-                    glPopMatrix()
-            
+                    self._modelViewStack.pop()
+
     def setCameraPosition(self, pos=None, distance=None, elevation=None, azimuth=None, rotation=None):
         if rotation is not None:
             # Alternatively, we could define that rotation overrides elevation and azimuth

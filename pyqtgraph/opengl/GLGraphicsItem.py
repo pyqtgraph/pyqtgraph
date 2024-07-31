@@ -2,7 +2,7 @@ from OpenGL.GL import *  # noqa
 from OpenGL import GL
 
 from .. import Transform3D
-from ..Qt import QtCore
+from ..Qt import QtCore, QtGui
 
 GLOptions = {
     'opaque': {
@@ -304,6 +304,27 @@ class GLGraphicsItem(QtCore.QObject):
         if tr is None:
             return point
         return tr.inverted()[0].map(point)
-        
-        
-        
+
+    def modelViewMatrix(self) -> QtGui.QMatrix4x4:
+        topobj = self
+        while (view := topobj.view()) is None:
+            topobj = topobj.parentItem()
+            if topobj is None:
+                return QtGui.QMatrix4x4()
+        return view.currentModelView()
+
+    def projectionMatrix(self) -> QtGui.QMatrix4x4:
+        topobj = self
+        while (view := topobj.view()) is None:
+            topobj = topobj.parentItem()
+            if topobj is None:
+                return QtGui.QMatrix4x4()
+        return view.currentProjection()
+
+    def mvpMatrix(self) -> QtGui.QMatrix4x4:
+        topobj = self
+        while (view := topobj.view()) is None:
+            topobj = topobj.parentItem()
+            if topobj is None:
+                return QtGui.QMatrix4x4()
+        return view.currentProjection() * view.currentModelView()
