@@ -8,20 +8,17 @@ GLOptions = {
     'opaque': {
         GL_DEPTH_TEST: True,
         GL_BLEND: False,
-        GL_ALPHA_TEST: False,
         GL_CULL_FACE: False,
     },
     'translucent': {
         GL_DEPTH_TEST: True,
         GL_BLEND: True,
-        GL_ALPHA_TEST: False,
         GL_CULL_FACE: False,
         'glBlendFunc': (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA),
     },
     'additive': {
         GL_DEPTH_TEST: False,
         GL_BLEND: True,
-        GL_ALPHA_TEST: False,
         GL_CULL_FACE: False,
         'glBlendFunc': (GL_SRC_ALPHA, GL_ONE),
     },
