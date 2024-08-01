@@ -230,7 +230,6 @@ class GLViewMixin:
                 continue
             if i is item:
                 try:
-                    glPushAttrib(GL_ALL_ATTRIB_BITS)
                     if useItemNames:
                         glLoadName(i._id)
                         self._itemNames[i._id] = i
@@ -239,9 +238,6 @@ class GLViewMixin:
                     from .. import debug
                     debug.printExc()
                     print("Error while drawing item %s." % str(item))
-                    
-                finally:
-                    glPopAttrib()
             else:
                 self._modelViewStack.append(self.currentModelView() * i.transform())
                 try:
