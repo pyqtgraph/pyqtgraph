@@ -45,7 +45,7 @@ class QuadInstances:
         # pre-create quads from those instances of QPointF(s).
         # store the quads as a flattened list of a 2d array
         # of polygons of shape (nrows, ncols)
-        polys = []
+        polys = np.ndarray((nrows+1)*(ncols+1), dtype=object)
         for r in range(nrows):
             for c in range(ncols):
                 bl = points[(r+0)*(ncols+1)+(c+0)]
@@ -53,7 +53,7 @@ class QuadInstances:
                 br = points[(r+1)*(ncols+1)+(c+0)]
                 tr = points[(r+1)*(ncols+1)+(c+1)]
                 poly = (bl, br, tr, tl)
-                polys.append(poly)
+                polys[r*ncols+c] = poly
         self.polys = polys
 
     def ndarray(self):
@@ -289,6 +289,13 @@ class PColorMeshItem(GraphicsObject):
             if self.antialiasing:
                 painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
 
+        z_invalid = np.isnan(self.z)
+        skip_nans = np.any(z_invalid)
+        if skip_nans:
+            valid_z = self.z[~z_invalid]
+        else:
+            valid_z
+
         ## Prepare colormap
         # First we get the LookupTable
         lut = self.lut_qcolor
@@ -298,7 +305,7 @@ class PColorMeshItem(GraphicsObject):
         rng = hi - lo
         if rng == 0:
             rng = 1
-        norm = fn.rescaleData(self.z, scale / rng, lo, dtype=int, clip=(0, len(lut)-1))
+        norm = fn.rescaleData(valid_z, scale / rng, lo, dtype=int, clip=(0, len(lut)-1))
 
         if Qt.QT_LIB.startswith('PyQt'):
             drawConvexPolygon = lambda x : painter.drawConvexPolygon(*x)
@@ -311,6 +318,9 @@ class PColorMeshItem(GraphicsObject):
         memory[..., 1] = self.y.ravel()
         polys = self.quads.instances()
 
+        if skip_nans:
+            polys = polys[~z_invalid]
+
         # group indices of same coloridx together
         color_indices, counts = np.unique(norm, return_counts=True)
         sorted_indices = np.argsort(norm, axis=None)
@@ -319,11 +329,9 @@ class PColorMeshItem(GraphicsObject):
         for coloridx, cnt in zip(color_indices, counts):
             indices = sorted_indices[offset:offset+cnt]
             offset += cnt
-            # NaN values in z give an illegal coloridx. Don't draw polygon for NaN.
-            if 0 <= coloridx < len(lut):
-                painter.setBrush(lut[coloridx])
-                for idx in indices:
-                    drawConvexPolygon(polys[idx])
+            painter.setBrush(lut[coloridx])
+            for idx in indices:
+                drawConvexPolygon(polys[idx])
 
         painter.end()
         return picture
@@ -352,8 +360,6 @@ class PColorMeshItem(GraphicsObject):
         The format is ``(low, high)``.
         """
         return self.levels
-
-
 
     def setLookupTable(self, lut, update=True):
         self.cmap = None    # invalidate since no longer consistent with lut
