@@ -114,7 +114,13 @@ class GLVolumeItem(GLGraphicsItem):
         d = 1 if cam[ax] > 0 else -1
         offset, num_vertices = self.lists[(ax,d)]
 
-        shader = shaders.getShaderProgram('texture3d')
+        context = QtGui.QOpenGLContext.currentContext()
+        if context.isOpenGLES():
+            shader_name = 'texture3d-es3'
+        else:
+            shader_name = 'texture3d'
+        shader = shaders.getShaderProgram(shader_name)
+
         loc_pos = glGetAttribLocation(shader.program(), "a_position")
         loc_tex = glGetAttribLocation(shader.program(), "a_texcoord")
         self.m_vbo_position.bind()
