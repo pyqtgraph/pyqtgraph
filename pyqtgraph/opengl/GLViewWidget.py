@@ -1,6 +1,7 @@
 from OpenGL.GL import *  # noqa
 import OpenGL.GL.framebufferobjects as glfbo  # noqa
 from math import cos, radians, sin, tan
+import warnings
 
 import numpy as np
 
@@ -101,10 +102,17 @@ class GLViewMixin:
         """
         ctx = self.context()
         fmt = ctx.format()
-        if ctx.isOpenGLES() or fmt.version() < (2, 0):
+        if ctx.isOpenGLES():
+            warnings.warn(
+                f"pyqtgraph.opengl is primarily tested against OpenGL Desktop"
+                f" but OpenGL {fmt.version()} ES detected",
+                RuntimeWarning,
+                stacklevel=2
+            )
+        if fmt.version() < (2, 0):
             verString = glGetString(GL_VERSION)
             raise RuntimeError(
-                "pyqtgraph.opengl: Requires >= OpenGL 2.0 (not ES); Found %s" % verString
+                "pyqtgraph.opengl: Requires >= OpenGL 2.0; Found %s" % verString
             )
 
         for item in self.items:
