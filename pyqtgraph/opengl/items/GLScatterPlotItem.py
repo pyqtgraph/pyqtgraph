@@ -32,8 +32,6 @@ class GLScatterPlotItem(GLGraphicsItem):
         self.m_vbo_size = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
         self.vbos_uploaded = False
 
-        self.pointTexture = None
-
         self.setParentItem(parentItem)
         self.setData(**kwds)
 
@@ -78,28 +76,6 @@ class GLScatterPlotItem(GLGraphicsItem):
         self.vbos_uploaded = False
         self.update()
 
-    def create_texture(self):
-        ## Generate texture for rendering points
-        w = 64
-        def genTexture(x,y):
-            r = np.hypot((x-(w-1)/2.), (y-(w-1)/2.))
-            return 255 * (w / 2 - fn.clip_array(r, w / 2 - 1, w / 2))
-        pData = np.empty((w, w, 4))
-        pData[:] = 255
-        pData[:,:,3] = np.fromfunction(genTexture, pData.shape[:2])
-        pData = pData.astype(np.ubyte)
-        
-        texture = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, texture)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pData.shape[0], pData.shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, pData)
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
-
-        return texture
-
     def upload_vbo(self, vbo, arr):
         if arr is None:
             vbo.destroy()
@@ -111,9 +87,6 @@ class GLScatterPlotItem(GLGraphicsItem):
         vbo.release()
 
     def paint(self):
-        if self.pointTexture is None:
-            self.pointTexture = self.create_texture()
-
         if self.pos is None:
             return
 
@@ -155,16 +128,10 @@ class GLScatterPlotItem(GLGraphicsItem):
             self.m_vbo_size.write(0, point_size, point_size.nbytes)
             self.m_vbo_size.release()
 
-        glBindTexture(GL_TEXTURE_2D, self.pointTexture)
-
         if sformat.profile() == QtGui.QSurfaceFormat.OpenGLContextProfile.CompatibilityProfile:
             # setting GL_POINT_SPRITE is only needed for OpenGL 2.1
             # In Core profiles, it is an error to set it even.
             glEnable(GL_POINT_SPRITE)
-            glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE)
-
-        #glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)    ## use texture color exactly
-        #glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE )  ## texture modulates current color
 
         if context.isOpenGLES():
             shader_name = 'pointSprite-es2'
@@ -212,5 +179,3 @@ class GLScatterPlotItem(GLGraphicsItem):
 
         for loc in enabled_locs:
             glDisableVertexAttribArray(loc)
-
-        glBindTexture(GL_TEXTURE_2D, 0)

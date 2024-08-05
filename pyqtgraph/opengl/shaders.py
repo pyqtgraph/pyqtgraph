@@ -340,11 +340,12 @@ def initShaders():
             """),
             FragmentShader("""
                 #version 120
-                uniform sampler2D texture;
                 varying vec4 v_color;
                 void main()
                 {
-                    gl_FragColor = texture2D(texture, gl_PointCoord) * v_color;
+                    vec2 xy = (gl_PointCoord - 0.5) * 2.0;
+                    float mask = step(-1.0, -dot(xy, xy));
+                    gl_FragColor = vec4(v_color.rgb, v_color.a * mask);
                 }
             """)
         ]),
@@ -367,11 +368,12 @@ def initShaders():
             """),
             FragmentShader("""
                 precision mediump float;
-                uniform sampler2D texture;
                 varying vec4 v_color;
                 void main()
                 {
-                    gl_FragColor = texture2D(texture, gl_PointCoord) * v_color;
+                    vec2 xy = (gl_PointCoord - 0.5) * 2.0;
+                    float mask = step(-1.0, -dot(xy, xy));
+                    gl_FragColor = vec4(v_color.rgb, v_color.a * mask);
                 }
             """)
         ]),
