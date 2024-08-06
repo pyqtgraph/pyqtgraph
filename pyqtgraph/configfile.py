@@ -177,6 +177,8 @@ def parseString(lines, start=0, **scope):
                 else:
                     #print "Going deeper..", ln+1
                     (ln, val) = parseString(lines, start=ln+1, **scope)
+            if k in data:
+                raise ParseError(f'Duplicate key: {k}', ln+1, l)
             data[k] = val
         #print k, repr(val)
     except ParseError:
