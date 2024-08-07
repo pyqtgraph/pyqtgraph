@@ -1050,10 +1050,10 @@ class AxisItem(GraphicsWidget):
             offset = 0
         else:
             if axis == 0:
-                xScale = -bounds.height() / dif
+                xScale = fn.turnInfToSysMax(-bounds.height() / dif)
                 offset = self.range[0] * xScale - bounds.height()
             else:
-                xScale = bounds.width() / dif
+                xScale = fn.turnInfToSysMax(bounds.width() / dif)
                 offset = self.range[0] * xScale
 
         xRange = [x * xScale - offset for x in self.range]
