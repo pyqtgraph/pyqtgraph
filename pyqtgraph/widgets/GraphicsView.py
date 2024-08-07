@@ -100,6 +100,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         # GraphicsScene must have parent or expect crashes!
         self.sceneObj = GraphicsScene(parent=self)
         self.setScene(self.sceneObj)
+        self.sceneObj.sigBackgroundChanged.connect(self.setBackground)
         
         ## by default we set up a central widget with a grid layout.
         ## this can be replaced if needed.
