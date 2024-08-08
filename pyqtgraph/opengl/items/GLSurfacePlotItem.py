@@ -1,4 +1,3 @@
-from OpenGL.GL import *  # noqa
 import numpy as np
 
 from ..MeshData import MeshData
@@ -89,7 +88,7 @@ class GLSurfacePlotItem(GLMeshItem):
         ## Generate vertex and face array
         if self._vertexes is None:
             newVertexes = True
-            self._vertexes = np.empty((self._z.shape[0], self._z.shape[1], 3), dtype=float)
+            self._vertexes = np.empty((self._z.shape[0], self._z.shape[1], 3), dtype=np.float32)
             self.generateFaces()
             self._meshdata.setFaces(self._faces)
             updateMesh = True
@@ -126,7 +125,7 @@ class GLSurfacePlotItem(GLMeshItem):
     def generateFaces(self):
         cols = self._z.shape[1]-1
         rows = self._z.shape[0]-1
-        faces = np.empty((cols*rows*2, 3), dtype=np.uint)
+        faces = np.empty((cols*rows*2, 3), dtype=np.uint32)
         rowtemplate1 = np.arange(cols).reshape(cols, 1) + np.array([[0, 1, cols+1]])
         rowtemplate2 = np.arange(cols).reshape(cols, 1) + np.array([[cols+1, 1, cols+2]])
         for row in range(rows):
