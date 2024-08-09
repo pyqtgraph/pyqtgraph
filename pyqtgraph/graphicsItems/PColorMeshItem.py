@@ -45,7 +45,7 @@ class QuadInstances:
         # pre-create quads from those instances of QPointF(s).
         # store the quads as a flattened list of a 2d array
         # of polygons of shape (nrows, ncols)
-        polys = []
+        polys = np.ndarray((nrows+1)*(ncols+1), dtype=object)
         for r in range(nrows):
             for c in range(ncols):
                 bl = points[(r+0)*(ncols+1)+(c+0)]
@@ -53,7 +53,7 @@ class QuadInstances:
                 br = points[(r+1)*(ncols+1)+(c+0)]
                 tr = points[(r+1)*(ncols+1)+(c+1)]
                 poly = (bl, br, tr, tl)
-                polys.append(poly)
+                polys[r*ncols+c] = poly
         self.polys = polys
 
     def ndarray(self):
@@ -102,16 +102,16 @@ class PColorMeshItem(GraphicsObject):
             Colormap used to map the z value to colors.
             default ``pyqtgraph.colormap.get('viridis')``
         levels: tuple, optional, default None
-            Sets the minimum and maximum values to be represented by the colormap (min, max). 
+            Sets the minimum and maximum values to be represented by the colormap (min, max).
             Values outside this range will be clipped to the colors representing min or max.
-            ``None`` disables the limits, meaning that the colormap will autoscale 
+            ``None`` disables the limits, meaning that the colormap will autoscale
             the next time ``setData()`` is called with new data.
         enableAutoLevels: bool, optional, default True
-            Causes the colormap levels to autoscale whenever ``setData()`` is called. 
+            Causes the colormap levels to autoscale whenever ``setData()`` is called.
             It is possible to override this value on a per-change-basis by using the
             ``autoLevels`` keyword argument when calling ``setData()``.
-            If ``enableAutoLevels==False`` and ``levels==None``, autoscaling will be 
-            performed once when the first z data is supplied. 
+            If ``enableAutoLevels==False`` and ``levels==None``, autoscaling will be
+            performed once when the first z data is supplied.
         edgecolors : dict, optional
             The color of the edges of the polygons.
             Default None means no edges.
@@ -141,7 +141,7 @@ class PColorMeshItem(GraphicsObject):
         self.antialiasing = kwargs.get('antialiasing', False)
         self.levels = kwargs.get('levels', None)
         self._defaultAutoLevels = kwargs.get('enableAutoLevels', True)
-        
+
         if 'colorMap' in kwargs:
             cmap = kwargs.get('colorMap')
             if not isinstance(cmap, colormap.ColorMap):
@@ -175,7 +175,7 @@ class PColorMeshItem(GraphicsObject):
             self.z = None
 
             self._dataBounds = None
-            
+
         # User only specified z
         elif len(args)==1:
             # If x and y is None, the polygons will be displaced on a grid
@@ -210,7 +210,7 @@ class PColorMeshItem(GraphicsObject):
                 raise ValueError('The dimension of x should be one greater than the one of z')
             if y.shape != xy_shape:
                 raise ValueError('The dimension of y should be one greater than the one of z')
-        
+
             self.x = x
             self.y = y
             self.z = z
@@ -237,7 +237,7 @@ class PColorMeshItem(GraphicsObject):
             colors.
             If x and y is None, the polygons will be displaced on a grid
             otherwise x and y will be used as polygons vertices coordinates as::
-                
+
                 (x[i+1, j], y[i+1, j])           (x[i+1, j+1], y[i+1, j+1])
                                     +---------+
                                     | z[i, j] |
@@ -268,11 +268,11 @@ class PColorMeshItem(GraphicsObject):
 
     def _rerender(self, *, autoLevels):
         self.qpicture = None
-        if self.z is not None:
+        if self.z is not None and np.any(np.isfinite(self.z)):
             if (self.levels is None) or autoLevels:
                 # Autoscale colormap
-                z_min = self.z.min()
-                z_max = self.z.max()
+                z_min = np.nanmin(self.z)
+                z_max = np.nanmax(self.z)
                 self.setLevels( (z_min, z_max), update=False)
 
     def _drawPicture(self) -> QtGui.QPicture:
@@ -289,6 +289,13 @@ class PColorMeshItem(GraphicsObject):
             if self.antialiasing:
                 painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
 
+        z_invalid = np.isnan(self.z)
+        skip_nans = np.any(z_invalid)
+        if skip_nans:
+            valid_z = self.z[~z_invalid]
+        else:
+            valid_z
+
         ## Prepare colormap
         # First we get the LookupTable
         lut = self.lut_qcolor
@@ -298,7 +305,7 @@ class PColorMeshItem(GraphicsObject):
         rng = hi - lo
         if rng == 0:
             rng = 1
-        norm = fn.rescaleData(self.z, scale / rng, lo, dtype=int, clip=(0, len(lut)-1))
+        norm = fn.rescaleData(valid_z, scale / rng, lo, dtype=int, clip=(0, len(lut)-1))
 
         if Qt.QT_LIB.startswith('PyQt'):
             drawConvexPolygon = lambda x : painter.drawConvexPolygon(*x)
@@ -310,6 +317,9 @@ class PColorMeshItem(GraphicsObject):
         memory[..., 0] = self.x.ravel()
         memory[..., 1] = self.y.ravel()
         polys = self.quads.instances()
+
+        if skip_nans:
+            polys = polys[~z_invalid]
 
         # group indices of same coloridx together
         color_indices, counts = np.unique(norm, return_counts=True)
@@ -326,15 +336,14 @@ class PColorMeshItem(GraphicsObject):
         painter.end()
         return picture
 
-
     def setLevels(self, levels, update=True):
         """
-        Sets color-scaling levels for the mesh. 
-        
+        Sets color-scaling levels for the mesh.
+
         Parameters
         ----------
             levels: tuple
-                ``(low, high)`` 
+                ``(low, high)``
                 sets the range for which values can be represented in the colormap.
             update: bool, optional
                 Controls if mesh immediately updates to reflect the new color levels.
@@ -352,8 +361,6 @@ class PColorMeshItem(GraphicsObject):
         """
         return self.levels
 
-
-    
     def setLookupTable(self, lut, update=True):
         self.cmap = None    # invalidate since no longer consistent with lut
         self.lut_qcolor = lut[:]
