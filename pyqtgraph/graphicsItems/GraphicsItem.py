@@ -541,6 +541,7 @@ class GraphicsItem(object):
         
         
 
+    @QtCore.Slot()
     def viewRangeChanged(self):
         """
         Called whenever the view coordinates of the ViewBox containing this item have changed.
@@ -548,6 +549,7 @@ class GraphicsItem(object):
         # when this is called, _cachedView is not invalidated.
         # this means that for functions overriding viewRangeChanged, viewRect() may be stale.
     
+    @QtCore.Slot()
     def viewTransformChanged(self):
         """
         Called whenever the transformation matrix of the view has changed.

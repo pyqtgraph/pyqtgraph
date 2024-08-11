@@ -1715,6 +1715,7 @@ class PlotDataItem(GraphicsObject):
     def appendData(self, *args, **kwargs):
         pass
 
+    @QtCore.Slot(object, object)
     def curveClicked(self, _: PlotCurveItem, ev):
         warnings.warn(
             (
@@ -1724,10 +1725,12 @@ class PlotDataItem(GraphicsObject):
         )
         self.sigClicked.emit(self, ev)
 
+    @QtCore.Slot(object, object, object)
     def scatterClicked(self, _, points, ev):
         self.sigClicked.emit(self, ev)
         self.sigPointsClicked.emit(self, points, ev)
 
+    @QtCore.Slot(object, object, object)
     def scatterHovered(self, _, points, ev):
         warnings.warn(
             (
@@ -1744,6 +1747,8 @@ class PlotDataItem(GraphicsObject):
     # update curve and scatter later than intended.
     #   super().viewTransformChanged() # this invalidates the viewRect() cache!
         
+    @QtCore.Slot(object, object)
+    @QtCore.Slot(object, object, object)
     def viewRangeChanged(self, vb=None, ranges=None, changed=None):
         # view range has changed; re-plot if needed 
         update_needed = False

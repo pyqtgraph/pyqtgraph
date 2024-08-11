@@ -19,6 +19,7 @@ import pyqtgraph as pg
 
 class C(pg.QtCore.QObject):
     sig = pg.QtCore.Signal()
+    @pg.QtCore.Slot()
     def fn(self):
         print("{msg}")
 

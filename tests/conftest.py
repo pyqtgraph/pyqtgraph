@@ -2,6 +2,9 @@ import os
 import sys
 
 import pytest
+from pyqtgraph.Qt import QtCore
+
+QtCore.QLoggingCategory.setFilterRules("qt.pyside.libpyside.warning=true")
 
 
 @pytest.fixture
