@@ -1155,6 +1155,7 @@ class ViewBox(GraphicsWidget):
         else:
             self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][ax]))
 
+    @QtCore.Slot()
     @QtCore.Slot(QtWidgets.QWidget)
     def invertY(self, b=True):
         """
