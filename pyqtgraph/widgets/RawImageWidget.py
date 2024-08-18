@@ -11,19 +11,17 @@ from .. import functions as fn
 from .. import functions_qimage
 from .. import getConfigOption, getCupy
 from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
+from ..Qt import OpenGLConstants as GLC
+from ..Qt import OpenGLHelpers
 
-try:
-    if QT_LIB in ["PyQt5", "PySide2"]:
-        QtOpenGL = QtGui
-        QtOpenGLWidgets = QtWidgets
-    else:
-        QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
-        QtOpenGLWidgets = importlib.import_module(f"{QT_LIB}.QtOpenGLWidgets")
-    HAVE_OPENGL = True
-except ModuleNotFoundError:
-    HAVE_OPENGL = False
+if QT_LIB in ["PyQt5", "PySide2"]:
+    QtOpenGL = QtGui
+    QtOpenGLWidgets = QtWidgets
+else:
+    QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
+    QtOpenGLWidgets = importlib.import_module(f"{QT_LIB}.QtOpenGLWidgets")
 
-__all__ = ['RawImageWidget']
+__all__ = ['RawImageWidget', 'RawImageGLWidget']
 
 class RawImageWidget(QtWidgets.QWidget):
     """
@@ -108,105 +106,91 @@ class RawImageWidget(QtWidgets.QWidget):
         p.end()
 
 
-if HAVE_OPENGL:
-    __all__.append('RawImageGLWidget')
+class RawImageGLWidget(QtOpenGLWidgets.QOpenGLWidget):
+    """
+    Similar to RawImageWidget, but uses a GL widget to do all drawing.
+    Performance varies between platforms; see examples/VideoSpeedTest for benchmarking.
 
-    class RawImageGLWidget(QtOpenGLWidgets.QOpenGLWidget):
+    Checks if setConfigOptions(imageAxisOrder='row-major') was set.
+    """
+
+    def __init__(self, parent=None, smooth=False):
+        super().__init__(parent)
+        self.image = None
+        self.uploaded = False
+        self.smooth = smooth
+        self.opts = None
+
+        self.m_texture = QtOpenGL.QOpenGLTexture(QtOpenGL.QOpenGLTexture.Target.Target2D)
+        self.m_blitter = None
+
+    def setImage(self, img, *args, **kargs):
         """
-        Similar to RawImageWidget, but uses a GL widget to do all drawing.
-        Performance varies between platforms; see examples/VideoSpeedTest for benchmarking.
-
-        Checks if setConfigOptions(imageAxisOrder='row-major') was set.
+        img must be ndarray of shape (x,y), (x,y,3), or (x,y,4).
+        Extra arguments are sent to functions.makeARGB
         """
+        if getConfigOption('imageAxisOrder') == 'col-major':
+            img = img.swapaxes(0, 1)
+        self.opts = (img, args, kargs)
+        self.image = None
+        self.uploaded = False
+        self.update()
 
-        def __init__(self, parent=None, smooth=False):
-            super().__init__(parent)
-            self.image = None
-            self.uploaded = False
-            self.smooth = smooth
-            self.opts = None
+    def initializeGL(self):
+        ctx = self.context()
 
-            self.m_texture = QtOpenGL.QOpenGLTexture(QtOpenGL.QOpenGLTexture.Target.Target2D)
+        # in Python, slot will not get called during application termination
+        ctx.aboutToBeDestroyed.connect(self.cleanup)
+
+        self.glfn = OpenGLHelpers.getFunctions(ctx)
+
+        self.m_blitter = QtOpenGL.QOpenGLTextureBlitter()
+        self.m_blitter.create()
+
+    def cleanup(self):
+        # explicit call of cleanup() is needed during application termination
+        self.makeCurrent()
+        self.m_texture.destroy()
+        self.uploaded = False
+        if self.m_blitter is not None:
+            self.m_blitter.destroy()
             self.m_blitter = None
+        self.doneCurrent()
 
-        def setImage(self, img, *args, **kargs):
-            """
-            img must be ndarray of shape (x,y), (x,y,3), or (x,y,4).
-            Extra arguments are sent to functions.makeARGB
-            """
-            if getConfigOption('imageAxisOrder') == 'col-major':
-                img = img.swapaxes(0, 1)
-            self.opts = (img, args, kargs)
-            self.image = None
-            self.uploaded = False
-            self.update()
+    def uploadTexture(self):
+        h, w = self.image.shape[:2]
 
-        def initializeGL(self):
-            ctx = self.context()
-
-            # in Python, slot will not get called during application termination
-            ctx.aboutToBeDestroyed.connect(self.cleanup)
-
-            profile = QtOpenGL.QOpenGLVersionProfile()
-            profile.setVersion(2, 0)
-            if QT_LIB == 'PySide2':
-                self.glfn = ctx.functions()
-            elif QT_LIB == 'PyQt5':
-                self.glfn = ctx.versionFunctions(profile)
-            else:
-                self.glfn = QtOpenGL.QOpenGLVersionFunctionsFactory.get(profile, ctx)
-
-            self.m_blitter = QtOpenGL.QOpenGLTextureBlitter()
-            self.m_blitter.create()
-
-        def cleanup(self):
-            # explicit call of cleanup() is needed during application termination
-            self.makeCurrent()
+        if self.m_texture.isCreated() and (w != self.m_texture.width() or h != self.m_texture.height()):
             self.m_texture.destroy()
-            self.uploaded = False
-            if self.m_blitter is not None:
-                self.m_blitter.destroy()
-                self.m_blitter = None
-            self.doneCurrent()
 
-        def uploadTexture(self):
-            h, w = self.image.shape[:2]
+        if not self.m_texture.isCreated():
+            self.m_texture.setFormat(QtOpenGL.QOpenGLTexture.TextureFormat.RGBAFormat)
+            self.m_texture.setSize(w, h)
+            self.m_texture.allocateStorage()
 
-            if self.m_texture.isCreated() and (w != self.m_texture.width() or h != self.m_texture.height()):
-                self.m_texture.destroy()
+        filt = QtOpenGL.QOpenGLTexture.Filter.Linear if self.smooth else QtOpenGL.QOpenGLTexture.Filter.Nearest
+        self.m_texture.setMinMagFilters(filt, filt)
+        self.m_texture.setWrapMode(QtOpenGL.QOpenGLTexture.WrapMode.ClampToBorder)
+        self.m_texture.setData(QtOpenGL.QOpenGLTexture.PixelFormat.RGBA, QtOpenGL.QOpenGLTexture.PixelType.UInt8, self.image)
 
-            if not self.m_texture.isCreated():
-                self.m_texture.setFormat(QtOpenGL.QOpenGLTexture.TextureFormat.RGBAFormat)
-                self.m_texture.setSize(w, h)
-                self.m_texture.allocateStorage()
+        self.uploaded = True
 
-            filt = QtOpenGL.QOpenGLTexture.Filter.Linear if self.smooth else QtOpenGL.QOpenGLTexture.Filter.Nearest
-            self.m_texture.setMinMagFilters(filt, filt)
-            self.m_texture.setWrapMode(QtOpenGL.QOpenGLTexture.WrapMode.ClampToBorder)
-            self.m_texture.setData(QtOpenGL.QOpenGLTexture.PixelFormat.RGBA, QtOpenGL.QOpenGLTexture.PixelType.UInt8, self.image)
+    def paintGL(self):
+        self.glfn.glClearColor(1, 1, 1, 1)
+        self.glfn.glClear(GLC.GL_COLOR_BUFFER_BIT)
+        self.glfn.glEnable(GLC.GL_BLEND)
+        self.glfn.glBlendFuncSeparate(GLC.GL_SRC_ALPHA, GLC.GL_ONE_MINUS_SRC_ALPHA, 1, GLC.GL_ONE_MINUS_SRC_ALPHA)
 
-            self.uploaded = True
+        if self.image is None:
+            if self.opts is None:
+                return
+            img, args, kwds = self.opts
+            self.image, _ = fn.makeRGBA(img, *args, **kwds)
 
-        def paintGL(self):
-            GL_COLOR_BUFFER_BIT = 0x4000
-            GL_BLEND = 0x0BE3
-            GL_SRC_ALPHA = 0x0302
-            GL_ONE_MINUS_SRC_ALPHA = 0x0303
-            self.glfn.glClearColor(1, 1, 1, 1)
-            self.glfn.glClear(GL_COLOR_BUFFER_BIT)
-            self.glfn.glEnable(GL_BLEND)
-            self.glfn.glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, 1, GL_ONE_MINUS_SRC_ALPHA)
+        if not self.uploaded:
+            self.uploadTexture()
 
-            if self.image is None:
-                if self.opts is None:
-                    return
-                img, args, kwds = self.opts
-                self.image, _ = fn.makeRGBA(img, *args, **kwds)
-
-            if not self.uploaded:
-                self.uploadTexture()
-
-            target = QtGui.QMatrix4x4()
-            self.m_blitter.bind()
-            self.m_blitter.blit(self.m_texture.textureId(), target, QtOpenGL.QOpenGLTextureBlitter.Origin.OriginTopLeft)
-            self.m_blitter.release()
+        target = QtGui.QMatrix4x4()
+        self.m_blitter.bind()
+        self.m_blitter.blit(self.m_texture.textureId(), target, QtOpenGL.QOpenGLTextureBlitter.Origin.OriginTopLeft)
+        self.m_blitter.release()
