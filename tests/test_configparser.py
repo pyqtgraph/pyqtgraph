@@ -14,6 +14,7 @@ def test_longArrays(tmpdir):
     config = configfile.readConfigFile(tf)
     assert all(config['arr'] == arr)
 
+
 def test_multipleParameters(tmpdir):
     """
     Test config saving and loading of multiple parameters.
@@ -30,3 +31,21 @@ def test_multipleParameters(tmpdir):
     assert config['par1'] == par1
     assert config['par2'] == par2
     assert config['par3'] == par3
+
+
+def test_duplicate_keys_error(tmpdir):
+    """
+    Test that an error is raised when duplicate keys are present in the config file.
+    """
+
+    tf = tmpdir.join("config.cfg")
+    with open(tf, 'w') as f:
+        f.write('a: 1\n')
+        f.write('a: 2\n')
+
+    try:
+        configfile.readConfigFile(tf)
+    except configfile.ParseError as e:
+        assert 'Duplicate key' in str(e)
+    else:
+        assert False, "Expected ParseError"

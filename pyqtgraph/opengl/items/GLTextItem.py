@@ -1,4 +1,3 @@
-from OpenGL.GL import *  # noqa
 import numpy as np
 
 from ... import functions as fn
@@ -64,13 +63,9 @@ class GLTextItem(GLGraphicsItem):
             return
         self.setupGLState()
 
-        modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-        projection = glGetDoublev(GL_PROJECTION_MATRIX)
-
-        viewport = [0, 0, self.view().width(), self.view().height()]
-        text_pos = self.__project(self.pos, modelview, projection, viewport)
-
-        text_pos.setY(viewport[3] - text_pos.y())
+        project = self.compute_projection()
+        vec3 = QtGui.QVector3D(*self.pos)
+        text_pos = project.map(vec3).toPointF()
 
         painter = QtGui.QPainter(self.view())
         painter.setPen(self.color)
@@ -79,18 +74,9 @@ class GLTextItem(GLGraphicsItem):
         painter.drawText(text_pos, self.text)
         painter.end()
 
-    def __project(self, obj_pos, modelview, projection, viewport):
-        obj_vec = np.append(np.array(obj_pos), [1.0])
-
-        view_vec = np.matmul(modelview.T, obj_vec)
-        proj_vec = np.matmul(projection.T, view_vec)
-
-        if proj_vec[3] == 0.0:
-            return QtCore.QPointF(0, 0)
-
-        proj_vec[0:3] /= proj_vec[3]
-
-        return QtCore.QPointF(
-            viewport[0] + (1.0 + proj_vec[0]) * viewport[2] / 2,
-            viewport[1] + (1.0 + proj_vec[1]) * viewport[3] / 2
-        )
+    def compute_projection(self):
+        # note that QRectF.bottom() != QRect.bottom()
+        rect = QtCore.QRectF(self.view().rect())
+        ndc_to_viewport = QtGui.QMatrix4x4()
+        ndc_to_viewport.viewport(rect.left(), rect.bottom(), rect.width(), -rect.height())
+        return ndc_to_viewport * self.mvpMatrix()
