@@ -1,10 +1,10 @@
-from OpenGL.GL import *  # noqa
 import numpy as np
 
 from ... import functions as fn
 from ...Qt import QtCore, QtGui
 from ..GLGraphicsItem import GLGraphicsItem
 from .GLScatterPlotItem import GLScatterPlotItem
+from .GLLinePlotItem import GLLinePlotItem
 
 __all__ = ['GLGraphItem']
 
@@ -15,14 +15,16 @@ class GLGraphItem(GLGraphicsItem):
     """
 
     def __init__(self, parentItem=None, **kwds):
-        super().__init__(parentItem=parentItem)
+        super().__init__()
+        glopts = kwds.pop('glOptions', 'translucent')
 
         self.edges = None
         self.edgeColor = QtGui.QColor(QtCore.Qt.GlobalColor.white)
         self.edgeWidth = 1.0
 
-        self.scatter = GLScatterPlotItem()
-        self.scatter.setParentItem(self)
+        self.lineplot = GLLinePlotItem(parentItem=self, glOptions=glopts, mode='lines')
+        self.scatter = GLScatterPlotItem(parentItem=self, glOptions=glopts)
+        self.setParentItem(parentItem)
         self.setData(**kwds)
 
     def setData(self, **kwds):
@@ -78,25 +80,16 @@ class GLGraphItem(GLGraphicsItem):
             kwds['color'] = kwds.pop('nodeColor')
         if 'nodeSize' in kwds:
             kwds['size'] = kwds.pop('nodeSize')
+
         self.scatter.setData(**kwds)
+
+        kwdLines = dict(width=self.edgeWidth)
+        if self.scatter.pos is None or self.edges is None or self.edgeColor is None:
+            kwdLines['pos'] = np.zeros((0, 3), dtype=np.float32)
+            kwdLines['color'] = (0, 0, 0, 0)
+        else:
+            kwdLines['pos'] = self.scatter.pos[self.edges].reshape((-1, 3))
+            kwdLines['color'] = self.edgeColor
+        self.lineplot.setData(**kwdLines)
+
         self.update()
-
-    def initializeGL(self):
-        self.scatter.initializeGL()
-
-    def paint(self):
-        if self.scatter.pos is None \
-                or self.edges is None \
-                or self.edgeColor is None:
-            return None
-        verts = self.scatter.pos
-        edges = self.edges.astype(np.uint32).flatten()
-        glEnableClientState(GL_VERTEX_ARRAY)
-        try:
-            glColor4f(*self.edgeColor.getRgbF())
-            glLineWidth(self.edgeWidth)
-            glVertexPointerf(verts)
-            glDrawElements(GL_LINES, edges.shape[0], GL_UNSIGNED_INT, edges)
-        finally:
-            glDisableClientState(GL_VERTEX_ARRAY)
-        return None

@@ -8,7 +8,8 @@ from .. import functions as fn
 from .. import getConfigOption
 from ..GraphicsScene import GraphicsScene
 from ..Point import Point
-from ..Qt import QT_LIB, QtCore, QtGui, QtWidgets
+from ..Qt import QtCore, QtGui, QtWidgets
+from ..Qt import OpenGLHelpers
 
 __all__ = ['GraphicsView']
 
@@ -151,16 +152,22 @@ class GraphicsView(QtWidgets.QGraphicsView):
         super(GraphicsView, self).close()
 
     def useOpenGL(self, b=True):
-        if b:
-            HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
-            if not HAVE_OPENGL:
-                raise Exception("Requested to use OpenGL with QGraphicsView, but QOpenGLWidget is not available.")
+        old_vp = self.viewport()
+        new_vp = None
 
-            v = QtWidgets.QOpenGLWidget()
+        if b:
+            try:
+                GraphicsViewGLWidget = getattr(OpenGLHelpers, "GraphicsViewGLWidget")
+            except AttributeError:
+                raise RuntimeError("Requested to use OpenGL with QGraphicsView, but QOpenGLWidget is not available.")
+            if not isinstance(old_vp, GraphicsViewGLWidget):
+                new_vp = GraphicsViewGLWidget()
         else:
-            v = QtWidgets.QWidget()
+            if not type(old_vp) is QtWidgets.QWidget:
+                new_vp = QtWidgets.QWidget()
             
-        self.setViewport(v)
+        if new_vp is not None:
+            self.setViewport(new_vp)
             
     def keyPressEvent(self, ev):
         self.scene().keyPressEvent(ev)  ## bypass view, hand event directly to scene
