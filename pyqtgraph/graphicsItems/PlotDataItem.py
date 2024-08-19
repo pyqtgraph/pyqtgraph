@@ -621,6 +621,10 @@ class PlotDataItem(GraphicsObject):
         self.setCurveClickable(kwargs.get('clickable', False))
         self.setData(*args, **kwargs)
     
+    # Fix "NotImplementedError: QGraphicsObject.paint() is abstract and must be overridden"
+    def paint(self, *args):
+        ...
+    
     # Compatibility with direct property access to previous xData and yData structures:
     @property
     def xData(self):
