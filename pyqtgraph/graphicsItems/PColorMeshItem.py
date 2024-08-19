@@ -294,7 +294,7 @@ class PColorMeshItem(GraphicsObject):
         if skip_nans:
             valid_z = self.z[~z_invalid]
         else:
-            valid_z
+            valid_z = self.z
 
         ## Prepare colormap
         # First we get the LookupTable
