@@ -50,7 +50,7 @@ class QuadInstances:
         # pre-create quads from those instances of QPointF(s).
         # store the quads as a flattened list of a 2d array
         # of polygons of shape (nrows, ncols)
-        polys = np.ndarray((nrows+1)*(ncols+1), dtype=object)
+        polys = np.ndarray(nrows*ncols, dtype=object)
         for r in range(nrows):
             for c in range(ncols):
                 bl = points[(r+0)*(ncols+1)+(c+0)]
@@ -297,7 +297,12 @@ class PColorMeshItem(GraphicsObject):
         z_invalid = np.isnan(self.z)
         skip_nans = np.any(z_invalid)
         if skip_nans:
+            # note: flattens array
             valid_z = self.z[~z_invalid]
+            if len(valid_z) == 0:
+                # nothing to draw => return
+                painter.end()
+                return picture
         else:
             valid_z = self.z
 
@@ -324,10 +329,11 @@ class PColorMeshItem(GraphicsObject):
         polys = self.quads.instances()
 
         if skip_nans:
-            polys = polys[~z_invalid]
+            polys = polys[(~z_invalid).flat]
 
         # group indices of same coloridx together
         color_indices, counts = np.unique(norm, return_counts=True)
+        # note: returns flattened array
         sorted_indices = np.argsort(norm, axis=None)
 
         offset = 0
