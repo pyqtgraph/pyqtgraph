@@ -49,3 +49,23 @@ def test_duplicate_keys_error(tmpdir):
         assert 'Duplicate key' in str(e)
     else:
         assert False, "Expected ParseError"
+
+
+def test_line_numbers_acconut_for_comments_and_blanks(tmpdir):
+    """
+    Test that line numbers in ParseError account for comments and blank lines.
+    """
+
+    tf = tmpdir.join("config.cfg")
+    with open(tf, 'w') as f:
+        f.write('a: 1\n')
+        f.write('\n')
+        f.write('# comment\n')
+        f.write('a: 2\n')
+
+    try:
+        configfile.readConfigFile(tf)
+    except configfile.ParseError as e:
+        assert 'at line 4' in str(e)
+    else:
+        assert False, "Expected ParseError"

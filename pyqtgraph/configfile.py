@@ -123,7 +123,6 @@ def parseString(lines, start=0, **scope):
     if isinstance(lines, str):
         lines = lines.replace("\\\n", "")
         lines = lines.split('\n')
-        lines = [l for l in lines if re.search(r'\S', l) and not re.match(r'\s*#', l)]  ## remove empty lines
 
     indent = measureIndent(lines[start])
     ln = start - 1
