@@ -69,3 +69,18 @@ def test_line_numbers_acconut_for_comments_and_blanks(tmpdir):
         assert 'at line 4' in str(e)
     else:
         assert False, "Expected ParseError"
+
+
+def test_comment_indentation_is_ignored(tmpdir):
+    """
+    Test that comment indentation is ignored.
+    """
+
+    tf = tmpdir.join("config.cfg")
+    with open(tf, 'w') as f:
+        f.write('a:\n')
+        f.write('        # comment\n')
+        f.write('    b: 2\n')
+
+    retval = configfile.readConfigFile(tf)
+    assert retval['a']['b'] == 2

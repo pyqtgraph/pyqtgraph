@@ -124,7 +124,7 @@ def parseString(lines, start=0, **scope):
         lines = lines.replace("\\\n", "")
         lines = lines.split('\n')
 
-    indent = measureIndent(lines[start])
+    indent = None
     ln = start - 1
     l = ''
 
@@ -142,6 +142,8 @@ def parseString(lines, start=0, **scope):
 
             ## Measure line indentation, make sure it is correct for this level
             lineInd = measureIndent(l)
+            if indent is None:
+                indent = lineInd
             if lineInd < indent:
                 ln -= 1
                 break
