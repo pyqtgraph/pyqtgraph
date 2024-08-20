@@ -21,6 +21,7 @@ class ReplWidget(QtWidgets.QWidget):
         self._thread = ReplThread(self, globals, locals, parent=self)
         self._thread.sigCommandEntered.connect(self.sigCommandEntered)
         self._thread.sigCommandRaisedException.connect(self.sigCommandRaisedException)
+        self._thread.sigCommandExecuted.connect(self.handleCommandExecuted)
         self._thread.start()
 
         self._setupUi()
@@ -69,9 +70,16 @@ class ReplWidget(QtWidgets.QWidget):
         self.input = CmdInput(parent=self)
         self.inputLayout.addWidget(self.input)
 
-        self.input.sigExecuteCmd.connect(self._thread.queueCommand)
+        self.input.sigExecuteCmd.connect(self.handleCommand)
         self._thread.sigInputGenerated.connect(self.write)
         self._thread.sigMultilineChanged.connect(self.input.setMultiline)
+
+    def handleCommand(self, cmd):
+        self.input.setEnabled(False)
+        self._thread.queueCommand(cmd)
+
+    def handleCommandExecuted(self):
+        self.input.setEnabled(True)
 
     def write(self, strn, style='output', scrollToBottom='auto'):
         """Write a string into the console.
@@ -126,6 +134,7 @@ class ReplWidget(QtWidgets.QWidget):
 class ReplThread(QtCore.QThread):
     sigCommandEntered = QtCore.Signal(object, object)  # repl, command
     sigCommandRaisedException = QtCore.Signal(object, object)  # repl, exception
+    sigCommandExecuted = QtCore.Signal()
     sigInputGenerated = QtCore.Signal(str, str, str)  # input, style, scrollToBottom
     sigMultilineChanged = QtCore.Signal(bool)
 
@@ -184,6 +193,7 @@ class ReplThread(QtCore.QThread):
             try:
                 with self._stdoutInterceptor:
                     exec(cmdCode, self._globals(), self._locals())
+                    self.sigCommandExecuted.emit()
             except Exception as exc:
                 self.displayException()
                 self.sigCommandRaisedException.emit(self._repl, exc)
