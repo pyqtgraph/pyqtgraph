@@ -13,16 +13,18 @@ class ReplWidget(QtWidgets.QWidget):
     sigCommandEntered = QtCore.Signal(object, object)  # self, command
     sigCommandRaisedException = QtCore.Signal(object, object)  # self, exc
 
-    def __init__(self, globals, locals, parent=None):
+    def __init__(self, globals, locals, parent=None, allowNonGuiExecution=False):
         self._lastCommandRow = None
 
         QtWidgets.QWidget.__init__(self, parent=parent)
 
+        self._allowNonGuiExecution = allowNonGuiExecution
         self._thread = ReplThread(self, globals, locals, parent=self)
         self._thread.sigCommandEntered.connect(self.sigCommandEntered)
         self._thread.sigCommandRaisedException.connect(self.sigCommandRaisedException)
         self._thread.sigCommandExecuted.connect(self.handleCommandExecuted)
-        self._thread.start()
+        if allowNonGuiExecution:
+            self._thread.start()
 
         self._setupUi()
 
@@ -69,6 +71,10 @@ class ReplWidget(QtWidgets.QWidget):
 
         self.input = CmdInput(parent=self)
         self.inputLayout.addWidget(self.input)
+        if self._allowNonGuiExecution:
+            self.guiCheckbox = QtWidgets.QCheckBox("Exec in GUI", self)
+            self.guiCheckbox.setChecked(True)
+            self.inputLayout.addWidget(self.guiCheckbox)
 
         self.input.sigExecuteCmd.connect(self.handleCommand)
         self._thread.sigInputGenerated.connect(self.write)
@@ -76,7 +82,10 @@ class ReplWidget(QtWidgets.QWidget):
 
     def handleCommand(self, cmd):
         self.input.setEnabled(False)
-        self._thread.queueCommand(cmd)
+        if self._allowNonGuiExecution and not self.guiCheckbox.isChecked():
+            self._thread.queueCommand(cmd)
+        else:
+            self._thread.runCmd(cmd)
 
     def handleCommandExecuted(self):
         self.input.setEnabled(True)
