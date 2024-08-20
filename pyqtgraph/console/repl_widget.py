@@ -1,7 +1,6 @@
 import code
 import queue
 import sys
-import time
 import traceback
 
 from ..functions import mkBrush
