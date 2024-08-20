@@ -74,6 +74,10 @@ class ReplWidget(QtWidgets.QWidget):
         if self._allowNonGuiExecution:
             self.guiCheckbox = QtWidgets.QCheckBox("Exec in GUI", self)
             self.guiCheckbox.setChecked(True)
+            self.guiCheckbox.setToolTip(
+                "If your command is long-running and does not require GUI interaction,"
+                " uncheck this box to run it in a separate thread."
+            )
             self.inputLayout.addWidget(self.guiCheckbox)
 
         self.input.sigExecuteCmd.connect(self.handleCommand)
