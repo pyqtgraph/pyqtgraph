@@ -166,10 +166,10 @@ def parseString(lines, start=0, **scope):
             if re.search(r'\S', v) and v[0] != '#':  ## eval the value
                 try:
                     val = eval(v, scope)
-                except Exception:
-                    ex = sys.exc_info()[1]
-                    raise ParseError(f"Error evaluating expression '{v}': [{ex.__class__.__name__}: {str(ex)}]",
-                                     (ln + 1), l)
+                except Exception as ex:
+                    raise ParseError(
+                        f"Error evaluating expression '{v}': [{ex.__class__.__name__}: {ex}]", ln + 1, l
+                    ) from ex
             elif ln + 1 >= len(lines) or measureIndent(lines[ln + 1]) <= indent:
                 val = {}
             else:
@@ -179,9 +179,8 @@ def parseString(lines, start=0, **scope):
             data[k] = val
     except ParseError:
         raise
-    except:
-        ex = sys.exc_info()[1]
-        raise ParseError(f"{ex.__class__.__name__}: {ex}", ln + 1, l)
+    except Exception as ex:
+        raise ParseError(f"{ex.__class__.__name__}: {ex}", ln + 1, l) from ex
     return ln, data
 
 
