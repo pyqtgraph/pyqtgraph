@@ -80,7 +80,9 @@ def test_comment_indentation_is_ignored(tmpdir):
     with open(tf, 'w') as f:
         f.write('a:\n')
         f.write('        # comment\n')
-        f.write('    b: 2\n')
+        f.write('    b:\n')
+        f.write('# more comments\n')
+        f.write('        c: 2\n')
 
     retval = configfile.readConfigFile(tf)
-    assert retval['a']['b'] == 2
+    assert retval['a']['b']['c'] == 2

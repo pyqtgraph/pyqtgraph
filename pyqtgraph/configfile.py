@@ -137,7 +137,7 @@ def parseString(lines, start=0, **scope):
             l = lines[ln]
 
             ## Skip blank lines or lines starting with #
-            if re.match(r'\s*#', l) or not re.search(r'\S', l):
+            if not _line_is_real(l):
                 continue
 
             ## Measure line indentation, make sure it is correct for this level
@@ -165,17 +165,19 @@ def parseString(lines, start=0, **scope):
                     k1 = eval(k, scope)
                     if type(k1) is tuple:
                         k = k1
-            if re.search(r'\S', v) and v[0] != '#':  ## eval the value
+            if _line_is_real(v):  # eval the value
                 try:
                     val = eval(v, scope)
                 except Exception as ex:
                     raise ParseError(
                         f"Error evaluating expression '{v}': [{ex.__class__.__name__}: {ex}]", ln + 1, l
                     ) from ex
-            elif ln + 1 >= len(lines) or measureIndent(lines[ln + 1]) <= indent:
-                val = {}
             else:
-                (ln, val) = parseString(lines, start=ln + 1, **scope)
+                next_real_ln = next((i for i in range(ln + 1, len(lines)) if _line_is_real(lines[i])), len(lines))
+                if ln + 1 >= len(lines) or measureIndent(lines[next_real_ln]) <= indent:
+                    val = {}
+                else:
+                    ln, val = parseString(lines, start=ln + 1, **scope)
             if k in data:
                 raise ParseError(f'Duplicate key: {k}', ln + 1, l)
             data[k] = val
@@ -184,6 +186,10 @@ def parseString(lines, start=0, **scope):
     except Exception as ex:
         raise ParseError(f"{ex.__class__.__name__}: {ex}", ln + 1, l) from ex
     return ln, data
+
+
+def _line_is_real(line):
+    return not re.match(r'\s*#', line) and re.search(r'\S', line)
 
 
 def measureIndent(s):
