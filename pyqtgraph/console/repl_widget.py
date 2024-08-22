@@ -20,7 +20,7 @@ class ReplWidget(QtWidgets.QWidget):
         self._allowNonGuiExecution = allowNonGuiExecution
         self._thread = ReplThread(self, globals, locals, parent=self)
         self._thread.sigCommandEntered.connect(self.sigCommandEntered)
-        self._thread.sigCommandRaisedException.connect(self.sigCommandRaisedException)
+        self._thread.sigCommandRaisedException.connect(self.handleException)
         self._thread.sigCommandExecuted.connect(self.handleCommandExecuted)
         if allowNonGuiExecution:
             self._thread.start()
@@ -93,6 +93,10 @@ class ReplWidget(QtWidgets.QWidget):
     def handleCommandExecuted(self):
         self.input.setEnabled(True)
 
+    def handleException(self, exc):
+        self.input.setEnabled(True)
+        self.sigCommandRaisedException.emit(self, exc)
+
     def write(self, strn, style='output', scrollToBottom='auto'):
         """Write a string into the console.
 
@@ -145,7 +149,7 @@ class ReplWidget(QtWidgets.QWidget):
 
 class ReplThread(QtCore.QThread):
     sigCommandEntered = QtCore.Signal(object, object)  # repl, command
-    sigCommandRaisedException = QtCore.Signal(object, object)  # repl, exception
+    sigCommandRaisedException = QtCore.Signal(object)  # exception
     sigCommandExecuted = QtCore.Signal()
     sigInputGenerated = QtCore.Signal(str, str, str)  # input, style, scrollToBottom
     sigMultilineChanged = QtCore.Signal(bool)
@@ -208,7 +212,7 @@ class ReplThread(QtCore.QThread):
                     self.sigCommandExecuted.emit()
             except Exception as exc:
                 self.displayException()
-                self.sigCommandRaisedException.emit(self._repl, exc)
+                self.sigCommandRaisedException.emit(exc)
 
             # Add a newline if the output did not
             cursor = self._repl.output.textCursor()
