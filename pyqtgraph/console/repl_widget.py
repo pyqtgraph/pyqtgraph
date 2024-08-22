@@ -92,9 +92,11 @@ class ReplWidget(QtWidgets.QWidget):
 
     def handleCommandExecuted(self):
         self.input.setEnabled(True)
+        self.input.setFocus()
 
     def handleException(self, exc):
         self.input.setEnabled(True)
+        self.input.setFocus()
         self.sigCommandRaisedException.emit(self, exc)
 
     def write(self, strn, style='output', scrollToBottom='auto'):
