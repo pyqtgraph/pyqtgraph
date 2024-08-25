@@ -319,7 +319,13 @@ class DockArea(Container, QtWidgets.QWidget):
         if self.topContainer is None or self.topContainer.count() == 0:
             self.topContainer = None
             if self.temporary and self.home is not None:
-                self.home.removeTempArea(self)
+                originDockArea = self.home
+                self.home = None  # apoptose might be called again by dock, if temporary floating window is closed by
+                                  # calling restoreState, see the call to apoptose() in TempAreaWindow.closeEvent().
+                # This would lead to a ValueError because this temp area was already removed
+                # Since we are in the process of closing this temporary dock area
+                # prevent calling removeTempArea by removing the reference to the original dock area.
+                originDockArea.removeTempArea(self)
                 #self.close()
                 
     def clear(self):
@@ -379,4 +385,8 @@ class TempAreaWindow(QtWidgets.QWidget):
                 dock.orig_area.addDock(dock, )
         # clear dock area, and close remaining docks
         self.dockarea.clear()
+        self.dockarea.apoptose() # This call is needed to remove the temporary dock area when a dock is undocked into a
+        # temporary window and either the temporary window is closed or the dock dragged back into the main window.
+        # Otherwise, calling saveState and then restoreState fails with a TypeError trying to restore half-present
+        # floating windows. See GH issue #3125
         super().closeEvent(*args)
