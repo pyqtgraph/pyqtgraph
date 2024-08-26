@@ -1,5 +1,5 @@
 import weakref
-from math import ceil, floor, isfinite, log10, sqrt, frexp, floor
+from math import ceil, floor, frexp, isfinite, log10, sqrt
 
 import numpy as np
 
@@ -11,6 +11,8 @@ from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsWidget import GraphicsWidget
 
 __all__ = ['AxisItem']
+
+
 class AxisItem(GraphicsWidget):
     """
     GraphicsItem showing a single plot axis with ticks, values, and label.
@@ -20,7 +22,18 @@ class AxisItem(GraphicsWidget):
     If maxTickLength is negative, ticks point into the plot.
     """
 
-    def __init__(self, orientation, pen=None, textPen=None, tickPen = None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
+    def __init__(
+            self,
+            orientation,
+            pen=None,
+            textPen=None,
+            tickPen = None,
+            linkView=None,
+            parent=None,
+            maxTickLength=-5,
+            showValues=True,
+            **args,
+    ):
         """
         =============== ===============================================================
         **Arguments:**
@@ -33,14 +46,7 @@ class AxisItem(GraphicsWidget):
         pen             (QPen) Pen used when drawing axis and (by default) ticks
         textPen         (QPen) Pen used when drawing tick labels.
         tickPen         (QPen) Pen used when drawing ticks.
-        text            The text (excluding units) to display on the label for this
-                        axis.
-        units           The units for this axis. Units should generally be given
-                        without any scaling prefix (eg, 'V' instead of 'mV'). The
-                        scaling prefix will be automatically prepended based on the
-                        range of data displayed.
-        args            All extra keyword arguments become CSS style options for
-                        the <span> tag which will surround the axis label and units.
+        args            All additional keyword arguments are passed to :func:`setLabel`
         =============== ===============================================================
         """
 
@@ -49,12 +55,14 @@ class AxisItem(GraphicsWidget):
         self.picture = None
         self.orientation = orientation
         if orientation not in ['left', 'right', 'top', 'bottom']:
-            raise Exception("Orientation argument must be one of 'left', 'right', 'top', or 'bottom'.")
+            raise ValueError("Orientation argument must be one of 'left', 'right', 'top', or 'bottom'.")
         if orientation in ['left', 'right']:
             self.label.setRotation(-90)
-            hide_overlapping_labels = False # allow labels on vertical axis to extend above and below the length of the axis
+            # allow labels on vertical axis to extend above and below the length of the axis
+            hide_overlapping_labels = False
         else:
-            hide_overlapping_labels = True # stop labels on horizontal axis from overlapping so vertical axis labels have room
+            # stop labels on horizontal axis from overlapping so vertical axis labels have room
+            hide_overlapping_labels = True
 
         self.style = {
             'tickTextOffset': [5, 2],  ## (horizontal, vertical) spacing between text and axis
@@ -86,10 +94,6 @@ class AxisItem(GraphicsWidget):
         self.fixedWidth = None
         self.fixedHeight = None
 
-        self.labelText = text
-        self.labelUnits = units
-        self.labelUnitPrefix = unitPrefix
-        self.labelStyle = args
         self.logMode = False
 
         self._tickDensity = 1.0   # used to adjust scale the number of automatically generated ticks
@@ -99,6 +103,12 @@ class AxisItem(GraphicsWidget):
         self.autoSIPrefix = True
         self.autoSIPrefixScale = 1.0
 
+        self.labelText = ""
+        self.labelUnits = ""
+        self.labelUnitPrefix = ""
+        self.labelStyle = {}
+        self._siPrefixEnableRanges = None
+        self.setLabel(**args)
         self.showLabel(False)
 
         self.setRange(0, 1)
@@ -308,19 +318,23 @@ class AxisItem(GraphicsWidget):
         if self.autoSIPrefix:
             self.updateAutoSIPrefix()
 
-    def setLabel(self, text=None, units=None, unitPrefix=None, **args):
+    def setLabel(self, text=None, units=None, unitPrefix=None, siPrefixEnableRanges=None, **args):
         """Set the text displayed adjacent to the axis.
 
         ==============  =============================================================
         **Arguments:**
-        text            The text (excluding units) to display on the label for this
-                        axis.
-        units           The units for this axis. Units should generally be given
-                        without any scaling prefix (eg, 'V' instead of 'mV'). The
-                        scaling prefix will be automatically prepended based on the
-                        range of data displayed.
-        args            All extra keyword arguments become CSS style options for
-                        the <span> tag which will surround the axis label and units.
+        text                   The text (excluding units) to display on the label for this
+                               axis.
+        units                  The units for this axis. Units should generally be given
+                               without any scaling prefix (eg, 'V' instead of 'mV'). The
+                               scaling prefix will be automatically prepended based on the
+                               range of data displayed.
+        unitPrefix             An extra prefix to prepend to the units.
+        siPrefixEnableRanges   The ranges in which automatic SI prefix scaling is enabled.
+                               Defaults to everywhere, unless units is empty, in which case
+                               it defaults to ((0, 1), (1e9, inf)).
+        args                   All extra keyword arguments become CSS style options for
+                               the <span> tag which will surround the axis label and units.
         ==============  =============================================================
 
         The final text generated for the label will look like::
@@ -340,10 +354,22 @@ class AxisItem(GraphicsWidget):
         self.labelUnitPrefix = unitPrefix or ""
         if len(args) > 0:
             self.labelStyle = args
+        self.setSIPrefixEnableRanges(siPrefixEnableRanges)
         # Account empty string and `None` for units and text
-        visible = True if (text or units) else False
+        visible = bool(text or units)
         self.showLabel(visible)
         self._updateLabel()
+
+    def setSIPrefixEnableRanges(self, ranges=None):
+        self._siPrefixEnableRanges = ranges
+
+    def getSIPrefixEnableRanges(self):
+        if self._siPrefixEnableRanges is not None:
+            return self._siPrefixEnableRanges
+        elif self.labelUnits == '':
+            return (0, 1), (1e9, float('inf'))
+        else:
+            return ((0, float('inf')),)
 
     def _updateLabel(self):
         """Internal method to update the label according to the text"""
@@ -357,15 +383,15 @@ class AxisItem(GraphicsWidget):
             if not self.autoSIPrefix or self.autoSIPrefixScale == 1.0:
                 units = ''
             else:
-                units = '(x%g)' % (1.0/self.autoSIPrefixScale)
+                units = f'(x{1.0 / self.autoSIPrefixScale:g})'
         else:
-            units = '(%s%s)' % (self.labelUnitPrefix, self.labelUnits)
+            units = f'({self.labelUnitPrefix}{self.labelUnits})'
 
-        s = '%s %s' % (self.labelText, units)
+        s = f'{self.labelText} {units}'
 
-        style = ';'.join(['%s: %s' % (k, self.labelStyle[k]) for k in self.labelStyle])
+        style = ';'.join([f'{k}: {self.labelStyle[k]}' for k in self.labelStyle])
 
-        return "<span style='%s'>%s</span>" % (style, s)
+        return f"<span style='{style}'>{s}</span>"
 
     def _updateMaxTextSize(self, x):
         ## Informs that the maximum tick size orthogonal to the axis has
@@ -548,27 +574,26 @@ class AxisItem(GraphicsWidget):
         self.updateAutoSIPrefix()
 
     def updateAutoSIPrefix(self):
+        scale = 1.0
+        prefix = ''
         if self.label.isVisible():
             if self.logMode:
                 _range = 10**np.array(self.range)
             else:
                 _range = self.range
-            (scale, prefix) = fn.siScale(max(abs(_range[0]*self.scale), abs(_range[1]*self.scale)))
-            if self.labelUnits == '' and prefix in ['k', 'm']:  ## If we are not showing units, wait until 1e6 before scaling.
-                scale = 1.0
-                prefix = ''
-            self.autoSIPrefixScale = scale
-            self.labelUnitPrefix = prefix
-        else:
-            self.autoSIPrefixScale = 1.0
+            scaling_value = max(abs(_range[0]), abs(_range[1])) * self.scale
+            if any(low <= scaling_value <= high for low, high in self.getSIPrefixEnableRanges()):
+                (scale, prefix) = fn.siScale(scaling_value)
 
+        self.autoSIPrefixScale = scale
+        self.labelUnitPrefix = prefix
         self._updateLabel()
 
     def setRange(self, mn, mx):
         """Set the range of values displayed by the axis.
         Usually this is handled automatically by linking the axis to a ViewBox with :func:`linkToView <pyqtgraph.AxisItem.linkToView>`"""
         if not isfinite(mn) or not isfinite(mx):
-            raise Exception("Not setting range to [%s, %s]" % (str(mn), str(mx)))
+            raise ValueError(f"Not setting range to [{mn}, {mx}]")
         self.range = [mn, mx]
         if self.autoSIPrefix:
             # XXX: Will already update once!
