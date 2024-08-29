@@ -1116,11 +1116,13 @@ class PlotItem(GraphicsWidget):
         Sets the label for an axis. Basic HTML is allowed. See :func:`AxisItem.setLabel` for
         formatting options.
         
-        ==============  =================================================================
-        **Arguments:**
-        axis            must be one of 'left', 'bottom', 'right', or 'top'
-        args            all extra arguments are passed to :func:`AxisItem.setLabel`
-        ==============  =================================================================
+        Parameters
+        ----------
+        axis : str
+            Which axis to label. Must be one of 'left', 'bottom', 'right', or 'top'
+        **args
+            All extra arguments are passed to :func:`AxisItem.setLabel`
+
         """
         self.getAxis(axis).setLabel(*args, **kwds)
         self.showAxis(axis)

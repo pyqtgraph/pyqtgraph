@@ -16,7 +16,7 @@ __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):
     """
     GraphicsItem showing a single plot axis with ticks, values, and label.
-    Can be configured to fit on any side of a plot, 
+    Can be configured to fit on any side of a plot,
     Can automatically synchronize its displayed scale with ViewBox items.
     Ticks can be extended to draw a grid.
     If maxTickLength is negative, ticks point into the plot.
@@ -35,19 +35,24 @@ class AxisItem(GraphicsWidget):
             **args,
     ):
         """
-        =============== ===============================================================
-        **Arguments:**
-        orientation     one of 'left', 'right', 'top', or 'bottom'
-        maxTickLength   (px) maximum length of ticks to draw. Negative values draw
-                        into the plot, positive values draw outward.
-        linkView        (ViewBox) causes the range of values displayed in the axis
-                        to be linked to the visible range of a ViewBox.
-        showValues      (bool) Whether to display values adjacent to ticks
-        pen             (QPen) Pen used when drawing axis and (by default) ticks
-        textPen         (QPen) Pen used when drawing tick labels.
-        tickPen         (QPen) Pen used when drawing ticks.
-        args            All additional keyword arguments are passed to :func:`setLabel`
-        =============== ===============================================================
+        Parameters
+        ----------
+        orientation : str
+            one of 'left', 'right', 'top', or 'bottom'
+        maxTickLength : int
+            (px) maximum length of ticks to draw. Negative values draw into the plot, positive values draw outward.
+        linkView : ViewBox
+            causes the range of values displayed in the axis to be linked to the visible range of a ViewBox.
+        showValues : bool
+            Whether to display values adjacent to ticks
+        pen : QPen
+            Pen used when drawing axis and (by default) ticks
+        textPen : QPen
+            Pen used when drawing tick labels.
+        tickPen : QPen
+            Pen used when drawing ticks.
+        **args
+            All additional keyword arguments are passed to :func:`setLabel`
         """
 
         GraphicsWidget.__init__(self, parent)
@@ -122,7 +127,7 @@ class AxisItem(GraphicsWidget):
             self.setTextPen()
         else:
             self.setTextPen(textPen)
-            
+
         if tickPen is None:
             self.setTickPen()
         else:
@@ -133,7 +138,7 @@ class AxisItem(GraphicsWidget):
             self._linkToView_internal(linkView)
 
         self.grid = False
-        
+
         #self.setCacheMode(self.DeviceCoordinateCache)
 
     def setStyle(self, **kwds):
@@ -242,7 +247,7 @@ class AxisItem(GraphicsWidget):
 
         If an axis is set to log scale, ticks are displayed on a logarithmic scale
         and values are adjusted accordingly. (This is usually accessed by changing
-        the log mode of a :func:`PlotItem <pyqtgraph.PlotItem.setLogMode>`.) The 
+        the log mode of a :func:`PlotItem <pyqtgraph.PlotItem.setLogMode>`.) The
         linked ViewBox will be informed of the change.
         """
         if len(args) == 1:
@@ -258,12 +263,12 @@ class AxisItem(GraphicsWidget):
                 self.logMode = x
             if y is not None and self.orientation in ('left', 'right'):
                 self.logMode = y
-        
+
         if self._linkedView is not None:
-            if self.orientation in ('top', 'bottom'):           
-                self._linkedView().setLogMode('x', self.logMode)    
+            if self.orientation in ('top', 'bottom'):
+                self._linkedView().setLogMode('x', self.logMode)
             elif self.orientation in ('left', 'right'):
-                self._linkedView().setLogMode('y', self.logMode)    
+                self._linkedView().setLogMode('y', self.logMode)
 
         self.picture = None
 
@@ -271,7 +276,7 @@ class AxisItem(GraphicsWidget):
 
     def setTickFont(self, font):
         """
-        (QFont or None) Determines the font used for tick values. 
+        (QFont or None) Determines the font used for tick values.
         Use None for the default font.
         """
         self.style['tickFont'] = font
@@ -289,7 +294,7 @@ class AxisItem(GraphicsWidget):
         if self.label is None: # self.label is set to None on close, but resize events can still occur.
             self.picture = None
             return
-            
+
         br = self.label.boundingRect()
         p = QtCore.QPointF(0, 0)
         if self.orientation == 'left':
@@ -321,32 +326,28 @@ class AxisItem(GraphicsWidget):
     def setLabel(self, text=None, units=None, unitPrefix=None, siPrefixEnableRanges=None, **args):
         """Set the text displayed adjacent to the axis.
 
-        ==============  =============================================================
-        **Arguments:**
-        text                   The text (excluding units) to display on the label for this
-                               axis.
-        units                  The units for this axis. Units should generally be given
-                               without any scaling prefix (eg, 'V' instead of 'mV'). The
-                               scaling prefix will be automatically prepended based on the
-                               range of data displayed.
-        unitPrefix             An extra prefix to prepend to the units.
-        siPrefixEnableRanges   The ranges in which automatic SI prefix scaling is enabled.
-                               Defaults to everywhere, unless units is empty, in which case
-                               it defaults to ((0, 1), (1e9, inf)).
-        args                   All extra keyword arguments become CSS style options for
-                               the <span> tag which will surround the axis label and units.
-        ==============  =============================================================
+        Parameters
+        ----------
+        text : str
+            The text (excluding units) to display on the label for this axis.
+        units : str
+            The units for this axis. Units should generally be given without any scaling prefix (eg, 'V' instead of
+            'mV'). The scaling prefix will be automatically prepended based on the range of data displayed.
+        unitPrefix : str
+            An extra prefix to prepend to the units.
+        siPrefixEnableRanges : tuple[tuple[float, float], ...]
+            The ranges in which automatic SI prefix scaling is enabled. Defaults to everywhere, unless units is empty,
+            in which case it defaults to ((0, 1), (1e9, inf)).
+        **args
+            All extra keyword arguments become CSS style options for the <span> tag which will surround the axis label
+            and units. Note that CSS attributes are not always valid python arguments. Examples: `color='#FFF'`,
+            `**{'font-size': '14pt'}`.
 
-        The final text generated for the label will look like::
+        Notes
+        -----
+        The final text generated for the label will usually take the form::
 
-            <span style="...options...">{text} (prefix{units})</span>
-
-        Each extra keyword argument will become a CSS option in the above template.
-        For example, you can set the font size and color of the label::
-
-            labelStyle = {'color': '#FFF', 'font-size': '14pt'}
-            axis.setLabel('label text', units='V', **labelStyle)
-
+            <span style="...args...">{text} (prefix{units})</span>
         """
         # `None` input is kept for backward compatibility!
         self.labelText = text or ""
@@ -407,7 +408,7 @@ class AxisItem(GraphicsWidget):
                     self.textWidth = mx
             if self.style['autoExpandTextSpace']:
                 self._updateWidth()
-        
+
         else:
             if self.style['autoReduceTextSpace']:
                 if x > self.textHeight or x < self.textHeight - 10:
@@ -523,13 +524,13 @@ class AxisItem(GraphicsWidget):
             self._textPen = fn.mkPen(getConfigOption('foreground'))
         self.labelStyle['color'] = self._textPen.color().name() #   #RRGGBB
         self._updateLabel()
-        
+
     def tickPen(self):
         if self._tickPen is None:
             return self.pen() # Default to the main pen
         else:
             return fn.mkPen(self._tickPen)
-        
+
     def setTickPen(self, *args, **kwargs):
         """
         Set the pen used for drawing tick marks.
@@ -541,7 +542,7 @@ class AxisItem(GraphicsWidget):
         else:
             self._tickPen = None
 
-        self._updateLabel()        
+        self._updateLabel()
 
     def setScale(self, scale=None):
         """
@@ -624,7 +625,7 @@ class AxisItem(GraphicsWidget):
     def linkToView(self, view):
         """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
         self._linkToView_internal(view)
-        
+
     def unlinkFromView(self):
         """Unlink this axis from a ViewBox."""
         oldView = self.linkedView()
@@ -708,7 +709,7 @@ class AxisItem(GraphicsWidget):
 
     def setTickDensity(self, density=1.0):
         """
-        The default behavior is to show at least two major ticks for axes of up to 300 pixels in length, 
+        The default behavior is to show at least two major ticks for axes of up to 300 pixels in length,
         then add additional major ticks, spacing them out further as the available room increases.
         (Internally, the targeted number of major ticks grows with the square root of the axes length.)
 
@@ -791,10 +792,10 @@ class AxisItem(GraphicsWidget):
         dif = abs(maxVal - minVal)
         if dif == 0:
             return []
-        
+
         ref_size = 300. # axes longer than this display more than the minimum number of major ticks
         minNumberOfIntervals = max(
-            2.25,       # 2.0 ensures two tick marks. Fudged increase to 2.25 allows room for tick labels. 
+            2.25,       # 2.0 ensures two tick marks. Fudged increase to 2.25 allows room for tick labels.
             2.25 * self._tickDensity * sqrt(size/ref_size) # sub-linear growth of tick spacing with size
         )
 
@@ -804,14 +805,14 @@ class AxisItem(GraphicsWidget):
         # Then divide by ten so that the scale factors for subdivision all become intergers.
         # p10unit = 10**( floor( log10(majorMaxSpacing) ) ) / 10
 
-        # And we want to do it without a log operation:        
+        # And we want to do it without a log operation:
         mantissa, exp2 = frexp(majorMaxSpacing) # IEEE 754 float already knows its exponent, no need to calculate
         p10unit = 10. ** ( # approximate a power of ten base factor just smaller than the given number
             floor(            # int would truncate towards zero to give wrong results for negative exponents
                 (exp2-1)      # IEEE 754 exponent is ceiling of true exponent --> estimate floor by subtracting 1
                 / 3.32192809488736 # division by log2(10)=3.32 converts base 2 exponent to base 10 exponent
             ) - 1             # subtract one extra power of ten so that we can work with integer scale factors >= 5
-        )                
+        )
         # neglecting the mantissa can underestimate by one power of 10 when the true value is JUST above the threshold.
         if 100. * p10unit <= majorMaxSpacing: # Cheaper to check this than to use a more complicated approximation.
             majorScaleFactor = 10
@@ -822,7 +823,7 @@ class AxisItem(GraphicsWidget):
                     break # find the first value that is smaller or equal
         majorInterval = majorScaleFactor * p10unit
         # manual sanity check: print(f"{majorMaxSpacing:.2e} > {majorInterval:.2e} = {majorScaleFactor:.2e} x {p10unit:.2e}")
-        
+
         minorMinSpacing = 2 * dif/size   # no more than one minor tick per two pixels
         if majorScaleFactor == 10:
             trials = (5, 10) # if major interval is 1.0, try minor interval of 0.5, fall back to same as major interval
@@ -854,7 +855,7 @@ class AxisItem(GraphicsWidget):
             if extraInterval < minorInterval: # add extra interval only if it is visible
                 levels.append((extraInterval, 0))
         return levels
-    
+
 
     def tickValues(self, minVal, maxVal, size):
         """
@@ -1098,7 +1099,7 @@ class AxisItem(GraphicsWidget):
 
             ## length of tick
             tickLength = self.style['tickLength'] / ((i*0.5)+1.0)
-                
+
             lineAlpha = self.style["tickAlpha"]
             if lineAlpha is None:
                 lineAlpha = 255 / (i+1)
@@ -1117,7 +1118,7 @@ class AxisItem(GraphicsWidget):
             if tickPen.brush().style() == QtCore.Qt.BrushStyle.SolidPattern: # only adjust simple color pens
                 tickPen = QtGui.QPen(tickPen) # copy to a new QPen
                 color = QtGui.QColor(tickPen.color()) # copy to a new QColor
-                color.setAlpha(int(lineAlpha)) # adjust opacity                
+                color.setAlpha(int(lineAlpha)) # adjust opacity
                 tickPen.setColor(color)
 
             for v in ticks:
@@ -1228,7 +1229,7 @@ class AxisItem(GraphicsWidget):
                         break
                 if finished:
                     break
-            
+
             lastTextSize2 = textSize2
 
             #spacing, values = tickLevels[best]
@@ -1260,7 +1261,7 @@ class AxisItem(GraphicsWidget):
                     alignFlags = QtCore.Qt.AlignmentFlag.AlignHCenter|QtCore.Qt.AlignmentFlag.AlignTop
                     rect = QtCore.QRectF(x-width/2., tickStop+offset, width, height)
 
-                textFlags = alignFlags | QtCore.Qt.TextFlag.TextDontClip    
+                textFlags = alignFlags | QtCore.Qt.TextFlag.TextDontClip
                 #p.setPen(self.pen())
                 #p.drawText(rect, textFlags, vstr)
 
