@@ -197,7 +197,7 @@ def test_restoring_fails_silently_if_only_one_dock_in_container():
                  ['vertical', [
                      ['horizontal', [
                         ['vertical', [
-                            ['vertical', [
+                            ['vertical', [  # A single dock in a container should not lead to the collapse of this side of the tree.
                                 ['dock', 'Plot 1', {}]],
                              {'sizes': [314]}
                             ],
@@ -222,8 +222,8 @@ def test_restoring_fails_silently_if_only_one_dock_in_container():
 
 
 def test_floating_and_closed_before_save_and_restore_state():
-    # Test that undocking and redocking a dock doesn't break save- and restoreState functionality.
-    # Regression test for GH issue #3125
+    # Test that undocking and redocking a dock by closing the temporary window doesn't break
+    # save- and restoreState functionality. Regression test for GH issue #3125
     a = da.DockArea()
     d1 = da.Dock("dock 1")
     a.addDock(d1, 'left')
@@ -234,6 +234,19 @@ def test_floating_and_closed_before_save_and_restore_state():
     a2.restoreState(state, missing='create')
     assert a2.saveState() == state
 
+
+def test_floating_and_redock_by_dragging_back_before_save_and_restore_state():
+    # Test that undocking and dragging the dock back to the main window closes the temporary window and therefore
+    # doesn't break save- and restoreState functionality. Regression test for GH issue #3125
+    a = da.DockArea()
+    d1 = da.Dock("dock 1")
+    a.addDock(d1, 'left')
+    a.floatDock(d1)
+    a.moveDock(d1, 'left', None)
+    state = a.saveState()
+    a2 = da.DockArea()
+    a2.restoreState(state, missing='create')
+    assert a2.saveState() == state
 
 def test_floating_dock_closed_by_restore_state_doesnt_error():
     # Test that closing a floating dock by calling restoreState doesn't raise an exception.

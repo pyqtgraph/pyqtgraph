@@ -286,7 +286,11 @@ class DockArea(Container, QtWidgets.QWidget):
                 self.buildFromState(o, docks, obj, depth+1, missing=missing)
             # remove this container if possible. (there are valid situations when a restore will
             # generate empty containers, such as when using missing='ignore')
-            obj.apoptose(propagate=False)
+            # There are 2 cases where this container should be removed:
+            #   1. There are no child items which might happen in missing is set to 'ignore'
+            #   2. To remove a superfluous container (Another container as the sole children of this container)
+            if obj.count() == 0 or (obj.count() == 1 and isinstance(obj.widget(0), Container)):
+                obj.apoptose(propagate=False)
             obj.restoreState(state)  ## this has to be done later?     
 
     def findAll(self, obj=None, c=None, d=None):
