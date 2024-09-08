@@ -294,12 +294,15 @@ class LinearRegionItem(GraphicsObject):
         self.prepareGeometryChange()
         self.sigRegionChanged.emit(self)
 
+    @QtCore.Slot()
     def _line0Moved(self):
         self.lineMoved(0)
 
+    @QtCore.Slot()
     def _line1Moved(self):
         self.lineMoved(1)
 
+    @QtCore.Slot()
     def lineMoveFinished(self):
         self.sigRegionChangeFinished.emit(self)
 

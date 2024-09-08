@@ -111,6 +111,7 @@ accidentally added, address mixed-line-endings types and so on.  Check the
 ### Basic Setup
 
 * pytest
+* Optional: pytest-qt    (used to check PyQt warnings)
 * Optional: pytest-xdist (used to run tests in parallel)
 * Optional: pytest-xvfb  (used on linux with headless displays)
 

@@ -86,6 +86,7 @@ class PenParameter(GroupParameter):
             threadSafe=False,
         )
 
+    @QtCore.Slot(object)
     def _childrenFinishedChanging(self, paramAndValue):
         self.setValue(self.pen)
 

@@ -17,6 +17,7 @@ class Receiver(QtCore.QObject):
         super(Receiver, self).__init__(parent)
         self.counter = 0
 
+    @QtCore.Slot()
     def slotReceive(self):
         self.counter += 1
 

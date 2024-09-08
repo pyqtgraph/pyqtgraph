@@ -231,6 +231,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
         QtWidgets.QTreeWidget.setColumnCount(self, c)
         self.sigColumnCountChanged.emit(self, c)
 
+    @QtCore.Slot(QtWidgets.QTreeWidgetItem, int)
     def _itemClicked(self, item, col):
         if hasattr(item, 'itemClicked'):
             item.itemClicked(col)

@@ -109,6 +109,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.prepareForPaint()
         return QtWidgets.QGraphicsScene.render(self, *args)
 
+    @QtCore.Slot()
     def prepareForPaint(self):
         """Called before every render. This method will inform items that the scene is about to
         be rendered by emitting sigPrepareForPaint.
@@ -536,6 +537,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.contextMenuItem = event.acceptedItem
         return self.contextMenu
 
+    @QtCore.Slot()
     def showExportDialog(self):
         if self.exportDialog is None:
             from . import exportDialog

@@ -19,6 +19,8 @@ import pyqtgraph as pg
 
 class C(pg.QtCore.QObject):
     sig = pg.QtCore.Signal()
+    # https://www.riverbankcomputing.com/pipermail/pyqt/2024-August/045989.html
+    # @pg.QtCore.Slot()
     def fn(self):
         print("{msg}")
 
@@ -39,6 +41,8 @@ def remove_cache(mod):
     ),
     reason="Unknown Issue"
 )
+# https://www.riverbankcomputing.com/pipermail/pyqt/2024-August/045989.html
+@pytest.mark.qt_log_ignore("Registering dynamic slot")
 @pytest.mark.usefixtures("tmp_module")
 def test_reload(tmp_module):
     # write a module

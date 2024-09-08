@@ -204,17 +204,20 @@ class ColorMapMenu(QtWidgets.QMenu):
             submenu = topmenu.addMenu('colorcet')
             submenu.aboutToShow.connect(self.buildColorcetSubMenu)
 
+    @QtCore.Slot(QtGui.QAction)
     def onTriggered(self, action):
         if not isinstance(data := action.data(), PrivateActionData):
             return
         cmap = self.actionDataToColorMap(data)
         self.sigColorMapTriggered.emit(cmap)
 
+    @QtCore.Slot()
     def buildGradientSubMenu(self):
         source = 'preset-gradient'
         names = list(Gradients.keys())
         self.buildSubMenu(names, source, sort=False)
 
+    @QtCore.Slot()
     def buildLocalSubMenu(self):
         source = None
         names = colormap.listMaps(source=source)
@@ -222,6 +225,7 @@ class ColorMapMenu(QtWidgets.QMenu):
         names = [x for x in names if not x.startswith('PAL-relaxed')]
         self.buildSubMenu(names, source)
 
+    @QtCore.Slot()
     def buildCetLocalSubMenu(self):
         # in Qt6 we could have used Qt.ConnectionType.SingleShotConnection
         menu = self.sender()
@@ -230,6 +234,7 @@ class ColorMapMenu(QtWidgets.QMenu):
         cet_type = menu.title()
         buildCetSubMenu(menu, source, cet_type)
 
+    @QtCore.Slot()
     def buildCetExternalSubMenu(self):
         # in Qt6 we could have used Qt.ConnectionType.SingleShotConnection
         menu = self.sender()
@@ -238,6 +243,7 @@ class ColorMapMenu(QtWidgets.QMenu):
         cet_type = menu.title()
         buildCetSubMenu(menu, source, cet_type)
 
+    @QtCore.Slot()
     def buildMplCategorySubMenu(self):
         # in Qt6 we could have used Qt.ConnectionType.SingleShotConnection
         menu = self.sender()
@@ -254,9 +260,11 @@ class ColorMapMenu(QtWidgets.QMenu):
                 # so to be safe, we wrap around try except
                 pass
 
+    @QtCore.Slot()
     def buildMplOthersSubMenu(self):
         self.buildSubMenu(find_mpl_leftovers(), "matplotlib")
 
+    @QtCore.Slot()
     def buildColorcetSubMenu(self):
         # colorcet colormaps with shorter/simpler aliases
         source = 'colorcet'

@@ -575,30 +575,39 @@ class Parameter(QtCore.QObject):
         self.treeStateChanges.append((self, changeDesc, data))
         self.emitTreeChanges()
 
+    @QtCore.Slot(object, object)
     def _emitValueChanged(self, param, data):
         self.emitStateChanged("value", data)
 
+    @QtCore.Slot(object, object, object)
     def _emitChildAddedChanged(self, param, *data):
         self.emitStateChanged("childAdded", data)
 
+    @QtCore.Slot(object, object)
     def _emitChildRemovedChanged(self, param, data):
         self.emitStateChanged("childRemoved", data)
 
+    @QtCore.Slot(object, object)
     def _emitParentChanged(self, param, data):
         self.emitStateChanged("parent", data)
 
+    @QtCore.Slot(object, object)
     def _emitLimitsChanged(self, param, data):
         self.emitStateChanged("limits", data)
 
+    @QtCore.Slot(object, object)
     def _emitDefaultChanged(self, param, data):
         self.emitStateChanged("default", data)
 
+    @QtCore.Slot(object, object)
     def _emitNameChanged(self, param, data):
         self.emitStateChanged("name", data)
 
+    @QtCore.Slot(object, object)
     def _emitOptionsChanged(self, param, data):
         self.emitStateChanged("options", data)
 
+    @QtCore.Slot(object, object)
     def _emitContextMenuChanged(self, param, data):
         self.emitStateChanged("contextMenu", data)
 
@@ -849,6 +858,7 @@ class Parameter(QtCore.QObject):
         self.emitTreeChanges()
         
         
+    @QtCore.Slot(object, object)
     def treeStateChanged(self, param, changes):
         """
         Called when the state of any sub-parameter has changed. 

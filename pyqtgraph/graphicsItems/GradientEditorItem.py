@@ -186,6 +186,7 @@ class TickSliderItem(GraphicsWidget):
         if finish:
             self.sigTicksChangeFinished.emit(self)
     
+    @QtCore.Slot(object, object)
     def tickMoved(self, tick, pos):
         #print "tick changed"
         ## Correct position of tick if it has left bounds.
@@ -196,6 +197,7 @@ class TickSliderItem(GraphicsWidget):
         
         self.sigTicksChanged.emit(self)
     
+    @QtCore.Slot(object)
     def tickMoveFinished(self, tick):
         self.sigTicksChangeFinished.emit(self)
     
@@ -488,6 +490,7 @@ class GradientEditorItem(TickSliderItem):
         #private
         self.menu.popup(ev.screenPos().toQPoint())
     
+    @QtCore.Slot(object)
     def colorMapMenuClicked(self, cmap):
         #private
         if cmap.name.startswith("preset-gradient:"):
@@ -529,9 +532,11 @@ class GradientEditorItem(TickSliderItem):
         self.sigTicksChanged.emit(self)
         self.sigGradientChangeFinished.emit(self)
 
+    @QtCore.Slot()
     def _setColorModeToRGB(self):
         self.setColorMode("rgb")
 
+    @QtCore.Slot()
     def _setColorModeToHSV(self):
         self.setColorMode("hsv")
 
@@ -553,6 +558,7 @@ class GradientEditorItem(TickSliderItem):
         self.gradRect.setBrush(QtGui.QBrush(self.gradient))
         self.sigGradientChanged.emit(self)
 
+    @QtCore.Slot(object)
     def _updateGradientIgnoreArgs(self, *args, **kwargs):
         self.updateGradient()
 
@@ -563,18 +569,22 @@ class GradientEditorItem(TickSliderItem):
         self.gradRect.setRect(1, -self.rectSize, newLen, self.rectSize)
         self.sigTicksChanged.emit(self)
         
+    @QtCore.Slot(QtGui.QColor)
     def currentColorChanged(self, color):
         #private
         if color.isValid() and self.currentTick is not None:
             self.setTickColor(self.currentTick, color)
             
+    @QtCore.Slot()
     def currentColorRejected(self):
         #private
         self.setTickColor(self.currentTick, self.currentTickColor)
         
+    @QtCore.Slot()
     def currentColorAccepted(self):
         self.sigGradientChangeFinished.emit(self)
         
+    @QtCore.Slot(object, object)
     def tickClicked(self, tick, ev):
         #private
         if ev.button() == QtCore.Qt.MouseButton.LeftButton:

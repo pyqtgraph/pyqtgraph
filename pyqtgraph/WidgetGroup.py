@@ -217,6 +217,9 @@ class WidgetGroup(QtCore.QObject):
         self.scales[widget] = scale
         self.setWidget(widget, val)
 
+    @QtCore.Slot()
+    @QtCore.Slot(bool)
+    @QtCore.Slot(int)
     def widgetChanged(self, *args):
         w = self.sender()
         n = self.widgetList[w]

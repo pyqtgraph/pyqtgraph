@@ -314,6 +314,7 @@ class ViewBox(GraphicsWidget):
                 scene.sigPrepareForPaint.connect(self.prepareForPaint)
         return ret
 
+    @QtCore.Slot()
     def prepareForPaint(self):
         #autoRangeEnabled = (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False)
         # don't check whether auto range is enabled here--only check when setting dirty flag.
@@ -1154,6 +1155,8 @@ class ViewBox(GraphicsWidget):
         else:
             self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][ax]))
 
+    @QtCore.Slot()
+    @QtCore.Slot(QtWidgets.QWidget)
     def invertY(self, b=True):
         """
         By default, the positive y-axis points upward on the screen. Use invertY(True) to reverse the y-axis.

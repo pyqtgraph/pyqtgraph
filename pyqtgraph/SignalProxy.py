@@ -52,6 +52,9 @@ class SignalProxy(QtCore.QObject):
     def setDelay(self, delay):
         self.delay = delay
 
+    @QtCore.Slot()
+    @QtCore.Slot(object)
+    @QtCore.Slot(object, object)
     def signalReceived(self, *args):
         """Received signal. Cancel previous timer and store args to be
         forwarded later."""
@@ -72,6 +75,7 @@ class SignalProxy(QtCore.QObject):
             self.timer.stop()
             self.timer.start(int(min(leakTime, self.delay) * 1000) + 1)
 
+    @QtCore.Slot()
     def flush(self):
         """If there is a signal queued up, send it now."""
         if self.args is None or self.blockSignal:

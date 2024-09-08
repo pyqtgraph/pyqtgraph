@@ -182,14 +182,19 @@ class ParameterTree(TreeWidget):
             self._updatePalette(self.palette())
         return super().event(event)
 
+    @QtCore.Slot(QtWidgets.QTreeWidgetItem, int)
     def itemChangedEvent(self, item, col):
         if hasattr(item, 'columnChangedEvent'):
             item.columnChangedEvent(col)
     
+    @QtCore.Slot(QtWidgets.QTreeWidgetItem)
+    @QtCore.Slot(QtWidgets.QTreeWidgetItem, int)
     def itemExpandedEvent(self, item):
         if hasattr(item, 'expandedChangedEvent'):
             item.expandedChangedEvent(True)
     
+    @QtCore.Slot(QtWidgets.QTreeWidgetItem)
+    @QtCore.Slot(QtWidgets.QTreeWidgetItem, int)
     def itemCollapsedEvent(self, item):
         if hasattr(item, 'expandedChangedEvent'):
             item.expandedChangedEvent(False)

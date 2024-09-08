@@ -1,5 +1,5 @@
 from .. import functions as fn
-from ..Qt import QtWidgets
+from ..Qt import QtCore, QtWidgets
 from .GraphicsWidget import GraphicsWidget
 from .LabelItem import LabelItem
 from .PlotItem import PlotItem
@@ -204,6 +204,7 @@ class GraphicsLayout(GraphicsWidget):
     def setSpacing(self, *args):
         self.layout.setSpacing(*args)
 
+    @QtCore.Slot()
     def _updateItemBorder(self):
         if self.border is None:
             return

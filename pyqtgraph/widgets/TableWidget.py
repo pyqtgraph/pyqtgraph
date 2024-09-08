@@ -323,18 +323,22 @@ class TableWidget(QtWidgets.QTableWidget):
             s += ('\t'.join(row) + '\n')
         return s
 
+    @QtCore.Slot()
     def copySel(self):
         """Copy selected data to clipboard."""
         QtWidgets.QApplication.clipboard().setText(self.serialize(useSelection=True))
 
+    @QtCore.Slot()
     def copyAll(self):
         """Copy all data to clipboard."""
         QtWidgets.QApplication.clipboard().setText(self.serialize(useSelection=False))
 
+    @QtCore.Slot()
     def saveSel(self):
         """Save selected data to file."""
         self.save(self.serialize(useSelection=True))
 
+    @QtCore.Slot()
     def saveAll(self):
         """Save all data to file."""
         self.save(self.serialize(useSelection=False))
@@ -361,6 +365,7 @@ class TableWidget(QtWidgets.QTableWidget):
         else:
             super().keyPressEvent(ev)
 
+    @QtCore.Slot(QtWidgets.QTableWidgetItem)
     def handleItemChanged(self, item):
         item.itemChanged()
 
