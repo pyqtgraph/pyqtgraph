@@ -1,12 +1,12 @@
 import os
-import sys
 import pickle
 import subprocess
+import sys
 
 from .. import getConfigOption
 from ..Qt import QtCore, QtWidgets
-from .repl_widget import ReplWidget
 from .exception_widget import ExceptionHandlerWidget
+from .repl_widget import ReplWidget
 
 
 class ConsoleWidget(QtWidgets.QWidget):
@@ -56,7 +56,7 @@ class ConsoleWidget(QtWidgets.QWidget):
         self.input.setFocus()
         
         if text is not None:
-            self.output.setPlainText(text)
+            self.output.insertPlainText(text)
 
         self.historyFile = historyFile
         

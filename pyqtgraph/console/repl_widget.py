@@ -1,6 +1,9 @@
-import code, sys, traceback
-from ..Qt import QtWidgets, QtGui, QtCore
+import code
+import sys
+import traceback
+
 from ..functions import mkBrush
+from ..Qt import QtCore, QtGui, QtWidgets
 from .CmdInput import CmdInput
 
 
@@ -124,7 +127,6 @@ class ReplWidget(QtWidgets.QWidget):
 
         cursor = self.output.textCursor()
         cursor.movePosition(QtGui.QTextCursor.MoveOperation.End)
-        self.output.setTextCursor(cursor)
 
         sb = self.output.verticalScrollBar()
         scroll = sb.value()
@@ -216,4 +218,3 @@ class StdoutInterceptor:
         sys.stderr = self._orig_stderr
         self._orig_stdout = None
         self._orig_stderr = None
-
