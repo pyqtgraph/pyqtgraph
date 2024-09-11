@@ -2927,6 +2927,8 @@ def invertQTransform(tr):
     """
     try:
         det = tr.determinant()
+        if np.isinf(det):
+            return np_invert_qtransform(tr)
         detr = 1.0 / det    # let singular matrices raise ZeroDivisionError
         inv = tr.adjoint()
         inv *= detr
@@ -2962,24 +2964,6 @@ def np_invert_qtransform(tr):
     q_transform = QtGui.QTransform(*np_inv_tr.ravel().tolist())
     q_transform = turnInfToSysMax(q_transform)
     return q_transform
-
-def np_map(tr, pos):
-    """
-    Maps a QPointF using a QTransform without using the Qt API. This is useful when the Qt API fails to map a point and produces NaNs.
-    """
-    new_x = turnInfToSysMax(tr.m11() * pos.x()) + turnInfToSysMax(tr.m21() * pos.y()) + turnInfToSysMax(tr.dx())
-    new_y = turnInfToSysMax(tr.m22() * pos.y()) + turnInfToSysMax(tr.m12() * pos.x()) + tr.dy()
-
-    new_x = turnInfToSysMax(new_x)
-    new_y = turnInfToSysMax(new_y)
-
-    if tr.isAffine():
-        w = tr.m13() * pos.x() + tr.m23() * pos.y() + tr.m33()
-        w = turnInfToSysMax(w)
-        new_x /= w
-        new_y /= w
-
-    return QtCore.QPointF(new_x, new_y)
 
 def pseudoScatter(data, spacing=None, shuffle=True, bidir=False, method='exact'):
     """Return an array of position values needed to make beeswarm or column scatter plots.

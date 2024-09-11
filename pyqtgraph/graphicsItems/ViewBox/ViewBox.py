@@ -587,7 +587,7 @@ class ViewBox(GraphicsWidget):
             yOff = False if setRequested[1] else None
             self.enableAutoRange(x=xOff, y=yOff)
             changed.append(True)
-            
+
         limits = self._effectiveLimits()
         # print('rng:limits ', limits) # diagnostic output should reflect additional limit in log mode
         # limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
@@ -1347,9 +1347,8 @@ class ViewBox(GraphicsWidget):
             return
 
         s = [(None if m is False else s) for m in mask]
-        inv = fn.np_invert_qtransform(self.childGroup.transform())
-        inv = fn.turnInfToSysMax(inv)
-        center = Point(fn.np_map(inv, ev.pos()))
+        inv = fn.invertQTransform(self.childGroup.transform())
+        center = Point(inv.map(ev.pos()))
 
         self._resetTarget()
         self.scaleBy(s, center)
@@ -1404,8 +1403,8 @@ class ViewBox(GraphicsWidget):
                     self.updateScaleBox(ev.buttonDownPos(), ev.pos())
             else:
                 tr = self.childGroup.transform()
-                tr = fn.np_invert_qtransform(tr)
-                tr = fn.np_map(tr, Point(*(dif*mask))) - fn.np_map(tr, Point(0,0))
+                tr = fn.invertQTransform(tr)
+                tr = tr.map(Point(*(dif*mask))) - tr.map(Point(0,0))
 
                 x = tr.x() if mask[0] == 1 else None
                 y = tr.y() if mask[1] == 1 else None
@@ -1433,12 +1432,12 @@ class ViewBox(GraphicsWidget):
                 return
 
             tr = self.childGroup.transform()
-            tr = fn.np_invert_qtransform(tr)
+            tr = fn.invertQTransform(tr)
 
             x = s[0] if mouseEnabled[0] == 1 else None
             y = s[1] if mouseEnabled[1] == 1 else None
 
-            center = Point(fn.np_map(tr, ev.buttonDownPos(QtCore.Qt.MouseButton.RightButton)))
+            center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.MouseButton.RightButton)))
             self._resetTarget()
             self.scaleBy(x=x, y=y, center=center)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
