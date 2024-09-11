@@ -1765,7 +1765,7 @@ def gaussianFilter(data, sigma):
     return filtered + baseline
     
     
-def downsample(data, n, axis=0, xvals='subsample'):
+def downsample(data, n, axis=0, xvals='subsample', *, nanPolicy='propagate'):
     """Downsample by averaging points together across axis.
     If multiple axes are specified, runs once per axis.
     """
@@ -1773,7 +1773,7 @@ def downsample(data, n, axis=0, xvals='subsample'):
         if not hasattr(n, '__len__'):
             n = [n]*len(axis)
         for i in range(len(axis)):
-            data = downsample(data, n[i], axis[i])
+            data = downsample(data, n[i], axis[i], nanPolicy=nanPolicy)
         return data
     
     if n <= 1:
@@ -1786,7 +1786,12 @@ def downsample(data, n, axis=0, xvals='subsample'):
     sl[axis] = slice(0, nPts*n)
     d1 = data[tuple(sl)]
     d1.shape = tuple(s)
-    d2 = d1.mean(axis+1)
+    if nanPolicy == 'propagate':
+        d2 = d1.mean(axis+1)
+    elif nanPolicy == 'omit':
+        d2 = np.nanmean(d1, axis+1)
+    else:
+        raise ValueError(f"Keyword argument {nanPolicy=} must be one of {'propagate', 'omit'}.")
     return d2
 
 def _compute_backfill_indices(isfinite):

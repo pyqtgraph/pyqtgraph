@@ -73,6 +73,7 @@ class ImageItem(GraphicsObject):
         self.levels = None  ## [min, max] or [[redMin, redMax], ...]
         self.lut = None
         self.autoDownsample = False
+        self._nanPolicy = 'propagate'
         self._colorMap = None # This is only set if a color map is assigned directly
         self._lastDownsample = (1, 1)
         self._processingBuffer = None
@@ -323,6 +324,37 @@ class ImageItem(GraphicsObject):
         self._renderRequired = True
         self.update()
 
+    def nanPolicy(self) -> str:
+        """
+        Retrieve the string representing the current NaN policy.
+
+        See :meth:setNanPolicy.
+
+        Returns
+        -------
+        { 'propagate', 'omit' }
+            The NaN policy that this ImageItem uses during downsampling.
+        """
+        return self._nanPolicy
+
+    def setNanPolicy(self, nanPolicy: str):
+        """
+        Control how NaN values are handled during downsampling for this ImageItem.
+
+        Parameters
+        ----------
+        nanPolicy : { 'propagate', 'omit' }
+            If 'nanPolicy' is 'ignore', NaNs are automatically ignored during
+            downsampling, at the expense of performance. If 'nanPolicy' is 'propagate',
+            NaNs are kept during downsampling. Unless a different policy was specified,
+            a new ImageItem is created with ``nanPolicy='propagate'``.
+        """
+        if nanPolicy not in ['propagate', 'omit']:
+            raise ValueError(f"{nanPolicy=} must be one of {'propagate', 'omit'}")
+        self._nanPolicy = nanPolicy
+        self._renderRequired = True
+        self.update()
+
     def setOpts(self, update: bool=True, **kwargs):
         """
         Set display and processing options for this ImageItem.
@@ -340,6 +372,7 @@ class ImageItem(GraphicsObject):
             keys include:
 
             * `autoDownsample` whose value is directed to :meth:`setAutoDownsample`
+            * `nanPolicy` whose value is directed to :meth:`setNanPolicy`
             * `axisOrder`, which needs to be one of {'row-major', 'col-major'},
               determines the relationship between the numpy axis and visual axis
               of the data.
@@ -357,6 +390,8 @@ class ImageItem(GraphicsObject):
         --------
         :meth:`setAutoDownsample`
             Accepts the value of ``kwargs['autoDownsample']``.
+        :meth:`setNanPolicy`
+            Accepts the value of ``kwargs['nanPolicy']``.
         :meth:`setBorder`
             Accepts the value of ``kwargs['border']``.
         :meth:`setColorMap`
@@ -399,6 +434,8 @@ class ImageItem(GraphicsObject):
             self.menu = None
         if 'autoDownsample' in kwargs:
             self.setAutoDownsample(kwargs['autoDownsample'])
+        if 'nanPolicy' in kwargs:
+            self.setNanPolicy(kwargs['nanPolicy'])
         if 'rect' in kwargs:
             self.setRect(kwargs['rect'])
         if update:
@@ -704,14 +741,23 @@ class ImageItem(GraphicsObject):
         else:
             lut = None
 
+        if self._imageHasNans is None:
+            # awkward, but fastest numpy native nan evaluation
+            self._imageHasNans = (
+                self.image.dtype.kind == 'f' and
+                self._xp.isnan(self.image.min())
+            )
+            self._imageNanLocations = None
+
         if self.autoDownsample:
             xds, yds = self._computeDownsampleFactors()
             if xds is None:
                 return
 
             axes = [1, 0] if self.axisOrder == 'row-major' else [0, 1]
-            image = fn.downsample(self.image, xds, axis=axes[0])
-            image = fn.downsample(image, yds, axis=axes[1])
+            nan_policy = self._nanPolicy if self._imageHasNans else 'propagate'
+            image = fn.downsample(self.image, xds, axis=axes[0], nanPolicy=nan_policy)
+            image = fn.downsample(image, yds, axis=axes[1], nanPolicy=nan_policy)
             self._lastDownsample = (xds, yds)
 
             # Check if downsampling reduced the image size to zero due to inf values.
@@ -731,13 +777,6 @@ class ImageItem(GraphicsObject):
 
         levels = self.levels
 
-        if self._imageHasNans is None:
-            # awkward, but fastest numpy native nan evaluation
-            self._imageHasNans = (
-                image.dtype.kind == 'f' and
-                self._xp.isnan(image.min())
-            )
-            self._imageNanLocations = None
 
         qimage = None
 

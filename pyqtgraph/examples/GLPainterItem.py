@@ -2,8 +2,6 @@
 Demonstrate using QPainter on a subclass of GLGraphicsItem.
 """
 
-import OpenGL.GL as GL
-
 import pyqtgraph as pg
 from pyqtgraph.opengl import GLAxisItem, GLGraphicsItem, GLGridItem, GLViewWidget
 from pyqtgraph.Qt import QtCore, QtGui
@@ -17,17 +15,11 @@ class GLPainterItem(GLGraphicsItem.GLGraphicsItem):
         self.setGLOptions(glopts)
 
     def compute_projection(self):
-        modelview = GL.glGetDoublev(GL.GL_MODELVIEW_MATRIX)
-        projection = GL.glGetDoublev(GL.GL_PROJECTION_MATRIX)
-        mvp = projection.T @ modelview.T
-        mvp = QtGui.QMatrix4x4(mvp.ravel().tolist())
-
         # note that QRectF.bottom() != QRect.bottom()
         rect = QtCore.QRectF(self.view().rect())
         ndc_to_viewport = QtGui.QMatrix4x4()
         ndc_to_viewport.viewport(rect.left(), rect.bottom(), rect.width(), -rect.height())
-
-        return ndc_to_viewport * mvp
+        return ndc_to_viewport * self.mvpMatrix()
 
     def paint(self):
         self.setupGLState()
