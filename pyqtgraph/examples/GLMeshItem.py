@@ -72,7 +72,7 @@ md = gl.MeshData.sphere(rows=10, cols=20)
 #colors = np.random.random(size=(md.faceCount(), 4))
 #colors[:,3] = 0.3
 #colors[100:] = 0.0
-colors = np.ones((md.faceCount(), 4), dtype=float)
+colors = np.ones((md.faceCount(), 4), dtype=np.float32)
 colors[::2,0] = 0
 colors[:,1] = np.linspace(0, 1, colors.shape[0])
 md.setFaceColors(colors)
@@ -94,15 +94,15 @@ w.addItem(m4)
 # cylinder
 md = gl.MeshData.cylinder(rows=10, cols=20, radius=[1., 2.0], length=5.)
 md2 = gl.MeshData.cylinder(rows=10, cols=20, radius=[2., 0.5], length=10.)
-colors = np.ones((md.faceCount(), 4), dtype=float)
+colors = np.ones((len(md.vertexes()), 4), dtype=np.float32)
 colors[::2,0] = 0
 colors[:,1] = np.linspace(0, 1, colors.shape[0])
-md.setFaceColors(colors)
+md.setVertexColors(colors)
 m5 = gl.GLMeshItem(meshdata=md, smooth=True, drawEdges=True, edgeColor=(1,0,0,1), shader='balloon')
-colors = np.ones((md.faceCount(), 4), dtype=float)
+colors = np.ones((len(md2.vertexes()), 4), dtype=np.float32)
 colors[::2,0] = 0
 colors[:,1] = np.linspace(0, 1, colors.shape[0])
-md2.setFaceColors(colors)
+md2.setVertexColors(colors)
 m6 = gl.GLMeshItem(meshdata=md2, smooth=True, drawEdges=False, shader='balloon')
 m6.translate(0,0,7.5)
 

@@ -40,7 +40,7 @@ Currently this means:
 
 ### Optional added functionalities
 
-Through 3rd part libraries, additional functionality may be added to PyQtGraph, see the table below for a summary.
+Through 3rd party libraries, additional functionality may be added to PyQtGraph, see the table below for a summary.
 
 | Library        | Added functionality |
 |----------------|-|

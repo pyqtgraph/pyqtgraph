@@ -110,7 +110,7 @@ class ComboBox(QtWidgets.QComboBox):
         self.addItems(items)
 
     def items(self):
-        return self.items.copy()
+        return self._items.copy()
         
     def updateList(self, items):
         # for backward compatibility
