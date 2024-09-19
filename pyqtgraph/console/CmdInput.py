@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtWidgets
+from ..Qt import QtCore, QtGui, QtWidgets
 
 
 class CmdInput(QtWidgets.QLineEdit):
@@ -11,6 +11,9 @@ class CmdInput(QtWidgets.QLineEdit):
         self.ps2 = "... "
         self.history = [""]
         self.ptr = 0
+        font = QtGui.QFont("Courier New", )
+        font.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferAntialias)
+        self.setFont(font)
         self.setMultiline(False)
     
     def setMultiline(self, ml):
