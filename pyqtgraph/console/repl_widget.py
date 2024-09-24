@@ -81,7 +81,7 @@ class ReplWidget(QtWidgets.QWidget):
 
         self.input.sigExecuteCmd.connect(self.handleCommand)
         self._thread.sigInputGenerated.connect(self.write)
-        self._thread.sigMultilineChanged.connect(self.input.setMultiline)
+        self._thread.sigMultilineChanged.connect(self._setMultiline)
 
     def handleCommand(self, cmd):
         self.input.setEnabled(False)
@@ -142,6 +142,12 @@ class ReplWidget(QtWidgets.QWidget):
         else:
             sb.setValue(scroll)
 
+    def _setMultiline(self, enable):
+        self.input.setMultiline(enable)
+        if enable:
+            self.input.setEnabled(True)
+            self.input.setFocus()
+
     def _setTextStyle(self, style):
         charFormat, blockFormat = self.textStyles[style]
         cursor = self.output.textCursor()
@@ -194,11 +200,12 @@ class ReplThread(QtCore.QThread):
         try:
             cmdCode = code.compile_command(fullcmd)
             self.sigMultilineChanged.emit(False)
-        except Exception:
+        except Exception as e:
             # cannot continue processing this command; reset and print exception
             self._commandBuffer = []
             self.displayException()
             self.sigMultilineChanged.emit(False)
+            self.sigCommandRaisedException.emit(e)
         else:
             if cmdCode is None:
                 # incomplete input; wait for next line
