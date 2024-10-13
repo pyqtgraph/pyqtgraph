@@ -511,12 +511,11 @@ class ViewBox(GraphicsWidget):
             print("make qrectf failed:", self.state['targetRange'])
             raise
 
-    def _resetTarget(self, force: bool = False):
+    def _resetTarget(self):
         # Reset target range to exactly match current view range.
         # This is used during mouse interaction to prevent unpredictable
         # behavior (because the user is unaware of targetRange).
-        if self.state['aspectLocked'] is False or force: # (interferes with aspect locking)
-            self.state['targetRange'] = [self.state['viewRange'][0][:], self.state['viewRange'][1][:]]
+        self.state['targetRange'] = [self.state['viewRange'][0][:], self.state['viewRange'][1][:]]
             
     def _effectiveLimits(self):
         # Determines restricted effective scaling range when in log mapping mode
@@ -805,7 +804,10 @@ class ViewBox(GraphicsWidget):
         scale = Point([1.0 if x is None else x, 1.0 if y is None else y])
 
         if self.state['aspectLocked'] is not False:
-            scale[0] = scale[1]
+            if x is None:
+                scale[0] = scale[1]
+            if y is None:
+                scale[1] = scale[0]
 
         vr = self.targetRect()
         if center is None:
@@ -1626,7 +1628,7 @@ class ViewBox(GraphicsWidget):
                         # tweak the target range down so we can still pan properly
                         viewRange[ax] = canidateRange[ax]
                         self.state['viewRange'][ax] = viewRange[ax]
-                        self._resetTarget(force=True)
+                        self._resetTarget()
                         ax = target  # Switch the "fixed" axes
 
             if ax == 0:
