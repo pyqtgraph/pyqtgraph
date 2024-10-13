@@ -89,6 +89,7 @@ class AxisItem(GraphicsWidget):
             'maxTickLevel': 2,
             'maxTextLevel': 2,
             'tickAlpha': None,  ## If not none, use this alpha for all ticks.
+            'tickAntialiasing': False,  ## axis does not anti-alias by default
         }
 
         self.textWidth = 30  ## Keeps track of maximum width / height of tick text
@@ -190,6 +191,8 @@ class AxisItem(GraphicsWidget):
                               the alpha will be fixed at the value passed.  With int,
                               accepted values are [0..255].  With value of type
                               float, accepted values are from [0..1].
+        tickAntialiasing      (bool) indicates whether the grid rendered with
+                              anti-aliasing to ensure consistent line widths.
         ===================== =======================================================
 
         Added in version 0.9.9
@@ -1289,7 +1292,7 @@ class AxisItem(GraphicsWidget):
     def drawPicture(self, p, axisSpec, tickSpecs, textSpecs):
         profiler = debug.Profiler()
 
-        p.setRenderHint(p.RenderHint.Antialiasing, False)
+        p.setRenderHint(p.RenderHint.Antialiasing, self.style['tickAntialiasing'])
         p.setRenderHint(p.RenderHint.TextAntialiasing, True)
 
         ## draw long line along axis
