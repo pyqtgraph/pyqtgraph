@@ -26,6 +26,41 @@ class GridItem(UIGraphicsItem):
         self.setPen(pen)
         self.setTextPen(textPen)
         self.setTickSpacing(x=[None, None, None], y=[None, None, None])
+        self._axes = None
+        self.ctrl = None
+
+    def axes(self):
+        """ Returns axes object """
+        return self._axes
+
+
+    def setAxes(self, axes):
+        """
+        Set the axes object, in case the GridItem belongs to plot, whose axes
+        are controlled by AxisItem's
+        """
+        self._axes = axes
+
+
+    def control(self):
+        """ Returns axis control object """
+        return self.ctrl
+
+
+    def setControl(self, ctrl):
+        """
+        Set the control, in case the GridItem belongs to plot, whose axes are
+        controlled by AxisItem's
+        """
+        self.ctrl = ctrl
+        self.ctrl.xGridCheck.toggled.connect(self.updateGrid)
+        self.ctrl.yGridCheck.toggled.connect(self.updateGrid)
+        self.ctrl.gridAlphaSlider.valueChanged.connect(self.updateGrid)
+
+
+    def updateGrid(self, *args):
+        self.picture = None
+        self.update()
 
 
     def setPen(self, *args, **kwargs):
@@ -90,20 +125,72 @@ class GridItem(UIGraphicsItem):
         #self.update()
         
     def paint(self, p, opt, widget):
-        #p.setPen(QtGui.QPen(QtGui.QColor(100, 100, 100)))
-        #p.drawRect(self.boundingRect())
-        #UIGraphicsItem.paint(self, p, opt, widget)
         ### draw picture
         if self.picture is None:
-            #print "no pic, draw.."
-            self.generatePicture()
-        p.drawPicture(QtCore.QPointF(0, 0), self.picture)
-        #p.setPen(QtGui.QPen(QtGui.QColor(255,0,0)))
-        #p.drawLine(0, -100, 0, 100)
-        #p.drawLine(-100, 0, 100, 0)
-        #print "drawing Grid."
+            if self._axes:
+                self.drawAxesGrid()
+            else:
+                self.generatePicture()
+        p.drawPicture(Point(0, 0), self.picture)
         
-        
+
+    def drawAxesGrid(self):
+        """ Draw ticks and/or grid lines for all axes """
+        self.picture = QtGui.QPicture()
+        p = QtGui.QPainter()
+        p.begin(self.picture)
+
+        scaling = (+self.boundingRect().width()/self._axes['bottom'].width(),
+                   -self.boundingRect().height()/self._axes['left'].height())
+
+        for axis_item in self._axes.values():
+            self.drawAxisTicks(p, axis_item, scaling)
+
+        tr = self.deviceTransform()
+        p.setWorldTransform(fn.invertQTransform(tr))
+        p.end()
+
+
+    def gridAlpha(self, orientation):
+        """ Determine the grid lines' alpha value """
+        show_grid = False
+        if orientation in ('top', 'bottom'):
+            show_grid = self.ctrl.xGridCheck.isChecked()
+        elif orientation in ('left', 'right'):
+            show_grid = self.ctrl.yGridCheck.isChecked()
+        if show_grid:
+            return self.ctrl.gridAlphaSlider.value()
+        return False
+
+
+    def drawAxisTicks(self, p, axis_item, scaling):
+        """ Draw ticks and/or grid lines for a given axis and painter """
+        orientation = axis_item.orientation
+        alpha = self.gridAlpha(orientation)
+        axis_item.setGrid(alpha)
+        axis_item.draw_ticks = not bool(alpha)
+        if not bool(alpha):
+            return
+        _, tickSpecs, _ = axis_item.generateDrawSpecs(p)
+
+        ## draw ticks
+        rect = self.boundingRect()
+        for pen, p1, p2 in tickSpecs:
+            if orientation in ('top', 'bottom'):
+                for pt in (p1, p2):
+                    pt.setX(scaling[0]*pt.x() + rect.left())
+                p1.setY(rect.top())
+                p2.setY(rect.bottom())
+            elif orientation in ('left', 'right'):
+                for pt in (p1, p2):
+                    pt.setY(scaling[1]*pt.y() + rect.bottom())
+                p1.setX(rect.left())
+                p2.setX(rect.right())
+
+            p.setPen(pen)
+            p.drawLine(p1, p2)
+
+
     def generatePicture(self):
         self.picture = QtGui.QPicture()
         p = QtGui.QPainter()
