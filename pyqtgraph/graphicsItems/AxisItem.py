@@ -640,6 +640,8 @@ class AxisItem(GraphicsWidget):
         if oldView is not None:
             oldView.sigResized.disconnect(self.linkedViewChanged)
 
+    @QtCore.Slot(object)
+    @QtCore.Slot(object, object)
     def linkedViewChanged(self, view, newRange=None):
         if self.orientation in ['right', 'left']:
             if newRange is None:

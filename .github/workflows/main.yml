@@ -186,7 +186,7 @@ jobs:
           auto-update-conda: false
           python-version: "3.12"
       - name: "Install Test Framework"
-        run: pip install pytest pytest-xdist
+        run: pip install pytest pytest-qt pytest-xdist
       - name: "Install Windows-Mesa OpenGL DLL"
         if: runner.os == 'Windows'
         run: |

@@ -47,6 +47,7 @@ class ActionGroupParameter(GroupParameter):
         opts.setdefault("button", {})
         super().__init__(**opts)
 
+    @QtCore.Slot()
     def activate(self):
         self.sigActivated.emit(self)
         self.emitStateChanged('activated', None)

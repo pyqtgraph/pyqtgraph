@@ -323,6 +323,7 @@ if QT_LIB in [PYQT5, PYQT6]:
     loadUiType = uic.loadUiType
 
     QtCore.Signal = QtCore.pyqtSignal
+    QtCore.Slot = QtCore.pyqtSlot
 
     compat.wrapinstance = sip.wrapinstance
     compat.unwrapinstance = sip.unwrapinstance
