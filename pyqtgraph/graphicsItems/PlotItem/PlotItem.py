@@ -1111,21 +1111,20 @@ class PlotItem(GraphicsWidget):
         self._checkScaleKey(name)
         return self.axes[name]['item']
         
-    def setLabel(self, axis, text=None, units=None, unitPrefix=None, **args):
+    def setLabel(self, axis, *args, **kwds):
         """
-        Sets the label for an axis. Basic HTML formatting is allowed.
+        Sets the label for an axis. Basic HTML is allowed. See :func:`AxisItem.setLabel` for
+        formatting options.
         
-        ==============  =================================================================
-        **Arguments:**
-        axis            must be one of 'left', 'bottom', 'right', or 'top'
-        text            text to display along the axis. HTML allowed.
-        units           units to display after the title. If units are given,
-                        then an SI prefix will be automatically appended
-                        and the axis values will be scaled accordingly.
-                        (ie, use 'V' instead of 'mV'; 'm' will be added automatically)
-        ==============  =================================================================
+        Parameters
+        ----------
+        axis : str
+            Which axis to label. Must be one of 'left', 'bottom', 'right', or 'top'
+        **args
+            All extra arguments are passed to :func:`AxisItem.setLabel`
+
         """
-        self.getAxis(axis).setLabel(text=text, units=units, **args)
+        self.getAxis(axis).setLabel(*args, **kwds)
         self.showAxis(axis)
         
     def setLabels(self, **kwds):
