@@ -660,6 +660,13 @@ class AxisItem(GraphicsWidget):
         else:
             return self.mapRectFromParent(self.geometry()) | linkedView.mapRectToItem(self, linkedView.boundingRect())
 
+    def shape(self):
+        # override shape() to exclude grid lines from getting mouse events
+        rect = self.mapRectFromParent(self.geometry())
+        path = QtGui.QPainterPath()
+        path.addRect(rect)
+        return path
+
     def paint(self, p, opt, widget):
         profiler = debug.Profiler()
         if self.picture is None:
