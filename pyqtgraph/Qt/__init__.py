@@ -346,6 +346,7 @@ App = QtWidgets.QApplication
 # subclassing QApplication causes segfaults on PySide{2, 6} / Python 3.8.7+
 
 QAPP = None
+_pgAppInitialized = False
 def mkQApp(name=None):
     """
     Creates new QApplication or returns current instance if existing.
@@ -356,6 +357,7 @@ def mkQApp(name=None):
     ============== ========================================================
     """
     global QAPP
+    global _pgAppInitialized
 
     QAPP = QtWidgets.QApplication.instance()
     if QAPP is None:
@@ -408,30 +410,21 @@ def mkQApp(name=None):
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_app_id)
         QAPP.setWindowIcon(applicationIcon)
 
-    # determine if dark mode
-    try:
-        # this only works in Qt 6.5+
-        darkMode = QAPP.styleHints().colorScheme() == QtCore.Qt.ColorScheme.Dark
-        with contextlib.suppress(TypeError):
-            # some qt bindings raise a TypeError when using a UniqueConnection
-            # to an already connected signal/slot
-            QAPP.styleHints().colorSchemeChanged.connect(
-                _onColorSchemeChange,
-                type=QtCore.Qt.ConnectionType.UniqueConnection
-            )
-    except AttributeError:
-        palette = QAPP.palette()
-        windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
-        windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
-        darkMode = windowTextLightness > windowLightness
-        with contextlib.suppress(TypeError):
-            # some qt bindings raise a TypeError when using a UniqueConnection
-            # to an already connected signal/slot
-            QAPP.paletteChanged.connect(
-                _onPaletteChange,
-                type=QtCore.Qt.ConnectionType.UniqueConnection
-            )
-    QAPP.setProperty("darkMode", darkMode)
+    if not _pgAppInitialized:
+        _pgAppInitialized = True
+
+        # determine if dark mode
+        try:
+            # this only works in Qt 6.5+
+            darkMode = QAPP.styleHints().colorScheme() == QtCore.Qt.ColorScheme.Dark
+            QAPP.styleHints().colorSchemeChanged.connect(_onColorSchemeChange)
+        except AttributeError:
+            palette = QAPP.palette()
+            windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
+            windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
+            darkMode = windowTextLightness > windowLightness
+            QAPP.paletteChanged.connect(_onPaletteChange)
+        QAPP.setProperty("darkMode", darkMode)
 
     if name is not None:
         QAPP.setApplicationName(name)
