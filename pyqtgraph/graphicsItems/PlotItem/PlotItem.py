@@ -395,6 +395,8 @@ class PlotItem(GraphicsWidget):
     def registerPlot(self, name):   ## for backward compatibility
         self.vb.register(name)
         
+    @QtCore.Slot(bool)
+    @QtCore.Slot(int)
     def updateGrid(self, *args):
         alpha = self.ctrl.gridAlphaSlider.value()
         x = alpha if self.ctrl.xGridCheck.isChecked() else False
@@ -413,12 +415,14 @@ class PlotItem(GraphicsWidget):
         wr.adjust(pos.x(), pos.y(), pos.x(), pos.y())
         return wr
 
+    @QtCore.Slot(bool)
     def avgToggled(self, b):
         if b:
             self.recomputeAverages()
         for k in self.avgCurves:
             self.avgCurves[k][1].setVisible(b)
         
+    @QtCore.Slot(QtWidgets.QListWidgetItem)
     def avgParamListClicked(self, item):
         name = str(item.text())
         self.paramList[name] = (item.checkState() == QtCore.Qt.CheckState.Checked)
@@ -488,6 +492,7 @@ class PlotItem(GraphicsWidget):
         else:
             plot.setData(x, y, stepMode=stepMode)
         
+    @QtCore.Slot()
     def autoBtnClicked(self):
         if self.autoBtn.mode == 'auto':
             self.enableAutoRange()
@@ -495,6 +500,7 @@ class PlotItem(GraphicsWidget):
         else:
             self.disableAutoRange()
             
+    @QtCore.Slot()
     def viewStateChanged(self):
         self.updateButtons()
 
@@ -853,6 +859,7 @@ class PlotItem(GraphicsWidget):
     def widgetGroupInterface(self):
         return (None, PlotItem.saveState, PlotItem.restoreState)
       
+    @QtCore.Slot(bool)
     def updateSpectrumMode(self, b=None):
         if b is None:
             b = self.ctrl.fftCheck.isChecked()
@@ -861,6 +868,7 @@ class PlotItem(GraphicsWidget):
         self.enableAutoRange()
         self.recomputeAverages()
             
+    @QtCore.Slot()
     def updateLogMode(self):
         x = self.ctrl.logXCheck.isChecked()
         y = self.ctrl.logYCheck.isChecked()
@@ -874,6 +882,7 @@ class PlotItem(GraphicsWidget):
         self.enableAutoRange()
         self.recomputeAverages()
     
+    @QtCore.Slot()
     def updateDerivativeMode(self):
         d = self.ctrl.derivativeCheck.isChecked()
         for i in self.items:
@@ -882,6 +891,7 @@ class PlotItem(GraphicsWidget):
         self.enableAutoRange()
         self.recomputeAverages()
 
+    @QtCore.Slot()
     def updatePhasemapMode(self):
         d = self.ctrl.phasemapCheck.isChecked()
         for i in self.items:
@@ -937,6 +947,7 @@ class PlotItem(GraphicsWidget):
             else:
                 raise ValueError("mode argument must be 'subsample', 'mean', or 'peak'.")
             
+    @QtCore.Slot()
     def updateDownsampling(self):
         ds, auto, method = self.downsampleMode()
         clip = self.ctrl.clipToViewCheck.isChecked()
@@ -973,6 +984,7 @@ class PlotItem(GraphicsWidget):
     def clipToViewMode(self):
         return self.ctrl.clipToViewCheck.isChecked()
     
+    @QtCore.Slot(bool)
     def _handle_max_traces_toggle(self, check_state):
         if check_state:
             self.updateDecimation()
@@ -980,6 +992,7 @@ class PlotItem(GraphicsWidget):
             for curve in self.curves:
                 curve.show()
     
+    @QtCore.Slot()
     def updateDecimation(self):
         """
         Reduce or increase number of visible curves according to value set by the `Max Traces` spinner,
@@ -1008,6 +1021,8 @@ class PlotItem(GraphicsWidget):
             else:
                 curve.hide()
       
+    @QtCore.Slot(bool)
+    @QtCore.Slot(int)
     def updateAlpha(self, *args):
         (alpha, auto) = self.alphaState()
         for c in self.curves:
@@ -1111,21 +1126,20 @@ class PlotItem(GraphicsWidget):
         self._checkScaleKey(name)
         return self.axes[name]['item']
         
-    def setLabel(self, axis, text=None, units=None, unitPrefix=None, **args):
+    def setLabel(self, axis, *args, **kwds):
         """
-        Sets the label for an axis. Basic HTML formatting is allowed.
+        Sets the label for an axis. Basic HTML is allowed. See :func:`AxisItem.setLabel` for
+        formatting options.
         
-        ==============  =================================================================
-        **Arguments:**
-        axis            must be one of 'left', 'bottom', 'right', or 'top'
-        text            text to display along the axis. HTML allowed.
-        units           units to display after the title. If units are given,
-                        then an SI prefix will be automatically appended
-                        and the axis values will be scaled accordingly.
-                        (ie, use 'V' instead of 'mV'; 'm' will be added automatically)
-        ==============  =================================================================
+        Parameters
+        ----------
+        axis : str
+            Which axis to label. Must be one of 'left', 'bottom', 'right', or 'top'
+        **args
+            All extra arguments are passed to :func:`AxisItem.setLabel`
+
         """
-        self.getAxis(axis).setLabel(text=text, units=units, **args)
+        self.getAxis(axis).setLabel(*args, **kwds)
         self.showAxis(axis)
         
     def setLabels(self, **kwds):

@@ -58,7 +58,7 @@ class ConsoleWidget(QtWidgets.QWidget):
         self.input.setFocus()
         
         if text is not None:
-            self.output.setPlainText(text)
+            self.output.insertPlainText(text)
 
         self.historyFile = historyFile
         
