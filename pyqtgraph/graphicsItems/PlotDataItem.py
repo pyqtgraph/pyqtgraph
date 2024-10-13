@@ -1716,8 +1716,62 @@ class PlotDataItem(GraphicsObject):
         self.curve.clear()
         self.scatter.clear()
 
-    def appendData(self, *args, **kwargs):
-        pass
+    # def appendData(self, *args, **kwargs):
+    #     pass
+
+    def appendData(self, new_x, new_y):
+        """
+        Append new data to the existing dataset.
+        
+        Parameters
+        ----------
+        new_x : array-like
+            The new x-values to append.
+        new_y : array-like
+            The new y-values to append.
+        """
+        if self._dataset is None:
+            # If there is no existing dataset, set the new data as the dataset.
+            self.setData(new_x, new_y)
+            return
+        
+        # Convert new data to arrays
+        new_x = np.array(new_x)
+        new_y = np.array(new_y)
+
+        # Concatenate new data to existing dataset
+        xData = np.concatenate((self._dataset.x, new_x))
+        yData = np.concatenate((self._dataset.y, new_y))
+
+        # Update the dataset
+        self._dataset = PlotDataset(xData, yData)
+        
+        # Update display data
+        self._datasetDisplay = None  # Invalidate display data
+        self.updateItems(styleUpdate=True)  # Update items
+
+    def updateLastData(self, new_x, new_y):
+        """
+        Update the last data point in the dataset.
+        
+        Parameters
+        ----------
+        new_x : float
+            The new x-value to set.
+        new_y : float
+            The new y-value to set.
+        """
+        if self._dataset is None or len(self._dataset.x) == 0:
+            raise ValueError("Dataset is empty. Cannot update data.")
+        
+        # Update the last data point
+        self._dataset.x[-1] = new_x
+        self._dataset.y[-1] = new_y
+        
+        # Update display data
+        self._datasetDisplay = None  # Invalidate display data
+        self.updateItems(styleUpdate=True)  # Update items
+
 
     @QtCore.Slot(object, object)
     def curveClicked(self, _: PlotCurveItem, ev):
