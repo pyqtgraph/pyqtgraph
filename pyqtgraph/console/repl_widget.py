@@ -48,9 +48,8 @@ class ReplWidget(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
         self.output = QtWidgets.QTextEdit(self)
-        font = QtGui.QFont()
-        font.setFamily("Courier New")
-        font.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferAntialias)
+        font = QtGui.QFont("monospace")
+        font.setStyleHint(QtGui.QFont.StyleHint.TypeWriter, QtGui.QFont.StyleStrategy.PreferAntialias)
         self.output.setFont(font)
         self.output.setReadOnly(True)
         self.layout.addWidget(self.output)
@@ -216,4 +215,3 @@ class StdoutInterceptor:
         sys.stderr = self._orig_stderr
         self._orig_stdout = None
         self._orig_stderr = None
-
