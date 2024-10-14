@@ -85,6 +85,7 @@ class ExportDialog(QtWidgets.QWidget):
             self.updateItemTree(ch, treeItem, select=select)
         
             
+    @QtCore.Slot(QtWidgets.QTreeWidgetItem, QtWidgets.QTreeWidgetItem)
     def exportItemChanged(self, item, prev):
         if item is None:
             return
@@ -111,6 +112,7 @@ class ExportDialog(QtWidgets.QWidget):
         if not gotCurrent:
             self.ui.formatList.setCurrentRow(0)
         
+    @QtCore.Slot(QtWidgets.QListWidgetItem, QtWidgets.QListWidgetItem)
     def exportFormatChanged(self, item, prev):
         if item is None:
             self.currentExporter = None
@@ -128,10 +130,12 @@ class ExportDialog(QtWidgets.QWidget):
         self.currentExporter = exp
         self.ui.copyBtn.setEnabled(exp.allowCopy)
         
+    @QtCore.Slot()
     def exportClicked(self):
         self.selectBox.hide()
         self.currentExporter.export()
         
+    @QtCore.Slot()
     def copyClicked(self):
         self.selectBox.hide()
         self.currentExporter.export(copy=True)

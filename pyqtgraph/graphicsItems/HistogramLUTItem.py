@@ -288,9 +288,11 @@ class HistogramLUTItem(GraphicsWidget):
         self.regionChanged()
         self.imageChanged(autoLevel=True)
 
+    @QtCore.Slot()
     def viewRangeChanged(self):
         self.update()
 
+    @QtCore.Slot()
     def gradientChanged(self):
         if self.imageItem() is not None:
             self._setImageLookupTable()
@@ -319,17 +321,20 @@ class HistogramLUTItem(GraphicsWidget):
             self.lut = self.gradient.getLookupTable(n, alpha=alpha)
         return self.lut
 
+    @QtCore.Slot()
     def regionChanged(self):
         if self.imageItem() is not None:
             self.imageItem().setLevels(self.getLevels())
         self.sigLevelChangeFinished.emit(self)
 
+    @QtCore.Slot()
     def regionChanging(self):
         if self.imageItem() is not None:
             self.imageItem().setLevels(self.getLevels())
         self.update()
         self.sigLevelsChanged.emit(self)
 
+    @QtCore.Slot()
     def imageChanged(self, autoLevel=False, autoRange=False):
         if self.imageItem() is None:
             return
