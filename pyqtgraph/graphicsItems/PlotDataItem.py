@@ -1716,8 +1716,6 @@ class PlotDataItem(GraphicsObject):
         self.curve.clear()
         self.scatter.clear()
 
-    # def appendData(self, *args, **kwargs):
-    #     pass
 
     def appendData(self, new_x, new_y):
         """
