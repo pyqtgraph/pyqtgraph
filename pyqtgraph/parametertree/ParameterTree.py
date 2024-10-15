@@ -1,5 +1,5 @@
 from .parameterTypes import GroupParameterItem
-from ..Qt import QtCore, QtWidgets, mkQApp
+from ..Qt import QtCore, QtWidgets, QtGui, mkQApp
 from ..widgets.TreeWidget import TreeWidget
 from .ParameterItem import ParameterItem
 
@@ -21,7 +21,6 @@ class ParameterTree(TreeWidget):
         self.setAnimated(False)
         self.setColumnCount(2)
         self.setHeaderLabels(["Parameter", "Value"])
-        self.setAlternatingRowColors(True)
         self.paramSet = None
         self.header().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
         self.setHeaderHidden(not showHeader)
@@ -30,9 +29,8 @@ class ParameterTree(TreeWidget):
         self.itemCollapsed.connect(self.itemCollapsedEvent)
         self.lastSel = None
         self.setRootIsDecorated(False)
-
-        app = mkQApp()
-        app.paletteChanged.connect(self.updatePalette)
+        self.setAlternatingRowColors(True)
+        self._updatePalette(self.palette())
 
     def setParameters(self, param, showTop=True):
         """
@@ -133,25 +131,70 @@ class ParameterTree(TreeWidget):
         item = self.currentItem()
         if hasattr(item, 'contextMenuEvent'):
             item.contextMenuEvent(ev)
-            
-    def updatePalette(self):
-        """
-        called when application palette changes
-        This should ensure that the color theme of the OS is applied to the GroupParameterItems
-        should the theme chang while the application is running.
-        """
-        for item in self.listAllItems():
-            if isinstance(item, GroupParameterItem):
-                item.updateDepth(item.depth)
 
+    def _updatePalette(self, palette: QtGui.QPalette) -> None:
+        app = mkQApp()
+        # Docs say to use the following methods
+        # QApplication.instance().styleHints().colorScheme() == QtCore.Qt.ColorScheme.Dark
+        # but on macOS with Qt 6.7 this is giving opposite results (says color sceme is light
+        # when it is dark and vice versa). This was not observed in the ExampleApp, but was
+        # observed with the ParameterTree. We fall back to the "legacy" method of determining
+        # if the color theme is dark or light from QPalette
+        windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
+        windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
+        darkMode = windowTextLightness > windowLightness
+        app.setProperty('darkMode', darkMode)
+
+        for group in [
+            QtGui.QPalette.ColorGroup.Disabled,
+            QtGui.QPalette.ColorGroup.Active,
+            QtGui.QPalette.ColorGroup.Inactive
+        ]:
+            baseColor = palette.color(
+                group,
+                QtGui.QPalette.ColorRole.Base
+            )
+            if app.property("darkMode"):
+                alternateColor = baseColor.lighter(180)
+            else:
+                alternateColor = baseColor.darker(110)
+            # apparently colors are transparent here by default!
+            alternateColor.setAlpha(255)
+            palette.setColor(
+                group,
+                QtGui.QPalette.ColorRole.AlternateBase,
+                alternateColor
+            )
+        self.setPalette(palette)
+        return None
+
+    def event(self, event: QtCore.QEvent) -> bool:
+        if event.type() == QtCore.QEvent.Type.FontChange:
+            for item in self.listAllItems():
+                if isinstance(item, GroupParameterItem):
+                    item.updateDepth(item.depth)
+        elif event.type() == QtCore.QEvent.Type.ApplicationPaletteChange:
+            app = mkQApp()
+            self._updatePalette(app.palette())
+        elif event.type() == QtCore.QEvent.Type.PaletteChange:
+            # For Windows to effectively change all the rows we
+            # need to catch QEvent.Type.PaletteChange event as well
+            self._updatePalette(self.palette())
+        return super().event(event)
+
+    @QtCore.Slot(QtWidgets.QTreeWidgetItem, int)
     def itemChangedEvent(self, item, col):
         if hasattr(item, 'columnChangedEvent'):
             item.columnChangedEvent(col)
     
+    @QtCore.Slot(QtWidgets.QTreeWidgetItem)
+    @QtCore.Slot(QtWidgets.QTreeWidgetItem, int)
     def itemExpandedEvent(self, item):
         if hasattr(item, 'expandedChangedEvent'):
             item.expandedChangedEvent(True)
     
+    @QtCore.Slot(QtWidgets.QTreeWidgetItem)
+    @QtCore.Slot(QtWidgets.QTreeWidgetItem, int)
     def itemCollapsedEvent(self, item):
         if hasattr(item, 'expandedChangedEvent'):
             item.expandedChangedEvent(False)

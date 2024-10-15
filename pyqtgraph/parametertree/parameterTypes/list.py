@@ -24,7 +24,7 @@ class ListParameterItem(WidgetParameterItem):
         w.setValue = self.setValue
         self.widget = w  ## needs to be set before limits are changed
         self.limitsChanged(self.param, self.param.opts['limits'])
-        if len(self.forward) > 0:
+        if len(self.forward) > 0 and self.param.hasValue():
             self.setValue(self.param.value())
         return w
 
@@ -91,12 +91,10 @@ class ListParameter(Parameter):
     def __init__(self, **opts):
         self.forward = OrderedDict()  ## {name: value, ...}
         self.reverse = ([], [])       ## ([value, ...], [name, ...])
-
-        # Parameter uses 'limits' option to define the set of allowed values
         if 'values' in opts:
-            warnings.warn('Using "values" to set limits is deprecated. Use "limits" instead.',
-                          DeprecationWarning, stacklevel=2)
-            opts['limits'] = opts['values']
+            warning = "ListParameter 'values' argument has been replaced with 'limits' and will be removed in a future version."
+            warnings.warn(warning, DeprecationWarning)
+            opts['limits'] = opts.pop('values')
         if opts.get('limits', None) is None:
             opts['limits'] = []
         Parameter.__init__(self, **opts)
@@ -107,10 +105,11 @@ class ListParameter(Parameter):
         self.forward, self.reverse = self.mapping(limits)
 
         Parameter.setLimits(self, limits)
-        # 'value in limits' expression will break when reverse contains numpy array
-        curVal = self.value()
-        if len(self.reverse[0]) > 0 and not any(fn.eq(curVal, limVal) for limVal in self.reverse[0]):
-            self.setValue(self.reverse[0][0])
+        if self.hasValue():
+            # 'value in limits' expression will break when reverse contains numpy array
+            curVal = self.value()
+            if len(self.reverse[0]) > 0 and not any(fn.eq(curVal, limVal) for limVal in self.reverse[0]):
+                self.setValue(self.reverse[0][0])
 
     @staticmethod
     def mapping(limits):

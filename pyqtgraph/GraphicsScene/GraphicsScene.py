@@ -84,7 +84,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     
     ExportDirectory = None
 
-    def __init__(self, clickRadius=2, moveDistance=5, parent=None):
+    def __init__(self, clickRadius: int = 2, moveDistance=5, parent=None):
         QtWidgets.QGraphicsScene.__init__(self, parent)
         self.setClickRadius(clickRadius)
         self.setMoveDistance(moveDistance)
@@ -109,6 +109,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.prepareForPaint()
         return QtWidgets.QGraphicsScene.render(self, *args)
 
+    @QtCore.Slot()
     def prepareForPaint(self):
         """Called before every render. This method will inform items that the scene is about to
         be rendered by emitting sigPrepareForPaint.
@@ -117,14 +118,14 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.sigPrepareForPaint.emit()
     
 
-    def setClickRadius(self, r):
+    def setClickRadius(self, r: int):
         """
         Set the distance away from mouse clicks to search for interacting items.
         When clicking, the scene searches first for items that directly intersect the click position
         followed by any other items that are within a rectangle that extends r pixels away from the 
         click position. 
         """
-        self._clickRadius = r
+        self._clickRadius = int(r)
         
     def setMoveDistance(self, d):
         """
@@ -432,7 +433,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         r = self._clickRadius
         items_within_radius = []
         rgn = None
-        if r > 0.0:
+        if r > 0:
             rect = view.mapToScene(QtCore.QRect(0, 0, 2 * r, 2 * r)).boundingRect()
             w = rect.width()
             h = rect.height()
@@ -536,6 +537,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.contextMenuItem = event.acceptedItem
         return self.contextMenu
 
+    @QtCore.Slot()
     def showExportDialog(self):
         if self.exportDialog is None:
             from . import exportDialog

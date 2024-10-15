@@ -13,7 +13,6 @@ Basic steps are:
 import numpy as np
 
 import pyqtgraph as pg
-import pyqtgraph.metaarray as metaarray
 from pyqtgraph.flowchart import Flowchart
 from pyqtgraph.Qt import QtWidgets
 
@@ -49,7 +48,6 @@ win.show()
 data = np.random.normal(size=1000)
 data[200:300] += 1
 data += np.sin(np.linspace(0, 100, 1000))
-data = metaarray.MetaArray(data, info=[{'name': 'Time', 'values': np.linspace(0, 1.0, len(data))}, {}])
 
 ## Feed data into the input terminal of the flowchart
 fc.setInput(dataIn=data)
@@ -63,8 +61,8 @@ pw1Node.setPlotList(plotList)
 pw1Node.setPlot(pw1)
 
 pw2Node = fc.createNode('PlotWidget', pos=(150, -150))
-pw2Node.setPlot(pw2)
 pw2Node.setPlotList(plotList)
+pw2Node.setPlot(pw2)
 
 fNode = fc.createNode('GaussianFilter', pos=(0, 0))
 fNode.ctrls['sigma'].setValue(5)

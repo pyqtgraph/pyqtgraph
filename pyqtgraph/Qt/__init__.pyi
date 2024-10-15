@@ -1,44 +1,18 @@
 """
-This stub file is to aid in the PyCharm auto-completion of the Qt imports.
+This stub file is to aid in the PyCharm and VSCode auto-completion of the Qt imports.
 """
 
-from typing import Union
-
-try:
-    from PyQt5 import QtCore, QtGui, QtWidgets
-
-    QtCore = QtCore
-    QtGui = QtGui
-    QtWidgets = QtWidgets
-except ImportError:
-    try:
-        from PyQt6 import QtCore, QtGui, QtWidgets
-
-        QtCore = QtCore
-        QtGui = QtGui
-        QtWidgets = QtWidgets
-    except ImportError:
-        try:
-            from PySide2 import QtCore, QtGui, QtWidgets
-
-            QtCore = QtCore
-            QtGui = QtGui
-            QtWidgets = QtWidgets
-        except ImportError:
-            try:
-                from PySide6 import QtCore, QtGui, QtWidgets
-
-                QtCore = QtCore
-                QtGui = QtGui
-                QtWidgets = QtWidgets
-            except ImportError as e:
-                raise ImportError("No suitable qt binding found") from e
-
+from . import QtCore as QtCore
+from . import QtGui as QtGui
+from . import QtSvg as QtSvg
+from . import QtTest as QtTest
+from . import QtWidgets as QtWidgets
 
 App: QtWidgets.QApplication
 VERSION_INFO: str
 QT_LIB: str
 QtVersion: str
+
 def exec_() -> QtWidgets.QApplication: ...
-def mkQApp(name: Union[str, None] = None) -> QtWidgets.QApplication: ...
+def mkQApp(name: str | None = None) -> QtWidgets.QApplication: ...
 def isQObjectAlive(obj: QtCore.QObject) -> bool: ...

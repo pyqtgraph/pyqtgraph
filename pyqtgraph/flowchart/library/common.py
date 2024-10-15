@@ -1,22 +1,15 @@
-__all__ = ["CtrlNode", "PlottingCtrlNode", "metaArrayWrapper"]
+__all__ = ["CtrlNode", "PlottingCtrlNode"]
 
 import numpy as np
 
 from ...Qt import QtCore, QtWidgets
 
-#from ...SignalProxy import SignalProxy
 from ...WidgetGroup import WidgetGroup
 from ...widgets.ColorButton import ColorButton
 from ...widgets.SpinBox import SpinBox
 
-#from ColorMapper import ColorMapper
 from ..Node import Node
 
-try:
-    import metaarray
-    HAVE_METAARRAY = True
-except:
-    HAVE_METAARRAY = False
 
 
 def generateUi(opts):
@@ -178,18 +171,3 @@ class PlottingCtrlNode(CtrlNode):
         out = CtrlNode.process(self, In, display)
         out['plot'] = None
         return out
-
-
-def metaArrayWrapper(fn):
-    def newFn(self, data, *args, **kargs):
-        if HAVE_METAARRAY and (hasattr(data, 'implements') and data.implements('MetaArray')):
-            d1 = fn(self, data.view(np.ndarray), *args, **kargs)
-            info = data.infoCopy()
-            if d1.shape != data.shape:
-                for i in range(data.ndim):
-                    if 'values' in info[i]:
-                        info[i]['values'] = info[i]['values'][:d1.shape[i]]
-            return metaarray.MetaArray(d1, info=info)
-        else:
-            return fn(self, data, *args, **kargs)
-    return newFn

@@ -9,8 +9,10 @@ app = pg.mkQApp()
 
 
 def test_ImageExporter_filename_dialog():
-    """Tests ImageExporter code path that opens a file dialog. Regression test
-    for pull request 1133."""
+    """
+    Tests ImageExporter code path that opens a file dialog.
+    Regression test for pull request 1133.
+    """
     p = pg.PlotWidget()
     p.show()
     exp = ImageExporter(p.getPlotItem())

@@ -61,15 +61,11 @@ def test_NonUniformImage_lut():
     Z = X * Y
 
     image = NonUniformImage(x, y, Z, border=fn.mkPen('g'))
+
+    cmap = ColorMap(None, [0.0, 1.0])
+    image.setLookupTable(cmap.getLookupTable(nPts=256))
+
     viewbox.addItem(image)
-
-    lut = pg.HistogramLUTItem()
-    window.addItem(lut)
-
-    image.setLookupTable(lut, autoLevel=True)
-
-    h = image.getHistogram()
-    lut.plot.setData(*h)
 
     QtTest.QTest.qWaitForWindowExposed(window)
     QtTest.QTest.qWait(100)
@@ -90,7 +86,7 @@ def test_NonUniformImage_colormap():
     X, Y = np.meshgrid(x, y, indexing='ij')
     Z = X * Y
 
-    Z[:, 0] = [np.NINF, np.NAN, np.PINF]
+    Z[:, 0] = [-np.inf, np.nan, np.inf]
 
     image = NonUniformImage(x, y, Z, border=fn.mkPen('g'))
 

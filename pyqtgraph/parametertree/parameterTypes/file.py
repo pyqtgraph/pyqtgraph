@@ -129,7 +129,7 @@ class FileParameterItem(StrParameterItem):
         return self._value
 
     def _retrieveFileSelection_gui(self):
-        curVal = self.param.value()
+        curVal = self.param.value() if self.param.hasValue() else None
         if isinstance(curVal, list) and len(curVal):
             # All files should be from the same directory, in principle
             # Since no mechanism exists for preselecting multiple, the most sensible
@@ -148,10 +148,8 @@ class FileParameterItem(StrParameterItem):
         if opts.get('windowTitle') is None:
             opts['windowTitle'] = self.param.title()
 
-        fname = popupFilePicker(None, **opts)
-        if not fname:
-            return
-        self.param.setValue(fname)
+        if fname := popupFilePicker(None, **opts):
+            self.param.setValue(fname)
 
     def updateDefaultBtn(self):
         # Override since a readonly label should still allow reverting to default

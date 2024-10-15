@@ -31,19 +31,22 @@ V = np.ones_like(TAU) * v
 P_loss = kfric * W + kfric3 * W ** 3 + (res * (TAU / psi) ** 2) + k_v * (V - v_ref)
 
 P_mech = TAU * W
-P_loss[P_mech > 1.5e5] = np.NaN
+P_loss[P_mech > 1.5e5] = np.nan
 
 app = pg.mkQApp("NonUniform Image Example")
 
-win = pg.PlotWidget()
+win = pg.GraphicsLayoutWidget()
 win.show()
 win.resize(600, 400)
 win.setWindowTitle('pyqtgraph example: Non-uniform Image')
 
-p = win.getPlotItem()
-p.setTitle("Power Losses [W]")
+p = win.addPlot(title="Power Losses [W]", row=0, col=0)
+hist = pg.HistogramLUTItem(orientation="horizontal")
 
 p.setMouseEnabled(x=False, y=False)
+
+win.nextRow()
+win.addItem(hist)
 
 image = NonUniformImage(w * RADS2RPM, tau, P_loss.T)
 image.setZValue(-1)
@@ -51,8 +54,8 @@ p.addItem(image)
 
 # green - orange - red
 cmap = pg.ColorMap([0.0, 0.5, 1.0], [(74, 158, 71), (255, 230, 0), (191, 79, 76)])
-bar = pg.ColorBarItem(colorMap=cmap, orientation='h')
-bar.setImageItem(image, insert_in=p)
+hist.gradient.setColorMap(cmap)
+hist.setImageItem(image)
 
 p.showGrid(x=True, y=True)
 

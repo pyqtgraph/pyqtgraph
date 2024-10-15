@@ -1,6 +1,11 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py310']
 include = '\.pyi?$'
 exclude = '''
 
@@ -21,16 +26,69 @@ exclude = '''
 )
 '''
 
+[tool.coverage.run]
+parallel = true
+branch = true
+relative_files = true
+source = ["pyqtgraph"]
+omit = ["./pyqtgraph/examples/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+skip_empty = true
+
+exclude_also = [
+  # allow defensive code
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "return NotImplemented",
+  "if self.debug",
+  "def __repr__",
+
+  # typing-related code
+  "if False:",
+  "if TYPE_CHECKING",
+  "-> NoReturn:",
+]
+
 [tool.isort]
 profile = "black"
 honor_noqa = true
 color_output = true
-py_version = 38
+py_version = 310
 src_paths = ["pyqtgraph", "tests"]
-skip_glob = ["**/*Template*.py", "**/colorama"]
+skip_glob = ["**/*Template*.py"]
 skip_gitignore = true
 known_third_party = ["QtCore", "QtGui", "QtWidgets"]
 
 [tool.pycln]
 all = true
 exclude = '(Template|__init__.py)'
+
+[tool.mypy]
+packages = ["pyqtgraph"]
+show_error_codes = true
+strict = true
+disable_error_code = ["attr-defined"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "pyqtgraph.flowchart.*" # the list will increase
+ignore_errors = true             # will be changed to `false` when it's ready
+
+[tool.numpydoc_validation]
+checks = [
+  'all',  # report on all checks, except the below
+  'EX01', # allow absence of "Examples" section
+  'SA01', # allow absence of "See Also" section
+  'GL08', # allow absence of docstring
+  'ES01', # allow absence of Extended Summary
+]
+# remember to use single quotes for regex in TOML
+exclude = [ # don't report on objects that match any of these regex
+]
+
+override_GL06 = [
+  'Signals', # allow sections to start with "Signals"
+]

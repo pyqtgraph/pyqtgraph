@@ -2,10 +2,10 @@ from math import atan2, degrees
 
 import numpy as np
 
+from . import SRTTransform
 from .Qt import QtGui
 from .Transform3D import Transform3D
 from .Vector import Vector
-from . import SRTTransform
 
 
 class SRTTransform3D(Transform3D):
@@ -214,14 +214,6 @@ class SRTTransform3D(Transform3D):
 
     def __repr__(self):
         return str(self.saveState())
-        
-    def matrix(self, nd=3):
-        if nd == 3:
-            return np.array(self.copyDataTo()).reshape(4,4)
-        elif nd == 2:
-            m = np.array(self.copyDataTo()).reshape(4,4)
-            m[2] = m[3]
-            m[:,2] = m[:,3]
-            return m[:3,:3]
-        else:
-            raise Exception("Argument 'nd' must be 2 or 3")
+
+    def __reduce__(self):
+        return SRTTransform3D, (self.saveState(),)

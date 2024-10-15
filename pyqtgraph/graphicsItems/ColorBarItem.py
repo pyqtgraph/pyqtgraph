@@ -7,8 +7,8 @@ from .. import colormap
 from .. import functions as fn
 from ..Qt import QtCore, QtGui, QtWidgets
 from .LinearRegionItem import LinearRegionItem
-from .PColorMeshItem import PColorMeshItem
 from .PlotItem import PlotItem
+from ..widgets.ColorMapMenu import ColorMapMenu
 
 __all__ = ['ColorBarItem']
 
@@ -42,7 +42,8 @@ class ColorBarItem(PlotItem):
 
     def __init__(self, values=None, width=25, colorMap=None, label=None,
                  interactive=True, limits=None, rounding=1,
-                 orientation='vertical', pen='w', hoverPen='r', hoverBrush='#FF000080', cmap=None ):
+                 orientation='vertical', pen='w', hoverPen='r', hoverBrush='#FF000080',
+                 *, colorMapMenu=True):
         """
         Creates a new ColorBarItem.
 
@@ -72,6 +73,8 @@ class ColorBarItem(PlotItem):
             Sets the color of adjustment handles when hovered over.
         hoverBrush: :class:`QBrush` or color_like
             Sets the color of movable center region when hovered over.
+        colorMapMenu: `bool` or :class:`~pyqtgraph.ColorMapMenu`, default=True
+            Determines whether colormap menu functionality is enabled.
         """
         super().__init__()
         self.img_list  = [] # list of controlled ImageItems
@@ -98,6 +101,12 @@ class ColorBarItem(PlotItem):
                 self.lo_lim = self.rounding * math.floor( self.lo_lim/self.rounding )
             if self.hi_lim is not None:
                 self.hi_lim = self.rounding * math.ceil( self.hi_lim/self.rounding )
+
+        if not isinstance(colorMapMenu, (bool, ColorMapMenu)):
+            raise ValueError("colorMapMenu must be either bool or an ColorMapMenu instance")
+        self.colorMapMenu = colorMapMenu
+        if isinstance(self.colorMapMenu, ColorMapMenu):
+            self.colorMapMenu.sigColorMapTriggered.connect(self.setColorMap)
 
         self.disableAutoRange()
         self.hideButtons()
@@ -288,10 +297,7 @@ class ColorBarItem(PlotItem):
             if img is None: continue # dereference weakref
             img.setLevels( self.values ) # (min,max) tuple
             if update_cmap and self._colorMap is not None:
-                if isinstance(img, PColorMeshItem):
-                    img.setLookupTable( self._colorMap.getLookupTable(nPts=256, mode=self._colorMap.QCOLOR) )
-                else:
-                    img.setLookupTable( self._colorMap.getLookupTable(nPts=256) )
+                img.setColorMap(self._colorMap)
 
     def _levelsChangedHandler(self, levels):
         """ internal: called when child item for some reason decides to update its levels without using ColorBarItem.
@@ -348,3 +354,15 @@ class ColorBarItem(PlotItem):
         self.values = (lo_new, hi_new)
         self._update_items()
         self.sigLevelsChanged.emit(self)
+
+    def mouseClickEvent(self, ev):
+        if self.colorMapMenu is False:  # disabled
+            return
+
+        if ev.button() == QtCore.Qt.MouseButton.RightButton:
+            if not isinstance(self.colorMapMenu, ColorMapMenu):
+                self.colorMapMenu = ColorMapMenu(showColorMapSubMenus=True)
+                self.colorMapMenu.sigColorMapTriggered.connect(self.setColorMap)
+            pos = ev.screenPos()
+            self.colorMapMenu.popup(pos.toPoint())
+            ev.accept()

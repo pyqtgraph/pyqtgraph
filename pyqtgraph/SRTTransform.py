@@ -2,9 +2,9 @@ from math import atan2, degrees
 
 import numpy as np
 
+from . import SRTTransform3D
 from .Point import Point
 from .Qt import QtGui
-from . import SRTTransform3D
 
 
 class SRTTransform(QtGui.QTransform):
@@ -33,7 +33,6 @@ class SRTTransform(QtGui.QTransform):
         else:
             raise Exception("Cannot create SRTTransform from input type: %s" % str(type(init)))
 
-        
     def getScale(self):
         return self._state['scale']
         
@@ -142,9 +141,10 @@ class SRTTransform(QtGui.QTransform):
     def saveState(self):
         p = self._state['pos']
         s = self._state['scale']
-        #if s[0] == 0:
-            #raise Exception('Invalid scale: %s' % str(s))
         return {'pos': (p[0], p[1]), 'scale': (s[0], s[1]), 'angle': self._state['angle']}
+
+    def __reduce__(self):
+        return SRTTransform, (self.saveState(),)
 
     def restoreState(self, state):
         self._state['pos'] = Point(state.get('pos', (0,0)))

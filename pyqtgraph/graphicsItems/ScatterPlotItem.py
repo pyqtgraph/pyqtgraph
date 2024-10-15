@@ -16,7 +16,7 @@ __all__ = ['ScatterPlotItem', 'SpotItem']
 
 
 ## Build all symbol paths
-name_list = ['o', 's', 't', 't1', 't2', 't3', 'd', '+', 'x', 'p', 'h', 'star',
+name_list = ['o', 's', 't', 't1', 't2', 't3', 'd', '+', 'x', 'p', 'h', 'star', '|', '_',
              'arrow_up', 'arrow_right', 'arrow_down', 'arrow_left', 'crosshair']
 Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in name_list])
 Symbols['o'].addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
@@ -52,6 +52,7 @@ coords = {
              (-0.1816, 0.059), (-0.2939, 0.4045), (0, 0.1910),
              (0.2939, 0.4045), (0.1816, 0.059), (0.4755, -0.1545),
              (0.1123, -0.1545)],
+    '|': [(-0.1, 0.5),(0.1, 0.5), (0.1, -0.5), (-0.1, -0.5)],
     'arrow_up': [
         (-0.125, 0.125), (0, 0), (0.125, 0.125),
         (0.05, 0.125), (0.05, 0.5), (-0.05, 0.5), (-0.05, 0.125)
@@ -69,6 +70,9 @@ tr.rotate(45)
 Symbols['arrow_right'] = tr.map(Symbols['arrow_up'])
 Symbols['arrow_down'] = tr.map(Symbols['arrow_right'])
 Symbols['arrow_left'] = tr.map(Symbols['arrow_down'])
+
+# already rotated 90 degrees from earlier commands
+Symbols['_'] = tr.map(Symbols['|'])
 _DEFAULT_STYLE = {'symbol': None, 'size': -1, 'pen': None, 'brush': None, 'visible': True}
 
 
@@ -85,7 +89,7 @@ def drawSymbol(painter, symbol, size, pen, brush):
     painter.drawPath(symbol)
 
 
-def renderSymbol(symbol, size, pen, brush, device=None):
+def renderSymbol(symbol, size, pen, brush, device=None, dpr=1.0):
     """
     Render a symbol specification to QImage.
     Symbol may be either a QPainterPath or one of the keys in the Symbols dict.
@@ -96,13 +100,14 @@ def renderSymbol(symbol, size, pen, brush, device=None):
     ## Render a spot with the given parameters to a pixmap
     penPxWidth = max(math.ceil(pen.widthF()), 1)
     if device is None:
-        device = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth),
-            QtGui.QImage.Format.Format_ARGB32_Premultiplied)
+        side = int(math.ceil(dpr*(size+penPxWidth)))
+        device = QtGui.QImage(side, side, QtGui.QImage.Format.Format_ARGB32_Premultiplied)
+        device.setDevicePixelRatio(dpr)
         device.fill(QtCore.Qt.GlobalColor.transparent)
     p = QtGui.QPainter(device)
     try:
         p.setRenderHint(p.RenderHint.Antialiasing)
-        p.translate(device.width()*0.5, device.height()*0.5)
+        p.translate(device.width()/dpr*0.5, device.height()/dpr*0.5)
         drawSymbol(p, symbol, size, pen, brush)
     finally:
         p.end()
@@ -148,14 +153,8 @@ class SymbolAtlas(object):
     _idGenerator = itertools.count()
 
     def __init__(self):
-        self._data = np.zeros((0, 0, 4), dtype=np.ubyte)  # numpy array of atlas image
-        self._coords = {}
-        self._pixmap = None
-        self._maxWidth = 0
-        self._totalWidth = 0
-        self._totalArea = 0
-        self._pos = (0, 0)
-        self._rowShape = (0, 0)
+        self._dpr = 1.0
+        self.clear()
 
     def __getitem__(self, styles):
         """
@@ -173,6 +172,12 @@ class SymbolAtlas(object):
     def __len__(self):
         return len(self._coords)
 
+    def devicePixelRatio(self):
+        return self._dpr
+
+    def setDevicePixelRatio(self, dpr):
+        self._dpr = dpr
+
     @property
     def pixmap(self):
         if self._pixmap is None:
@@ -181,7 +186,8 @@ class SymbolAtlas(object):
 
     @property
     def maxWidth(self):
-        return self._maxWidth
+        # return the max logical width
+        return self._maxWidth / self._dpr
 
     def rebuild(self, styles=None):
         profiler = debug.Profiler()  # noqa: profiler prints on GC
@@ -196,7 +202,14 @@ class SymbolAtlas(object):
             self._extendFromData(data)
 
     def clear(self):
-        self.__init__()
+        self._data = np.zeros((0, 0, 4), dtype=np.ubyte)  # numpy array of atlas image
+        self._coords = {}
+        self._pixmap = None
+        self._maxWidth = 0
+        self._totalWidth = 0
+        self._totalArea = 0
+        self._pos = (0, 0)
+        self._rowShape = (0, 0)
 
     def diagnostics(self):
         n = len(self)
@@ -233,7 +246,7 @@ class SymbolAtlas(object):
         images = []
         data = []
         for key, style in styles.items():
-            img = renderSymbol(*style)
+            img = renderSymbol(*style, dpr=self._dpr)
             arr = fn.ndarray_from_qimage(img)
             images.append(img)  # keep these to delay garbage collection
             data.append((key, arr))
@@ -352,6 +365,8 @@ class ScatterPlotItem(GraphicsObject):
 
         self.picture = None   # QPicture used for rendering when pxmode==False
         self.fragmentAtlas = SymbolAtlas()
+        if screen := QtGui.QGuiApplication.primaryScreen():
+            self.fragmentAtlas.setDevicePixelRatio(screen.devicePixelRatio())
 
         dtype = [
             ('x', float),
@@ -656,6 +671,8 @@ class ScatterPlotItem(GraphicsObject):
         * 'p'  pentagon
         * 'h'  hexagon
         * 'star'
+        * '|' vertical line
+        * '_' horizontal line
         * 'x'  cross
         * 'arrow_up'
         * 'arrow_right'
@@ -919,7 +936,7 @@ class ScatterPlotItem(GraphicsObject):
         self.invalidate()
 
     @debug.warnOnException  ## raising an exception here causes crash
-    def paint(self, p, *args):
+    def paint(self, p, option, widget):
         profiler = debug.Profiler()
         cmode = self.opts.get('compositionMode', None)
         if cmode is not None:
@@ -947,6 +964,15 @@ class ScatterPlotItem(GraphicsObject):
             if self.opts['useCache'] and self._exportOpts is False:
                 # Draw symbols from pre-rendered atlas
 
+                dpr = self.fragmentAtlas.devicePixelRatio()
+                if widget is not None and (dpr_new := widget.devicePixelRatioF()) != dpr:
+                    # force a re-render if dpr changed
+                    dpr = dpr_new
+                    self.fragmentAtlas.setDevicePixelRatio(dpr)
+                    self.fragmentAtlas.clear()
+                    self.data['sourceRect'] = 0
+                    self.updateSpots()
+
                 # x, y is the center of the target rect
                 xy = pts[:, viewMask].T
                 sr = self.data['sourceRect'][viewMask]
@@ -955,7 +981,7 @@ class ScatterPlotItem(GraphicsObject):
                 frags = self._pixmapFragments.ndarray()
                 frags[:, 0:2] = xy
                 frags[:, 2:6] = np.frombuffer(sr, dtype=int).reshape((-1, 4)) # sx, sy, sw, sh
-                frags[:, 6:10] = [1.0, 1.0, 0.0, 1.0]   # scaleX, scaleY, rotation, opacity
+                frags[:, 6:10] = [1/dpr, 1/dpr, 0.0, 1.0]   # scaleX, scaleY, rotation, opacity
 
                 profiler('prep')
                 drawargs = self._pixmapFragments.drawargs()

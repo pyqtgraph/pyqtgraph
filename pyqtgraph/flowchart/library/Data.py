@@ -10,7 +10,7 @@ from .common import CtrlNode
 
 
 class ColumnSelectNode(Node):
-    """Select named columns from a record array or MetaArray."""
+    """Select named columns from a record array."""
     nodeName = "ColumnSelect"
     def __init__(self, name):
         Node.__init__(self, name, terminals={'In': {'io': 'in'}})
@@ -24,31 +24,20 @@ class ColumnSelectNode(Node):
             self.updateList(In)
                 
         out = {}
-        if hasattr(In, 'implements') and In.implements('MetaArray'):
-            for c in self.columns:
-                out[c] = In[self.axis:c]
-        elif isinstance(In, np.ndarray) and In.dtype.fields is not None:
+        if isinstance(In, np.ndarray) and In.dtype.fields is not None:
             for c in self.columns:
                 out[c] = In[c]
         else:
             self.In.setValueAcceptable(False)
-            raise Exception("Input must be MetaArray or ndarray with named fields")
-            
+            raise Exception("Input must be ndarray with named fields")
+
         return out
         
     def ctrlWidget(self):
         return self.columnList
 
     def updateList(self, data):
-        if hasattr(data, 'implements') and data.implements('MetaArray'):
-            cols = data.listColumns()
-            for ax in cols:  ## find first axis with columns
-                if len(cols[ax]) > 0:
-                    self.axis = ax
-                    cols = set(cols[ax])
-                    break
-        else:
-            cols = list(data.dtype.fields.keys())
+        cols = list(data.dtype.fields.keys())
                 
         rem = set()
         for c in self.columns:
@@ -154,8 +143,6 @@ class RegionSelectNode(CtrlNode):
         if self['selected'].isConnected():
             if data is None:
                 sliced = None
-            elif (hasattr(data, 'implements') and data.implements('MetaArray')):
-                sliced = data[0:s['start']:s['stop']]
             else:
                 mask = (data['time'] >= s['start']) * (data['time'] < s['stop'])
                 sliced = data[mask]

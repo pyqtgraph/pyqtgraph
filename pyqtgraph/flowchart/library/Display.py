@@ -8,7 +8,7 @@ from .common import CtrlNode
 
 
 class PlotWidgetNode(Node):
-    """Connection to PlotWidget. Will plot arrays, metaarrays, and display event lists."""
+    """Connection to PlotWidget. Will plot arrays, and display event lists."""
     nodeName = 'PlotWidget'
     sigPlotChanged = QtCore.Signal(object)
     

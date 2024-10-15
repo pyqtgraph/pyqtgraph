@@ -1,13 +1,14 @@
 import re
 from contextlib import ExitStack
 
-from . import GroupParameterItem, WidgetParameterItem
-from .basetypes import GroupParameter, Parameter, ParameterItem
-from .qtenum import QtEnumParameter
 from ... import functions as fn
 from ...Qt import QtCore, QtWidgets
 from ...SignalProxy import SignalProxy
 from ...widgets.PenPreviewLabel import PenPreviewLabel
+from . import GroupParameterItem, WidgetParameterItem
+from .basetypes import GroupParameter, Parameter, ParameterItem
+from .qtenum import QtEnumParameter
+
 
 class PenParameterItem(GroupParameterItem):
     def __init__(self, param, depth):
@@ -48,6 +49,12 @@ class PenParameterItem(GroupParameterItem):
         )
 
 
+def cap_first(s: str):
+    if not s:
+        return s
+    return s[0].upper() + s[1:]
+
+
 class PenParameter(GroupParameter):
     """
     Controls the appearance of a QPen value.
@@ -79,10 +86,11 @@ class PenParameter(GroupParameter):
             threadSafe=False,
         )
 
+    @QtCore.Slot(object)
     def _childrenFinishedChanging(self, paramAndValue):
         self.setValue(self.pen)
 
-    def setDefault(self, val):
+    def setDefault(self, val, **kwargs):
         pen = self._interpretValue(val)
         with self.treeChangeBlocker():
             # Block changes until all are finalized
@@ -92,14 +100,16 @@ class PenParameter(GroupParameter):
                     attrName = f'is{opt.title()}'
                 else:
                     attrName = opt
-                self.child(opt).setDefault(getattr(pen, attrName)())
-            out = super().setDefault(val)
+                self.child(opt).setDefault(getattr(pen, attrName)(), **kwargs)
+            out = super().setDefault(val, **kwargs)
         return out
 
     def saveState(self, filter=None):
         state = super().saveState(filter)
         opts = state.pop('children')
         state['value'] = tuple(o['value'] for o in opts.values())
+        if 'default' not in state:
+            state['default'] = state['value']  # TODO remove this after January 2025
         return state
 
     def restoreState(self, state, recursive=True, addChildren=True, removeChildren=True, blockSignals=True):
@@ -131,8 +141,7 @@ class PenParameter(GroupParameter):
 
     def setOpts(self, **opts):
         # Transform opts into a value
-        penOpts = self.applyOptsToPen(**opts)
-        if penOpts:
+        if self.applyOptsToPen(**opts):
             self.setValue(self.pen)
         return super().setOpts(**opts)
 
@@ -163,8 +172,8 @@ class PenParameter(GroupParameter):
         optsPen = boundPen or fn.mkPen()
         for p in param:
             name = p.name()
-            # Qt naming scheme uses isXXX for booleans
-            if isinstance(p.value(), bool):
+            # Qt naming scheme uses isXxx for booleans
+            if p.type() == 'bool':
                 attrName = f'is{name.title()}'
             else:
                 attrName = name
@@ -177,7 +186,7 @@ class PenParameter(GroupParameter):
         if boundPen is not None:
             self.updateFromPen(param, boundPen)
             for p in param:
-                setName = f'set{p.name().capitalize()}'
+                setName = f'set{cap_first(p.name())}'
                 # Instead, set the parameter which will signal the old setter
                 setattr(boundPen, setName, p.setValue)
                 newSetter = self.penPropertySetter
@@ -201,7 +210,7 @@ class PenParameter(GroupParameter):
 
     def penPropertySetter(self, p, value):
         boundPen = self.pen
-        setName = f'set{p.name().capitalize()}'
+        setName = f'set{cap_first(p.name())}'
         # boundPen.setName has been monkey-patched
         # so we get the original setter from the class
         getattr(boundPen.__class__, setName)(boundPen, value)

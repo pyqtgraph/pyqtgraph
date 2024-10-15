@@ -37,6 +37,7 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
     #         self._updateView()
     #     return ret
 
+    @QtCore.Slot()
     def _resetCachedProperties(self):
         self._boundingRectCache = self._previousGeometry = None
         self._painterPathCache = None

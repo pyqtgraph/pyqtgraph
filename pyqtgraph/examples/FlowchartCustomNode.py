@@ -47,7 +47,6 @@ data += np.random.normal(size=(100,100))
 data[40:60, 40:60] += 15.0
 data[30:50, 30:50] += 15.0
 #data += np.sin(np.linspace(0, 100, 1000))
-#data = metaarray.MetaArray(data, info=[{'name': 'Time', 'values': np.linspace(0, 1.0, len(data))}, {}])
 
 ## Set the raw data as the input value to the flowchart
 fc.setInput(dataIn=data)

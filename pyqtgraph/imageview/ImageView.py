@@ -313,9 +313,6 @@ class ImageView(QtWidgets.QWidget):
         """
         profiler = debug.Profiler()
 
-        if hasattr(img, 'implements') and img.implements('MetaArray'):
-            img = img.asarray()
-
         if not isinstance(img, np.ndarray):
             required = ['dtype', 'max', 'min', 'ndim', 'shape', 'size']
             if not all(hasattr(img, attr) for attr in required):
@@ -362,13 +359,7 @@ class ImageView(QtWidgets.QWidget):
         if xvals is not None:
             self.tVals = xvals
         elif axes['t'] is not None:
-            if hasattr(img, 'xvals'):
-                try:
-                    self.tVals = img.xvals(axes['t'])
-                except:
-                    self.tVals = np.arange(img.shape[axes['t']])
-            else:
-                self.tVals = np.arange(img.shape[axes['t']])
+            self.tVals = np.arange(img.shape[axes['t']])
 
         profiler()
 
@@ -580,6 +571,7 @@ class ImageView(QtWidgets.QWidget):
         else:
             self.play(0)
         
+    @QtCore.Slot()
     def timeout(self):
         now = perf_counter()
         dt = now - self.lastPlayTime
@@ -607,6 +599,7 @@ class ImageView(QtWidgets.QWidget):
         if self.axes['t'] is not None:
             self.setCurrentIndex(self.currentIndex + n)
 
+    @QtCore.Slot()
     def normRadioChanged(self):
         self.imageDisp = None
         self.updateImage()
@@ -614,6 +607,7 @@ class ImageView(QtWidgets.QWidget):
         self.roiChanged()
         self.sigProcessingChanged.emit(self)
     
+    @QtCore.Slot()
     def updateNorm(self):
         if self.ui.normTimeRangeCheck.isChecked():
             self.normRgn.show()
@@ -640,6 +634,7 @@ class ImageView(QtWidgets.QWidget):
     def hasTimeAxis(self):
         return 't' in self.axes and self.axes['t'] is not None
 
+    @QtCore.Slot()
     def roiClicked(self):
         showRoiPlot = False
         if self.ui.roiBtn.isChecked():
@@ -674,6 +669,7 @@ class ImageView(QtWidgets.QWidget):
             
         self.ui.roiPlot.setVisible(showRoiPlot)
 
+    @QtCore.Slot()
     def roiChanged(self):
         # Extract image data from ROI
         if self.image is None:
@@ -807,6 +803,7 @@ class ImageView(QtWidgets.QWidget):
                 
         return norm
         
+    @QtCore.Slot()
     def timeLineChanged(self):
         if not self.ignoreTimeLine:
             self.play(0)
@@ -924,6 +921,7 @@ class ImageView(QtWidgets.QWidget):
         self.exportAction.triggered.connect(self.exportClicked)
         self.menu.addAction(self.exportAction)
         
+    @QtCore.Slot()
     def menuClicked(self):
         if self.menu is None:
             self.buildMenu()

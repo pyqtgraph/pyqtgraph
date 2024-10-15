@@ -44,6 +44,9 @@ class PlotWidget(GraphicsView):
     other methods, use :func:`getPlotItem <pyqtgraph.PlotWidget.getPlotItem>`.
     """
     def __init__(self, parent=None, background='default', plotItem=None, **kargs):
+        ## start by instantiating the plotItem attribute in order to avoid recursive 
+        ## calls of PlotWidget.__getattr__ - which access self.plotItem!
+        self.plotItem = None
         """When initializing PlotWidget, *parent* and *background* are passed to 
         :func:`GraphicsWidget.__init__() <pyqtgraph.GraphicsWidget.__init__>`
         and all others are passed
@@ -81,6 +84,7 @@ class PlotWidget(GraphicsView):
                 return m
         raise AttributeError(attr)
     
+    @QtCore.Slot(object, object)
     def viewRangeChanged(self, view, range):
         #self.emit(QtCore.SIGNAL('viewChanged'), *args)
         self.sigRangeChanged.emit(self, range)
@@ -97,6 +101,3 @@ class PlotWidget(GraphicsView):
     def getPlotItem(self):
         """Return the PlotItem contained within."""
         return self.plotItem
-        
-        
-        

@@ -1,5 +1,6 @@
 import decimal
 import re
+import warnings
 from math import isinf, isnan
 
 from .. import functions as fn
@@ -81,7 +82,8 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             'prefix': '', ## string to be prepended to spin box value
             'suffix': '',
             'siPrefix': False,   ## Set to True to display numbers with SI prefix (ie, 100pA instead of 1e-10A)
-            
+            'scaleAtZero': None,
+
             'delay': 0.3, ## delay sending wheel update signals for 300ms
             
             'delayUntilEditFinished': True,   ## do not send signals until text editing has finished
@@ -133,6 +135,9 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        orders of magnitude, such as a Reynolds number, an SI
                        prefix is allowed with no suffix. Default is False.
         prefix         (str) String to be prepended to the spin box value. Default is an empty string.
+        scaleAtZero    (float) If siPrefix is also True, this option then sets the default SI prefix
+                       that a value of 0 will have applied (and thus the default scale of the first
+                       number the user types in after the SpinBox has been zeroed out).
         step           (float) The size of a single step. This is used when clicking the up/
                        down arrows, when rolling the mouse wheel, or when pressing 
                        keyboard arrows while the widget has keyboard focus. Note that
@@ -370,7 +375,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         changed = not fn.eq(value, prev)  # use fn.eq to handle nan
 
         if update and (changed or not bounded):
-            self.updateText(prev=prev)
+            self.updateText()
 
         if changed:
             self.sigValueChanging.emit(self, float(self.val))  ## change will be emitted in 300ms if there are no subsequent changes.
@@ -384,6 +389,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         self.valueChanged.emit(float(self.val))
         self.sigValueChanged.emit(self)
     
+    @QtCore.Slot()
     def delayedChange(self):
         try:
             if not fn.eq(self.val, self.lastValEmitted):  # use fn.eq to handle nan
@@ -401,34 +407,35 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         return self.StepEnabledFlag.StepUpEnabled | self.StepEnabledFlag.StepDownEnabled        
     
     def stepBy(self, n):
-        if isinf(self.val) or isnan(self.val):
-            return
+        ## note all steps (arrow buttons, wheel, up/down keys..) emit delayed signals only.
+        self.setValue(self._stepByValue(n), delaySignal=True)
 
-        n = decimal.Decimal(int(n))   ## n must be integral number of steps.
-        s = [decimal.Decimal(-1), decimal.Decimal(1)][n >= 0]  ## determine sign of step
+    def _stepByValue(self, steps):
+        if isinf(self.val) or isnan(self.val):
+            return self.val
+        steps = int(steps)
+        sign = [decimal.Decimal(-1), decimal.Decimal(1)][steps >= 0]
         val = self.val
-        
-        for i in range(int(abs(n))):
+        for i in range(int(abs(steps))):
             if self.opts['dec']:
                 if val == 0:
                     step = self.opts['minStep']
                     exp = None
                 else:
                     vs = [decimal.Decimal(-1), decimal.Decimal(1)][val >= 0]
-                    #exp = decimal.Decimal(int(abs(val*(decimal.Decimal('1.01')**(s*vs))).log10()))
-                    fudge = decimal.Decimal('1.01')**(s*vs) ## fudge factor. at some places, the step size depends on the step sign.
+                    ## fudge factor. at some places, the step size depends on the step sign.
+                    fudge = decimal.Decimal('1.01') ** (sign * vs)
                     exp = abs(val * fudge).log10().quantize(1, decimal.ROUND_FLOOR)
-                    step = self.opts['step'] * decimal.Decimal(10)**exp
+                    step = self.opts['step'] * decimal.Decimal(10) ** exp
                 if 'minStep' in self.opts:
                     step = max(step, self.opts['minStep'])
-                val += s * step
-                #print "Exp:", exp, "step", step, "val", val
+                val += sign * step
             else:
-                val += s*self.opts['step']
-                
+                val += sign * self.opts['step']
+
             if 'minStep' in self.opts and abs(val) < self.opts['minStep']:
                 val = decimal.Decimal(0)
-        self.setValue(val, delaySignal=True)  ## note all steps (arrow buttons, wheel, up/down keys..) emit delayed signals only.
+        return val
 
     def valueInRange(self, value):
         if not isnan(value):
@@ -442,11 +449,11 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                     return False
         return True
 
-    def updateText(self, prev=None):
+    def updateText(self, **kwargs):
         # temporarily disable validation
         self.skipValidate = True
         
-        txt = self.formatText(prev=prev)
+        txt = self.formatText(**kwargs)
         
         # actually set the text
         self.lineEdit().setText(txt)
@@ -455,7 +462,13 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         # re-enable the validation
         self.skipValidate = False
         
-    def formatText(self, prev=None):
+    def formatText(self, **kwargs):
+        if 'prev' in kwargs:
+            warnings.warn(
+                "updateText and formatText no longer take prev argument. This will error after January 2025.",
+                DeprecationWarning,
+                stacklevel=2
+            )  # TODO remove all kwargs handling here and updateText after January 2025
         # get the number of decimal places to print
         decimals = self.opts['decimals']
         suffix = self.opts['suffix']
@@ -466,9 +479,11 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         if self.opts['siPrefix'] is True:
             # SI prefix was requested, so scale the value accordingly
 
-            if self.val == 0 and prev is not None:
-                # special case: if it's zero use the previous prefix
-                (s, p) = fn.siScale(prev)
+            if self.val == 0:
+                if self.opts['scaleAtZero'] is not None:
+                    (s, p) = fn.siScale(self.opts['scaleAtZero'])
+                else:
+                    (s, p) = fn.siScale(self._stepByValue(1))
             else:
                 (s, p) = fn.siScale(val)
             parts = {'value': val, 'suffix': suffix, 'decimals': decimals, 'siPrefix': p, 'scaledValue': s*val, 'prefix':prefix}
@@ -558,6 +573,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
 
         return val
 
+    @QtCore.Slot()
     def editingFinishedEvent(self):
         """Edit has finished; set value."""
         if self.lineEdit().text() == self.lastText:

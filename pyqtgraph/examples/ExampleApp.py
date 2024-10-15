@@ -7,6 +7,7 @@ import sys
 from argparse import Namespace
 from collections import OrderedDict
 from functools import lru_cache
+from typing import Optional
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QT_LIB, QtCore, QtGui, QtWidgets
@@ -34,11 +35,7 @@ def charFormat(color, style='', background=None):
     """
     Return a QTextCharFormat with the given attributes.
     """
-    _color = QColor()
-    if type(color) is not str:
-        _color.setRgb(color[0], color[1], color[2])
-    else:
-        _color.setNamedColor(color)
+    _color = pg.functions.mkColor(color)
 
     _format = QTextCharFormat()
     _format.setForeground(_color)
@@ -314,7 +311,6 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.ui.codeView.setLayout(self.codeLayout)
         self.hl = PythonHighlighter(self.ui.codeView.document())
         app = QtWidgets.QApplication.instance()
-        app.paletteChanged.connect(self.updateTheme)
         policy = QtWidgets.QSizePolicy.Policy.Expanding
         self.codeLayout.addItem(QtWidgets.QSpacerItem(100,100, policy, policy), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
@@ -360,6 +356,24 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.ui.codeView.textChanged.connect(self.onTextChange)
         self.codeBtn.clicked.connect(self.runEditedCode)
         self.updateCodeViewTabWidth(self.ui.codeView.font())
+
+    def event(self, event: Optional[QtCore.QEvent]):
+        if event is None:
+            return super().event(None)
+        if event.type() in [
+            QtCore.QEvent.Type.ApplicationPaletteChange,
+        ]:
+            app = pg.mkQApp()
+            try:
+                darkMode = app.styleHints().colorScheme() == QtCore.Qt.ColorScheme.Dark
+            except AttributeError:
+                palette = app.palette()
+                windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
+                windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
+                darkMode = windowTextLightness > windowLightness
+            app.setProperty('darkMode', darkMode)
+            self.hl = PythonHighlighter(self.ui.codeView.document())
+        return super().event(event)
 
     def updateCodeViewTabWidth(self,font):
         """
@@ -480,9 +494,6 @@ class ExampleLoader(QtWidgets.QMainWindow):
         # finally, override application automatic detection
         app = QtWidgets.QApplication.instance()
         app.setProperty('darkMode', True)
-
-    def updateTheme(self):
-        self.hl = PythonHighlighter(self.ui.codeView.document())
 
     def populateTree(self, root, examples):
         bold_font = None

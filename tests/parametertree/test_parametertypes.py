@@ -8,16 +8,25 @@ from pyqtgraph.functions import eq
 from pyqtgraph.parametertree.parameterTypes import ChecklistParameterItem
 from pyqtgraph.Qt import QtCore, QtGui
 
+import pytest
+
 app = pg.mkQApp()
+
 
 def _getWidget(param):
     return list(param.items.keys())[0].widget
+
+
+def test_typeless_param():
+    p = pt.Parameter.create(name='test', type=None, value=set())
+    p.setValue(range(4))
 
 
 def test_opts():
     paramSpec = [
         dict(name='bool', type='bool', readonly=True),
         dict(name='color', type='color', readonly=True),
+        dict(name='float', type='float', limits=None),
     ]
 
     param = pt.Parameter.create(name='params', type='group', children=paramSpec)
@@ -93,14 +102,14 @@ def check_param_types(param, types, map_func, init, objs, keys):
             param.setValue().
         keys : list
             The list of keys indicating the valid objects in *objs*. When
-            param.setValue() is teasted with each value from *objs*, we expect
+            param.setValue() is tested with each value from *objs*, we expect
             an exception to be raised if the associated key is not in *keys*.
     """
     val = param.value()
     if not isinstance(types, tuple):
         types = (types,)
     assert val == init and type(val) in types
-    
+
     # test valid input types
     good_inputs = [objs[k] for k in keys if k in objs]
     good_outputs = map(map_func, good_inputs)
@@ -110,7 +119,7 @@ def check_param_types(param, types, map_func, init, objs, keys):
         if not (eq(val, y) and type(val) in types):
             raise Exception("Setting parameter %s with value %r should have resulted in %r (types: %r), "
                 "but resulted in %r (type: %r) instead." % (param, x, y, types, val, type(val)))
-        
+
     # test invalid input types
     for k,v in objs.items():
         if k in keys:
@@ -120,12 +129,22 @@ def check_param_types(param, types, map_func, init, objs, keys):
         except (TypeError, ValueError, OverflowError):
             continue
         except Exception as exc:
-            raise Exception("Setting %s parameter value to %r raised %r." % (param, v, exc))
-        
+            raise Exception(
+                "Setting %s parameter value to %r raised %r." % (param, v, exc)
+            ) from exc
+
         raise Exception("Setting %s parameter value to %r should have raised an exception." % (param, v))
         
-        
-def test_limits_enforcement():
+
+@pytest.mark.parametrize("k,v_in,v_out",[
+    ('float', -1, 0),
+    ('float',  2, 1),
+    ('int',   -1, 0),
+    ('int',    2, 1),
+    ('list', 'w', 'x'),
+    ('dict', 'w', 1)
+])
+def test_limits_enforcement(k, v_in, v_out):
     p = pt.Parameter.create(name='params', type='group', children=[
         dict(name='float', type='float', limits=[0, 1]),
         dict(name='int', type='int', bounds=[0, 1]),
@@ -134,14 +153,8 @@ def test_limits_enforcement():
     ])
     t = pt.ParameterTree()
     t.setParameters(p)
-    for k, vin, vout in [('float', -1, 0),
-                         ('float',  2, 1),
-                         ('int',   -1, 0),
-                         ('int',    2, 1),
-                         ('list',   'w', 'x'),
-                         ('dict',   'w', 1)]:
-        p[k] = vin
-        assert p[k] == vout
+    p[k] = v_in
+    assert p[k] == v_out
 
 
 def test_data_race():
@@ -187,7 +200,6 @@ def test_pen_settings():
     # Opts from changing child
     p["width"] = 10
     assert p.pen.width() == 10
-
 
 def test_recreate_from_savestate():
     from pyqtgraph.examples import _buildParamTypes

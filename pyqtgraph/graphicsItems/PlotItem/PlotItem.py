@@ -71,17 +71,19 @@ class PlotItem(GraphicsWidget):
     
     The ViewBox itself can be accessed by calling :func:`getViewBox() <pyqtgraph.PlotItem.getViewBox>` 
     
-    ==================== =======================================================================
+    ======================= =======================================================================
     **Signals:**
-    sigYRangeChanged     wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
-    sigXRangeChanged     wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
-    sigRangeChanged      wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
-    ==================== =======================================================================
+    sigYRangeChanged        wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
+    sigXRangeChanged        wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
+    sigRangeChanged         wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
+    sigRangeChangedManually wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
+    ======================= =======================================================================
     """
     
     sigRangeChanged = QtCore.Signal(object, object)    ## Emitted when the ViewBox range has changed
     sigYRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox Y range has changed
     sigXRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox X range has changed
+    sigRangeChangedManually = QtCore.Signal(object)    ## Emitted when the ViewBox range is changed via user interaction
         
     lastFileDir = None
     
@@ -139,6 +141,7 @@ class PlotItem(GraphicsWidget):
         self.vb.sigRangeChanged.connect(self.sigRangeChanged)
         self.vb.sigXRangeChanged.connect(self.sigXRangeChanged)
         self.vb.sigYRangeChanged.connect(self.sigYRangeChanged)
+        self.vb.sigRangeChangedManually.connect(self.sigRangeChangedManually)
         
         self.layout.addItem(self.vb, 2, 1)
         self.alpha = 1.0
@@ -395,6 +398,8 @@ class PlotItem(GraphicsWidget):
     def registerPlot(self, name):   ## for backward compatibility
         self.vb.register(name)
         
+    @QtCore.Slot(bool)
+    @QtCore.Slot(int)
     def updateGrid(self, *args):
         alpha = self.ctrl.gridAlphaSlider.value()
         x = alpha if self.ctrl.xGridCheck.isChecked() else False
@@ -413,12 +418,14 @@ class PlotItem(GraphicsWidget):
         wr.adjust(pos.x(), pos.y(), pos.x(), pos.y())
         return wr
 
+    @QtCore.Slot(bool)
     def avgToggled(self, b):
         if b:
             self.recomputeAverages()
         for k in self.avgCurves:
             self.avgCurves[k][1].setVisible(b)
         
+    @QtCore.Slot(QtWidgets.QListWidgetItem)
     def avgParamListClicked(self, item):
         name = str(item.text())
         self.paramList[name] = (item.checkState() == QtCore.Qt.CheckState.Checked)
@@ -488,13 +495,16 @@ class PlotItem(GraphicsWidget):
         else:
             plot.setData(x, y, stepMode=stepMode)
         
+    @QtCore.Slot()
     def autoBtnClicked(self):
         if self.autoBtn.mode == 'auto':
             self.enableAutoRange()
             self.autoBtn.hide()
+            self.sigRangeChangedManually.emit(self.vb.mouseEnabled()[:])
         else:
             self.disableAutoRange()
             
+    @QtCore.Slot()
     def viewStateChanged(self):
         self.updateButtons()
 
@@ -552,7 +562,7 @@ class PlotItem(GraphicsWidget):
             self.legend.addItem(item, name=name)            
 
     def listDataItems(self):
-        """Return a list of all data items (:class:`PlotDataItem <pyqtgraph.PlotDataItem>`, 
+        """Return a list of all data items (:class:`~pyqtgraph.PlotDataItem`,
         :class:`~pyqtgraph.PlotCurveItem` , :class:`~pyqtgraph.ScatterPlotItem` , etc)
         contained in this PlotItem."""
         return self.dataItems[:]
@@ -611,8 +621,7 @@ class PlotItem(GraphicsWidget):
     def plot(self, *args, **kargs):
 #        **Additional arguments:**
         """
-        Add and return a new plot.
-        See :func:`PlotDataItem.__init__ <pyqtgraph.PlotDataItem.__init__>` for data arguments
+        Add and return a new plot. See :class:`PlotDataItem` for data arguments
         
         **Additional allowed arguments**
         
@@ -854,6 +863,7 @@ class PlotItem(GraphicsWidget):
     def widgetGroupInterface(self):
         return (None, PlotItem.saveState, PlotItem.restoreState)
       
+    @QtCore.Slot(bool)
     def updateSpectrumMode(self, b=None):
         if b is None:
             b = self.ctrl.fftCheck.isChecked()
@@ -862,6 +872,7 @@ class PlotItem(GraphicsWidget):
         self.enableAutoRange()
         self.recomputeAverages()
             
+    @QtCore.Slot()
     def updateLogMode(self):
         x = self.ctrl.logXCheck.isChecked()
         y = self.ctrl.logYCheck.isChecked()
@@ -875,6 +886,7 @@ class PlotItem(GraphicsWidget):
         self.enableAutoRange()
         self.recomputeAverages()
     
+    @QtCore.Slot()
     def updateDerivativeMode(self):
         d = self.ctrl.derivativeCheck.isChecked()
         for i in self.items:
@@ -883,6 +895,7 @@ class PlotItem(GraphicsWidget):
         self.enableAutoRange()
         self.recomputeAverages()
 
+    @QtCore.Slot()
     def updatePhasemapMode(self):
         d = self.ctrl.phasemapCheck.isChecked()
         for i in self.items:
@@ -938,6 +951,7 @@ class PlotItem(GraphicsWidget):
             else:
                 raise ValueError("mode argument must be 'subsample', 'mean', or 'peak'.")
             
+    @QtCore.Slot()
     def updateDownsampling(self):
         ds, auto, method = self.downsampleMode()
         clip = self.ctrl.clipToViewCheck.isChecked()
@@ -974,6 +988,7 @@ class PlotItem(GraphicsWidget):
     def clipToViewMode(self):
         return self.ctrl.clipToViewCheck.isChecked()
     
+    @QtCore.Slot(bool)
     def _handle_max_traces_toggle(self, check_state):
         if check_state:
             self.updateDecimation()
@@ -981,6 +996,7 @@ class PlotItem(GraphicsWidget):
             for curve in self.curves:
                 curve.show()
     
+    @QtCore.Slot()
     def updateDecimation(self):
         """
         Reduce or increase number of visible curves according to value set by the `Max Traces` spinner,
@@ -1009,6 +1025,8 @@ class PlotItem(GraphicsWidget):
             else:
                 curve.hide()
       
+    @QtCore.Slot(bool)
+    @QtCore.Slot(int)
     def updateAlpha(self, *args):
         (alpha, auto) = self.alphaState()
         for c in self.curves:
@@ -1112,21 +1130,20 @@ class PlotItem(GraphicsWidget):
         self._checkScaleKey(name)
         return self.axes[name]['item']
         
-    def setLabel(self, axis, text=None, units=None, unitPrefix=None, **args):
+    def setLabel(self, axis, *args, **kwds):
         """
-        Sets the label for an axis. Basic HTML formatting is allowed.
+        Sets the label for an axis. Basic HTML is allowed. See :func:`AxisItem.setLabel` for
+        formatting options.
         
-        ==============  =================================================================
-        **Arguments:**
-        axis            must be one of 'left', 'bottom', 'right', or 'top'
-        text            text to display along the axis. HTML allowed.
-        units           units to display after the title. If units are given,
-                        then an SI prefix will be automatically appended
-                        and the axis values will be scaled accordingly.
-                        (ie, use 'V' instead of 'mV'; 'm' will be added automatically)
-        ==============  =================================================================
+        Parameters
+        ----------
+        axis : str
+            Which axis to label. Must be one of 'left', 'bottom', 'right', or 'top'
+        **args
+            All extra arguments are passed to :func:`AxisItem.setLabel`
+
         """
-        self.getAxis(axis).setLabel(text=text, units=units, **args)
+        self.getAxis(axis).setLabel(*args, **kwds)
         self.showAxis(axis)
         
     def setLabels(self, **kwds):
@@ -1269,32 +1286,7 @@ class PlotItem(GraphicsWidget):
             raise Exception("X array must be 1D to plot (shape is %s)" % x.shape)
         c = PlotCurveItem(arr, x=x, **kargs)
         return c
-        
-    def _plotMetaArray(self, arr, x=None, autoLabel=True, **kargs):
-        if arr.ndim != 1:
-            raise Exception('can only automatically plot 1 dimensional arrays.')
-        ## create curve
-        try:
-            xv = arr.xvals(0)
-        except:
-            if x is None:
-                xv = np.arange(arr.shape[0])
-            else:
-                xv = x
-        c = PlotCurveItem(**kargs)
-        c.setData(x=xv, y=arr.view(np.ndarray))
-        
-        if autoLabel:
-            name = arr._info[0].get('name', None)
-            units = arr._info[0].get('units', None)
-            self.setLabel('bottom', text=name, units=units)
-            
-            name = arr._info[1].get('name', None)
-            units = arr._info[1].get('units', None)
-            self.setLabel('left', text=name, units=units)
-            
-        return c
-      
+
     def setExportMode(self, export, opts=None):
         GraphicsWidget.setExportMode(self, export, opts)
         self.updateButtons()

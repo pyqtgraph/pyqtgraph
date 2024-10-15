@@ -14,52 +14,55 @@ app = pg.mkQApp()
 pg.setConfigOption("mouseRateLimit", 0)
 
 
-def test_getArrayRegion(transpose=False):
-    pr = pg.PolyLineROI([[0, 0], [27, 0], [0, 28]], closed=True)
-    pr.setPos(1, 1)
-    rois = [
-        (pg.ROI([1, 1], [27, 28], pen='y'), 'baseroi'),
-        (pg.RectROI([1, 1], [27, 28], pen='y'), 'rectroi'),
-        (pg.EllipseROI([1, 1], [27, 28], pen='y'), 'ellipseroi'),
-        (pr, 'polylineroi'),
+@pytest.mark.parametrize("roi, name", [
+        (pg.ROI([1, 1],        [27, 28], pen='y', antialias=False), 'baseroi'),
+        (pg.RectROI([1, 1],    [27, 28], pen='y', antialias=False), 'rectroi'),
+        (pg.EllipseROI([1, 1], [27, 28], pen='y', antialias=False), 'ellipseroi'),
+        (
+            pg.PolyLineROI(
+                [[0, 0], [27, 0], [0, 28]],
+                closed=True,
+                pos=(1, 1),
+                antialias=False
+            ),'polylineroi'
+        ),
     ]
-    for roi, name in rois:
-        # For some ROIs, resize should not be used.
-        testResize = not isinstance(roi, pg.PolyLineROI)
+)
+@pytest.mark.parametrize("transpose", [True, False])
+def test_getArrayRegion(roi, name, transpose):    
+    # For some ROIs, resize should not be used.
+    testResize = not isinstance(roi, pg.PolyLineROI)
 
-        origMode = pg.getConfigOption('imageAxisOrder')
-        try:
-            if transpose:
-                pg.setConfigOptions(imageAxisOrder='row-major')
-                check_getArrayRegion(roi, 'roi/' + name, testResize,
-                                     transpose=True)
-            else:
-                pg.setConfigOptions(imageAxisOrder='col-major')
-                check_getArrayRegion(roi, 'roi/' + name, testResize)
-        finally:
-            pg.setConfigOptions(imageAxisOrder=origMode)
-
-
-def test_getArrayRegion_axisorder():
-    test_getArrayRegion(transpose=True)
+    origMode = pg.getConfigOption('imageAxisOrder')
+    try:
+        pg.setConfigOptions(
+            imageAxisOrder='row-major' if transpose else 'col-major'
+        )
+        check_getArrayRegion(
+            roi, f"roi/{name}",
+            testResize,
+            transpose=transpose
+        )
+    finally:
+        pg.setConfigOptions(imageAxisOrder=origMode)
 
 
 def check_getArrayRegion(roi, name, testResize=True, transpose=False):
-    # on windows, edges corner pixels seem to be slightly different from
-    # other platforms giving a pxCount=2 for a fudge factor
-    if (isinstance(roi, (pg.ROI, pg.RectROI))
-            and platform.system() == "Windows"):
-        pxCount = 2
+    # edges corner pixels seem to be slightly different on windows
+    if (
+        isinstance(roi, (pg.ROI, pg.RectROI))
+        and platform.system() == "Windows"
+    ):
+        pxCount = 1
     else:
         pxCount = -1
 
     initState = roi.getState()
-
     win = pg.GraphicsView()
     win.show()
     resizeWindow(win, 200, 400)
-    # Don't use Qt's layouts for testing--these generate unpredictable results.
-    # Instead, place the viewboxes manually
+    # Don't use Qts' layouts for testing--these generate unpredictable results.
+    # Instead, manually place the ViewBoxes
     vb1 = pg.ViewBox()
     win.scene().addItem(vb1)
     vb1.setPos(6, 6)
@@ -94,12 +97,13 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     vb1.addItem(roi)
 
     if isinstance(roi, pg.RectROI):
-        if transpose:
-            assert roi.getAffineSliceParams(data, img1, axes=(1, 2)) == (
-                [28.0, 27.0], ((1.0, 0.0), (0.0, 1.0)), (1.0, 1.0))
-        else:
-            assert roi.getAffineSliceParams(data, img1, axes=(1, 2)) == (
-                [27.0, 28.0], ((1.0, 0.0), (0.0, 1.0)), (1.0, 1.0))
+        first_arg = [28.0, 27.0] if transpose else [27.0, 28.0]
+        assert roi.getAffineSliceParams(
+            data,
+            img1,
+            axes=(1, 2)
+        ) == (first_arg, ((1.0, 0.0), (0.0, 1.0)), (1.0, 1.0))
+
 
     rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
     # assert np.all((rgn == data[:, 1:-2, 1:-2, :]) | (rgn == 0))
@@ -108,8 +112,12 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     vb2.enableAutoRange(True, True)
 
     app.processEvents()
-    assertImageApproved(win, name + '/roi_getarrayregion',
-                        'Simple ROI region selection.', pxCount=pxCount)
+    assertImageApproved(
+        win,
+        f'{name}/roi_getarrayregion',
+        'Simple ROI region selection.',
+        pxCount=pxCount
+    )
 
     with pytest.raises(TypeError):
         roi.setPos(0, False)
@@ -118,44 +126,59 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
     img2.setImage(rgn[0, ..., 0])
     app.processEvents()
-    assertImageApproved(win, name + '/roi_getarrayregion_halfpx',
-                        'Simple ROI region selection, 0.5 pixel shift.',
-                        pxCount=pxCount)
+    assertImageApproved(
+        win, 
+        f'{name}/roi_getarrayregion_halfpx',
+        'Simple ROI region selection, 0.5 pixel shift.',
+        pxCount=pxCount
+    )
 
     roi.setAngle(45)
     roi.setPos([3, 0])
     rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
     img2.setImage(rgn[0, ..., 0])
     app.processEvents()
-    assertImageApproved(win, name + '/roi_getarrayregion_rotate',
-                        'Simple ROI region selection, rotation.',
-                        pxCount=pxCount)
+    assertImageApproved(
+        win, 
+        f'{name}/roi_getarrayregion_rotate',
+        'Simple ROI region selection, rotation.',
+        pxCount=pxCount
+    )
 
     if testResize:
         roi.setSize([60, 60])
         rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
         img2.setImage(rgn[0, ..., 0])
         app.processEvents()
-        assertImageApproved(win, name + '/roi_getarrayregion_resize',
-                            'Simple ROI region selection, resized.',
-                            pxCount=pxCount)
+        assertImageApproved(
+            win, 
+            f'{name}/roi_getarrayregion_resize',
+            'Simple ROI region selection, resized.',
+            pxCount=pxCount
+        )
 
     img1.setPos(0, img1.height())
     img1.setTransform(QtGui.QTransform().scale(1, -1).rotate(20), True)
     rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
     img2.setImage(rgn[0, ..., 0])
     app.processEvents()
-    assertImageApproved(win, name + '/roi_getarrayregion_img_trans',
-                        'Simple ROI region selection, image transformed.',
-                        pxCount=pxCount)
+    assertImageApproved(
+        win,
+        f'{name}/roi_getarrayregion_img_trans',
+        'Simple ROI region selection, image transformed.',
+        pxCount=pxCount
+    )
 
     vb1.invertY()
     rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
     img2.setImage(rgn[0, ..., 0])
     app.processEvents()
-    assertImageApproved(win, name + '/roi_getarrayregion_inverty',
-                        'Simple ROI region selection, view inverted.',
-                        pxCount=pxCount)
+    assertImageApproved(
+        win, 
+        f'{name}/roi_getarrayregion_inverty',
+        'Simple ROI region selection, view inverted.',
+        pxCount=pxCount
+    )
 
     roi.setState(initState)
     img1.setPos(0, 0)
@@ -164,13 +187,13 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     img2.setImage(rgn[0, ..., 0])
     app.processEvents()
     assertImageApproved(
-        win, name + '/roi_getarrayregion_anisotropic',
+        win, 
+        f'{name}/roi_getarrayregion_anisotropic',
         'Simple ROI region selection, image scaled anisotropically.',
-        pxCount=pxCount)
-
+        pxCount=pxCount
+    )
     # allow the roi to be re-used
     roi.scene().removeItem(roi)
-
     win.hide()
 
 
@@ -188,11 +211,15 @@ def test_mouseClickEvent():
     vb.addItem(roi)
     app.processEvents()
 
-    mouseClick(plt, roi.mapToScene(pg.Point(2, 2)),
-               QtCore.Qt.MouseButton.LeftButton)
+    mouseClick(
+        plt,
+        roi.mapToScene(pg.Point(2, 2)),
+        QtCore.Qt.MouseButton.LeftButton
+    )
 
 
 def test_mouseDragEventSnap():
+    pg.setConfigOptions(antialias=False)
     plt = pg.GraphicsView()
     plt.show()
     resizeWindow(plt, 200, 200)
@@ -205,8 +232,14 @@ def test_mouseDragEventSnap():
     # A Rectangular roi with scaleSnap enabled
     initial_x = 20
     initial_y = 20
-    roi = pg.RectROI((initial_x, initial_y), (20, 20), scaleSnap=True,
-                     translateSnap=True, snapSize=1.0, movable=True)
+    roi = pg.RectROI(
+        (initial_x, initial_y),
+        (20, 20),
+        scaleSnap=True,
+        translateSnap=True,
+        snapSize=1.0,
+        movable=True
+    )
     vb.addItem(roi)
     app.processEvents()
 
@@ -223,28 +256,53 @@ def test_mouseDragEventSnap():
 
     # Only drag in y direction
     roi_position = roi.mapToView(pg.Point(initial_x, initial_y))
-    mouseDrag(plt, roi_position, roi_position + pg.Point(0, 10),
-              QtCore.Qt.MouseButton.LeftButton)
+    mouseDrag(
+        plt,
+        roi_position,
+        roi_position + pg.Point(0, 10),
+        QtCore.Qt.MouseButton.LeftButton
+    )
     assert roi.pos() == pg.Point(initial_x, 19)
 
-    mouseDrag(plt, roi_position, roi_position + pg.Point(0, 10),
-              QtCore.Qt.MouseButton.LeftButton)
+    mouseDrag(
+        plt,
+        roi_position,
+        roi_position + pg.Point(0, 10),
+        QtCore.Qt.MouseButton.LeftButton
+    )
     assert roi.pos() == pg.Point(initial_x, 18)
 
     # Only drag in x direction
-    mouseDrag(plt, roi_position, roi_position + pg.Point(10, 0),
-              QtCore.Qt.MouseButton.LeftButton)
+    mouseDrag(
+        plt,
+        roi_position,
+        roi_position + pg.Point(10, 0),
+        QtCore.Qt.MouseButton.LeftButton
+    )
     assert roi.pos() == pg.Point(21, 18)
 
-
-def test_PolyLineROI():
-    rois = [
-        (pg.PolyLineROI([[0, 0], [10, 0], [0, 15]], closed=True, pen=0.3),
-         'closed'),
-        (pg.PolyLineROI([[0, 0], [10, 0], [0, 15]], closed=False, pen=0.3),
-         'open')
+@pytest.mark.parametrize("roi, name", [
+        (
+            pg.PolyLineROI(
+                [[0, 0], [10, 0], [0, 15]],
+                closed=True,
+                pen=0.3,
+                antialias=False
+            ),
+            'closed'
+        ),
+        (
+            pg.PolyLineROI(
+                [[0, 0], [10, 0], [0, 15]],
+                closed=False,
+                pen=0.3,
+                antialias=False 
+            ),
+            'open'
+        )
     ]
-
+)
+def test_PolyLineROI(roi, name):
     plt = pg.GraphicsView()
     plt.show()
     resizeWindow(plt, 200, 200)
@@ -257,89 +315,134 @@ def test_PolyLineROI():
 
     plt.scene().minDragTime = 0  # let us simulate mouse drags very quickly.
 
-    # seemingly arbitrary requirements; might need longer wait time for some
-    # platforms..
+    # seemingly arbitrary requirements; might need longer wait time for some platforms.
     QtTest.QTest.qWaitForWindowExposed(plt)
     QtTest.QTest.qWait(100)
 
-    for r, name in rois:
-        vb.clear()
-        vb.addItem(r)
-        vb.autoRange()
-        app.processEvents()
+    vb.clear()
+    vb.addItem(roi)
+    vb.autoRange()
+    app.processEvents()
 
-        assertImageApproved(plt, 'roi/polylineroi/' + name + '_init',
-                            'Init %s polyline.' % name)
-        initState = r.getState()
-        assert len(r.getState()['points']) == 3
+    assertImageApproved(
+        plt,
+        f'roi/polylineroi/{name}_init',
+        f'Init {name} polyline.'
+    )
+    initState = roi.getState()
+    assert len(roi.getState()['points']) == 3
 
-        # hover over center
-        center = r.mapToScene(pg.Point(3, 3))
-        mouseMove(plt, center)
-        assertImageApproved(plt, 'roi/polylineroi/' + name + '_hover_roi',
-                            'Hover mouse over center of ROI.')
+    # hover over center
+    center = roi.mapToScene(pg.Point(3, 3))
+    mouseMove(plt, center)
+    assertImageApproved(
+        plt,
+        f'roi/polylineroi/{name}_hover_roi',
+        'Hover mouse over center of ROI.'
+    )
 
-        # drag ROI
-        mouseDrag(plt, center, center + pg.Point(10, -10),
-                  QtCore.Qt.MouseButton.LeftButton)
-        assertImageApproved(plt, 'roi/polylineroi/' + name + '_drag_roi',
-                            'Drag mouse over center of ROI.')
+    # drag ROI
+    mouseDrag(
+        plt,
+        center, center + pg.Point(10, -10),
+        QtCore.Qt.MouseButton.LeftButton
+    )
+    assertImageApproved(
+        plt,
+        f'roi/polylineroi/{name}_drag_roi',
+        'Drag mouse over center of ROI.'
+    )
 
-        # hover over handle
-        pt = r.mapToScene(pg.Point(r.getState()['points'][2]))
-        mouseMove(plt, pt)
-        assertImageApproved(plt, 'roi/polylineroi/' + name + '_hover_handle',
-                            'Hover mouse over handle.')
+    # hover over handle
+    pt = roi.mapToScene(
+        pg.Point(roi.getState()['points'][2])
+    )
+    mouseMove(plt, pt)
+    assertImageApproved(
+        plt,
+        f'roi/polylineroi/{name}_hover_handle',
+        'Hover mouse over handle.'
+    )
 
-        # drag handle
-        mouseDrag(plt, pt, pt + pg.Point(5, 20),
-                  QtCore.Qt.MouseButton.LeftButton)
-        assertImageApproved(plt, 'roi/polylineroi/' + name + '_drag_handle',
-                            'Drag mouse over handle.')
+    # drag handle
+    mouseDrag(plt,
+        pt,
+        pt + pg.Point(5, 20),
+        QtCore.Qt.MouseButton.LeftButton
+    )
+    
+    assertImageApproved(
+        plt,
+        f'roi/polylineroi/{name}_drag_handle',
+        'Drag mouse over handle.'
+    )
 
-        # hover over segment
-        pt = r.mapToScene((pg.Point(r.getState()['points'][2]) + pg.Point(
-            r.getState()['points'][1])) * 0.5)
-        mouseMove(plt, pt + pg.Point(0, 2))
-        assertImageApproved(plt, 'roi/polylineroi/' + name + '_hover_segment',
-                            'Hover mouse over diagonal segment.')
+    # hover over segment
+    pt = roi.mapToScene(
+        (
+            pg.Point(roi.getState()['points'][2]) + 
+            pg.Point(roi.getState()['points'][1])
+        ) * 0.5
+    )
 
-        # click segment
-        mouseClick(plt, pt, QtCore.Qt.MouseButton.LeftButton)
-        assertImageApproved(plt, 'roi/polylineroi/' + name + '_click_segment',
-                            'Click mouse over segment.')
+    mouseMove(plt, pt + pg.Point(0, 2))
+    assertImageApproved(
+        plt,
+        f'roi/polylineroi/{name}_hover_segment',
+        'Hover mouse over diagonal segment.'
+    )
 
-        # drag new handle
-        mouseMove(plt, pt + pg.Point(10,
-                                     -10))
-        # pg bug: have to move the mouse off/on again to register hover
-        mouseDrag(plt, pt, pt + pg.Point(10, -10),
-                  QtCore.Qt.MouseButton.LeftButton)
-        assertImageApproved(plt,
-                            'roi/polylineroi/' + name + '_drag_new_handle',
-                            'Drag mouse over created handle.')
+    # click segment
+    mouseClick(plt, pt, QtCore.Qt.MouseButton.LeftButton)
+    assertImageApproved(
+        plt,
+        f'roi/polylineroi/{name}_click_segment',
+        'Click mouse over segment.',
+        pxCount=3
+    )
 
-        # clear all points
-        r.clearPoints()
-        assertImageApproved(plt, 'roi/polylineroi/' + name + '_clear',
-                            'All points cleared.')
-        assert len(r.getState()['points']) == 0
+    # drag new handle
+    mouseMove(plt, pt + pg.Point(10, -10))
+    # pg bug: have to move the mouse off/on again to register hover
+    mouseDrag(
+        plt,
+        pt, pt + pg.Point(10, -10),
+        QtCore.Qt.MouseButton.LeftButton
+    )
 
-        # call setPoints
-        r.setPoints(initState['points'])
-        assertImageApproved(
-            plt,
-            f'roi/polylineroi/{name}_setpoints',
-            'Reset points to initial state.',
-            pxCount=1 if platform.system() == "Darwin" and parse(platform.mac_ver()[0]) >= Version("13.0") else 0
-        )
-        assert len(r.getState()['points']) == 3
+    assertImageApproved(
+        plt,
+        f'roi/polylineroi/{name}_drag_new_handle',
+        'Drag mouse over created handle.',
+        pxCount=2
+    )
 
-        # call setState
-        r.setState(initState)
-        assertImageApproved(plt, 'roi/polylineroi/' + name + '_setstate',
-                            'Reset ROI to initial state.')
-        assert len(r.getState()['points']) == 3
+    # clear all points
+    roi.clearPoints()
+    assertImageApproved(
+        plt,
+        f'roi/polylineroi/{name}_clear',
+        'All points cleared.'
+    )
+    assert len(roi.getState()['points']) == 0
+
+    # call setPoints
+    roi.setPoints(initState['points'])
+    assertImageApproved(
+        plt,
+        f'roi/polylineroi/{name}_setpoints',
+        'Reset points to initial state.',
+    )
+    assert len(roi.getState()['points']) == 3
+
+    # call setState
+    roi.setState(initState)
+    assertImageApproved(
+        plt,
+        f'roi/polylineroi/{name}_setstate',
+        'Reset ROI to initial state.'
+    )
+    assert len(roi.getState()['points']) == 3
 
     plt.hide()
 
@@ -351,6 +454,7 @@ def test_PolyLineROI():
     ((-2, 1), (-4, -8)),
 ])
 def test_LineROI_coords(p1, p2):
+    pg.setConfigOptions(antialias=False)
     pw = pg.PlotWidget()
     pw.show()
 
@@ -358,8 +462,10 @@ def test_LineROI_coords(p1, p2):
     pw.addItem(lineroi)
 
     # first two handles are the scale-rotate handles positioned by pos1, pos2
-    for expected, (name, scenepos) in zip([p1, p2],
-                                          lineroi.getSceneHandlePositions()):
+    for expected, (_, scenepos) in zip(
+        [p1, p2],
+        lineroi.getSceneHandlePositions()
+    ):
         got = lineroi.mapSceneToParent(scenepos)
         assert math.isclose(got.x(), expected[0])
         assert math.isclose(got.y(), expected[1])

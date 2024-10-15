@@ -17,6 +17,7 @@ class Receiver(QtCore.QObject):
         super(Receiver, self).__init__(parent)
         self.counter = 0
 
+    @QtCore.Slot()
     def slotReceive(self):
         self.counter += 1
 
@@ -90,7 +91,6 @@ def test_signal_proxy_no_slot_start(qapp):
     qapp.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents, 10)
     assert receiver.counter == 0
 
-    # Start a connect
     proxy.connectSlot(receiver.slotReceive)
     assert proxy.blockSignal is False
     sender.signalSend.emit()

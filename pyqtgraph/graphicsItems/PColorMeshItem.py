@@ -1,11 +1,30 @@
+import enum
+import importlib
+
 import numpy as np
 
 from .. import Qt, colormap
 from .. import functions as fn
-from ..Qt import QtCore, QtGui
+from .. import getConfigOption
+from ..Qt import compat
+from ..Qt import OpenGLConstants as GLC
+from ..Qt import OpenGLHelpers
+from ..Qt import QtCore, QtGui, QT_LIB
 from .GraphicsObject import GraphicsObject
 
+if QT_LIB in ["PyQt5", "PySide2"]:
+    QtOpenGL = QtGui
+else:
+    QtOpenGL = importlib.import_module(f'{QT_LIB}.QtOpenGL')
+
 __all__ = ['PColorMeshItem']
+
+
+class DirtyFlag(enum.Flag):
+    XY = enum.auto()
+    Z = enum.auto()
+    LUT = enum.auto()
+    DIM = enum.auto()
 
 
 class QuadInstances:
@@ -31,7 +50,7 @@ class QuadInstances:
         # pre-create quads from those instances of QPointF(s).
         # store the quads as a flattened list of a 2d array
         # of polygons of shape (nrows, ncols)
-        polys = []
+        polys = np.ndarray(nrows*ncols, dtype=object)
         for r in range(nrows):
             for c in range(ncols):
                 bl = points[(r+0)*(ncols+1)+(c+0)]
@@ -39,7 +58,7 @@ class QuadInstances:
                 br = points[(r+1)*(ncols+1)+(c+0)]
                 tr = points[(r+1)*(ncols+1)+(c+1)]
                 poly = (bl, br, tr, tl)
-                polys.append(poly)
+                polys[r*ncols+c] = poly
         self.polys = polys
 
     def ndarray(self):
@@ -88,16 +107,16 @@ class PColorMeshItem(GraphicsObject):
             Colormap used to map the z value to colors.
             default ``pyqtgraph.colormap.get('viridis')``
         levels: tuple, optional, default None
-            Sets the minimum and maximum values to be represented by the colormap (min, max). 
+            Sets the minimum and maximum values to be represented by the colormap (min, max).
             Values outside this range will be clipped to the colors representing min or max.
-            ``None`` disables the limits, meaning that the colormap will autoscale 
-            each time ``setData()`` is called - unless ``enableAutoLevels=False``.
+            ``None`` disables the limits, meaning that the colormap will autoscale
+            the next time ``setData()`` is called with new data.
         enableAutoLevels: bool, optional, default True
-            Causes the colormap levels to autoscale whenever ``setData()`` is called. 
-            When enableAutoLevels is set to True, it is still possible to disable autoscaling
-            on a per-change-basis by using ``autoLevels=False`` when calling ``setData()``.
-            If ``enableAutoLevels==False`` and ``levels==None``, autoscaling will be 
-            performed once when the first z data is supplied. 
+            Causes the colormap levels to autoscale whenever ``setData()`` is called.
+            It is possible to override this value on a per-change-basis by using the
+            ``autoLevels`` keyword argument when calling ``setData()``.
+            If ``enableAutoLevels==False`` and ``levels==None``, autoscaling will be
+            performed once when the first z data is supplied.
         edgecolors : dict, optional
             The color of the edges of the polygons.
             Default None means no edges.
@@ -116,6 +135,7 @@ class PColorMeshItem(GraphicsObject):
         self.y = None
         self.z = None
         self._dataBounds = None
+        self.glstate = None
 
         self.edgecolors = kwargs.get('edgecolors', None)
         if self.edgecolors is not None:
@@ -125,8 +145,8 @@ class PColorMeshItem(GraphicsObject):
             self.edgecolors.setCosmetic(True)
         self.antialiasing = kwargs.get('antialiasing', False)
         self.levels = kwargs.get('levels', None)
-        self.enableautolevels = kwargs.get('enableAutoLevels', True)
-        
+        self._defaultAutoLevels = kwargs.get('enableAutoLevels', True)
+
         if 'colorMap' in kwargs:
             cmap = kwargs.get('colorMap')
             if not isinstance(cmap, colormap.ColorMap):
@@ -144,11 +164,13 @@ class PColorMeshItem(GraphicsObject):
             self.setData(*args)
 
 
-    def _prepareData(self, args):
+    def _prepareData(self, args) -> DirtyFlag:
         """
         Check the shape of the data.
         Return a set of 2d array x, y, z ready to be used to draw the picture.
         """
+
+        dirtyFlags = DirtyFlag.XY | DirtyFlag.Z | DirtyFlag.DIM
 
         # User didn't specified data
         if len(args)==0:
@@ -158,7 +180,7 @@ class PColorMeshItem(GraphicsObject):
             self.z = None
 
             self._dataBounds = None
-            
+
         # User only specified z
         elif len(args)==1:
             # If x and y is None, the polygons will be displaced on a grid
@@ -171,17 +193,32 @@ class PColorMeshItem(GraphicsObject):
 
         # User specified x, y, z
         elif len(args)==3:
+            # specifying None explicitly means to retain the existing value
+            if (x := args[0]) is None:
+                x = self.x
+            if (y := args[1]) is None:
+                y = self.y
+            if (z := args[2]) is None:
+                z = self.z
+
+            if args[0] is None and args[1] is None:
+                dirtyFlags &= ~DirtyFlag.XY
+            if args[2] is None:
+                dirtyFlags &= ~DirtyFlag.Z
+
+            if self.z is not None and z.shape == self.z.shape:
+                dirtyFlags &= ~DirtyFlag.DIM
 
             # Shape checking
-            if args[0].shape[0] != args[2].shape[0]+1 or args[0].shape[1] != args[2].shape[1]+1:
+            xy_shape = (z.shape[0]+1, z.shape[1]+1)
+            if x.shape != xy_shape:
                 raise ValueError('The dimension of x should be one greater than the one of z')
-            
-            if args[1].shape[0] != args[2].shape[0]+1 or args[1].shape[1] != args[2].shape[1]+1:
+            if y.shape != xy_shape:
                 raise ValueError('The dimension of y should be one greater than the one of z')
-        
-            self.x = args[0]
-            self.y = args[1]
-            self.z = args[2]
+
+            self.x = x
+            self.y = y
+            self.z = z
 
             xmn, xmx = np.min(self.x), np.max(self.x)
             ymn, ymx = np.min(self.y), np.max(self.y)
@@ -190,6 +227,7 @@ class PColorMeshItem(GraphicsObject):
         else:
             raise ValueError('Data must been sent as (z) or (x, y, z)')
 
+        return dirtyFlags
 
     def setData(self, *args, **kwargs):
         """
@@ -204,7 +242,7 @@ class PColorMeshItem(GraphicsObject):
             colors.
             If x and y is None, the polygons will be displaced on a grid
             otherwise x and y will be used as polygons vertices coordinates as::
-                
+
                 (x[i+1, j], y[i+1, j])           (x[i+1, j+1], y[i+1, j+1])
                                     +---------+
                                     | z[i, j] |
@@ -213,38 +251,41 @@ class PColorMeshItem(GraphicsObject):
 
             "ASCII from: <https://matplotlib.org/3.2.1/api/_as_gen/
                          matplotlib.pyplot.pcolormesh.html>".
-        autoLevels: bool, optional, default True
-            When set to True, PColorMeshItem will automatically select levels
-            based on the minimum and maximum values encountered in the data along the z axis.
-            The minimum and maximum levels are mapped to the lowest and highest colors 
-            in the colormap. The autoLevels parameter is ignored if ``enableAutoLevels is False`` 
+        autoLevels: bool, optional
+            If set, overrides the value of ``enableAutoLevels``
         """
-        autoLevels = kwargs.get('autoLevels', True)
+        old_bounds = self._dataBounds
+        dirtyFlags = self._prepareData(args)
+        boundsChanged = old_bounds != self._dataBounds
 
-        # Has the view bounds changed
-        shapeChanged = False
-        if self.qpicture is None:
-            shapeChanged = True
-        elif len(args)==1:
-            if args[0].shape[0] != self.x[:,1][-1] or args[0].shape[1] != self.y[0][-1]:
-                shapeChanged = True
-        elif len(args)==3:
-            if np.any(self.x != args[0]) or np.any(self.y != args[1]):
-                shapeChanged = True
+        self._rerender(
+            autoLevels=kwargs.get('autoLevels', self._defaultAutoLevels)
+        )
 
-        if len(args)==0:
-            # No data was received.
-            if self.z is None:
-                # No data is currently displayed, 
-                # so other settings (like colormap) can not be updated
-                return
-        else:
-            # Got new data. Prepare it for plotting
-            self._prepareData(args)
+        if boundsChanged:
+            self.prepareGeometryChange()
+            self.informViewBoundsChanged()
 
+        if self.glstate is not None:
+            self.glstate.dataChange(dirtyFlags)
 
-        self.qpicture = QtGui.QPicture()
-        painter = QtGui.QPainter(self.qpicture)
+        self.update()
+
+    def _rerender(self, *, autoLevels):
+        self.qpicture = None
+        if self.z is not None and np.any(np.isfinite(self.z)):
+            if (self.levels is None) or autoLevels:
+                # Autoscale colormap
+                z_min = np.nanmin(self.z)
+                z_max = np.nanmax(self.z)
+                self.setLevels( (z_min, z_max), update=False)
+
+    def _drawPicture(self) -> QtGui.QPicture:
+        # on entry, the following members are all valid: x, y, z, levels
+        # this function does not alter any state (besides using self.quads)
+
+        picture = QtGui.QPicture()
+        painter = QtGui.QPainter(picture)
         # We set the pen of all polygons once
         if self.edgecolors is None:
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
@@ -252,28 +293,29 @@ class PColorMeshItem(GraphicsObject):
             painter.setPen(self.edgecolors)
             if self.antialiasing:
                 painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-                
+
+        z_invalid = np.isnan(self.z)
+        skip_nans = np.any(z_invalid)
+        if skip_nans:
+            # note: flattens array
+            valid_z = self.z[~z_invalid]
+            if len(valid_z) == 0:
+                # nothing to draw => return
+                painter.end()
+                return picture
+        else:
+            valid_z = self.z
 
         ## Prepare colormap
         # First we get the LookupTable
         lut = self.lut_qcolor
         # Second we associate each z value, that we normalize, to the lut
         scale = len(lut) - 1
-        # Decide whether to autoscale the colormap or use the same levels as before
-        if (self.levels is None) or (self.enableautolevels and autoLevels):
-            # Autoscale colormap 
-            z_min = self.z.min()
-            z_max = self.z.max()
-            self.setLevels( (z_min, z_max), update=False)
-        else:
-            # Use consistent colormap scaling
-            z_min = self.levels[0]
-            z_max = self.levels[1]
-        rng = z_max - z_min
+        lo, hi = self.levels[0], self.levels[1]
+        rng = hi - lo
         if rng == 0:
             rng = 1
-        norm = fn.rescaleData(self.z, scale / rng, z_min,
-            dtype=int, clip=(0, len(lut)-1))
+        norm = fn.rescaleData(valid_z, scale / rng, lo, dtype=int, clip=(0, len(lut)-1))
 
         if Qt.QT_LIB.startswith('PyQt'):
             drawConvexPolygon = lambda x : painter.drawConvexPolygon(*x)
@@ -286,8 +328,12 @@ class PColorMeshItem(GraphicsObject):
         memory[..., 1] = self.y.ravel()
         polys = self.quads.instances()
 
+        if skip_nans:
+            polys = polys[(~z_invalid).flat]
+
         # group indices of same coloridx together
         color_indices, counts = np.unique(norm, return_counts=True)
+        # note: returns flattened array
         sorted_indices = np.argsort(norm, axis=None)
 
         offset = 0
@@ -299,34 +345,16 @@ class PColorMeshItem(GraphicsObject):
                 drawConvexPolygon(polys[idx])
 
         painter.end()
-        self.update()
-
-        self.prepareGeometryChange()
-        if shapeChanged:
-            self.informViewBoundsChanged()
-
-
-
-    def _updateDisplayWithCurrentState(self, *args, **kargs):
-        ## Used for re-rendering mesh from self.z.
-        ## For example when a new colormap is applied, or the levels are adjusted
-
-        defaults = {
-            'autoLevels': False,
-        }
-        defaults.update(kargs)
-        return self.setData(*args, **defaults)
-
-
+        return picture
 
     def setLevels(self, levels, update=True):
         """
-        Sets color-scaling levels for the mesh. 
-        
+        Sets color-scaling levels for the mesh.
+
         Parameters
         ----------
             levels: tuple
-                ``(low, high)`` 
+                ``(low, high)``
                 sets the range for which values can be represented in the colormap.
             update: bool, optional
                 Controls if mesh immediately updates to reflect the new color levels.
@@ -334,9 +362,8 @@ class PColorMeshItem(GraphicsObject):
         self.levels = levels
         self.sigLevelsChanged.emit(levels)
         if update:
-            self._updateDisplayWithCurrentState()
-
-
+            self._rerender(autoLevels=False)
+            self.update()
 
     def getLevels(self):
         """
@@ -345,42 +372,62 @@ class PColorMeshItem(GraphicsObject):
         """
         return self.levels
 
-
-    
     def setLookupTable(self, lut, update=True):
+        self.cmap = None    # invalidate since no longer consistent with lut
         self.lut_qcolor = lut[:]
+        if self.glstate is not None:
+            self.glstate.dataChange(DirtyFlag.LUT)
         if update:
-            self._updateDisplayWithCurrentState()
-
-
+            self._rerender(autoLevels=False)
+            self.update()
 
     def getColorMap(self):
         return self.cmap
 
-
+    def setColorMap(self, cmap):
+        self.setLookupTable(cmap.getLookupTable(nPts=256, mode=cmap.QCOLOR), update=True)
+        self.cmap = cmap
 
     def enableAutoLevels(self):
-        self.enableautolevels = True
-
-
+        self._defaultAutoLevels = True
 
     def disableAutoLevels(self):
-        self.enableautolevels = False
+        self._defaultAutoLevels = False
 
-
-
-    def paint(self, p, *args):
+    def paint(self, painter, opt, widget):
         if self.z is None:
             return
 
-        p.drawPicture(0, 0, self.qpicture)
+        if (
+            getConfigOption('enableExperimental')
+            and isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
+            and self.cmap is not None   # don't support setting colormap by setLookupTable
+        ):
+            if self.glstate is None:
+                self.glstate = OpenGLState(widget)
+            painter.beginNativePainting()
+            try:
+                self.paintGL(widget)
+            finally:
+                painter.endNativePainting()
 
+            if (
+                self.edgecolors is not None
+                and self.edgecolors.style() != QtCore.Qt.PenStyle.NoPen
+            ):
+                painter.setPen(self.edgecolors)
+                if self.antialiasing:
+                    painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+                for idx in range(self.x.shape[0]):
+                    painter.drawPolyline(fn.arrayToQPolygonF(self.x[idx, :], self.y[idx, :]))
+                for idx in range(self.x.shape[1]):
+                    painter.drawPolyline(fn.arrayToQPolygonF(self.x[:, idx], self.y[:, idx]))
 
-    def setBorder(self, b):
-        self.border = fn.mkPen(b)
-        self.update()
+            return
 
-
+        if self.qpicture is None:
+            self.qpicture = self._drawPicture()
+        painter.drawPicture(0, 0, self.qpicture)
 
     def width(self):
         if self._dataBounds is None:
@@ -425,3 +472,306 @@ class PColorMeshItem(GraphicsObject):
             py *= pxPad
 
         return QtCore.QRectF(xmn-px, ymn-py, (2*px)+xmx-xmn, (2*py)+ymx-ymn)
+
+    def paintGL(self, widget):
+        if (view := self.getViewBox()) is None:
+            return
+
+        X, Y, Z = self.x, self.y, self.z
+
+        glstate = self.glstate
+        glstate.setup(widget.context())
+        glfn = widget.getFunctions()
+        program = widget.retrieveProgram("PColorMeshItem")
+
+        # OpenGL only sees the float32 version of our data, and this may cause
+        # precision issues. To mitigate this, we shift the origin of our data
+        # to the center of its bounds.
+        # Note that xc, yc are double precision Python floats. Subtracting them
+        # from the x, y ndarrays will automatically upcast the latter to double
+        # precision.
+        if glstate.render_cache is None:
+            origin = None
+            dirty_bits = DirtyFlag.XY | DirtyFlag.Z | DirtyFlag.LUT | DirtyFlag.DIM
+        else:
+            origin, dirty_bits = glstate.render_cache
+        if origin is None or DirtyFlag.XY in dirty_bits:
+            # the origin point is calculated once per data change.
+            # once the data is uploaded, the origin point is fixed.
+            center = self.boundingRect().center()
+            origin = center.x(), center.y()
+
+        proj = QtGui.QMatrix4x4()
+        proj.ortho(widget.rect())
+        tr = self.sceneTransform()
+        xc, yc = origin
+        tr.translate(xc, yc)
+        mvp = proj * QtGui.QMatrix4x4(tr)
+
+        if glstate.flat_shading:
+            vtx_array_shape = X.shape
+        else:
+            vtx_array_shape = Z.shape + (4,)
+        num_vtx_mesh = np.prod(vtx_array_shape)
+        num_ind_mesh = np.prod(Z.shape) * 6
+
+        # resize (and invalidate) gpu buffers if needed.
+        # a reallocation can only occur together with a change in data.
+        # i.e. reallocation ==> change in data (render_cache is None)
+        if DirtyFlag.DIM in dirty_bits:
+            glstate.m_vbo_pos.bind()
+            glstate.m_vbo_pos.allocate(num_vtx_mesh * 2 * 4)
+            glstate.m_vbo_pos.release()
+            glstate.m_vbo_lum.bind()
+            glstate.m_vbo_lum.allocate(num_vtx_mesh * 1 * 4)
+            glstate.m_vbo_lum.release()
+
+            if glstate.flat_shading:
+                # let the bottom-left of each quad be its "anchor".
+                # then each quad is made up of 2 triangles
+                #   (TR, TL, BL); (BR, TR, BL)
+                # that have indices
+                #   (stride + 1, stride + 0, 0); (1, stride + 1, 0)
+                # where "0" is the relative index of BL
+                # and "stride" advances to the next row
+                # note that both triangles are created such that their 3rd vertex is at "BL"
+                stride = Z.shape[1] + 1
+                dim0 = np.arange(0, Z.shape[0]*stride, stride, dtype=np.uint32)[:, np.newaxis, np.newaxis]
+                dim1 = np.arange(Z.shape[1], dtype=np.uint32)[np.newaxis, :, np.newaxis]
+                dim2 = np.array([stride + 1, stride + 0, 0, 1, stride + 1, 0], dtype=np.uint32)[np.newaxis, np.newaxis, :]
+                buf_ind = dim0 + dim1 + dim2
+            else:
+                # for each quad, we store 4 vertices contiguously (BL, BR, TL, TR)
+                # then each quad is made up of 2 triangles
+                #   (TR, TL, BL); (BR, TR, BL)
+                # that have indices
+                #   (3, 2, 0); (1, 3, 0)
+                strides = np.cumprod(vtx_array_shape[::-1])[::-1]
+                dim0 = np.arange(0, strides[0], strides[1], dtype=np.uint32)[:, np.newaxis, np.newaxis]
+                dim1 = np.arange(0, strides[1], strides[2], dtype=np.uint32)[np.newaxis, :, np.newaxis]
+                dim2 = np.array([3, 2, 0, 1, 3, 0], dtype=np.uint32)[np.newaxis, np.newaxis, :]
+                buf_ind = dim0 + dim1 + dim2
+
+            glstate.m_vbo_ind.bind()
+            glstate.m_vbo_ind.allocate(buf_ind, buf_ind.nbytes)
+            glstate.m_vbo_ind.release()
+
+            dirty_bits &= ~DirtyFlag.DIM
+
+        if DirtyFlag.LUT in dirty_bits:
+            lut = self.cmap.getLookupTable(nPts=256, alpha=True)
+            glstate.setTextureLut(lut)
+            dirty_bits &= ~DirtyFlag.LUT
+
+        if DirtyFlag.XY in dirty_bits:
+            pos = np.empty(vtx_array_shape + (2,), dtype=np.float32)
+
+            if glstate.flat_shading:
+                pos[..., 0] = X - xc
+                pos[..., 1] = Y - yc
+            else:
+                XY = np.dstack((X - xc, Y - yc)).astype(np.float32)
+                pos[..., 0, :] = XY[:-1, :-1, :] # BL
+                pos[..., 1, :] = XY[1:, :-1, :]  # BR
+                pos[..., 2, :] = XY[:-1, 1:, :]  # TL
+                pos[..., 3, :] = XY[1:, 1:, :]   # TR
+
+            glstate.m_vbo_pos.bind()
+            glstate.m_vbo_pos.write(0, pos, pos.nbytes)
+            glstate.m_vbo_pos.release()
+
+            dirty_bits &= ~DirtyFlag.XY
+
+        if DirtyFlag.Z in dirty_bits:
+            lum = np.empty(vtx_array_shape, dtype=np.float32)
+
+            if glstate.flat_shading:
+                lum[:-1, :-1] = Z
+            else:
+                lum[..., :] = np.expand_dims(Z, axis=2)
+
+            glstate.m_vbo_lum.bind()
+            glstate.m_vbo_lum.write(0, lum, lum.nbytes)
+            glstate.m_vbo_lum.release()
+
+            dirty_bits &= ~DirtyFlag.Z
+
+        glstate.render_cache = [origin, dirty_bits]
+
+        widget.drawStencil(view)
+
+        glstate.m_vao.bind()
+        glstate.m_texture.bind()
+        program.bind()
+
+        lo, hi = self.levels
+        rng = hi - lo
+        if rng == 0:
+            rng = 1
+        OpenGLHelpers.setUniformValue(program, "u_rescale", QtGui.QVector2D(1/rng, lo))
+
+        OpenGLHelpers.setUniformValue(program, "u_mvp", mvp)
+
+        NULL = compat.voidptr(0) if QT_LIB.startswith("PySide") else None
+        glfn.glDrawElements(GLC.GL_TRIANGLES, num_ind_mesh, GLC.GL_UNSIGNED_INT, NULL)
+
+        glstate.m_vao.release()
+
+
+class OpenGLState(QtCore.QObject):
+    VERT_SRC_COMPAT = """
+        attribute vec4 a_position;
+        attribute float a_luminance;
+        varying float v_luminance;
+        uniform mat4 u_mvp;
+        uniform vec2 u_rescale;
+        void main() {
+            v_luminance = clamp(u_rescale.x * (a_luminance - u_rescale.y), 0.0, 1.0);
+            gl_Position = u_mvp * a_position;
+        }
+    """
+    FRAG_SRC_COMPAT = """
+        varying mediump float v_luminance;
+        uniform mediump sampler2D u_texture;
+        void main() {
+            gl_FragColor = texture2D(u_texture, vec2(v_luminance, 0));
+        }
+    """
+
+    VERT_SRC = """
+        in vec4 a_position;
+        in float a_luminance;
+        flat out float v_luminance;
+        uniform mat4 u_mvp;
+        uniform vec2 u_rescale;
+        void main() {
+            v_luminance = clamp(u_rescale.x * (a_luminance - u_rescale.y), 0.0, 1.0);
+            gl_Position = u_mvp * a_position;
+        }
+    """
+    FRAG_SRC = """
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+        flat in float v_luminance;
+        out vec4 FragColor;
+        uniform sampler2D u_texture;
+        void main() {
+            FragColor = texture(u_texture, vec2(v_luminance, 0));
+        }
+    """
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.context = None
+        self.render_cache = None
+        self.m_vao = QtOpenGL.QOpenGLVertexArrayObject(self)
+        self.m_vbo_pos = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
+        self.m_vbo_lum = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
+        self.m_vbo_ind = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.IndexBuffer)
+        self.m_texture = QtOpenGL.QOpenGLTexture(QtOpenGL.QOpenGLTexture.Target.Target2D)
+
+    def setup(self, context):
+        if self.context is context:
+            return
+
+        if self.context is not None:
+            self.context.aboutToBeDestroyed.disconnect(self.cleanup)
+            self.cleanup()
+
+        self.context = context
+        self.context.aboutToBeDestroyed.connect(self.cleanup)
+
+        is_opengles = self.context.isOpenGLES()
+        gl_version = self.context.format().version()
+        if not is_opengles and gl_version >= (3, 1):
+            moderngl = True
+        elif is_opengles and gl_version >= (3, 0):
+            moderngl = True
+        else:
+            moderngl = False
+
+        if moderngl:
+            self.flat_shading = True
+            if not is_opengles:
+                glsl_version = "#version 140"
+            else:
+                glsl_version = "#version 300 es"
+            VERT_SRC = "\n".join([glsl_version, OpenGLState.VERT_SRC])
+            FRAG_SRC = "\n".join([glsl_version, OpenGLState.FRAG_SRC])
+        else:
+            self.flat_shading = False
+            VERT_SRC = OpenGLState.VERT_SRC_COMPAT
+            FRAG_SRC = OpenGLState.FRAG_SRC_COMPAT
+
+        glwidget = self.parent()
+        program = glwidget.retrieveProgram("PColorMeshItem")
+        if program is None:
+            program = QtOpenGL.QOpenGLShaderProgram()
+            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, VERT_SRC)
+            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, FRAG_SRC)
+            program.bindAttributeLocation("a_position", 0)
+            program.bindAttributeLocation("a_luminance", 1)
+            program.link()
+        glwidget.storeProgram("PColorMeshItem", program)
+
+        self.m_vao.create()
+        self.m_vbo_pos.create()
+        self.m_vbo_lum.create()
+        self.m_vbo_ind.create()
+
+
+        loc_pos, loc_lum = 0, 1
+        self.m_vao.bind()
+        self.m_vbo_ind.bind()
+        self.m_vbo_pos.bind()
+        program.enableAttributeArray(loc_pos)
+        program.setAttributeBuffer(loc_pos, GLC.GL_FLOAT, 0, 2)
+        self.m_vbo_pos.release()
+        self.m_vbo_lum.bind()
+        program.enableAttributeArray(loc_lum)
+        program.setAttributeBuffer(loc_lum, GLC.GL_FLOAT, 0, 1)
+        self.m_vbo_lum.release()
+        self.m_vao.release()
+        self.m_vbo_ind.release()
+
+    def cleanup(self):
+        # this method should restore the state back to __init__
+        glwidget = self.parent()
+        glwidget.makeCurrent()
+
+        for name in ['m_texture', 'm_vbo_pos', 'm_vbo_lum', 'm_vbo_ind', 'm_vao']:
+            obj = getattr(self, name)
+            obj.destroy()
+
+        self.context = None
+        self.render_cache = None
+
+        glwidget.doneCurrent()
+
+    def setTextureLut(self, lut):
+        tex = self.m_texture
+        if not tex.isCreated():
+            tex.setFormat(tex.TextureFormat.RGBAFormat)
+            tex.setSize(256, 1)
+            tex.allocateStorage()
+            tex.setMinMagFilters(tex.Filter.Nearest, tex.Filter.Nearest)
+            tex.setWrapMode(tex.WrapMode.ClampToEdge)
+        tex.setData(tex.PixelFormat.RGBA, tex.PixelType.UInt8, lut)
+
+    def dataChange(self, dirtyFlags : DirtyFlag):
+        if self.render_cache is None:
+            return
+
+        if DirtyFlag.XY in dirtyFlags:
+            self.render_cache[0] = None
+            self.render_cache[1] |= DirtyFlag.XY
+
+        if DirtyFlag.Z in dirtyFlags:
+            self.render_cache[1] |= DirtyFlag.Z
+
+        if DirtyFlag.DIM in dirtyFlags:
+            self.render_cache[1] |= DirtyFlag.DIM
+
+        if DirtyFlag.LUT in dirtyFlags:
+            self.render_cache[1] |= DirtyFlag.LUT

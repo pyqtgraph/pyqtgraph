@@ -4,14 +4,13 @@ PyQtGraph
 [![PyPi](https://img.shields.io/pypi/v/pyqtgraph.svg)](https://pypi.org/project/pyqtgraph/)
 [![conda-forge](https://img.shields.io/conda/vn/conda-forge/pyqtgraph.svg)](https://anaconda.org/conda-forge/pyqtgraph)
 [![Build Status](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/actions/?query=workflow%3Amain)
-[![CodeQL Status](https://github.com/pyqtgraph/pyqtgraph/workflows/codeql/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/actions/?query=workflow%3Acodeql)
 [![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
-[![Discord](https://img.shields.io/discord/946624673200893953.svg?label=PyQtGraph&logo=discord)](https://discord.gg/ufTVNNreAZ)
+
 A pure-Python graphics library for PyQt5/PyQt6/PySide2/PySide6
 
-Copyright 2023 PyQtGraph developers
+Copyright 2024 PyQtGraph developers
 
-<http://www.pyqtgraph.org>
+<https://www.pyqtgraph.org>
 
 PyQtGraph is intended for use in mathematics / scientific / engineering applications.
 Despite being written entirely in python, the library is fast due to its
@@ -31,22 +30,22 @@ This project supports:
 
 Currently this means:
 
-* Python 3.9+
+* Python 3.10+
 * Qt 5.15, 6.2+
 * [PyQt5](https://www.riverbankcomputing.com/software/pyqt/),
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
   [PySide2](https://wiki.qt.io/Qt_for_Python), or
   [PySide6](https://wiki.qt.io/Qt_for_Python)
-* [`numpy`](https://github.com/numpy/numpy) 1.22+
+* [`numpy`](https://github.com/numpy/numpy) 1.24+
 
 ### Optional added functionalities
 
-Through 3rd part libraries, additional functionality may be added to PyQtGraph, see the table below for a summary.
+Through 3rd party libraries, additional functionality may be added to PyQtGraph, see the table below for a summary.
 
 | Library        | Added functionality |
 |----------------|-|
 | [`scipy`]      | <ul><li> Image processing through [`ndimage`]</li><li> Data array filtering through [`signal`] </li><ul> |
-| [`pyopengl`]   | <ul><li> 3D graphics </li><li> Faster image processing </li><li>Note: on macOS Big Sur only works with python 3.9.1+</li></ul> |
+| [`pyopengl`]   | <ul><li> 3D graphics </li><li> Faster image processing </li></ul> |
 | [`h5py`]       | <ul><li> Export in hdf5 format </li></ul> |
 | [`colorcet`]   | <ul><li> Add a collection of perceptually uniform colormaps </li></ul> |
 | [`matplotlib`] | <ul><li> Export of PlotItem in matplotlib figure </li><li> Add matplotlib collection of colormaps </li></ul> |
@@ -83,10 +82,7 @@ Installation Methods
   * Latest development version: `pip install git+https://github.com/pyqtgraph/pyqtgraph@master`
 * From conda
   * Last released version: `conda install -c conda-forge pyqtgraph`
-* To install system-wide from source distribution: `python setup.py install`
 * Many linux package repositories have release versions.
-* To use with a specific project, simply copy the PyQtGraph subdirectory
-  anywhere that is importable from your project.
 
 Documentation
 -------------
@@ -113,6 +109,7 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [Joulescope](https://www.joulescope.com/)
 * [MaD GUI](https://github.com/mad-lab-fau/mad-gui)
 * [neurotic](https://neurotic.readthedocs.io)
+* [Bio Silicon Intelligence System](https://github.com/Unlimited-Research-Cooperative/Bio-Silicon-Synergetic-Intelligence-System)
 * [Orange3](https://orangedatamining.com/)
 * [PatchView](https://github.com/ZeitgeberH/patchview)
 * [pyplotter](https://github.com/pyplotter/pyplotter)

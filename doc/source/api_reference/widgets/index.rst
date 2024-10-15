@@ -28,7 +28,6 @@ Contents:
     progressdialog
     filedialog
     joystickbutton
-    multiplotwidget
     verticallabel
     remotegraphicsview
     matplotlibwidget
@@ -39,3 +38,4 @@ Contents:
     valuelabel
     busycursor
     rawimagewidget
+    colormapmenu

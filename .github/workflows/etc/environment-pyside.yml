@@ -2,10 +2,10 @@ name: test
 channels:
   - conda-forge
 dependencies:
-  - pyside2
-  - qt-main
+  - pyside6
   - numpy
   - nomkl
   - scipy
   - pyopengl
+  - colorama
   - pip

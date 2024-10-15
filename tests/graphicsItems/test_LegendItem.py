@@ -1,8 +1,8 @@
 import pyqtgraph as pg
 
+pg.mkQApp()
 
 def test_legend_item_basics():
-    pg.mkQApp()
 
     legend = pg.LegendItem()
 

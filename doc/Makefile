@@ -55,10 +55,11 @@ dash: clean
 	export BUILD_DASH_DOCSET=1;\
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/dash
 	doc2dash -n pyqtgraph\
+	 --index-page index.html\
 	 --online-redirect-url https://pyqtgraph.readthedocs.io/en/latest\
-	 --icon $(SOURCEDIR)/_static/peegee_03_square_no_bg_32_cleaned.png\
+	 --icon $(SOURCEDIR)/_static/docset-icon.png\
+	 --icon-2x $(SOURCEDIR)/_static/docset-icon@2x.png\
 	 --force\
-	 -A\
 	 $(BUILDDIR)/dash
 	@echo
 

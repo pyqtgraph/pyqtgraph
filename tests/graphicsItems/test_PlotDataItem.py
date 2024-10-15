@@ -185,7 +185,7 @@ def test_clipping():
     # test center and expected number of remaining data points
     for center, num in ((-100.,1), (100.,1), (0.,len(y)) ):
         # when all elements are off-screen, only one will be kept
-        # when all elelemts are on-screen, all should be kept
+        # when all elements are on-screen, all should be kept
         # and the code should not crash for zero separation
         w.setXRange( center-50, center+50, padding=0 )
         xDisp, yDisp = c.getData()

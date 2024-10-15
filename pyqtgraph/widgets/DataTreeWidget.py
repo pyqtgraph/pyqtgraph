@@ -7,11 +7,6 @@ import numpy as np
 from ..Qt import QtWidgets
 from .TableWidget import TableWidget
 
-try:
-    import metaarray  # noqa
-    HAVE_METAARRAY = True
-except:
-    HAVE_METAARRAY = False
 
 __all__ = ['DataTreeWidget']
 
@@ -102,11 +97,6 @@ class DataTreeWidget(QtWidgets.QTreeWidget):
         elif isinstance(data, (list, tuple)):
             desc = "length=%d" % len(data)
             childs = OrderedDict(enumerate(data))
-        elif HAVE_METAARRAY and (hasattr(data, 'implements') and data.implements('MetaArray')):
-            childs = OrderedDict([
-                ('data', data.view(np.ndarray)),
-                ('meta', data.infoCopy())
-            ])
         elif isinstance(data, np.ndarray):
             desc = "shape=%s dtype=%s" % (data.shape, data.dtype)
             table = TableWidget()

@@ -57,12 +57,7 @@ installedFrontends = sorted([
     frontend for frontend, isPresent in frontends.items() if isPresent
 ])
 
-darwin_opengl_broken = (platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and
-            (sys.version_info < (3, 8, 10) or sys.version_info == (3, 9, 0)))
 
-darwin_opengl_reason = ("pyopenGL cannot find openGL library on big sur: "
-                        "https://github.com/python/cpython/pull/21241")
 
 exceptionCondition = namedtuple("exceptionCondition", ["condition", "reason"])
 conditionalExamples = {
@@ -80,23 +75,8 @@ conditionalExamples = {
     ),
 }
 
-openglExamples = ['GLViewWidget.py']
-openglExamples.extend(utils.examples_['3D Graphics'].values())
-for key in openglExamples:
-    conditionalExamples[key] = exceptionCondition(
-        not darwin_opengl_broken,
-        reason=darwin_opengl_reason
-    )
 
-@pytest.mark.skipif(
-    Qt.QT_LIB == "PySide2"
-    and tuple(map(int, Qt.PySide2.__version__.split("."))) >= (5, 14) 
-    and tuple(map(int, Qt.PySide2.__version__.split("."))) < (5, 14, 2, 2), 
-    reason="new PySide2 doesn't have loadUi functionality"
-)
-@pytest.mark.parametrize(
-    "frontend, f",
-    [
+@pytest.mark.parametrize("frontend, f", [
         pytest.param(
             frontend,
             f,
@@ -107,9 +87,8 @@ for key in openglExamples:
         )
         for frontend, f, in itertools.product(installedFrontends, files)
     ],
-    ids = [
-        " {} - {} ".format(f[1], frontend)
-        for frontend, f in itertools.product(
+    ids=[
+        f" {f[1]} - {frontend} " for frontend, f in itertools.product(
             installedFrontends,
             files
         )
@@ -122,7 +101,7 @@ def testExamples(frontend, f):
     os.chdir(path)
     sys.stdout.write(f"{name}")
     sys.stdout.flush()
-    import1 = "import %s" % frontend if frontend != '' else ''
+    import1 = f"import {frontend}" if frontend != '' else ''
     import2 = os.path.splitext(os.path.split(fn)[1])[0]
     code = """
 try:

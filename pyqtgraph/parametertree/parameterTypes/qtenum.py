@@ -1,4 +1,5 @@
 from enum import Enum
+
 from ...Qt import QT_LIB, QtCore
 from .list import ListParameter
 
@@ -26,22 +27,22 @@ class QtEnumParameter(ListParameter):
 
     def formattedLimits(self):
         # Title-cased words without the ending substring for brevity
-        substringEnd = None
         mapping = self.enumMap
         shortestName = min(len(name) for name in mapping)
         names = list(mapping)
         cmpName, *names = names
-        for ii in range(-1, -shortestName-1, -1):
-            if any(cmpName[ii] != curName[ii] for curName in names):
-                substringEnd = ii+1
-                break
-        # Special case of 0: Set to none to avoid null string
+        substringEnd = next(
+            (
+                ii + 1
+                for ii in range(-1, -shortestName - 1, -1)
+                if any(cmpName[ii] != curName[ii] for curName in names)
+            ),
+            None,
+        )
+        # Special case of 0: Set to None to avoid null string
         if substringEnd == 0:
             substringEnd = None
-        limits = {}
-        for kk, vv in self.enumMap.items():
-            limits[kk[:substringEnd]] = vv
-        return limits
+        return {kk[:substringEnd]: vv for kk, vv in self.enumMap.items()}
 
     def saveState(self, filter=None):
         state = super().saveState(filter)

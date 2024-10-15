@@ -5,12 +5,15 @@ This module exists to smooth out some of the differences between Qt versions.
 * Allow you to import QtCore/QtGui from pyqtgraph.Qt without specifying which Qt wrapper
   you want to use.
 """
+import contextlib
 import os
+import platform
 import re
 import subprocess
 import sys
 import time
 import warnings
+from importlib import resources
 
 PYSIDE = 'PySide'
 PYSIDE2 = 'PySide2'
@@ -51,7 +54,7 @@ if QT_LIB is None:
             pass
 
 if QT_LIB is None:
-    raise Exception("PyQtGraph requires one of PyQt5, PyQt6, PySide2 or PySide6; none of these packages could be imported.")
+    raise ImportError("PyQtGraph requires one of PyQt5, PyQt6, PySide2 or PySide6; none of these packages could be imported.")
 
 
 class FailedImport(object):
@@ -320,6 +323,7 @@ if QT_LIB in [PYQT5, PYQT6]:
     loadUiType = uic.loadUiType
 
     QtCore.Signal = QtCore.pyqtSignal
+    QtCore.Slot = QtCore.pyqtSlot
 
     compat.wrapinstance = sip.wrapinstance
     compat.unwrapinstance = sip.unwrapinstance
@@ -342,6 +346,7 @@ App = QtWidgets.QApplication
 # subclassing QApplication causes segfaults on PySide{2, 6} / Python 3.8.7+
 
 QAPP = None
+_pgAppInitialized = False
 def mkQApp(name=None):
     """
     Creates new QApplication or returns current instance if existing.
@@ -352,15 +357,13 @@ def mkQApp(name=None):
     ============== ========================================================
     """
     global QAPP
-
-    def onPaletteChange(palette):
-        color = palette.base().color()
-        app = QtWidgets.QApplication.instance()
-        darkMode = color.lightnessF() < 0.5
-        app.setProperty('darkMode', darkMode)
+    global _pgAppInitialized
 
     QAPP = QtWidgets.QApplication.instance()
     if QAPP is None:
+        # We do not have an already instantiated QApplication
+        # let's add some sane defaults
+
         # hidpi handling
         qtVersionCompare = tuple(map(int, QtVersion.split(".")))
         if qtVersionCompare > (6, 0):
@@ -368,18 +371,86 @@ def mkQApp(name=None):
             pass
         elif qtVersionCompare > (5, 14):
             os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
-            QtWidgets.QApplication.setHighDpiScaleFactorRoundingPolicy(QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+            QtWidgets.QApplication.setHighDpiScaleFactorRoundingPolicy(
+                QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+            )
         else:  # qt 5.12 and 5.13
             QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
             QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
 
         QAPP = QtWidgets.QApplication(sys.argv or ["pyqtgraph"])
-        QAPP.paletteChanged.connect(onPaletteChange)
-        QAPP.paletteChanged.emit(QAPP.palette())
+        if QtVersion.startswith("6"):
+            # issues with dark mode + windows + qt5
+            QAPP.setStyle("fusion")
+
+        # set the application icon
+        # python 3.9 won't take "pyqtgraph.icons.peegee" directly
+        traverse_path = resources.files("pyqtgraph.icons")  
+        peegee_traverse_path = traverse_path.joinpath("peegee")
+
+        # as_file requires I feed in a file from the directory...
+        with resources.as_file(
+            peegee_traverse_path.joinpath("peegee.svg")
+        ) as path:
+            # need the parent directory, not the filepath
+            icon_path = path.parent
+
+        applicationIcon = QtGui.QIcon()
+        applicationIcon.addFile(
+            os.fsdecode(icon_path / "peegee.svg"),
+        )
+        for sz in [128, 256, 512]:
+            pathname = os.fsdecode(icon_path / f"peegee_{sz}px.png")
+            applicationIcon.addFile(pathname, QtCore.QSize(sz, sz))
+
+        # handles the icon showing up on the windows taskbar
+        if platform.system() == 'Windows':
+            import ctypes
+            my_app_id = "pyqtgraph.Qt.mkQApp"
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_app_id)
+        QAPP.setWindowIcon(applicationIcon)
+
+    if not _pgAppInitialized:
+        _pgAppInitialized = True
+
+        # determine if dark mode
+        try:
+            # this only works in Qt 6.5+
+            darkMode = QAPP.styleHints().colorScheme() == QtCore.Qt.ColorScheme.Dark
+            QAPP.styleHints().colorSchemeChanged.connect(_onColorSchemeChange)
+        except AttributeError:
+            palette = QAPP.palette()
+            windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
+            windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
+            darkMode = windowTextLightness > windowLightness
+            QAPP.paletteChanged.connect(_onPaletteChange)
+        QAPP.setProperty("darkMode", darkMode)
 
     if name is not None:
         QAPP.setApplicationName(name)
     return QAPP
+
+
+def _onPaletteChange(palette):
+    # Attempt to keep darkMode attribute up to date
+    # QEvent.Type.PaletteChanged/ApplicationPaletteChanged will be emitted after
+    # paletteChanged.emit()!
+    # Using API deprecated in Qt 6.0
+    app = mkQApp()
+    windowTextLightness = palette.color(QtGui.QPalette.ColorRole.WindowText).lightness()
+    windowLightness = palette.color(QtGui.QPalette.ColorRole.Window).lightness()
+    darkMode = windowTextLightness > windowLightness
+    app.setProperty('darkMode', darkMode)
+
+
+def _onColorSchemeChange(colorScheme):
+    # Attempt to keep darkMode attribute up to date
+    # QEvent.Type.PaletteChanged/ApplicationPaletteChanged will be emitted before
+    # QStyleHint().colorSchemeChanged.emit()!
+    # Uses Qt 6.5+ API
+    app = mkQApp()
+    darkMode = colorScheme == QtCore.Qt.ColorScheme.Dark
+    app.setProperty('darkMode', darkMode)
 
 
 # exec() is used within _loadUiType, so we define as exec_() here and rename in pg namespace

@@ -10,39 +10,43 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+import importlib.util
 import os
 import sys
 import time
-from datetime import datetime
+import datetime
 
 from sphinx.application import Sphinx
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-path = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(path, '..', '..'))
-sys.path.insert(0, os.path.join(path, '..', 'extensions'))
-import pyqtgraph
+path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "pyqtgraph")
+spec = importlib.util.spec_from_file_location(
+    "pyqtgraph",
+    os.path.join(path, "__init__.py")
+)
+pyqtgraph = importlib.util.module_from_spec(spec)
+sys.modules["pyqtgraph"] = pyqtgraph
+spec.loader.exec_module(pyqtgraph)
 
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-#needs_sphinx = '1.0'
+# needs_sphinx = '1.0'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
-    "sphinx.ext.napoleon",
+    "sphinx.ext.napoleon",  # has to be loaded before sphinx_autodoc_typehints
+    "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "sphinx_qt_documentation",
     "sphinx_design",
     "sphinx_favicon",
     "sphinxext.rediraffe",
     "sphinxcontrib.images",
-    "sphinx_autodoc_typehints"
+    'sphinx.ext.inheritance_diagram',
+    # 'sphinxcontrib.spelling'  # commenting out to allow for easy usage locally
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -60,16 +64,60 @@ intersphinx_mapping = {
 }
 
 nitpick_ignore_regex = [
-    ("py:class", r"re\.Pattern"),  # doesn't seem to be a good ref in python docs
+    ("py:class", "re.Pattern"),  # doesn't seem to be a good ref in python docs
+    ("py:class", "numpy._typing._array_like._SupportsArray"),
+    ("py:class", "numpy._typing._nested_sequence._NestedSequence")
+]
+
+# looks way better with pydata-sphinx-theme
+napoleon_use_admonition_for_examples = True
+napoleon_use_admonition_for_notes = True
+napoleon_use_admonition_for_references = True
+
+# if napoleon_use_param is True, there are issues, it merges
+# Parameters  Other Parameters, see  https://github.com/sphinx-doc/sphinx/issues/10330
+napoleon_use_param = False
+# napoleon_use_keyword = False
+
+# makes so Attributes/Variables aren't rendered like methods, but like Parameters
+napoleon_use_ivar = True
+napoleon_attr_annotations = False
+napoleon_custom_sections = [
+    ("Signals", "params_style"),
+    ("Slots", "params_style")
 ]
 
 napoleon_preprocess_types = True
 napoleon_type_aliases = {
-    "callable": ":class:`collections.abc.Callable`",
+    "callable": ":class:`~collections.abc.Callable`",
     "np.ndarray": ":class:`numpy.ndarray`",
     'array_like': ':term:`array_like`',
-    'color_like': ':func:`pyqtgraph.mkColor`'
+    'color_like': ':obj:`~pyqtgraph.functions.color_like`',
 }
+
+# makes things far more legible
+python_use_unqualified_type_names = True
+python_display_short_literal_types = True
+maximum_signature_line_length = 20
+
+# spelling
+spelling_word_list_filename = [
+    'dictionaries/numpy.dic',
+    'dictionaries/PyQt6.QtCore.dic',
+    'dictionaries/PyQt6.QtGui.dic',
+    'dictionaries/PyQt6.QtWidgets.dic',
+    'dictionaries/pyqtgraph.dic',
+    'dictionaries/custom.dic'
+]
+
+graphviz_dot_args = ['-Gbgcolor=transparent']
+graphviz_output_format = 'svg'  
+inheritance_graph_attrs = dict(
+    rankdir="LR",
+    fontsize=14,
+    ratio='compress',
+    bgcolor='transparent',
+)
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
@@ -79,10 +127,12 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'pyqtgraph'
-now = datetime.utcfromtimestamp(
-    int(os.environ.get('SOURCE_DATE_EPOCH', time.time()))
+
+now = datetime.datetime.fromtimestamp(
+    int(os.environ.get('SOURCE_DATE_EPOCH', time.time())),
+    tz=datetime.timezone.utc
 )
-copyright = '2011 - {}, PyQtGraph developers'.format(now.year)
+copyright = f'2011 - {now.year}, PyQtGraph developers'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -127,12 +177,32 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
+# Automatically extract typehints when specified and place them in
+# descriptions of the relevant function/method.
+# autodoc_typehints = "description"
+autodoc_typehints = "both"
+autodoc_typehints_format = 'short'
+autodoc_typehints_description_target = 'documented_params'
+
+# sphinx-autodoc-typehints settings
+always_use_bars_union = True
+typehints_defaults = 'braces'
+
+napoleon_use_rtype = True
+typehints_use_rtype = True
+typehints_document_rtype = True
+
+typehints_use_signature = True
+typehints_use_signature_return = True
+
 autodoc_inherit_docstrings = False
 autodoc_mock_imports = [
     "scipy",
     "h5py",
     "matplotlib",
 ]
+
+# autodoc_type_aliases = {}
 
 
 # -- Options for HTML output ---------------------------------------------------
@@ -143,22 +213,40 @@ html_theme = 'pydata_sphinx_theme'
 
 # favicons
 favicons = [
-    "peegee_03_square_no_bg_32_cleaned.png",
-    "peegee_04_square_no_bg_180_cleaned.png",
+    "docset-icon.png",
+    "docset-icon@2x.png",
     "peegee_03_square_no_bg_32_cleaned.ico"
 ]
 
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-html_theme_options = {
-    "github_url": "https://github.com/pyqtgraph/pyqtgraph",
-    "navbar_end": ["theme-switcher", "navbar-icon-links"],
-    "twitter_url": "https://twitter.com/pyqtgraph",
-    "use_edit_page_button": False,
-    "secondary_sidebar_items": ["page-toc"]
-}
+# make right side TOC work w/ long names, makes it so method names aren't clipped
+# e.g. PlotDataItem.setDerivativeMode() -> setDerivativeMode()
+toc_object_entries_show_parents = "hide"
 
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the documentation.
+html_theme_options = {
+    "collapse_navigation": True,
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/pyqtgraph/pyqtgraph",
+            "icon": "fa-brands fa-square-github",
+            "type": "fontawesome",
+        },
+        {
+            "name": "Mastodon",
+            "url": "https://fosstodon.org/@pyqtgraph",
+            "icon": "fa-brands fa-mastodon",
+            "type": "fontawesome",
+        }
+    ],
+    "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    "navigation_depth": 2,
+    "navigation_with_keys": False,
+    "secondary_sidebar_items": ["page-toc"],
+    "show_toc_level": 3,
+    "use_edit_page_button": False,
+}
 
 if os.getenv("BUILD_DASH_DOCSET"):
     html_theme_options |= {
@@ -166,7 +254,6 @@ if os.getenv("BUILD_DASH_DOCSET"):
         "show_prev_next": False,
         "collapse_navigation": True,
     }
-
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -185,7 +272,6 @@ html_logo = os.path.join("images", "peegee_02.svg")
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-# html_favicon = "_static/peegee_03_square_no_bg_32_cleaned.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -251,7 +337,6 @@ rediraffe_redirects = {
     "graphicsItems/labelitem.rst": "api_reference/graphicsItems/labelitem.rst",
     "graphicsItems/legenditem.rst": "api_reference/graphicsItems/legenditem.rst",
     "graphicsItems/linearregionitem.rst": "api_reference/graphicsItems/linearregionitem.rst",
-    "graphicsItems/multiplotitem.rst": "api_reference/graphicsItems/multiplotitem.rst",
     "graphicsItems/pcolormeshitem.rst": "api_reference/graphicsItems/pcolormeshitem.rst",
     "graphicsItems/plotcurveitem.rst": "api_reference/graphicsItems/plotcurveitem.rst",
     "graphicsItems/plotdataitem.rst": "api_reference/graphicsItems/plotdataitem.rst",
@@ -298,7 +383,6 @@ rediraffe_redirects = {
     "widgets/joystickbutton.rst": "api_reference/widgets/joystickbutton.rst",
     "widgets/layoutwidget.rst": "api_reference/widgets/layoutwidget.rst",
     "widgets/matplotlibwidget.rst": "api_reference/widgets/matplotlibwidget.rst",
-    "widgets/multiplotwidget.rst": "api_reference/widgets/multiplotwidget.rst",
     "widgets/pathbutton.rst": "api_reference/widgets/pathbutton.rst",
     "widgets/plotwidget.rst": "api_reference/widgets/plotwidget.rst",
     "widgets/progressdialog.rst": "api_reference/widgets/progressdialog.rst",
@@ -327,11 +411,11 @@ rediraffe_redirects = {
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
-#html_last_updated_fmt = '%b %d, %Y'
+# html_last_updated_fmt = '%b %d, %Y'
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
-#html_use_smartypants = True
+# html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
 if os.getenv("BUILD_DASH_DOCSET"):  # used for building dash docsets

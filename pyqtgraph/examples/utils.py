@@ -61,6 +61,7 @@ examples_ = OrderedDict([
         ('Linked Views', 'linkedViews.py'),
         ('Arrow', 'Arrow.py'),
         ('ViewBox', 'ViewBoxFeatures.py'),
+        ('AxisItem - label overlap', 'AxisItem_label_overlap.py'),
         ('Custom Graphics', 'customGraphicsItem.py'),
         ('Labeled Graph', 'CustomGraphItem.py'),
         ('PColorMeshItem', 'PColorMeshItem.py'),
