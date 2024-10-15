@@ -174,19 +174,32 @@ class GraphicsLayout(GraphicsWidget):
     def removeItem(self, item):
         """Remove *item* from the layout."""
         ind = self.itemIndex(item)
+        
+        # Remove the item from the layout and scene
         self.layout.removeAt(ind)
         self.scene().removeItem(item)
         
+        # Clear the row and column where the item was
         for r, c in self.items[item]:
             del self.rows[r][c]
+            
+            # Adjust the layout by updating row/column stretch factors
+            self.layout.setRowStretchFactor(r, 0)
+            self.layout.setColumnStretchFactor(c, 0)
+        
+        # Clean up the references to the removed item
         del self.items[item]
-
         item.geometryChanged.disconnect(self._updateItemBorder)
+        
+        # Remove the item's border
         itemBorder = self.itemBorders.pop(item)
         self.scene().removeItem(itemBorder)
-
+        
+        # Recalculate the layout to reclaim the space
+        self.layout.updateGeometry()
         self.update()
-    
+
+
     def clear(self):
         """Remove all items from the layout and set the current row and column to 0
         """
