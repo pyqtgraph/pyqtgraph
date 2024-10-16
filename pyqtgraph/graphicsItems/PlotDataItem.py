@@ -1741,13 +1741,17 @@ class PlotDataItem(GraphicsObject):
         xData = np.concatenate((self._dataset.x, new_x))
         yData = np.concatenate((self._dataset.y, new_y))
 
-        # Update the dataset
-        self._dataset = PlotDataset(xData, yData)
+            # Update the internal dataset with the concatenated arrays
+        self._dataset.x = xData
+        self._dataset.y = yData
         
-        # Update display data
+        # Invalidate any display data cache
         self._datasetDisplay = None  # Invalidate display data
-        self.updateItems(styleUpdate=True)  # Update items
 
+        # Trigger a visual update of the plot without recalculating everything
+        self.updateItems(styleUpdate=False)  # Only update items, not recalculate all data
+
+        
     def updateLastData(self, new_x, new_y):
         """
         Update the last data point in the dataset.
