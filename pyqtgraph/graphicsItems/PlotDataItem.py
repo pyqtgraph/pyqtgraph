@@ -1744,14 +1744,16 @@ class PlotDataItem(GraphicsObject):
             # Update the internal dataset with the concatenated arrays
         self._dataset.x = xData
         self._dataset.y = yData
-        
         # Invalidate any display data cache
-        self._datasetDisplay = None  # Invalidate display data
 
+        self._datasetMapped  = None
+        self._datasetDisplay = None  # Invalidate display data
+        self._adsLastValue   = 1
+        
         # Trigger a visual update of the plot without recalculating everything
         self.updateItems(styleUpdate=False)  # Only update items, not recalculate all data
 
-        
+
     def updateLastData(self, new_x, new_y):
         """
         Update the last data point in the dataset.
