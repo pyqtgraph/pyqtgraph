@@ -626,7 +626,7 @@ class OpenGLState(QtCore.QObject):
         uniform mat4 u_mvp;
         uniform vec2 u_rescale;
         void main() {
-            v_luminance = clamp(u_rescale.x * (a_luminance - u_rescale.y), 0.0, 1.0);
+            v_luminance = u_rescale.x * (a_luminance - u_rescale.y);
             gl_Position = u_mvp * a_position;
         }
     """
@@ -634,7 +634,9 @@ class OpenGLState(QtCore.QObject):
         varying mediump float v_luminance;
         uniform mediump sampler2D u_texture;
         void main() {
-            gl_FragColor = texture2D(u_texture, vec2(v_luminance, 0));
+            if (isnan(v_luminance)) discard;
+            float s = clamp(v_luminance, 0.0, 1.0);
+            gl_FragColor = texture2D(u_texture, vec2(s, 0));
         }
     """
 
@@ -645,7 +647,7 @@ class OpenGLState(QtCore.QObject):
         uniform mat4 u_mvp;
         uniform vec2 u_rescale;
         void main() {
-            v_luminance = clamp(u_rescale.x * (a_luminance - u_rescale.y), 0.0, 1.0);
+            v_luminance = u_rescale.x * (a_luminance - u_rescale.y);
             gl_Position = u_mvp * a_position;
         }
     """
@@ -657,7 +659,9 @@ class OpenGLState(QtCore.QObject):
         out vec4 FragColor;
         uniform sampler2D u_texture;
         void main() {
-            FragColor = texture(u_texture, vec2(v_luminance, 0));
+            if (isnan(v_luminance)) discard;
+            float s = clamp(v_luminance, 0.0, 1.0);
+            FragColor = texture(u_texture, vec2(s, 0));
         }
     """
 
