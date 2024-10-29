@@ -272,6 +272,7 @@ class DockLabel(VerticalLabel):
         self.updateStyle()
         self.setAutoFillBackground(False)
         self.mouseMoved = False
+        self.pressPos = QtCore.QPointF(0, 0)
 
         self.closeButton = None
         if closable:
