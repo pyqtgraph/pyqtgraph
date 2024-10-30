@@ -1,5 +1,7 @@
 from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsItem import GraphicsItem
+from ..GraphicsScene.GraphicsScene import GraphicsScene
+from typing import TYPE_CHECKING
 
 __all__ = ['GraphicsWidget']
 
@@ -25,7 +27,8 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
 
         # done by GraphicsItem init
         # GraphicsScene.registerObject(self)  # workaround for pyqt bug in GraphicsScene.items()
-
+    if TYPE_CHECKING:
+        def scene(self) -> GraphicsScene: ...
     # Removed due to https://bugreports.qt-project.org/browse/PYSIDE-86
     # def itemChange(self, change, value):
     #     # BEWARE: Calling QGraphicsWidget.itemChange can lead to crashing!
