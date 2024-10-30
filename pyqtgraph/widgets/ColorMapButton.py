@@ -80,7 +80,7 @@ class ColorMapDisplayMixin:
         trect = painter.boundingRect(rect, AF.AlignCenter, text)
         # draw the foreground text
         painter.setPen(pen)
-        painter.drawText(trect.adjusted(1,0,1,0), 0, text)
+        painter.drawText(trect, text)
 
         painter.restore()
 
