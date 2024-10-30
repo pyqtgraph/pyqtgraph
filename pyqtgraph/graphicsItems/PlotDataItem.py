@@ -1719,18 +1719,7 @@ class PlotDataItem(GraphicsObject):
 
     def appendData(self, new_x, new_y):
         """
-        Append new data to the existing dataset.
-
-        .. warning::
-        This method may be significantly slower than calling `setData`, as it 
-        appends to the current data rather than replacing it. For high-performance
-        applications, consider using `setData` when possible.
-
-        .. warning::
-            This method will be undergoing further changes in future versions. 
-            Currently, the accepted arguments are only a subset of those for `setData`.
-            Ensure compatibility by using only the supported arguments.
-    
+        Append new data to the existing dataset.    
         
         Parameters
         ----------
@@ -1738,6 +1727,16 @@ class PlotDataItem(GraphicsObject):
             The new x-values to append.
         new_y : array-like
             The new y-values to append.
+
+        Warning
+        -------
+        This method may be significantly slower than calling `setData`, as it 
+        appends to the current data rather than replacing it. For high-performance
+        applications, consider using `setData` when possible.
+
+        This method will be undergoing further changes in future versions. 
+        Currently, the accepted arguments are only a subset of those for `setData`.
+        Ensure compatibility by using only the supported arguments.
         
         """
         if self._dataset is None:
