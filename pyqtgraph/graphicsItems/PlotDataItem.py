@@ -1752,17 +1752,16 @@ class PlotDataItem(GraphicsObject):
         xData = np.concatenate((self._dataset.x, new_x))
         yData = np.concatenate((self._dataset.y, new_y))
 
-            # Update the internal dataset with the concatenated arrays
+        # Update the internal dataset with the concatenated arrays
         self._dataset.x = xData
         self._dataset.y = yData
-        # Invalidate any display data cache
 
+        # Invalidate any display data cache
         self._datasetMapped  = None
-        self._datasetDisplay = None  # Invalidate display data
+        self._datasetDisplay = None  
         self._adsLastValue   = 1
         
-        # Trigger a visual update of the plot without recalculating everything
-        self.updateItems(styleUpdate=False)  # Only update items, not recalculate all data
+        self.updateItems(styleUpdate=False)  
 
     @QtCore.Slot(object, object)
     def curveClicked(self, _: PlotCurveItem, ev):
