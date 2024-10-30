@@ -1720,6 +1720,17 @@ class PlotDataItem(GraphicsObject):
     def appendData(self, new_x, new_y):
         """
         Append new data to the existing dataset.
+
+        .. warning::
+        This method may be significantly slower than calling `setData`, as it 
+        appends to the current data rather than replacing it. For high-performance
+        applications, consider using `setData` when possible.
+
+        .. warning::
+            This method will be undergoing further changes in future versions. 
+            Currently, the accepted arguments are only a subset of those for `setData`.
+            Ensure compatibility by using only the supported arguments.
+    
         
         Parameters
         ----------
@@ -1727,6 +1738,7 @@ class PlotDataItem(GraphicsObject):
             The new x-values to append.
         new_y : array-like
             The new y-values to append.
+        
         """
         if self._dataset is None:
             # If there is no existing dataset, set the new data as the dataset.
@@ -1752,30 +1764,6 @@ class PlotDataItem(GraphicsObject):
         
         # Trigger a visual update of the plot without recalculating everything
         self.updateItems(styleUpdate=False)  # Only update items, not recalculate all data
-
-
-    def updateLastData(self, new_x, new_y):
-        """
-        Update the last data point in the dataset.
-        
-        Parameters
-        ----------
-        new_x : float
-            The new x-value to set.
-        new_y : float
-            The new y-value to set.
-        """
-        if self._dataset is None or len(self._dataset.x) == 0:
-            raise ValueError("Dataset is empty. Cannot update data.")
-        
-        # Update the last data point
-        self._dataset.x[-1] = new_x
-        self._dataset.y[-1] = new_y
-        
-        # Update display data
-        self._datasetDisplay = None  # Invalidate display data
-        self.updateItems(styleUpdate=True)  # Update items
-
 
     @QtCore.Slot(object, object)
     def curveClicked(self, _: PlotCurveItem, ev):
