@@ -106,19 +106,35 @@ class TargetItem(UIGraphicsItem):
             pos = Point(0, 0)
         self.setPos(pos)
 
+        self._path = None
+        self.setSymbol(symbol)
+
+        self.scale = size
+        self.setLabel(label, labelOpts)
+
+    def setSymbol(self, symbol):
+        r"""Method to set the TargetItem symbol, during or after creation
+
+        Parameters
+        ----------
+        symbol : QPainterPath or str
+            QPainterPath to use for drawing the target, should be centered at
+            ``(0, 0)`` with ``max(width, height) == 1.0``.  Alternatively a string
+            which can be any symbol accepted by
+            :func:`~pyqtgraph.ScatterPlotItem.setSymbol`
+
+        """
         if isinstance(symbol, str):
             try:
-                self._path = Symbols[symbol]
+                path = Symbols[symbol]
             except KeyError:
-                raise KeyError("symbol name found in available Symbols")
+                raise KeyError("Symbol name '%s' not found in available Symbols" % symbol)
         elif isinstance(symbol, QtGui.QPainterPath):
-            self._path = symbol
+            path = symbol
         else:
             raise TypeError("Unknown type provided as symbol")
 
-        self.scale = size
-        self.setPath(self._path)
-        self.setLabel(label, labelOpts)
+        self.setPath(path)
 
     def setPos(self, *args):
         """Method to set the position to ``(x, y)`` within the plot view
