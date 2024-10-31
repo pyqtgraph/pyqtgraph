@@ -1,9 +1,9 @@
 import numpy as np
 
-from .ColorMapMenu import ColorMapMenu
 from .. import colormap
 from .. import functions as fn
 from ..Qt import QtCore, QtGui, QtWidgets
+from .ColorMapMenu import ColorMapMenu
 
 __all__ = ['ColorMapButton']
 
@@ -74,21 +74,13 @@ class ColorMapDisplayMixin:
         # get an estimate of the lightness of the colormap
         # from its center element
         lightness = image.pixelColor(image.rect().center()).lightnessF()
-        if lightness >= 0.5:
-            # light: draw text with dark pen
-            pens = [wpen, bpen]
-        else:
-            # dark: draw text with light pen
-            pens = [bpen, wpen]
+        pen = bpen if lightness >= 0.55 else wpen
 
         AF = QtCore.Qt.AlignmentFlag
         trect = painter.boundingRect(rect, AF.AlignCenter, text)
-        # draw a background shadow
-        painter.setPen(pens[0])
-        painter.drawText(trect, 0, text)
         # draw the foreground text
-        painter.setPen(pens[1])
-        painter.drawText(trect.adjusted(1,0,1,0), 0, text)
+        painter.setPen(pen)
+        painter.drawText(trect, text)
 
         painter.restore()
 
