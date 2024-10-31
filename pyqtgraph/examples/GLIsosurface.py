@@ -40,7 +40,7 @@ verts, faces = pg.isosurface(data, data.max()/4.)
 
 md = gl.MeshData(vertexes=verts, faces=faces)
 
-colors = np.ones((md.faceCount(), 4), dtype=float)
+colors = np.ones((md.faceCount(), 4), dtype=np.float32)
 colors[:,3] = 0.2
 colors[:,2] = np.linspace(0, 1, colors.shape[0])
 md.setFaceColors(colors)

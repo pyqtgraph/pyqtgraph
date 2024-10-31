@@ -14,6 +14,7 @@ def test_longArrays(tmpdir):
     config = configfile.readConfigFile(tf)
     assert all(config['arr'] == arr)
 
+
 def test_multipleParameters(tmpdir):
     """
     Test config saving and loading of multiple parameters.
@@ -30,3 +31,58 @@ def test_multipleParameters(tmpdir):
     assert config['par1'] == par1
     assert config['par2'] == par2
     assert config['par3'] == par3
+
+
+def test_duplicate_keys_error(tmpdir):
+    """
+    Test that an error is raised when duplicate keys are present in the config file.
+    """
+
+    tf = tmpdir.join("config.cfg")
+    with open(tf, 'w') as f:
+        f.write('a: 1\n')
+        f.write('a: 2\n')
+
+    try:
+        configfile.readConfigFile(tf)
+    except configfile.ParseError as e:
+        assert 'Duplicate key' in str(e)
+    else:
+        assert False, "Expected ParseError"
+
+
+def test_line_numbers_acconut_for_comments_and_blanks(tmpdir):
+    """
+    Test that line numbers in ParseError account for comments and blank lines.
+    """
+
+    tf = tmpdir.join("config.cfg")
+    with open(tf, 'w') as f:
+        f.write('a: 1\n')
+        f.write('\n')
+        f.write('# comment\n')
+        f.write('a: 2\n')
+
+    try:
+        configfile.readConfigFile(tf)
+    except configfile.ParseError as e:
+        assert 'at line 4' in str(e)
+    else:
+        assert False, "Expected ParseError"
+
+
+def test_comment_indentation_is_ignored(tmpdir):
+    """
+    Test that comment indentation is ignored.
+    """
+
+    tf = tmpdir.join("config.cfg")
+    with open(tf, 'w') as f:
+        f.write('a:\n')
+        f.write('        # comment\n')
+        f.write('    b:\n')
+        f.write('# more comments\n')
+        f.write('        c: 2\n')
+
+    retval = configfile.readConfigFile(tf)
+    assert retval['a']['b']['c'] == 2

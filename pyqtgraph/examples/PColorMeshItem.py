@@ -8,6 +8,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
 from utils import FrameCounter
 
+# pg.setConfigOptions(useOpenGL=True, enableExperimental=True)
 app = pg.mkQApp("PColorMesh Example")
 
 ## Create window with GraphicsView widget
@@ -26,20 +27,27 @@ randomness = 5
 
 # x and y being the vertices of the polygons, they share the same shape
 # However the shape can be different in both dimension
-xn = 50 # nb points along x
-yn = 40 # nb points along y
+xrange = 50
+yrange = 40
 
+# xrange, yrange are the bounds of the mesh
+# whereas xn, yn give the number of points evaluated within those bounds.
+# increasing density will increase the processing workload.
+density = 1
+xn = xrange * density # nb points along x
+yn = yrange * density # nb points along y
 
-x = np.repeat(np.arange(1, xn+1), yn).reshape(xn, yn)\
-    + np.random.random((xn, yn))*randomness
-y = np.tile(np.arange(1, yn+1), xn).reshape(xn, yn)\
-    + np.random.random((xn, yn))*randomness
+rng = np.random.default_rng()
+x = np.repeat(np.linspace(1, xrange, xn), yn).reshape(xn, yn)\
+    + rng.random((xn, yn))*randomness
+y = np.tile(np.linspace(1, yrange, yn), xn).reshape(xn, yn)\
+    + rng.random((xn, yn))*randomness
 x.sort(axis=0)
 y.sort(axis=0)
 
 
 # z being the color of the polygons its shape must be decreased by one in each dimension
-z = np.exp(-(x*xn)**2/1000)[:-1,:-1]
+z = np.exp(-(x*xrange)**2/1000)[:-1,:-1]
 
 ## Create autoscaling image item
 edgecolors   = None
@@ -89,23 +97,17 @@ maxy = np.max(y) + wave_amplitude
 view_auto_scale.setYRange(miny, maxy)
 textitem.setPos(np.max(x), maxy)
 
-textpos = None
 i=0
 def updateData():
     global i
-    global textpos
     
     ## Display the new data set
     color_noise = np.sin(i * 2*np.pi*color_noise_freq) 
     new_x = x
     new_y = y+wave_amplitude*np.cos(x/wave_length+i)
-    new_z = np.exp(-(x-np.cos(i*color_speed)*xn)**2/1000)[:-1,:-1] + color_noise
-    pcmi_auto.setData(new_x,
-                 new_y,
-                 new_z)
-    pcmi_consistent.setData(new_x,
-                 new_y,
-                 new_z)
+    new_z = np.exp(-(x-np.cos(i*color_speed)*xrange)**2/1000)[:-1,:-1] + color_noise
+    pcmi_auto.setData(new_x, new_y, new_z)
+    pcmi_consistent.setData(new_x, new_y, new_z)
 
     i += wave_speed
     framecnt.update()

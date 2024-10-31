@@ -210,7 +210,7 @@ class Dock(QtWidgets.QWidget):
     def containerChanged(self, c):
         if self._container is not None:
             # ask old container to close itself if it is no longer needed
-            self._container.apoptose(propagate=False)
+            self._container.apoptose()
         self._container = c
         if c is None:
             self.area = None
@@ -272,6 +272,7 @@ class DockLabel(VerticalLabel):
         self.updateStyle()
         self.setAutoFillBackground(False)
         self.mouseMoved = False
+        self.pressPos = QtCore.QPointF(0, 0)
 
         self.closeButton = None
         if closable:
