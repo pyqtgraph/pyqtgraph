@@ -113,7 +113,7 @@ class TargetItem(UIGraphicsItem):
         self.setLabel(label, labelOpts)
 
     def setSymbol(self, symbol):
-        r"""Method to set the TargetItem symbol, during or after creation
+        """Method to set the TargetItem symbol, during or after creation
 
         Parameters
         ----------
@@ -123,12 +123,20 @@ class TargetItem(UIGraphicsItem):
             which can be any symbol accepted by
             :func:`~pyqtgraph.ScatterPlotItem.setSymbol`
 
+        Raises
+        ------
+        KeyError
+            If ``symbol`` string is unknown
+
+        TypeError
+            If unknown type is is provided as ``symbol``
+
         """
         if isinstance(symbol, str):
             try:
                 path = Symbols[symbol]
             except KeyError:
-                raise KeyError("Symbol name '%s' not found in available Symbols" % symbol)
+                raise KeyError(f"Symbol name '{symbol}' not found in available Symbols")
         elif isinstance(symbol, QtGui.QPainterPath):
             path = symbol
         else:
