@@ -33,10 +33,12 @@ class ReplWidget(QtWidgets.QWidget):
         outputFirstLineBlockFormat = QtGui.QTextBlockFormat(outputBlockFormat)
         outputFirstLineBlockFormat.setTopMargin(5)
         outputCharFormat = QtGui.QTextCharFormat()
+        outputCharFormat.setFont(self.output.font())
         outputCharFormat.setFontWeight(QtGui.QFont.Weight.Normal)
         cmdBlockFormat = QtGui.QTextBlockFormat()
         cmdBlockFormat.setBackground(mkBrush("#335" if isDark else "#CCF"))
         cmdCharFormat = QtGui.QTextCharFormat()
+        cmdCharFormat.setFont(self.output.font())
         cmdCharFormat.setFontWeight(QtGui.QFont.Weight.Bold)
         self.textStyles = {
             'command': (cmdCharFormat, cmdBlockFormat),
@@ -55,7 +57,7 @@ class ReplWidget(QtWidgets.QWidget):
 
         self.output = QtWidgets.QTextEdit(self)
         font = QtGui.QFont("monospace")
-        font.setStyleHint(QtGui.QFont.StyleHint.TypeWriter, QtGui.QFont.StyleStrategy.PreferAntialias)
+        # font.setStyleHint(QtGui.QFont.StyleHint.TypeWriter, QtGui.QFont.StyleStrategy.PreferAntialias)
         self.output.setFont(font)
         self.output.setReadOnly(True)
         self.layout.addWidget(self.output)
@@ -68,6 +70,7 @@ class ReplWidget(QtWidgets.QWidget):
         self.inputLayout.setContentsMargins(0, 0, 0, 0)
 
         self.input = CmdInput(parent=self)
+        self.input.setFont(font)
         self.inputLayout.addWidget(self.input)
         if self._allowNonGuiExecution:
             self.guiCheckbox = QtWidgets.QCheckBox("Exec in GUI", self)
