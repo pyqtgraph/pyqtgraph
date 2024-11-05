@@ -57,7 +57,6 @@ class ReplWidget(QtWidgets.QWidget):
 
         self.output = QtWidgets.QTextEdit(self)
         font = QtGui.QFont("monospace")
-        # font.setStyleHint(QtGui.QFont.StyleHint.TypeWriter, QtGui.QFont.StyleStrategy.PreferAntialias)
         self.output.setFont(font)
         self.output.setReadOnly(True)
         self.layout.addWidget(self.output)
