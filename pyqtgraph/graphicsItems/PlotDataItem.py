@@ -78,6 +78,10 @@ class PlotDataset:
     yAllFinite : bool or None, default None
         Label for `y` data points, indicating if all values are finite, or not, and
         unknown if ``None``.
+    connect : np.ndarray or None, default None
+        Array of boolean values indicating if points are connected. This is only
+        populated if the PlotDataItem's `connect` argument is set to a numpy array.
+        Otherwise, will be None.
 
     Warnings
     --------
@@ -93,13 +97,15 @@ class PlotDataset:
         x: np.ndarray,
         y: np.ndarray,
         xAllFinite: bool | None = None,
-        yAllFinite: bool | None = None
+        yAllFinite: bool | None = None,
+        connect: np.ndarray | None = None
     ):
         super().__init__()
         self.x = x
         self.y = y
         self.xAllFinite = xAllFinite
         self.yAllFinite = yAllFinite
+        self.connect = connect
         self._dataRect = None
 
         if isinstance(x, np.ndarray) and x.dtype.kind in 'iu':
@@ -1349,6 +1355,8 @@ class PlotDataItem(GraphicsObject):
 
         x = dataset.x
         y = dataset.y
+        if dataset.connect is not None:
+            curveArgs['connect'] = dataset.connect
         #scatterArgs['mask'] = self.dataMask
         if (
             self.opts['pen'] is not None
@@ -1513,6 +1521,7 @@ class PlotDataItem(GraphicsObject):
             self._adsLastValue = ds
             # downsampling is expensive; delay until after clipping.
 
+        connect = self.opts['connect'] if isinstance(self.opts['connect'], np.ndarray) else None
         if self.opts['clipToView']:
             if view is None or view.autoRangeEnabled()[0]:
                 pass  # no ViewBox to clip to, or view will autoscale to data range.
@@ -1538,17 +1547,24 @@ class PlotDataItem(GraphicsObject):
                     x1 = fn.clip_scalar(x1, x0, len(x))
                     x = x[x0:x1]
                     y = y[x0:x1]
+                    if connect is not None:
+                        connect = connect[x0:x1]
+
 
         if ds > 1:
             if self.opts['downsampleMethod'] == 'subsample':
                 x = x[::ds]
                 y = y[::ds]
+                if connect is not None:
+                    connect = connect[::ds]
             elif self.opts['downsampleMethod'] == 'mean':
                 n = len(x) // ds
                 # start of x-values try to select a somewhat centered point
                 stx = ds // 2
                 x = x[stx:stx + n * ds:ds]
                 y = y[:n * ds].reshape(n, ds).mean(axis=1)
+                if connect is not None:
+                    connect = connect[:n*ds].reshape(n,ds).all(axis=1)
             elif self.opts['downsampleMethod'] == 'peak':
                 n = len(x) // ds
                 x1 = np.empty((n, 2))
@@ -1561,6 +1577,10 @@ class PlotDataItem(GraphicsObject):
                 y1[:, 0] = y2.max(axis=1)
                 y1[:, 1] = y2.min(axis=1)
                 y = y1.reshape(n * 2)
+                if connect is not None:
+                    c = np.ones((n*2), dtype=bool)
+                    c[1::2] = connect[:n*ds].reshape(n,ds).all(axis=1)
+                    connect = c
 
         if self.opts['dynamicRangeLimit'] is not None and view_range is not None:
             data_range = self._datasetMapped.dataRect()
@@ -1601,7 +1621,7 @@ class PlotDataItem(GraphicsObject):
                         max_val = view_range.top()    + limit * view_height
                         y = fn.clip_array(y, min_val, max_val)
                         self._drlLastClip = (min_val, max_val)
-        self._datasetDisplay = PlotDataset(x, y, xAllFinite, yAllFinite)
+        self._datasetDisplay = PlotDataset(x, y, xAllFinite, yAllFinite, connect)
         self.setProperty('xViewRangeWasChanged', False)
         self.setProperty('yViewRangeWasChanged', False)
 
