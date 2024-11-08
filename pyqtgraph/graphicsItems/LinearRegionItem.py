@@ -320,11 +320,11 @@ class LinearRegionItem(GraphicsObject):
         if not self.moving:
             return
             
-        self.lines[0].blockSignals(True)  # only want to update once
+        self.blockLineSignal = True  # only want to update once
         for i, l in enumerate(self.lines):
             l.setPos(self.cursorOffsets[i] + ev.pos())
-        self.lines[0].blockSignals(False)
         self.prepareGeometryChange()
+        self.blockLineSignal = False
         
         if ev.isFinish():
             self.moving = False
