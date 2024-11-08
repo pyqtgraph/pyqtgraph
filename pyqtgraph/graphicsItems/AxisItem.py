@@ -1275,7 +1275,8 @@ class AxisItem(GraphicsWidget):
                 #p.drawText(rect, textFlags, vstr)
 
                 br = self.boundingRect()
-                if not br.contains(rect):
+                # br.contains(rect) suffers from floating point rounding errors
+                if not br & rect == rect:
                     continue
 
                 textSpecs.append((rect, textFlags, vstr))
