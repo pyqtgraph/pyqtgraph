@@ -1173,7 +1173,7 @@ class PlotDataItem(GraphicsObject):
                 for k in [
                     'data', 'symbolSize', 'symbolPen', 'symbolBrush', 'symbolShape'
                 ]:
-                    if k in data:
+                    if k in data[0]:
                         kwargs[k] = [d.get(k) for d in data]
             else:
                 raise TypeError('Invalid data type %s' % type(data))
