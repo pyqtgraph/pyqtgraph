@@ -179,8 +179,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             # Next Deliver our own Hover Events
             self.sendHoverEvents(ev)
             if ev.buttons():
-                # button is pressed' send mouseMoveEvents and mouseDragEvents
-                super().mouseMoveEvent(ev)
+                # button is pressed' send mouseDragEvents
                 if self.mouseGrabberItem() is None:
                     now = perf_counter()
                     init = False
