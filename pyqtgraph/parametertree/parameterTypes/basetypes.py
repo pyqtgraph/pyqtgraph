@@ -283,6 +283,37 @@ class SimpleParameter(Parameter):
             'str': StrParameterItem,
         }[self.opts['type']]
 
+    def set_specific_options(el):
+        param_dict = {}
+        value = el.get('value','0')
+        if el.get('type') == 'bool':
+            param_dict['value'] = True if value == '1' else False
+        elif el.get('type') == 'int':
+            param_dict['value'] = int(value)
+        elif el.get('type') == 'float':
+            param_dict['value'] = float(value)
+        elif el.get('type') == 'str':
+            param_dict['value'] = value
+        else:
+            raise TypeError(f'No interpreter found for type {el.get("type")}')
+        return param_dict
+
+    
+    def get_specific_options(param):
+        param_value = param.opts.get('value', None)
+        opts = {}
+        if param.opts['type'] == 'bool':
+            opts['value'] = '1' if param_value else '0'
+        elif param.opts['type'] == 'int':
+            opts['value'] = 'int({})'.format(param_value)
+        elif param.opts['type'] == 'float':
+            opts['value'] = 'float({})'.format(param_value)
+        elif param.opts['type'] == 'str':
+            opts['value'] = param_value
+        else:
+            raise TypeError(f'No interpreter found for type {param.opts["type"]}')
+        return opts
+    
     def _interpretValue(self, v):
         typ = self.opts['type']
 
@@ -294,6 +325,8 @@ class SimpleParameter(Parameter):
 
         interpreter = getattr(builtins, typ, _missing_interp)
         return interpreter(v)
+    
+    
 
 
 class GroupParameterItem(ParameterItem):
