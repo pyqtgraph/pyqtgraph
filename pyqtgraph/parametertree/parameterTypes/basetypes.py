@@ -283,7 +283,7 @@ class SimpleParameter(Parameter):
             'str': StrParameterItem,
         }[self.opts['type']]
 
-    def set_specific_options(el):
+    def set_value_to_parameter(el):
         param_dict = {}
         value = el.get('value','0')
         if el.get('type') == 'bool':
@@ -299,7 +299,7 @@ class SimpleParameter(Parameter):
         return param_dict
 
     
-    def get_specific_options(param):
+    def set_value_to_xml_element(param):
         param_value = param.opts.get('value', None)
         opts = {}
         if param.opts['type'] == 'bool':
