@@ -283,7 +283,22 @@ class SimpleParameter(Parameter):
             'str': StrParameterItem,
         }[self.opts['type']]
 
-    def set_value_to_parameter(el):
+    def get_typed_value_from_xml(el):
+        """
+        Extract and convert a typed value from an XML element.
+
+        This function retrieves the `value` attribute from the given XML element
+        and converts it into a Python value based on the type specified in the `type` attribute.
+
+        Args:
+            el (xml.etree.ElementTree.Element): The XML element containing `type` and `value` attributes.
+
+        Returns:
+            dict: A dictionary containing the key `'value'` with the corresponding typed value.
+
+        Raises:
+            TypeError: If the type specified in the `type` attribute is unsupported.
+        """
         param_dict = {}
         value = el.get('value','0')
         if el.get('type') == 'bool':
@@ -299,7 +314,24 @@ class SimpleParameter(Parameter):
         return param_dict
 
     
-    def set_value_to_xml_element(param):
+    def get_typed_value_from_parameter(param):
+        """
+        Convert a parameter's value into a format compatible with XML representation.
+
+        This function extracts the value from a `Parameter` object and formats it 
+        according to the type specified in `param.opts['type']`. The result is suitable 
+        for insertion into an XML element's `value` attribute.
+
+        Args:
+            param (pyqtgraph.parametertree.Parameter): The `Parameter` object containing 
+                the value and type to interpret.
+
+        Returns:
+            dict: A dictionary containing the key `'value'` with the formatted value as a string.
+
+        Raises:
+            TypeError: If the type specified in `param.opts['type']` is unsupported.
+        """
         param_value = param.opts.get('value', None)
         opts = {}
         if param.opts['type'] == 'bool':
