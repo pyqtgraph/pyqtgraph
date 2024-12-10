@@ -236,26 +236,21 @@ def test_get_typed_value_from_xml():
 def test_get_typed_value_from_parameter():
     """Teste la méthode get_typed_value_from_parameter pour différents types."""
     
-    # Bool parameter
     bool_param = SimpleParameter.create(name="param_bool", type="bool", value=True)
     assert SimpleParameter.get_typed_value_from_parameter(bool_param) == {'value': '1'}
 
     bool_param_false = SimpleParameter.create(name="param_bool", type="bool", value=False)
     assert SimpleParameter.get_typed_value_from_parameter(bool_param_false) == {'value': '0'}
 
-    # Int parameter
     int_param = SimpleParameter.create(name="param_int", type="int", value=42)
     assert SimpleParameter.get_typed_value_from_parameter(int_param) == {'value': 'int(42)'}
 
-    # Float parameter
     float_param = SimpleParameter.create(name="param_float", type="float", value=3.14)
     assert SimpleParameter.get_typed_value_from_parameter(float_param) == {'value': 'float(3.14)'}
 
-    # Str parameter
     str_param = SimpleParameter.create(name="param_str", type="str", value="test_value")
     assert SimpleParameter.get_typed_value_from_parameter(str_param) == {'value': 'test_value'}
 
-    # # Invalid parameter type
-    # invalid_param = SimpleParameter.create(name="param_invalid", type="unknown", value="test")
-    # with pytest.raises(TypeError):
-    #     SimpleParameter.get_typed_value_from_parameter(invalid_param)
+    invalid_param = SimpleParameter.create(name="param_invalid", type="unknown", value="test")
+    with pytest.raises(TypeError):
+        SimpleParameter.get_typed_value_from_parameter(invalid_param)
