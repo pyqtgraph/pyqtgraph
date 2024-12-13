@@ -901,7 +901,7 @@ class Parameter(QtCore.QObject):
             "name": el.tag,
             "type": el.get('type'),
             "title": el.get('title', el.tag),
-            "visible": el.get('visible', '0') == '1',
+            "visible": el.get('visible', '1') == '1',
             "removable": el.get('removable', '0') == '1',
             "readonly": el.get('readonly', '0') == '1',
             "tip": el.get('tip', '0') == '1',
@@ -936,7 +936,7 @@ class Parameter(QtCore.QObject):
         opts.update(dict(title=title))
 
         boolean_opts = {
-            "visible": param.opts.get("visible", False),
+            "visible": param.opts.get("visible", True),
             "removable": param.opts.get("removable", False),
             "readonly": param.opts.get("readonly", False),
             "tip": param.opts.get("tip", False),
