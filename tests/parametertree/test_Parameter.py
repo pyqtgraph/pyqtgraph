@@ -667,7 +667,7 @@ def test_get_basics_options_from_parameter():
     }
     assert result == expected_min
 
-    # Test with missing 'title' (title fallback to name)
+    # Test with missing 'title'
     param_no_title = Parameter.create(name="fallback_test", type="bool", visible=True)
     result = Parameter.get_basics_options_from_parameter(param_no_title)
     expected_no_title = {

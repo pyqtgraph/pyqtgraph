@@ -283,7 +283,7 @@ class SimpleParameter(Parameter):
             'str': StrParameterItem,
         }[self.opts['type']]
 
-    def get_typed_value_from_xml(el):
+    def specific_options_from_xml(el):
         """
         Extract and convert a typed value from an XML element.
 
@@ -311,10 +311,24 @@ class SimpleParameter(Parameter):
             param_dict['value'] = value
         else:
             raise TypeError(f'No interpreter found for type {el.get("type")}')
+        
+        for key in ["filetype", "detlist", "movelist", "addList", "addText", "label", "limits"]:
+            if key in el.attrib:
+                try:
+                    if key == "filetype":
+                        value = bool(int(el.get(key)))
+                    elif key in ["detlist", "movelist", "addList", "limits"]:
+                        value = eval(el.get(key))
+                    else:
+                        value = str(el.get(key))
+                    param_dict.update({key: value})
+                except:
+                    pass  # Ignore les erreurs pour 'limits' et autres
+
         return param_dict
 
     
-    def get_typed_value_from_parameter(param):
+    def specific_options_from_parameter(param):
         """
         Convert a parameter's value into a format compatible with XML representation.
 
@@ -344,6 +358,11 @@ class SimpleParameter(Parameter):
             opts['value'] = param_value
         else:
             raise TypeError(f'No interpreter found for type {param.opts["type"]}')
+        
+        for key in ["limits", "addList", "addText", "detlist", "movelist", "filetype"]:
+            if key in param.opts:
+                opts[key] = str(param.opts[key])
+
         return opts
     
     def _interpretValue(self, v):
