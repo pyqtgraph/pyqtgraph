@@ -31,7 +31,7 @@ def load_from_xml():
     global xml_data
 
     if xml_data:
-        param_list_dict = factory.xml_string_to_parameter(xml_data)
+        param_list_dict = factory.xml_string_to_parameter_list_dict(xml_data)
         restored_params = Parameter.create(name='Restored Parameters', type='group',
                                            children=param_list_dict)
         t.setParameters(restored_params, showTop=False)
