@@ -1,7 +1,6 @@
 from ...widgets.SpinBox import SpinBox
 from .basetypes import WidgetParameterItem
 from .basetypes import SimpleParameter
-from ..xml_parameter_factory import XMLParameter
 
 
 class NumericParameterItem(WidgetParameterItem):
@@ -61,8 +60,7 @@ class NumericParameterItem(WidgetParameterItem):
         self.updateDisplayLabel()
 
 
-
-class NumericParameter(SimpleParameter, XMLParameter):
+class NumericParameter(SimpleParameter):
     itemClass = NumericParameterItem
 
     def __init__(self, **opts):
@@ -79,28 +77,24 @@ class NumericParameter(SimpleParameter, XMLParameter):
     
     @staticmethod
     def set_specific_options(el):
-        value = el.get('value','0')
+        value = el.get('value', '0')
         param_dict = {}
         param_type = param_dict['type']
 
         if param_type == "int":
-            param_dict['value'] = float(value)
+            param_dict['value'] = int(value)
         elif param_type == "float":
-            param_dict['value'] = int(float(value))
+            param_dict['value'] = float(value)
 
         return param_dict
 
-    @staticmethod 
-    def get_specific_options(param):
-        param_value = param.opts.get('value', None)
-
-        if param.opts['type'] == "int":
-            value = 'int({})'.format(param_value)
+    def get_specific_options(self):
+        if self.opts['type'] == "int":
+            value = f'int({self.value()})'
         else:
-            value = 'float({})'.format(param.value())
+            value = f'float({self.value()})'
 
         opts = {
             "value": value,
         }
-
         return opts
