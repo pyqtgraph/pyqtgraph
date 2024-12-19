@@ -58,8 +58,8 @@ class XMLParameterFactory:
         
         return dic
 
-    def xml_string_to_parameter_list(self, params: List[dict],
-                                     xml_elt: Optional[ET.Element]):
+    def xml_elt_to_parameter_list(self, params: List[dict],
+                                  xml_elt: ET.Element):
 
         if not isinstance(xml_elt, ET.Element):
             raise TypeError(f'{xml_elt} is not a valid XML element')
@@ -70,7 +70,7 @@ class XMLParameterFactory:
             param_dict['children'] = []
             for child in xml_elt:
                 child_params = []
-                self.xml_string_to_parameter_list(child_params, child)
+                self.xml_elt_to_parameter_list(child_params, child)
                 param_dict['children'].extend(child_params)
         params.append(param_dict)
 
@@ -101,24 +101,17 @@ class XMLParameterFactory:
         return ET.tostring(parent_xml_elt)
     
     @staticmethod
-    def parameter_list_to_parameter(params: list):
-        """
-        Convert a list of dict to a pyqtgraph parameter object.
+    def parameter_list_to_parameter(params: List[dict]) -> Parameter:
+        """ Convert a list of dict to a pyqtgraph parameter object.
 
-        =============== =========== ================================
-        **Parameters**   **Type**    **Description**
-
-        params           list        list of dict to init a parameter
-        =============== =========== ================================
+        Parameters
+        ----------
+        params: list of dict defining a Parameter object
 
         Returns
         -------
-        Parameter: a parameter object
-
+        Parameter: the retrieved parameter object
         """
-        if type(params) is not list:
-            raise TypeError('params must be a list of dict') 
-        
         
         param_opts = params[0]
         children = param_opts.pop('children', [])
@@ -131,7 +124,7 @@ class XMLParameterFactory:
 
         return param
     
-    def xml_string_to_parameter(self, xml_string: bytes):
+    def xml_string_to_parameter_list_dict(self, xml_string: bytes) -> List[dict]:
         """ Convert a xml string into a list of dict to initialize a Parameter object.
 
         Parameters
@@ -151,7 +144,7 @@ class XMLParameterFactory:
         """
         root = ET.fromstring(xml_string)
         params = []
-        self.xml_string_to_parameter_list(params, xml_elt=root)
+        self.xml_elt_to_parameter_list(params, xml_elt=root)
         return params
     
 
