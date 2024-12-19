@@ -123,3 +123,33 @@ class ListParameter(Parameter):
             reverse[0].append(v)
             reverse[1].append(k)
         return forward, reverse
+    
+    @staticmethod
+    def set_specific_options(el):
+        param_dict = {}
+        value = el.get('value',None)    
+        try:
+            param_dict['value'] = eval(value)
+        except Exception:
+            param_dict['value'] = value
+
+        return param_dict
+
+    @staticmethod
+    def get_specific_options(param):
+        param_value = param.opts.get('value', None)
+
+        if isinstance(param_value, str):
+            value = "str('{}')".format(param_value)
+        elif isinstance(param_value, int):
+            value = 'int({})'.format(param_value)
+        elif isinstance(param_value, float):
+            value = 'float({})'.format(param_value)
+        else:
+            value = str(param_value)
+        
+        opts = {
+            "value": value,
+        }
+
+        return opts
