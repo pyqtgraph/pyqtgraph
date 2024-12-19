@@ -16,6 +16,10 @@ from xml.etree.ElementTree import Element
 from pyqtgraph.parametertree.Parameter import PARAM_TYPES
 from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
 from pyqtgraph.Qt import QtGui
+from pyqtgraph.parametertree.xml_factory import XMLParameterFactory
+from xml.etree import ElementTree as ET
+from qtpy.QtCore import QDateTime
+
 
 pg.mkQApp()
 
@@ -576,122 +580,30 @@ def test_interact_existing_parent():
     assert outParam in parent.names.values()
     outParam.activate()
     assert lastValue == 5
+ 
+def test_start_with_parameter():
+    params = [
+        {'name': 'param1', 'type': 'int', 'value': 10, 'title': 'Integer Parameter',
+         'visible': True, 'removable': False, 'readonly': False, 'tip': '', 'show_pb': False},
+        {'name': 'param2', 'type': 'float', 'value': 3.14, 'title': 'Float Parameter',
+         'visible': True, 'removable': False, 'readonly': False, 'tip': '', 'show_pb': False},
+        {'name': 'param3', 'type': 'str', 'value': 'Hello', 'title': 'String Parameter',
+         'visible': True, 'removable': False, 'readonly': False, 'tip': '', 'show_pb': False},
+        {'name': 'param4', 'type': 'bool', 'value': True, 'title': 'Boolean Parameter',
+         'visible': True, 'removable': False, 'readonly': False, 'tip': '', 'show_pb': False}
+    ]
+    settings = Parameter.create(name='settings', type='group', title='setting test',children=params, visible = True, removable = False, readonly = False, tip = '', show_pb = False)
 
-def test_get_basic_options_from_xml_element():
-    """Test for get_basic_options_from_xml_element with various XML attributes."""
+    xml_element = XMLParameterFactory.parameter_to_xml_string_factory(param=settings)
 
-    # Test with all attributes provided
-    el = Element('param', {
-        'type': 'int',
-        'title': 'Test Parameter',
-        'visible': '1',
-        'removable': '1',
-        'readonly': '0',
-        'tip': '1',
-        'show_pb': '0'
-    })
-    result = Parameter.get_basic_options_from_xml_element(el)
-    expected = {
-        "name": "param",
-        "type": "int",
-        "title": "Test Parameter",
-        "visible": True,
-        "removable": True,
-        "readonly": False,
-        "tip": True,
-        "show_pb": False
-    }
-    assert result == expected
+    print(xml_element)
 
-    # Test with minimal attributes
-    el_min = Element('param', {'type': 'str'})
-    result = Parameter.get_basic_options_from_xml_element(el_min)
-    expected_min = {
-        "name": "param",
-        "type": "str",
-        "title": "param",
-        "visible": True,
-        "removable": False,
-        "readonly": False,
-        "tip": False,
-        "show_pb": False
-    }
-    assert result == expected_min
+    param_dict = XMLParameterFactory.XML_string_to_parameter(xml_element)
 
-    # Test with missing 'type'
-    el_no_type = Element('param', {'visible': '0'})
-    result = Parameter.get_basic_options_from_xml_element(el_no_type)
-    expected_no_type = {
-        "name": "param",
-        "type": None,
-        "title": "param",
-        "visible": False,
-        "removable": False,
-        "readonly": False,
-        "tip": False,
-        "show_pb": False
-    }
-    assert result == expected_no_type
+    param_res = XMLParameterFactory.parameter_list_to_parameter(param_dict)
+
+    assert settings.saveState() == param_res.saveState()
 
 
-def test_get_basics_options_from_parameter():
-    """Test for get_basics_options_from_parameter with various parameter options."""
-
-    # Test with all options provided
-    param = Parameter.create(name="test_param", type="float", title="Test Parameter", 
-                             visible=True, removable=True, readonly=False, tip=True, show_pb=False, limits=[0, 10])
-    result = Parameter.get_basics_options_from_parameter(param)
-    expected = {
-        "type": "float",
-        "title": "Test Parameter",
-        "visible": "1",
-        "removable": "1",
-        "readonly": "0",
-        "tip": "1",
-        "show_pb": "0",
-        "limits": "[0, 10]"
-    }
-    assert result == expected
-
-    # Test with minimal options
-    param_min = Parameter.create(name="test_min", type="str")
-    result = Parameter.get_basics_options_from_parameter(param_min)
-    expected_min = {
-        "type": "str",
-        "title": "test_min",
-        "visible": "1",
-        "removable": "0",
-        "readonly": "0",
-        "tip": "0",
-        "show_pb": "0"
-    }
-    assert result == expected_min
-
-    # Test with missing 'title'
-    param_no_title = Parameter.create(name="fallback_test", type="bool", visible=True)
-    result = Parameter.get_basics_options_from_parameter(param_no_title)
-    expected_no_title = {
-        "type": "bool",
-        "title": "fallback_test",
-        "visible": "1",
-        "removable": "0",
-        "readonly": "0",
-        "tip": "0",
-        "show_pb": "0"
-    }
-    assert result == expected_no_title
-
-    # Test with extra options
-    param_extra = Parameter.create(name="test_extra", type="int", addList=["item1", "item2"])
-    result = Parameter.get_basics_options_from_parameter(param_extra)
-    expected_extra = {
-        "type": "int",
-        "title": "test_extra",
-        "visible": "1",
-        "removable": "0",
-        "readonly": "0",
-        "tip": "0",
-        "show_pb": "0",
-        "addList": "['item1', 'item2']"
-    }
-    assert result == expected_extra
+if __name__ == "__main__":
+    test_start_with_parameter()

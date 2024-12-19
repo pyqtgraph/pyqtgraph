@@ -8,13 +8,13 @@ class XMLParameter():
     @staticmethod
     def common_options_from_xml(el: ET.Element):
         basic_options = {
-            "name": el.tag,
+            "name": el.get('name'),
             "type": el.get('type'),
             "title": el.get('title', el.tag),
             "visible": el.get('visible', '1') == '1',
             "removable": el.get('removable', '0') == '1',
             "readonly": el.get('readonly', '0') == '1',
-            "tip": el.get('tip', None),
+            "tip": el.get('tip', ""),
             "show_pb": el.get('show_pb', '0') == '1'
 
         }
@@ -32,7 +32,7 @@ class XMLParameter():
         opts = {
             "type": param.opts.get("type"),
             "name": param.opts.get("name"),
-            "tip": param.opts.get("tip",None)
+            "tip": param.opts.get("tip","")
         }
 
         title = param.opts['title']
@@ -88,9 +88,9 @@ class XMLParameterFactory:
         param_type = param.type()
         param_class = self.get_parameter_class(param_type)
         if(param_type == 'group'):
-            return param_class.common_options_from_parameter(param)
+            return XMLParameter.common_options_from_parameter(param)
         else:
-            dic = param_class.get_basics_options(param)
+            dic = XMLParameter.common_options_from_parameter(param)
             dic.update(param_class.specific_options_from_parameter(param))
         return dic
 
@@ -100,19 +100,21 @@ class XMLParameterFactory:
         param_type = el.get('type',None)
         param_class = self.get_parameter_class(param_type)
         if(param_type == 'group'):
-            return param_class.common_options_from_xml(el)
-        dic = param_class.set_basic_options(el)
+            return XMLParameter.common_options_from_xml(el)
+        dic = XMLParameter.common_options_from_xml(el)
         dic.update(param_class.specific_options_from_xml(el))
         
         return dic
 
     @staticmethod
     def xml_string_to_parameter_list_factory(params=[], XML_elt=None):
+        factory = XMLParameterFactory()
+
         try:
             if type(XML_elt) is not ET.Element:
                 raise TypeError('not valid XML element')
 
-            param_dict = XMLParameter.xml_elt_to_dict(XML_elt)
+            param_dict = factory.options_from_xml(XML_elt)
 
             if param_dict['type'] == 'group':
                 param_dict['children'] = []
@@ -129,7 +131,6 @@ class XMLParameterFactory:
     
     @staticmethod
     def parameter_to_xml_string_factory(parent_elt = None, param = None):
-        from pymodaq_gui.parameter.ioxml_factory import dict_from_param
         """
         To convert a parameter object (and children) to xml data tree.
 
@@ -146,16 +147,19 @@ class XMLParameterFactory:
             XML element with subelements from Parameter object
 
         """
+        factory = XMLParameterFactory()
+
         if type(param) is None:
             raise TypeError('No valid param input')
 
         if parent_elt is None:
-            opts = XMLParameter.common_options(param)
+            
+            opts = factory.options_from_parameter(param)
             parent_elt = ET.Element(param.name(), **opts)
 
         params_list = param.children()
         for param in params_list:
-            opts = XMLParameter.common_options(param)
+            opts = factory.options_from_parameter(param)
             elt = ET.Element(param.name(), **opts)
 
             if param.hasChildren():

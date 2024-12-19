@@ -19,7 +19,7 @@ import pyqtgraph.parametertree.parameterTypes as pTypes
 from pyqtgraph.parametertree import Parameter, ParameterTree
 
 from xml.etree import ElementTree as ET
-from parametertree.xml_factory import XMLParameter, XMLParameterFactory
+from pyqtgraph.parametertree.xml_factory import XMLParameter, XMLParameterFactory
 
 ## test subclassing parameters
 ## This parameter automatically generates two child parameters which are always reciprocals of each other
@@ -150,9 +150,18 @@ p.restoreState(state)
 compareState = p.saveState()
 assert pg.eq(compareState, state)
 
+params = [
+    {'name': 'param1', 'type': 'int', 'value': 10, 'title': 'Integer Parameter'},
+    {'name': 'param2', 'type': 'float', 'value': 3.14, 'title': 'Float Parameter'},
+    {'name': 'param3', 'type': 'str', 'value': 'Hello', 'title': 'String Parameter'},
+    {'name': 'param4', 'type': 'bool', 'value': True, 'title': 'Boolean Parameter'}
+]
+
+p2 = Parameter.create(name='params', type='group', children=params)
+
 def save_to_xml():
     global xml_data
-    xml_data = XMLParameterFactory.parameter_to_xml_string_factory(p)
+    xml_data = XMLParameterFactory.parameter_to_xml_string_factory(p2)
     print("Export XML:\n", xml_data)
 
 def load_from_xml():
@@ -190,4 +199,5 @@ compareState = p.saveState()
 assert pg.eq(compareState, state)
 
 if __name__ == '__main__':
+    xml_data = None
     pg.exec()

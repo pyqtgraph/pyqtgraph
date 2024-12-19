@@ -300,7 +300,7 @@ class SimpleParameter(Parameter):
             TypeError: If the type specified in the `type` attribute is unsupported.
         """
         param_dict = {}
-        value = el.get('value','0')
+        value = el.get('value',None)
         if el.get('type') == 'bool':
             param_dict['value'] = True if value == '1' else False
         elif el.get('type') == 'int':
@@ -351,9 +351,9 @@ class SimpleParameter(Parameter):
         if param.opts['type'] == 'bool':
             opts['value'] = '1' if param_value else '0'
         elif param.opts['type'] == 'int':
-            opts['value'] = 'int({})'.format(param_value)
+            opts['value'] = str(param_value)
         elif param.opts['type'] == 'float':
-            opts['value'] = 'float({})'.format(param_value)
+            opts['value'] = str(param_value)
         elif param.opts['type'] == 'str':
             opts['value'] = param_value
         else:
