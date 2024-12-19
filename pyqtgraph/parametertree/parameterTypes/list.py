@@ -5,7 +5,7 @@ from ... import functions as fn
 from ...Qt import QtWidgets
 from ..Parameter import Parameter
 from .basetypes import WidgetParameterItem
-from ..xml_parameter_factory import XMLParameter
+
 
 class ListParameterItem(WidgetParameterItem):
     """
@@ -70,7 +70,7 @@ class ListParameterItem(WidgetParameterItem):
         super().updateDisplayLabel(value)
 
 
-class ListParameter(Parameter, XMLParameter):
+class ListParameter(Parameter):
     """Parameter with a list of acceptable values.
 
     By default, this parameter is represtented by a :class:`ListParameterItem`,
