@@ -246,6 +246,14 @@ class Parameter(QtCore.QObject, XMLParameter):
 
     @staticmethod
     def specific_options_from_xml(el: ET.Element) -> dict:
+        """ Get the object options specific to its type: value, limits, ...
+
+        To be implemented by real implementations
+
+        Returns
+        -------
+        dict: dictionary of options
+        """
         return {}
 
     def specific_options_from_parameter(self) -> dict:
