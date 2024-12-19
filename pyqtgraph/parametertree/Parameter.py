@@ -1,12 +1,16 @@
 import re
+from typing import List
 import warnings
 import weakref
 from collections import OrderedDict
+from xml.etree import ElementTree as ET
 
 from .. import functions as fn
 from xml.etree.ElementTree import Element
 from ..Qt import QtCore
 from .ParameterItem import ParameterItem
+
+from .xml_base import XMLParameter
 
 PARAM_TYPES = {}
 PARAM_NAMES = {}
@@ -50,7 +54,7 @@ def __reload__(old):
     PARAM_NAMES.update(old.get('PARAM_NAMES', {}))
 
 
-class Parameter(QtCore.QObject):
+class Parameter(QtCore.QObject, XMLParameter):
     """
     A Parameter is the basic unit of data in a parameter tree. Each parameter has
     a name, a type, a value, and several other properties that modify the behavior of the 
@@ -184,6 +188,7 @@ class Parameter(QtCore.QObject):
         =======================      =========================================================
         """
         QtCore.QObject.__init__(self)
+        XMLParameter.__init__(self)
         
         self.opts = {
             'type': None,
@@ -238,6 +243,21 @@ class Parameter(QtCore.QObject):
         self.sigNameChanged.connect(self._emitNameChanged)
         self.sigOptionsChanged.connect(self._emitOptionsChanged)
         self.sigContextMenu.connect(self._emitContextMenuChanged)
+
+    @staticmethod
+    def specific_options_from_xml(el: ET.Element) -> dict:
+        return {}
+
+    def specific_options_from_parameter(self) -> dict:
+        """ Get the object options specific to its type: value, limits, ...
+
+        To be implemented by real implementations
+
+        Returns
+        -------
+        dict: dictionary of options
+        """
+        return {}
 
     @property
     def itemClass(self):
@@ -713,7 +733,7 @@ class Parameter(QtCore.QObject):
         for ch in self.childs[:]:
             self.removeChild(ch)
 
-    def children(self):  
+    def children(self) -> List['Parameter']:
         """Return a list of this parameter's children.
         Warning: this overrides QObject.children
         """
