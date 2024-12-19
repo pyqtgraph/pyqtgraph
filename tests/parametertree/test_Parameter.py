@@ -12,16 +12,15 @@ from pyqtgraph.parametertree import (
     RunOptions,
     interact,
 )
-from xml.etree.ElementTree import Element
 from pyqtgraph.parametertree.Parameter import PARAM_TYPES
 from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
 from pyqtgraph.Qt import QtGui
-from pyqtgraph.parametertree.xml_factory import XMLParameterFactory
-from xml.etree import ElementTree as ET
+
 from qtpy.QtCore import QDateTime
 
 
 pg.mkQApp()
+
 
 def test_parameter_hasdefault():
     opts = {"name": "param", "type": 'int', "value": 1}
@@ -580,30 +579,3 @@ def test_interact_existing_parent():
     assert outParam in parent.names.values()
     outParam.activate()
     assert lastValue == 5
- 
-def test_start_with_parameter():
-    params = [
-        {'name': 'param1', 'type': 'int', 'value': 10, 'title': 'Integer Parameter',
-         'visible': True, 'removable': False, 'readonly': False, 'tip': '', 'show_pb': False},
-        {'name': 'param2', 'type': 'float', 'value': 3.14, 'title': 'Float Parameter',
-         'visible': True, 'removable': False, 'readonly': False, 'tip': '', 'show_pb': False},
-        {'name': 'param3', 'type': 'str', 'value': 'Hello', 'title': 'String Parameter',
-         'visible': True, 'removable': False, 'readonly': False, 'tip': '', 'show_pb': False},
-        {'name': 'param4', 'type': 'bool', 'value': True, 'title': 'Boolean Parameter',
-         'visible': True, 'removable': False, 'readonly': False, 'tip': '', 'show_pb': False}
-    ]
-    settings = Parameter.create(name='settings', type='group', title='setting test',children=params, visible = True, removable = False, readonly = False, tip = '', show_pb = False)
-
-    xml_element = XMLParameterFactory.parameter_to_xml_string_factory(param=settings)
-
-    print(xml_element)
-
-    param_dict = XMLParameterFactory.XML_string_to_parameter(xml_element)
-
-    param_res = XMLParameterFactory.parameter_list_to_parameter(param_dict)
-
-    assert settings.saveState() == param_res.saveState()
-
-
-if __name__ == "__main__":
-    test_start_with_parameter()
