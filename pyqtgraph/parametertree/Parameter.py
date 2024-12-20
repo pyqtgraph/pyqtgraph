@@ -54,7 +54,7 @@ def __reload__(old):
     PARAM_NAMES.update(old.get('PARAM_NAMES', {}))
 
 
-class Parameter(QtCore.QObject, XMLParameter):
+class Parameter(XMLParameter, QtCore.QObject):
     """
     A Parameter is the basic unit of data in a parameter tree. Each parameter has
     a name, a type, a value, and several other properties that modify the behavior of the 
