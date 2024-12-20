@@ -32,7 +32,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     sigDoubleClicked = QtCore.Signal(object, object)
     sigSampleClicked = QtCore.Signal(object)
 
-    def __init__(self, size=None, offset=None, horSpacing=25, verSpacing=0,
+    def __init__(self, size=None, offset=None, horSpacing=5, verSpacing=0,
                  pen=None, brush=None, labelTextColor=None, frame=True,
                  labelTextSize='9pt', colCount=1, sampleType=None, **kwargs):
         """
@@ -245,7 +245,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
                     # MAKE NEW ROW
                     col = 0
                     row += 1
-        self.layout.addItem(sample, row, col)
+        self.layout.addItem(sample, row, col, alignment=QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.layout.addItem(label, row, col + 1)
         # Keep rowCount in sync with the number of rows if items are added
         self.rowCount = max(self.rowCount, row + 1)
@@ -359,6 +359,8 @@ class ItemSample(GraphicsWidget):
     def __init__(self, item):
         GraphicsWidget.__init__(self)
         self.item = item
+        self.setFixedWidth(20)
+        self.setFixedHeight(20)
 
     def boundingRect(self):
         return QtCore.QRectF(0, 0, 20, 20)
