@@ -1,7 +1,5 @@
 from ...widgets.SpinBox import SpinBox
 from .basetypes import WidgetParameterItem
-from .basetypes import SimpleParameter
-
 
 class NumericParameterItem(WidgetParameterItem):
     """
@@ -58,43 +56,3 @@ class NumericParameterItem(WidgetParameterItem):
                 sbOpts[k] = v
         self.widget.setOpts(**sbOpts)
         self.updateDisplayLabel()
-
-
-class NumericParameter(SimpleParameter):
-    itemClass = NumericParameterItem
-
-    def __init__(self, **opts):
-        super().__init__(**opts)
-
-    def setLimits(self, limits):
-        curVal = self.value()
-        if curVal > limits[1]:
-            self.setValue(limits[1])
-        elif curVal < limits[0]:
-            self.setValue(limits[0])
-        super().setLimits(limits)
-        return limits
-    
-    @staticmethod
-    def set_specific_options(el):
-        value = el.get('value', '0')
-        param_dict = {}
-        param_type = param_dict['type']
-
-        if param_type == "int":
-            param_dict['value'] = int(value)
-        elif param_type == "float":
-            param_dict['value'] = float(value)
-
-        return param_dict
-
-    def get_specific_options(self):
-        if self.opts['type'] == "int":
-            value = f'int({self.value()})'
-        else:
-            value = f'float({self.value()})'
-
-        opts = {
-            "value": value,
-        }
-        return opts

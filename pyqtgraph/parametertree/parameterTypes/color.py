@@ -1,8 +1,6 @@
 from ... import functions as fn
 from ...widgets.ColorButton import ColorButton
 from .basetypes import SimpleParameter, WidgetParameterItem
-from qtpy import QtGui
-
 
 class ColorParameterItem(WidgetParameterItem):
     """Registered parameter type which displays a :class:`ColorButton <pyqtgraph.ColorButton>` """

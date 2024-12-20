@@ -16,9 +16,6 @@ from pyqtgraph.parametertree.Parameter import PARAM_TYPES
 from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
 from pyqtgraph.Qt import QtGui
 
-from qtpy.QtCore import QDateTime
-
-
 pg.mkQApp()
 
 

@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from xml.etree import ElementTree as ET
 
-from pyqtgraph.parametertree import Parameter
+from ..parametertree import Parameter
 
 
 class XMLParameter:
