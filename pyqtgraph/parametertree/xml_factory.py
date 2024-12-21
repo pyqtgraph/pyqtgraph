@@ -146,5 +146,3 @@ class XMLParameterFactory:
         params = []
         self.xml_elt_to_parameter_list(params, xml_elt=root)
         return params
-    
-
