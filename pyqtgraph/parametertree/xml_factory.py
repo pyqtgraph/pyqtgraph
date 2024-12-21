@@ -1,8 +1,7 @@
-from typing import Optional, List, Iterable, Type
+from typing import Optional, List, Type
 
 from xml.etree import ElementTree as ET
 
-from .xml_base import XMLParameter
 from ..parametertree.Parameter import PARAM_TYPES
 from ..parametertree.Parameter import Parameter
 
