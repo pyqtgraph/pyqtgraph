@@ -2,14 +2,11 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("Parameter Tree Example")
-import pyqtgraph.parametertree.parameterTypes as pTypes
 from pyqtgraph.parametertree import Parameter, ParameterTree
 
-from xml.etree import ElementTree as ET
 from pyqtgraph.parametertree.xml_factory import XMLParameterFactory
 
 factory = XMLParameterFactory()
-
 
 params = [
     {'title': 'Integer Parameter', 'name': 'param1', 'type': 'int', 'value': 10, },
@@ -18,7 +15,7 @@ params = [
     {'title': 'Boolean Parameter', 'name': 'param4', 'type': 'bool', 'value': True, }
 ]
 
-p2 = Parameter.create(name='params', type='group', children=params)
+p2 = Parameter.create(name='settings', type='group', title='setting test',children=params)
 
 
 def save_to_xml():
@@ -32,8 +29,7 @@ def load_from_xml():
 
     if xml_data:
         param_list_dict = factory.xml_string_to_parameter_list_dict(xml_data)
-        restored_params = Parameter.create(name='Restored Parameters', type='group',
-                                           children=param_list_dict)
+        restored_params = factory.parameter_list_to_parameter(param_list_dict)
         t.setParameters(restored_params, showTop=False)
         print("Import XML completed")
 
@@ -43,15 +39,14 @@ btn_import = QtWidgets.QPushButton("Import from XML")
 btn_export.clicked.connect(save_to_xml)
 btn_import.clicked.connect(load_from_xml)
 
-## Create two ParameterTree widgets, both accessing the same data
 t = ParameterTree()
 t.setParameters(p2, showTop=False)
-t.setWindowTitle('pyqtgraph example: Parameter Tree')
+t.setWindowTitle('pyqtgraph example: Parameter <-> XML Conversion')
 
 win = QtWidgets.QWidget()
 layout = QtWidgets.QGridLayout()
 win.setLayout(layout)
-layout.addWidget(QtWidgets.QLabel("These are two views of the same data. They should always display the same values."), 0,  0, 1, 2)
+layout.addWidget(QtWidgets.QLabel("Use this tool to serialize Parameter objects to XML or deserialize XML into Parameters."), 0,  0, 1, 2)
 layout.addWidget(t, 1, 0, 1, 2)
 layout.addWidget(btn_export, 2, 0)
 layout.addWidget(btn_import, 2, 1)

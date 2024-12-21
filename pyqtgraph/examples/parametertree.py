@@ -19,7 +19,6 @@ import pyqtgraph.parametertree.parameterTypes as pTypes
 from pyqtgraph.parametertree import Parameter, ParameterTree
 
 
-
 ## test subclassing parameters
 ## This parameter automatically generates two child parameters which are always reciprocals of each other
 class ComplexParameter(pTypes.GroupParameter):
@@ -107,6 +106,7 @@ def change(param, changes):
     
 p.sigTreeStateChanged.connect(change)
 
+
 def valueChanging(param, value):
     print("Value changing (not finalized): %s %s" % (param, value))
     
@@ -141,26 +141,6 @@ win.setLayout(layout)
 layout.addWidget(QtWidgets.QLabel("These are two views of the same data. They should always display the same values."), 0,  0, 1, 2)
 layout.addWidget(t, 1, 0, 1, 1)
 layout.addWidget(t2, 1, 1, 1, 1)
-win.show()
-
-## test save/restore
-state = p.saveState()
-p.restoreState(state)
-compareState = p.saveState()
-assert pg.eq(compareState, state)
-
-
-
-## Create two ParameterTree widgets, both accessing the same data
-t = ParameterTree()
-t.setParameters(p, showTop=False)
-t.setWindowTitle('pyqtgraph example: Parameter Tree')
-
-win = QtWidgets.QWidget()
-layout = QtWidgets.QGridLayout()
-win.setLayout(layout)
-layout.addWidget(QtWidgets.QLabel("These are two views of the same data. They should always display the same values."), 0,  0, 1, 2)
-layout.addWidget(t, 1, 0, 1, 2)
 win.show()
 
 ## test save/restore

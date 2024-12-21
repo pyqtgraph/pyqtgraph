@@ -7,10 +7,8 @@ import pyqtgraph.parametertree as pt
 from pyqtgraph.functions import eq
 from pyqtgraph.parametertree.parameterTypes import ChecklistParameterItem
 from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.parametertree.parameterTypes import SimpleParameter
-from xml.etree.ElementTree import Element
 
-import pytest   
+import pytest
 
 app = pg.mkQApp()
 
@@ -209,4 +207,3 @@ def test_recreate_from_savestate():
     state = created.saveState()
     created2 = pt.Parameter.create(**state)
     assert pg.eq(state, created2.saveState())
-

@@ -16,7 +16,7 @@ from .colormaplut import ColorMapLutParameter, ColorMapLutParameterItem
 from .file import FileParameter, FileParameterItem
 from .font import FontParameter, FontParameterItem
 from .list import ListParameter, ListParameterItem
-from .numeric import NumericParameterItem, NumericParameter
+from .numeric import NumericParameterItem
 from .pen import PenParameter, PenParameterItem
 from .progress import ProgressBarParameter, ProgressBarParameterItem
 from .qtenum import QtEnumParameter
