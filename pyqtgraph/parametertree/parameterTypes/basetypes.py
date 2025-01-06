@@ -312,19 +312,11 @@ class SimpleParameter(Parameter):
         else:
             raise TypeError(f'No interpreter found for type {el.get("type")}')
         
-        for key in ["filetype", "detlist", "movelist", "addList", "addText", "label", "limits"]:
-            if key in el.attrib:
-                try:
-                    if key == "filetype":
-                        value = bool(int(el.get(key)))
-                    elif key in ["detlist", "movelist", "addList", "limits"]:
-                        value = eval(el.get(key))
-                    else:
-                        value = str(el.get(key))
-                    param_dict.update({key: value})
-                except:
-                    pass  # Ignore les erreurs pour 'limits' et autres
-
+        key = "limits"
+        if key in el.attrib:
+            value = eval(el.get(key))
+            param_dict.update({key: value})
+            
         return param_dict
 
     
@@ -359,9 +351,9 @@ class SimpleParameter(Parameter):
         else:
             raise TypeError(f'No interpreter found for type {param.opts["type"]}')
         
-        for key in ["limits", "addList", "addText", "detlist", "movelist", "filetype"]:
-            if key in param.opts:
-                opts[key] = str(param.opts[key])
+        key = "limits"
+        if key in param.opts:
+            opts[key] = str(param.opts[key])
 
         return opts
     

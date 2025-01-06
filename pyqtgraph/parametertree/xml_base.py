@@ -28,8 +28,6 @@ class XMLParameter:
             "removable": el.get('removable', '0') == '1',
             "readonly": el.get('readonly', '0') == '1',
             "tip": el.get('tip', ""),
-            "show_pb": el.get('show_pb', '0') == '1'
-
         }
 
         return basic_options
@@ -66,7 +64,6 @@ class XMLParameter:
             "visible": self.opts.get("visible", True),
             "removable": self.opts.get("removable", False),
             "readonly": self.opts.get("readonly", False),
-            "show_pb": self.opts.get("show_pb", False),
         }
 
         opts.update({key: '1' if value else '0' for key, value in boolean_opts.items()})
