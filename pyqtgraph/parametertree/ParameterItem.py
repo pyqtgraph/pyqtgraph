@@ -164,12 +164,6 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
         if not title or title == 'params':
             return
         self.setText(0, title)
-        fm = QtGui.QFontMetrics(self.font(0))
-        textFlags = QtCore.Qt.TextFlag.TextSingleLine
-        size = fm.size(textFlags, self.text(0))
-        size.setHeight(int(size.height() * 1.35))
-        size.setWidth(int(size.width() * 1.15))
-        self.setSizeHint(0, size)
 
     def limitsChanged(self, param, limits):
         """Called when the parameter's limits have changed"""
