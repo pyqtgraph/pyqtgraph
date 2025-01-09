@@ -11,15 +11,15 @@ pg.mkQApp()
 def test_xml_serialize():
     params = [
         {'name': 'param1', 'type': 'int', 'value': 10, 'title': 'Integer Parameter',
-         'visible': True, 'removable': False, 'readonly': False, 'tip': '', 'show_pb': False},
+         'visible': True, 'removable': False, 'readonly': False, 'tip': ''},
         {'name': 'param2', 'type': 'float', 'value': 3.14, 'title': 'Float Parameter',
-         'visible': True, 'removable': False, 'readonly': False, 'tip': '', 'show_pb': False},
+         'visible': True, 'removable': False, 'readonly': False, 'tip': ''},
         {'name': 'param3', 'type': 'str', 'value': 'Hello', 'title': 'String Parameter',
-         'visible': True, 'removable': False, 'readonly': False, 'tip': '', 'show_pb': False},
+         'visible': True, 'removable': False, 'readonly': False, 'tip': ''},
         {'name': 'param4', 'type': 'bool', 'value': True, 'title': 'Boolean Parameter',
-         'visible': True, 'removable': False, 'readonly': False, 'tip': '', 'show_pb': False}
+         'visible': True, 'removable': False, 'readonly': False, 'tip': ''}
     ]
-    settings = Parameter.create(name='settings', type='group', title='setting test',children=params, visible = True, removable = False, readonly = False, tip = '', show_pb = False)
+    settings = Parameter.create(name='settings', type='group', title='setting test',children=params, visible = True, removable = False, readonly = False, tip = '')
 
     xml_string = factory.parameter_to_xml_string(param=settings)
 
