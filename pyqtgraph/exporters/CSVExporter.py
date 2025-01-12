@@ -75,7 +75,6 @@ class CSVExporter(Exporter):
         if cd[0] is None:
             # no data found, break out...
             return None
-        self.data.append(cd)
 
         index = next(self.index_counter)
         if plotDataItem.name() is not None:
@@ -88,8 +87,10 @@ class CSVExporter(Exporter):
         appendAllX = self.params['columnMode'] == '(x,y) per plot'
         if appendAllX or index == 0:
             self.header.extend([xName, yName])
+            self.data.append(cd)
         else:
             self.header.extend([yName])
+            self.data.append([cd[1]])
         return None
 
     def export(self, fileName=None):
