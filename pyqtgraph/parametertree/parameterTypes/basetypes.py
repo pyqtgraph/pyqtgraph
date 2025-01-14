@@ -283,6 +283,7 @@ class SimpleParameter(Parameter):
             'str': StrParameterItem,
         }[self.opts['type']]
 
+    @staticmethod
     def specific_options_from_xml(el):
         """
         Extract and convert a typed value from an XML element.
@@ -319,7 +320,7 @@ class SimpleParameter(Parameter):
             
         return param_dict
 
-    
+    @staticmethod
     def specific_options_from_parameter(param):
         """
         Convert a parameter's value into a format compatible with XML representation.

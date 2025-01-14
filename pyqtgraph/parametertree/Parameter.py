@@ -6,7 +6,6 @@ from collections import OrderedDict
 from xml.etree import ElementTree as ET
 
 from .. import functions as fn
-from xml.etree.ElementTree import Element
 from ..Qt import QtCore
 from .ParameterItem import ParameterItem
 

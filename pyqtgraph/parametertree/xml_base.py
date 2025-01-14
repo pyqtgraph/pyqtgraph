@@ -47,31 +47,33 @@ class XMLParameter:
         """
         pass
 
-    def common_options_from_parameter(self: 'Parameter') -> dict:
+    @staticmethod
+    def common_options_from_parameter(param: 'Parameter') -> dict:
         opts = {
-            "type": self.opts.get("type"),
-            "name": self.opts.get("name"),
-            "tip": self.opts.get("tip","")
+            "type": param.opts.get("type"),
+            "name": param.opts.get("name"),
+            "tip": param.opts.get("tip","")
         }
 
-        title = self.opts['title']
+        title = param.opts['title']
         if title is None:
-            title = self.name()
+            title = param.name()
 
         opts.update(dict(title=title))
 
         boolean_opts = {
-            "visible": self.opts.get("visible", True),
-            "removable": self.opts.get("removable", False),
-            "readonly": self.opts.get("readonly", False),
+            "visible": param.opts.get("visible", True),
+            "removable": param.opts.get("removable", False),
+            "readonly": param.opts.get("readonly", False),
         }
 
         opts.update({key: '1' if value else '0' for key, value in boolean_opts.items()})
 
         return opts
 
+    @staticmethod
     @abstractmethod
-    def specific_options_from_parameter(self: 'Parameter') -> dict:
+    def specific_options_from_parameter(param: 'Parameter') -> dict:
         """ Get the object options specific to its type: value, limits, ...
 
         Returns

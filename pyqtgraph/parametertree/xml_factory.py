@@ -39,12 +39,11 @@ class XMLParameterFactory:
 
     def options_from_parameter(self, param: Parameter):
         param_type = param.type()
-        param_class = self.get_parameter_class(param_type)
-        if param_type == 'group':
-            return param.common_options_from_parameter()
-        else:
-            dic = param.common_options_from_parameter()
-            dic.update(param.specific_options_from_parameter())
+        param_class: Type[Parameter] = self.get_parameter_class(param_type)
+        
+        dic = param_class.common_options_from_parameter(param)
+        dic.update(param_class.specific_options_from_parameter(param))
+        
         return dic
 
     def options_from_xml(self, el: ET.Element):
