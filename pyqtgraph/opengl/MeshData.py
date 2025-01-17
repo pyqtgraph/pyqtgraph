@@ -99,10 +99,10 @@ class MeshData(object):
         return self._edges
         
     def setFaces(self, faces):
-        """Set the (Nf, 3) array of faces. Each rown in the array contains
+        """Set the (Nf, 3) array of faces. Each row in the array contains
         three indexes into the vertex array, specifying the three corners 
         of a triangular face."""
-        self._faces = faces
+        self._faces = np.ascontiguousarray(faces, dtype=np.uint32)
         self._edges = None
         self._vertexFaces = None
         self._vertexesIndexedByFaces = None
