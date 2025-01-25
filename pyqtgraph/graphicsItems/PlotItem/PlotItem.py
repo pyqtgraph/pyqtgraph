@@ -312,7 +312,8 @@ class PlotItem(GraphicsWidget):
                 # Remove old axis
                 oldAxis = self.axes[k]['item']
                 self.layout.removeItem(oldAxis)
-                oldAxis.scene().removeItem(oldAxis)
+                if oldAxis.scene() is not None:
+                    oldAxis.scene().removeItem(oldAxis)
                 oldAxis.unlinkFromView()
             
             # Create new axis
