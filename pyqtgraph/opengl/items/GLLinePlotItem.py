@@ -129,7 +129,9 @@ class GLLinePlotItem(GLGraphicsItem):
 
         glLineWidth(self.width)
 
-        if self.antialias and not context.isOpenGLES():
+        enable_aa = self.antialias and not context.isOpenGLES()
+
+        if enable_aa:
             glEnable(GL_LINE_SMOOTH)
             glEnable(GL_BLEND)
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -148,6 +150,9 @@ class GLLinePlotItem(GLGraphicsItem):
 
         for loc in enabled_locs:
             glDisableVertexAttribArray(loc)
- 
-    
+
+        if enable_aa:
+            glDisable(GL_LINE_SMOOTH)
+            glDisable(GL_BLEND)
         
+        glLineWidth(1.0)
