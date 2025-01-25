@@ -227,7 +227,7 @@ def initShaders():
                 varying vec4 v_color;
                 varying vec3 normal;
                 void main() {
-                    float p = dot(normal, normalize(vec3(1.0, -1.0, -1.0)));
+                    float p = dot(normal, normalize(vec3(1.0, 1.0, 1.0)));
                     p = p < 0. ? 0. : p * 0.8;
                     vec4 color = v_color;
                     color.x = color.x * (0.2 + p);
