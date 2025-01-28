@@ -238,7 +238,10 @@ class GLMeshItem(GLGraphicsItem):
                     glVertexAttrib4f(loc, *color)
                 else:
                     self.m_vbo_color.bind()
-                    glVertexAttribPointer(loc, 4, GL_FLOAT, False, 0, None)
+                    if self.colors.dtype == np.uint8:
+                        glVertexAttribPointer(loc, 4, GL_UNSIGNED_BYTE, True, 0, None)
+                    else:
+                        glVertexAttribPointer(loc, 4, GL_FLOAT, False, 0, None)
                     self.m_vbo_color.release()
                     enabled_locs.append(loc)
 
