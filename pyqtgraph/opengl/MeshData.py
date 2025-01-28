@@ -224,7 +224,15 @@ class MeshData(object):
             return self._vertexNormals[self.faces()]
         else:
             raise Exception("Invalid indexing mode. Accepts: None, 'faces'")
-        
+
+    @staticmethod
+    def _ensure_colors_dtype(colors):
+        if isinstance(colors, np.ndarray) and colors.dtype == np.uint8:
+            dtype = np.uint8
+        else:
+            dtype = np.float32
+        return np.ascontiguousarray(colors, dtype=dtype)
+
     def vertexColors(self, indexed=None):
         """
         Return an array (Nv, 4) of vertex colors.
@@ -246,12 +254,13 @@ class MeshData(object):
         If indexed=='faces', then the array will be interpreted
         as indexed and should have shape (Nf, 3, 4)
         """
+        colors = self._ensure_colors_dtype(colors)
         if indexed is None:
-            self._vertexColors = np.ascontiguousarray(colors, dtype=np.float32)
+            self._vertexColors = colors
             self._vertexColorsIndexedByFaces = None
         elif indexed == 'faces':
             self._vertexColors = None
-            self._vertexColorsIndexedByFaces = np.ascontiguousarray(colors, dtype=np.float32)
+            self._vertexColorsIndexedByFaces = colors
         else:
             raise Exception("Invalid indexing mode. Accepts: None, 'faces'")
         
@@ -279,12 +288,13 @@ class MeshData(object):
         If indexed=='faces', then the array will be interpreted
         as indexed and should have shape (Nf, 3, 4)
         """
+        colors = self._ensure_colors_dtype(colors)
         if indexed is None:
-            self._faceColors = np.ascontiguousarray(colors, dtype=np.float32)
+            self._faceColors = colors
             self._faceColorsIndexedByFaces = None
         elif indexed == 'faces':
             self._faceColors = None
-            self._faceColorsIndexedByFaces = np.ascontiguousarray(colors, dtype=np.float32)
+            self._faceColorsIndexedByFaces = colors
         else:
             raise Exception("Invalid indexing mode. Accepts: None, 'faces'")
         
