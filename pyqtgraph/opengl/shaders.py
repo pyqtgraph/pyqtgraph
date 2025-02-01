@@ -144,16 +144,18 @@ def initShaders():
                 #ifdef GL_ES
                 precision mediump float;
                 #endif
+                uniform float lightDirection[3];
                 varying vec4 v_color;
                 varying vec3 v_normal;
                 void main() {
-                    float p = dot(v_normal, normalize(vec3(1.0, -1.0, -1.0)));
+                    vec3 dirn = vec3(lightDirection[0], lightDirection[1], lightDirection[2]);
+                    float p = dot(v_normal, normalize(dirn));
                     p = p < 0. ? 0. : p * 0.8;
                     vec3 rgb = v_color.rgb * (0.2 + p);
                     gl_FragColor = vec4(rgb, v_color.a);
                 }
             """)
-        ]),
+        ], uniforms={'lightDirection': [1.0, -1.0, -1.0]}),
         
         ## colors get brighter near edges of object
         ShaderProgram('edgeHilight', [   
