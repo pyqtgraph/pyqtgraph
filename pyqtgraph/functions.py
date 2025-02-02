@@ -2833,7 +2833,7 @@ def isosurface(data, level):
     cutEdges = np.zeros([x+1 for x in index.shape]+[3], dtype=np.uint32)
     edges = edgeTable[index]
     for i, shift in enumerate(edgeShifts[:12]):        
-        slices = [slice(shift[j],cutEdges.shape[j]+(shift[j]-1)) for j in range(3)]
+        slices = [slice(int(shift[j]),cutEdges.shape[j]+(int(shift[j])-1)) for j in range(3)]
         cutEdges[slices[0], slices[1], slices[2], shift[3]] += edges & 2**i
     
     ## for each cut edge, interpolate to see where exactly the edge is cut and generate vertex positions
