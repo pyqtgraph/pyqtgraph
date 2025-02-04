@@ -39,7 +39,7 @@ def applyFilter(data, b, a, padding=100, bidir=True):
         d1 = np.hstack([d1[:padding], d1, d1[-padding:]])
     
     if bidir:
-        d1 = scipy.signal.lfilter(b, a, scipy.signal.lfilter(b, a, d1)[::-1])[::-1]
+        d1 = scipy.signal.filtfilt(b, a, d1)
     else:
         d1 = scipy.signal.lfilter(b, a, d1)
     
