@@ -96,7 +96,6 @@ class GLScatterPlotItem(GLGraphicsItem):
         mat_mvp = np.array(mat_mvp.data(), dtype=np.float32)
 
         context = QtGui.QOpenGLContext.currentContext()
-        sformat = context.format()
 
         if not self.vbos_uploaded:
             self.upload_vbo(self.m_vbo_position, self.pos)
@@ -128,14 +127,12 @@ class GLScatterPlotItem(GLGraphicsItem):
             self.m_vbo_size.write(0, point_size, point_size.nbytes)
             self.m_vbo_size.release()
 
-        if sformat.profile() == QtGui.QSurfaceFormat.OpenGLContextProfile.CompatibilityProfile:
-            # setting GL_POINT_SPRITE is only needed for OpenGL 2.1
-            # In Core profiles, it is an error to set it even.
-            glEnable(GL_POINT_SPRITE)
-
         if context.isOpenGLES():
             shader_name = 'pointSprite-es2'
         else:
+            if _is_compatibility_profile(context):
+                glEnable(GL_POINT_SPRITE)
+
             glEnable(GL_PROGRAM_POINT_SIZE)
             shader_name = 'pointSprite'
         shader = shaders.getShaderProgram(shader_name)
@@ -179,3 +176,31 @@ class GLScatterPlotItem(GLGraphicsItem):
 
         for loc in enabled_locs:
             glDisableVertexAttribArray(loc)
+
+
+def _is_compatibility_profile(context):
+    # https://stackoverflow.com/questions/73745603/detect-the-opengl-context-profile-before-version-3-2
+    sformat = context.format()
+    profile = sformat.profile()
+
+    # >= 3.2 has {Compatibility,Core}Profile
+    # <= 3.1 is NoProfile
+
+    if profile == sformat.OpenGLContextProfile.CompatibilityProfile:
+        compat = True
+    elif profile == sformat.OpenGLContextProfile.CoreProfile:
+        compat = False
+    else:
+        compat = False
+        version = sformat.version()
+
+        if version <= (2, 1):
+            compat = True
+        elif version == (3, 0):
+            if sformat.testOption(sformat.FormatOption.DeprecatedFunctions):
+                compat = True
+        elif version == (3, 1):
+            if context.hasExtension(b'GL_ARB_compatibility'):
+                compat = True
+
+    return compat
