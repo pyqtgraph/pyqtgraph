@@ -1,9 +1,9 @@
+import math
 import importlib
 
 from OpenGL.GL import *  # noqa
 import numpy as np
 
-from ... import functions as fn
 from ...Qt import QtGui, QT_LIB
 from .. import shaders
 from ..GLGraphicsItem import GLGraphicsItem
@@ -95,47 +95,31 @@ class GLScatterPlotItem(GLGraphicsItem):
         mat_mvp = self.mvpMatrix()
         mat_mvp = np.array(mat_mvp.data(), dtype=np.float32)
 
+        if not (view := self.view()):
+            view = self.parentItem().view()
+        mat_viewTransform = np.array(self.viewTransform().data(), dtype=np.float32)
+        vec_cameraPosition = list(view.cameraPosition())
+        if self.pxMode:
+            scale = 0
+        else:
+            scale = 2.0 * math.tan(math.radians(0.5 * view.opts["fov"])) / view.width()
+
         context = QtGui.QOpenGLContext.currentContext()
-        sformat = context.format()
 
         if not self.vbos_uploaded:
             self.upload_vbo(self.m_vbo_position, self.pos)
             if isinstance(self.color, np.ndarray):
                 self.upload_vbo(self.m_vbo_color, self.color)
-            if self.pxMode:
-                if isinstance(self.size, np.ndarray):
-                    # for this case, size only needs to be uploaded once
-                    self.upload_vbo(self.m_vbo_size, self.size)
-            else:
-                # for non-pxMode, upload a dummy array to allocate the buffer
-                point_size = np.zeros(len(self.pos), dtype=np.float32)
-                self.upload_vbo(self.m_vbo_size, point_size)
+            if isinstance(self.size, np.ndarray):
+                self.upload_vbo(self.m_vbo_size, self.size)
             self.vbos_uploaded = True
-
-        if self.pxMode:
-            # if size was an (static) array, it has already been uploaded
-            point_size = self.size
-        else:
-            # whether size is a scalar or an array, non-pxMode ends up with
-            # an array that needs to be re-uploaded on each paint.
-            if not (view := self.view()):
-                view = self.parentItem().view()
-            gpos = self.mapToView(self.pos.T).T
-            pxSize = view.pixelSize(gpos)
-            point_size = np.array(self.size / pxSize, dtype=np.float32)
-
-            self.m_vbo_size.bind()
-            self.m_vbo_size.write(0, point_size, point_size.nbytes)
-            self.m_vbo_size.release()
-
-        if sformat.profile() == QtGui.QSurfaceFormat.OpenGLContextProfile.CompatibilityProfile:
-            # setting GL_POINT_SPRITE is only needed for OpenGL 2.1
-            # In Core profiles, it is an error to set it even.
-            glEnable(GL_POINT_SPRITE)
 
         if context.isOpenGLES():
             shader_name = 'pointSprite-es2'
         else:
+            if _is_compatibility_profile(context):
+                glEnable(GL_POINT_SPRITE)
+
             glEnable(GL_PROGRAM_POINT_SIZE)
             shader_name = 'pointSprite'
         shader = shaders.getShaderProgram(shader_name)
@@ -161,13 +145,13 @@ class GLScatterPlotItem(GLGraphicsItem):
                 glVertexAttrib4f(loc, *color)
 
         if (loc := glGetAttribLocation(shader.program(), "a_size")) != -1:
-            if isinstance(point_size, np.ndarray):
+            if isinstance(self.size, np.ndarray):
                 self.m_vbo_size.bind()
                 glVertexAttribPointer(loc, 1, GL_FLOAT, False, 0, None)
                 self.m_vbo_size.release()
                 enabled_locs.append(loc)
             else:
-                glVertexAttrib1f(loc, point_size)
+                glVertexAttrib1f(loc, self.size)
 
         for loc in enabled_locs:
             glEnableVertexAttribArray(loc)
@@ -175,7 +159,39 @@ class GLScatterPlotItem(GLGraphicsItem):
         with shader:
             glUniformMatrix4fv(shader.uniform("u_mvp"), 1, False, mat_mvp)
 
+            glUniformMatrix4fv(shader.uniform("u_viewTransform"), 1, False, mat_viewTransform)
+            glUniform3f(shader.uniform("u_cameraPosition"), *vec_cameraPosition)
+            glUniform1f(shader.uniform("u_scale"), scale)
+
             glDrawArrays(GL_POINTS, 0, len(self.pos))
 
         for loc in enabled_locs:
             glDisableVertexAttribArray(loc)
+
+
+def _is_compatibility_profile(context):
+    # https://stackoverflow.com/questions/73745603/detect-the-opengl-context-profile-before-version-3-2
+    sformat = context.format()
+    profile = sformat.profile()
+
+    # >= 3.2 has {Compatibility,Core}Profile
+    # <= 3.1 is NoProfile
+
+    if profile == sformat.OpenGLContextProfile.CompatibilityProfile:
+        compat = True
+    elif profile == sformat.OpenGLContextProfile.CoreProfile:
+        compat = False
+    else:
+        compat = False
+        version = sformat.version()
+
+        if version <= (2, 1):
+            compat = True
+        elif version == (3, 0):
+            if sformat.testOption(sformat.FormatOption.DeprecatedFunctions):
+                compat = True
+        elif version == (3, 1):
+            if context.hasExtension(b'GL_ARB_compatibility'):
+                compat = True
+
+    return compat
