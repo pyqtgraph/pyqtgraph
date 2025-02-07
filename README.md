@@ -8,7 +8,7 @@ PyQtGraph
 
 A pure-Python graphics library for PyQt5/PyQt6/PySide2/PySide6
 
-Copyright 2024 PyQtGraph developers
+Copyright 2025 PyQtGraph developers
 
 <https://www.pyqtgraph.org>
 
@@ -36,7 +36,7 @@ Currently this means:
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
   [PySide2](https://wiki.qt.io/Qt_for_Python), or
   [PySide6](https://wiki.qt.io/Qt_for_Python)
-* [`numpy`](https://github.com/numpy/numpy) 1.24+
+* [`numpy`](https://github.com/numpy/numpy) 1.25+
 
 ### Optional added functionalities
 
