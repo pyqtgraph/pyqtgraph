@@ -230,6 +230,7 @@ class PlotDataItem(GraphicsObject):
     * :meth:`setPhasemapMode`
     * :meth:`setFftMode`
     * :meth:`setLogMode`
+    * :meth:`setSubtractMeanMode`
 
     It can pre-process large data sets to accelerate plotting:
     
@@ -584,7 +585,8 @@ class PlotDataItem(GraphicsObject):
         self.opts = {
             # defaults to 'all', unless overridden to 'finite' for log-scaling
             'connect': 'auto',
-            'skipFiniteCheck': False, 
+            'skipFiniteCheck': False,
+            'subtractMeanMode': False,
             'fftMode': False,
             'logMode': [False, False],
             'derivativeMode': False,
@@ -753,6 +755,26 @@ class PlotDataItem(GraphicsObject):
         self._datasetMapped  = None  # invalidate mapped data
         self._datasetDisplay = None  # invalidate display data
         self._adsLastValue   = 1     # reset auto-downsample value
+        self.updateItems(styleUpdate=False)
+        self.informViewBoundsChanged()
+
+    def setSubtractMeanMode(self, state: bool):
+        """
+        Enable mean value subtraction mode.
+
+        In mean value subtraction mode, the data is mapped according to ``y_mapped = y - mean(y)``.
+
+        Parameters
+        ----------
+        state : bool
+            Enable mean subtraction mode.
+        """
+        if self.opts['subtractMeanMode'] == state:
+            return
+        self.opts['subtractMeanMode'] = state
+        self._datasetMapped = None  # invalidate mapped data
+        self._datasetDisplay = None  # invalidate display data
+        self._adsLastValue = 1  # reset auto-downsample value
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
@@ -1443,6 +1465,8 @@ class PlotDataItem(GraphicsObject):
                 y = y.astype(np.uint8)
             if x.dtype == bool:
                 x = x.astype(np.uint8)
+            if self.opts['subtractMeanMode']:
+                y = y - np.mean(y)
             if self.opts['fftMode']:
                 x, y = self._fourierTransform(x, y)
                 # Ignore the first bin for fft data if we have a logx scale
