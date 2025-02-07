@@ -182,10 +182,6 @@ class GraphicsLayout(GraphicsWidget):
         # Clear the row and column where the item was
         for r, c in self.items[item]:
             del self.rows[r][c]
-            
-            # Adjust the layout by updating row/column stretch factors
-            self.layout.setRowStretchFactor(r, 0)
-            self.layout.setColumnStretchFactor(c, 0)
         
         # Clean up the references to the removed item
         del self.items[item]
