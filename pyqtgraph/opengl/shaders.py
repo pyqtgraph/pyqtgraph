@@ -16,10 +16,8 @@ import re
 ##
 ##
 POINT_SPRITE_VERT_SRC = """
-    uniform mat4 u_viewTransform;
-    uniform vec3 u_cameraPosition;
     uniform float u_scale;
-
+    uniform mat4 u_modelview;
     uniform mat4 u_mvp;
     attribute vec4 a_position;
     attribute vec4 a_color;
@@ -33,8 +31,10 @@ POINT_SPRITE_VERT_SRC = """
 
         if (u_scale != 0.0) {
             // pxMode=False
-            vec4 gpos = u_viewTransform * a_position;
-            float dist = distance(u_cameraPosition, gpos.xyz);
+            // the modelview matrix transforms the vertex to
+            // camera space, where the camera is at (0, 0, 0).
+            vec4 cpos = u_modelview * a_position;
+            float dist = length(cpos.xyz);
             // equations:
             //   xDist = dist * 2.0 * tan(0.5 * fov)
             //   pxSize = xDist / view_width
