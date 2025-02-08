@@ -42,7 +42,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install mypy
@@ -55,9 +55,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-latest]
         qt-lib: [pyqt, pyside]
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
         include:
           - python-version: "3.10"
             qt-lib: "pyqt"
@@ -77,10 +77,20 @@ jobs:
           - python-version: "3.12"
             qt-lib: "pyside"
             qt-version: "PySide6-Essentials"
+          - python-version: "3.13"
+            qt-lib: "pyqt"
+            qt-version: "PyQt6"
+          - python-version: "3.13"
+            qt-lib: "pyside"
+            qt-version: "PySide6-Essentials"
         exclude:
           - os: macos-latest
             python-version: "3.10"
             qt-lib: "pyside"
+          - os: ubuntu-24.04-arm
+            python-version: "3.10"
+          - os: ubuntu-24.04-arm
+            python-version: "3.11"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -92,7 +102,7 @@ jobs:
       - name: "Install Windows-Mesa OpenGL DLL"
         if: runner.os == 'Windows'
         run: |
-          curl -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/24.0.6/mesa3d-24.0.6-release-msvc.7z
+          curl -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/24.3.4/mesa3d-24.3.4-release-msvc.7z
           7z x mesa.7z -o*
           powershell.exe mesa\systemwidedeploy.cmd 1
       - name: Install Dependencies
@@ -184,13 +194,15 @@ jobs:
           miniforge-version: latest
           environment-file: ${{ matrix.environment-file }}
           auto-update-conda: false
+          conda-remove-defaults: "true"
+          channels: 'conda-forge'
           python-version: "3.12"
       - name: "Install Test Framework"
         run: pip install pytest pytest-qt pytest-xdist
       - name: "Install Windows-Mesa OpenGL DLL"
         if: runner.os == 'Windows'
         run: |
-          curl -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/24.0.6/mesa3d-24.0.6-release-msvc.7z
+          curl -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/24.3.4/mesa3d-24.3.4-release-msvc.7z
           7z x mesa.7z -o*
           powershell.exe mesa\systemwidedeploy.cmd 1
         shell: pwsh
@@ -257,7 +269,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
           cache: pip
       - name: Build Wheel
         run: |
@@ -284,7 +296,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
           cache: pip
       - name: Install Dependencies
         run: |
@@ -310,7 +322,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           # Use latest Python, so it understands all syntax.
-          python-version: "3.12"
+          python-version: "3.13"
 
       - uses: actions/download-artifact@v4
         with:
