@@ -95,10 +95,10 @@ class GLScatterPlotItem(GLGraphicsItem):
         mat_mvp = self.mvpMatrix()
         mat_mvp = np.array(mat_mvp.data(), dtype=np.float32)
 
-        if not (view := self.view()):
-            view = self.parentItem().view()
-        mat_viewTransform = np.array(self.viewTransform().data(), dtype=np.float32)
-        vec_cameraPosition = list(view.cameraPosition())
+        mat_modelview = self.modelViewMatrix()
+        mat_modelview = np.array(mat_modelview.data(), dtype=np.float32)
+
+        view = self.view()
         if self.pxMode:
             scale = 0
         else:
@@ -159,8 +159,7 @@ class GLScatterPlotItem(GLGraphicsItem):
         with shader:
             glUniformMatrix4fv(shader.uniform("u_mvp"), 1, False, mat_mvp)
 
-            glUniformMatrix4fv(shader.uniform("u_viewTransform"), 1, False, mat_viewTransform)
-            glUniform3f(shader.uniform("u_cameraPosition"), *vec_cameraPosition)
+            glUniformMatrix4fv(shader.uniform("u_modelview"), 1, False, mat_modelview)
             glUniform1f(shader.uniform("u_scale"), scale)
 
             glDrawArrays(GL_POINTS, 0, len(self.pos))
