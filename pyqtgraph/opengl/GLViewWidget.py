@@ -1,6 +1,7 @@
 from OpenGL.GL import *  # noqa
 import OpenGL.GL.framebufferobjects as glfbo  # noqa
 from math import cos, radians, sin, tan
+import importlib
 import warnings
 
 import numpy as np
@@ -8,7 +9,12 @@ import numpy as np
 from .. import Vector
 from .. import functions as fn
 from .. import getConfigOption
-from ..Qt import QtCore, QtGui, QtWidgets
+from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
+
+if QT_LIB in ["PyQt5", "PySide2"]:
+    QtOpenGL = QtGui
+else:
+    QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
 
 class GLViewMixin:
     def __init__(self, *args, rotationMethod='euler', **kwargs):
@@ -48,6 +54,7 @@ class GLViewMixin:
 
         self._modelViewStack = []
         self._projectionStack = []
+        self.default_vao = QtOpenGL.QOpenGLVertexArrayObject(self)
 
     def deviceWidth(self):
         dpr = self.devicePixelRatioF()
@@ -114,6 +121,12 @@ class GLViewMixin:
             raise RuntimeError(
                 "pyqtgraph.opengl: Requires >= OpenGL 2.0; Found %s" % verString
             )
+
+        # Core profile requires a non-default VAO
+        if fmt.profile() == QtGui.QSurfaceFormat.OpenGLContextProfile.CoreProfile:
+            if not self.default_vao.isCreated():
+                self.default_vao.create()
+                self.default_vao.bind()
 
         for item in self.items:
             if not item.isInitialized():
@@ -241,6 +254,13 @@ class GLViewMixin:
                     if useItemNames:
                         glLoadName(i._id)
                         self._itemNames[i._id] = i
+
+                    # The GLGraphicsItem(s) making use of QPainter end
+                    # up indirectly unbinding the default VAO, so we
+                    # rebind it before each GLGraphicsItem.
+                    if self.default_vao.isCreated():
+                        self.default_vao.bind()
+
                     i.paint()
                 except:
                     from .. import debug
