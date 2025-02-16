@@ -631,8 +631,11 @@ class OpenGLState(QtCore.QObject):
         }
     """
     FRAG_SRC_COMPAT = """
-        varying mediump float v_luminance;
-        uniform mediump sampler2D u_texture;
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+        varying float v_luminance;
+        uniform sampler2D u_texture;
         void main() {
             if (!(v_luminance == v_luminance)) discard;
             float s = clamp(v_luminance, 0.0, 1.0);
