@@ -1,5 +1,4 @@
 from OpenGL.GL import *  # noqa
-import OpenGL.GL.framebufferobjects as glfbo  # noqa
 from math import cos, radians, sin, tan
 import importlib
 import warnings
@@ -533,27 +532,37 @@ class GLViewMixin:
         depth_buf = None
         try:
             output = np.empty((h, w, 4), dtype=np.ubyte)
-            fb = glfbo.glGenFramebuffers(1)
-            glfbo.glBindFramebuffer(glfbo.GL_FRAMEBUFFER, fb )
             
-            glEnable(GL_TEXTURE_2D)
             tex = glGenTextures(1)
             glBindTexture(GL_TEXTURE_2D, tex)
             texwidth = textureSize
             data = np.zeros((texwidth,texwidth,4), dtype=np.ubyte)
             
             ## Test texture dimensions first
-            glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
-            if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
-                raise RuntimeError("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % data.shape[:2])
+            if not self.context().isOpenGLES():
+                glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
+                if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
+                    raise RuntimeError("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % data.shape[:2])
             ## create texture
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, data)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
+            glBindTexture(GL_TEXTURE_2D, 0)
 
             # Create depth buffer
             depth_buf = glGenRenderbuffers(1)
             glBindRenderbuffer(GL_RENDERBUFFER, depth_buf)
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, texwidth, texwidth)
+            if self.context().isOpenGLES():
+                if self.context().format().version() >= (3, 0):
+                    depth_fmt = GL_DEPTH_COMPONENT24
+                else:
+                    depth_fmt = GL_DEPTH_COMPONENT16
+            else:
+                depth_fmt = GL_DEPTH_COMPONENT
+            glRenderbufferStorage(GL_RENDERBUFFER, depth_fmt, texwidth, texwidth)
+
+            fb = glGenFramebuffers(1)
+            glBindFramebuffer(GL_FRAMEBUFFER, fb)
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buf)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0)
 
             self.opts['viewport'] = (0, 0, w, h)  # viewport is the complete image; this ensures that paintGL(region=...)
                                                   # is interpreted correctly.
@@ -565,25 +574,22 @@ class GLViewMixin:
                     w2 = x2-x
                     h2 = y2-y
                     
-                    ## render to texture
-                    glfbo.glFramebufferTexture2D(glfbo.GL_FRAMEBUFFER, glfbo.GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0)
-                    
+                    glBindFramebuffer(GL_FRAMEBUFFER, fb)
                     self.paintGL(region=(x, h-y-h2, w2, h2), viewport=(0, 0, w2, h2))  # only render sub-region
-                    glBindTexture(GL_TEXTURE_2D, tex) # fixes issue #366
                     
-                    ## read texture back to array
-                    data = glGetTexImage(GL_TEXTURE_2D, 0, format, type)
-                    data = np.frombuffer(data, dtype=np.ubyte).reshape(texwidth,texwidth,4)[::-1, ...]
-                    output[y+padding:y2-padding, x+padding:x2-padding] = data[-(h2-padding):-padding, padding:w2-padding]
+                    glBindFramebuffer(GL_FRAMEBUFFER, fb)
+                    glReadPixels(0, 0, texwidth, texwidth, format, type, data)
+                    data_yflip = data[::-1, ...]
+                    output[y+padding:y2-padding, x+padding:x2-padding] = data_yflip[-(h2-padding):-padding, padding:w2-padding]
                     
         finally:
             self.opts['viewport'] = None
-            glfbo.glBindFramebuffer(glfbo.GL_FRAMEBUFFER, 0)
+            glBindFramebuffer(GL_FRAMEBUFFER, self.defaultFramebufferObject())
             glBindTexture(GL_TEXTURE_2D, 0)
             if tex is not None:
                 glDeleteTextures([tex])
             if fb is not None:
-                glfbo.glDeleteFramebuffers([fb])
+                glDeleteFramebuffers(1, [fb])
             if depth_buf is not None:
                 glDeleteRenderbuffers(1, [depth_buf])
 
