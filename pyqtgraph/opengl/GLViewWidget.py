@@ -39,8 +39,7 @@ class GLViewMixin:
             'elevation': 30,          ## camera's angle of elevation in degrees
             'azimuth': 45,            ## camera's azimuthal angle in degrees 	
                                       ## (rotation around z-axis 0 points along x-axis)	
-            'viewport': None,         ## glViewport params; None == whole widget
-                                      ## note that 'viewport' is in device pixels
+            'viewport': None,         ## no longer in use
             'rotationMethod': rotationMethod
         }
         self.reset()
@@ -73,7 +72,7 @@ class GLViewMixin:
         self.opts['elevation'] = 30          ## camera's angle of elevation in degrees
         self.opts['azimuth'] = 45            ## camera's azimuthal angle in degrees 
                                              ## (rotation around z-axis 0 points along x-axis)
-        self.opts['viewport'] = None         ## glViewport params; None == whole widget
+        self.opts['viewport'] = None         ## no longer in use
         self.setBackgroundColor(getConfigOption('background'))
 
     def addItem(self, item):
@@ -140,22 +139,15 @@ class GLViewMixin:
         self.update()
         
     def getViewport(self):
-        vp = self.opts['viewport']
-        if vp is None:
-            return (0, 0, self.deviceWidth(), self.deviceHeight())
-        else:
-            return vp
+        return (0, 0, self.width(), self.height())
         
-    def setProjection(self, region=None):
-        m = self.projectionMatrix(region)
+    def setProjection(self, region, viewport):
+        m = self.projectionMatrix(region, viewport)
         self._projectionStack.clear()
         self._projectionStack.append(m)
 
-    def projectionMatrix(self, region=None):
-        if region is None:
-            region = (0, 0, self.deviceWidth(), self.deviceHeight())
-        
-        x0, y0, w, h = self.getViewport()
+    def projectionMatrix(self, region, viewport):
+        x0, y0, w, h = viewport
         dist = self.opts['distance']
         fov = self.opts['fov']
         nearClip = dist * 0.001
@@ -203,7 +195,8 @@ class GLViewMixin:
         Return a list of the items displayed in the region (x, y, w, h)
         relative to the widget.        
         """
-        region = (region[0], self.deviceHeight()-(region[1]+region[3]), region[2], region[3])
+        region = (region[0], self.height()-(region[1]+region[3]), region[2], region[3])
+        viewport = self.getViewport()
         
         #buf = np.zeros(100000, dtype=np.uint)
         buf = glSelectBuffer(100000)
@@ -212,7 +205,7 @@ class GLViewMixin:
             glInitNames()
             glPushName(0)
             self._itemNames = {}
-            self.paintGL(region=region, useItemNames=True)
+            self.paint(region=region, viewport=viewport, useItemNames=True)
             
         finally:
             hits = glRenderMode(GL_RENDER)
@@ -221,17 +214,18 @@ class GLViewMixin:
         items.sort(key=lambda i: i[0])
         return [self._itemNames[i[1]] for i in items]
     
-    def paintGL(self, region=None, viewport=None, useItemNames=False):
+    def paintGL(self):
+        # when called by Qt, glViewport has already been called
+        # with device pixel ratio taken of
+        region = self.getViewport()
+        self.paint(region=region, viewport=region)
+
+    def paint(self, *, region, viewport, useItemNames=False):
         """
-        viewport specifies the arguments to glViewport. If None, then we use self.opts['viewport']
-        region specifies the sub-region of self.opts['viewport'] that should be rendered.
-        Note that we may use viewport != self.opts['viewport'] when exporting.
+        It is caller's responsibility to call glViewport prior to calling this method.
+        region specifies the sub-region of viewport that should be rendered.
         """
-        if viewport is None:
-            glViewport(*self.getViewport())
-        else:
-            glViewport(*viewport)
-        self.setProjection(region=region)
+        self.setProjection(region, viewport)
         self.setModelview()
         bgcolor = self.opts['bgcolor']
         glClearColor(*bgcolor)
@@ -457,16 +451,6 @@ class GLViewMixin:
         
     def mouseReleaseEvent(self, ev):
         pass
-        # Example item selection code:
-        #region = (ev.pos().x()-5, ev.pos().y()-5, 10, 10)
-        #print(self.itemsAt(region))
-        
-        ## debugging code: draw the picking region
-        #glViewport(*self.getViewport())
-        #glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
-        #region = (region[0], self.height()-(region[1]+region[3]), region[2], region[3])
-        #self.paintGL(region=region)
-        #self.swapBuffers()
         
     def wheelEvent(self, ev):
         delta = ev.angleDelta().x()
@@ -564,8 +548,6 @@ class GLViewMixin:
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buf)
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0)
 
-            self.opts['viewport'] = (0, 0, w, h)  # viewport is the complete image; this ensures that paintGL(region=...)
-                                                  # is interpreted correctly.
             p2 = 2 * padding
             for x in range(-padding, w-padding, texwidth-p2):
                 for y in range(-padding, h-padding, texwidth-p2):
@@ -575,7 +557,8 @@ class GLViewMixin:
                     h2 = y2-y
                     
                     glBindFramebuffer(GL_FRAMEBUFFER, fb)
-                    self.paintGL(region=(x, h-y-h2, w2, h2), viewport=(0, 0, w2, h2))  # only render sub-region
+                    glViewport(0, 0, w2, h2)
+                    self.paint(region=(x, h-y-h2, w2, h2), viewport=(0, 0, w, h))  # only render sub-region
                     
                     glBindFramebuffer(GL_FRAMEBUFFER, fb)
                     glReadPixels(0, 0, texwidth, texwidth, format, type, data)
@@ -583,7 +566,6 @@ class GLViewMixin:
                     output[y+padding:y2-padding, x+padding:x2-padding] = data_yflip[-(h2-padding):-padding, padding:w2-padding]
                     
         finally:
-            self.opts['viewport'] = None
             glBindFramebuffer(GL_FRAMEBUFFER, self.defaultFramebufferObject())
             glBindTexture(GL_TEXTURE_2D, 0)
             if tex is not None:
