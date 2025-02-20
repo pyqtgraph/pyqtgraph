@@ -511,43 +511,17 @@ class GLViewMixin:
         w,h = map(int, size)
         
         self.makeCurrent()
-        tex = None
-        fb = None
-        depth_buf = None
+
+        texwidth = textureSize
+
+        fbo = QtOpenGL.QOpenGLFramebufferObject(texwidth, texwidth,
+                    QtOpenGL.QOpenGLFramebufferObject.Attachment.CombinedDepthStencil,
+                    GL_TEXTURE_2D)
+
+        output = np.empty((h, w, 4), dtype=np.ubyte)
+        data = np.empty((texwidth, texwidth, 4), dtype=np.ubyte)
+
         try:
-            output = np.empty((h, w, 4), dtype=np.ubyte)
-            
-            tex = glGenTextures(1)
-            glBindTexture(GL_TEXTURE_2D, tex)
-            texwidth = textureSize
-            data = np.zeros((texwidth,texwidth,4), dtype=np.ubyte)
-            
-            ## Test texture dimensions first
-            if not self.context().isOpenGLES():
-                glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
-                if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
-                    raise RuntimeError("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % data.shape[:2])
-            ## create texture
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
-            glBindTexture(GL_TEXTURE_2D, 0)
-
-            # Create depth buffer
-            depth_buf = glGenRenderbuffers(1)
-            glBindRenderbuffer(GL_RENDERBUFFER, depth_buf)
-            if self.context().isOpenGLES():
-                if self.context().format().version() >= (3, 0):
-                    depth_fmt = GL_DEPTH_COMPONENT24
-                else:
-                    depth_fmt = GL_DEPTH_COMPONENT16
-            else:
-                depth_fmt = GL_DEPTH_COMPONENT
-            glRenderbufferStorage(GL_RENDERBUFFER, depth_fmt, texwidth, texwidth)
-
-            fb = glGenFramebuffers(1)
-            glBindFramebuffer(GL_FRAMEBUFFER, fb)
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buf)
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0)
-
             p2 = 2 * padding
             for x in range(-padding, w-padding, texwidth-p2):
                 for y in range(-padding, h-padding, texwidth-p2):
@@ -556,24 +530,17 @@ class GLViewMixin:
                     w2 = x2-x
                     h2 = y2-y
                     
-                    glBindFramebuffer(GL_FRAMEBUFFER, fb)
+                    fbo.bind()
                     glViewport(0, 0, w2, h2)
                     self.paint(region=(x, h-y-h2, w2, h2), viewport=(0, 0, w, h))  # only render sub-region
                     
-                    glBindFramebuffer(GL_FRAMEBUFFER, fb)
+                    fbo.bind()
                     glReadPixels(0, 0, texwidth, texwidth, format, type, data)
                     data_yflip = data[::-1, ...]
                     output[y+padding:y2-padding, x+padding:x2-padding] = data_yflip[-(h2-padding):-padding, padding:w2-padding]
                     
         finally:
-            glBindFramebuffer(GL_FRAMEBUFFER, self.defaultFramebufferObject())
-            glBindTexture(GL_TEXTURE_2D, 0)
-            if tex is not None:
-                glDeleteTextures([tex])
-            if fb is not None:
-                glDeleteFramebuffers(1, [fb])
-            if depth_buf is not None:
-                glDeleteRenderbuffers(1, [depth_buf])
+            fbo.release()
 
         return output
 
