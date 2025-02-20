@@ -1,4 +1,3 @@
-from OpenGL.GL import *  # noqa
 from OpenGL import GL
 
 from .. import Transform3D
@@ -6,21 +5,21 @@ from ..Qt import QtCore, QtGui
 
 GLOptions = {
     'opaque': {
-        GL_DEPTH_TEST: True,
-        GL_BLEND: False,
-        GL_CULL_FACE: False,
+        GL.GL_DEPTH_TEST: True,
+        GL.GL_BLEND: False,
+        GL.GL_CULL_FACE: False,
     },
     'translucent': {
-        GL_DEPTH_TEST: True,
-        GL_BLEND: True,
-        GL_CULL_FACE: False,
-        'glBlendFunc': (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA),
+        GL.GL_DEPTH_TEST: True,
+        GL.GL_BLEND: True,
+        GL.GL_CULL_FACE: False,
+        'glBlendFunc': (GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA),
     },
     'additive': {
-        GL_DEPTH_TEST: False,
-        GL_BLEND: True,
-        GL_CULL_FACE: False,
-        'glBlendFunc': (GL_SRC_ALPHA, GL_ONE),
+        GL.GL_DEPTH_TEST: False,
+        GL.GL_BLEND: True,
+        GL.GL_CULL_FACE: False,
+        'glBlendFunc': (GL.GL_SRC_ALPHA, GL.GL_ONE),
     },
 }    
 
@@ -256,9 +255,9 @@ class GLGraphicsItem(QtCore.QObject):
                 func(*v)
             else:
                 if v is True:
-                    glEnable(k)
+                    GL.glEnable(k)
                 else:
-                    glDisable(k)
+                    GL.glDisable(k)
     
     def paint(self):
         """
