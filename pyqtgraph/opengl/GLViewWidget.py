@@ -114,10 +114,10 @@ class GLViewMixin:
                 RuntimeWarning,
                 stacklevel=2
             )
-        if fmt.version() < (2, 0):
+        elif fmt.version() < (2, 1):
             verString = GL.glGetString(GL.GL_VERSION)
             raise RuntimeError(
-                "pyqtgraph.opengl: Requires >= OpenGL 2.0; Found %s" % verString
+                "pyqtgraph.opengl: Requires >= OpenGL 2.1; Found %s" % verString
             )
 
         # Core profile requires a non-default VAO
