@@ -1,8 +1,8 @@
-from OpenGL.GL import *  # noqa
 from math import cos, radians, sin, tan
 import importlib
 import warnings
 
+from OpenGL import GL
 import numpy as np
 
 from .. import Vector
@@ -115,7 +115,7 @@ class GLViewMixin:
                 stacklevel=2
             )
         if fmt.version() < (2, 0):
-            verString = glGetString(GL_VERSION)
+            verString = GL.glGetString(GL.GL_VERSION)
             raise RuntimeError(
                 "pyqtgraph.opengl: Requires >= OpenGL 2.0; Found %s" % verString
             )
@@ -199,16 +199,16 @@ class GLViewMixin:
         viewport = self.getViewport()
         
         #buf = np.zeros(100000, dtype=np.uint)
-        buf = glSelectBuffer(100000)
+        buf = GL.glSelectBuffer(100000)
         try:
-            glRenderMode(GL_SELECT)
-            glInitNames()
-            glPushName(0)
+            GL.glRenderMode(GL.GL_SELECT)
+            GL.glInitNames()
+            GL.glPushName(0)
             self._itemNames = {}
             self.paint(region=region, viewport=viewport, useItemNames=True)
             
         finally:
-            hits = glRenderMode(GL_RENDER)
+            hits = GL.glRenderMode(GL.GL_RENDER)
             
         items = [(h.near, h.names[0]) for h in hits]
         items.sort(key=lambda i: i[0])
@@ -228,8 +228,8 @@ class GLViewMixin:
         self.setProjection(region, viewport)
         self.setModelview()
         bgcolor = self.opts['bgcolor']
-        glClearColor(*bgcolor)
-        glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
+        GL.glClearColor(*bgcolor)
+        GL.glClear( GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT )
         self.drawItemTree(useItemNames=useItemNames)
         
     def drawItemTree(self, item=None, useItemNames=False):
@@ -245,7 +245,7 @@ class GLViewMixin:
             if i is item:
                 try:
                     if useItemNames:
-                        glLoadName(i._id)
+                        GL.glLoadName(i._id)
                         self._itemNames[i._id] = i
 
                     # The GLGraphicsItem(s) making use of QPainter end
@@ -507,7 +507,7 @@ class GLViewMixin:
         """
         return self.grabFramebuffer()
         
-    def renderToArray(self, size, format=GL_BGRA, type=GL_UNSIGNED_BYTE, textureSize=1024, padding=256):
+    def renderToArray(self, size, format=GL.GL_BGRA, type=GL.GL_UNSIGNED_BYTE, textureSize=1024, padding=256):
         w,h = map(int, size)
         
         self.makeCurrent()
@@ -516,7 +516,7 @@ class GLViewMixin:
 
         fbo = QtOpenGL.QOpenGLFramebufferObject(texwidth, texwidth,
                     QtOpenGL.QOpenGLFramebufferObject.Attachment.CombinedDepthStencil,
-                    GL_TEXTURE_2D)
+                    GL.GL_TEXTURE_2D)
 
         output = np.empty((h, w, 4), dtype=np.ubyte)
         data = np.empty((texwidth, texwidth, 4), dtype=np.ubyte)
@@ -531,11 +531,11 @@ class GLViewMixin:
                     h2 = y2-y
                     
                     fbo.bind()
-                    glViewport(0, 0, w2, h2)
+                    GL.glViewport(0, 0, w2, h2)
                     self.paint(region=(x, h-y-h2, w2, h2), viewport=(0, 0, w, h))  # only render sub-region
                     
                     fbo.bind()
-                    glReadPixels(0, 0, texwidth, texwidth, format, type, data)
+                    GL.glReadPixels(0, 0, texwidth, texwidth, format, type, data)
                     data_yflip = data[::-1, ...]
                     output[y+padding:y2-padding, x+padding:x2-padding] = data_yflip[-(h2-padding):-padding, padding:w2-padding]
                     
