@@ -928,7 +928,7 @@ class PlotItem(GraphicsWidget):
                         'peak': Downsample by drawing a saw wave that follows the min and 
                         max of the original data. This method produces the best visual 
                         representation of the data but is slower.
-        lttb_threshold (int) Threshold for lttb down-sampling method
+        lttb_threshold  (int) Threshold for lttb down-sampling method
         =============== ====================================================================
         """
         if ds is not None:
