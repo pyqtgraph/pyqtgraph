@@ -1,11 +1,11 @@
 import math
 import importlib
 
-from OpenGL.GL import *  # noqa
+from OpenGL import GL
+from OpenGL.GL import shaders
 import numpy as np
 
 from ...Qt import QtGui, QT_LIB
-from .. import shaders
 from ..GLGraphicsItem import GLGraphicsItem
 
 if QT_LIB in ["PyQt5", "PySide2"]:
@@ -18,6 +18,8 @@ __all__ = ['GLScatterPlotItem']
 class GLScatterPlotItem(GLGraphicsItem):
     """Draws points at a list of 3D positions."""
     
+    _shaderProgram = None
+
     def __init__(self, parentItem=None, **kwds):
         super().__init__()
         glopts = kwds.pop('glOptions', 'additive')
@@ -86,6 +88,42 @@ class GLScatterPlotItem(GLGraphicsItem):
         vbo.allocate(arr, arr.nbytes)
         vbo.release()
 
+    @staticmethod
+    def getShaderProgram():
+        klass = GLScatterPlotItem
+
+        if klass._shaderProgram is not None:
+            return klass._shaderProgram
+
+        ctx = QtGui.QOpenGLContext.currentContext()
+        fmt = ctx.format()
+
+        if ctx.isOpenGLES():
+            if fmt.version() >= (3, 0):
+                glsl_version = "#version 300 es\n"
+                sources = SHADER_CORE
+            else:
+                glsl_version = "#version 100\n"
+                sources = SHADER_LEGACY
+        else:
+            if fmt.version() >= (3, 1):
+                glsl_version = "#version 140\n"
+                sources = SHADER_CORE
+            else:
+                glsl_version = "#version 120\n"
+                sources = SHADER_LEGACY
+
+        compiled = [shaders.compileShader([glsl_version, v], k) for k, v in sources.items()]
+        program = shaders.compileProgram(*compiled)
+
+        # bind generic vertex attrib 0 to "a_position" so that
+        # vertex attrib 0 definitely gets enabled later.
+        GL.glBindAttribLocation(program, 0, "a_position")
+        GL.glLinkProgram(program)
+
+        klass._shaderProgram = program
+        return program
+
     def paint(self):
         if self.pos is None:
             return
@@ -95,10 +133,10 @@ class GLScatterPlotItem(GLGraphicsItem):
         mat_mvp = self.mvpMatrix()
         mat_mvp = np.array(mat_mvp.data(), dtype=np.float32)
 
-        if not (view := self.view()):
-            view = self.parentItem().view()
-        mat_viewTransform = np.array(self.viewTransform().data(), dtype=np.float32)
-        vec_cameraPosition = list(view.cameraPosition())
+        mat_modelview = self.modelViewMatrix()
+        mat_modelview = np.array(mat_modelview.data(), dtype=np.float32)
+
+        view = self.view()
         if self.pxMode:
             scale = 0
         else:
@@ -114,59 +152,59 @@ class GLScatterPlotItem(GLGraphicsItem):
                 self.upload_vbo(self.m_vbo_size, self.size)
             self.vbos_uploaded = True
 
-        if context.isOpenGLES():
-            shader_name = 'pointSprite-es2'
-        else:
+        if not context.isOpenGLES():
             if _is_compatibility_profile(context):
-                glEnable(GL_POINT_SPRITE)
+                GL.glEnable(GL.GL_POINT_SPRITE)
 
-            glEnable(GL_PROGRAM_POINT_SIZE)
-            shader_name = 'pointSprite'
-        shader = shaders.getShaderProgram(shader_name)
+            GL.glEnable(GL.GL_PROGRAM_POINT_SIZE)
+
+        program = self.getShaderProgram()
 
         enabled_locs = []
 
-        if (loc := glGetAttribLocation(shader.program(), "a_position")) != -1:
+        if (loc := GL.glGetAttribLocation(program, "a_position")) != -1:
             self.m_vbo_position.bind()
-            glVertexAttribPointer(loc, 3, GL_FLOAT, False, 0, None)
+            GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
             self.m_vbo_position.release()
             enabled_locs.append(loc)
 
-        if (loc := glGetAttribLocation(shader.program(), "a_color")) != -1:
+        if (loc := GL.glGetAttribLocation(program, "a_color")) != -1:
             if isinstance(self.color, np.ndarray):
                 self.m_vbo_color.bind()
-                glVertexAttribPointer(loc, 4, GL_FLOAT, False, 0, None)
+                GL.glVertexAttribPointer(loc, 4, GL.GL_FLOAT, False, 0, None)
                 self.m_vbo_color.release()
                 enabled_locs.append(loc)
             else:
                 color = self.color
                 if isinstance(color, QtGui.QColor):
                     color = color.getRgbF()
-                glVertexAttrib4f(loc, *color)
+                GL.glVertexAttrib4f(loc, *color)
 
-        if (loc := glGetAttribLocation(shader.program(), "a_size")) != -1:
+        if (loc := GL.glGetAttribLocation(program, "a_size")) != -1:
             if isinstance(self.size, np.ndarray):
                 self.m_vbo_size.bind()
-                glVertexAttribPointer(loc, 1, GL_FLOAT, False, 0, None)
+                GL.glVertexAttribPointer(loc, 1, GL.GL_FLOAT, False, 0, None)
                 self.m_vbo_size.release()
                 enabled_locs.append(loc)
             else:
-                glVertexAttrib1f(loc, self.size)
+                GL.glVertexAttrib1f(loc, self.size)
 
         for loc in enabled_locs:
-            glEnableVertexAttribArray(loc)
+            GL.glEnableVertexAttribArray(loc)
 
-        with shader:
-            glUniformMatrix4fv(shader.uniform("u_mvp"), 1, False, mat_mvp)
+        with program:
+            loc = GL.glGetUniformLocation(program, "u_mvp")
+            GL.glUniformMatrix4fv(loc, 1, False, mat_mvp)
 
-            glUniformMatrix4fv(shader.uniform("u_viewTransform"), 1, False, mat_viewTransform)
-            glUniform3f(shader.uniform("u_cameraPosition"), *vec_cameraPosition)
-            glUniform1f(shader.uniform("u_scale"), scale)
+            loc = GL.glGetUniformLocation(program, "u_modelview")
+            GL.glUniformMatrix4fv(loc, 1, False, mat_modelview)
+            loc = GL.glGetUniformLocation(program, "u_scale")
+            GL.glUniform1f(loc, scale)
 
-            glDrawArrays(GL_POINTS, 0, len(self.pos))
+            GL.glDrawArrays(GL.GL_POINTS, 0, len(self.pos))
 
         for loc in enabled_locs:
-            glDisableVertexAttribArray(loc)
+            GL.glDisableVertexAttribArray(loc)
 
 
 def _is_compatibility_profile(context):
@@ -195,3 +233,110 @@ def _is_compatibility_profile(context):
                 compat = True
 
     return compat
+
+
+## See:
+##
+##  http://stackoverflow.com/questions/9609423/applying-part-of-a-texture-sprite-sheet-texture-map-to-a-point-sprite-in-ios
+##  http://stackoverflow.com/questions/3497068/textured-points-in-opengl-es-2-0
+##
+##
+
+SHADER_LEGACY = {
+    GL.GL_VERTEX_SHADER : """
+        uniform float u_scale;
+
+        uniform mat4 u_modelview;
+        uniform mat4 u_mvp;
+        attribute vec4 a_position;
+        attribute vec4 a_color;
+        attribute float a_size;
+        varying vec4 v_color;
+
+        void main() {
+            gl_Position = u_mvp * a_position;
+            v_color = a_color;
+            gl_PointSize = a_size;
+
+            if (u_scale != 0.0) {
+                // pxMode=False
+                // the modelview matrix transforms the vertex to
+                // camera space, where the camera is at (0, 0, 0).
+                vec4 cpos = u_modelview * a_position;
+                float dist = length(cpos.xyz);
+                // equations:
+                //   xDist = dist * 2.0 * tan(0.5 * fov)
+                //   pxSize = xDist / view_width
+                // let:
+                //   u_scale = 2.0 * tan(0.5 * fov) / view_width
+                // then:
+                //   pxSize = dist * u_scale
+                float pxSize = dist * u_scale;
+                gl_PointSize /= pxSize;
+            }
+        }
+    """,
+    GL.GL_FRAGMENT_SHADER : """
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        varying vec4 v_color;
+        void main()
+        {
+            vec2 xy = (gl_PointCoord - 0.5) * 2.0;
+            float mask = step(-1.0, -dot(xy, xy));
+            gl_FragColor = vec4(v_color.rgb, v_color.a * mask);
+        }
+    """
+}
+
+SHADER_CORE = {
+    GL.GL_VERTEX_SHADER : """
+        uniform float u_scale;
+
+        uniform mat4 u_modelview;
+        uniform mat4 u_mvp;
+        in vec4 a_position;
+        in vec4 a_color;
+        in float a_size;
+        out vec4 v_color;
+
+        void main() {
+            gl_Position = u_mvp * a_position;
+            v_color = a_color;
+            gl_PointSize = a_size;
+
+            if (u_scale != 0.0) {
+                // pxMode=False
+                // the modelview matrix transforms the vertex to
+                // camera space, where the camera is at (0, 0, 0).
+                vec4 cpos = u_modelview * a_position;
+                float dist = length(cpos.xyz);
+                // equations:
+                //   xDist = dist * 2.0 * tan(0.5 * fov)
+                //   pxSize = xDist / view_width
+                // let:
+                //   u_scale = 2.0 * tan(0.5 * fov) / view_width
+                // then:
+                //   pxSize = dist * u_scale
+                float pxSize = dist * u_scale;
+                gl_PointSize /= pxSize;
+            }
+        }
+    """,
+    GL.GL_FRAGMENT_SHADER : """
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        in vec4 v_color;
+        out vec4 fragColor;
+        void main()
+        {
+            vec2 xy = (gl_PointCoord - 0.5) * 2.0;
+            float mask = step(-1.0, -dot(xy, xy));
+            fragColor = vec4(v_color.rgb, v_color.a * mask);
+        }
+    """
+}

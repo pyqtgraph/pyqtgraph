@@ -9,58 +9,6 @@ import re
 
 ## For centralizing and managing vertex/fragment shader programs.
 
-## See:
-##
-##  http://stackoverflow.com/questions/9609423/applying-part-of-a-texture-sprite-sheet-texture-map-to-a-point-sprite-in-ios
-##  http://stackoverflow.com/questions/3497068/textured-points-in-opengl-es-2-0
-##
-##
-POINT_SPRITE_VERT_SRC = """
-    uniform mat4 u_viewTransform;
-    uniform vec3 u_cameraPosition;
-    uniform float u_scale;
-
-    uniform mat4 u_mvp;
-    attribute vec4 a_position;
-    attribute vec4 a_color;
-    attribute float a_size;
-    varying vec4 v_color;
-
-    void main() {
-        gl_Position = u_mvp * a_position;
-        v_color = a_color;
-        gl_PointSize = a_size;
-
-        if (u_scale != 0.0) {
-            // pxMode=False
-            vec4 gpos = u_viewTransform * a_position;
-            float dist = distance(u_cameraPosition, gpos.xyz);
-            // equations:
-            //   xDist = dist * 2.0 * tan(0.5 * fov)
-            //   pxSize = xDist / view_width
-            // let:
-            //   u_scale = 2.0 * tan(0.5 * fov) / view_width
-            // then:
-            //   pxSize = dist * u_scale
-            float pxSize = dist * u_scale;
-            gl_PointSize /= pxSize;
-        }
-    }
-"""
-POINT_SPRITE_FRAG_SRC = """
-    #ifdef GL_ES
-    precision mediump float;
-    #endif
-
-    varying vec4 v_color;
-    void main()
-    {
-        vec2 xy = (gl_PointCoord - 0.5) * 2.0;
-        float mask = step(-1.0, -dot(xy, xy));
-        gl_FragColor = vec4(v_color.rgb, v_color.a * mask);
-    }
-"""
-
 def initShaders():
     global Shaders
     Shaders = [
@@ -370,15 +318,6 @@ def initShaders():
             """),
         ], uniforms={'colorMap': [1, 1, 1, 1, 0.5, 1, 1, 0, 1]}),
 
-        ShaderProgram('pointSprite', [   ## allows specifying point size using attribute "a_size"
-            VertexShader("\n".join(["#version 120", POINT_SPRITE_VERT_SRC])),
-            FragmentShader("\n".join(["#version 120", POINT_SPRITE_FRAG_SRC])),
-        ]),
-
-        ShaderProgram('pointSprite-es2', [
-            VertexShader(POINT_SPRITE_VERT_SRC),
-            FragmentShader(POINT_SPRITE_FRAG_SRC),
-        ]),
     ]
 
 
