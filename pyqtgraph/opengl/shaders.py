@@ -346,7 +346,7 @@ class ShaderProgram(object):
     def __delitem__(self, item):
         self.setUniformData(item, None)
 
-    def program(self):
+    def program(self, *, es2_compat=False):
         # for reasons that may vary across drivers, having vertex attribute
         # array generic location 0 enabled (glEnableVertexAttribArray(0)) is
         # required for rendering to take place.
@@ -356,7 +356,15 @@ class ShaderProgram(object):
         # sufficient for us to bind "a_position" explicitly to 0.
         if self.prog is None:
             try:
-                compiled = [s.shader() for s in self.shaders]  ## compile all shaders
+                # we know that macOS OpenGL 4.1 Core has ARB_ES2_compatibility,
+                # so we can get it to run legacy shaders by marking the shaders
+                # as ES2
+                compiled = []
+                for shader in self.shaders:
+                    sources = [shader.code]
+                    if es2_compat and not shader.code.lstrip().startswith("#version"):
+                        sources.insert(0, "#version 100\n")
+                    compiled.append(shaders.compileShader(sources, shader.shaderType))
                 self.prog = shaders.compileProgram(*compiled)  ## compile program
             except:
                 self.prog = -1
