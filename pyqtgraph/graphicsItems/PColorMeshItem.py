@@ -631,10 +631,13 @@ class OpenGLState(QtCore.QObject):
         }
     """
     FRAG_SRC_COMPAT = """
-        varying mediump float v_luminance;
-        uniform mediump sampler2D u_texture;
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+        varying float v_luminance;
+        uniform sampler2D u_texture;
         void main() {
-            if (isnan(v_luminance)) discard;
+            if (!(v_luminance == v_luminance)) discard;
             float s = clamp(v_luminance, 0.0, 1.0);
             gl_FragColor = texture2D(u_texture, vec2(s, 0));
         }
