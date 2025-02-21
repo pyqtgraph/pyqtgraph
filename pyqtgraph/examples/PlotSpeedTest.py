@@ -7,6 +7,8 @@ import argparse
 import itertools
 
 import numpy as np
+
+import pyqtgraph
 from utils import FrameCounter
 
 import pyqtgraph as pg
@@ -83,7 +85,7 @@ interactor = ptree.Interactor(
 
 pw.setWindowTitle('pyqtgraph example: PlotSpeedTest')
 pw.setLabel('bottom', 'Index', units='B')
-curve = MonkeyCurveItem(pen=default_pen, brush='b')
+curve = pyqtgraph.PlotDataItem(pen=default_pen, brush='b')
 pw.addItem(curve)
 iterations_counter = itertools.count()
 

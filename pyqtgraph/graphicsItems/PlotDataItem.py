@@ -614,6 +614,7 @@ class PlotDataItem(GraphicsObject):
             'downsampleMethod': 'peak',
             'autoDownsampleFactor': 5.,  # draw ~5 samples per pixel
             'clipToView': False,
+            'lttbc_threshold': 1000,
             'dynamicRangeLimit': 1e6,
             'dynamicRangeHyst': 3.0,
             'data': None,
@@ -996,7 +997,8 @@ class PlotDataItem(GraphicsObject):
         self,
         ds: int | None = None,
         auto: bool | None = None,
-        method: str = 'peak'
+        method: str = 'peak',
+        lttbc_threshold: int | None = None
     ):
         """
         Set the downsampling mode.
@@ -1019,6 +1021,9 @@ class PlotDataItem(GraphicsObject):
             * `peak` - Downsample by drawing a saw wave that follows the min and max of
               the original data. This method produces the best visual representation of
               the data but is slower.
+            * `lttbc` - Downsample using Largest-Triangle-Three-Buckets requires lttbc package to be installed.
+        lttbc_threshold : int or None, default None
+            Lttbc threshold value
         """
         changed = False
         if ds is not None and self.opts['downsample'] != ds:
@@ -1032,6 +1037,10 @@ class PlotDataItem(GraphicsObject):
         if method is not None and self.opts['downsampleMethod'] != method:
             changed = True
             self.opts['downsampleMethod'] = method
+
+        if lttbc_threshold is not None and self.opts['lttbc_threshold'] != lttbc_threshold:
+            changed = True
+            self.opts['lttbc_threshold'] = lttbc_threshold
 
         if changed:
             self._datasetMapped  = None  # invalidate mapped data
@@ -1561,6 +1570,12 @@ class PlotDataItem(GraphicsObject):
                 y1[:, 0] = y2.max(axis=1)
                 y1[:, 1] = y2.min(axis=1)
                 y = y1.reshape(n * 2)
+            elif self.opts['downsampleMethod'] == 'lttbc':
+                try:
+                    import lttbc
+                    x, y = lttbc.downsample(x, y, self.opts['lttbc_threshold'])
+                except ImportError as e:
+                    warnings.warn(f"lttbc package is not installed ignoring down-sampling")
 
         if self.opts['dynamicRangeLimit'] is not None and view_range is not None:
             data_range = self._datasetMapped.dataRect()
