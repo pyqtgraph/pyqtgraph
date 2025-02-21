@@ -1575,7 +1575,7 @@ class PlotDataItem(GraphicsObject):
                     import lttbc
                     x, y = lttbc.downsample(x, y, self.opts['lttb_threshold'])
                 except ImportError as e:
-                    warnings.warn(f"lttb package is not installed ignoring down-sampling")
+                    warnings.warn(f"lttbc package is not installed ignoring down-sampling")
 
         if self.opts['dynamicRangeLimit'] is not None and view_range is not None:
             data_range = self._datasetMapped.dataRect()
