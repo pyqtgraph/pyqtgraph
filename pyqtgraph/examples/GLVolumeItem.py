@@ -1,12 +1,21 @@
 """
 Demonstrates GLVolumeItem for displaying volumetric data.
 """
+import sys
 
 import numpy as np
 
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 import pyqtgraph.opengl as gl
 from pyqtgraph import functions as fn
+
+if 'darwin' in sys.platform:
+    fmt = QtGui.QSurfaceFormat()
+    fmt.setRenderableType(fmt.RenderableType.OpenGL)
+    fmt.setProfile(fmt.OpenGLContextProfile.CoreProfile)
+    fmt.setVersion(4, 1)
+    QtGui.QSurfaceFormat.setDefaultFormat(fmt)
 
 app = pg.mkQApp("GLVolumeItem Example")
 w = gl.GLViewWidget()

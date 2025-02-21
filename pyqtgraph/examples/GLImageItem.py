@@ -4,11 +4,20 @@ Use GLImageItem to display image data on rectangular planes.
 In this example, the image data is sampled from a volume and the image planes 
 placed as if they slice through the volume.
 """
+import sys
 
 import numpy as np
 
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 import pyqtgraph.opengl as gl
+
+if 'darwin' in sys.platform:
+    fmt = QtGui.QSurfaceFormat()
+    fmt.setRenderableType(fmt.RenderableType.OpenGL)
+    fmt.setProfile(fmt.OpenGLContextProfile.CoreProfile)
+    fmt.setVersion(4, 1)
+    QtGui.QSurfaceFormat.setDefaultFormat(fmt)
 
 app = pg.mkQApp("GLImageItem Example")
 w = gl.GLViewWidget()
