@@ -1,11 +1,11 @@
 import ctypes
 import importlib
 
-from OpenGL.GL import *  # noqa
+from OpenGL import GL
+from OpenGL.GL import shaders
 import numpy as np
 
 from ...Qt import QtGui, QT_LIB
-from .. import shaders
 from ..GLGraphicsItem import GLGraphicsItem
 
 if QT_LIB in ["PyQt5", "PySide2"]:
@@ -22,6 +22,7 @@ class GLImageItem(GLGraphicsItem):
     Displays image data as a textured quad.
     """
     
+    _shaderProgram = None
     
     def __init__(self, data, smooth=False, glOptions='translucent', parentItem=None):
         """
@@ -50,27 +51,25 @@ class GLImageItem(GLGraphicsItem):
         
     def _updateTexture(self):
         if self.texture is None:
-            self.texture = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, self.texture)
-        if self.smooth:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        else:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
+            self.texture = GL.glGenTextures(1)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture)
+        filt = GL.GL_LINEAR if self.smooth else GL.GL_NEAREST
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, filt)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, filt)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_BORDER)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_BORDER)
         shape = self.data.shape
         
         context = QtGui.QOpenGLContext.currentContext()
         if not context.isOpenGLES():
             ## Test texture dimensions first
-            glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, shape[0], shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
-            if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
+            GL.glTexImage2D(GL.GL_PROXY_TEXTURE_2D, 0, GL.GL_RGBA, shape[0], shape[1], 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, None)
+            if GL.glGetTexLevelParameteriv(GL.GL_PROXY_TEXTURE_2D, 0, GL.GL_TEXTURE_WIDTH) == 0:
                 raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
         
         data = np.ascontiguousarray(self.data.transpose((1,0,2)))
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, shape[0], shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, data)
+        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, shape[0], shape[1], 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, data)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
 
         x, y = shape[:2]
         pos = np.array([
@@ -86,6 +85,42 @@ class GLImageItem(GLGraphicsItem):
         vbo.allocate(pos, pos.nbytes)
         vbo.release()
 
+    @staticmethod
+    def getShaderProgram():
+        klass = GLImageItem
+
+        if klass._shaderProgram is not None:
+            return klass._shaderProgram
+
+        ctx = QtGui.QOpenGLContext.currentContext()
+        fmt = ctx.format()
+
+        if ctx.isOpenGLES():
+            if fmt.version() >= (3, 0):
+                glsl_version = "#version 300 es\n"
+                sources = SHADER_CORE
+            else:
+                glsl_version = ""
+                sources = SHADER_LEGACY
+        else:
+            if fmt.version() >= (3, 1):
+                glsl_version = "#version 140\n"
+                sources = SHADER_CORE
+            else:
+                glsl_version = ""
+                sources = SHADER_LEGACY
+
+        compiled = [shaders.compileShader([glsl_version, v], k) for k, v in sources.items()]
+        program = shaders.compileProgram(*compiled)
+
+        # bind generic vertex attrib 0 to "a_position" so that
+        # vertex attrib 0 definitely gets enabled later.
+        GL.glBindAttribLocation(program, 0, "a_position")
+        GL.glLinkProgram(program)
+
+        klass._shaderProgram = program
+        return program
+
     def paint(self):
         if self._needUpdate:
             self._updateTexture()
@@ -96,26 +131,77 @@ class GLImageItem(GLGraphicsItem):
         mat_mvp = self.mvpMatrix()
         mat_mvp = np.array(mat_mvp.data(), dtype=np.float32)
 
-        shader = shaders.getShaderProgram('texture2d')
-        loc_pos = glGetAttribLocation(shader.program(), "a_position")
-        loc_tex = glGetAttribLocation(shader.program(), "a_texcoord")
+        program = self.getShaderProgram()
+        loc_pos = GL.glGetAttribLocation(program, "a_position")
+        loc_tex = GL.glGetAttribLocation(program, "a_texcoord")
         self.m_vbo_position.bind()
-        glVertexAttribPointer(loc_pos, 2, GL_FLOAT, False, 4*4, None)
-        glVertexAttribPointer(loc_tex, 2, GL_FLOAT, False, 4*4, ctypes.c_void_p(2*4))
+        GL.glVertexAttribPointer(loc_pos, 2, GL.GL_FLOAT, False, 4*4, None)
+        GL.glVertexAttribPointer(loc_tex, 2, GL.GL_FLOAT, False, 4*4, ctypes.c_void_p(2*4))
         self.m_vbo_position.release()
         enabled_locs = [loc_pos, loc_tex]
 
-        glBindTexture(GL_TEXTURE_2D, self.texture)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture)
 
         for loc in enabled_locs:
-            glEnableVertexAttribArray(loc)
+            GL.glEnableVertexAttribArray(loc)
 
-        with shader:
-            glUniformMatrix4fv(shader.uniform("u_mvp"), 1, False, mat_mvp)
+        with program:
+            loc = GL.glGetUniformLocation(program, "u_mvp")
+            GL.glUniformMatrix4fv(loc, 1, False, mat_mvp)
 
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4)
+            GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
 
         for loc in enabled_locs:
-            glDisableVertexAttribArray(loc)
+            GL.glDisableVertexAttribArray(loc)
 
-        glBindTexture(GL_TEXTURE_2D, 0)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
+
+
+SHADER_LEGACY = {
+    GL.GL_VERTEX_SHADER : """
+        uniform mat4 u_mvp;
+        attribute vec4 a_position;
+        attribute vec2 a_texcoord;
+        varying vec2 v_texcoord;
+        void main() {
+            gl_Position = u_mvp * a_position;
+            v_texcoord = a_texcoord;
+        }
+    """,
+    GL.GL_FRAGMENT_SHADER : """
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+        uniform sampler2D u_texture;
+        varying vec2 v_texcoord;
+        void main()
+        {
+            gl_FragColor = texture2D(u_texture, v_texcoord);
+        }
+    """,
+}
+
+SHADER_CORE = {
+    GL.GL_VERTEX_SHADER : """
+        uniform mat4 u_mvp;
+        in vec4 a_position;
+        in vec2 a_texcoord;
+        out vec2 v_texcoord;
+        void main() {
+            gl_Position = u_mvp * a_position;
+            v_texcoord = a_texcoord;
+        }
+    """,
+    GL.GL_FRAGMENT_SHADER : """
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+        uniform sampler2D u_texture;
+        in vec2 v_texcoord;
+        out vec4 fragColor;
+        void main()
+        {
+            fragColor = texture(u_texture, v_texcoord);
+        }
+    """,
+}
