@@ -972,8 +972,10 @@ class PlotItem(GraphicsWidget):
     def downsampleMode(self):
         if self.ctrl.downsampleCheck.isChecked():
             ds = self.ctrl.downsampleSpin.value()
+            lttb_threshold = self.ctrl.lttbSpin.value()
         else:
             ds = 1
+            lttb_threshold = 1
             
         auto = self.ctrl.downsampleCheck.isChecked() and self.ctrl.autoDownsampleCheck.isChecked()
             
@@ -987,8 +989,6 @@ class PlotItem(GraphicsWidget):
             method = 'lttb'
         else:
             raise ValueError("one of the method radios must be selected for: 'subsample', 'mean', or 'peak'.")
-
-        lttb_threshold = self.ctrl.lttbSpin.value()
 
         return ds, auto, method, lttb_threshold
         

@@ -1548,7 +1548,7 @@ class PlotDataItem(GraphicsObject):
                     x = x[x0:x1]
                     y = y[x0:x1]
 
-        if ds > 1:
+        if ds > 1 or (self.opts['lttb_threshold'] > 1 and self.opts['downsampleMethod'] == 'lttb'):
             if self.opts['downsampleMethod'] == 'subsample':
                 x = x[::ds]
                 y = y[::ds]
