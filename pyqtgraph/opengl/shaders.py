@@ -1,4 +1,4 @@
-from OpenGL.GL import *  # noqa
+from OpenGL import GL
 from OpenGL.GL import shaders  # noqa
 try:
     from OpenGL import NullFunctionError
@@ -303,11 +303,11 @@ class Shader(object):
 
 class VertexShader(Shader):
     def __init__(self, code):
-        Shader.__init__(self, GL_VERTEX_SHADER, code)
+        Shader.__init__(self, GL.GL_VERTEX_SHADER, code)
         
 class FragmentShader(Shader):
     def __init__(self, code):
-        Shader.__init__(self, GL_FRAGMENT_SHADER, code)
+        Shader.__init__(self, GL.GL_FRAGMENT_SHADER, code)
         
         
         
@@ -370,13 +370,13 @@ class ShaderProgram(object):
                 self.prog = -1
                 raise
             # bind generic vertex attrib 0 to "a_position" and relink
-            glBindAttribLocation(self.prog, 0, "a_position")
-            glLinkProgram(self.prog)
+            GL.glBindAttribLocation(self.prog, 0, "a_position")
+            GL.glLinkProgram(self.prog)
         return self.prog
         
     def __enter__(self):
         if len(self.shaders) > 0 and self.program() != -1:
-            glUseProgram(self.program())
+            GL.glUseProgram(self.program())
             
             try:
                 ## load uniform values into program
@@ -384,7 +384,7 @@ class ShaderProgram(object):
                     loc = self.uniform(uniformName)
                     if loc == -1:
                         raise Exception('Could not find uniform variable "%s"' % uniformName)
-                    glUniform1fv(loc, len(data), np.array(data, dtype=np.float32))
+                    GL.glUniform1fv(loc, len(data), np.array(data, dtype=np.float32))
                     
                 ### bind buffer data to program blocks
                 #if len(self.blockData) > 0:
@@ -414,18 +414,18 @@ class ShaderProgram(object):
                         ### bind buffer to the same binding point
                         #glBindBufferBase(GL_UNIFORM_BUFFER, bindPoint, buf)
             except:
-                glUseProgram(0)
+                GL.glUseProgram(0)
                 raise
                     
             
         
     def __exit__(self, *args):
         if len(self.shaders) > 0:
-            glUseProgram(0)
+            GL.glUseProgram(0)
         
     def uniform(self, name):
         """Return the location integer for a uniform variable in this program"""
-        return glGetUniformLocation(self.program(), name.encode('utf_8'))
+        return GL.glGetUniformLocation(self.program(), name.encode('utf_8'))
 
     #def uniformBlockInfo(self, blockName):
         #blockIndex = glGetUniformBlockIndex(self.program(), blockName)
