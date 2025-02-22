@@ -35,6 +35,22 @@ class OpenGLState(QtCore.QObject):
             gl_FragColor = u_color;
         }
     """
+    VERT_SRC_140 = """
+        #version 140
+        in vec4 a_position;
+        uniform mat4 u_mvp;
+        void main() {
+            gl_Position = u_mvp * a_position;
+        }
+    """
+    FRAG_SRC_140 = """
+        #version 140
+        uniform vec4 u_color;
+        out vec4 fragColor;
+        void main() {
+            fragColor = u_color;
+        }
+    """
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -59,8 +75,19 @@ class OpenGLState(QtCore.QObject):
         program = glwidget.retrieveProgram("PlotCurveItem")
         if program is None:
             program = QtOpenGL.QOpenGLShaderProgram()
-            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, OpenGLState.VERT_SRC)
-            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, OpenGLState.FRAG_SRC)
+
+            is_opengles = self.context.isOpenGLES()
+            gl_version = self.context.format().version()
+
+            if not is_opengles and gl_version >= (3, 1):
+                vert_src = OpenGLState.VERT_SRC_140
+                frag_src = OpenGLState.FRAG_SRC_140
+            else:
+                vert_src = OpenGLState.VERT_SRC
+                frag_src = OpenGLState.FRAG_SRC
+
+            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, vert_src)
+            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, frag_src)
             program.bindAttributeLocation("a_position", 0)
             program.link()
             glwidget.storeProgram("PlotCurveItem", program)
