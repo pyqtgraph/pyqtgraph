@@ -105,15 +105,17 @@ class GraphicsViewGLWidget(QtOpenGLWidgets.QOpenGLWidget):
         self.m_vbo.destroy()
         self._functions = None
 
+        ctx = self.context()
+        if not ctx.isOpenGLES() and ctx.format().version() >= (3, 1):
+            vert_src = "#version 140\nin vec4 a_pos; void main() { gl_Position = a_pos; }"
+            frag_src = "#version 140\nout vec4 fragColor; void main() { fragColor = vec4(1.0); }"
+        else:
+            vert_src = "attribute vec4 a_pos; void main() { gl_Position = a_pos; }"
+            frag_src = "void main() { gl_FragColor = vec4(1.0); }"
+
         program = QtOpenGL.QOpenGLShaderProgram()
-        program.addShaderFromSourceCode(
-            QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex,
-            "attribute vec4 a_pos; void main() { gl_Position = a_pos; }"
-        )
-        program.addShaderFromSourceCode(
-            QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment,
-            "void main() { gl_FragColor = vec4(1.0); }"
-        )
+        program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, vert_src)
+        program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, frag_src)
         program.bindAttributeLocation("a_pos", 0)
         program.link()
         self.storeProgram("Stencil", program)
