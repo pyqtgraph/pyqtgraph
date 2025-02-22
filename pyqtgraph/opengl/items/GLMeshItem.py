@@ -1,6 +1,6 @@
 import importlib
 
-from OpenGL.GL import *  # noqa
+from OpenGL import GL
 import numpy as np
 
 from ...Qt import QtGui, QT_LIB
@@ -209,89 +209,96 @@ class GLMeshItem(GLGraphicsItem):
         mat_normal = self.modelViewMatrix().normalMatrix()
         mat_normal = np.array(mat_normal.data(), dtype=np.float32)
 
+        context = QtGui.QOpenGLContext.currentContext()
+        es2_compat = context.hasExtension(b'GL_ARB_ES2_compatibility')
+
         if self.opts['drawFaces'] and self.vertexes is not None:
             shader = self.shader()
+            program = shader.program(es2_compat=es2_compat)
 
             enabled_locs = []
 
-            if (loc := glGetAttribLocation(shader.program(), "a_position")) != -1:
+            if (loc := GL.glGetAttribLocation(program, "a_position")) != -1:
                 self.m_vbo_position.bind()
-                glVertexAttribPointer(loc, 3, GL_FLOAT, False, 0, None)
+                GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
                 self.m_vbo_position.release()
                 enabled_locs.append(loc)
 
-            if (loc := glGetAttribLocation(shader.program(), "a_normal")) != -1:
+            if (loc := GL.glGetAttribLocation(program, "a_normal")) != -1:
                 if self.normals is None:
                     # the shader needs a normal but the user set computeNormals=False...
-                    glVertexAttrib3f(loc, 0, 0, 1)
+                    GL.glVertexAttrib3f(loc, 0, 0, 1)
                 else:
                     self.m_vbo_normal.bind()
-                    glVertexAttribPointer(loc, 3, GL_FLOAT, False, 0, None)
+                    GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
                     self.m_vbo_normal.release()
                     enabled_locs.append(loc)
 
-            if (loc := glGetAttribLocation(shader.program(), "a_color")) != -1:
+            if (loc := GL.glGetAttribLocation(program, "a_color")) != -1:
                 if self.colors is None:
                     color = self.opts['color']
                     if isinstance(color, QtGui.QColor):
                         color = color.getRgbF()
-                    glVertexAttrib4f(loc, *color)
+                    GL.glVertexAttrib4f(loc, *color)
                 else:
                     self.m_vbo_color.bind()
                     if self.colors.dtype == np.uint8:
-                        glVertexAttribPointer(loc, 4, GL_UNSIGNED_BYTE, True, 0, None)
+                        GL.glVertexAttribPointer(loc, 4, GL.GL_UNSIGNED_BYTE, True, 0, None)
                     else:
-                        glVertexAttribPointer(loc, 4, GL_FLOAT, False, 0, None)
+                        GL.glVertexAttribPointer(loc, 4, GL.GL_FLOAT, False, 0, None)
                     self.m_vbo_color.release()
                     enabled_locs.append(loc)
 
             for loc in enabled_locs:
-                glEnableVertexAttribArray(loc)
+                GL.glEnableVertexAttribArray(loc)
 
-            with shader:
-                glUniformMatrix4fv(shader.uniform("u_mvp"), 1, False, mat_mvp)
-                if (uloc_normal := shader.uniform("u_normal")) != -1:
-                    glUniformMatrix3fv(uloc_normal, 1, False, mat_normal)
+            with shader:    # "with shader" will load extra uniforms
+                loc = GL.glGetUniformLocation(program, "u_mvp")
+                GL.glUniformMatrix4fv(loc, 1, False, mat_mvp)
+                if (uloc_normal := GL.glGetUniformLocation(program, "u_normal")) != -1:
+                    GL.glUniformMatrix3fv(uloc_normal, 1, False, mat_normal)
 
                 if (faces := self.faces) is None:
-                    glDrawArrays(GL_TRIANGLES, 0, np.prod(self.vertexes.shape[:-1]))
+                    GL.glDrawArrays(GL.GL_TRIANGLES, 0, np.prod(self.vertexes.shape[:-1]))
                 else:
                     self.m_ibo_faces.bind()
-                    glDrawElements(GL_TRIANGLES, faces.size, GL_UNSIGNED_INT, None)
+                    GL.glDrawElements(GL.GL_TRIANGLES, faces.size, GL.GL_UNSIGNED_INT, None)
                     self.m_ibo_faces.release()
 
             for loc in enabled_locs:
-                glDisableVertexAttribArray(loc)
+                GL.glDisableVertexAttribArray(loc)
 
         if self.opts['drawEdges']:
             shader = shaders.getShaderProgram(None)
+            program = shader.program(es2_compat=es2_compat)
 
             enabled_locs = []
 
-            if (loc := glGetAttribLocation(shader.program(), "a_position")) != -1:
+            if (loc := GL.glGetAttribLocation(program, "a_position")) != -1:
                 self.m_vbo_edgeVerts.bind()
-                glVertexAttribPointer(loc, 3, GL_FLOAT, False, 0, None)
+                GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
                 self.m_vbo_edgeVerts.release()
                 enabled_locs.append(loc)
 
             # edge colors are always just one single color
-            if (loc := glGetAttribLocation(shader.program(), "a_color")) != -1:
+            if (loc := GL.glGetAttribLocation(program, "a_color")) != -1:
                 color = self.opts['edgeColor']
                 if isinstance(color, QtGui.QColor):
                     color = color.getRgbF()
-                glVertexAttrib4f(loc, *color)
+                GL.glVertexAttrib4f(loc, *color)
 
             for loc in enabled_locs:
-                glEnableVertexAttribArray(loc)
+                GL.glEnableVertexAttribArray(loc)
 
-            with shader:
-                glUniformMatrix4fv(shader.uniform("u_mvp"), 1, False, mat_mvp)
+            with program:
+                loc = GL.glGetUniformLocation(program, "u_mvp")
+                GL.glUniformMatrix4fv(loc, 1, False, mat_mvp)
 
                 self.m_ibo_edges.bind()
-                glDrawElements(GL_LINES, self.edges.size, GL_UNSIGNED_INT, None)
+                GL.glDrawElements(GL.GL_LINES, self.edges.size, GL.GL_UNSIGNED_INT, None)
                 self.m_ibo_edges.release()
 
             for loc in enabled_locs:
-                glDisableVertexAttribArray(loc)
+                GL.glDisableVertexAttribArray(loc)
 
 

@@ -1,4 +1,4 @@
-from OpenGL.GL import *  # noqa
+from OpenGL import GL
 from OpenGL.GL import shaders  # noqa
 try:
     from OpenGL import NullFunctionError
@@ -44,10 +44,9 @@ def initShaders():
                 attribute vec3 a_normal;
                 attribute vec4 a_color;
                 varying vec4 v_color;
-                varying vec3 normal;
+                varying vec3 v_normal;
                 void main() {
-                    // compute here for use in fragment shader
-                    normal = normalize(u_normal * a_normal);
+                    v_normal = normalize(u_normal * a_normal);
                     v_color = a_color;
                     gl_Position = u_mvp * a_position;
                 }
@@ -57,10 +56,10 @@ def initShaders():
                 precision mediump float;
                 #endif
                 varying vec4 v_color;
-                varying vec3 normal;
+                varying vec3 v_normal;
                 void main() {
                     vec4 color = v_color;
-                    color.w = min(color.w + 2.0 * color.w * pow(normal.x*normal.x + normal.y*normal.y, 5.0), 1.0);
+                    color.w = min(color.w + 2.0 * color.w * pow(v_normal.x*v_normal.x + v_normal.y*v_normal.y, 5.0), 1.0);
                     gl_FragColor = color;
                 }
             """)
@@ -76,10 +75,9 @@ def initShaders():
                 attribute vec3 a_normal;
                 attribute vec4 a_color;
                 varying vec4 v_color;
-                varying vec3 normal;
+                varying vec3 v_normal;
                 void main() {
-                    // compute here for use in fragment shader
-                    normal = normalize(u_normal * a_normal);
+                    v_normal = normalize(u_normal * a_normal);
                     v_color = a_color;
                     gl_Position = u_mvp * a_position;
                 }
@@ -89,13 +87,10 @@ def initShaders():
                 precision mediump float;
                 #endif
                 varying vec4 v_color;
-                varying vec3 normal;
+                varying vec3 v_normal;
                 void main() {
-                    vec4 color = v_color;
-                    color.x = (normal.x + 1.0) * 0.5;
-                    color.y = (normal.y + 1.0) * 0.5;
-                    color.z = (normal.z + 1.0) * 0.5;
-                    gl_FragColor = color;
+                    vec3 rgb = (v_normal + 1.0) * 0.5;
+                    gl_FragColor = vec4(rgb, v_color.a);
                 }
             """)
         ]),
@@ -108,10 +103,9 @@ def initShaders():
                 attribute vec3 a_normal;
                 attribute vec4 a_color;
                 varying vec4 v_color;
-                varying vec3 normal;
+                varying vec3 v_normal;
                 void main() {
-                    // compute here for use in fragment shader
-                    normal = normalize(a_normal);
+                    v_normal = normalize(a_normal);
                     v_color = a_color;
                     gl_Position = u_mvp * a_position;
                 }
@@ -121,13 +115,10 @@ def initShaders():
                 precision mediump float;
                 #endif
                 varying vec4 v_color;
-                varying vec3 normal;
+                varying vec3 v_normal;
                 void main() {
-                    vec4 color = v_color;
-                    color.x = (normal.x + 1.0) * 0.5;
-                    color.y = (normal.y + 1.0) * 0.5;
-                    color.z = (normal.z + 1.0) * 0.5;
-                    gl_FragColor = color;
+                    vec3 rgb = (v_normal + 1.0) * 0.5;
+                    gl_FragColor = vec4(rgb, v_color.a);
                 }
             """)
         ]),
@@ -142,10 +133,9 @@ def initShaders():
                 attribute vec3 a_normal;
                 attribute vec4 a_color;
                 varying vec4 v_color;
-                varying vec3 normal;
+                varying vec3 v_normal;
                 void main() {
-                    // compute here for use in fragment shader
-                    normal = normalize(u_normal * a_normal);
+                    v_normal = normalize(u_normal * a_normal);
                     v_color = a_color;
                     gl_Position = u_mvp * a_position;
                 }
@@ -155,15 +145,12 @@ def initShaders():
                 precision mediump float;
                 #endif
                 varying vec4 v_color;
-                varying vec3 normal;
+                varying vec3 v_normal;
                 void main() {
-                    float p = dot(normal, normalize(vec3(1.0, -1.0, -1.0)));
+                    float p = dot(v_normal, normalize(vec3(1.0, -1.0, -1.0)));
                     p = p < 0. ? 0. : p * 0.8;
-                    vec4 color = v_color;
-                    color.x = color.x * (0.2 + p);
-                    color.y = color.y * (0.2 + p);
-                    color.z = color.z * (0.2 + p);
-                    gl_FragColor = color;
+                    vec3 rgb = v_color.rgb * (0.2 + p);
+                    gl_FragColor = vec4(rgb, v_color.a);
                 }
             """)
         ]),
@@ -177,10 +164,9 @@ def initShaders():
                 attribute vec3 a_normal;
                 attribute vec4 a_color;
                 varying vec4 v_color;
-                varying vec3 normal;
+                varying vec3 v_normal;
                 void main() {
-                    // compute here for use in fragment shader
-                    normal = normalize(u_normal * a_normal);
+                    v_normal = normalize(u_normal * a_normal);
                     v_color = a_color;
                     gl_Position = u_mvp * a_position;
                 }
@@ -190,14 +176,11 @@ def initShaders():
                 precision mediump float;
                 #endif
                 varying vec4 v_color;
-                varying vec3 normal;
+                varying vec3 v_normal;
                 void main() {
-                    vec4 color = v_color;
-                    float s = pow(normal.x*normal.x + normal.y*normal.y, 2.0);
-                    color.x = color.x + s * (1.0-color.x);
-                    color.y = color.y + s * (1.0-color.y);
-                    color.z = color.z + s * (1.0-color.z);
-                    gl_FragColor = color;
+                    float s = pow(v_normal.x*v_normal.x + v_normal.y*v_normal.y, 2.0);
+                    vec3 rgb = v_color.rgb + s * (1.0-v_color.rgb);
+                    gl_FragColor = vec4(rgb, v_color.a);
                 }
             """)
         ]),
@@ -303,11 +286,11 @@ class Shader(object):
 
 class VertexShader(Shader):
     def __init__(self, code):
-        Shader.__init__(self, GL_VERTEX_SHADER, code)
+        Shader.__init__(self, GL.GL_VERTEX_SHADER, code)
         
 class FragmentShader(Shader):
     def __init__(self, code):
-        Shader.__init__(self, GL_FRAGMENT_SHADER, code)
+        Shader.__init__(self, GL.GL_FRAGMENT_SHADER, code)
         
         
         
@@ -346,7 +329,7 @@ class ShaderProgram(object):
     def __delitem__(self, item):
         self.setUniformData(item, None)
 
-    def program(self):
+    def program(self, *, es2_compat=False):
         # for reasons that may vary across drivers, having vertex attribute
         # array generic location 0 enabled (glEnableVertexAttribArray(0)) is
         # required for rendering to take place.
@@ -356,19 +339,27 @@ class ShaderProgram(object):
         # sufficient for us to bind "a_position" explicitly to 0.
         if self.prog is None:
             try:
-                compiled = [s.shader() for s in self.shaders]  ## compile all shaders
+                # we know that macOS OpenGL 4.1 Core has ARB_ES2_compatibility,
+                # so we can get it to run legacy shaders by marking the shaders
+                # as ES2
+                compiled = []
+                for shader in self.shaders:
+                    sources = [shader.code]
+                    if es2_compat and not shader.code.lstrip().startswith("#version"):
+                        sources.insert(0, "#version 100\n")
+                    compiled.append(shaders.compileShader(sources, shader.shaderType))
                 self.prog = shaders.compileProgram(*compiled)  ## compile program
             except:
                 self.prog = -1
                 raise
             # bind generic vertex attrib 0 to "a_position" and relink
-            glBindAttribLocation(self.prog, 0, "a_position")
-            glLinkProgram(self.prog)
+            GL.glBindAttribLocation(self.prog, 0, "a_position")
+            GL.glLinkProgram(self.prog)
         return self.prog
         
     def __enter__(self):
         if len(self.shaders) > 0 and self.program() != -1:
-            glUseProgram(self.program())
+            GL.glUseProgram(self.program())
             
             try:
                 ## load uniform values into program
@@ -376,7 +367,7 @@ class ShaderProgram(object):
                     loc = self.uniform(uniformName)
                     if loc == -1:
                         raise Exception('Could not find uniform variable "%s"' % uniformName)
-                    glUniform1fv(loc, len(data), np.array(data, dtype=np.float32))
+                    GL.glUniform1fv(loc, len(data), np.array(data, dtype=np.float32))
                     
                 ### bind buffer data to program blocks
                 #if len(self.blockData) > 0:
@@ -406,18 +397,18 @@ class ShaderProgram(object):
                         ### bind buffer to the same binding point
                         #glBindBufferBase(GL_UNIFORM_BUFFER, bindPoint, buf)
             except:
-                glUseProgram(0)
+                GL.glUseProgram(0)
                 raise
                     
             
         
     def __exit__(self, *args):
         if len(self.shaders) > 0:
-            glUseProgram(0)
+            GL.glUseProgram(0)
         
     def uniform(self, name):
         """Return the location integer for a uniform variable in this program"""
-        return glGetUniformLocation(self.program(), name.encode('utf_8'))
+        return GL.glGetUniformLocation(self.program(), name.encode('utf_8'))
 
     #def uniformBlockInfo(self, blockName):
         #blockIndex = glGetUniformBlockIndex(self.program(), blockName)
