@@ -20,6 +20,16 @@
   font-family: "no-parens", sans-serif;
 }
 
+/* set the article contents to take the max width */
+.bd-page-width {
+  max-width: 100rem;  /* default is 88rem */
+}
+
+.bd-main .bd-content .bd-article-container {
+  max-width: 100%;
+  /* default is 60em */
+}
+
 /* Retrieved from https://codepen.io/jonneal/pen/bXLEdB (MIT)
    It replaces (, ) with a zero-width font. This version is lighter than
    the original font from Adobe.
