@@ -134,6 +134,7 @@ jobs:
           python -m pip list
           echo pyqtgraph system info
           python -c "import pyqtgraph as pg; pg.systemInfo()"
+          python -c "import sys; print(sys.byteorder)"
         shell: bash
         env:
           QT_DEBUG_PLUGINS: 1
