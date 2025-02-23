@@ -715,11 +715,14 @@ class OpenGLState(QtCore.QObject):
         program = glwidget.retrieveProgram("PColorMeshItem")
         if program is None:
             program = QtOpenGL.QOpenGLShaderProgram()
-            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, VERT_SRC)
-            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, FRAG_SRC)
+            if not program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, VERT_SRC):
+                raise RuntimeError(program.log())
+            if not program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, FRAG_SRC):
+                raise RuntimeError(program.log())
             program.bindAttributeLocation("a_position", 0)
             program.bindAttributeLocation("a_luminance", 1)
-            program.link()
+            if not program.link():
+                raise RuntimeError(program.log())
         glwidget.storeProgram("PColorMeshItem", program)
 
         self.m_vao.create()

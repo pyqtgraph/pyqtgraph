@@ -86,10 +86,13 @@ class OpenGLState(QtCore.QObject):
                 vert_src = OpenGLState.VERT_SRC
                 frag_src = OpenGLState.FRAG_SRC
 
-            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, vert_src)
-            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, frag_src)
+            if not program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, vert_src):
+                raise RuntimeError(program.log())
+            if not program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, frag_src):
+                raise RuntimeError(program.log())
             program.bindAttributeLocation("a_position", 0)
-            program.link()
+            if not program.link():
+                raise RuntimeError(program.log())
             glwidget.storeProgram("PlotCurveItem", program)
 
         self.m_vao.create()
