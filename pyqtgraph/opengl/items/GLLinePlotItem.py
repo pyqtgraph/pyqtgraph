@@ -176,8 +176,8 @@ class GLLinePlotItem(GLGraphicsItem):
         # clamp to supported line widths
         if (width := self.width) != 1.0:
             kind = GL.GL_ALIASED_LINE_WIDTH_RANGE if not enable_aa else GL.GL_SMOOTH_LINE_WIDTH_RANGE
-            pair = (GL.GLint * 2)()
-            GL.glGetIntegerv(kind, pair)
+            pair = (GL.GLfloat * 2)()
+            GL.glGetFloatv(kind, pair)
             width = fn.clip_scalar(width, pair[0], pair[1])
 
         GL.glLineWidth(width)
