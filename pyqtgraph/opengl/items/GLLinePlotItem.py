@@ -173,14 +173,15 @@ class GLLinePlotItem(GLGraphicsItem):
             GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
             GL.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST)
 
-        # clamp to supported line widths
-        if (width := self.width) != 1.0:
-            kind = GL.GL_ALIASED_LINE_WIDTH_RANGE if not enable_aa else GL.GL_SMOOTH_LINE_WIDTH_RANGE
-            pair = (GL.GLfloat * 2)()
-            GL.glGetFloatv(kind, pair)
-            width = fn.clip_scalar(width, pair[0], pair[1])
-
-        GL.glLineWidth(width)
+        sfmt = context.format()
+        core_forward_compatible = (
+            sfmt.profile() == sfmt.OpenGLContextProfile.CoreProfile
+            and not sfmt.testOption(sfmt.FormatOption.DeprecatedFunctions)
+        )
+        if not core_forward_compatible:
+            # Core Forward Compatible profiles will return error for
+            # any width that is not 1.0
+            GL.glLineWidth(self.width)
 
         for loc in enabled_locs:
             GL.glEnableVertexAttribArray(loc)
