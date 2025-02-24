@@ -34,7 +34,7 @@ class GLGraphicsItem(QtCore.QObject):
         
         self.__parent: GLGraphicsItem | None = None
         self.__view = None
-        self.__children: set[GLGraphicsItem] = set()
+        self.__children: list[GLGraphicsItem] = list()
         self.__transform = Transform3D()
         self.__visible = True
         self.__initialized = False
