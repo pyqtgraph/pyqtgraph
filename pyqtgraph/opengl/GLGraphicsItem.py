@@ -47,7 +47,7 @@ class GLGraphicsItem(QtCore.QObject):
         if self.__parent is not None:
             self.__parent.__children.remove(self)
         if item is not None:
-            item.__children.add(self)
+            item.__children.append(self)
 
         # if we had a __view, we were a top level object
         if self.__view is not None:
