@@ -19,7 +19,7 @@ if 'darwin' in sys.platform:
 
 app = pg.mkQApp("GLGraphItem Example")
 w = gl.GLViewWidget()
-w.setCameraPosition(distance=20)
+w.setCameraPosition(distance=5)
 w.show()
 
 edges = np.array([
@@ -45,7 +45,8 @@ gi = gl.GLGraphItem(
     edges=edges,
     nodePositions=nodes,
     edgeWidth=1.,
-    nodeSize=10.
+    nodeSize=0.1,
+    pxMode=False
 )
 
 w.addItem(gi)

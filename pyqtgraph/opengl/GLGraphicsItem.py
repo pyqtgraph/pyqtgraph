@@ -34,7 +34,7 @@ class GLGraphicsItem(QtCore.QObject):
         
         self.__parent: GLGraphicsItem | None = None
         self.__view = None
-        self.__children: set[GLGraphicsItem] = set()
+        self.__children: list[GLGraphicsItem] = list()
         self.__transform = Transform3D()
         self.__visible = True
         self.__initialized = False
@@ -47,13 +47,16 @@ class GLGraphicsItem(QtCore.QObject):
         if self.__parent is not None:
             self.__parent.__children.remove(self)
         if item is not None:
-            item.__children.add(self)
+            item.__children.append(self)
+
+        # if we had a __view, we were a top level object
+        if self.__view is not None:
+            self.__view.removeItem(self)
+
+        # we are now either a child or an orphan.
+        # either way, we don't have our own __view
         self.__parent = item
-        
-        if self.__parent is not None and self.view() is not self.__parent.view():
-            if self.view() is not None:
-                self.view().removeItem(self)
-            self.__parent.view().addItem(self)
+        self.__view = None
     
     def setGLOptions(self, opts):
         """
@@ -113,7 +116,12 @@ class GLGraphicsItem(QtCore.QObject):
         self.__view = v
         
     def view(self):
-        return self.__view
+        if self.__parent is None:
+            # top level object
+            return self.__view
+        else:
+            # recurse
+            return self.__parent.view()
         
     def setDepthValue(self, value):
         """
@@ -302,25 +310,16 @@ class GLGraphicsItem(QtCore.QObject):
         return tr.inverted()[0].map(point)
 
     def modelViewMatrix(self) -> QtGui.QMatrix4x4:
-        topobj = self
-        while (view := topobj.view()) is None:
-            topobj = topobj.parentItem()
-            if topobj is None:
-                return QtGui.QMatrix4x4()
+        if (view := self.view()) is None:
+            return QtGui.QMatrix4x4()
         return view.currentModelView()
 
     def projectionMatrix(self) -> QtGui.QMatrix4x4:
-        topobj = self
-        while (view := topobj.view()) is None:
-            topobj = topobj.parentItem()
-            if topobj is None:
-                return QtGui.QMatrix4x4()
+        if (view := self.view()) is None:
+            return QtGui.QMatrix4x4()
         return view.currentProjection()
 
     def mvpMatrix(self) -> QtGui.QMatrix4x4:
-        topobj = self
-        while (view := topobj.view()) is None:
-            topobj = topobj.parentItem()
-            if topobj is None:
-                return QtGui.QMatrix4x4()
+        if (view := self.view()) is None:
+            return QtGui.QMatrix4x4()
         return view.currentProjection() * view.currentModelView()
