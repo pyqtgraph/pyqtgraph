@@ -1,4 +1,3 @@
-import ctypes
 import importlib
 
 from OpenGL import GL
@@ -140,10 +139,14 @@ class GLVolumeItem(GLGraphicsItem):
         mat_mvp = self.mvpMatrix()
         mat_mvp = np.array(mat_mvp.data(), dtype=np.float32)
 
-        view = self.view()
+        # calculate camera coordinates in this model's local space.
+        # (in eye space, the camera is at the origin)
+        modelview = self.modelViewMatrix()
+        cam_local = modelview.inverted()[0].map(QtGui.QVector3D())
+
+        # in local space, the model spans (0,0,0) to data.shape
         center = QtGui.QVector3D(*[x/2. for x in self.data.shape[:3]])
-        cam = self.mapFromParent(view.cameraPosition()) - center
-        #print "center", center, "cam", view.cameraPosition(), self.mapFromParent(view.cameraPosition()), "diff", cam
+        cam = cam_local - center
         cam = np.array([cam.x(), cam.y(), cam.z()])
         ax = np.argmax(abs(cam))
         d = 1 if cam[ax] > 0 else -1
@@ -155,7 +158,7 @@ class GLVolumeItem(GLGraphicsItem):
         loc_tex = GL.glGetAttribLocation(program, "a_texcoord")
         self.m_vbo_position.bind()
         GL.glVertexAttribPointer(loc_pos, 3, GL.GL_FLOAT, False, 6*4, None)
-        GL.glVertexAttribPointer(loc_tex, 3, GL.GL_FLOAT, False, 6*4, ctypes.c_void_p(3*4))
+        GL.glVertexAttribPointer(loc_tex, 3, GL.GL_FLOAT, False, 6*4, GL.GLvoidp(3*4))
         self.m_vbo_position.release()
         enabled_locs = [loc_pos, loc_tex]
 
