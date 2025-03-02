@@ -2048,7 +2048,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         backstore = None
         arr = Qt.internals.get_qpainterpath_element_array(path, n)
     else:
-        if QT_LIB == 'PySide2':
+        if QT_LIB in ['PySide2', 'PySide6']:
             # When PySide{2,6} is built without Py_LIMITED_API,
             # it leaks memory when a memory view to a QByteArray
             # object is taken.
@@ -2056,6 +2056,11 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
             # This leak is present in the following builds:
             # - conda-forge's PySide6 6.7.3 through 6.8.2-build0
             # - conda-forge's PySide2 5.15.15
+            # In addition, distro builds may or may not have built
+            # their PySide6 with limited api. Until PYSIDE-3031 is
+            # fixed, there is no way to know whether PySide6 will leak.
+            # Note: official builds of PySide6 by Qt are built with
+            # the limited api, and thus do not leak.
             backstore = bytearray(4 + n*20 + 8) # initialized to zero
             struct.pack_into('>i', backstore, 0, n)
             # cStart, fillRule (Qt.FillRule.OddEvenFill)
