@@ -232,6 +232,8 @@ class PlotItem(GraphicsWidget):
         c.autoDownsampleCheck.toggled.connect(self.updateDownsampling)
         c.subsampleRadio.toggled.connect(self.updateDownsampling)
         c.meanRadio.toggled.connect(self.updateDownsampling)
+        c.lttbRadio.toggled.connect(self.updateDownsampling)
+        c.lttbSpin.valueChanged.connect(self.updateDownsampling)
         c.clipToViewCheck.toggled.connect(self.updateDownsampling)
 
         self.ctrl.avgParamList.itemClicked.connect(self.avgParamListClicked)
@@ -906,7 +908,7 @@ class PlotItem(GraphicsWidget):
         self.recomputeAverages()
         
         
-    def setDownsampling(self, ds=None, auto=None, mode=None):
+    def setDownsampling(self, ds=None, auto=None, mode=None, lttb_threshold=None):
         """
         Changes the default downsampling mode for all :class:`~pyqtgraph.PlotDataItem` managed by this plot.
         
@@ -926,6 +928,7 @@ class PlotItem(GraphicsWidget):
                         'peak': Downsample by drawing a saw wave that follows the min and 
                         max of the original data. This method produces the best visual 
                         representation of the data but is slower.
+        lttb_threshold  (int) Threshold for lttb down-sampling method
         =============== ====================================================================
         """
         if ds is not None:
@@ -949,23 +952,30 @@ class PlotItem(GraphicsWidget):
                 self.ctrl.meanRadio.setChecked(True)
             elif mode == 'peak':
                 self.ctrl.peakRadio.setChecked(True)
+            elif mode == 'lttb':
+                self.ctrl.lttbRadio.setChecked(True)
             else:
-                raise ValueError("mode argument must be 'subsample', 'mean', or 'peak'.")
+                raise ValueError("mode argument must be 'subsample', 'mean', 'peak' or lttb.")
+
+        if lttb_threshold is not None:
+            self.ctrl.lttbSpin.setValue(lttb_threshold)
             
     @QtCore.Slot()
     def updateDownsampling(self):
-        ds, auto, method = self.downsampleMode()
+        ds, auto, method, lttb_threshold = self.downsampleMode()
         clip = self.ctrl.clipToViewCheck.isChecked()
         for c in self.curves:
-            c.setDownsampling(ds, auto, method)
+            c.setDownsampling(ds, auto, method, lttb_threshold)
             c.setClipToView(clip)
         self.recomputeAverages()
         
     def downsampleMode(self):
         if self.ctrl.downsampleCheck.isChecked():
             ds = self.ctrl.downsampleSpin.value()
+            lttb_threshold = self.ctrl.lttbSpin.value()
         else:
             ds = 1
+            lttb_threshold = 1
             
         auto = self.ctrl.downsampleCheck.isChecked() and self.ctrl.autoDownsampleCheck.isChecked()
             
@@ -975,10 +985,12 @@ class PlotItem(GraphicsWidget):
             method = 'mean'
         elif self.ctrl.peakRadio.isChecked():
             method = 'peak'
+        elif self.ctrl.lttbRadio.isChecked():
+            method = 'lttb'
         else:
             raise ValueError("one of the method radios must be selected for: 'subsample', 'mean', or 'peak'.")
-        
-        return ds, auto, method
+
+        return ds, auto, method, lttb_threshold
         
     def setClipToView(self, clip):
         """Set the default clip-to-view mode for all :class:`~pyqtgraph.PlotDataItem` s managed by this plot.
