@@ -6,9 +6,9 @@ import numpy as np
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
-pg.setConfigOptions(useOpenGL=True, enableExperimental=True)
+pg.setConfigOptions(useOpenGL=True)
 
-app = pg.mkQApp()
+app = pg.mkQApp("MouseSelection Example")
 plt = pg.PlotWidget()
 plt.setWindowTitle('pyqtgraph example: Plot data selection')
 # shift plot area by adding title to test that the OpenGL code handles it
