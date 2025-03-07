@@ -31,8 +31,6 @@ useCupy            bool                False              Use cupy to perform ca
                                                           ImageItem and its associated functions.
 useNumba           bool                False              Use numba acceleration where implemented.
 enableExperimental bool                False              Enable experimental features (the curious can search for this key in the code).
-                                                          In combination with useOpenGL, this makes PlotCurveItem use PyOpenGL
-                                                          for curve drawing.
                                                           
 
                                                           **Caveats**

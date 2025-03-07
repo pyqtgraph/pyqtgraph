@@ -156,12 +156,8 @@ class GraphicsView(QtWidgets.QGraphicsView):
         new_vp = None
 
         if b:
-            try:
-                GraphicsViewGLWidget = getattr(OpenGLHelpers, "GraphicsViewGLWidget")
-            except AttributeError:
-                raise RuntimeError("Requested to use OpenGL with QGraphicsView, but QOpenGLWidget is not available.")
-            if not isinstance(old_vp, GraphicsViewGLWidget):
-                new_vp = GraphicsViewGLWidget()
+            if not isinstance(old_vp, OpenGLHelpers.GraphicsViewGLWidget):
+                new_vp = OpenGLHelpers.GraphicsViewGLWidget()
         else:
             if not type(old_vp) is QtWidgets.QWidget:
                 new_vp = QtWidgets.QWidget()

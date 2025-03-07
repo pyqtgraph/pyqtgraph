@@ -37,7 +37,6 @@ args = parser.parse_args()
 
 if args.use_opengl is not None:
     pg.setConfigOption('useOpenGL', args.use_opengl)
-    pg.setConfigOption('enableExperimental', args.use_opengl)
 use_opengl = pg.getConfigOption('useOpenGL')
 
 # don't limit frame rate to vsync
@@ -152,7 +151,7 @@ def updateOptions(
     curvePen=pg.mkPen(),
     plotMethod='pyqtgraph',
     fillLevel=False,
-    enableExperimental=use_opengl,
+    enableExperimental=False,
     useOpenGL=use_opengl,
 ):
     pg.setConfigOption('enableExperimental', enableExperimental)
