@@ -1160,7 +1160,12 @@ class PlotDataItem(GraphicsObject):
             elif dt == 'Nx2array':
                 x = data[:, 0]
                 y = data[:, 1]
-            elif dt == 'recarray' or dt == 'dictOfLists':
+            elif dt == 'recarray':
+                if "x" in data.dtype.names:
+                    x = data["x"]
+                if "y" in data.dtype.names:
+                    y = data["y"]
+            elif dt == 'dictOfLists':
                 if 'x' in data:
                     x = np.array(data['x'])
                 if 'y' in data:

@@ -81,7 +81,19 @@ def test_setData():
     pdi.setData([],[])
     assert pdi.xData is None
     assert pdi.yData is None
-    
+
+    # recarray (issue #3275)
+    data = np.recarray((10,), dtype=[('x', float), ('y', float)])
+    pdi.setData(data)
+    assert all(pdi.xData == data["x"])
+    assert all(pdi.yData == data["y"])
+
+    # array with named fields
+    data = np.array([(1, 2), (3, 4), (5, 6)], dtype=[("x", float), ("y", float)])
+    pdi.setData(data)
+    assert all(pdi.xData == data["x"])
+    assert all(pdi.yData == data["y"])
+
 def test_nonfinite():
     def _assert_equal_arrays(a1, a2):
         assert a1.shape == a2.shape
