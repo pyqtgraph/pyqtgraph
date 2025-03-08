@@ -6,7 +6,7 @@ import numpy as np
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
-pg.setConfigOptions(useOpenGL=True, enableExperimental=True)
+pg.setConfigOptions(useOpenGL=True)
 
 app = pg.mkQApp()
 plt = pg.PlotWidget()

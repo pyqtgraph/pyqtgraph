@@ -8,7 +8,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
 from utils import FrameCounter
 
-# pg.setConfigOptions(useOpenGL=True, enableExperimental=True)
+# pg.setConfigOptions(useOpenGL=True)
 app = pg.mkQApp("PColorMesh Example")
 
 ## Create window with GraphicsView widget

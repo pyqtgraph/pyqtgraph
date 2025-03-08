@@ -45,7 +45,7 @@ Through 3rd party libraries, additional functionality may be added to PyQtGraph,
 | Library        | Added functionality |
 |----------------|-|
 | [`scipy`]      | <ul><li> Image processing through [`ndimage`]</li><li> Data array filtering through [`signal`] </li><ul> |
-| [`pyopengl`]   | <ul><li> 3D graphics </li><li> Faster image processing </li></ul> |
+| [`pyopengl`]   | <ul><li> 3D graphics </li></ul> |
 | [`h5py`]       | <ul><li> Export in hdf5 format </li></ul> |
 | [`colorcet`]   | <ul><li> Add a collection of perceptually uniform colormaps </li></ul> |
 | [`matplotlib`] | <ul><li> Export of PlotItem in matplotlib figure </li><li> Add matplotlib collection of colormaps </li></ul> |

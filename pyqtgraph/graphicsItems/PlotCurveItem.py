@@ -877,8 +877,8 @@ class PlotCurveItem(GraphicsObject):
         # Set suitable chunk size for current configuration:
         #   * Without OpenGL split in small chunks
         #   * With OpenGL split in rather big chunks
-        #     Note, the present code is used only if config option 'enableExperimental' is False,
-        #     otherwise the 'paintGL' method is used.
+        #     Note: when OpenGL mode is enabled, we should normally be using the
+        #     'paintGL' method, and should not even reach here.
         # Values were found using 'PlotSpeedTest.py' example, see #2257.
         chunksize = 50 if not isinstance(widget, QtWidgets.QOpenGLWidget) else 5000
 
@@ -958,8 +958,7 @@ class PlotCurveItem(GraphicsObject):
         )
 
         if (
-            getConfigOption('enableExperimental')
-            and isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
+            isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
             and opengl_supported_fill
             and not self.opts['stepMode']
         ):
