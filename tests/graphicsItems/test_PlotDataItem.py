@@ -84,6 +84,8 @@ def test_setData():
 
     # recarray (issue #3275)
     data = np.recarray((10,), dtype=[('x', float), ('y', float)])
+    data["x"] = np.linspace(0, 1, len(data))
+    data["y"] = np.linspace(10, 20, len(data))
     pdi.setData(data)
     assert all(pdi.xData == data["x"])
     assert all(pdi.yData == data["y"])
