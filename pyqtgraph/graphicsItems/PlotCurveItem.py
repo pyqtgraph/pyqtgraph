@@ -1199,7 +1199,7 @@ class PlotCurveItem(GraphicsObject):
         if aa:
             glf.glEnable(GLC.GL_LINE_SMOOTH)
             glf.glEnable(GLC.GL_BLEND)
-            glf.glBlendFunc(GLC.GL_SRC_ALPHA, GLC.GL_ONE_MINUS_SRC_ALPHA)
+            glf.glBlendFuncSeparate(GLC.GL_SRC_ALPHA, GLC.GL_ONE_MINUS_SRC_ALPHA, 1, GLC.GL_ONE_MINUS_SRC_ALPHA)
             glf.glHint(GLC.GL_LINE_SMOOTH_HINT, GLC.GL_NICEST)
         else:
             glf.glDisable(GLC.GL_LINE_SMOOTH)
