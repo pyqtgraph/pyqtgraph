@@ -29,8 +29,12 @@ curves = [
               
 def plotClicked(curve):
     for i, c in enumerate(curves):
-        width = 3 if c is curve else 1
-        c.setPen('rgcy'[i], width=width)
+        width = 1
+        color = pg.mkColor('rgcy'[i])
+        if c is curve:
+            width = 4
+            color = color.darker()
+        c.setPen(color, width=width)
     
 for c in curves:
     plt.addItem(c)
