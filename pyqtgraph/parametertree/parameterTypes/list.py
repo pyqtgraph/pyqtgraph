@@ -97,7 +97,7 @@ class ListParameter(Parameter):
             opts['limits'] = opts.pop('values')
         if opts.get('limits', None) is None:
             opts['limits'] = []
-        Parameter.__init__(self, **opts)
+        super().__init__(**opts)
         self.setLimits(opts['limits'])
 
     def setLimits(self, limits):

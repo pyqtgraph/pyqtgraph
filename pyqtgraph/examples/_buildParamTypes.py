@@ -43,7 +43,7 @@ def makeMetaChild(name, cfgDict):
     children = []
     for chName, chOpts in cfgDict.items():
         if not isinstance(chOpts, dict):
-            ch = Parameter.create(name=chName, type=chName, value=chOpts)
+            ch = Parameter.create(name=chName, type=chName, default=chOpts)
         else:
             ch = Parameter.create(name=chName, **chOpts)
         _encounteredTypes.add(ch.type())

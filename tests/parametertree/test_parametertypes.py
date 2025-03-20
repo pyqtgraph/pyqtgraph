@@ -18,7 +18,7 @@ def _getWidget(param):
 
 
 def test_typeless_param():
-    p = pt.Parameter.create(name='test', type=None, value=set())
+    p = pt.Parameter.create(name='test', type=None, value=set(), default=set())
     p.setValue(range(4))
 
 
@@ -160,7 +160,7 @@ def test_limits_enforcement(k, v_in, v_out):
 def test_data_race():
     # Ensure widgets don't override user setting of param values whether
     # they connect the signal before or after it's added to a tree
-    p = pt.Parameter.create(name='int', type='int', value=0)
+    p = pt.Parameter.create(name='int', type='int', default=0)
     t = pt.ParameterTree()
 
     def override():
@@ -189,21 +189,21 @@ def test_checklist_show_hide():
     pi.setHidden.assert_called_with(False)
     assert p.opts["visible"]
 
-@pytest.mark.parametrize("limits,value",[
-    ([1, 2, 3], [1, 2, 3]),
+@pytest.mark.parametrize("limits,default",[
     ([1, 2, 3],  []),
-    (['a', 'b', 'c'], ['a', 'b', 'c']),
+    ([1, 2, 3], [1, 2, 3]),
     (['a', 'b', 'c'], []),
+    (['a', 'b', 'c'], ['a', 'b', 'c']),
 ])
-def test_checklist_check_and_clear_all(limits, value):
-    p = pt.Parameter.create(name='checklist', type='checklist', limits=limits, value=value)
+def test_checklist_check_and_clear_all(limits, default):
+    p = pt.Parameter.create(name='checklist', type='checklist', limits=limits, default=default)
     pi = ChecklistParameterItem(p, 0)
 
     clearButton = pi.metaBtns['Clear']
     selectButton = pi.metaBtns['Select']
     
     # ensure only the specified ones are selected by default
-    assert pi.param.value() == value
+    assert pi.param.value() == default
 
     # make all are selected after selecting all
     selectButton.clicked.emit()

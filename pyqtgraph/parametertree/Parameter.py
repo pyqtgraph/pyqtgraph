@@ -198,9 +198,15 @@ class Parameter(QtCore.QObject):
             # The following intentionally excluded; each parameter type may have a different data type for limits.
             # 'limits': None,
         }
-        name = opts.get('name', None)
+
+        try:
+            name = opts['name']
+        except KeyError:
+            raise KeyError("Parameter must have a name specified")
+
         if not isinstance(name, str):
             raise TypeError("Parameter must have a string name specified in opts.")
+
         self.opts.update(opts)
         self.opts['name'] = None
 
@@ -216,12 +222,12 @@ class Parameter(QtCore.QObject):
         if 'value' in self.opts and 'default' not in self.opts:
             warnings.warn(
                 "Parameter has no default value. Pass a default, or use setDefault(). This will no longer set "
-                "an implicit default after January 2025.",
+                "an implicit default after August 2025.",
                 DeprecationWarning,
                 stacklevel=2,
             )
             self.opts['default'] = self.opts['value']
-        value = self.opts.get('value', self.opts.get('default', None))
+        value = self.opts.get('value', self.opts.get('default'))
         modified = 'value' in self.opts
         if value is not None:
             self.setValue(value)
@@ -345,11 +351,11 @@ class Parameter(QtCore.QObject):
         if 'value' not in self.opts:
             warnings.warn(
                 "Parameter has no value set. Pass an initial value or default, or use setValue() or setDefault(). "
-                "This will be an error after January 2025.",
+                "This will be an error after August 2025.",
                 DeprecationWarning,
                 stacklevel=2,
             )
-        return self.opts.get('value')
+        return self.opts['value']
 
     def getValues(self):
         """
@@ -471,9 +477,11 @@ class Parameter(QtCore.QObject):
     def defaultValue(self):
         """Return the default value for this parameter. Raises ValueError if no default."""
         if 'default' not in self.opts:
-            warnings.warn("Parameter has no default value. This will be a ValueError after January 2025.",
-                          DeprecationWarning,
-                          stacklevel=2)
+            warnings.warn(
+                "Parameter has no default value. This will be a ValueError after August 2025.",
+                DeprecationWarning,
+                stacklevel=2
+            )
         return self.opts.get('default')
         
     def setDefault(self, val, updatePristineValues=False):
