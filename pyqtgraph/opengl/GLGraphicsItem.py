@@ -13,7 +13,8 @@ GLOptions = {
         GL.GL_DEPTH_TEST: True,
         GL.GL_BLEND: True,
         GL.GL_CULL_FACE: False,
-        'glBlendFunc': (GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA),
+        'glBlendFuncSeparate': (GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA,
+                                GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA),
     },
     'additive': {
         GL.GL_DEPTH_TEST: False,

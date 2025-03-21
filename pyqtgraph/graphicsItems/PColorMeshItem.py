@@ -399,8 +399,7 @@ class PColorMeshItem(GraphicsObject):
             return
 
         if (
-            getConfigOption('enableExperimental')
-            and isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
+            isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
             and self.cmap is not None   # don't support setting colormap by setLookupTable
         ):
             if self.glstate is None:

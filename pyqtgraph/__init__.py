@@ -27,18 +27,8 @@ from .Qt import mkQApp
               ## (import here to avoid massive error dump later on if numpy is not available)
 
 
-## in general openGL is poorly supported with Qt+GraphicsView.
-## we only enable it where the performance benefit is critical.
-## Note this only applies to 2D graphics; 3D graphics always use OpenGL.
-if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
-    useOpenGL = False
-elif 'darwin' in sys.platform: ## openGL can have a major impact on mac, but also has serious bugs
-    useOpenGL = False
-else:
-    useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff.
-
 CONFIG_OPTIONS = {
-    'useOpenGL': useOpenGL, ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
+    'useOpenGL': False, ## Set to True or False to explicitly enable/disable opengl.
     'leftButtonPan': True,  ## if false, left button drags a rubber band for zooming in viewbox
     # foreground/background take any arguments to the 'mkColor' in /pyqtgraph/functions.py
     'foreground': 'd',  ## default foreground color for axes, labels, etc.

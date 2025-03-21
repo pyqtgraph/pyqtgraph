@@ -285,8 +285,8 @@ SHADER_LEGACY = {
         void main()
         {
             vec2 xy = (gl_PointCoord - 0.5) * 2.0;
-            float mask = step(-1.0, -dot(xy, xy));
-            gl_FragColor = vec4(v_color.rgb, v_color.a * mask);
+            if (dot(xy, xy) <= 1.0) gl_FragColor = v_color;
+            else discard;
         }
     """
 }
@@ -335,8 +335,8 @@ SHADER_CORE = {
         void main()
         {
             vec2 xy = (gl_PointCoord - 0.5) * 2.0;
-            float mask = step(-1.0, -dot(xy, xy));
-            fragColor = vec4(v_color.rgb, v_color.a * mask);
+            if (dot(xy, xy) <= 1.0) fragColor = v_color;
+            else discard;
         }
     """
 }

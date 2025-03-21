@@ -170,7 +170,8 @@ class GLLinePlotItem(GLGraphicsItem):
         if enable_aa:
             GL.glEnable(GL.GL_LINE_SMOOTH)
             GL.glEnable(GL.GL_BLEND)
-            GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+            GL.glBlendFuncSeparate(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA,
+                                   GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA)
             GL.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST)
 
         sfmt = context.format()
