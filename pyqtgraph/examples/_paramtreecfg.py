@@ -31,31 +31,31 @@ cfg = {
         },
         'relativeTo': {
             'type': 'str',
-            'value': None
+            'default': None
         },
         'directory': {
             'type': 'str',
-            'value': None
+            'default': None
         },
         'windowTitle': {
             'type': 'str',
-            'value': None
+            'default': None
         },
         'nameFilter': {
             'type': 'str',
-            'value': None
+            'default': None
         }
     },
     'float': {
         'Float Information': {
             'type': 'str',
             'readonly': True,
-            'value': 'Note that all options except "finite" also apply to "int" parameters',
+            'default': 'Note that all options except "finite" also apply to "int" parameters',
         },
         'step': {
             'type': 'float',
             'limits': [0, None],
-            'value': 1,
+            'default': 1,
         },
         'limits': {
             'type': 'list',
@@ -67,19 +67,19 @@ cfg = {
         },
         'siPrefix': {
             'type': 'bool',
-            'value': True
+            'default': True
         },
         'finite': {
             'type': 'bool',
-            'value': True,
+            'default': True,
         },
         'dec': {
             'type': 'bool',
-            'value': False,
+            'default': False,
         },
         'minStep': {
             'type': 'float',
-            'value': 1.0e-12,
+            'default': 1.0e-12,
         },
     },
 
@@ -90,11 +90,11 @@ cfg = {
         },
         'exclusive': {
             'type': 'bool',
-            'value': False,
+            'default': False,
         },
         'delay': {
             'type': 'float',
-            'value': 1.0,
+            'default': 1.0,
             'limits': [0, None]
         }
     },
@@ -102,6 +102,7 @@ cfg = {
     'pen': {
         'Pen Information': {
             'type': 'str',
+            'default': "",
             'value': 'Click the button to see options',
             'readonly': True,
         },
@@ -111,14 +112,14 @@ cfg = {
         'step': {
             'type': 'float',
             'limits': [0, None],
-            'value': 1, },
+            'default': 1, },
         'format': {
             'type': 'str',
-            'value': '{0:>3}',
+            'default': '{0:>3}',
         },
         'precision': {
             'type': 'int',
-            'value': 2,
+            'default': 2,
             'limits': [1, None],
         },
         'span': {
@@ -135,11 +136,11 @@ cfg = {
     'action': {
         'shortcut': {
             'type': 'str',
-            'value': "Ctrl+Shift+P",
+            'default': "Ctrl+Shift+P",
         },
         'icon': {
             'type': 'file',
-            'value': None,
+            'default': None,
             'nameFilter': "Images (*.png *.jpg *.bmp *.jpeg *.svg)",
         },
     },
@@ -147,7 +148,7 @@ cfg = {
     'calendar': {
         'format': {
             'type': 'str',
-            'value': 'MM DD',
+            'default': 'MM DD',
         }
     },
 
@@ -160,24 +161,24 @@ cfg = {
         },
         'readonly': {
             'type': 'bool',
-            'value': True,
+            'default': True,
         },
         'removable': {
             'type': 'bool',
             'tip': 'Adds a context menu option to remove this parameter',
-            'value': False,
+            'default': False,
         },
         'visible': {
             'type': 'bool',
-            'value': True,
+            'default': True,
         },
         'disabled': {
             'type': 'bool',
-            'value': False,
+            'default': False,
         },
         'title': {
             'type': 'str',
-            'value': 'Meta Options',
+            'default': 'Meta Options',
         },
         'default': {
             'tip': 'The default value that gets set when clicking the arrow in the right column',
@@ -185,7 +186,7 @@ cfg = {
         },
         'expanded': {
             'type': 'bool',
-            'value': True,
+            'default': True,
         },
     },
 

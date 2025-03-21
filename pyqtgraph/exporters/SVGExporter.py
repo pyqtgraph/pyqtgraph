@@ -29,18 +29,33 @@ class SVGExporter(Exporter):
             bg.setAlpha(0)
 
         self.params = Parameter.create(name='params', type='group', children=[
-            {'name': 'background', 'title': translate("Exporter", 'background'), 'type': 'color', 'value': bg},
-            {'name': 'width', 'title': translate("Exporter", 'width'), 'type': 'float', 'value': tr.width(),
-             'limits': (0, None)},
-            {'name': 'height', 'title': translate("Exporter", 'height'), 'type': 'float', 'value': tr.height(),
-             'limits': (0, None)},
+            {
+                'name': 'background',
+                'title': translate("Exporter", 'background'),
+                'type': 'color',
+                'default': bg
+            },
+            {
+                'name': 'width',
+                'title': translate("Exporter", 'width'),
+                'type': 'float',
+                'default': tr.width(),
+                'limits': (0, None)
+            },
+            {
+                'name': 'height',
+                'title': translate("Exporter", 'height'),
+                'type': 'float',
+                'default': tr.height(),
+                'limits': (0, None)
+            },
             #{'name': 'viewbox clipping', 'type': 'bool', 'value': True},
             #{'name': 'normalize coordinates', 'type': 'bool', 'value': True},
             {
                 'name': 'scaling stroke',
                 'title': translate("Exporter", 'scaling stroke'),
                 'type': 'bool',
-                'value': False,
+                'default': False,
                 'tip': "If False, strokes are non-scaling, which means that "
                        "they appear the same width on screen regardless of "
                        "how they are scaled or how the view is zoomed."

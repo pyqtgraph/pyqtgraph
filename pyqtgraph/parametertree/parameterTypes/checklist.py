@@ -163,8 +163,9 @@ class ChecklistParameter(GroupParameter):
             )
         self.targetValue = None
         limits = opts.setdefault('limits', [])
+        default = opts.setdefault('default', [])
         self.forward, self.reverse = ListParameter.mapping(limits)
-        value = opts.setdefault('value', limits)
+        value = opts.setdefault('value', default)
         opts.setdefault('exclusive', False)
         super().__init__(**opts)
         # Force 'exclusive' to trigger by making sure value is not the same

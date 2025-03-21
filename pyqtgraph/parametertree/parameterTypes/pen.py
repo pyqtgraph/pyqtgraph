@@ -160,12 +160,12 @@ class PenParameter(GroupParameter):
         ps = QtCore.Qt.PenStyle
         param = Parameter.create(
             name='Params', type='group', children=[
-                dict(name='color', type='color', value='k'),
-                dict(name='width', value=1, type='int', limits=[0, None]),
-                QtEnumParameter(ps, name='style', value='SolidLine'),
+                dict(name='color', type='color', default='k'),
+                dict(name='width', default=1, type='int', limits=[0, None]),
+                QtEnumParameter(ps, name='style', deafult='SolidLine'),
                 QtEnumParameter(cs, name='capStyle'),
                 QtEnumParameter(js, name='joinStyle'),
-                dict(name='cosmetic', type='bool', value=True)
+                dict(name='cosmetic', type='bool', default=True)
             ]
             )
 

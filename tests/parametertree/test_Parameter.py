@@ -19,12 +19,11 @@ from pyqtgraph.Qt import QtGui
 pg.mkQApp()
 
 def test_parameter_hasdefault():
-    opts = {"name": "param", "type": 'int', "value": 1}
+    opts = {"name": "param", "type": 'int'}
 
     # default unspecified
     p = Parameter.create(**opts)
-    # TODO after January 2025, this next line needs to reverse its assertion
-    assert p.hasDefault()
+    assert p.hasDefault() is False
 
     # default specified
     p = Parameter.create(default=0, **opts)
@@ -46,12 +45,7 @@ def test_parameter_defaults_and_pristineness():
     # init with different value and default
     p = Parameter.create(name="param", type='int', value=1, default=2)
     assert p.valueModifiedSinceResetToDefault() is True
-    # init with value only
-    p = Parameter.create(name="param", type='int', value=1)
-    assert p.valueModifiedSinceResetToDefault() is True
-    # TODO after January 2025, uncomment the following lines
-    # with pytest.raises(ValueError):
-    #     p.setToDefault()
+
     # init with default only
     p = Parameter.create(name="param", type='int', default=1)
     assert p.valueModifiedSinceResetToDefault() is False
@@ -96,7 +90,7 @@ def test_parameter_defaults_and_pristineness():
     # init with neither value nor default
     p = Parameter.create(name="param", type='int')
     assert p.valueModifiedSinceResetToDefault() is False
-    # TODO after January 2025, uncomment the following lines
+    # TODO after August 2025, uncomment the following lines
     # with pytest.raises(ValueError):
     #     p.value()
     # with pytest.raises(ValueError):
@@ -113,26 +107,26 @@ def test_add_child():
         name="test",
         type="group",
         children=[
-            dict(name="ch1", type="bool", value=True),
-            dict(name="ch2", type="bool", value=False),
+            dict(name="ch1", type="bool", default=True),
+            dict(name="ch2", type="bool", default=False),
         ],
     )
     with pytest.raises(ValueError):
-        p.addChild(dict(name="ch1", type="int", value=0))
+        p.addChild(dict(name="ch1", type="int", default=0))
     existing = p.child("ch1")
-    ch = p.addChild(dict(name="ch1", type="int", value=0), existOk=True)
+    ch = p.addChild(dict(name="ch1", type="int", default=0), existOk=True)
     assert ch is existing
 
-    ch = p.addChild(dict(name="ch1", type="int", value=0), autoIncrementName=True)
+    ch = p.addChild(dict(name="ch1", type="int", default=0), autoIncrementName=True)
     assert ch.name() == "ch3"
 
 
 def test_unpack_parameter():
     # test that **unpacking correctly returns child name/value maps
     params = [
-        dict(name="a", type="int", value=1),
-        dict(name="b", type="str", value="2"),
-        dict(name="c", type="float", value=3.0),
+        dict(name="a", type="int", default=1),
+        dict(name="b", type="str", default="2"),
+        dict(name="c", type="float", default=3.0),
     ]
     p = Parameter.create(name="params", type="group", children=params)
     result = dict(**p)
@@ -202,7 +196,7 @@ def test_interact():
     assert value == (10, 100)
 
     with interactor.optsContext(titleFormat=str.upper):
-        host = interactor(a, x={"title": "different", "value": 5})
+        host = interactor(a, x={"title": "different", "default": 5})
         titles = [p.title() for p in host]
         for ch in "different", "Y":
             assert ch in titles
@@ -473,7 +467,7 @@ def test_hookup_extra_params():
 
     interact(a)
 
-    p2 = Parameter.create(name="p2", type="int", value=3)
+    p2 = Parameter.create(name="p2", type="int", default=3)
     a.hookupParameters([p2], clearOld=False)
 
     assert a() == 8
