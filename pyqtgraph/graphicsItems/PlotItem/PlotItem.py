@@ -222,6 +222,7 @@ class PlotItem(GraphicsWidget):
         c.gridAlphaSlider.valueChanged.connect(self.updateGrid)
 
         c.fftCheck.toggled.connect(self.updateSpectrumMode)
+        c.subtractMeanCheck.toggled.connect(self.updateSubtractMeanMode)
         c.logXCheck.toggled.connect(self.updateLogMode)
         c.logYCheck.toggled.connect(self.updateLogMode)
         c.derivativeCheck.toggled.connect(self.updateDerivativeMode)
@@ -543,6 +544,7 @@ class PlotItem(GraphicsWidget):
             ## configure curve for this plot
             (alpha, auto) = self.alphaState()
             item.setAlpha(alpha, auto)
+            item.setSubtractMeanMode(self.ctrl.subtractMeanCheck.isChecked())
             item.setFftMode(self.ctrl.fftCheck.isChecked())
             item.setDownsampling(*self.downsampleMode())
             item.setClipToView(self.clipToViewMode())
@@ -838,6 +840,7 @@ class PlotItem(GraphicsWidget):
             
         self.stateGroup.setState(state)
         self.updateSpectrumMode()
+        self.updateSubtractMeanMode()
         self.updateDownsampling()
         self.updateAlpha()
         self.updateDecimation()
@@ -872,7 +875,16 @@ class PlotItem(GraphicsWidget):
             c.setFftMode(b)
         self.enableAutoRange()
         self.recomputeAverages()
-            
+
+    @QtCore.Slot()
+    def updateSubtractMeanMode(self):
+        d = self.ctrl.subtractMeanCheck.isChecked()
+        for i in self.items:
+            if hasattr(i, 'setSubtractMeanMode'):
+                i.setSubtractMeanMode(d)
+        self.enableAutoRange()
+        self.recomputeAverages()
+
     @QtCore.Slot()
     def updateLogMode(self):
         x = self.ctrl.logXCheck.isChecked()
