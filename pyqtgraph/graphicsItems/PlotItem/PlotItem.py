@@ -20,6 +20,7 @@ from ..PlotCurveItem import PlotCurveItem
 from ..PlotDataItem import PlotDataItem
 from ..ScatterPlotItem import ScatterPlotItem
 from ..ViewBox import ViewBox
+from ..GridItem import GridItem
 
 translate = QtCore.QCoreApplication.translate
 
@@ -562,6 +563,10 @@ class PlotItem(GraphicsWidget):
         if name is not None and hasattr(self, 'legend') and self.legend is not None:
             self.legend.addItem(item, name=name)            
 
+        if isinstance(item, GridItem):
+            item.setAxes({ax['item'].orientation: ax['item'] for ax in self.axes.values()})
+            item.setControl(self.ctrl)
+        
     def listDataItems(self):
         """Return a list of all data items (:class:`~pyqtgraph.PlotDataItem`,
         :class:`~pyqtgraph.PlotCurveItem` , :class:`~pyqtgraph.ScatterPlotItem` , etc)

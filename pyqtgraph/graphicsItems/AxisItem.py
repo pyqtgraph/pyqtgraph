@@ -141,6 +141,8 @@ class AxisItem(GraphicsWidget):
 
         #self.setCacheMode(self.DeviceCoordinateCache)
 
+        self.draw_ticks = True
+
     def setStyle(self, **kwds):
         """
         Set various style options.
@@ -671,7 +673,7 @@ class AxisItem(GraphicsWidget):
             except ValueError: pass # ignore any non-numeric value
 
         linkedView = self.linkedView()
-        if linkedView is None or self.grid is False:
+        if linkedView is None or self.grid is False or self.draw_ticks is False:
             rect = self.mapRectFromParent(self.geometry())
             ## extend rect if ticks go in negative direction
             ## also extend to account for text that flows past the edges
@@ -1300,9 +1302,10 @@ class AxisItem(GraphicsWidget):
         # p.translate(0.5,0)  ## resolves some damn pixel ambiguity
 
         ## draw ticks
-        for pen, p1, p2 in tickSpecs:
-            p.setPen(pen)
-            p.drawLine(p1, p2)
+        if self.draw_ticks:
+            for pen, p1, p2 in tickSpecs:
+                p.setPen(pen)
+                p.drawLine(p1, p2)
         profiler('draw ticks')
 
         # Draw all text
