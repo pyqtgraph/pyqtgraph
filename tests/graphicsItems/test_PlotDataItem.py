@@ -207,3 +207,34 @@ def test_clipping():
         assert len(yDisp) == num
 
     w.close()
+
+def test_downsampling_with_connect():
+    # Test that down sampling and view clipping works correctly when using the connect vector
+    x = np.linspace(0.0, 7.0, num=1000)
+    x = np.concatenate((x[:300], x[700:]))
+    y = np.sin(x)
+    connect = np.ones(len(x), dtype=bool)
+    connect[299] = False
+    nc = (x[~connect].item(), y[~connect].item())
+    w = pg.PlotWidget()
+    c = pg.PlotDataItem(x, y, connect=connect)
+    w.addItem(c)
+    c.setClipToView(True)
+    w.setXRange(1.0, 6.0)
+
+    # verify that the connect vector is clipped correctly
+    xs, ys = c.getData()
+    cs = c.curve.opts['connect']
+    assert len(xs) == len(cs)
+    assert nc == (xs[~cs].item(), ys[~cs].item())
+
+    c.setClipToView(False)
+    w.setXRange(0.0, 7.0)
+    for method in ['subsample', 'mean', 'peak']:
+        c.setDownsampling(5, method=method)
+        # verify that the connect vector is downsampled to the same size
+        xs, _ = c.getData()
+        cs = c.curve.opts['connect']
+        assert len(xs) == len(cs)
+
+    w.close()
