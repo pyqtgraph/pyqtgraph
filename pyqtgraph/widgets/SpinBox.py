@@ -389,6 +389,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         self.valueChanged.emit(float(self.val))
         self.sigValueChanged.emit(self)
     
+    @QtCore.Slot()
     def delayedChange(self):
         try:
             if not fn.eq(self.val, self.lastValEmitted):  # use fn.eq to handle nan
@@ -572,6 +573,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
 
         return val
 
+    @QtCore.Slot()
     def editingFinishedEvent(self):
         """Edit has finished; set value."""
         if self.lineEdit().text() == self.lastText:

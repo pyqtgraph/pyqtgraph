@@ -40,7 +40,7 @@ area.addDock(d2, 'right')     ## place d2 at right edge of dock area
 area.addDock(d3, 'bottom', d1)## place d3 at bottom edge of d1
 area.addDock(d4, 'right')     ## place d4 at right edge of dock area
 area.addDock(d5, 'left', d1)  ## place d5 at left edge of d1
-area.addDock(d6, 'top', d4)   ## place d5 at top edge of d4
+area.addDock(d6, 'top', d4)   ## place d6 at top edge of d4
 
 ## Test ability to move docks programatically after they have been placed
 area.moveDock(d4, 'top', d2)     ## move d4 to top edge of d2

@@ -91,7 +91,10 @@ class ListParameter(Parameter):
     def __init__(self, **opts):
         self.forward = OrderedDict()  ## {name: value, ...}
         self.reverse = ([], [])       ## ([value, ...], [name, ...])
-
+        if 'values' in opts:
+            warning = "ListParameter 'values' argument has been replaced with 'limits' and will be removed in a future version."
+            warnings.warn(warning, DeprecationWarning)
+            opts['limits'] = opts.pop('values')
         if opts.get('limits', None) is None:
             opts['limits'] = []
         Parameter.__init__(self, **opts)

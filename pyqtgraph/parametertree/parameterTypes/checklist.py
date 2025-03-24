@@ -1,5 +1,5 @@
 from ... import functions as fn
-from ...Qt import QtWidgets
+from ...Qt import QtCore, QtWidgets
 from ...SignalProxy import SignalProxy
 from ..ParameterItem import ParameterItem
 from . import BoolParameterItem, SimpleParameter
@@ -193,6 +193,7 @@ class ChecklistParameter(GroupParameter):
         else:
             return vals
 
+    @QtCore.Slot(object, object)
     def _onChildChanging(self, child, value):
         # When exclusive, ensure only this value is True
         if self.opts['exclusive'] and value:
@@ -201,6 +202,7 @@ class ChecklistParameter(GroupParameter):
             value = self.childrenValue()
         self.sigValueChanging.emit(self, value)
 
+    @QtCore.Slot(object, object)
     def updateLimits(self, _param, limits):
         oldOpts = self.names
         val = self.opts.get('value', None)
@@ -225,11 +227,13 @@ class ChecklistParameter(GroupParameter):
         self.unblockTreeChangeSignal()
         self.setValue(val)
 
+    @QtCore.Slot(object)
     def _finishChildChanges(self, paramAndValue):
         param, value = paramAndValue
         # Interpret value, fire sigValueChanged
         return self.setValue(value)
 
+    @QtCore.Slot(object, object)
     def optsChanged(self, param, opts):
         if 'exclusive' in opts:
             self.updateLimits(None, self.opts.get('limits', []))
@@ -270,7 +274,7 @@ class ChecklistParameter(GroupParameter):
         # Could be replaced by "value in self.reverse[0]" and "reverse[0].index",
         # but this allows for using pg.eq to cover more diverse value options
         for val in values:
-            for limitName, limitValue in zip(*self.reverse):
+            for limitValue, limitName in zip(*self.reverse):
                 if fn.eq(limitValue, val):
                     allowedNames.append(limitName)
                     allowedValues.append(val)

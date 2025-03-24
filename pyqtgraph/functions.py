@@ -2044,15 +2044,22 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     if hasattr(path, 'reserve'):    # Qt 5.13
         path.reserve(n)
 
-    if hasattr(path, 'reserve') and getConfigOption('enableExperimental'):
+    if getConfigOption('enableExperimental'):
         backstore = None
         arr = Qt.internals.get_qpainterpath_element_array(path, n)
     else:
-        backstore = QtCore.QByteArray()
-        backstore.resize(4 + n*20 + 8)      # contents uninitialized
-        backstore.replace(0, 4, struct.pack('>i', n))
-        # cStart, fillRule (Qt.FillRule.OddEvenFill)
-        backstore.replace(4+n*20, 8, struct.pack('>ii', 0, 0))
+        if Qt.internals.qbytearray_leaks():
+            backstore = bytearray(4 + n*20 + 8) # initialized to zero
+            struct.pack_into('>i', backstore, 0, n)
+            # cStart, fillRule (Qt.FillRule.OddEvenFill)
+            struct.pack_into('>ii', backstore, 4+n*20, 0, 0)
+        else:
+            backstore = QtCore.QByteArray()
+            backstore.resize(4 + n*20 + 8)      # contents uninitialized
+            backstore.replace(0, 4, struct.pack('>i', n))
+            # cStart, fillRule (Qt.FillRule.OddEvenFill)
+            backstore.replace(4+n*20, 8, struct.pack('>ii', 0, 0))
+
         arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
             count=n, offset=4)
 
@@ -2091,6 +2098,10 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
 
     if isinstance(backstore, QtCore.QByteArray):
         ds = QtCore.QDataStream(backstore)
+        ds >> path
+    elif isinstance(backstore, bytearray):
+        qba = QtCore.QByteArray(backstore)  # a copy is made here
+        ds = QtCore.QDataStream(qba)
         ds >> path
     return path
 
@@ -2833,7 +2844,7 @@ def isosurface(data, level):
     cutEdges = np.zeros([x+1 for x in index.shape]+[3], dtype=np.uint32)
     edges = edgeTable[index]
     for i, shift in enumerate(edgeShifts[:12]):        
-        slices = [slice(shift[j],cutEdges.shape[j]+(shift[j]-1)) for j in range(3)]
+        slices = [slice(int(shift[j]),cutEdges.shape[j]+(int(shift[j])-1)) for j in range(3)]
         cutEdges[slices[0], slices[1], slices[2], shift[3]] += edges & 2**i
     
     ## for each cut edge, interpolate to see where exactly the edge is cut and generate vertex positions

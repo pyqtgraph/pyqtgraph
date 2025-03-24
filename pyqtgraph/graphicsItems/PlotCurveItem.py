@@ -35,6 +35,22 @@ class OpenGLState(QtCore.QObject):
             gl_FragColor = u_color;
         }
     """
+    VERT_SRC_140 = """
+        #version 140
+        in vec4 a_position;
+        uniform mat4 u_mvp;
+        void main() {
+            gl_Position = u_mvp * a_position;
+        }
+    """
+    FRAG_SRC_140 = """
+        #version 140
+        uniform vec4 u_color;
+        out vec4 fragColor;
+        void main() {
+            fragColor = u_color;
+        }
+    """
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -59,10 +75,24 @@ class OpenGLState(QtCore.QObject):
         program = glwidget.retrieveProgram("PlotCurveItem")
         if program is None:
             program = QtOpenGL.QOpenGLShaderProgram()
-            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, OpenGLState.VERT_SRC)
-            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, OpenGLState.FRAG_SRC)
+
+            is_opengles = self.context.isOpenGLES()
+            gl_version = self.context.format().version()
+
+            if not is_opengles and gl_version >= (3, 1):
+                vert_src = OpenGLState.VERT_SRC_140
+                frag_src = OpenGLState.FRAG_SRC_140
+            else:
+                vert_src = OpenGLState.VERT_SRC
+                frag_src = OpenGLState.FRAG_SRC
+
+            if not program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, vert_src):
+                raise RuntimeError(program.log())
+            if not program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, frag_src):
+                raise RuntimeError(program.log())
             program.bindAttributeLocation("a_position", 0)
-            program.link()
+            if not program.link():
+                raise RuntimeError(program.log())
             glwidget.storeProgram("PlotCurveItem", program)
 
         self.m_vao.create()
@@ -847,8 +877,8 @@ class PlotCurveItem(GraphicsObject):
         # Set suitable chunk size for current configuration:
         #   * Without OpenGL split in small chunks
         #   * With OpenGL split in rather big chunks
-        #     Note, the present code is used only if config option 'enableExperimental' is False,
-        #     otherwise the 'paintGL' method is used.
+        #     Note: when OpenGL mode is enabled, we should normally be using the
+        #     'paintGL' method, and should not even reach here.
         # Values were found using 'PlotSpeedTest.py' example, see #2257.
         chunksize = 50 if not isinstance(widget, QtWidgets.QOpenGLWidget) else 5000
 
@@ -928,8 +958,7 @@ class PlotCurveItem(GraphicsObject):
         )
 
         if (
-            getConfigOption('enableExperimental')
-            and isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
+            isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
             and opengl_supported_fill
             and not self.opts['stepMode']
         ):
@@ -1170,7 +1199,7 @@ class PlotCurveItem(GraphicsObject):
         if aa:
             glf.glEnable(GLC.GL_LINE_SMOOTH)
             glf.glEnable(GLC.GL_BLEND)
-            glf.glBlendFunc(GLC.GL_SRC_ALPHA, GLC.GL_ONE_MINUS_SRC_ALPHA)
+            glf.glBlendFuncSeparate(GLC.GL_SRC_ALPHA, GLC.GL_ONE_MINUS_SRC_ALPHA, 1, GLC.GL_ONE_MINUS_SRC_ALPHA)
             glf.glHint(GLC.GL_LINE_SMOOTH_HINT, GLC.GL_NICEST)
         else:
             glf.glDisable(GLC.GL_LINE_SMOOTH)

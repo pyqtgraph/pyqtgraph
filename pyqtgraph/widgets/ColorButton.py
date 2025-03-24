@@ -56,18 +56,23 @@ class ColorButton(QtWidgets.QPushButton):
         else:
             self.sigColorChanging.emit(self)
         
+    @QtCore.Slot()
     def selectColor(self):
         self.origColor = self.color()
         self.colorDialog.setCurrentColor(self.color())
         self.colorDialog.open()
         
+    @QtCore.Slot(QtGui.QColor)
     def dialogColorChanged(self, color):
         if color.isValid():
             self.setColor(color, finished=False)
             
+    @QtCore.Slot()
+    @QtCore.Slot(QtGui.QColor)
     def colorRejected(self):
         self.setColor(self.origColor, finished=False)
     
+    @QtCore.Slot(QtGui.QColor)
     def colorSelected(self, color):
         self.setColor(self._color, finished=True)
     

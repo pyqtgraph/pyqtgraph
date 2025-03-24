@@ -6,9 +6,9 @@ import numpy as np
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
-pg.setConfigOptions(useOpenGL=True, enableExperimental=True)
+pg.setConfigOptions(useOpenGL=True)
 
-app = pg.mkQApp()
+app = pg.mkQApp("MouseSelection Example")
 plt = pg.PlotWidget()
 plt.setWindowTitle('pyqtgraph example: Plot data selection')
 # shift plot area by adding title to test that the OpenGL code handles it
@@ -29,8 +29,12 @@ curves = [
               
 def plotClicked(curve):
     for i, c in enumerate(curves):
-        width = 3 if c is curve else 1
-        c.setPen('rgcy'[i], width=width)
+        width = 1
+        color = pg.mkColor('rgcy'[i])
+        if c is curve:
+            width = 4
+            color = color.darker()
+        c.setPen(color, width=width)
     
 for c in curves:
     plt.addItem(c)
