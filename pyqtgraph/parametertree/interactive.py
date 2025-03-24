@@ -590,7 +590,11 @@ class Interactor:
             # directly from the default Also, maybe override was a value without a
             # type, so give a sensible default
             default = signatureParameter.default
-            signatureDict = {"value": default, "type": type(default).__name__}
+            signatureDict = {
+                "value": default,
+                "default": default,
+                "type": type(default).__name__
+            }
         else:
             signatureDict = {}
         # Doc takes precedence over signature for any value information
@@ -604,12 +608,17 @@ class Interactor:
         pgDict["name"] = name
         # Required function arguments with any override specifications can still be
         # unfilled at this point
-        pgDict.setdefault("value", PARAM_UNSET)
+        if "value" not in pgDict:
+            if "default" in pgDict:
+                pgDict["value"] = pgDict["default"]
+            else:
+                pgDict["value"] = PARAM_UNSET
+        pgDict.setdefault("default", pgDict["value"])
 
         # Anywhere a title is specified should take precedence over the default factory
         if self.titleFormat is not None:
             pgDict.setdefault("title", self._nameToTitle(name))
-        pgDict.setdefault("type", type(pgDict["value"]).__name__)
+        pgDict.setdefault("type", type(pgDict["default"]).__name__)
         return pgDict
 
     def __str__(self):

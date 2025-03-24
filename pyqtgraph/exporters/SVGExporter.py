@@ -29,11 +29,25 @@ class SVGExporter(Exporter):
             bg.setAlpha(0)
 
         self.params = Parameter.create(name='params', type='group', children=[
-            {'name': 'background', 'title': translate("Exporter", 'background'), 'type': 'color', 'value': bg},
-            {'name': 'width', 'title': translate("Exporter", 'width'), 'type': 'float', 'value': tr.width(),
-             'limits': (0, None)},
-            {'name': 'height', 'title': translate("Exporter", 'height'), 'type': 'float', 'value': tr.height(),
-             'limits': (0, None)},
+            {
+                'name': 'background',
+                'title': translate("Exporter", 'background'),
+                'type': 'color',
+                'value': bg
+            },
+            {
+                'name': 'width',
+                'title': translate("Exporter", 'width'),
+                'type': 'float',
+                'value': tr.width(),
+                'limits': (0, None)
+            },
+            {
+                'name': 'height',
+                'title': translate("Exporter", 'height'),
+                'type': 'float',
+                'value': tr.height(),
+                'limits': (0, None)},
             #{'name': 'viewbox clipping', 'type': 'bool', 'value': True},
             #{'name': 'normalize coordinates', 'type': 'bool', 'value': True},
             {
