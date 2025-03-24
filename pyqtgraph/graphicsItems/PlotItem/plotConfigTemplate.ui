@@ -206,16 +206,23 @@
      <number>0</number>
     </property>
     <item row="2" column="0">
-     <widget class="QCheckBox" name="logYCheck">
-      <property name="text">
-       <string>Log Y</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0">
      <widget class="QCheckBox" name="logXCheck">
       <property name="text">
        <string>Log X</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0">
+     <widget class="QCheckBox" name="derivativeCheck">
+      <property name="text">
+       <string>dy/dx</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0">
+     <widget class="QCheckBox" name="phasemapCheck">
+      <property name="text">
+       <string>Y vs. Y'</string>
       </property>
      </widget>
     </item>
@@ -227,16 +234,16 @@
      </widget>
     </item>
     <item row="3" column="0">
-     <widget class="QCheckBox" name="derivativeCheck">
+     <widget class="QCheckBox" name="logYCheck">
       <property name="text">
-       <string>dy/dx</string>
+       <string>Log Y</string>
       </property>
      </widget>
     </item>
-    <item row="4" column="0">
-     <widget class="QCheckBox" name="phasemapCheck">
+    <item row="1" column="0">
+     <widget class="QCheckBox" name="subtractMeanCheck">
       <property name="text">
-       <string>Y vs. Y'</string>
+       <string>Subtract Mean</string>
       </property>
      </widget>
     </item>
