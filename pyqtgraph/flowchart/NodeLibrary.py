@@ -51,7 +51,7 @@ class NodeLibrary:
                 if n not in root:
                     root[n] = OrderedDict()
                 root = root[n]
-            root[name] = nodeClass  # type: ignore
+            root[name] = nodeClass
 
     def getNodeType(self, name: str) -> type:
         try:

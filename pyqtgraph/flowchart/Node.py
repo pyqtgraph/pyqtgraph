@@ -3,8 +3,7 @@ __all__ = ["Node", "NodeGraphicsItem"]
 import sys
 import types
 from collections import OrderedDict
-from typing import Optional, Any, Callable, Union
-from typing_extensions import Unpack
+from typing import Optional, Any, Callable, Union, Unpack
 
 from .. import functions as fn
 from ..GraphicsScene.mouseEvents import MouseClickEvent, MouseDragEvent
@@ -78,7 +77,7 @@ class Node(QtCore.QObject):
         QtCore.QObject.__init__(self)
         self._name: str = name
         self._bypass: bool = False
-        self.bypassButton = None  ## this will be set by the flowchart ctrl widget..
+        self.bypassButton: QtWidgets.QPushButton | None = None  ## this will be set by the flowchart ctrl widget..
         self._graphicsItem: Optional[NodeGraphicsItem] = None
         self.terminals: dict[str, Terminal] = OrderedDict()
         self._inputs: dict = OrderedDict()
@@ -229,7 +228,7 @@ class Node(QtCore.QObject):
     def __repr__(self) -> str:
         return "<Node %s @%x>" % (self.name(), id(self))
 
-    def ctrlWidget(self) -> None:
+    def ctrlWidget(self) -> QtWidgets.QWidget | None:
         """Return this Node's control widget.
         
         By default, Nodes have no control widget. Subclasses may reimplement this 
@@ -426,7 +425,7 @@ class Node(QtCore.QObject):
         if item.scene() is not None:
             item.scene().removeItem(item)
         self._graphicsItem = None
-        w = self.ctrlWidget()  # type: ignore
+        w = self.ctrlWidget()
         if w is not None:
             w.setParent(None)
         # self.emit(QtCore.SIGNAL('closed'), self)
@@ -442,19 +441,23 @@ class TextItem(QtWidgets.QGraphicsTextItem):
         super().__init__(text, parent)
         self.on_update = on_update
 
-    def focusOutEvent(self, ev: QtGui.QFocusEvent) -> None:
+    def focusOutEvent(self, ev: QtGui.QFocusEvent | None) -> None:
         super().focusOutEvent(ev)
         if self.on_update is not None:
             self.on_update()
 
-    def keyPressEvent(self, ev: QtGui.QKeyEvent) -> None:
+    def keyPressEvent(self, ev: QtGui.QKeyEvent | None) -> None:
+        if ev is None:
+            return super().keyPressEvent(ev)
         if ev.key() == QtCore.Qt.Key.Key_Enter or ev.key() == QtCore.Qt.Key.Key_Return:
             if self.on_update is not None:
                 self.on_update()
                 return
         super().keyPressEvent(ev)
 
-    def mousePressEvent(self, ev: QtWidgets.QGraphicsSceneMouseEvent) -> None:
+    def mousePressEvent(self, ev: QtWidgets.QGraphicsSceneMouseEvent | None) -> None:
+        if ev is None:
+            return super().mousePressEvent(ev)
         if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextEditorInteraction)
             self.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)  # focus text label
@@ -495,7 +498,7 @@ class NodeGraphicsItem(GraphicsObject):
         self.updateTerminals()
         # self.setZValue(10)
 
-        self.menu = None
+        self.menu = QtWidgets.QMenu()
         self.buildMenu()
 
     def setTitleOffset(self, new_offset: int) -> None:
@@ -598,7 +601,7 @@ class NodeGraphicsItem(GraphicsObject):
     def boundingRect(self) -> QtCore.QRectF:
         return self.bounds.adjusted(-5, -5, 5, 5)
 
-    def paint(self, p, *args) -> None:  # type: ignore
+    def paint(self, p, *args) -> None:
 
         p.setPen(self.pen)
         if self.isSelected():
@@ -613,27 +616,33 @@ class NodeGraphicsItem(GraphicsObject):
 
         p.drawRect(self.bounds)
 
-    def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
-        ev.ignore()
+    def mousePressEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent | None) -> None:
+        if event is None:
+            return None
+        event.ignore()
 
-    def mouseClickEvent(self, ev: QtGui.QMouseEvent) -> None:
-        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
-            ev.accept()
+    def mouseClickEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent | None) -> None:
+        if event is None:
+            return None
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
+            event.accept()
             sel = self.isSelected()
             self.setSelected(True)
             if not sel and self.isSelected():
                 self.update()
 
-        elif ev.button() == QtCore.Qt.MouseButton.RightButton:
-            ev.accept()
-            self.raiseContextMenu(ev)
+        elif event.button() == QtCore.Qt.MouseButton.RightButton:
+            event.accept()
+            self.raiseContextMenu(event)
 
-    def mouseDragEvent(self, ev: QtGui.QMouseEvent) -> None:
+    def mouseDragEvent(self, ev: QtWidgets.QGraphicsSceneMouseEvent | None) -> None:
+        if ev is None:
+            return
         if ev.button() == QtCore.Qt.MouseButton.LeftButton:
             ev.accept()
             self.setPos(self.pos() + self.mapToParent(ev.pos()) - self.mapToParent(ev.lastPos()))
 
-    def hoverEvent(self, ev) -> None:  # type: ignore
+    def hoverEvent(self, ev) -> None:
         if not ev.isExit() and ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton):
             ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton)
             self.hovered = True
@@ -641,7 +650,9 @@ class NodeGraphicsItem(GraphicsObject):
             self.hovered = False
         self.update()
 
-    def keyPressEvent(self, ev: QtGui.QKeyEvent) -> None:
+    def keyPressEvent(self, ev: QtGui.QKeyEvent | None) -> None:
+        if ev is None:
+            return None
         if ev.key() == QtCore.Qt.Key.Key_Delete or ev.key() == QtCore.Qt.Key.Key_Backspace:
             ev.accept()
             if not self.node._allowRemove:
@@ -656,16 +667,16 @@ class NodeGraphicsItem(GraphicsObject):
                 t[1].nodeMoved()
         return GraphicsObject.itemChange(self, change, val)
 
-    def getMenu(self) -> Optional[QtWidgets.QMenu]:
+    def getMenu(self) -> QtWidgets.QMenu:
         return self.menu
 
-    def raiseContextMenu(self, ev: Union[MouseClickEvent, MouseDragEvent]) -> None:
+    def raiseContextMenu(self, ev: MouseClickEvent | MouseDragEvent | QtWidgets.QGraphicsSceneMouseEvent) -> None:
         menu = self.scene().addParentContextMenus(self, self.getMenu(), ev)
         pos = ev.screenPos()
         menu.popup(QtCore.QPoint(int(pos.x()), int(pos.y())))
 
     def buildMenu(self) -> None:
-        self.menu = QtWidgets.QMenu()
+        self.menu.clear()
         self.menu.setTitle(translate("Context Menu", "Node"))
         a = self.menu.addAction(translate("Context Menu", "Add input"), self.addInputFromMenu)
         if not self.node._allowAddInput:

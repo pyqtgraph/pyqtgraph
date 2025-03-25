@@ -14,13 +14,17 @@ class PlotWidgetNode(Node):
     """Connection to PlotWidget. Will plot arrays, and display event lists."""
     nodeName = 'PlotWidget'
     sigPlotChanged = QtCore.Signal(object)
+    plot: PlotWidget | None
+    plots: dict
+    ui: ComboBox | None
+    items: dict
 
     def __init__(self, name: str) -> None:
-        Node.__init__(self, name, terminals={'In': {'io': 'in', 'multi': True}})
-        self.plot: Optional[PlotWidget] = None  # currently selected plot
-        self.plots: dict = {}  # list of available plots user may select from
-        self.ui: Optional[ComboBox] = None
-        self.items: dict = {}
+        super().__init__(name, terminals={'In': {'io': 'in', 'multi': True}})
+        self.plot = None  # currently selected plot
+        self.plots = {}  # list of available plots user may select from
+        self.ui = None
+        self.items = {}
 
     def disconnected(self, localTerm: Terminal, remoteTerm: Terminal) -> None:
         if localTerm is self['In'] and remoteTerm in self.items:
@@ -28,7 +32,6 @@ class PlotWidgetNode(Node):
             del self.items[remoteTerm]
 
     def setPlot(self, plot: Optional[PlotWidget]) -> None:
-        # print "======set plot"
         if plot == self.plot:
             return
 
@@ -46,7 +49,7 @@ class PlotWidgetNode(Node):
     def getPlot(self) -> Optional[PlotWidget]:
         return self.plot
 
-    def process(self, In: dict, display=True) -> None:  # type: ignore
+    def process(self, In: dict, display=True) -> None:
         if display and self.plot is not None:
             items = set()
             # Add all new input items to selected plot
@@ -88,7 +91,7 @@ class PlotWidgetNode(Node):
         self.items = {}
         return {}
 
-    def ctrlWidget(self) -> ComboBox:  # type: ignore
+    def ctrlWidget(self) -> ComboBox:
         if self.ui is None:
             self.ui = ComboBox()
             self.ui.currentIndexChanged.connect(self.plotSelected)
@@ -131,13 +134,13 @@ class CanvasNode(Node):
             self.canvas.removeItem(self.items[remoteTerm])
             del self.items[remoteTerm]
 
-    def setCanvas(self, canvas) -> None:  # type: ignore
+    def setCanvas(self, canvas) -> None:
         self.canvas = canvas
 
-    def getCanvas(self):  # type: ignore
+    def getCanvas(self):
         return self.canvas
 
-    def process(self, In: dict, display: bool = True) -> None:  # type: ignore
+    def process(self, In: dict, display: bool = True) -> None:
         if display:
             items = set()
             for name, vals in In.items():
@@ -177,7 +180,7 @@ class PlotCurve(CtrlNode):
         })
         self.item = PlotDataItem()
 
-    def process(self, x, y, display: bool = True) -> dict:  # type: ignore
+    def process(self, x, y, display: bool = True) -> dict:
         # print "scatterplot process"
         if not display:
             return {'plot': None}
@@ -216,7 +219,7 @@ class ScatterPlot(CtrlNode):
         # self.xCombo = QtWidgets.QComboBox()
         # self.yCombo = QtWidgets.QComboBox()
 
-    def process(self, input, display: bool = True) -> dict:  # type: ignore
+    def process(self, input, display: bool = True) -> dict:
         # print "scatterplot process"
         if not display:
             return {'plot': None}
@@ -229,7 +232,7 @@ class ScatterPlot(CtrlNode):
         pen = QtGui.QPen(QtGui.QColor(0, 0, 0, 0))
         points = []
         for i in input:
-            pt = {'pos': (i[x], i[y])}
+            pt: dict[str, tuple[int, int] | QtGui.QPen | QtGui.QBrush] = {'pos': (i[x], i[y])}
             if self.ctrls['sizeEnabled'].isChecked():
                 pt['size'] = i[size]
             if self.ctrls['borderEnabled'].isChecked():

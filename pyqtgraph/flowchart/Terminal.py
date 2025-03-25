@@ -2,8 +2,7 @@ __all__ = ["Terminal", "TerminalGraphicsItem"]
 
 import weakref
 
-from typing import Optional, Literal, Sequence, Callable, Union, Any
-from typing_extensions import Unpack
+from typing import Unpack, Optional, Literal, Sequence, Callable, Union, Any, overload
 
 from .. import functions as fn
 from ..GraphicsScene.mouseEvents import HoverEvent
@@ -15,7 +14,175 @@ from ..Qt import QtCore, QtGui, QtWidgets
 translate = QtCore.QCoreApplication.translate
 
 
-class Terminal(object):
+class TerminalGraphicsItem(GraphicsObject):
+
+    def __init__(self, term: 'Terminal', parent: Optional[QtWidgets.QGraphicsItem] = None) -> None:
+        self.term = term
+        GraphicsObject.__init__(self, parent)
+        self.brush = fn.mkBrush(0, 0, 0)
+        self.box = QtWidgets.QGraphicsRectItem(0, 0, 10, 10, self)
+        on_update = self.labelChanged if self.term.isRenamable() else None
+        self.label = TextItem(self.term.name(), self, on_update)
+        self.label.setScale(0.7)
+        self.newConnection: Optional[ConnectionItem] = None
+        self.setFiltersChildEvents(True)  ## to pick up mouse events on the rectitem
+        if self.term.isRenamable():
+            self.label.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextEditorInteraction)
+        self.setZValue(1)
+        self.menu: QtWidgets.QMenu | None = None
+
+    def labelChanged(self) -> None:
+        newName = self.label.toPlainText()
+        if newName != self.term.name():
+            self.term.rename(newName)
+
+    def termRenamed(self, name: str) -> None:
+        self.label.setPlainText(name)
+
+    def setBrush(self, brush: Union[QtGui.QBrush, QtGui.QColor, QtCore.Qt.GlobalColor, QtGui.QGradient]) -> None:
+        self.brush = brush
+        self.box.setBrush(brush)
+
+    def boundingRect(self) -> QtCore.QRectF:
+        br = self.box.mapRectToParent(self.box.boundingRect())
+        lr = self.label.mapRectToParent(self.label.boundingRect())
+        return br | lr
+
+    def paint(self, p: Any, *args: Unpack) -> None:
+        pass
+
+    def setAnchor(self, x: float, y: float) -> None:
+        pos = QtCore.QPointF(x, y)
+        self.anchorPos = pos
+        br = self.box.mapRectToParent(self.box.boundingRect())
+        lr = self.label.mapRectToParent(self.label.boundingRect())
+
+        if self.term.isInput():
+            self.box.setPos(pos.x(), pos.y() - br.height() / 2.)
+            self.label.setPos(pos.x() + br.width(), pos.y() - lr.height() / 2.)
+        else:
+            self.box.setPos(pos.x() - br.width(), pos.y() - br.height() / 2.)
+            self.label.setPos(pos.x() - br.width() - lr.width(), pos.y() - lr.height() / 2.)
+        self.updateConnections()
+
+    def updateConnections(self) -> None:
+        for t, c in self.term.connections().items():
+            c.updateLine()
+
+    def mousePressEvent(self, ev: QtWidgets.QGraphicsSceneMouseEvent | None) -> None:
+        if ev is None:
+            return None
+        # ev.accept()
+        ev.ignore()  # necessary to allow click/drag events to process correctly
+
+    def mouseClickEvent(self, ev: QtGui.QMouseEvent| None) -> None:
+        if ev is None:
+            return None
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
+            ev.accept()
+            self.label.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)
+        elif ev.button() == QtCore.Qt.MouseButton.RightButton:
+            ev.accept()
+            self.raiseContextMenu(ev)
+
+    def raiseContextMenu(self, ev: QtGui.QMouseEvent | None) -> None:
+        ## only raise menu if this terminal is removable
+        menu = self.getMenu()
+        menu = self.scene().addParentContextMenus(self, menu, ev)
+        pos = ev.screenPos()
+        menu.popup(QtCore.QPoint(int(pos.x()), int(pos.y())))
+
+    def getMenu(self) -> QtWidgets.QMenu:
+        if self.menu is None:
+            self.menu = QtWidgets.QMenu()
+            self.menu.setTitle(translate("Context Menu", "Terminal"))
+            remAct = QtGui.QAction(translate("Context Menu", "Remove terminal"), self.menu)
+            remAct.triggered.connect(self.removeSelf)
+            self.menu.addAction(remAct)
+            self.menu.remAct = remAct
+            if not self.term.isRemovable():
+                remAct.setEnabled(False)
+            multiAct = QtGui.QAction(translate("Context Menu", "Multi-value"), self.menu)
+            multiAct.setCheckable(True)
+            multiAct.setChecked(self.term.isMultiValue())
+            multiAct.setEnabled(self.term.isMultiable())
+
+            multiAct.triggered.connect(self.toggleMulti)
+            self.menu.addAction(multiAct)
+            self.menu.multiAct = multiAct
+            if self.term.isMultiable():
+                multiAct.setEnabled(False)
+        return self.menu
+
+    def toggleMulti(self) -> None:
+        multi = self.menu.multiAct.isChecked()
+        self.term.setMultiValue(multi)
+
+    def removeSelf(self) -> None:
+        self.term.node().removeTerminal(self.term)
+
+    def mouseDragEvent(self, ev: QtGui.QMouseEvent) -> None:
+        if ev.button() != QtCore.Qt.MouseButton.LeftButton:
+            ev.ignore()
+            return
+
+        ev.accept()
+        if ev.isStart():
+            if self.newConnection is None:
+                self.newConnection = ConnectionItem(self)
+                # self.scene().addItem(self.newConnection)
+                self.getViewBox().addItem(self.newConnection)
+                # self.newConnection.setParentItem(self.parent().parent())
+
+            self.newConnection.setTarget(self.mapToView(ev.pos()))
+        elif ev.isFinish():
+            if self.newConnection is not None:
+                items = self.scene().items(ev.scenePos())
+                gotTarget = False
+                for i in items:
+                    if isinstance(i, TerminalGraphicsItem):
+                        self.newConnection.setTarget(i)
+                        try:
+                            self.term.connectTo(i.term, self.newConnection)
+                            gotTarget = True
+                        except:
+                            self.scene().removeItem(self.newConnection)
+                            self.newConnection = None
+                            raise
+                        break
+
+                if not gotTarget:
+                    self.newConnection.close()
+                self.newConnection = None
+        else:
+            if self.newConnection is not None:
+                self.newConnection.setTarget(self.mapToView(ev.pos()))
+
+    def hoverEvent(self, ev: HoverEvent) -> None:
+        if not ev.isExit() and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
+            ev.acceptClicks(
+                QtCore.Qt.MouseButton.LeftButton)  ## we don't use the click, but we also don't want anyone else to use it.
+            ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)
+            self.box.setBrush(fn.mkBrush('w'))
+        else:
+            self.box.setBrush(self.brush)
+        self.update()
+
+    def connectPoint(self) -> Union[QtCore.QPoint, QtCore.QPointF]:
+        ## return the connect position of this terminal in view coords
+        return self.mapToView(self.mapFromItem(self.box, self.box.boundingRect().center()))
+
+    def nodeMoved(self) -> None:
+        for t, item in self.term.connections().items():
+            item.updateLine()
+
+
+class Terminal:
+
+    _connections: dict
+    _value: dict | None
+    valueOk: bool | None
+
     def __init__(
             self,
             node: Any,
@@ -56,16 +223,16 @@ class Terminal(object):
         self._renamable = renamable
         self._removable = removable
         self._multiable = multiable
-        self._connections: dict = {}
+        self._connections = {}
         self._graphicsItem = TerminalGraphicsItem(self, parent=self._node().graphicsItem())
         self._bypass = bypass
 
         if multi:
-            self._value: Optional[dict] = {}  ## dictionary of terminal:value pairs.
+            self._value = {}  ## dictionary of terminal:value pairs.
         else:
             self._value = None
 
-        self.valueOk: Optional[bool] = None
+        self.valueOk = None
         self.recolor()
 
     def value(self, term: Optional['Terminal'] = None) -> Optional[dict]:
@@ -118,7 +285,7 @@ class Terminal(object):
     def disconnected(self, term: 'Terminal') -> None:
         """Called whenever this terminal has been disconnected from another. (note--this function is called on both terminals)"""
         try:
-            hasTerm = term in self._value  # type: ignore
+            hasTerm = term in self._value
         except TypeError:
             hasTerm = False
 
@@ -182,7 +349,7 @@ class Terminal(object):
     def name(self) -> str:
         return self._name
 
-    def graphicsItem(self) -> 'TerminalGraphicsItem':
+    def graphicsItem(self) -> TerminalGraphicsItem:
         return self._graphicsItem
 
     def isConnected(self) -> bool:
@@ -303,189 +470,9 @@ class Terminal(object):
         return self._name < other._name
 
 
-class TextItem(QtWidgets.QGraphicsTextItem):
-    def __init__(self, text: str, parent: QtWidgets.QGraphicsTextItem, on_update: Optional[Callable]) -> None:
-        super().__init__(text, parent)
-        self.on_update = on_update
-
-    def focusOutEvent(self, ev: QtGui.QFocusEvent) -> None:
-        super().focusOutEvent(ev)
-        if self.on_update is not None:
-            self.on_update()
-
-    def keyPressEvent(self, ev: QtGui.QKeyEvent) -> None:
-        if ev.key() == QtCore.Qt.Key.Key_Enter or ev.key() == QtCore.Qt.Key.Key_Return:
-            if self.on_update is not None:
-                self.on_update()
-                return
-        super().keyPressEvent(ev)
-
-
-class TerminalGraphicsItem(GraphicsObject):
-
-    def __init__(self, term: Terminal, parent: Optional[QtWidgets.QGraphicsItem] = None) -> None:
-        self.term = term
-        GraphicsObject.__init__(self, parent)
-        self.brush = fn.mkBrush(0, 0, 0)
-        self.box = QtWidgets.QGraphicsRectItem(0, 0, 10, 10, self)
-        on_update = self.labelChanged if self.term.isRenamable() else None
-        self.label = TextItem(self.term.name(), self, on_update)
-        self.label.setScale(0.7)
-        self.newConnection: Optional[ConnectionItem] = None
-        self.setFiltersChildEvents(True)  ## to pick up mouse events on the rectitem
-        if self.term.isRenamable():
-            self.label.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextEditorInteraction)
-        self.setZValue(1)
-        self.menu = None
-
-    def labelChanged(self) -> None:
-        newName = self.label.toPlainText()
-        if newName != self.term.name():
-            self.term.rename(newName)
-
-    def termRenamed(self, name: str) -> None:
-        self.label.setPlainText(name)
-
-    def setBrush(self, brush: Union[QtGui.QBrush, QtGui.QColor, QtCore.Qt.GlobalColor, QtGui.QGradient]) -> None:
-        self.brush = brush
-        self.box.setBrush(brush)
-
-    def disconnect(self, target: 'TerminalGraphicsItem') -> None:
-        self.term.disconnectFrom(target.term)
-
-    def boundingRect(self) -> QtCore.QRectF:
-        br = self.box.mapRectToParent(self.box.boundingRect())
-        lr = self.label.mapRectToParent(self.label.boundingRect())
-        return br | lr
-
-    def paint(self, p: Any, *args: Unpack) -> None:
-        pass
-
-    def setAnchor(self, x: float, y: float) -> None:
-        pos = QtCore.QPointF(x, y)
-        self.anchorPos = pos
-        br = self.box.mapRectToParent(self.box.boundingRect())
-        lr = self.label.mapRectToParent(self.label.boundingRect())
-
-        if self.term.isInput():
-            self.box.setPos(pos.x(), pos.y() - br.height() / 2.)
-            self.label.setPos(pos.x() + br.width(), pos.y() - lr.height() / 2.)
-        else:
-            self.box.setPos(pos.x() - br.width(), pos.y() - br.height() / 2.)
-            self.label.setPos(pos.x() - br.width() - lr.width(), pos.y() - lr.height() / 2.)
-        self.updateConnections()
-
-    def updateConnections(self) -> None:
-        for t, c in self.term.connections().items():
-            c.updateLine()
-
-    def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
-        # ev.accept()
-        ev.ignore()  ## necessary to allow click/drag events to process correctly
-
-    def mouseClickEvent(self, ev: QtGui.QMouseEvent) -> None:
-        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
-            ev.accept()
-            self.label.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)
-        elif ev.button() == QtCore.Qt.MouseButton.RightButton:
-            ev.accept()
-            self.raiseContextMenu(ev)
-
-    def raiseContextMenu(self, ev: QtGui.QMouseEvent) -> None:
-        ## only raise menu if this terminal is removable
-        menu = self.getMenu()
-        menu = self.scene().addParentContextMenus(self, menu, ev)
-        pos = ev.screenPos()
-        menu.popup(QtCore.QPoint(int(pos.x()), int(pos.y())))
-
-    def getMenu(self) -> QtWidgets.QMenu:
-        if self.menu is None:
-            self.menu = QtWidgets.QMenu()
-            self.menu.setTitle(translate("Context Menu", "Terminal"))
-            remAct = QtGui.QAction(translate("Context Menu", "Remove terminal"), self.menu)
-            remAct.triggered.connect(self.removeSelf)
-            self.menu.addAction(remAct)
-            self.menu.remAct = remAct
-            if not self.term.isRemovable():
-                remAct.setEnabled(False)
-            multiAct = QtGui.QAction(translate("Context Menu", "Multi-value"), self.menu)
-            multiAct.setCheckable(True)
-            multiAct.setChecked(self.term.isMultiValue())
-            multiAct.setEnabled(self.term.isMultiable())
-
-            multiAct.triggered.connect(self.toggleMulti)
-            self.menu.addAction(multiAct)
-            self.menu.multiAct = multiAct
-            if self.term.isMultiable():
-                multiAct.setEnabled = False
-        return self.menu
-
-    def toggleMulti(self) -> None:
-        multi = self.menu.multiAct.isChecked()
-        self.term.setMultiValue(multi)
-
-    def removeSelf(self) -> None:
-        self.term.node().removeTerminal(self.term)
-
-    def mouseDragEvent(self, ev: QtGui.QMouseEvent) -> None:
-        if ev.button() != QtCore.Qt.MouseButton.LeftButton:
-            ev.ignore()
-            return
-
-        ev.accept()
-        if ev.isStart():
-            if self.newConnection is None:
-                self.newConnection = ConnectionItem(self)
-                # self.scene().addItem(self.newConnection)
-                self.getViewBox().addItem(self.newConnection)
-                # self.newConnection.setParentItem(self.parent().parent())
-
-            self.newConnection.setTarget(self.mapToView(ev.pos()))
-        elif ev.isFinish():
-            if self.newConnection is not None:
-                items = self.scene().items(ev.scenePos())
-                gotTarget = False
-                for i in items:
-                    if isinstance(i, TerminalGraphicsItem):
-                        self.newConnection.setTarget(i)
-                        try:
-                            self.term.connectTo(i.term, self.newConnection)
-                            gotTarget = True
-                        except:
-                            self.scene().removeItem(self.newConnection)
-                            self.newConnection = None
-                            raise
-                        break
-
-                if not gotTarget:
-                    self.newConnection.close()
-                self.newConnection = None
-        else:
-            if self.newConnection is not None:
-                self.newConnection.setTarget(self.mapToView(ev.pos()))
-
-    def hoverEvent(self, ev: HoverEvent) -> None:
-        if not ev.isExit() and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
-            ev.acceptClicks(
-                QtCore.Qt.MouseButton.LeftButton)  ## we don't use the click, but we also don't want anyone else to use it.
-            ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)
-            self.box.setBrush(fn.mkBrush('w'))
-        else:
-            self.box.setBrush(self.brush)
-        self.update()
-
-    def connectPoint(self) -> Union[QtCore.QPoint, QtCore.QPointF]:
-        ## return the connect position of this terminal in view coords
-        return self.mapToView(self.mapFromItem(self.box, self.box.boundingRect().center()))
-
-    def nodeMoved(self) -> None:
-        for t, item in self.term.connections().items():
-            item.updateLine()
-
-
 class ConnectionItem(GraphicsObject):
 
-    def __init__(self, source: GraphicsItem, target: Union[TerminalGraphicsItem, QtCore.QPointF] = None) -> None:
+    def __init__(self, source: GraphicsItem, target: TerminalGraphicsItem | QtCore.QPointF | None = None) -> None:
         GraphicsObject.__init__(self)
         self.setFlags(
             self.GraphicsItemFlag.ItemIsSelectable |
@@ -495,8 +482,8 @@ class ConnectionItem(GraphicsObject):
         self.target = target
         self.length = 0
         self.hovered = False
-        self.path = None
-        self.shapePath = None
+        self.path = QtGui.QPainterPath()
+        self.shapePath = QtGui.QPainterPath()
         self.style = {
             'shape': 'line',
             'color': (100, 100, 250),
@@ -536,7 +523,7 @@ class ConnectionItem(GraphicsObject):
         self.prepareGeometryChange()
 
         self.path = self.generatePath(start, stop)
-        self.shapePath = None
+        self.shapePath = QtGui.QPainterPath()
         self.update()
 
     def generatePath(self, start: Point, stop: Point) -> QtGui.QPainterPath:
@@ -550,18 +537,22 @@ class ConnectionItem(GraphicsObject):
             raise Exception('Invalid shape "%s"; options are "line" or "cubic"' % self.style['shape'])
         return path
 
-    def keyPressEvent(self, ev: QtGui.QKeyEvent) -> None:
+    def keyPressEvent(self, ev: QtGui.QKeyEvent | None) -> None:
+        if ev is None:
+            return None
         if not self.isSelected():
             ev.ignore()
             return
 
         if ev.key() == QtCore.Qt.Key.Key_Delete or ev.key() == QtCore.Qt.Key.Key_Backspace:
-            self.source.disconnect(self.target)
+            self.source.disconnectFrom(self.target.term)
             ev.accept()
         else:
             ev.ignore()
 
-    def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
+    def mousePressEvent(self, ev: QtWidgets.QGraphicsSceneMouseEvent | None) -> None:
+        if ev is None:
+            return None
         ev.ignore()
 
     def mouseClickEvent(self, ev: QtGui.QMouseEvent) -> None:
@@ -584,20 +575,18 @@ class ConnectionItem(GraphicsObject):
         return self.shape().boundingRect()
 
     def viewRangeChanged(self) -> None:
-        self.shapePath = None
+        self.shapePath.clear()
         self.prepareGeometryChange()
 
     def shape(self) -> QtGui.QPainterPath:
-        if self.shapePath is None:
-            if self.path is None:
-                return QtGui.QPainterPath()
+        if self.shapePath.isEmpty():
             stroker = QtGui.QPainterPathStroker()
             px = self.pixelWidth()
             stroker.setWidth(px * 8)
             self.shapePath = stroker.createStroke(self.path)
         return self.shapePath
 
-    def paint(self, p: QtWidgets.QGraphicsItem, *args: Unpack) -> None:
+    def paint(self, p: QtGui.QPainter | None, option: QtWidgets.QStyleOptionGraphicsItem | None, widget: QtWidgets.QWidget | None = None) -> None:
         if self.isSelected():
             p.setPen(fn.mkPen(self.style['selectedColor'], width=self.style['selectedWidth']))
         else:
@@ -605,5 +594,22 @@ class ConnectionItem(GraphicsObject):
                 p.setPen(fn.mkPen(self.style['hoverColor'], width=self.style['hoverWidth']))
             else:
                 p.setPen(fn.mkPen(self.style['color'], width=self.style['width']))
-
         p.drawPath(self.path)
+
+
+class TextItem(QtWidgets.QGraphicsTextItem):
+    def __init__(self, text: str, parent: TerminalGraphicsItem, on_update: Optional[Callable]) -> None:
+        super().__init__(text, parent)
+        self.on_update = on_update
+
+    def focusOutEvent(self, event: QtGui.QFocusEvent | None) -> None:
+        super().focusOutEvent(event)
+        if self.on_update is not None:
+            self.on_update()
+
+    def keyPressEvent(self, ev: QtGui.QKeyEvent | None) -> None:
+        if ev.key() == QtCore.Qt.Key.Key_Enter or ev.key() == QtCore.Qt.Key.Key_Return:
+            if self.on_update is not None:
+                self.on_update()
+                return
+        super().keyPressEvent(ev)

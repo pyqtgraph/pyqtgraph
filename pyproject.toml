@@ -93,7 +93,6 @@ disallow_untyped_calls = false
 disallow_any_generics = false
 disallow_subclassing_any = false
 warn_return_any = false
-enable_incomplete_feature = ["Unpack"]
 
 [[tool.mypy.overrides]]
 module = [

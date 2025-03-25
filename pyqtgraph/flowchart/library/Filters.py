@@ -1,5 +1,3 @@
-# type: ignore
-
 import numpy as np
 
 from ... import Point, PolyLineROI
@@ -213,7 +211,7 @@ class RemoveBaseline(PlottingCtrlNode):
 
     def __init__(self, name):
         ## define inputs and outputs (one output needs to be a plot)
-        PlottingCtrlNode.__init__(self, name)
+        super().__init__(name)
         self.line = PolyLineROI([[0, 0], [1, 0]])
         self.line.sigRegionChanged.connect(self.changed)
 

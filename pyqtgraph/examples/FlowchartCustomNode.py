@@ -6,12 +6,13 @@ We implement a couple of simple image processing nodes.
 from typing import Optional, Any
 
 import numpy as np
+import numpy.typing as npt
 
 import pyqtgraph as pg
 import pyqtgraph.flowchart.library as fclib
 from pyqtgraph.flowchart import Flowchart, Node
 from pyqtgraph.flowchart.library.common import CtrlNode
-from pyqtgraph.Qt import QtWidgets
+from pyqtgraph.Qt import QtWidgets, QtGui
 
 app = pg.mkQApp("Flowchart Custom Node Example")
 
@@ -61,16 +62,17 @@ fc.setInput(dataIn=data)
 class ImageViewNode(Node):
     """Node that displays image data in an ImageView widget"""
     nodeName = 'ImageView'
+    view: pg.ImageView | None
 
     def __init__(self, name: str) -> None:
         self.view = None
         ## Initialize node with only a single input terminal
-        Node.__init__(self, name, terminals={'data': {'io': 'in'}})
+        super().__init__(name, terminals={'data': {'io': 'in'}})
 
-    def setView(self, view: Any) -> None:  ## setView must be called by the program
+    def setView(self, view: pg.ImageView) -> None:  ## setView must be called by the program
         self.view = view
 
-    def process(self, data: Optional[np.ndarray], display: bool = True) -> None:  # type:ignore
+    def process(self, data: Optional[npt.ArrayLike], display: bool = True) -> None:
         ## if process is called with display=False, then the flowchart is being operated
         ## in batch processing mode, so we should skip displaying to improve performance.
 
@@ -101,9 +103,9 @@ class UnsharpMaskNode(CtrlNode):
         }  # other more advanced options are available
         # as well..
 
-        CtrlNode.__init__(self, name, terminals=terminals)
+        super().__init__(name, terminals=terminals)
 
-    def process(self, dataIn: np.ndarray, display: bool = True) -> dict:  # type: ignore
+    def process(self, dataIn: np.ndarray, display: bool = True) -> dict:
         # CtrlNode has created self.ctrls, which is a dict containing {ctrlName: widget}
         sigma = self.ctrls['sigma'].value()
         strength = self.ctrls['strength'].value()

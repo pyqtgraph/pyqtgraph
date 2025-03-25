@@ -1,6 +1,4 @@
-# type: ignore
-from typing import Callable
-from typing_extensions import Unpack
+from typing import Callable, Unpack
 
 from .Node import Node
 from ..graphicsItems.ViewBox import ViewBox

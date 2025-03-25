@@ -37,6 +37,7 @@ def generateUi(opts: Iterable[Sequence]) -> tuple[QtWidgets.QWidget, WidgetGroup
         hidden = o.pop('hidden', False)
         tip = o.pop('tip', None)
 
+        w: QtWidgets.QWidget
         if t == 'intSpin':
             w = QtWidgets.QSpinBox()
             if 'max' in o:
@@ -95,7 +96,7 @@ class CtrlNode(Node):
     def __init__(self, name: str, ui: Optional[Sequence] = None, terminals: Optional[dict[str, dict]] = None) -> None:
         if terminals is None:
             terminals = {'In': {'io': 'in'}, 'Out': {'io': 'out', 'bypass': 'In'}}
-        Node.__init__(self, name=name, terminals=terminals)
+        super().__init__(name=name, terminals=terminals)
 
         if ui is None:
             if hasattr(self, 'uiTemplate'):
@@ -113,7 +114,7 @@ class CtrlNode(Node):
         self.update()
         self.sigStateChanged.emit(self)
 
-    def process(self, In: dict, display: bool = True) -> dict:  # type: ignore
+    def process(self, In: dict, display: bool = True) -> dict:
         out = self.processData(In)
         return {'Out': out}
 
@@ -145,7 +146,7 @@ class PlottingCtrlNode(CtrlNode):
 
     def __init__(self, name: str, ui: Optional[Sequence] = None, terminals: Optional[dict[str, dict]] = None):
         # print "PlottingCtrlNode.__init__ called."
-        CtrlNode.__init__(self, name, ui=ui, terminals=terminals)
+        super().__init__(name, ui=ui, terminals=terminals)
         self.plotTerminal = self.addOutput('plot', optional=True)
 
     def connected(self, term: Terminal, remote: Terminal) -> None:
@@ -171,7 +172,7 @@ class PlottingCtrlNode(CtrlNode):
         """Define what happens when the node is disconnected from a plot"""
         raise Exception("Must be re-implemented in subclass")
 
-    def process(self, In: dict, display: bool = True) -> dict:  # type: ignore
+    def process(self, In: dict, display: bool = True) -> dict:
         out = CtrlNode.process(self, In, display)
         out['plot'] = None
         return out

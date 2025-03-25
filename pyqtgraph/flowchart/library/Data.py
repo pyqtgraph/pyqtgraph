@@ -1,5 +1,3 @@
-# type: ignore
-
 import numpy as np
 
 from ...graphicsItems.LinearRegionItem import LinearRegionItem

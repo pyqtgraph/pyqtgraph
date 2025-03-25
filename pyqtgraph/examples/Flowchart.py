@@ -45,7 +45,7 @@ layout.addWidget(pw2, 1, 1)
 win.show()
 
 ## generate signal data to pass through the flowchart
-data: metaarray.MetaArray = np.random.normal(size=1000)  # type: ignore
+data = np.random.normal(size=1000)
 data[200:300] += 1
 data += np.sin(np.linspace(0, 100, 1000))
 

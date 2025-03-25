@@ -1,5 +1,4 @@
-from typing import Union
-from typing_extensions import Unpack
+from typing import Union, Unpack
 
 from ..Node import Node
 from .common import CtrlNode
@@ -40,7 +39,7 @@ class BinOpNode(CtrlNode):
             'Out': {'io': 'out', 'bypass': 'A'}
         })
 
-    def process(self, **args: Unpack) -> dict:  # type: ignore
+    def process(self, **args: Unpack) -> dict:
         if isinstance(self.fn, tuple):
             for name in self.fn:
                 try:

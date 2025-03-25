@@ -52,8 +52,9 @@ def applyFilter(data: npt.ArrayLike, b: npt.ArrayLike, a: npt.ArrayLike, padding
     if padding > 0:
         d1 = d1[padding:-padding]
     return d1
-    
-def besselFilter(data: npt.ArrayLike, cutoff: float, order: int = 1, dt: Optional[float] = None, btype: str = 'low',
+
+
+def besselFilter(data: npt.ArrayLike, cutoff: float, order: int = 1, dt: Optional[float] = None, btype: str = 'low', bidir: bool=True) -> npt.ArrayLike:
     """return data passed through bessel filter"""
     try:
         import scipy.signal
@@ -66,18 +67,8 @@ def besselFilter(data: npt.ArrayLike, cutoff: float, order: int = 1, dt: Optiona
             dt = (tvals[-1] - tvals[0]) / (len(tvals) - 1)
         except:
             dt = 1.0
-    b,a = scipy.signal.bessel(order, cutoff * dt, btype=btype) 
-    return applyFilter(data, b, a, bidir=bidir)
-
-
     b, a = scipy.signal.bessel(order, cutoff * dt, btype=btype)
-
     return applyFilter(data, b, a, bidir=bidir)
-    # base = data.mean()
-    # d1 = scipy.signal.lfilter(b, a, data.view(ndarray)-base) + base
-    # if (hasattr(data, 'implements') and data.implements('MetaArray')):
-    # return MetaArray(d1, info=data.infoCopy())
-    # return d1
 
 
 def butterworthFilter(data: npt.ArrayLike, wPass: float, wStop: Optional[float] = None, gPass: float = 2.0,
