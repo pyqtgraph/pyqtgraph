@@ -84,6 +84,7 @@ class ImageItem(GraphicsObject):
         self._defferedLevels = None
         self._imageHasNans = None    # None : not yet known
         self._imageNanLocations = None
+        self._defaultAutoLevels = True
 
         self.axisOrder = getConfigOption('imageAxisOrder')
         self._dataTransform = self._inverseDataTransform = QtGui.QTransform()
@@ -167,6 +168,14 @@ class ImageItem(GraphicsObject):
         if (height := self.height()) is None:
             height = 0.
         return QtCore.QRectF(0., 0., float(width), float(height))
+
+    def setAutoLevels(self, bState: bool):
+        """
+        Controls whether automatic image scaling takes place for this ImageItem,
+        if not otherwise overridden by ``autoLevels`` or ``levels`` keyword
+        arguments in a call to :func:`~pyqtgraph.ImageItem.setImage`.
+        """
+        self._defaultAutoLevels = bState
 
     def setLevels(self, levels: npt.ArrayLike | None, update: bool=True):
         """
@@ -390,6 +399,8 @@ class ImageItem(GraphicsObject):
         --------
         :meth:`setAutoDownsample`
             Accepts the value of ``kwargs['autoDownsample']``.
+        :meth:`setAutoLevels`
+            Accepts the value of ``kwargs['autoLevels']``.
         :meth:`setNanPolicy`
             Accepts the value of ``kwargs['nanPolicy']``.
         :meth:`setBorder`
@@ -434,6 +445,8 @@ class ImageItem(GraphicsObject):
             self.menu = None
         if 'autoDownsample' in kwargs:
             self.setAutoDownsample(kwargs['autoDownsample'])
+        if 'autoLevels' in kwargs:
+            self.setAutoLevels(kwargs['autoLevels'])
         if 'nanPolicy' in kwargs:
             self.setNanPolicy(kwargs['nanPolicy'])
         if 'rect' in kwargs:
@@ -533,9 +546,9 @@ class ImageItem(GraphicsObject):
             If ``True``, ImageItem will automatically select levels based on the maximum
             and minimum values encountered in the data. For performance reasons, this
             search sub-samples the images and may miss individual bright or dark points
-            in the data set. If ``False``, the search will be omitted. If ``None``, and
-            the levels keyword argument is given, it will switch to ``False``, if the
-            `levels` argument is omitted, it will switch to ``True``.
+            in the data set. If ``False``, the search will be omitted. If ``None``, the
+            value set by :func:`~pyqtgraph.ImageItem.setOpts` is used, unless a ``levels``
+            keyword argument is given, which implies `False`.
         levelSamples : int, default 65536
             Only used when ``autoLevels is None``.  When determining minimum and
             maximum values, ImageItem only inspects a subset of pixels no larger than
@@ -599,7 +612,8 @@ class ImageItem(GraphicsObject):
         profile()
 
         if autoLevels is None:
-            autoLevels = 'levels' not in kwargs
+            autoLevels = False if 'levels' in kwargs else self._defaultAutoLevels
+
         if autoLevels:
             mn, mx = self.quickMinMax( targetSize=levelSamples )
             # mn and mx can still be NaN if the data is all-NaN
