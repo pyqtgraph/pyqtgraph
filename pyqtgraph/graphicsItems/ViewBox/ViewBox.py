@@ -436,7 +436,7 @@ class ViewBox(GraphicsWidget):
 
         if not ignoreBounds:
             self.addedItems.append(item)
-        self.updateAutoRange()
+        self.queueUpdateAutoRange()
 
     def removeItem(self, item):
         """Remove an item from this view."""
@@ -449,7 +449,7 @@ class ViewBox(GraphicsWidget):
         if scene is not None:
             scene.removeItem(item)
         item.setParentItem(None)
-        self.updateAutoRange()
+        self.queueUpdateAutoRange()
 
     def clear(self):
         for i in self.addedItems[:]:
@@ -465,7 +465,7 @@ class ViewBox(GraphicsWidget):
             self.linkedXChanged()
             self.linkedYChanged()
 
-            self.updateAutoRange()
+            self.queueUpdateAutoRange()
             self.updateViewRange()
 
             # self._matrixNeedsUpdate = True
@@ -903,7 +903,7 @@ class ViewBox(GraphicsWidget):
         if y is not None:
             self.state['autoPan'][1] = y
         if None not in [x,y]:
-            self.updateAutoRange()
+            self.queueUpdateAutoRange()
 
     def setAutoVisible(self, x=None, y=None):
         """Set whether automatic range uses only visible data when determining
@@ -919,7 +919,11 @@ class ViewBox(GraphicsWidget):
                 self.state['autoVisibleOnly'][0] = False
 
         if x is not None or y is not None:
-            self.updateAutoRange()
+            self.queueUpdateAutoRange()
+
+    def queueUpdateAutoRange(self):
+        self._autoRangeNeedsUpdate = True
+        self.update()
 
     def updateAutoRange(self):
         ## Break recursive loops when auto-ranging.
@@ -1134,13 +1138,12 @@ class ViewBox(GraphicsWidget):
 
     def itemsChanged(self):
         ## called when items are added/removed from self.childGroup
-        self.updateAutoRange()
+        self.queueUpdateAutoRange()
 
     def itemBoundsChanged(self, item):
         self._itemBoundsCache.pop(item, None)
         if (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False):
-            self._autoRangeNeedsUpdate = True
-            self.update()
+            self.queueUpdateAutoRange()
 
     def _invertAxis(self, ax, inv):
         key = 'xy'[ax] + 'Inverted'
@@ -1218,7 +1221,7 @@ class ViewBox(GraphicsWidget):
             if ratio != currentRatio:  ## If this would change the current range, do that now
                 self.updateViewRange()
 
-        self.updateAutoRange()
+        self.queueUpdateAutoRange()
         self.updateViewRange()
         self.sigStateChanged.emit(self)
 
