@@ -156,10 +156,9 @@ class LinearRegionItem(GraphicsObject):
             return
         self.blockLineSignal = True
         self.lines[0].setValue(rgn[0])
-        self.blockLineSignal = False
         self.lines[1].setValue(rgn[1])
-        #self.blockLineSignal = False
         self.lineMoved(0)
+        self.blockLineSignal = False
         self.lineMoved(1)
         self.lineMoveFinished()
 
