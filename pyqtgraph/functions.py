@@ -267,7 +267,7 @@ def mkColor(*args) -> QtGui.QColor:
      QColor          QColor instance; makes a copy.
     ================ ================================================
     """
-    err = 'Not sure how to make a color from "%s"' % str(args)
+    err = lambda: 'Not sure how to make a color from "%s"' % str(args)
     if len(args) == 1:
         if isinstance(args[0], str):
             c = args[0]
@@ -303,18 +303,18 @@ def mkColor(*args) -> QtGui.QColor:
             elif len(args[0]) == 2:
                 return intColor(*args[0])
             else:
-                raise TypeError(err)
+                raise TypeError(err())
         elif np.issubdtype(type(args[0]), np.integer):
             return intColor(args[0])
         else:
-            raise TypeError(err)
+            raise TypeError(err())
     elif len(args) == 3:
         r, g, b = args
         a = 255
     elif len(args) == 4:
         r, g, b, a = args
     else:
-        raise TypeError(err)
+        raise TypeError(err())
     args = [int(a) if np.isfinite(a) else 0 for a in (r, g, b, a)]
     return QtGui.QColor(*args)
 
