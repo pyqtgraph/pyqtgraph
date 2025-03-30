@@ -146,9 +146,13 @@ def _combine_levels_and_lut(xp, image, levels, lut):
         and image.ndim == 3
         and image.shape[2] == 3
     ):
-        # uint16 rgb can't be directly displayed, so make it
-        # pass through effective lut processing
-        levels = [0, 65535]
+        # uint16 rgb can't be directly displayed, so add in
+        # an alpha channel so that we can use RGBX64 format
+        rgba = xp.full(image.shape[:2] + (4,), 65535, dtype=image.dtype)
+        rgba[..., 0] = image[..., 0]
+        rgba[..., 1] = image[..., 1]
+        rgba[..., 2] = image[..., 2]
+        image = rgba
 
     if levels is None and lut is None:
         # nothing to combine
@@ -313,11 +317,7 @@ def try_make_qimage(image, *, levels, lut, transparentLocations=None):
         ubyte_nolvl and image.ndim == 2 and lut is not None and lut.shape[0] <= 256
     )
     is_passthru16 = image.dtype == xp.uint16 and levels is None and lut is None
-    can_grayscale16 = (
-        is_passthru16
-        and image.ndim == 2
-        and hasattr(QtGui.QImage.Format, "Format_Grayscale16")
-    )
+    can_grayscale16 = is_passthru16 and image.ndim == 2
     is_rgba64 = is_passthru16 and image.ndim == 3 and image.shape[2] == 4
 
     # bypass makeARGB for supported combinations
@@ -359,9 +359,12 @@ def try_make_qimage(image, *, levels, lut, transparentLocations=None):
         # both levels and lut are None
         fmt = QtGui.QImage.Format.Format_Grayscale16
     elif is_rgba64:
-        # uint16 rgba
+        # uint16 rgba (3 or 4 channels)
         # both levels and lut are None
-        fmt = QtGui.QImage.Format.Format_RGBA64  # endian-independent
+        if alpha_channel_required:
+            fmt = QtGui.QImage.Format.Format_RGBA64
+        else:
+            fmt = QtGui.QImage.Format.Format_RGBX64
     if fmt is None:
         raise ValueError("unsupported image type")
     qimage = functions.ndarray_to_qimage(image, fmt)

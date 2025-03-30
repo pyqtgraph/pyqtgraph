@@ -94,7 +94,7 @@ def test_uint16():
 
     levels = None
     check_format((h, w), dtype, levels, lut_none, Format.Format_Grayscale16)
-    check_format((h, w, 3), dtype, levels, lut_none, Format.Format_RGB888)
+    check_format((h, w, 3), dtype, levels, lut_none, Format.Format_RGBX64)
     check_format((h, w, 4), dtype, levels, lut_none, Format.Format_RGBA64)
 
     levels = [lo, hi]
