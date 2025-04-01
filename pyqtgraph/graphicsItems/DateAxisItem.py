@@ -8,7 +8,7 @@ import numpy as np
 from ..Qt.QtCore import QDateTime
 from .AxisItem import AxisItem
 
-__all__ = ['DateAxisItem']
+__all__ = ['DateAxisItem', 'TimeDeltaAxisItem']
 
 MS_SPACING = 1/1000.0
 SECOND_SPACING = 1
@@ -512,6 +512,20 @@ HM_DT_ZOOM_LEVEL = ZoomLevel(
 
 
 class TimeDeltaAxisItem(DateAxisItem):
+    """
+    **Bases:** :class:`DateAxisItem <pyqtgraph.AxisItem>`
+
+    An AxisItem that displays time-deltas provided in seconds.
+
+    The display format is adjusted automatically depending on the current time
+    density (seconds/point) on the axis. For more details on changing this
+    behaviour, see :func:`setZoomLevelForDensity() <pyqtgraph.DateAxisItem.setZoomLevelForDensity>`.
+
+    Can be added to an existing plot e.g. via
+    :func:`setAxisItems({'bottom':axis}) <pyqtgraph.PlotItem.setAxisItems>`.
+
+    """
+
     def __init__(self, orientation="bottom", utcOffset=None, **kwargs):
         """
         Create a new TimeDeltaAxisItem.
@@ -529,7 +543,7 @@ class TimeDeltaAxisItem(DateAxisItem):
                 (24 * 3600, H_DT_ZOOM_LEVEL),  # HH:00 with hour-spacing
                 (1800, HM_DT_ZOOM_LEVEL),  # HH:MM
                 (100, HMS_ZOOM_LEVEL),  # HH:MM:SS
-                (10, MS_ZOOM_LEVEL),  # SS.ms)
+                (10, MS_ZOOM_LEVEL),  # SS.ms
             ]
         )
         self.autoSIPrefix = False

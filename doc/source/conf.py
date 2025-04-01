@@ -346,6 +346,7 @@ rediraffe_redirects = {
     "graphicsItems/scatterplotitem.rst": "api_reference/graphicsItems/scatterplotitem.rst",
     "graphicsItems/targetitem.rst": "api_reference/graphicsItems/targetitem.rst",
     "graphicsItems/textitem.rst": "api_reference/graphicsItems/textitem.rst",
+    "graphicsItems/timedeltaaxisitem.rst": "api_reference/graphicsItems/timedeltaaxisitem.rst",
     "graphicsItems/uigraphicsitem.rst": "api_reference/graphicsItems/uigraphicsitem.rst",
     "graphicsItems/viewbox.rst": "api_reference/graphicsItems/viewbox.rst",
     "graphicsItems/vtickgroup.rst": "api_reference/graphicsItems/vtickgroup.rst",
