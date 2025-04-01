@@ -147,8 +147,6 @@ def test_format_hms_timedelta_parametrized(timestamp, expected):
 
 def test_smoke_integration_with_plot(qtbot: QtBot):
     """Smoke test that the axis can be added to a plot."""
-    import pyqtgraph as pg
-
     # Create a plot with our custom axis
     plt = pg.PlotWidget()
     time_axis = TimeDeltaAxisItem(orientation="bottom")
