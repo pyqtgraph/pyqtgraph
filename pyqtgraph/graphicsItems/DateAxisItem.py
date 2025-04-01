@@ -431,7 +431,7 @@ class DateAxisItem(AxisItem):
         return super(DateAxisItem, self).generateDrawSpecs(p)
 
 
-def _format_hms_timedelta(timestamp, show_seconds=False):
+def _format_hms_timedelta(seconds, show_seconds=False):
     """
     Format time with hours that can exceed 24
 
@@ -447,8 +447,8 @@ def _format_hms_timedelta(timestamp, show_seconds=False):
         str: Formatted time string (either HH:MM or HH:MM:SS)
     """
     # Extract whole seconds and milliseconds
-    seconds_whole = int(timestamp)
-    milliseconds = int((timestamp - seconds_whole) * 1000)
+    seconds_whole = int(seconds)
+    milliseconds = int((seconds - seconds_whole) * 1000)
 
     # Calculate hours, minutes, seconds
     hours = seconds_whole // 3600
@@ -475,7 +475,7 @@ def _format_hms_timedelta(timestamp, show_seconds=False):
     return f"{hours:02d}:{minutes:02d}"
 
 
-def _format_day_timedelta(timestamp):
+def _format_day_timedelta(seconds):
     """
     Format time to hour string.
 
@@ -485,8 +485,8 @@ def _format_day_timedelta(timestamp):
     Returns:
         str: Formatted time string (e.g. '21 d')
     """
-    hours = int(timestamp // (3600 * 24))
-    missing_seconds = hours * 3600 * 24 - timestamp
+    hours = int(seconds // (3600 * 24))
+    missing_seconds = hours * 3600 * 24 - seconds
     if not missing_seconds == 0:
         warnings.warn(
             f"Truncating seconds ({missing_seconds} s), "
