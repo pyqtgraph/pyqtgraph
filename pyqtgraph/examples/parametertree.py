@@ -17,6 +17,8 @@ from pyqtgraph.Qt import QtWidgets
 app = pg.mkQApp("Parameter Tree Example")
 import pyqtgraph.parametertree.parameterTypes as pTypes
 from pyqtgraph.parametertree import Parameter, ParameterTree
+from pyqtgraph.parametertree.xml_factory import XMLParameterFactory
+from pyqtgraph.parametertree.interactive import interact
 
 
 ## test subclassing parameters
@@ -26,14 +28,14 @@ class ComplexParameter(pTypes.GroupParameter):
         opts['type'] = 'bool'
         opts['value'] = True
         pTypes.GroupParameter.__init__(self, **opts)
-        
+
         self.addChild({'name': 'A = 1/B', 'type': 'float', 'value': 7, 'suffix': 'Hz', 'siPrefix': True})
         self.addChild({'name': 'B = 1/A', 'type': 'float', 'value': 1/7., 'suffix': 's', 'siPrefix': True})
         self.a = self.param('A = 1/B')
         self.b = self.param('B = 1/A')
         self.a.sigValueChanged.connect(self.aChanged)
         self.b.sigValueChanged.connect(self.bChanged)
-        
+
     def aChanged(self):
         self.b.setValue(1.0 / self.a.value(), blockSignal=self.bChanged)
 
@@ -49,7 +51,7 @@ class ScalableGroup(pTypes.GroupParameter):
         opts['addText'] = "Add"
         opts['addList'] = ['str', 'float', 'int']
         pTypes.GroupParameter.__init__(self, **opts)
-    
+
     def addNew(self, typ):
         val = {
             'str': '',
@@ -59,17 +61,19 @@ class ScalableGroup(pTypes.GroupParameter):
         self.addChild(dict(name="ScalableParam %d" % (len(self.childs)+1), type=typ, value=val, removable=True, renamable=True))
 
 
-
+# [
+#         {'name': 'Save State to JSON', 'type': 'action'},
+#         {'name': 'Restore State from JSON', 'type': 'action', 'children': [
+#             {'name': 'Add missing items', 'type': 'bool', 'value': True},
+#             {'name': 'Remove extra items', 'type': 'bool', 'value': True},
+#         ]},
+#         {'name': 'Save State to XML', 'type': 'action'},
+#         {'name': 'Restore State from XML', 'type': 'action'},
+#     ]
 
 params = [
     makeAllParamTypes(),
-    {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
-        {'name': 'Save State', 'type': 'action'},
-        {'name': 'Restore State', 'type': 'action', 'children': [
-            {'name': 'Add missing items', 'type': 'bool', 'value': True},
-            {'name': 'Remove extra items', 'type': 'bool', 'value': True},
-        ]},
-    ]},
+    {'name': 'Save/Restore functionality', 'type': 'group'},
     {'name': 'Custom context menu', 'type': 'group', 'children': [
         {'name': 'List contextMenu', 'type': 'float', 'value': 0, 'context': [
             'menu1',
@@ -89,6 +93,7 @@ params = [
 
 ## Create tree of Parameter objects
 p = Parameter.create(name='params', type='group', children=params)
+saveRestoreParam = p.child('Save/Restore functionality')
 
 ## If anything changes in the tree, print a message
 def change(param, changes):
@@ -103,29 +108,44 @@ def change(param, changes):
         print('  change:    %s'% change)
         print('  data:      %s'% str(data))
         print('  ----------')
-    
+
 p.sigTreeStateChanged.connect(change)
 
 
 def valueChanging(param, value):
     print("Value changing (not finalized): %s %s" % (param, value))
-    
+
 # Only listen for changes of the 'widget' child:
 for child in p.child('Example Parameters'):
     if 'widget' in child.names:
         child.child('widget').sigValueChanging.connect(valueChanging)
 
-def save():
-    global state
-    state = p.saveState()
+@interact.decorate(titleFormat='Save to JSON', parent=saveRestoreParam)
+def saveToJson():
+    global jsonState
+    jsonState = p.saveState()
 
-def restore():
-    global state
-    add = p['Save/Restore functionality', 'Restore State', 'Add missing items']
-    rem = p['Save/Restore functionality', 'Restore State', 'Remove extra items']
-    p.restoreState(state, addChildren=add, removeChildren=rem)
-p.param('Save/Restore functionality', 'Save State').sigActivated.connect(save)
-p.param('Save/Restore functionality', 'Restore State').sigActivated.connect(restore)
+@interact.decorate(titleFormat='Restore from JSON', parent=saveRestoreParam)
+def restoreFromJson(addMissingItems=True, removeExtraItems=True):
+    global jsonState
+    p.restoreState(jsonState, addChildren=addMissingItems, removeChildren=removeExtraItems)
+
+
+factory = XMLParameterFactory()
+@interact.decorate(titleFormat='Save to XML', parent=saveRestoreParam)
+def saveToXml():
+    global xmlState
+    xmlState = factory.parameter_to_xml_string(p)
+
+
+@interact.decorate(titleFormat='Restore from XML', parent=saveRestoreParam)
+def restoreFromXml():
+    global xmlState
+
+    if xmlState:
+        paramListDict = factory.xml_string_to_parameter_list_dict(xmlState)
+        restoredParams = factory.parameter_list_to_parameter(paramListDict)
+        t.setParameters(restoredParams, showTop=False)
 
 
 ## Create two ParameterTree widgets, both accessing the same data
@@ -144,10 +164,16 @@ layout.addWidget(t2, 1, 1, 1, 1)
 win.show()
 
 ## test save/restore
-state = p.saveState()
-p.restoreState(state)
+jsonState = p.saveState()
+xmlState = factory.parameter_to_xml_string(p)
+
+p.restoreState(jsonState)
 compareState = p.saveState()
-assert pg.eq(compareState, state)
+assert pg.eq(compareState, jsonState)
+
+p.restoreState(factory.xml_string_to_parameter_list_dict(xmlState))
+compareState = p.saveState()
+assert pg.eq(compareState, factory.xml_string_to_parameter_list_dict(xmlState))
 
 if __name__ == '__main__':
     pg.exec()
