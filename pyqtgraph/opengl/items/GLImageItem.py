@@ -1,4 +1,3 @@
-import ctypes
 import importlib
 
 from OpenGL import GL
@@ -131,7 +130,7 @@ class GLImageItem(GLGraphicsItem):
         loc_tex = GL.glGetAttribLocation(program, "a_texcoord")
         self.m_vbo_position.bind()
         GL.glVertexAttribPointer(loc_pos, 2, GL.GL_FLOAT, False, 4*4, None)
-        GL.glVertexAttribPointer(loc_tex, 2, GL.GL_FLOAT, False, 4*4, ctypes.c_void_p(2*4))
+        GL.glVertexAttribPointer(loc_tex, 2, GL.GL_FLOAT, False, 4*4, GL.GLvoidp(2*4))
         self.m_vbo_position.release()
         enabled_locs = [loc_pos, loc_tex]
 
