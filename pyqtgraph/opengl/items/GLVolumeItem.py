@@ -119,11 +119,6 @@ class GLVolumeItem(GLGraphicsItem):
         compiled = [shaders.compileShader([glsl_version, v], k) for k, v in sources.items()]
         program = shaders.compileProgram(*compiled)
 
-        # bind generic vertex attrib 0 to "a_position" so that
-        # vertex attrib 0 definitely gets enabled later.
-        GL.glBindAttribLocation(program, 0, "a_position")
-        GL.glLinkProgram(program)
-
         klass._shaderProgram = program
         return program
         
