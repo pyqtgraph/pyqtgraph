@@ -1,6 +1,7 @@
 from pyqtgraph.parametertree import Parameter
 from pyqtgraph.parametertree.xml_factory import XMLParameterFactory
 import pyqtgraph as pg
+from pyqtgraph.Qt.QtGui import QColor
 
 
 factory = XMLParameterFactory()
@@ -16,8 +17,12 @@ def test_xml_serialize():
          'visible': True, 'removable': False, 'readonly': False, 'tip': ''},
         {'name': 'param3', 'type': 'str', 'value': 'Hello', 'title': 'String Parameter',
          'visible': True, 'removable': False, 'readonly': False, 'tip': ''},
-        {'name': 'param4', 'type': 'bool', 'value': True, 'title': 'Boolean Parameter',
-         'visible': True, 'removable': False, 'readonly': False, 'tip': ''}
+        {'name': 'group_param', 'type': 'group', 'children': [
+            {'name': 'param4', 'type': 'bool', 'value': True, 'title': 'Boolean Parameter',
+             'visible': True, 'removable': False, 'readonly': False, 'tip': ''},
+            {'name': 'param5', 'type': 'color', 'value': QColor(1,2,3,1), 'title': 'Color Parameter',
+             'visible': True, 'removable': False, 'readonly': False, 'tip': ''},
+        ]},
     ]
     settings = Parameter.create(name='settings', type='group', title='setting test',children=params, visible = True, removable = False, readonly = False, tip = '')
 
