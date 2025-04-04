@@ -90,10 +90,8 @@ class XMLParameterFactory:
         for param in params_list:
             opts = self.options_from_parameter(param)
             elt = ET.Element(param.name(), **opts)
-
             if param.hasChildren():
                 self.parameter_to_xml_string(param, elt)
-
             parent_xml_elt.append(elt)
 
         return ET.tostring(parent_xml_elt)

@@ -253,7 +253,8 @@ class Parameter(XMLParameter, QtCore.QObject):
         -------
         dict: dictionary of options
         """
-        return {}
+        raise NotImplementedError(f'{el} corresponding Parameter has no implementation for "specific_options_from_xml"')
+
 
     def specific_options_from_parameter(self) -> dict:
         """ Get the object options specific to its type: value, limits, ...
@@ -264,7 +265,7 @@ class Parameter(XMLParameter, QtCore.QObject):
         -------
         dict: dictionary of options
         """
-        return {}
+        raise NotImplementedError(f'{self} has no implementation for "specific_options_from_parameter"')
 
     @property
     def itemClass(self):
