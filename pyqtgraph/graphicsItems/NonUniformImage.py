@@ -1,9 +1,11 @@
 import warnings
-import numpy as np
+from typing import Optional
 
+import numpy as np
+import numpy.typing as npt
+
+from .. import Qt, colormap
 from .. import functions as fn
-from ..colormap import ColorMap
-from .. import Qt
 from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
 from .HistogramLUTItem import HistogramLUTItem
@@ -12,37 +14,108 @@ __all__ = ['NonUniformImage']
 
 class NonUniformImage(GraphicsObject):
     """
-    **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
-
     GraphicsObject displaying an image with non-uniform sample points. It's
     commonly used to display 2-d or slices of higher dimensional data that
     have a regular but non-uniform grid e.g. measurements or simulation results.
-    """
-    def __init__(self, x, y, z, border=None):
 
-        GraphicsObject.__init__(self)
+    Create an image plot by drawing rectangles with specified x and y
+    boundaries. The correct interpretation is that the provided coordinates are
+    supposed to be the sampled data points, while the drawn polygons are shaded
+    to the nearest coordinate z-value.
+
+    Parameters
+    ----------
+    x, y : array_like
+        1D array_like of monotonically increasing values of where the centers
+        of the 'pixels' should be. Exception for first and last element values
+        in the array that represent the boundaries.
+    z : array_like
+        2D array_like where the shape must equal (x.size, y.size). Value
+        will be mapped into the rectangles colors.
+    colorMap : pyqtgraph.ColorMap or None
+        Colormap used to map the z value to colors.  Default
+        ``pyqtgraph.colormap.get('viridis')``.  If None, will fall back to
+        black to white.
+    levels : (float | int, float | int), optional, default None
+        Sets the minimum and maximum values to be represented by the colormap
+        (min, max). Values outside this range will be clipped to the colors
+        representing min or max. ``None`` disables the limits, meaning the
+        colormap will autoscale the next time ``setData()`` is called with new
+        data.
+    edgecolors : color_like, optional
+        The color of the edges of the polygons.  Argument is relayed to
+        :func:`mkPen <pyqtgraph.mkPen>` to construct the pen used to draw the
+        edges. Default is None
+    border : color_like, optional
+        Argument that can be relayed to :func:`mkPen <pyqtgraph.mkPen>`
+        that represents the border of the border drawn around the
+        NonUniformImageItem.  Default is None
+    antialiasing : bool, default False
+        Whether to draw edgelines with antialiasing.  As lines are vertical and
+        horizontal, it is highly suggested to leave to False. If rotation is applied
+        consider enabling.
+
+    See Also
+    --------
+    :class:`PColorMeshItem <pyqtgraph.PColorMeshItem>` - This item provides
+    similar functionality but instead of rectangles, it uses Polygons for
+    more customizable geometry.
+    """
+    def __init__(
+        self,
+        x: npt.ArrayLike,
+        y: npt.ArrayLike,
+        z: npt.ArrayLike,
+        colorMap: colormap.ColorMap | None = colormap.get('viridis'),
+        levels=None,
+        edgecolors=None,
+        border=None,
+        antialiasing: bool = False,
+    ):
+        super().__init__()
 
         # convert to numpy arrays
         x = np.asarray(x, dtype=np.float64)
         y = np.asarray(y, dtype=np.float64)
         z = np.asarray(z, dtype=np.float64)
 
+        
+        # check shape of data
         if x.ndim != 1 or y.ndim != 1:
-            raise Exception("x and y must be 1-d arrays.")
-
-        if np.any(np.diff(x) < 0) or np.any(np.diff(y) < 0):
-            raise Exception("The values in x and y must be monotonically increasing.")
-
+            raise ValueError("x and y must be 1-d arrays.")
+        
         if len(z.shape) != 2 or z.shape != (x.size, y.size):
-            raise Exception("The length of x and y must match the shape of z.")
+            raise ValueError("The length of x and y must match the shape of z.")
 
-        # default colormap (black - white)
-        self.cmap = ColorMap(None, [0.0, 1.0])
+        # ensure values are monotonically increasing
+        if np.any(np.diff(x) < 0) or np.any(np.diff(y) < 0):
+            raise ValueError("The values in x and y must be monotonically increasing.")
+
+        self._dataBounds = None
+
+        # handle handle edge-colors:
+        self.edgecolors  = fn.mkPen(edgecolors)
+        # force the pen to be cosmetic. see discussion in
+        # https://github.com/pyqtgraph/pyqtgraph/pull/2586
+        self.edgecolors.setCosmetic(True)
+
+        self.border = fn.mkPen(border)
+        # force the pen to be cosmetic. see discussion in
+        # https://github.com/pyqtgraph/pyqtgraph/pull/2586
+        self.edgecolors.setCosmetic(True)
+
+        self.antialiasing = antialiasing
+
+        if colorMap is None:
+            # if None is specified, use black - white colormap
+            self.cmap = colormap.ColorMap(None, [0.0, 1.0])
+        else:
+            self.cmap = colorMap
         self.lut = self.cmap.getLookupTable(nPts=256)
 
-        self.data = (x, y, z)
-        self.levels = None
-        self.border = border
+        self._data = (x, y, z)
+        self._dataBounds = ((x[0], x[-1]), (y[0], y[-1]))
+        self._levels = levels
         self.picture = None
 
         self.update()
@@ -66,34 +139,51 @@ class NonUniformImage(GraphicsObject):
             self.update()
 
     def setColorMap(self, cmap):
+        """
+        Set the colormap for the NonUniformImage
+
+        Parameters
+        ----------
+        cmap
+            Specify the colormap to be used.
+        """
         self.setLookupTable(cmap.getLookupTable(nPts=256), update=True)
         self.cmap = cmap
 
     def getHistogram(self, **kwds):
-        """Returns x and y arrays containing the histogram values for the current image.
+        """
+        Returns x and y arrays containing the histogram values for the current image.
         For an explanation of the return format, see numpy.histogram().
         """
-
-        z = self.data[2]
+        # hist = np.histogram(self.z, **kwds)
+        z = self._data[2]
         z = z[np.isfinite(z)]
         hist = np.histogram(z, **kwds)
 
         return hist[1][:-1], hist[0]
 
     def setLevels(self, levels):
-        self.levels = levels
+        self._levels = levels
         self.picture = None
         self.update()
 
-    def getLevels(self):
-        if self.levels is None:
-            z = self.data[2]
+    def levels(self):
+        if self._levels is None:
+            z = self._data[2]
             z = z[np.isfinite(z)]
-            self.levels = z.min(), z.max()
-        return self.levels
+            self._levels = z.min(), z.max()
+        return self._levels
+
+    def getLevels(self):
+        warnings.warn(
+            "NonUniformImage::getLevels is deprecated, use NonUniformImage::levels instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self.levels()
 
     def generatePicture(self):
-        x, y, z = self.data
+        x, y, z = self._data
 
         # pad x and y so that we don't need to special-case the edges
         x = np.pad(x, 1, mode='edge')
@@ -117,11 +207,11 @@ class NonUniformImage(GraphicsObject):
             # 1) self.lut(z) can also return None on error
             # 2) if a trivial gradient is being used, HistogramLUTItem calls
             #    setLookupTable(None) as an optimization for ImageItem
-            cmap = ColorMap(None, [0.0, 1.0])
+            cmap = colormap.ColorMap(None, [0.0, 1.0])
             lut = cmap.getLookupTable(nPts=256)
 
         # normalize and quantize
-        mn, mx = self.getLevels()
+        mn, mx = self.levels()
         rng = mx - mn
         if rng == 0:
             rng = 1
@@ -145,7 +235,9 @@ class NonUniformImage(GraphicsObject):
 
         self.picture = QtGui.QPicture()
         painter = QtGui.QPainter(self.picture)
-        painter.setPen(fn.mkPen(None))
+        painter.setPen(self.edgecolors)
+        if self.antialiasing:
+            painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
 
         # draw the tiles grouped by coloridx
         offset = 0
@@ -177,6 +269,57 @@ class NonUniformImage(GraphicsObject):
             self.generatePicture()
         p.drawPicture(0, 0, self.picture)
 
+    def pixelPadding(self):
+        pen = self.edgecolors
+        no_pen = (pen is None) or (pen.style() == QtCore.Qt.PenStyle.NoPen)
+        return 0 if no_pen else (pen.widthF() or 1) * 0.5
+
     def boundingRect(self):
-        x, y, _ = self.data
-        return QtCore.QRectF(x[0], y[0], x[-1]-x[0], y[-1]-y[0])
+        xmin, xmax = self.dataBounds(ax=0)
+        if xmin is None or xmax is None:
+            return QtCore.QRectF()
+        ymin, ymax = self.dataBounds(ax=1)
+        if ymin is None or ymax is None:
+            return QtCore.QRectF()
+        px = py = 0
+        pxPad = self.pixelPadding()
+        if pxPad > 0:
+            px, py = self.pixelVectors()
+            px = 0 if px is None else px.length()
+            py = 0 if py is None else py.length()
+
+            px *= pxPad
+            py *= pxPad
+        return QtCore.QRectF(
+            xmin-px,
+            ymin-py,
+            (2 * px) + xmax - xmin,
+            (2 * py) + ymax - ymin
+        )
+
+    def width(self):
+        if self._dataBounds is None:
+            return 0
+        x_bounds = self._dataBounds[0]
+        return x_bounds[1] - x_bounds[0]
+
+    def height(self):
+        if self._dataBounds is None:
+            return 0
+        y_bounds = self._dataBounds[1]
+        return y_bounds[1] - y_bounds[0]
+
+    def dataBounds(
+            self,
+            ax: int,
+            frac: float = 1.0,
+            orthoRange: Optional[tuple[float, float]] = None
+    ) -> tuple[Optional[float], Optional[float]]:
+        return (None, None) if self._dataBounds is None else self._dataBounds[ax]
+
+    def _updateDisplayWithCurrentState(self, *args, **kwargs):
+        defaults = {
+            'autolevels': False
+        }
+        defaults.update(kwargs)
+        return self.setData(*args, **defaults)
