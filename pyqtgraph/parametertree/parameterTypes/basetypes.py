@@ -1,8 +1,11 @@
 import builtins
 
+from PyQt6.uic.Compiler.qtproxies import QtGui
+
 from ... import functions as fn
 from ... import icons
 from ...Qt import QtCore, QtWidgets
+from ...Qt.QtGui import QColor
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
 
@@ -310,18 +313,19 @@ class SimpleParameter(Parameter):
             param_dict['value'] = float(value)
         elif el.get('type') == 'str':
             param_dict['value'] = value
+        elif el.get('type') == 'color':
+            param_dict['value'] = eval(value)
         else:
             raise TypeError(f'No interpreter found for type {el.get("type")}')
-        
+
         key = "limits"
         if key in el.attrib:
             value = eval(el.get(key))
             param_dict.update({key: value})
-            
+
         return param_dict
 
-    @staticmethod
-    def specific_options_from_parameter(param):
+    def specific_options_from_parameter(self):
         """
         Convert a parameter's value into a format compatible with XML representation.
 
@@ -339,22 +343,27 @@ class SimpleParameter(Parameter):
         Raises:
             TypeError: If the type specified in `param.opts['type']` is unsupported.
         """
-        param_value = param.opts.get('value', None)
+        param_value = self.opts.get('value', None)
         opts = {}
-        if param.opts['type'] == 'bool':
+        if self.opts['type'] == 'bool':
             opts['value'] = '1' if param_value else '0'
-        elif param.opts['type'] == 'int':
+        elif self.opts['type'] == 'int':
             opts['value'] = str(param_value)
-        elif param.opts['type'] == 'float':
+        elif self.opts['type'] == 'float':
             opts['value'] = str(param_value)
-        elif param.opts['type'] == 'str':
+        elif self.opts['type'] == 'str':
             opts['value'] = param_value
+        elif self.opts['type'] == 'color':
+            opts['value'] = str([self.value().red(),
+                                 self.value().green(),
+                                 self.value().blue(),
+                                 self.value().alpha()])
         else:
-            raise TypeError(f'No interpreter found for type {param.opts["type"]}')
+            raise TypeError(f'No interpreter found for type {self.opts["type"]}')
         
         key = "limits"
-        if key in param.opts:
-            opts[key] = str(param.opts[key])
+        if key in self.opts:
+            opts[key] = str(self.opts[key])
 
         return opts
     
@@ -508,6 +517,46 @@ class GroupParameter(Parameter):
     def setAddList(self, vals):
         """Change the list of options available for the user to add to the group."""
         self.setOpts(addList=vals)
+
+    @staticmethod
+    def specific_options_from_xml(el):
+        """
+        Extract and convert a typed value from an XML element.
+
+        This function retrieves the `value` attribute from the given XML element
+        and converts it into a Python value based on the type specified in the `type` attribute.
+
+        Args:
+            el (xml.etree.ElementTree.Element): The XML element containing `type` and `value` attributes.
+
+        Returns:
+            dict: A dictionary containing the key `'value'` with the corresponding typed value.
+
+        Raises:
+            TypeError: If the type specified in the `type` attribute is unsupported.
+        """
+        return {}
+
+    def specific_options_from_parameter(self):
+        """
+        Convert a parameter's value into a format compatible with XML representation.
+
+        This function extracts the value from a `Parameter` object and formats it
+        according to the type specified in `param.opts['type']`. The result is suitable
+        for insertion into an XML element's `value` attribute.
+
+        Args:
+            param (pyqtgraph.parametertree.Parameter): The `Parameter` object containing
+                the value and type to interpret.
+
+        Returns:
+            dict: A dictionary containing the key `'value'` with the formatted value as a string.
+
+        Raises:
+            TypeError: If the type specified in `param.opts['type']` is unsupported.
+        """
+        return {}
+
 
 
 class Emitter(QtCore.QObject):
