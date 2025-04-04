@@ -140,6 +140,7 @@ class GLLinePlotItem(GLGraphicsItem):
             self.upload_vbo(self.m_vbo_position, self.pos)
             if isinstance(self.color, np.ndarray):
                 self.upload_vbo(self.m_vbo_color, self.color)
+            self.vbos_uploaded = True
 
         program = self.getShaderProgram()
 
