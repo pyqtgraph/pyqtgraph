@@ -1,13 +1,14 @@
 import sys
 from collections import OrderedDict
 from datetime import datetime, timedelta, timezone
+import warnings
 
 import numpy as np
 
 from ..Qt.QtCore import QDateTime
 from .AxisItem import AxisItem
 
-__all__ = ['DateAxisItem']
+__all__ = ['DateAxisItem', 'TimeDeltaAxisItem']
 
 MS_SPACING = 1/1000.0
 SECOND_SPACING = 1
@@ -428,3 +429,146 @@ class DateAxisItem(AxisItem):
         # Get font scale factor by current window resolution
 
         return super(DateAxisItem, self).generateDrawSpecs(p)
+
+
+def _format_hms_timedelta(seconds, show_seconds=False):
+    """
+    Format time with hours that can exceed 24
+
+    Formats timestamps into HH:MM or HH:MM:SS format while allowing hours to
+    exceed 24 (unlike standard time formatting functions),
+    e.g. 81:16 for 81 hours and 16 minutes.
+
+    Args:
+        timestamp: Time in seconds
+        show_seconds: Whether to include seconds in the output
+
+    Returns:
+        str: Formatted time string (either HH:MM or HH:MM:SS)
+    """
+    # Extract whole seconds and milliseconds
+    seconds_whole = int(seconds)
+    milliseconds = int((seconds - seconds_whole) * 1000)
+
+    # Calculate hours, minutes, seconds
+    hours = seconds_whole // 3600
+    minutes = (seconds_whole % 3600) // 60
+    secs = seconds_whole % 60
+
+    if not milliseconds == 0:
+        # For HH:MM:SS format, ensure we don't have partial seconds
+        warnings.warn(
+            f"Truncating milliseconds ({milliseconds} ms), "
+            "this may lead to an incorrect label for the tick."
+        )
+
+    if show_seconds:
+        return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+
+    if not np.isclose(secs, 0, atol=1e-10):
+        # For HH:MM format, ensure we're on a minute boundary
+        warnings.warn(
+            f"Truncating seconds ({secs} s), "
+            "this may lead to an incorrect label for the tick."
+        )
+
+    return f"{hours:02d}:{minutes:02d}"
+
+
+def _format_day_timedelta(seconds):
+    """
+    Format time to hour string.
+
+    Args:
+        timestamp: Time in seconds
+
+    Returns:
+        str: Formatted time string (e.g. '21 d')
+    """
+    hours = int(seconds // (3600 * 24))
+    missing_seconds = hours * 3600 * 24 - seconds
+    if not missing_seconds == 0:
+        warnings.warn(
+            f"Truncating seconds ({missing_seconds} s), "
+            "this may lead to an incorrect label for the tick."
+        )
+
+    return f"{hours:d} d"
+
+
+DAY_DT_ZOOM_LEVEL = ZoomLevel(
+    [TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), None, autoSkip=[2, 5, 10, 20, 30])],
+    "123 d",
+)
+
+H_DT_ZOOM_LEVEL = ZoomLevel(
+    [TickSpec(HOUR_SPACING, makeSStepper(HOUR_SPACING), None, autoSkip=[1, 5, 15, 30])],
+    "99:99",
+)
+HM_DT_ZOOM_LEVEL = ZoomLevel(
+    [TickSpec(MINUTE_SPACING, makeSStepper(MINUTE_SPACING), None, autoSkip=[1, 5, 15, 30])],
+    "99:99",
+)
+
+
+class TimeDeltaAxisItem(DateAxisItem):
+    """
+    **Bases:** :class:`DateAxisItem <pyqtgraph.AxisItem>`
+
+    An AxisItem that displays time-deltas provided in seconds.
+
+    The display format is adjusted automatically depending on the current time
+    density (seconds/point) on the axis. For more details on changing this
+    behaviour, see :func:`setZoomLevelForDensity() <pyqtgraph.DateAxisItem.setZoomLevelForDensity>`.
+
+    Can be added to an existing plot e.g. via
+    :func:`setAxisItems({'bottom':axis}) <pyqtgraph.PlotItem.setAxisItems>`.
+
+    """
+
+    def __init__(self, orientation="bottom", utcOffset=None, **kwargs):
+        """
+        Create a new TimeDeltaAxisItem.
+
+        For `orientation` and `**kwargs`, see
+        :func:`AxisItem.__init__ <pyqtgraph.AxisItem.__init__>`.
+
+        """
+        super().__init__(orientation, utcOffset, **kwargs)
+
+        # Set the zoom level to use depending on the time density on the axis
+        self.zoomLevels = OrderedDict(
+            [
+                (np.inf, DAY_DT_ZOOM_LEVEL),  # days
+                (24 * 3600, H_DT_ZOOM_LEVEL),  # HH:00 with hour-spacing
+                (1800, HM_DT_ZOOM_LEVEL),  # HH:MM
+                (100, HMS_ZOOM_LEVEL),  # HH:MM:SS
+                (10, MS_ZOOM_LEVEL),  # SS.ms
+            ]
+        )
+        self.autoSIPrefix = False
+
+    def tickStrings(self, values, scale, spacing):
+        tickSpecs = self.zoomLevel.tickSpecs
+        tickSpec = next((s for s in tickSpecs if s.spacing == spacing), None)
+        if tickSpec is None:
+            return super(TimeDeltaAxisItem, self).tickStrings(values, scale, spacing)
+
+        if tickSpec.spacing == DAY_SPACING:
+            self.labelUnits = "day"
+            self._updateLabel()
+            return [_format_day_timedelta(value) for value in values]
+        elif tickSpec.spacing == HOUR_SPACING or tickSpec.spacing == MINUTE_SPACING:
+            self.labelUnits = "hour:minute"
+            self._updateLabel()
+            return [_format_hms_timedelta(value, show_seconds=False) for value in values]
+        elif tickSpec.spacing == 1:
+            self.labelUnits = "hour:minute:sec"
+            self._updateLabel()
+            return [_format_hms_timedelta(value, show_seconds=True) for value in values]
+
+        # For sub-second precision, use the parent implementation
+        else:
+            self.labelUnits = "seconds"
+            self._updateLabel()
+            return super(TimeDeltaAxisItem, self).tickStrings(values, scale, spacing)
