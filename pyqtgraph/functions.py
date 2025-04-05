@@ -650,6 +650,9 @@ def eq(a, b):
         if math.isnan(a) and math.isnan(b):
             return True
 
+    if isinstance(a, QtGui.QColor) and isinstance(b, QtGui.QColor):
+        return a.rgba() == b.rgba()
+
     # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.
     aIsArr = isinstance(a, np.ndarray)
     bIsArr = isinstance(b, np.ndarray)
