@@ -7,6 +7,11 @@ from ..parametertree.Parameter import Parameter
 
     
 class XMLParameterFactory:
+    """ Object implementing the Factory Pattern to:
+    * convert a Parameter object into a serialized xml string
+    * convert back a serialized xml string into a Parameter object (or a list of dict to instantiate one)
+    * harness the registration mechanism of Parameter types to infer an object from its type
+    """
     
     param_types_registry = PARAM_TYPES
 
@@ -26,7 +31,7 @@ class XMLParameterFactory:
 
         Raises
         ------
-            ValueError: If the provided parameter type is not supported.
+        TypeError: If the provided parameter type is not supported.
         """
 
         normalized_type = param_type.lower()
@@ -35,29 +40,31 @@ class XMLParameterFactory:
             if key.lower() == normalized_type:
                 return parameter_class
 
-        raise ValueError(f"{param_type} is not a supported parameter type.")
+        raise TypeError(f"{param_type} is not a supported parameter type.")
 
     def options_from_parameter(self, param: Parameter):
+        """Convert a Parameter object to a dictionary"""
         param_type = param.type()
         param_class: Type[Parameter] = self.get_parameter_class(param_type)
         
-        dic = param_class.common_options_from_parameter(param)
+        dic = param_class.shared_options_from_parameter(param)
         dic.update(param_class.specific_options_from_parameter(param))
         
         return dic
 
     def options_from_xml(self, el: ET.Element):
-        """Convert a XML element to a dictionary"""
-        param_type = el.get('type', None)
+        """Convert an XML element to a dictionary"""
+        param_type = el.get('type')
         param_class: Type[Parameter] = self.get_parameter_class(param_type)
 
-        dic = param_class.common_options_from_xml(el)
+        dic = param_class.shared_options_from_xml(el)
         dic.update(param_class.specific_options_from_xml(el))
         
         return dic
 
     def xml_elt_to_parameter_list(self, params: List[dict],
                                   xml_elt: ET.Element):
+        """ Convert a XML element to a list of dictionaries """
 
         if not isinstance(xml_elt, ET.Element):
             raise TypeError(f'{xml_elt} is not a valid XML element')
@@ -73,13 +80,9 @@ class XMLParameterFactory:
         params.append(param_dict)
 
     def parameter_to_xml_string(self, param: Parameter,
-                                parent_xml_elt: Optional[ET.Element] = None):
-        """
-        To convert a parameter object (and children) to xml string.
+                                parent_xml_elt: Optional[ET.Element] = None) -> bytes:
+        """ Convert a parameter object (and children) to xml binary string.
 
-        Returns
-        -------
-        ET.Element : XML element with subelements from Parameter object
         """
 
         if parent_xml_elt is None:
@@ -98,7 +101,7 @@ class XMLParameterFactory:
     
     @staticmethod
     def parameter_list_to_parameter(params: List[dict]) -> Parameter:
-        """ Convert a list of dict to a pyqtgraph parameter object.
+        """ Convert a list of dict to a Parameter object.
 
         Parameters
         ----------
@@ -125,20 +128,27 @@ class XMLParameterFactory:
 
         Parameters
         ----------
-        xml_string: ET.Element
+        xml_string: ET.Element dumped into a string
             The binary string to convert to a Parameter
+
         Returns
         -------
         params: a parameter list of dict to init a parameter
-
-        See Also
-        --------
-        walk_parameters_to_xml
-
-        Examples
-        --------
         """
         root = ET.fromstring(xml_string)
         params = []
         self.xml_elt_to_parameter_list(params, xml_elt=root)
         return params
+
+    def xml_string_to_parameter(self, xml_string: bytes) -> Parameter:
+        """ Convert a xml string into a Parameter object
+
+        Parameters
+        ----------
+        xml_string: ET.Element dumped into a string
+            The binary string to convert to a Parameter
+        Returns
+        -------
+        Parameter
+        """
+        return self.parameter_list_to_parameter(self.xml_string_to_parameter_list_dict(xml_string))

@@ -3,7 +3,6 @@ from pyqtgraph.parametertree.xml_factory import XMLParameterFactory
 import pyqtgraph as pg
 from pyqtgraph.Qt.QtGui import QColor
 
-
 factory = XMLParameterFactory()
 
 pg.mkQApp()
@@ -11,16 +10,16 @@ pg.mkQApp()
 
 def test_xml_serialize():
     params = [
-        {'name': 'param1', 'type': 'int', 'value': 10, 'title': 'Integer Parameter',
+        {'name': 'p_int', 'type': 'int', 'value': 10, 'title': 'Integer Parameter',
+         'visible': True, 'removable': False,},
+        {'name': 'p_float', 'type': 'float', 'value': 3.14, 'title': 'Float Parameter',
          'visible': True, 'removable': False, 'readonly': False, 'tip': ''},
-        {'name': 'param2', 'type': 'float', 'value': 3.14, 'title': 'Float Parameter',
+        {'name': 'p_str', 'type': 'str', 'value': 'Hello', 'title': 'String Parameter',
          'visible': True, 'removable': False, 'readonly': False, 'tip': ''},
-        {'name': 'param3', 'type': 'str', 'value': 'Hello', 'title': 'String Parameter',
-         'visible': True, 'removable': False, 'readonly': False, 'tip': ''},
-        {'name': 'group_param', 'type': 'group', 'children': [
-            {'name': 'param4', 'type': 'bool', 'value': True, 'title': 'Boolean Parameter',
+        {'name': 'p_group', 'type': 'group', 'children': [
+            {'name': 'p_bool', 'type': 'bool', 'value': True, 'title': 'Boolean Parameter',
              'visible': True, 'removable': False, 'readonly': False, 'tip': ''},
-            {'name': 'param5', 'type': 'color', 'value': QColor(1,2,3,1), 'title': 'Color Parameter',
+            {'name': 'p_color', 'type': 'color', 'value': QColor(1, 2, 3, 1), 'title': 'Color Parameter',
              'visible': True, 'removable': False, 'readonly': False, 'tip': ''},
         ]},
     ]
