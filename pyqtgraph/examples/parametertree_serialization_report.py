@@ -4,6 +4,7 @@ a simple way to generate user interfaces that control sets of parameters. The ex
 demonstrates a variety of different parameter types (int, float, list, etc.)
 as well as some customized parameter types
 """
+import io
 
 # `makeAllParamTypes` creates several parameters from a dictionary of config specs.
 # This contains information about the options for each parameter so they can be directly
@@ -24,150 +25,49 @@ from typing import Optional, List, Type
 import random
 from xml.etree.ElementTree import ParseError
 
-class XMLParameterFactoryModified(XMLParameterFactory):
-    def options_from_parameter(self, param: Parameter):
-        param_type = param.type()
-        if param_type is not None:
-            param_class: Type[Parameter] = self.get_parameter_class(param_type)
-            dic = {}
-            try:
-                dic.update(param_class.common_options_from_parameter(param))
-            except NotImplementedError as e:
-                dic.update({'title': param.name(),
-                            'name': param.name(),
-                            'type': 'str',
-                            'value': 'I"m not implemented so I"m a default string'})
-                print(e)
-            try:
-                dic.update(param_class.specific_options_from_parameter(param))
-            except NotImplementedError as e:
-                print(e)
-            except TypeError as e:
-                print(e)
-            return dic
-        else:
-            print(f'Param: {param} has no defined type')
-            return {}
+def print_log(s: str, fp: io.FileIO):
+    print(s)
+    fp.write(s + '\n')
+
+with open('parameter_serialization_report.txt', 'w') as fp:
+
+    class XMLParameterFactoryModified(XMLParameterFactory):
+        def options_from_parameter(self, param: Parameter):
+            param_type = param.type()
+            if param_type is not None:
+                param_class: Type[Parameter] = self.get_parameter_class(param_type)
+                dic = {}
+                try:
+                    dic.update(param_class.shared_options_from_parameter(param))
+                except NotImplementedError as e:
+                    dic.update({'title': param.name(),
+                                'name': param.name(),
+                                'type': 'str',
+                                'value': 'I"m not implemented so I"m a default string'})
+                    print_log(str(e), fp)
+                try:
+                    dic.update(param_class.specific_options_from_parameter(param))
+                except NotImplementedError as e:
+                    print_log(str(e), fp)
+                except TypeError as e:
+                    print_log(str(e), fp)
+                return dic
+            else:
+                print_log(f'Param: {param} has no defined type', fp)
+                return {}
+
+    factory = XMLParameterFactoryModified()
+
+    params = makeAllParamTypes()
+
+    ## Create tree of Parameter objects
+    p = Parameter.create(name='params', type='group', children=params)
 
 
+    ## test save/restore
+    try:
+        xmlState = factory.parameter_to_xml_string(p)
+        factory.xml_string_to_parameter_list_dict(xmlState)
+    except Exception as e:
+        print_log(str(e), fp)
 
-## test subclassing parameters
-## This parameter automatically generates two child parameters which are always reciprocals of each other
-class ComplexParameter(pTypes.GroupParameter):
-    def __init__(self, **opts):
-        opts['type'] = 'bool'
-        opts['value'] = True
-        pTypes.GroupParameter.__init__(self, **opts)
-
-        self.addChild({'name': 'A = 1/B', 'type': 'float', 'value': 7, 'suffix': 'Hz', 'siPrefix': True})
-        self.addChild({'name': 'B = 1/A', 'type': 'float', 'value': 1/7., 'suffix': 's', 'siPrefix': True})
-        self.a = self.param('A = 1/B')
-        self.b = self.param('B = 1/A')
-        self.a.sigValueChanged.connect(self.aChanged)
-        self.b.sigValueChanged.connect(self.bChanged)
-
-    def aChanged(self):
-        self.b.setValue(1.0 / self.a.value(), blockSignal=self.bChanged)
-
-    def bChanged(self):
-        self.a.setValue(1.0 / self.b.value(), blockSignal=self.aChanged)
-
-
-## test add/remove
-## this group includes a menu allowing the user to add new parameters into its child list
-class ScalableGroup(pTypes.GroupParameter):
-    def __init__(self, **opts):
-        opts['type'] = 'group'
-        opts['addText'] = "Add"
-        opts['addList'] = ['str', 'float', 'int']
-        pTypes.GroupParameter.__init__(self, **opts)
-
-    def addNew(self, typ):
-        val = {
-            'str': '',
-            'float': 0.0,
-            'int': 0
-        }[typ]
-        self.addChild(dict(name="ScalableParam %d" % (len(self.childs)+1), type=typ, value=val, removable=True, renamable=True))
-
-
-# [
-#         {'name': 'Save State to JSON', 'type': 'action'},
-#         {'name': 'Restore State from JSON', 'type': 'action', 'children': [
-#             {'name': 'Add missing items', 'type': 'bool', 'value': True},
-#             {'name': 'Remove extra items', 'type': 'bool', 'value': True},
-#         ]},
-#         {'name': 'Save State to XML', 'type': 'action'},
-#         {'name': 'Restore State from XML', 'type': 'action'},
-#     ]
-
-params = [
-    makeAllParamTypes(),
-    {'name': 'Save/Restore functionality', 'type': 'group'},
-    {'name': 'Custom context menu', 'type': 'group', 'children': [
-        {'name': 'List contextMenu', 'type': 'float', 'value': 0, 'context': [
-            'menu1',
-            'menu2'
-        ]},
-        {'name': 'Dict contextMenu', 'type': 'float', 'value': 0, 'context': {
-            'changeName': 'Title',
-            'internal': 'What the user sees',
-        }},
-    ]},
-    ComplexParameter(name='Custom parameter group (reciprocal values)'),
-    ScalableGroup(name="Expandable Parameter Group", tip='Click to add children', children=[
-        {'name': 'ScalableParam 1', 'type': 'str', 'value': "default param 1"},
-        {'name': 'ScalableParam 2', 'type': 'str', 'value': "default param 2"},
-    ]),
-]
-
-## Create tree of Parameter objects
-p = Parameter.create(name='params', type='group', children=params)
-saveRestoreParam = p.child('Save/Restore functionality')
-
-
-factory = XMLParameterFactoryModified()
-@interact.decorate(titleFormat='Save to XML', parent=saveRestoreParam)
-def saveToXml():
-    global xmlState
-    xmlState = factory.parameter_to_xml_string(p)
-
-
-@interact.decorate(titleFormat='Restore from XML', parent=saveRestoreParam)
-def restoreFromXml():
-    global xmlState
-
-    if xmlState:
-        paramListDict = factory.xml_string_to_parameter_list_dict(xmlState)
-        restoredParams = factory.parameter_list_to_parameter(paramListDict)
-        t.setParameters(restoredParams, showTop=False)
-
-
-## Create two ParameterTree widgets, both accessing the same data
-t = ParameterTree()
-t.setParameters(p, showTop=False)
-t.setWindowTitle('pyqtgraph example: Parameter Tree')
-t2 = ParameterTree()
-t2.setParameters(p, showTop=False)
-
-win = QtWidgets.QWidget()
-layout = QtWidgets.QGridLayout()
-win.setLayout(layout)
-layout.addWidget(QtWidgets.QLabel("These are two views of the same data. They should always display the same values."), 0,  0, 1, 2)
-layout.addWidget(t, 1, 0, 1, 1)
-layout.addWidget(t2, 1, 1, 1, 1)
-win.show()
-
-## test save/restore
-
-xmlState = factory.parameter_to_xml_string(p)
-
-try:
-    p.restoreState(factory.xml_string_to_parameter_list_dict(xmlState))
-    compareState = p.saveState()
-    assert pg.eq(compareState, factory.xml_string_to_parameter_list_dict(xmlState))
-except ParseError as e:
-    print(str(e))
-
-if __name__ == '__main__':
-    pg.exec()
