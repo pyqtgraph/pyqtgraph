@@ -9,6 +9,7 @@ from ...Qt.QtGui import QColor
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
 
+from xml.etree.ElementTree import Element
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -259,6 +260,27 @@ class EventProxy(QtCore.QObject):
         return self.callback(obj, ev)
 
 
+def el_value_to_dict(el: Element, attr = 'value') -> dict:
+    param_dict = {}
+    if attr in el.attrib:
+        value = el.get(attr)
+        if el.get('type') == 'bool':
+            param_dict[attr] = True if value == '1' else False
+        elif el.get('type') == 'int':
+            param_dict[attr] = int(value)
+        elif el.get('type') == 'float':
+            param_dict[attr] = float(value)
+        elif el.get('type') == 'str':
+            param_dict[attr] = value
+        elif el.get('type') == 'color':
+            c = QColor()
+            c.setRgba(int(value))
+            param_dict[attr] = c
+        else:
+            raise TypeError(f'No interpreter found for type {el.get("type")}')
+    return param_dict
+
+
 class SimpleParameter(Parameter):
     """
     Parameter representing a single value.
@@ -286,6 +308,7 @@ class SimpleParameter(Parameter):
             'str': StrParameterItem,
         }[self.opts['type']]
 
+
     @staticmethod
     def specific_options_from_xml(el):
         """
@@ -304,19 +327,8 @@ class SimpleParameter(Parameter):
             TypeError: If the type specified in the `type` attribute is unsupported.
         """
         param_dict = {}
-        value = el.get('value',None)
-        if el.get('type') == 'bool':
-            param_dict['value'] = True if value == '1' else False
-        elif el.get('type') == 'int':
-            param_dict['value'] = int(value)
-        elif el.get('type') == 'float':
-            param_dict['value'] = float(value)
-        elif el.get('type') == 'str':
-            param_dict['value'] = value
-        elif el.get('type') == 'color':
-            param_dict['value'] = eval(value)
-        else:
-            raise TypeError(f'No interpreter found for type {el.get("type")}')
+        param_dict.update(el_value_to_dict(el, 'value'))
+        param_dict.update(el_value_to_dict(el, 'default'))
 
         key = "limits"
         if key in el.attrib:
@@ -324,6 +336,22 @@ class SimpleParameter(Parameter):
             param_dict.update({key: value})
 
         return param_dict
+
+    def value_to_dict(self, value) -> dict:
+        opts = {}
+        if self.opts['type'] == 'bool':
+            opts['value'] = '1' if value else '0'
+        elif self.opts['type'] == 'int':
+            opts['value'] = str(value)
+        elif self.opts['type'] == 'float':
+            opts['value'] = str(value)
+        elif self.opts['type'] == 'str':
+            opts['value'] = value
+        elif self.opts['type'] == 'color':
+            opts['value'] = str(value.rgba())
+        else:
+            raise TypeError(f'No serializer found for type {self.opts["type"]}')
+        return opts
 
     def specific_options_from_parameter(self):
         """
@@ -344,26 +372,14 @@ class SimpleParameter(Parameter):
             TypeError: If the type specified in `param.opts['type']` is unsupported.
         """
         param_value = self.opts.get('value', None)
-        opts = {}
-        if self.opts['type'] == 'bool':
-            opts['value'] = '1' if param_value else '0'
-        elif self.opts['type'] == 'int':
-            opts['value'] = str(param_value)
-        elif self.opts['type'] == 'float':
-            opts['value'] = str(param_value)
-        elif self.opts['type'] == 'str':
-            opts['value'] = param_value
-        elif self.opts['type'] == 'color':
-            opts['value'] = str((self.value().red(),
-                                 self.value().green(),
-                                 self.value().blue(),
-                                 self.value().alpha()))
-        else:
-            raise TypeError(f'No interpreter found for type {self.opts["type"]}')
-        
+        opts = self.value_to_dict(param_value)
+        if 'default' in self.opts and self.opts['default'] is not None:
+            opts.update(self.value_to_dict(self.opts['default']))
+
         key = "limits"
         if key in self.opts:
             opts[key] = str(self.opts[key])
+
 
         return opts
     
