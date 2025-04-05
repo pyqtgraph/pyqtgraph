@@ -43,8 +43,8 @@ class XMLParameter:
         dict: the dictionary with the shared options
         """
         basic_options = {}
-        add_in_dict_if_present(basic_options, el, 'name')
         add_in_dict_if_present(basic_options, el, 'type')
+        add_in_dict_if_present(basic_options, el, 'name')
         add_in_dict_if_present(basic_options, el, 'title')
         add_in_dict_if_present(basic_options, el, 'tip')
 
@@ -95,9 +95,9 @@ class XMLParameter:
             "type": opts_to_read.get("type"),
             "name": opts_to_read.get("name"),
         }
-
-        add_in_dict_if_present(opts, opts_to_read, 'tip')
         add_in_dict_if_present(opts, opts_to_read, 'title')
+        add_in_dict_if_present(opts, opts_to_read, 'tip')
+
 
         boolean_opts = {}
         add_in_dict_if_present(boolean_opts, opts_to_read, 'visible')
