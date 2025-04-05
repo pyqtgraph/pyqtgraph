@@ -674,7 +674,7 @@ def eq(a, b):
         for k, v in a.items():
             if not eq(v, b[k]):
                 return False
-        if isinstance(a, OrderedDict) or sys.version_info >= (3, 7):
+        if isinstance(a, OrderedDict):
             for a_item, b_item in zip(a.items(), b.items()):
                 if not eq(a_item, b_item):
                     return False

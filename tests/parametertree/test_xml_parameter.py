@@ -35,4 +35,4 @@ def test_xml_serialize():
 
     param_res = factory.parameter_list_to_parameter(param_list_dict)
 
-    assert settings.saveState() == param_res.saveState()
+    assert pg.eq(settings.saveState(), param_res.saveState())
