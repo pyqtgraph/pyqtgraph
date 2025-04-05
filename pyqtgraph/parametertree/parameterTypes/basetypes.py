@@ -354,10 +354,10 @@ class SimpleParameter(Parameter):
         elif self.opts['type'] == 'str':
             opts['value'] = param_value
         elif self.opts['type'] == 'color':
-            opts['value'] = str([self.value().red(),
+            opts['value'] = str((self.value().red(),
                                  self.value().green(),
                                  self.value().blue(),
-                                 self.value().alpha()])
+                                 self.value().alpha()))
         else:
             raise TypeError(f'No interpreter found for type {self.opts["type"]}')
         
