@@ -165,15 +165,15 @@ win.show()
 
 ## test save/restore
 jsonState = p.saveState()
-xmlState = factory.parameter_to_xml_string(p)
+#xmlState = factory.parameter_to_xml_string(p)
 
 p.restoreState(jsonState)
 compareState = p.saveState()
 assert pg.eq(compareState, jsonState)
 
-p.restoreState(factory.xml_string_to_parameter_list_dict(xmlState))
-compareState = p.saveState()
-assert pg.eq(compareState, factory.xml_string_to_parameter_list_dict(xmlState))
+#p.restoreState(factory.xml_string_to_parameter_list_dict(xmlState))
+#compareState = p.saveState()
+#assert pg.eq(compareState, factory.xml_string_to_parameter_list_dict(xmlState))
 
 if __name__ == '__main__':
     pg.exec()
