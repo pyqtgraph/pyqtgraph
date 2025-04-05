@@ -1,13 +1,12 @@
-from contextlib import suppress
-
 import json
 import os
 import re
 import shutil
 import subprocess
 import sys
+from contextlib import suppress
 from distutils import core
-from typing import Dict, Any
+from typing import Any, Dict
 
 from .generateChangelog import generateDebianChangelog
 
@@ -467,27 +466,36 @@ def getVersionStrings(pkg):
 DEFAULT_ASV: Dict[str, Any] = {
     "version": 1,
     "project": "pyqtgraph",
-    "project_url": "http://pyqtgraph.org/",
+    "project_url": "https://pyqtgraph.org/",
     "repo": ".",
     "branches": ["master"],
     "environment_type": "virtualenv",
-    "show_commit_url": "http://github.com/pyqtgraph/pyqtgraph/commit/",
-    # "pythons": ["3.7", "3.8", "3.9"],
+    "show_commit_url": "https://github.com/pyqtgraph/pyqtgraph/commit/",
+    "pythons": ["3.10", "3.11", "3.12", "3.13"],
     "matrix": {
-        # "numpy": ["1.17", "1.18", "1.19", ""],
-        "numpy": "",
-        "pyqt5": ["", None],
-        "pyside2": ["", None],
+        "env_nobuild": {
+            "PYQTGRAPH_QT_LIB": ["PySide6", "PyQt5", "PyQt6"]
+        },
+        "req": {
+            "pyqt6": [""],
+            "pyqt5": [""],
+            "PySide6-Essentials": [""],
+            "numba": [""],  # always have numba, parametrize not using it...,
+        }
     },
-    "exclude": [
-        {"pyqt5": "", "pyside2": ""},
-        {"pyqt5": None, "pyside2": None}
-    ],
     "benchmark_dir": "benchmarks",
     "env_dir": ".asv/env",
     "results_dir": ".asv/results",
     "html_dir": ".asv/html",
-    "build_cache_size": 5
+    "build_cache_size": 5,
+    "build_command": [
+        "python -m pip install build",
+        "python -m build --wheel -o {build_cache_dir} {build_dir}"
+    ],
+    "install_command": [
+        "in-dir={env_dir} python -mpip install --no-deps {wheel_file}",
+        "in-dir={env_dir} python -mpip install colorama"
+    ]
 }
 
 
@@ -505,10 +513,10 @@ class ASVConfigCommand(core.Command):
         config = DEFAULT_ASV
         with suppress(FileNotFoundError, subprocess.CalledProcessError):
             cuda_check = subprocess.check_output(["nvcc", "--version"])
-            match = re.search(r"release (\d{1,2}\.\d)", cuda_check.decode("utf-8"))
-            ver = match.groups()[0]  # e.g. 11.0
-            ver_str = ver.replace(".", "")  # e.g. 110
-            config["matrix"][f"cupy-cuda{ver_str}"] = ""
+            if (match := re.search(r"release (\d{1,2}\.\d)", cuda_check.decode("utf-8"))):
+                ver = match.groups()[0]  # e.g. 11.0
+                major, _, _ = ver.partition(".")
+                config["matrix"]["req"][f"cupy-cuda{major}x"] = [""]
 
         with open("asv.conf.json", "w") as conf_file:
             conf_file.write(json.dumps(config, indent=2))

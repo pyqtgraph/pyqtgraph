@@ -28,7 +28,9 @@ python -m pip install numpy scipy pyqt6 -e .
 
 PyQtGraph supports PySide2, PyQt5, PySide6 and PyQt6 bindings, but if a contributor is
 to test against only one set of bindings, we suggest that it be PyQt6.  PyQt6 is the
-only bindings that enforces the use of fully scoped enums. For example, apart from PyQt6, `QGraphicsItem.ItemIgnoresTransformations` would be recognized, but that would error in PyQt6. The cross-binding compatible reference to that enum would be
+only bindings that enforces the use of fully scoped enums. For example, apart from
+PyQt6, `QGraphicsItem.ItemIgnoresTransformations` would be recognized, but that would
+error in PyQt6. The cross-binding compatible reference to that enum would be
 `QGraphicsItem.GraphicsItemFlags.ItemIgnoresTransformations`.
 
 Before making changes to the code-base, create a different branch with a name that
@@ -40,7 +42,8 @@ git switch -c my-new-feature
 ```
 
 The target of the pull request should be the `master` branch in the pyqtgraph repo.
-Pull requests should include only a focused and related set of changes. Mixed features and unrelated changes may be rejected.
+Pull requests should include only a focused and related set of changes. Mixed features
+and unrelated changes may be rejected.
 
 For major changes, it is recommended to discuss your plans on the mailing list or in a
 github issue/discussion before putting in too much effort.
@@ -121,7 +124,7 @@ To run the test suite, after installing the above dependencies run
 pytest tests
 ```
 
-In addition, the examples can be tested as well.  
+In addition, the examples can be tested as well.
 
 ```bash
 pytest pyqtgraph/examples
@@ -146,15 +149,28 @@ to be merged, it is expected that the CI passes.
 
 ### Benchmarks
 
-( *Still under development* ) To ensure this library is performant, we use
-[Air Speed Velocity (asv)](https://asv.readthedocs.io/en/stable/) to run benchmarks. For
-developing on core functions and classes, be aware of any impact your changes have on
-their speed. To configure and run asv:
+To ensure this library is performant, we use 
+[Air Speed Velocity (asv)](https://asv.readthedocs.io/en/stable/) to run 
+benchmarks. For developing on core functions and classes, be aware of any 
+impact your changes have on their speed. To configure and run asv:
+
 
 ```bash
-pip install asv
-python setup.py asv_config
-asv run
+$ pip install asv virtualenv setuptools
+$ python setup.py asv_config
+$ asv run
 ```
 
-( TODO publish results )
+Note for pyenv users, you need to ensure all the python versions you want to test are
+accessible.  This is easiest done by running `pyenv shell` followed by a space
+sparated list of all the python environments you want accessible.  For example,
+`pyenv shell asv 3.10.14 3.11.12 3.12.9 3.13.2`.
+
+To view the results, from the root pyqtgraph directory run
+
+```bash
+$ asv publish
+$ python -m http.server --directory .asv/html 8000
+```
+
+You can open a browser and go to `localhost:8000` and view the results.

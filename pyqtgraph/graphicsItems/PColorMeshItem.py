@@ -399,8 +399,7 @@ class PColorMeshItem(GraphicsObject):
             return
 
         if (
-            getConfigOption('enableExperimental')
-            and isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
+            isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
             and self.cmap is not None   # don't support setting colormap by setLookupTable
         ):
             if self.glstate is None:
@@ -631,10 +630,13 @@ class OpenGLState(QtCore.QObject):
         }
     """
     FRAG_SRC_COMPAT = """
-        varying mediump float v_luminance;
-        uniform mediump sampler2D u_texture;
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+        varying float v_luminance;
+        uniform sampler2D u_texture;
         void main() {
-            if (isnan(v_luminance)) discard;
+            if (!(v_luminance == v_luminance)) discard;
             float s = clamp(v_luminance, 0.0, 1.0);
             gl_FragColor = texture2D(u_texture, vec2(s, 0));
         }
@@ -712,11 +714,14 @@ class OpenGLState(QtCore.QObject):
         program = glwidget.retrieveProgram("PColorMeshItem")
         if program is None:
             program = QtOpenGL.QOpenGLShaderProgram()
-            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, VERT_SRC)
-            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, FRAG_SRC)
+            if not program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, VERT_SRC):
+                raise RuntimeError(program.log())
+            if not program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, FRAG_SRC):
+                raise RuntimeError(program.log())
             program.bindAttributeLocation("a_position", 0)
             program.bindAttributeLocation("a_luminance", 1)
-            program.link()
+            if not program.link():
+                raise RuntimeError(program.log())
         glwidget.storeProgram("PColorMeshItem", program)
 
         self.m_vao.create()

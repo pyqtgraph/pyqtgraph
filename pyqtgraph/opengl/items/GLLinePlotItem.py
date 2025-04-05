@@ -1,11 +1,11 @@
 import importlib
 
-from OpenGL.GL import *  # noqa
+from OpenGL import GL
+from OpenGL.GL import shaders
 import numpy as np
 
 from ...Qt import QtGui, QT_LIB
 from ... import functions as fn
-from .. import shaders
 from ..GLGraphicsItem import GLGraphicsItem
 
 if QT_LIB in ["PyQt5", "PySide2"]:
@@ -17,7 +17,9 @@ __all__ = ['GLLinePlotItem']
 
 class GLLinePlotItem(GLGraphicsItem):
     """Draws line plots in 3D."""
-    
+
+    _shaderProgram = None
+
     def __init__(self, parentItem=None, **kwds):
         """All keyword arguments are passed to setData()"""
         super().__init__()
@@ -88,6 +90,42 @@ class GLLinePlotItem(GLGraphicsItem):
         vbo.allocate(arr, arr.nbytes)
         vbo.release()
 
+    @staticmethod
+    def getShaderProgram():
+        klass = GLLinePlotItem
+
+        if klass._shaderProgram is not None:
+            return klass._shaderProgram
+
+        ctx = QtGui.QOpenGLContext.currentContext()
+        fmt = ctx.format()
+
+        if ctx.isOpenGLES():
+            if fmt.version() >= (3, 0):
+                glsl_version = "#version 300 es\n"
+                sources = SHADER_CORE
+            else:
+                glsl_version = ""
+                sources = SHADER_LEGACY
+        else:
+            if fmt.version() >= (3, 1):
+                glsl_version = "#version 140\n"
+                sources = SHADER_CORE
+            else:
+                glsl_version = ""
+                sources = SHADER_LEGACY
+
+        compiled = [shaders.compileShader([glsl_version, v], k) for k, v in sources.items()]
+        program = shaders.compileProgram(*compiled)
+
+        # bind generic vertex attrib 0 to "a_position" so that
+        # vertex attrib 0 definitely gets enabled later.
+        GL.glBindAttribLocation(program, 0, "a_position")
+        GL.glLinkProgram(program)
+
+        klass._shaderProgram = program
+        return program
+
     def paint(self):
         if self.pos is None:
             return
@@ -102,21 +140,22 @@ class GLLinePlotItem(GLGraphicsItem):
             self.upload_vbo(self.m_vbo_position, self.pos)
             if isinstance(self.color, np.ndarray):
                 self.upload_vbo(self.m_vbo_color, self.color)
+            self.vbos_uploaded = True
 
-        shader = shaders.getShaderProgram(None)
+        program = self.getShaderProgram()
 
         enabled_locs = []
 
-        if (loc := glGetAttribLocation(shader.program(), "a_position")) != -1:
+        if (loc := GL.glGetAttribLocation(program, "a_position")) != -1:
             self.m_vbo_position.bind()
-            glVertexAttribPointer(loc, 3, GL_FLOAT, False, 0, None)
+            GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
             self.m_vbo_position.release()
             enabled_locs.append(loc)
 
-        if (loc := glGetAttribLocation(shader.program(), "a_color")) != -1:
+        if (loc := GL.glGetAttribLocation(program, "a_color")) != -1:
             if isinstance(self.color, np.ndarray):
                 self.m_vbo_color.bind()
-                glVertexAttribPointer(loc, 4, GL_FLOAT, False, 0, None)
+                GL.glVertexAttribPointer(loc, 4, GL.GL_FLOAT, False, 0, None)
                 self.m_vbo_color.release()
                 enabled_locs.append(loc)
             else:
@@ -125,29 +164,90 @@ class GLLinePlotItem(GLGraphicsItem):
                     color = fn.mkColor(color)
                 if isinstance(color, QtGui.QColor):
                     color = color.getRgbF()
-                glVertexAttrib4f(loc, *color)
+                GL.glVertexAttrib4f(loc, *color)
 
-        glLineWidth(self.width)
+        enable_aa = self.antialias and not context.isOpenGLES()
 
-        if self.antialias and not context.isOpenGLES():
-            glEnable(GL_LINE_SMOOTH)
-            glEnable(GL_BLEND)
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
+        if enable_aa:
+            GL.glEnable(GL.GL_LINE_SMOOTH)
+            GL.glEnable(GL.GL_BLEND)
+            GL.glBlendFuncSeparate(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA,
+                                   GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA)
+            GL.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST)
+
+        sfmt = context.format()
+        core_forward_compatible = (
+            sfmt.profile() == sfmt.OpenGLContextProfile.CoreProfile
+            and not sfmt.testOption(sfmt.FormatOption.DeprecatedFunctions)
+        )
+        if not core_forward_compatible:
+            # Core Forward Compatible profiles will return error for
+            # any width that is not 1.0
+            GL.glLineWidth(self.width)
 
         for loc in enabled_locs:
-            glEnableVertexAttribArray(loc)
+            GL.glEnableVertexAttribArray(loc)
 
-        with shader:
-            glUniformMatrix4fv(shader.uniform("u_mvp"), 1, False, mat_mvp)
+        with program:
+            loc = GL.glGetUniformLocation(program, "u_mvp")
+            GL.glUniformMatrix4fv(loc, 1, False, mat_mvp)
 
             if self.mode == 'line_strip':
-                glDrawArrays(GL_LINE_STRIP, 0, len(self.pos))
+                GL.glDrawArrays(GL.GL_LINE_STRIP, 0, len(self.pos))
             elif self.mode == 'lines':
-                glDrawArrays(GL_LINES, 0, len(self.pos))
+                GL.glDrawArrays(GL.GL_LINES, 0, len(self.pos))
 
         for loc in enabled_locs:
-            glDisableVertexAttribArray(loc)
- 
-    
+            GL.glDisableVertexAttribArray(loc)
+
+        if enable_aa:
+            GL.glDisable(GL.GL_LINE_SMOOTH)
+            GL.glDisable(GL.GL_BLEND)
         
+        GL.glLineWidth(1.0)
+
+
+SHADER_LEGACY = {
+    GL.GL_VERTEX_SHADER : """
+        uniform mat4 u_mvp;
+        attribute vec4 a_position;
+        attribute vec4 a_color;
+        varying vec4 v_color;
+        void main() {
+            v_color = a_color;
+            gl_Position = u_mvp * a_position;
+        }
+    """,
+    GL.GL_FRAGMENT_SHADER : """
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+        varying vec4 v_color;
+        void main() {
+            gl_FragColor = v_color;
+        }
+    """,
+}
+
+SHADER_CORE = {
+    GL.GL_VERTEX_SHADER : """
+        uniform mat4 u_mvp;
+        in vec4 a_position;
+        in vec4 a_color;
+        out vec4 v_color;
+        void main() {
+            v_color = a_color;
+            gl_Position = u_mvp * a_position;
+        }
+    """,
+    GL.GL_FRAGMENT_SHADER : """
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+        in vec4 v_color;
+        out vec4 fragColor;
+        void main() {
+            fragColor = v_color;
+        }
+    """,
+}

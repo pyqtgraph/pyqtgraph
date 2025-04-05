@@ -24,7 +24,6 @@ def test_parameter_hasdefault():
 
     # default unspecified
     p = Parameter.create(**opts)
-    # TODO after January 2025, this next line needs to reverse its assertion
     assert p.hasDefault()
 
     # default specified
@@ -50,9 +49,6 @@ def test_parameter_defaults_and_pristineness():
     # init with value only
     p = Parameter.create(name="param", type='int', value=1)
     assert p.valueModifiedSinceResetToDefault() is True
-    # TODO after January 2025, uncomment the following lines
-    # with pytest.raises(ValueError):
-    #     p.setToDefault()
     # init with default only
     p = Parameter.create(name="param", type='int', default=1)
     assert p.valueModifiedSinceResetToDefault() is False
@@ -97,13 +93,6 @@ def test_parameter_defaults_and_pristineness():
     # init with neither value nor default
     p = Parameter.create(name="param", type='int')
     assert p.valueModifiedSinceResetToDefault() is False
-    # TODO after January 2025, uncomment the following lines
-    # with pytest.raises(ValueError):
-    #     p.value()
-    # with pytest.raises(ValueError):
-    #     p.defaultValue()
-    # with pytest.raises(ValueError):
-    #     p.setToDefault()
     p.setDefault(8)
     assert p.valueModifiedSinceResetToDefault() is False
     assert p.value() == 8
