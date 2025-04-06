@@ -1,3 +1,4 @@
+import enum
 import importlib
 
 from OpenGL import GL
@@ -14,6 +15,12 @@ else:
     QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
 
 __all__ = ['GLLinePlotItem']
+
+
+class DirtyFlag(enum.Flag):
+    POSITION = enum.auto()
+    COLOR = enum.auto()
+
 
 class GLLinePlotItem(GLGraphicsItem):
     """Draws line plots in 3D."""
@@ -33,7 +40,7 @@ class GLLinePlotItem(GLGraphicsItem):
 
         self.m_vbo_position = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
         self.m_vbo_color = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
-        self.vbos_uploaded = False
+        self.dirty_bits = DirtyFlag(0)
 
         self.setParentItem(parentItem)
         self.setData(**kwds)
@@ -66,10 +73,12 @@ class GLLinePlotItem(GLGraphicsItem):
         if 'pos' in kwds:
             pos = kwds.pop('pos')
             self.pos = np.ascontiguousarray(pos, dtype=np.float32)
+            self.dirty_bits |= DirtyFlag.POSITION
         if 'color' in kwds:
             color = kwds.pop('color')
             if isinstance(color, np.ndarray):
                 color = np.ascontiguousarray(color, dtype=np.float32)
+                self.dirty_bits |= DirtyFlag.COLOR
             self.color = color
         for k, v in kwds.items():
             setattr(self, k, v)
@@ -77,7 +86,6 @@ class GLLinePlotItem(GLGraphicsItem):
         if self.mode not in ['line_strip', 'lines']:
             raise ValueError("Unknown line mode '%s'. (must be 'lines' or 'line_strip')" % self.mode)
 
-        self.vbos_uploaded = False
         self.update()
 
     def upload_vbo(self, vbo, arr):
@@ -87,7 +95,10 @@ class GLLinePlotItem(GLGraphicsItem):
         if not vbo.isCreated():
             vbo.create()
         vbo.bind()
-        vbo.allocate(arr, arr.nbytes)
+        if vbo.size() != arr.nbytes:
+            vbo.allocate(arr, arr.nbytes)
+        else:
+            vbo.write(0, arr, arr.nbytes)
         vbo.release()
 
     @staticmethod
@@ -136,11 +147,11 @@ class GLLinePlotItem(GLGraphicsItem):
 
         context = QtGui.QOpenGLContext.currentContext()
 
-        if not self.vbos_uploaded:
+        if DirtyFlag.POSITION in self.dirty_bits:
             self.upload_vbo(self.m_vbo_position, self.pos)
-            if isinstance(self.color, np.ndarray):
-                self.upload_vbo(self.m_vbo_color, self.color)
-            self.vbos_uploaded = True
+        if DirtyFlag.COLOR in self.dirty_bits:
+            self.upload_vbo(self.m_vbo_color, self.color)
+        self.dirty_bits = DirtyFlag(0)
 
         program = self.getShaderProgram()
 

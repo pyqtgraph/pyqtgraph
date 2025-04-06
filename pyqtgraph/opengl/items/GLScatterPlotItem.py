@@ -1,3 +1,4 @@
+import enum
 import math
 import importlib
 
@@ -14,6 +15,13 @@ else:
     QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
 
 __all__ = ['GLScatterPlotItem']
+
+
+class DirtyFlag(enum.Flag):
+    POSITION = enum.auto()
+    COLOR = enum.auto()
+    SIZE = enum.auto()
+
 
 class GLScatterPlotItem(GLGraphicsItem):
     """Draws points at a list of 3D positions."""
@@ -32,7 +40,7 @@ class GLScatterPlotItem(GLGraphicsItem):
         self.m_vbo_position = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
         self.m_vbo_color = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
         self.m_vbo_size = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
-        self.vbos_uploaded = False
+        self.dirty_bits = DirtyFlag(0)
 
         self.setParentItem(parentItem)
         self.setData(**kwds)
@@ -63,19 +71,21 @@ class GLScatterPlotItem(GLGraphicsItem):
         if 'pos' in kwds:
             pos = kwds.pop('pos')
             self.pos = np.ascontiguousarray(pos, dtype=np.float32)
+            self.dirty_bits |= DirtyFlag.POSITION
         if 'color' in kwds:
             color = kwds.pop('color')
             if isinstance(color, np.ndarray):
                 color = np.ascontiguousarray(color, dtype=np.float32)
+                self.dirty_bits |= DirtyFlag.COLOR
             self.color = color
         if 'size' in kwds:
             size = kwds.pop('size')
             if isinstance(size, np.ndarray):
                 size = np.ascontiguousarray(size, dtype=np.float32)
+                self.dirty_bits |= DirtyFlag.SIZE
             self.size = size
                 
         self.pxMode = kwds.get('pxMode', self.pxMode)
-        self.vbos_uploaded = False
         self.update()
 
     def upload_vbo(self, vbo, arr):
@@ -85,7 +95,10 @@ class GLScatterPlotItem(GLGraphicsItem):
         if not vbo.isCreated():
             vbo.create()
         vbo.bind()
-        vbo.allocate(arr, arr.nbytes)
+        if vbo.size() != arr.nbytes:
+            vbo.allocate(arr, arr.nbytes)
+        else:
+            vbo.write(0, arr, arr.nbytes)
         vbo.release()
 
     @staticmethod
@@ -144,13 +157,13 @@ class GLScatterPlotItem(GLGraphicsItem):
 
         context = QtGui.QOpenGLContext.currentContext()
 
-        if not self.vbos_uploaded:
+        if DirtyFlag.POSITION in self.dirty_bits:
             self.upload_vbo(self.m_vbo_position, self.pos)
-            if isinstance(self.color, np.ndarray):
-                self.upload_vbo(self.m_vbo_color, self.color)
-            if isinstance(self.size, np.ndarray):
-                self.upload_vbo(self.m_vbo_size, self.size)
-            self.vbos_uploaded = True
+        if DirtyFlag.COLOR in self.dirty_bits:
+            self.upload_vbo(self.m_vbo_color, self.color)
+        if DirtyFlag.SIZE in self.dirty_bits:
+            self.upload_vbo(self.m_vbo_size, self.size)
+        self.dirty_bits = DirtyFlag(0)
 
         if not context.isOpenGLES():
             if _is_compatibility_profile(context):
