@@ -79,6 +79,10 @@ class GLLinePlotItem(GLGraphicsItem):
             if isinstance(color, np.ndarray):
                 color = np.ascontiguousarray(color, dtype=np.float32)
                 self.dirty_bits |= DirtyFlag.COLOR
+            if isinstance(color, str):
+                color = fn.mkColor(color)
+            if isinstance(color, QtGui.QColor):
+                color = color.getRgbF()
             self.color = color
         for k, v in kwds.items():
             setattr(self, k, v)
@@ -132,6 +136,7 @@ class GLLinePlotItem(GLGraphicsItem):
         # bind generic vertex attrib 0 to "a_position" so that
         # vertex attrib 0 definitely gets enabled later.
         GL.glBindAttribLocation(program, 0, "a_position")
+        GL.glBindAttribLocation(program, 1, "a_color")
         GL.glLinkProgram(program)
 
         klass._shaderProgram = program
@@ -157,25 +162,20 @@ class GLLinePlotItem(GLGraphicsItem):
 
         enabled_locs = []
 
-        if (loc := GL.glGetAttribLocation(program, "a_position")) != -1:
-            self.m_vbo_position.bind()
-            GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
-            self.m_vbo_position.release()
-            enabled_locs.append(loc)
+        loc = 0
+        self.m_vbo_position.bind()
+        GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
+        self.m_vbo_position.release()
+        enabled_locs.append(loc)
 
-        if (loc := GL.glGetAttribLocation(program, "a_color")) != -1:
-            if isinstance(self.color, np.ndarray):
-                self.m_vbo_color.bind()
-                GL.glVertexAttribPointer(loc, 4, GL.GL_FLOAT, False, 0, None)
-                self.m_vbo_color.release()
-                enabled_locs.append(loc)
-            else:
-                color = self.color
-                if isinstance(color, str):
-                    color = fn.mkColor(color)
-                if isinstance(color, QtGui.QColor):
-                    color = color.getRgbF()
-                GL.glVertexAttrib4f(loc, *color)
+        loc = 1
+        if isinstance(self.color, np.ndarray):
+            self.m_vbo_color.bind()
+            GL.glVertexAttribPointer(loc, 4, GL.GL_FLOAT, False, 0, None)
+            self.m_vbo_color.release()
+            enabled_locs.append(loc)
+        else:
+            GL.glVertexAttrib4f(loc, *self.color)
 
         enable_aa = self.antialias and not context.isOpenGLES()
 

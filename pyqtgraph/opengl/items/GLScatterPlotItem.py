@@ -77,6 +77,8 @@ class GLScatterPlotItem(GLGraphicsItem):
             if isinstance(color, np.ndarray):
                 color = np.ascontiguousarray(color, dtype=np.float32)
                 self.dirty_bits |= DirtyFlag.COLOR
+            if isinstance(color, QtGui.QColor):
+                color = color.getRgbF()
             self.color = color
         if 'size' in kwds:
             size = kwds.pop('size')
@@ -132,6 +134,8 @@ class GLScatterPlotItem(GLGraphicsItem):
         # bind generic vertex attrib 0 to "a_position" so that
         # vertex attrib 0 definitely gets enabled later.
         GL.glBindAttribLocation(program, 0, "a_position")
+        GL.glBindAttribLocation(program, 1, "a_color")
+        GL.glBindAttribLocation(program, 2, "a_size")
         GL.glLinkProgram(program)
 
         klass._shaderProgram = program
@@ -175,32 +179,29 @@ class GLScatterPlotItem(GLGraphicsItem):
 
         enabled_locs = []
 
-        if (loc := GL.glGetAttribLocation(program, "a_position")) != -1:
-            self.m_vbo_position.bind()
-            GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
-            self.m_vbo_position.release()
+        loc = 0
+        self.m_vbo_position.bind()
+        GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
+        self.m_vbo_position.release()
+        enabled_locs.append(loc)
+
+        loc = 1
+        if isinstance(self.color, np.ndarray):
+            self.m_vbo_color.bind()
+            GL.glVertexAttribPointer(loc, 4, GL.GL_FLOAT, False, 0, None)
+            self.m_vbo_color.release()
             enabled_locs.append(loc)
+        else:
+            GL.glVertexAttrib4f(loc, *self.color)
 
-        if (loc := GL.glGetAttribLocation(program, "a_color")) != -1:
-            if isinstance(self.color, np.ndarray):
-                self.m_vbo_color.bind()
-                GL.glVertexAttribPointer(loc, 4, GL.GL_FLOAT, False, 0, None)
-                self.m_vbo_color.release()
-                enabled_locs.append(loc)
-            else:
-                color = self.color
-                if isinstance(color, QtGui.QColor):
-                    color = color.getRgbF()
-                GL.glVertexAttrib4f(loc, *color)
-
-        if (loc := GL.glGetAttribLocation(program, "a_size")) != -1:
-            if isinstance(self.size, np.ndarray):
-                self.m_vbo_size.bind()
-                GL.glVertexAttribPointer(loc, 1, GL.GL_FLOAT, False, 0, None)
-                self.m_vbo_size.release()
-                enabled_locs.append(loc)
-            else:
-                GL.glVertexAttrib1f(loc, self.size)
+        loc = 2
+        if isinstance(self.size, np.ndarray):
+            self.m_vbo_size.bind()
+            GL.glVertexAttribPointer(loc, 1, GL.GL_FLOAT, False, 0, None)
+            self.m_vbo_size.release()
+            enabled_locs.append(loc)
+        else:
+            GL.glVertexAttrib1f(loc, self.size)
 
         for loc in enabled_locs:
             GL.glEnableVertexAttribArray(loc)
