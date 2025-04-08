@@ -1010,7 +1010,7 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        size : int | list[int]
+        size : int or list of int
             Diameter of the symbols, or array-like list of diameters. Diameter is
             either in pixels or data-space coordinates depending on the value of
             `pxMode`.
