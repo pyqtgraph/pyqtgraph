@@ -1,3 +1,4 @@
+import enum
 import importlib
 
 from OpenGL import GL
@@ -14,6 +15,12 @@ else:
     QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
 
 __all__ = ['GLLinePlotItem']
+
+
+class DirtyFlag(enum.Flag):
+    POSITION = enum.auto()
+    COLOR = enum.auto()
+
 
 class GLLinePlotItem(GLGraphicsItem):
     """Draws line plots in 3D."""
@@ -33,7 +40,7 @@ class GLLinePlotItem(GLGraphicsItem):
 
         self.m_vbo_position = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
         self.m_vbo_color = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
-        self.vbos_uploaded = False
+        self.dirty_bits = DirtyFlag(0)
 
         self.setParentItem(parentItem)
         self.setData(**kwds)
@@ -66,10 +73,16 @@ class GLLinePlotItem(GLGraphicsItem):
         if 'pos' in kwds:
             pos = kwds.pop('pos')
             self.pos = np.ascontiguousarray(pos, dtype=np.float32)
+            self.dirty_bits |= DirtyFlag.POSITION
         if 'color' in kwds:
             color = kwds.pop('color')
             if isinstance(color, np.ndarray):
                 color = np.ascontiguousarray(color, dtype=np.float32)
+                self.dirty_bits |= DirtyFlag.COLOR
+            if isinstance(color, str):
+                color = fn.mkColor(color)
+            if isinstance(color, QtGui.QColor):
+                color = color.getRgbF()
             self.color = color
         for k, v in kwds.items():
             setattr(self, k, v)
@@ -77,7 +90,6 @@ class GLLinePlotItem(GLGraphicsItem):
         if self.mode not in ['line_strip', 'lines']:
             raise ValueError("Unknown line mode '%s'. (must be 'lines' or 'line_strip')" % self.mode)
 
-        self.vbos_uploaded = False
         self.update()
 
     def upload_vbo(self, vbo, arr):
@@ -87,7 +99,10 @@ class GLLinePlotItem(GLGraphicsItem):
         if not vbo.isCreated():
             vbo.create()
         vbo.bind()
-        vbo.allocate(arr, arr.nbytes)
+        if vbo.size() != arr.nbytes:
+            vbo.allocate(arr, arr.nbytes)
+        else:
+            vbo.write(0, arr, arr.nbytes)
         vbo.release()
 
     @staticmethod
@@ -121,6 +136,7 @@ class GLLinePlotItem(GLGraphicsItem):
         # bind generic vertex attrib 0 to "a_position" so that
         # vertex attrib 0 definitely gets enabled later.
         GL.glBindAttribLocation(program, 0, "a_position")
+        GL.glBindAttribLocation(program, 1, "a_color")
         GL.glLinkProgram(program)
 
         klass._shaderProgram = program
@@ -136,35 +152,30 @@ class GLLinePlotItem(GLGraphicsItem):
 
         context = QtGui.QOpenGLContext.currentContext()
 
-        if not self.vbos_uploaded:
+        if DirtyFlag.POSITION in self.dirty_bits:
             self.upload_vbo(self.m_vbo_position, self.pos)
-            if isinstance(self.color, np.ndarray):
-                self.upload_vbo(self.m_vbo_color, self.color)
-            self.vbos_uploaded = True
+        if DirtyFlag.COLOR in self.dirty_bits:
+            self.upload_vbo(self.m_vbo_color, self.color)
+        self.dirty_bits = DirtyFlag(0)
 
         program = self.getShaderProgram()
 
         enabled_locs = []
 
-        if (loc := GL.glGetAttribLocation(program, "a_position")) != -1:
-            self.m_vbo_position.bind()
-            GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
-            self.m_vbo_position.release()
-            enabled_locs.append(loc)
+        loc = 0
+        self.m_vbo_position.bind()
+        GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
+        self.m_vbo_position.release()
+        enabled_locs.append(loc)
 
-        if (loc := GL.glGetAttribLocation(program, "a_color")) != -1:
-            if isinstance(self.color, np.ndarray):
-                self.m_vbo_color.bind()
-                GL.glVertexAttribPointer(loc, 4, GL.GL_FLOAT, False, 0, None)
-                self.m_vbo_color.release()
-                enabled_locs.append(loc)
-            else:
-                color = self.color
-                if isinstance(color, str):
-                    color = fn.mkColor(color)
-                if isinstance(color, QtGui.QColor):
-                    color = color.getRgbF()
-                GL.glVertexAttrib4f(loc, *color)
+        loc = 1
+        if isinstance(self.color, np.ndarray):
+            self.m_vbo_color.bind()
+            GL.glVertexAttribPointer(loc, 4, GL.GL_FLOAT, False, 0, None)
+            self.m_vbo_color.release()
+            enabled_locs.append(loc)
+        else:
+            GL.glVertexAttrib4f(loc, *self.color)
 
         enable_aa = self.antialias and not context.isOpenGLES()
 
