@@ -65,6 +65,7 @@ examples_ = OrderedDict([
         ('Custom Graphics', 'customGraphicsItem.py'),
         ('Labeled Graph', 'CustomGraphItem.py'),
         ('PColorMeshItem', 'PColorMeshItem.py'),
+        ('BoxplotItem', 'BoxplotItem.py'),
     ])),
     ('Benchmarks', OrderedDict([
         ('Video speed test', 'VideoSpeedTest.py'),
