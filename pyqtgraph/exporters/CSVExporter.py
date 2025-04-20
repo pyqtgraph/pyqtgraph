@@ -78,12 +78,7 @@ class CSVExporter(Exporter):
         return None
 
     def _exportPlotDataItem(self, plotDataItem) -> None:
-        if hasattr(plotDataItem, 'getOriginalDataset'):
-            # try to access unmapped, unprocessed data
-            cd = plotDataItem.getOriginalDataset()
-        else:
-             # fall back to earlier access method
-            cd = plotDataItem.getData()
+        cd = plotDataItem.getOriginalDataset()
         if cd[0] is None:
             # no data found, break out...
             return None
