@@ -1632,12 +1632,7 @@ def ndarray_from_qimage(qimg):
     logical_bpl = w * depth // 8
 
     if QT_LIB.startswith('PyQt'):
-        # sizeInBytes() was introduced in Qt 5.10
-        # however PyQt5 5.12 will fail with:
-        #   "TypeError: QImage.sizeInBytes() is a private method"
-        # note that sizeInBytes() works fine with:
-        #   PyQt5 5.15, PySide2 5.12, PySide2 5.15
-        img_ptr.setsize(h * bpl)
+        img_ptr.setsize(qimg.sizeInBytes())
 
     memory = np.frombuffer(img_ptr, dtype=np.ubyte).reshape((h, bpl))
     memory = memory[:, :logical_bpl]
