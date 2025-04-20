@@ -1846,18 +1846,16 @@ def _arrayToQPath_all(x, y, finiteCheck):
             arr[:, 1] = y[finite_idx]
 
         path = QtGui.QPainterPath()
-        if hasattr(path, 'reserve'):    # Qt 5.13
-            path.reserve(n)
+        path.reserve(n)
         path.addPolygon(poly)
         return path
 
     # at this point, we have numchunks >= minchunks
 
     path = QtGui.QPainterPath()
-    if hasattr(path, 'reserve'):    # Qt 5.13
-        path.reserve(n)
+    path.reserve(n)
     subpoly = QtGui.QPolygonF()
-    subpath = None
+    subpath = QtGui.QPainterPath()
     for idx in range(numchunks):
         sl = slice(idx*chunksize, min((idx+1)*chunksize, n))
         currsize = sl.stop - sl.start
@@ -1874,14 +1872,9 @@ def _arrayToQPath_all(x, y, finiteCheck):
             fiv = finite_idx[sl]  # view
             subarr[:, 0] = x[fiv]
             subarr[:, 1] = y[fiv]
-        if subpath is None:
-            subpath = QtGui.QPainterPath()
+        subpath.clear()
         subpath.addPolygon(subpoly)
         path.connectPath(subpath)
-        if hasattr(subpath, 'clear'):   # Qt 5.13
-            subpath.clear()
-        else:
-            subpath = None
     return path
 
 
@@ -1894,8 +1887,7 @@ def _arrayToQPath_finite(x, y, isfinite=None):
         isfinite = np.isfinite(x) & np.isfinite(y)
 
     path = QtGui.QPainterPath()
-    if hasattr(path, 'reserve'):    # Qt 5.13
-        path.reserve(n)
+    path.reserve(n)
 
     sidx = np.nonzero(~isfinite)[0] + 1
     # note: the chunks are views
@@ -2041,8 +2033,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         return _arrayToQPath_all(x, y, finiteCheck)
 
     path = QtGui.QPainterPath()
-    if hasattr(path, 'reserve'):    # Qt 5.13
-        path.reserve(n)
+    path.reserve(n)
 
     if getConfigOption('enableExperimental'):
         backstore = None
