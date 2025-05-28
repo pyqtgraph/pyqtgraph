@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 import sys
 import weakref
@@ -220,16 +222,19 @@ class ViewBox(GraphicsWidget):
 
         self.setAspectLocked(lockAspect)
 
-        if enableMenu:
-            self.menu = ViewBoxMenu(self)
-        else:
-            self.menu = None
+        self._menu = None
 
         self.register(name)
         if name is None:
             self.updateViewLists()
 
         self._viewPixelSizeCache  = None
+
+    @property
+    def menu(self) -> ViewBoxMenu:
+        if self.menuEnabled() and self._menu is None:
+            self._menu = ViewBoxMenu(self)
+        return self._menu
 
     @property
     def rbScaleBox(self):
@@ -414,12 +419,12 @@ class ViewBox(GraphicsWidget):
 
     def _applyMenuEnabled(self):
         enableMenu = self.state.get("enableMenu", True)
-        if enableMenu and self.menu is None:
-            self.menu = ViewBoxMenu(self)
+        if enableMenu and self._menu is None:
+            self._menu = ViewBoxMenu(self)
             self.updateViewLists()
-        elif not enableMenu and self.menu is not None:
-            self.menu.setParent(None)
-            self.menu = None
+        elif not enableMenu and self._menu is not None:
+            self._menu.setParent(None)
+            self._menu = None
 
     def addItem(self, item, ignoreBounds=False):
         """
@@ -1768,8 +1773,8 @@ class ViewBox(GraphicsWidget):
         if self in nv:
             nv.remove(self)
 
-        if self.menu is not None:
-            self.menu.setViewList(nv)
+        if self._menu is not None:
+            self._menu.setViewList(nv)
 
         for ax in [0,1]:
             link = self.state['linkedViews'][ax]

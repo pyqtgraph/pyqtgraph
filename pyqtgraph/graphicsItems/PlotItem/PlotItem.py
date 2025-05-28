@@ -273,10 +273,11 @@ class PlotItem(GraphicsWidget):
 
         if labels is None:
             labels = {}
-        for label in list(self.axes.keys()):
-            if label in kwargs:
-                labels[label] = kwargs[label]
-                del kwargs[label]
+        for label in self.axes:
+            try:
+                labels[label] = kwargs.pop(label)
+            except KeyError:
+                pass
         for k in labels:
             if isinstance(labels[k], str):
                 labels[k] = (labels[k],)

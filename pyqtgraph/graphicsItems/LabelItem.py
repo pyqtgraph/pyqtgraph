@@ -25,7 +25,10 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         }
         self.opts.update(args)
         self._sizeHint = {}
-        self.setText(text)
+        if text:
+            self.setText(text)
+        else:
+            self.text = text
         self.setAngle(angle)
             
     def setAttr(self, attr, value):

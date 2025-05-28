@@ -20,10 +20,11 @@ class ViewBoxMenu(QtWidgets.QMenu):
         self.addAction(self.viewAll)
         
         self.ctrl = []
-        self.widgetGroups = []
         self.dv = QtGui.QDoubleValidator(self)
-        for axis in 'XY':
-            m = self.addMenu(f"{axis} {translate('ViewBox', 'axis')}")
+
+        tr_axis = translate('ViewBox', 'axis')
+        for axis in 'xy':
+            m = self.addMenu(f"{axis.upper()} {tr_axis}")
             w = QtWidgets.QWidget()
             ui = ui_template.Ui_Form()
             ui.setupUi(w)
@@ -31,8 +32,6 @@ class ViewBoxMenu(QtWidgets.QMenu):
             a.setDefaultWidget(w)
             m.addAction(a)
             self.ctrl.append(ui)
-            wg = WidgetGroup(w)
-            self.widgetGroups.append(wg)
             
             connects = [
                 (ui.mouseCheck.toggled, 'MouseToggled'),
@@ -47,7 +46,7 @@ class ViewBoxMenu(QtWidgets.QMenu):
             ]
             
             for sig, fn in connects:
-                sig.connect(getattr(self, axis.lower()+fn))
+                sig.connect(getattr(self, axis+fn))
 
         self.ctrl[0].invertCheck.toggled.connect(self.xInvertToggled)
         self.ctrl[1].invertCheck.toggled.connect(self.yInvertToggled)
@@ -246,7 +245,6 @@ class ViewBoxMenu(QtWidgets.QMenu):
                 
             if changed:
                 c.setCurrentIndex(0)
-                c.currentIndexChanged.emit(c.currentIndex())
 
     def _validateRangeText(self, axis):
         """Validate range text inputs. Return current value(s) if invalid."""

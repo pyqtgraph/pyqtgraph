@@ -144,29 +144,32 @@ class WidgetGroup(QtCore.QObject):
             self.autoAdd(widgetList)
         elif isinstance(widgetList, list):
             for w in widgetList:
-                self.addWidget(*w)
+                self._addWidget(*w)
         elif isinstance(widgetList, dict):
             for name, w in widgetList.items():
-                self.addWidget(w, name)
+                self._addWidget(w, name)
         elif widgetList is None:
             return
         else:
             raise Exception("Wrong argument type %s" % type(widgetList))
-        
-    def addWidget(self, w, name=None, scale=None):
-        if not self.acceptsType(w):
-            raise Exception("Widget type %s not supported by WidgetGroup" % type(w))
+
+    def _addWidget(
+        self,
+        w: QtCore.QObject,
+        name: str | None = None,
+        scale: float | None = None,
+    ) -> None:
         if name is None:
-            name = str(w.objectName())
+            name = w.objectName()
         if name == '':
             raise Exception("Cannot add widget '%s' without a name." % str(w))
         self.widgetList[w] = name
         self.scales[w] = scale
         self.readWidget(w)
-            
-        if type(w) in WidgetGroup.classes:
+
+        try:
             signal = WidgetGroup.classes[type(w)][0]
-        else:
+        except KeyError:
             signal = w.widgetGroupInterface()[0]
             
         if signal is not None:
@@ -175,18 +178,24 @@ class WidgetGroup(QtCore.QObject):
             signal.connect(self.widgetChanged)
         else:
             self.uncachedWidgets[w] = None
-       
-    def findWidget(self, name):
-        for w in self.widgetList:
-            if self.widgetList[w] == name:
-                return w
-        return None
-       
-    def interface(self, obj):
-        t = type(obj)
-        if t in WidgetGroup.classes:
-            return WidgetGroup.classes[t]
-        else:
+
+    def addWidget(
+        self,
+        w: QtCore.QObject,
+        name: str | None = None,
+        scale: float | None = None,
+    ) -> None:
+        if not self.acceptsType(w):
+            raise Exception("Widget type %s not supported by WidgetGroup" % type(w))
+        self._addWidget(w, name, scale)
+
+    def findWidget(self, name: str) -> QtCore.QObject | None:
+        return self.widgetList.get(name)
+
+    def interface(self, obj: QtCore.QObject):
+        try:
+            return WidgetGroup.classes[type(obj)]
+        except KeyError:
             return obj.widgetGroupInterface()
 
     def checkForChildren(self, obj):
@@ -198,8 +207,8 @@ class WidgetGroup(QtCore.QObject):
         # Find all children of this object and add them if possible.
         accepted = self.acceptsType(obj)
         if accepted:
-            self.addWidget(obj)
-            
+            self._addWidget(obj)
+
         if not accepted or self.checkForChildren(obj):
             for c in obj.children():
                 self.autoAdd(c)
@@ -208,9 +217,7 @@ class WidgetGroup(QtCore.QObject):
         for c in WidgetGroup.classes:
             if isinstance(obj, c):
                 return True
-        if hasattr(obj, 'widgetGroupInterface'):
-            return True
-        return False
+        return hasattr(obj, 'widgetGroupInterface')
 
     def setScale(self, widget, scale):
         val = self.readWidget(widget)
@@ -241,9 +248,9 @@ class WidgetGroup(QtCore.QObject):
             self.setWidget(w, s[n])
 
     def readWidget(self, w):
-        if type(w) in WidgetGroup.classes:
+        try:
             getFunc = WidgetGroup.classes[type(w)][1]
-        else:
+        except KeyError:
             getFunc = w.widgetGroupInterface()[1]
         
         if getFunc is None:
@@ -256,9 +263,10 @@ class WidgetGroup(QtCore.QObject):
             val = getFunc()
         else:
             val = getFunc(w)
-            
-        if self.scales[w] is not None:
-            val /= self.scales[w]
+
+        scale = self.scales[w]
+        if scale is not None:
+            val /= scale
         n = self.widgetList[w]
         self.cache[n] = val
         return val
