@@ -190,7 +190,10 @@ class WidgetGroup(QtCore.QObject):
         self._addWidget(w, name, scale)
 
     def findWidget(self, name: str) -> QtCore.QObject | None:
-        return self.widgetList.get(name)
+        for w, wname in self.widgetList.items():
+            if wname == name:
+                return w
+        return None
 
     def interface(self, obj: QtCore.QObject):
         try:
