@@ -1,4 +1,4 @@
-PyQt6==6.9.0
+PyQt6==6.9.1
 sphinx==7.4.7
 pydata-sphinx-theme==0.16.1
 sphinx-design==0.6.1
