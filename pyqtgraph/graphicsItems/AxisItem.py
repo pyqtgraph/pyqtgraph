@@ -237,6 +237,13 @@ class AxisItem(GraphicsWidget):
                                   be fixed at the value passed. With ``int``, accepted
                                   values are [0..255]. With value of type ``float``,
                                   accepted values are from [0..1].
+
+            maxTickLevel          ``int``
+                                  default: 2
+
+                                  - 0: Only show coarse grid
+                                  - 1: Show coarse and fine grid
+                                  - 2: Show two fine grid levels (higher CPU usage)
             ===================== ======================================================
 
         Raises
