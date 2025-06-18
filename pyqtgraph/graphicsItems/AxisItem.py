@@ -241,9 +241,12 @@ class AxisItem(GraphicsWidget):
             maxTickLevel          ``int``
                                   default: 2
 
-                                  - 0: Only show coarse grid
-                                  - 1: Show coarse and fine grid
-                                  - 2: Show two fine grid levels (higher CPU usage)
+                                  Tick (and grid line) density level.
+
+                                  - 0: Show major ticks only
+                                  - 1: Show major ticks and one level of minor ticks
+                                  - 2: Show major ticks and two levels of minor ticks
+                                    (higher CPU usage)
             ===================== ======================================================
 
         Raises
