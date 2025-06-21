@@ -76,13 +76,13 @@ jobs:
             qt-version: "PyQt6"
           - python-version: "3.12"
             qt-lib: "pyside"
-            qt-version: "PySide6-Essentials"
+            qt-version: "PySide6-Essentials!=6.9.1"
           - python-version: "3.13"
             qt-lib: "pyqt"
             qt-version: "PyQt6"
           - python-version: "3.13"
             qt-lib: "pyside"
-            qt-version: "PySide6-Essentials"
+            qt-version: "PySide6-Essentials!=6.9.1"
         exclude:
           - os: macos-latest
             python-version: "3.10"
