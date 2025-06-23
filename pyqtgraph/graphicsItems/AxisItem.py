@@ -231,7 +231,7 @@ class AxisItem(GraphicsWidget):
             showValues            ``bool``
                                   indicates whether text is displayed adjacent to ticks.
             
-            tickAlpha             ``float``,``int`` or ``None`` 
+            tickAlpha             ``float``, ``int`` or ``None`` 
                                   If ``None``, pyqtgraph will draw the ticks with the
                                   alpha it deems appropriate. Otherwise, the alpha will
                                   be fixed at the value passed. With ``int``, accepted
