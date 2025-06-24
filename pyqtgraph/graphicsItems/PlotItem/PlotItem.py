@@ -648,7 +648,7 @@ class PlotItem(GraphicsWidget):
             
             ## Add to average if needed
             self.updateParamList()
-            if self.ctrl.averageGroup.isChecked() and 'skipAverage' not in kargs:
+            if self.ctrl.averageGroup.isChecked() and 'skipAverage' not in kwargs:
                 self.addAvgCurve(item)
 
         # conditionally add item to the legend
