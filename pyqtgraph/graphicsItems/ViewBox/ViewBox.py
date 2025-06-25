@@ -231,7 +231,7 @@ class ViewBox(GraphicsWidget):
         self._viewPixelSizeCache  = None
 
     @property
-    def menu(self) -> ViewBoxMenu:
+    def menu(self) -> ViewBoxMenu | None:
         if self.menuEnabled() and self._menu is None:
             self._menu = ViewBoxMenu(self)
         return self._menu
