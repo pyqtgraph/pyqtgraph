@@ -37,4 +37,4 @@ class FlowchartViewBox(ViewBox):
         ## called by scene to add menus on to someone else's context menu
         menu = self.widget.buildMenu(ev.scenePos())
         menu.setTitle(translate("Context Menu", "Add node"))
-        return [menu, ViewBox.getMenu(self)]
+        return [menu, ViewBox.getMenu(self, ev)]
