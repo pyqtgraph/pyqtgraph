@@ -119,6 +119,10 @@ class GLVolumeItem(GLGraphicsItem):
         compiled = [shaders.compileShader([glsl_version, v], k) for k, v in sources.items()]
         program = shaders.compileProgram(*compiled)
 
+        GL.glBindAttribLocation(program, 0, "a_position")
+        GL.glBindAttribLocation(program, 1, "a_texcoord")
+        GL.glLinkProgram(program)
+
         klass._shaderProgram = program
         return program
         
@@ -149,8 +153,7 @@ class GLVolumeItem(GLGraphicsItem):
 
         program = self.getShaderProgram()
 
-        loc_pos = GL.glGetAttribLocation(program, "a_position")
-        loc_tex = GL.glGetAttribLocation(program, "a_texcoord")
+        loc_pos, loc_tex = 0, 1
         self.m_vbo_position.bind()
         GL.glVertexAttribPointer(loc_pos, 3, GL.GL_FLOAT, False, 6*4, None)
         GL.glVertexAttribPointer(loc_tex, 3, GL.GL_FLOAT, False, 6*4, GL.GLvoidp(3*4))
