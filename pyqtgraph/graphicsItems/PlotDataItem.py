@@ -144,7 +144,8 @@ class PlotDataset:
             # are ignored.
             selection = np.isfinite(arr)
             # True if all values are finite, False if there are any non-finites
-            if not selection.all():
+            all_finite = bool(selection.all())
+            if not all_finite:
                 arr = arr[selection]
         
         # here all_finite could be [False, True]
