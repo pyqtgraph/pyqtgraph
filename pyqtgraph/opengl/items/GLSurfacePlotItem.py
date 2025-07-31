@@ -2,9 +2,8 @@ import numpy as np
 
 from ..MeshData import MeshData
 from .GLMeshItem import GLMeshItem
-import pyqtgraph as pg
-import pyqtgraph.opengl as gl
-import OpenGL.GL as ogl
+from .GLLinePlotItem import GLLinePlotItem
+from OpenGL import GL as ogl
 from pyqtgraph.Qt.QtGui import QVector3D
 
 __all__ = ['GLSurfacePlotItem']
@@ -211,7 +210,7 @@ class GLSurfacePlotItem(GLMeshItem):
                 self._y if self._y is not None else np.arange(cols),
                 self._z[i]
             ])
-            ln = gl.GLLinePlotItem(pos=map_pts(pts), **opts)
+            ln = GLLinePlotItem(pos=self.map_pts(tr, pts), **opts)
             view.addItem(ln)
             self._grid_lines.append(ln)
 
@@ -221,7 +220,7 @@ class GLSurfacePlotItem(GLMeshItem):
                 np.full(rows, self._y[j] if self._y is not None else j),
                 self._z[:, j]
             ])
-            ln = gl.GLLinePlotItem(pos=map_pts(pts), **opts)
+            ln = GLLinePlotItem(pos=self.map_pts(tr, pts), **opts)
             view.addItem(ln)
             self._grid_lines.append(ln)
 
