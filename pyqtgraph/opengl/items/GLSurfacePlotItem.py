@@ -4,7 +4,6 @@ from ..MeshData import MeshData
 from .GLMeshItem import GLMeshItem
 from .GLLinePlotItem import GLLinePlotItem
 from OpenGL import GL as ogl
-from pyqtgraph.Qt.QtGui import QVector3D
 
 __all__ = ['GLSurfacePlotItem']
 
@@ -178,6 +177,12 @@ class GLSurfacePlotItem(GLMeshItem):
             faces[start+cols:start+(cols*2)] = rowtemplate2 + row * (cols+1)
         self._faces = faces
 
+    @staticmethod
+    def _map_pts(tr, arr):
+        pts = np.asarray(arr, dtype=np.float32)
+        mapped3 = tr.map(pts.T)
+        return mapped3.T.astype(np.float32)
+
     def _update_grid(self):
         if not self._showGrid or self._z is None:
             return
@@ -197,12 +202,6 @@ class GLSurfacePlotItem(GLMeshItem):
             'width': self._lineWidth,
         }
 
-        def map_pts(arr):
-            return np.vstack([
-                [pt.x(), pt.y(), pt.z()]
-                for pt in (tr.map(QVector3D(x, y, z)) for x, y, z in arr)
-            ]).astype(np.float32)
-
         rows, cols = self._z.shape
         for i in range(rows):
             pts = np.column_stack([
@@ -210,7 +209,7 @@ class GLSurfacePlotItem(GLMeshItem):
                 self._y if self._y is not None else np.arange(cols),
                 self._z[i]
             ])
-            ln = GLLinePlotItem(pos=self.map_pts(tr, pts), **opts)
+            ln = GLLinePlotItem(pos=self._map_pts(tr, pts), **opts)
             view.addItem(ln)
             self._grid_lines.append(ln)
 
@@ -220,7 +219,7 @@ class GLSurfacePlotItem(GLMeshItem):
                 np.full(rows, self._y[j] if self._y is not None else j),
                 self._z[:, j]
             ])
-            ln = GLLinePlotItem(pos=self.map_pts(tr, pts), **opts)
+            ln = GLLinePlotItem(pos=self._map_pts(tr, pts), **opts)
             view.addItem(ln)
             self._grid_lines.append(ln)
 
