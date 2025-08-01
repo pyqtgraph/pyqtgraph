@@ -196,32 +196,32 @@ class GLSurfacePlotItem(GLMeshItem):
 
         tr = self.viewTransform()
         opts = {
-            'glOptions': self.gl_line_options,
-            'antialias': self._lineAntialias,
-            'color': self._lineColor,
-            'width': self._lineWidth,
+            'glOptions':  self.gl_line_options,
+            'antialias':  self._lineAntialias,
+            'color':      self._lineColor,
+            'width':      self._lineWidth,
+            'mode':       'lines',
         }
 
-        rows, cols = self._z.shape
-        for i in range(rows):
-            pts = np.column_stack([
-                np.full(cols, self._x[i] if self._x is not None else i),
-                self._y if self._y is not None else np.arange(cols),
-                self._z[i]
-            ])
-            ln = GLLinePlotItem(pos=self._map_pts(tr, pts), **opts)
-            view.addItem(ln)
-            self._grid_lines.append(ln)
+        z = self._z.astype(np.float32)
+        rows, cols = z.shape
 
-        for j in range(cols):
-            pts = np.column_stack([
-                self._x if self._x is not None else np.arange(rows),
-                np.full(rows, self._y[j] if self._y is not None else j),
-                self._z[:, j]
-            ])
-            ln = GLLinePlotItem(pos=self._map_pts(tr, pts), **opts)
-            view.addItem(ln)
-            self._grid_lines.append(ln)
+        x = (self._x if self._x is not None else np.arange(rows, dtype=z.dtype))
+        y = (self._y if self._y is not None else np.arange(cols, dtype=z.dtype))
+
+        xvals, yvals = np.meshgrid(x, y, indexing='ij')  # shape (rows, cols)
+        verts_flat = np.column_stack((xvals.ravel(), yvals.ravel(), z.ravel()))
+
+        idx = np.arange(z.size, dtype=np.int32).reshape(rows, cols)
+        h = np.column_stack((idx[:, :-1].ravel(), idx[:, 1:].ravel()))
+        v = np.column_stack((idx[:-1, :].ravel(), idx[1:, :].ravel()))
+        edges = np.vstack((h, v))
+
+        pts = verts_flat[edges].reshape(-1, 3)
+
+        ln = GLLinePlotItem(pos=self._map_pts(tr, pts), **opts)
+        view.addItem(ln)
+        self._grid_lines.append(ln)
 
     def _setView(self, v):
         super()._setView(v)
