@@ -3,7 +3,7 @@ from ..Qt import QT_LIB, QtCore, QtWidgets
 from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsObject']
-class GraphicsObject(GraphicsItem, QtWidgets.QGraphicsObject):
+class GraphicsObject(QtWidgets.QGraphicsObject, GraphicsItem):
     """
     **Bases:** :class:`GraphicsItem <pyqtgraph.GraphicsItem>`, :class:`QtWidgets.QGraphicsObject`
 
