@@ -113,7 +113,7 @@ class Container(object):
         return self._stretch
             
 
-class SplitContainer(Container, QtWidgets.QSplitter):
+class SplitContainer(QtWidgets.QSplitter, Container):
     """Horizontal or vertical splitter with some changes:
      - save/restore works correctly
     """
@@ -223,7 +223,7 @@ class StackedWidget(QtWidgets.QStackedWidget):
         self.container.childEvent_(ev)
 
 
-class TContainer(Container, QtWidgets.QWidget):
+class TContainer(QtWidgets.QWidget, Container):
     sigStretchChanged = QtCore.Signal()
     def __init__(self, area):
         QtWidgets.QWidget.__init__(self)
