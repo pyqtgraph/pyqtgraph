@@ -545,7 +545,7 @@ class GLViewMixin:
         return output
 
 
-class GLViewWidget(GLViewMixin, QtWidgets.QOpenGLWidget):
+class GLViewWidget(QtWidgets.QOpenGLWidget, GLViewMixin):
     def __init__(self, *args, devicePixelRatio=None, **kwargs):
         """
         Basic widget for displaying 3D data
