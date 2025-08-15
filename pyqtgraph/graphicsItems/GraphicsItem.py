@@ -51,14 +51,6 @@ class GraphicsItem(object):
     _pixelVectorGlobalCache = LRU(100)
 
     def __init__(self):
-        if not hasattr(self, '_qtBaseClass'):
-            for b in self.__class__.__bases__:
-                if issubclass(b, QtWidgets.QGraphicsItem):
-                    self.__class__._qtBaseClass = b
-                    break
-        if not hasattr(self, '_qtBaseClass'):
-            raise Exception('Could not determine Qt base class for GraphicsItem: %s' % str(self))
-
         self._pixelVectorCache = [None, None]
         self._viewWidget = None
         self._viewBox = None
@@ -122,21 +114,15 @@ class GraphicsItem(object):
     def forgetViewBox(self):
         self._viewBox = None
         
-    def deviceTransform(self, viewportTransform=None):
+    def deviceTransform_(self):
         """
         Return the transform that converts local item coordinates to device coordinates (usually pixels).
-        Extends deviceTransform to automatically determine the viewportTransform.
         """
-        if viewportTransform is None:
-            view = self.getViewWidget()
-            if view is None:
-                return None
-            viewportTransform = view.viewportTransform()
-        dt = self._qtBaseClass.deviceTransform(self, viewportTransform)
+        if (view := self.getViewWidget()) is None:
+            return None
+        viewportTransform = view.viewportTransform()
+        dt = self.deviceTransform(viewportTransform)
         
-        #xmag = abs(dt.m11())+abs(dt.m12())
-        #ymag = abs(dt.m21())+abs(dt.m22())
-        #if xmag * ymag == 0: 
         if dt.determinant() == 0:  ## occurs when deviceTransform is invalid because widget has not been displayed
             return None
         else:
@@ -153,7 +139,6 @@ class GraphicsItem(object):
             return self.itemTransform(view.innerSceneItem())[0]
         else:
             return self.sceneTransform()
-            #return self.deviceTransform(view.viewportTransform())
 
     def getBoundingParents(self):
         """Return a list of parents to this item that have child clipping enabled."""
@@ -204,8 +189,7 @@ class GraphicsItem(object):
         ## This is an expensive function that gets called very frequently.
         ## We have two levels of cache to try speeding things up.
         
-        dt = self.deviceTransform()
-        if dt is None:
+        if (dt := self.deviceTransform_()) is None:
             return None, None
             
         ## Ignore translation. If the translation is much larger than the scale
@@ -308,16 +292,14 @@ class GraphicsItem(object):
 
     def pixelWidth(self):
         ## deprecated
-        vt = self.deviceTransform()
-        if vt is None:
+        if (vt := self.deviceTransform_()) is None:
             return 0
         vt = fn.invertQTransform(vt)
         return vt.map(QtCore.QLineF(0, 0, 1, 0)).length()
         
     def pixelHeight(self):
         ## deprecated
-        vt = self.deviceTransform()
-        if vt is None:
+        if (vt := self.deviceTransform_()) is None:
             return 0
         vt = fn.invertQTransform(vt)
         return vt.map(QtCore.QLineF(0, 0, 0, 1)).length()
@@ -329,8 +311,7 @@ class GraphicsItem(object):
         Return *obj* mapped from local coordinates to device coordinates (pixels).
         If there is no device mapping available, return None.
         """
-        vt = self.deviceTransform()
-        if vt is None:
+        if (vt := self.deviceTransform_()) is None:
             return None
         return vt.map(obj)
         
@@ -339,8 +320,7 @@ class GraphicsItem(object):
         Return *obj* mapped from device coordinates (pixels) to local coordinates.
         If there is no device mapping available, return None.
         """
-        vt = self.deviceTransform()
-        if vt is None:
+        if (vt := self.deviceTransform_()) is None:
             return None
         if isinstance(obj, QtCore.QPoint):
             obj = QtCore.QPointF(obj)
@@ -352,8 +332,7 @@ class GraphicsItem(object):
         Return *rect* mapped from local coordinates to device coordinates (pixels).
         If there is no device mapping available, return None.
         """
-        vt = self.deviceTransform()
-        if vt is None:
+        if (vt := self.deviceTransform_()) is None:
             return None
         return vt.mapRect(rect)
 
@@ -362,8 +341,7 @@ class GraphicsItem(object):
         Return *rect* mapped from device coordinates (pixels) to local coordinates.
         If there is no device mapping available, return None.
         """
-        vt = self.deviceTransform()
-        if vt is None:
+        if (vt := self.deviceTransform_()) is None:
             return None
         vt = fn.invertQTransform(vt)
         return vt.mapRect(rect)
@@ -394,37 +372,9 @@ class GraphicsItem(object):
         vt = fn.invertQTransform(vt)
         return vt.mapRect(obj)
 
-    def pos(self):
-        return Point(self._qtBaseClass.pos(self))
-    
     def viewPos(self):
         return self.mapToView(self.mapFromParent(self.pos()))
     
-    def parentItem(self):
-        return self._qtBaseClass.parentItem(self)
-        
-    def setParentItem(self, parent):
-        ## Workaround for Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
-        if parent is not None:
-            pscene = parent.scene()
-            if pscene is not None and self.scene() is not pscene:
-                pscene.addItem(self)
-        return self._qtBaseClass.setParentItem(self, parent)
-    
-    def childItems(self):
-        return self._qtBaseClass.childItems(self)
-
-
-    def sceneTransform(self):
-        ## Qt bug: do no allow access to sceneTransform() until 
-        ## the item has a scene.
-        
-        if self.scene() is None:
-            return self.transform()
-        else:
-            return self._qtBaseClass.sceneTransform(self)
-
-
     def transformAngle(self, relativeItem=None):
         """Return the rotation produced by this item's transform (this assumes there is no shear in the transform)
         If relativeItem is given, then the angle is determined relative to that item.
@@ -436,33 +386,12 @@ class GraphicsItem(object):
         vec = tr.map(QtCore.QLineF(0,0,1,0))
         return vec.angleTo(QtCore.QLineF(vec.p1(), vec.p1()+QtCore.QPointF(1,0)))
         
-    #def itemChange(self, change, value):
-        #ret = self._qtBaseClass.itemChange(self, change, value)
-        #if change == self.GraphicsItemChange.ItemParentHasChanged or change == self.ItemSceneHasChanged:
-            #print "Item scene changed:", self
-            #self.setChildScene(self)  ## This is bizarre.
-        #return ret
-
-    #def setChildScene(self, ch):
-        #scene = self.scene()
-        #for ch2 in ch.childItems():
-            #if ch2.scene() is not scene:
-                #print "item", ch2, "has different scene:", ch2.scene(), scene
-                #scene.addItem(ch2)
-                #QtWidgets.QApplication.processEvents()
-                #print "   --> ", ch2.scene()
-            #self.setChildScene(ch2)
-
     def changeParent(self):
         """Called when the item's parent has changed. 
         This method handles connecting / disconnecting from ViewBox signals
         to make sure viewRangeChanged works properly. It should generally be 
         extended, not overridden."""
         self._updateView()
-
-    def parentChanged(self):
-        # deprecated version of changeParent()
-        GraphicsItem.changeParent(self)
 
     def _updateView(self):
         ## called to see whether this item has a new view to connect to
@@ -558,10 +487,6 @@ class GraphicsItem(object):
         """
         self._cachedView = None
     
-    #def prepareGeometryChange(self):
-        #self._qtBaseClass.prepareGeometryChange(self)
-        #self.informViewBoundsChanged()
-        
     def informViewBoundsChanged(self):
         """
         Inform this item's container ViewBox that the bounds of this item have changed.
@@ -602,10 +527,6 @@ class GraphicsItem(object):
         else:
             self._exportOpts = False
     
-    #def update(self):
-        #self._qtBaseClass.update(self)
-        #print "Update:", self
-
     def getContextMenus(self, event):
         return [self.getMenu()] if hasattr(self, "getMenu") else []
 
