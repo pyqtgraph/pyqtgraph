@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 __all__ = ['GraphicsWidget']
 
 
-class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
+class GraphicsWidget(QtWidgets.QGraphicsWidget, GraphicsItem):
     
     _qtBaseClass = QtWidgets.QGraphicsWidget
 
