@@ -6,7 +6,7 @@ from .Dock import Dock
 from .DockDrop import DockDrop
 
 
-class DockArea(Container, QtWidgets.QWidget):
+class DockArea(QtWidgets.QWidget, Container):
     def __init__(self, parent=None, temporary=False, home=None):
         Container.__init__(self, self)
         QtWidgets.QWidget.__init__(self, parent=parent)
