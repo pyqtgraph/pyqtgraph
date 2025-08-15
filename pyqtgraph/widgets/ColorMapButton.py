@@ -85,7 +85,7 @@ class ColorMapDisplayMixin:
         painter.restore()
 
 
-class ColorMapButton(ColorMapDisplayMixin, QtWidgets.QWidget):
+class ColorMapButton(QtWidgets.QWidget, ColorMapDisplayMixin):
     sigColorMapChanged = QtCore.Signal(object)
 
     def __init__(self):
