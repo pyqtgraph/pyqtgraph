@@ -62,8 +62,15 @@ class GLSurfacePlotItem(GLMeshItem):
                 surface_kwds[arg] = kwds.pop(arg)
 
         mesh_kwds = {**kwds, 'glOptions': self.gl_surface_options}
-        super().__init__(parentItem=parentItem, meshdata=self._meshdata, **mesh_kwds)
+        super().__init__(meshdata=self._meshdata, **mesh_kwds)
         
+        line_kwds = {'mode': 'lines', 'glOptions': self.gl_line_options}
+        self.lineplot = GLLinePlotItem(parentItem=self, **line_kwds)
+        # in GLViewWidget.drawItemTree(), at the same depth value, child items come before the parent.
+        # make it such that our grid lines get drawn after the surface mesh.
+        self.lineplot.setDepthValue(1)
+        self.setParentItem(parentItem)
+
         self.setData(**surface_kwds)
         
     def setData(self, **kwds):
@@ -156,7 +163,7 @@ class GLSurfacePlotItem(GLMeshItem):
         if newVertexes or z is not None:
             self._vertexes[...,2] = self._z
             updateMesh = True
-        
+
         ## Update MeshData
         if updateMesh:
             self._meshdata.setVertexes(self._vertexes.reshape(self._vertexes.shape[0]*self._vertexes.shape[1], 3))
@@ -177,30 +184,14 @@ class GLSurfacePlotItem(GLMeshItem):
             faces[start+cols:start+(cols*2)] = rowtemplate2 + row * (cols+1)
         self._faces = faces
 
-    @staticmethod
-    def _map_pts(tr, arr):
-        pts = np.asarray(arr, dtype=np.float32)
-        mapped3 = tr.map(pts.T)
-        return mapped3.T.astype(np.float32)
-
     def _update_grid(self):
         if not self._showGrid or self._z is None:
             return
 
-        if not (view := self.view()):
-            return
-
-        for ln in self._grid_lines:
-            view.removeItem(ln)
-        self._grid_lines.clear()
-
-        tr = self.viewTransform()
         opts = {
-            'glOptions':  self.gl_line_options,
             'antialias':  self._lineAntialias,
             'color':      self._lineColor,
             'width':      self._lineWidth,
-            'mode':       'lines',
         }
 
         z = self._z.astype(np.float32)
@@ -219,10 +210,4 @@ class GLSurfacePlotItem(GLMeshItem):
 
         pts = verts_flat[edges].reshape(-1, 3)
 
-        ln = GLLinePlotItem(pos=self._map_pts(tr, pts), **opts)
-        view.addItem(ln)
-        self._grid_lines.append(ln)
-
-    def _setView(self, v):
-        super()._setView(v)
-        self._update_grid()
+        self.lineplot.setData(pos=pts, **opts)
