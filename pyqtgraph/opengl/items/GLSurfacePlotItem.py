@@ -13,25 +13,6 @@ class GLSurfacePlotItem(GLMeshItem):
     
     Displays a surface plot on a regular x,y grid with optional wireframe overlay.
     """
-    gl_options = {
-        ogl.GL_DEPTH_TEST: True,
-        ogl.GL_BLEND: True,
-        ogl.GL_CULL_FACE: False,
-        ogl.GL_LINE_SMOOTH: True,
-        'glHint': (ogl.GL_LINE_SMOOTH_HINT, ogl.GL_NICEST),
-        'glBlendFunc': (ogl.GL_SRC_ALPHA, ogl.GL_ONE_MINUS_SRC_ALPHA),
-    }
-
-    gl_surface_options = {
-        **gl_options,
-        ogl.GL_POLYGON_OFFSET_FILL: True,
-        'glPolygonOffset': (1.0, 1.0),
-    }
-
-    gl_line_options = {
-        **gl_options,
-        ogl.GL_POLYGON_OFFSET_FILL: False,
-    }
 
     mesh_keys = ('x', 'y', 'z', 'colors')
     grid_keys = ('showGrid', 'lineColor', 'lineWidth', 'lineAntialias')
@@ -61,13 +42,12 @@ class GLSurfacePlotItem(GLMeshItem):
             if arg in kwds:
                 surface_kwds[arg] = kwds.pop(arg)
 
-        mesh_kwds = {**kwds, 'glOptions': self.gl_surface_options}
-        super().__init__(meshdata=self._meshdata, **mesh_kwds)
+        super().__init__(meshdata=self._meshdata, **kwds)
         
-        line_kwds = {'mode': 'lines', 'glOptions': self.gl_line_options}
-        self.lineplot = GLLinePlotItem(parentItem=self, **line_kwds)
-        # in GLViewWidget.drawItemTree(), at the same depth value, child items come before the parent.
-        # make it such that our grid lines get drawn after the surface mesh.
+        self.lineplot = GLLinePlotItem(parentItem=self, mode='lines', glOptions='translucent')
+        # in GLViewWidget.drawItemTree(), at the same depth value, child items
+        # come before the parent. make it such that our grid lines get drawn
+        # after the surface mesh.
         self.lineplot.setDepthValue(1)
         self.setParentItem(parentItem)
 
@@ -171,6 +151,15 @@ class GLSurfacePlotItem(GLMeshItem):
 
         # rebuild grid whenever mesh or parent changes
         self._update_grid()
+
+    def paint(self):
+        if self._showGrid:
+            ogl.glEnable(ogl.GL_POLYGON_OFFSET_FILL)
+            ogl.glPolygonOffset(1.0, 1.0)
+        super().paint()
+        if self._showGrid:
+            ogl.glDisable(ogl.GL_POLYGON_OFFSET_FILL)
+            ogl.glPolygonOffset(0.0, 0.0)
 
     def generateFaces(self):
         cols = self._z.shape[1]-1
