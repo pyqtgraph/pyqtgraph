@@ -30,7 +30,7 @@ class GLSurfacePlotItem(GLMeshItem):
         self._showGrid = False
         self._lineColor = (0, 0, 0, 1)
         self._lineWidth = 1.0
-        self._lineAntialias = True
+        self._lineAntialias = False
         self._vertexes = None
         self._meshdata = MeshData()
         self._grid_lines = []
