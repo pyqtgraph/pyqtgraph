@@ -47,7 +47,7 @@ class GLSurfacePlotItem(GLMeshItem):
         # in GLViewWidget.drawItemTree(), at the same depth value, child items
         # come before the parent. make it such that our grid lines get drawn
         # after the surface mesh.
-        self.lineplot.setDepthValue(1)
+        self.lineplot.setDepthValue(self.depthValue() + 1)
         self.setParentItem(parentItem)
 
         self.setData(**surface_kwds)
