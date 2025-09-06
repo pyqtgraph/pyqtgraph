@@ -33,7 +33,6 @@ class GLSurfacePlotItem(GLMeshItem):
         self._lineAntialias = False
         self._vertexes = None
         self._meshdata = MeshData()
-        self._grid_lines = []
 
         # splitout GLSurfacePlotItem from kwds
         surface_keys = self.mesh_keys + self.grid_keys
