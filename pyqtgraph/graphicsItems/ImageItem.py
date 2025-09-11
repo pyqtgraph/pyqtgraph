@@ -763,6 +763,8 @@ class ImageItem(GraphicsObject):
             )
             self._imageNanLocations = None
 
+        image = self.image
+
         if self.autoDownsample:
             xds, yds = self._computeDownsampleFactors()
             if xds is None:
@@ -770,15 +772,17 @@ class ImageItem(GraphicsObject):
 
             axes = [1, 0] if self.axisOrder == 'row-major' else [0, 1]
             nan_policy = self._nanPolicy if self._imageHasNans else 'propagate'
-            image = fn.downsample(self.image, xds, axis=axes[0], nanPolicy=nan_policy)
+            image = fn.downsample(image, xds, axis=axes[0], nanPolicy=nan_policy)
             image = fn.downsample(image, yds, axis=axes[1], nanPolicy=nan_policy)
             self._lastDownsample = (xds, yds)
+
+            # changes in view transform cause changes in downsampling factors,
+            # which invalidates any previously calculated nan locations
+            self._imageNanLocations = None
 
             # Check if downsampling reduced the image size to zero due to inf values.
             if image.size == 0:
                 return
-        else:
-            image = self.image
 
         # Convert single-channel image to 2D array
         if image.ndim == 3 and image.shape[-1] == 1:
