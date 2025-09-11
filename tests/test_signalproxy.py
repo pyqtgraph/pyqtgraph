@@ -40,7 +40,7 @@ def test_connect_qt_args():
         print(item)
 
     proxy = SignalProxy(model.itemChanged, slot=my_slot)
-
+    assert isinstance(proxy, SignalProxy)
 
 def test_signal_proxy_slot(qapp):
     """Test the normal work mode of SignalProxy with `signal` and `slot`"""
