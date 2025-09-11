@@ -29,7 +29,7 @@ def qapp():
     yield app
     app.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents, 100)
 
-def test_connect_qt_args():
+def test_connect_qt_args(qapp):
     """
     Test if we can connect the SignalProxy with signals that return special types
     See https://github.com/pyqtgraph/pyqtgraph/issues/3366
