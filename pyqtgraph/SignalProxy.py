@@ -40,7 +40,13 @@ class SignalProxy(QtCore.QObject):
         self.timer.timeout.connect(self.flush)
         self.lastFlushTime = None
         self.signal = signal
-        self.signal.connect(self.signalReceived)
+
+        try:
+            self.signal.connect(self.signalReceived)
+        except TypeError:
+            # see https://github.com/pyqtgraph/pyqtgraph/issues/3366
+            self.signal.connect(self.signalReceivedUndecorated)
+
         if slot is not None:
             self.blockSignal = False
             self.sigDelayed.connect(slot)
@@ -52,10 +58,16 @@ class SignalProxy(QtCore.QObject):
     def setDelay(self, delay):
         self.delay = delay
 
-    # commented slots because of https://github.com/pyqtgraph/pyqtgraph/issues/3366
-    # @QtCore.Slot()
-    # @QtCore.Slot(object)
-    # @QtCore.Slot(object, object)
+    def signalReceivedUndecorated(self, *args):
+        """
+        Workaround to connect with signals for which a slot description is missing.
+        See https://github.com/pyqtgraph/pyqtgraph/issues/3366
+        """
+        self.signalReceived(*args)
+
+    @QtCore.Slot()
+    @QtCore.Slot(object)
+    @QtCore.Slot(object, object)
     def signalReceived(self, *args):
         """Received signal. Cancel previous timer and store args to be
         forwarded later."""
