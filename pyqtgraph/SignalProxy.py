@@ -55,6 +55,7 @@ class SignalProxy(QtCore.QObject):
     @QtCore.Slot()
     @QtCore.Slot(object)
     @QtCore.Slot(object, object)
+    @QtCore.Slot(object, object, object)
     @QtCore.Slot(object, object, object, object)
     @QtCore.Slot(object, object, object, object, object)
     def signalReceived(self, *args):
