@@ -1,7 +1,6 @@
 import pytest
-
 from pyqtgraph import SignalProxy
-from pyqtgraph.Qt import QtCore, mkQApp
+from pyqtgraph.Qt import QtCore, mkQApp, QtGui
 
 
 class Sender(QtCore.QObject):
@@ -29,6 +28,18 @@ def qapp():
         app = mkQApp()
     yield app
     app.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents, 100)
+
+def test_connect_qt_args():
+    """
+    Test if we can connect the SignalProxy with signals that return special types
+    See https://github.com/pyqtgraph/pyqtgraph/issues/3366
+    """
+    model = QtGui.QStandardItemModel()
+
+    def my_slot(item: QtGui.QStandardItem):
+        print(item)
+
+    proxy = SignalProxy(model.itemChanged, slot=my_slot)
 
 
 def test_signal_proxy_slot(qapp):
