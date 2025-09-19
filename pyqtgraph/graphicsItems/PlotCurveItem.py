@@ -1264,7 +1264,7 @@ class PlotCurveItem(GraphicsObject):
         return self._mouseShape
 
     def mouseClickEvent(self, ev):
-        if not self.clickable or ev.button() != QtCore.Qt.MouseButton.LeftButton:
+        if not self.clickable:
             return
         if self.mouseShape().contains(ev.pos()):
             ev.accept()
