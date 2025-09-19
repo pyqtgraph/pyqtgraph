@@ -1073,16 +1073,13 @@ class ScatterPlotItem(GraphicsObject):
                 & (self.data['y'] - h < b))
 
     def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
-            pts = self.pointsAt(ev.pos())
-            if len(pts) > 0:
-                self.ptsClicked = pts
-                ev.accept()
-                self.sigClicked.emit(self, self.ptsClicked, ev)
-            else:
-                #print "no spots"
-                ev.ignore()
+        pts = self.pointsAt(ev.pos())
+        if len(pts) > 0:
+            self.ptsClicked = pts
+            ev.accept()
+            self.sigClicked.emit(self, self.ptsClicked, ev)
         else:
+            #print "no spots"
             ev.ignore()
 
     def hoverEvent(self, ev):
