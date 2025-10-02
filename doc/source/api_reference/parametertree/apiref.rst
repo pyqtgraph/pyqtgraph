@@ -13,3 +13,4 @@ Contents:
     parametertypes
     parameteritem
     interactiveparameters
+    xmlserialization
