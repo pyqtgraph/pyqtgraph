@@ -84,6 +84,7 @@ checks = [
   'SA01', # allow absence of "See Also" section
   'GL08', # allow absence of docstring
   'ES01', # allow absence of Extended Summary
+  'PR04', # allow no type annotations for attributes (to be filled by sphinx-autodoc-typehints)
 ]
 # remember to use single quotes for regex in TOML
 exclude = [ # don't report on objects that match any of these regex
