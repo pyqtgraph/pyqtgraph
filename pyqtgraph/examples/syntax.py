@@ -185,20 +185,37 @@ class PythonHighlighter(QSyntaxHighlighter):
         return DARK_STYLES if app.property('darkMode') else LIGHT_STYLES
 
     def highlightBlock(self, text):
-        """Apply syntax highlighting to the given block of text.
-        """
-        # Do other syntax formatting
-        for expression, nth, format in self.rules:
-            index = expression.indexIn(text, 0)
+        """Apply syntax highlighting to the given block of text."""
+
+        rules = self.rules.copy()
+        string_spans = []
+
+        # First: apply string rules and record spans
+        for expression, nth, format in rules:
+            if format not in ('string', 'string2'):
+                continue
             format = self.styles[format]
+            for n, match in enumerate(re.finditer(expression, text)):
+                if n < nth:
+                    continue
+                start, end = match.span()
+                self.setFormat(start, end - start, format)
+                string_spans.append((start, end))
 
-            while index >= 0:
-                # We actually want the index of the nth match
-                index = expression.pos(nth)
-                length = len(expression.cap(nth))
-                self.setFormat(index, length, format)
-                index = expression.indexIn(text, index + length)
+        # Then: apply other rules only if not in a string
+        for expression, nth, format in rules:
+            if format in ('string', 'string2'):
+                continue
+            format = self.styles[format]
+            for n, match in enumerate(re.finditer(expression, text)):
+                if n < nth:
+                    continue
+                start, end = match.span()
+                if any(start < e and end > s for s, e in string_spans):
+                    continue  # Skip overlapping with string
+                self.setFormat(start, end - start, format)
 
+        self.applySearchHighlight(text)
         self.setCurrentBlockState(0)
 
         # Do multi-line strings
