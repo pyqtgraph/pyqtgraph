@@ -598,6 +598,7 @@ class AxisItem(GraphicsWidget):
         if not self.isVisible():
             h = 0
         elif self.fixedHeight is None:
+            _min_necessary_height = 0
             if not self.style['showValues']:
                 h = 0
             elif self.style['autoExpandTextSpace']:
@@ -605,7 +606,7 @@ class AxisItem(GraphicsWidget):
             else:
                 h = self.style['tickTextHeight']
             h += self.style['tickTextOffset'][1] if self.style['showValues'] else 0
-            h += max(0, self.style['tickLength'])
+            h += max(_min_necessary_height, self.style['tickLength'])
             if self.label.isVisible():
                 h += self.label.boundingRect().height() * 0.8
         else:
@@ -634,6 +635,7 @@ class AxisItem(GraphicsWidget):
         if not self.isVisible():
             w = 0
         elif self.fixedWidth is None:
+            _min_necessary_width = 0
             if not self.style['showValues']:
                 w = 0
             elif self.style['autoExpandTextSpace']:
@@ -641,7 +643,7 @@ class AxisItem(GraphicsWidget):
             else:
                 w = self.style['tickTextWidth']
             w += self.style['tickTextOffset'][0] if self.style['showValues'] else 0
-            w += max(0, self.style['tickLength'])
+            w += max(_min_necessary_width, self.style['tickLength'])
             if self.label.isVisible():
                 w += self.label.boundingRect().height() * 0.8  ## bounding rect is usually an overestimate
         else:
