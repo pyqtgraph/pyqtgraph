@@ -5,6 +5,22 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 
 
+def test_qpainterpathprivate_empty():
+    # test empty path
+    qpath = QtGui.QPainterPath()
+    memory = pg.Qt.internals.get_qpainterpath_element_array(qpath)
+    assert len(memory) == 0
+
+    # test resizing empty path to 0
+    memory = pg.Qt.internals.get_qpainterpath_element_array(qpath, 0)
+    assert len(memory) == 0
+
+    # test resizing non-empty path to 0
+    qpath.moveTo(0, 0)
+    assert qpath.elementCount() == 1
+    memory = pg.Qt.internals.get_qpainterpath_element_array(qpath, 0)
+    assert len(memory) == 0
+
 def test_qpainterpathprivate_read():
     x0, y0 = 100, 200
     size = 100
