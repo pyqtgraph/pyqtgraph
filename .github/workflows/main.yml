@@ -18,7 +18,7 @@ jobs:
   make_dash_docset:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
@@ -44,7 +44,7 @@ jobs:
         with:
           python-version: "3.13"
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install mypy
         run: pip install mypy
       - name: Run mypy
@@ -89,7 +89,7 @@ jobs:
             qt-lib: "pyside"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
@@ -184,7 +184,7 @@ jobs:
             environment-file: .github/workflows/etc/environment-pyside.yml
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: latest
@@ -261,7 +261,7 @@ jobs:
     name: build wheel
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
@@ -286,7 +286,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2
       - name: Setup Python
@@ -314,7 +314,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           # Use latest Python, so it understands all syntax.
