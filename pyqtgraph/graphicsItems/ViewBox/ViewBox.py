@@ -1064,11 +1064,13 @@ class ViewBox(GraphicsWidget):
     def blockLink(self, b):
         self.linksBlocked = b  ## prevents recursive plot-change propagation
 
+    @QtCore.Slot()
     def linkedXChanged(self):
         ## called when x range of linked view has changed
         view = self.linkedView(0)
         self.linkedViewChanged(view, ViewBox.XAxis)
 
+    @QtCore.Slot()
     def linkedYChanged(self):
         ## called when y range of linked view has changed
         view = self.linkedView(1)
