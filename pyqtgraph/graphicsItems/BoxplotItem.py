@@ -199,12 +199,13 @@ class BoxplotItem(GraphicsObject):
 
         p.setPen(symbolPen)
         p.setBrush(symbolBrush)
+        tr = p.transform()
         for pos, outliers in self.outlierData.items():
             for o in outliers:
                 x, y = (pos, o) if self.opts["locAsX"] else (o, pos)
-                pt = self.mapToScene(x, y)
-                tr = QtGui.QTransform.fromTranslate(pt.x(), pt.y()).scale(symbolSize, symbolSize)
-                p.setTransform(tr)
+                p.resetTransform()
+                p.translate(*tr.map(x, y))
+                p.scale(symbolSize, symbolSize)                
                 p.drawPath(symbol)
                     
     def boundingRect(self):
