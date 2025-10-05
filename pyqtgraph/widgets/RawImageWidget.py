@@ -5,6 +5,7 @@ Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 import importlib
+import warnings
 import numpy as np
 
 from .. import functions as fn
@@ -20,6 +21,12 @@ if QT_LIB in ["PyQt5", "PySide2"]:
 else:
     QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
     QtOpenGLWidgets = importlib.import_module(f"{QT_LIB}.QtOpenGLWidgets")
+
+# importing cuda python is fast
+try:
+    from cuda.bindings import runtime as cudart
+except ImportError:
+    cudart = None
 
 __all__ = ['RawImageWidget', 'RawImageGLWidget']
 
@@ -105,6 +112,16 @@ class RawImageWidget(QtWidgets.QWidget):
         # p.drawPixmap(self.rect(), self.pixmap)
         p.end()
 
+def checkCudaErrors(result):
+    if err_num := result[0]:
+        error_name = cudart.cudaGetErrorName(err_num)[1].decode()
+        raise RuntimeError(f"{error_name}({err_num})")
+    if len(result) == 1:
+        return None
+    elif len(result) == 2:
+        return result[1]
+    else:
+        return result[1:]
 
 class RawImageGLWidget(QtOpenGLWidgets.QOpenGLWidget):
     """
@@ -120,9 +137,12 @@ class RawImageGLWidget(QtOpenGLWidgets.QOpenGLWidget):
         self.uploaded = False
         self.smooth = smooth
         self.opts = None
+        self.gfx_resource = None
 
         self.m_texture = QtOpenGL.QOpenGLTexture(QtOpenGL.QOpenGLTexture.Target.Target2D)
-        self.m_blitter = None
+        self.m_blitter = QtOpenGL.QOpenGLTextureBlitter()
+
+        self.try_cuda = cudart is not None
 
     def setImage(self, img, *args, **kargs):
         """
@@ -144,36 +164,84 @@ class RawImageGLWidget(QtOpenGLWidgets.QOpenGLWidget):
 
         self.glfn = OpenGLHelpers.getFunctions(ctx)
 
-        self.m_blitter = QtOpenGL.QOpenGLTextureBlitter()
         self.m_blitter.create()
 
     def cleanup(self):
         # explicit call of cleanup() is needed during application termination
         self.makeCurrent()
+        if self.gfx_resource is not None:
+            cudart.cudaGraphicsUnregisterResource(self.gfx_resource)
+            self.gfx_resource = None
         self.m_texture.destroy()
+        self.m_blitter.destroy()
         self.uploaded = False
-        if self.m_blitter is not None:
-            self.m_blitter.destroy()
-            self.m_blitter = None
         self.doneCurrent()
 
     def uploadTexture(self):
-        h, w = self.image.shape[:2]
+        rgba = self.image
+        h, w = rgba.shape[:2]
 
         if self.m_texture.isCreated() and (w != self.m_texture.width() or h != self.m_texture.height()):
+            if self.gfx_resource is not None:
+                cudart.cudaGraphicsUnregisterResource(self.gfx_resource)
+                self.gfx_resource = None
             self.m_texture.destroy()
 
         if not self.m_texture.isCreated():
-            self.m_texture.setFormat(QtOpenGL.QOpenGLTexture.TextureFormat.RGBAFormat)
+            self.m_texture.setFormat(QtOpenGL.QOpenGLTexture.TextureFormat.RGBA8_UNorm)
             self.m_texture.setSize(w, h)
             self.m_texture.allocateStorage()
 
         filt = QtOpenGL.QOpenGLTexture.Filter.Linear if self.smooth else QtOpenGL.QOpenGLTexture.Filter.Nearest
         self.m_texture.setMinMagFilters(filt, filt)
         self.m_texture.setWrapMode(QtOpenGL.QOpenGLTexture.WrapMode.ClampToBorder)
-        self.m_texture.setData(QtOpenGL.QOpenGLTexture.PixelFormat.RGBA, QtOpenGL.QOpenGLTexture.PixelType.UInt8, self.image)
 
-        self.uploaded = True
+        # cupy, pytorch and numba support CAI
+        data_on_gpu = hasattr(rgba, '__cuda_array_interface__')
+
+        if data_on_gpu and self.try_cuda and self.gfx_resource is None:
+            try:
+                self.gfx_resource = checkCudaErrors(cudart.cudaGraphicsGLRegisterImage(
+                    self.m_texture.textureId(), self.m_texture.target().value,
+                    cudart.cudaGraphicsRegisterFlags.cudaGraphicsRegisterFlagsWriteDiscard
+                ))
+            except RuntimeError as e:
+                # registration can fail if the OpenGL gpu is not the CUDA gpu,
+                warnings.warn(f"cudaGraphicsGLRegisterImage failed: {e}")
+                # registration failed, don't try to register anymore
+                self.try_cuda = False
+
+        if data_on_gpu and self.gfx_resource is None:
+            # cannot do gpu direct transfer, so transfer back to cpu
+            rgba = rgba.get()   # cupy syntax
+            data_on_gpu = False
+
+        if not data_on_gpu:
+            self.m_texture.setData(
+                QtOpenGL.QOpenGLTexture.PixelFormat.RGBA,
+                QtOpenGL.QOpenGLTexture.PixelType.UInt8,
+                rgba)
+        else:
+            cai = rgba.__cuda_array_interface__
+            device_ptr = cai['data'][0]
+            stream = cai.get('stream')
+
+            checkCudaErrors(cudart.cudaGraphicsMapResources(1, self.gfx_resource, stream))
+            try:
+                cuda_array = checkCudaErrors(cudart.cudaGraphicsSubResourceGetMappedArray(
+                    self.gfx_resource, 0, 0
+                ))
+
+                src_pitch = w * 4 * rgba.itemsize   # assume contiguous
+                checkCudaErrors(cudart.cudaMemcpy2DToArrayAsync(
+                    cuda_array, 0, 0,
+                    device_ptr, src_pitch,
+                    w * 4 * rgba.itemsize, h,
+                    cudart.cudaMemcpyKind.cudaMemcpyDefault,
+                    stream
+                ))
+            finally:
+                cudart.cudaGraphicsUnmapResources(1, self.gfx_resource, stream)
 
     def paintGL(self):
         self.glfn.glClearColor(1, 1, 1, 1)
@@ -188,6 +256,8 @@ class RawImageGLWidget(QtOpenGLWidgets.QOpenGLWidget):
             self.image, _ = fn.makeRGBA(img, *args, **kwds)
 
         if not self.uploaded:
+            # mark as uploaded whether or not it succeeds so that we don't retry and refail
+            self.uploaded = True
             self.uploadTexture()
 
         target = QtGui.QMatrix4x4()
