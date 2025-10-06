@@ -10,6 +10,7 @@ from .ScatterPlotItem import Symbols
 __all__ = ['BoxplotItem']
 
 DEFAULT_BOX_WIDTH = 0.8
+DEFAULT_SYM_SIZE  = 10
 
 def IQR_1p5(data):
     '''
@@ -48,9 +49,9 @@ class BoxplotItem(GraphicsObject):
             data=None,
             locAsX=True,
             width=None,
-            pen=None,
+            pen='y',
             brush=None,
-            medianPen=None,
+            medianPen='r',
             outlier=True,
             symbol=None,
             symbolSize=None,
@@ -72,9 +73,9 @@ class BoxplotItem(GraphicsObject):
                         otherwise as y, default to True.
         `width`:        Width of boxes, default to 0.8.
         `pen`:          The pen for drawing box outlines and whiskers, 
-                        default to yellow.
+                        default to yellow, hide on None.
         `brush`:        The brush for filling boxes.
-        `medianPen`:    The pen for drawing median line, default to red.
+        `medianPen`:    The pen for drawing median line, default to red, hide on None.
         `outlier`:      If True, outlier points will be drew on the plot, 
                         default to True.
         `symbol`:       Symbol of outlier points, can be one of supported symbol
@@ -85,6 +86,14 @@ class BoxplotItem(GraphicsObject):
         `symbolBrush`:  The brush for filling outlier symbols.
         '''
         self.opts.update(opts)
+        # set box width to a tiny number if not draw
+        if (self.opts["pen"] is None and 
+            self.opts["brush"] is None and
+            self.opts["medianPen"] is None):
+            self.opts["width"] = 0.001
+        else:
+            self.opts["width"] = self.opts["width"] or DEFAULT_BOX_WIDTH
+            
         self.picture = None
         self.outlierData = {}
         self.prepareGeometryChange()
@@ -120,10 +129,10 @@ class BoxplotItem(GraphicsObject):
             loc = np.arange(len(data))
         
         locAsX = self.opts["locAsX"]
-        width = DEFAULT_BOX_WIDTH if self.opts["width"] is None else self.opts["width"]
-        pen = fn.mkPen("y" if self.opts["pen"] is None else self.opts["pen"])
+        width = self.opts["width"]
+        pen = fn.mkPen(self.opts["pen"])
         brush = fn.mkBrush(self.opts["brush"])
-        medianPen = fn.mkPen("r" if self.opts["medianPen"] is None else self.opts["medianPen"])
+        medianPen = fn.mkPen(self.opts["medianPen"])
         
         p = QtGui.QPainter(self.picture)
         # for calculating bounding rect
@@ -195,7 +204,7 @@ class BoxplotItem(GraphicsObject):
         else:
             symbol = Symbols["o"]
         symbolPen = fn.mkPen(self.opts["symbolPen"])
-        symbolSize = 10 if self.opts["symbolSize"] is None else self.opts["symbolSize"]
+        symbolSize = DEFAULT_SYM_SIZE if self.opts["symbolSize"] is None else self.opts["symbolSize"]
         symbolBrush = fn.mkBrush(self.opts["symbolBrush"])
 
         p.setPen(symbolPen)
@@ -216,18 +225,12 @@ class BoxplotItem(GraphicsObject):
         bpx = bpy = 0.0
         spx = spy = 0.0
         pxPad = self._pixelPadding
-        symbolPad = 0.7072 * (10 if self.opts["symbolSize"] is None else self.opts["symbolSize"])
+        symbolPad = 0.7072 * (DEFAULT_SYM_SIZE if self.opts["symbolSize"] is None else self.opts["symbolSize"])
         if pxPad > 0 or symbolPad > 0:
             # determine length of pixel in local x, y directions
             px, py = self.pixelVectors()
-            try:
-                px = 0 if px is None else px.length()
-            except OverflowError:
-                px = 0
-            try:
-                py = 0 if py is None else py.length()
-            except OverflowError:
-                py = 0
+            px = px.length() or 0
+            py = py.length() or 0
             # return bounds expanded by pixel size
             if pxPad > 0:
                 bpx = px * pxPad
@@ -279,7 +282,7 @@ class BoxplotItem(GraphicsObject):
             loc = np.arange(len(data))
         loc = np.array(loc)
         minx, maxx = np.min(loc), np.max(loc)
-        width = DEFAULT_BOX_WIDTH if self.opts["width"] is None else self.opts["width"]
+        width = self.opts["width"]
         minx -= width/2
         maxx += width/2
 
