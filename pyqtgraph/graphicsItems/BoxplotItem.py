@@ -9,6 +9,7 @@ from .ScatterPlotItem import Symbols
 
 __all__ = ['BoxplotItem']
 
+DEFAULT_BOX_WIDTH = 0.8
 
 def IQR_1p5(data):
     '''
@@ -119,7 +120,7 @@ class BoxplotItem(GraphicsObject):
             loc = np.arange(len(data))
         
         locAsX = self.opts["locAsX"]
-        width = 0.8 if self.opts["width"] is None else self.opts["width"]
+        width = DEFAULT_BOX_WIDTH if self.opts["width"] is None else self.opts["width"]
         pen = fn.mkPen("y" if self.opts["pen"] is None else self.opts["pen"])
         brush = fn.mkBrush(self.opts["brush"])
         medianPen = fn.mkPen("r" if self.opts["medianPen"] is None else self.opts["medianPen"])
@@ -256,3 +257,45 @@ class BoxplotItem(GraphicsObject):
                     rect |= QRectF(out_min-spx, pos_min-spy, out_max-out_min+2*spx, pos_max-pos_min+2*spy)
         return rect
 
+    def calculateDataBounds(self):
+        loc, data = self.opts["loc"], self.opts["data"]
+        if data is None:
+            return QRectF()
+
+        lst_lower = []
+        lst_upper = []
+        for dataset in data:
+            dataset = np.asarray(dataset)
+            if self.opts["outlier"]:
+                lower, upper = np.min(dataset), np.max(dataset)
+            else:
+                lower, upper = self.whiskerFunc(dataset)
+            lst_lower.append(lower)
+            lst_upper.append(upper)
+        miny = np.min(lst_lower)
+        maxy = np.max(lst_upper)
+
+        if loc is None:
+            loc = np.arange(len(data))
+        loc = np.array(loc)
+        minx, maxx = np.min(loc), np.max(loc)
+        width = DEFAULT_BOX_WIDTH if self.opts["width"] is None else self.opts["width"]
+        minx -= width/2
+        maxx += width/2
+
+        if not self.opts["locAsX"]:
+            minx, maxx, miny, maxy = miny, maxy, minx, maxx
+
+        return QRectF(QPointF(minx, miny), QPointF(maxx, maxy))
+
+    def dataBounds(self, ax, frac=1.0, orthoRange=None):
+        br = self.calculateDataBounds()
+        if ax == 0:
+            return [br.left(), br.right()]
+        else:
+            return [br.top(), br.bottom()]
+
+    def pixelPadding(self):
+        if self.picture is None:
+            self.generatePicture()
+        return self._pixelPadding
