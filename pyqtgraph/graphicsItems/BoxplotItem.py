@@ -239,9 +239,11 @@ class BoxplotItem(GraphicsObject):
         # bounding rect of outliers
         if self.opts["outlier"]:
             if self.opts["locAsX"]:
-                rect = rect.adjusted(0, -spy, 0, spy)
+                ydelta = spy - bpy if spy > bpy else 0
+                rect = rect.adjusted(0, -ydelta, 0, ydelta)
             else:
-                rect = rect.adjusted(-spx, 0, spx, 0)
+                xdelta = spx - bpx if spx > bpx else 0
+                rect = rect.adjusted(-xdelta, 0, xdelta, 0)
         return rect
 
     def calculateDataBounds(self):
