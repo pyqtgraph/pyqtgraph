@@ -64,26 +64,32 @@ class BoxplotItem(GraphicsObject):
     def setData(self, **opts):
         '''
         Keyword Arguments
-        
-        `loc`:          Optional, used as coordinates for placing boxes, its length
-                        must be the same as that of `data`.
-        `data`:         Numpy 2D array or a list of arraylike object, user
-                        should ensure all value is not NAN.
-        `locAsX`:       If True, `loc` is regarded as x coordinates, 
-                        otherwise as y, default to True.
-        `width`:        Width of boxes, default to 0.8.
-        `pen`:          The pen for drawing box outlines and whiskers, 
-                        default to yellow, hide on None.
-        `brush`:        The brush for filling boxes.
-        `medianPen`:    The pen for drawing median line, default to red, hide on None.
-        `outlier`:      If True, outlier points will be drew on the plot, 
-                        default to True.
-        `symbol`:       Symbol of outlier points, can be one of supported symbol
-                        used in `ScatterPlotItem` or a custom `QPainterPath` symbol,
-                        default to 'o'.
-        `symbolSize`:   The size of outlier symbols, default to 10.
-        `symbolPen`:    The pen for drawing outlines of outlier symbols.
-        `symbolBrush`:  The brush for filling outlier symbols.
+        -----------------
+
+        `loc`:          (Optional) array-like. Coordinates for placing boxes. Its length must be the same as that of `data`.
+
+        `data`:         Array-like of array-like. Numpy 2D array or list of arrays. User should ensure all values are not NaN.
+
+        `locAsX`:       If True, `loc` is regarded as x-coordinates, otherwise y. Default is True.
+
+        `width`:        Width of boxes. Default is 0.8.
+
+        `pen`:          Pen for drawing box outlines and whiskers. Default is yellow. Hidden if None.
+
+        `brush`:        Brush for filling boxes. Default is None.
+
+        `medianPen`:    Pen for drawing median line. Default is red. Hidden if None.
+
+        `outlier`:      If True, outlier points will be drawn on the plot. Default is True.
+
+        `symbol`:       Symbol for outlier points, can be any supported symbol used in `ScatterPlotItem`, 
+                        or a custom `QPainterPath`. Default is `'o'`.
+
+        `symbolSize`:   Size of outlier symbols. Default is 10.
+
+        `symbolPen`:    Pen for drawing outlines of outlier symbols.
+
+        `symbolBrush`:  Brush for filling outlier symbols.
         '''
         self.opts.update(opts)
         # set box width to a tiny number if not draw
