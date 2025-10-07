@@ -93,7 +93,17 @@ class BoxplotItem(GraphicsObject):
             self.opts["width"] = 0.001
         else:
             self.opts["width"] = self.opts["width"] or DEFAULT_BOX_WIDTH
-            
+        
+        # prepare pen and brush object
+        self._pen = fn.mkPen(self.opts["pen"])
+        self._brush = fn.mkBrush(self.opts["brush"])
+        self._medianPen = fn.mkPen(self.opts["medianPen"])
+        self._symbolPen = fn.mkPen(self.opts["symbolPen"])
+        self._symbolBrush = fn.mkBrush(self.opts["symbolBrush"])
+        
+        self._dataBoundRect = None
+        self._pixelPadding = self._pen.widthF() * 0.7072 if self._pen.isCosmetic() else 0
+
         self.picture = None
         self.outlierData = {}
         self.prepareGeometryChange()
@@ -130,15 +140,8 @@ class BoxplotItem(GraphicsObject):
         
         locAsX = self.opts["locAsX"]
         width = self.opts["width"]
-        pen = fn.mkPen(self.opts["pen"])
-        brush = fn.mkBrush(self.opts["brush"])
-        medianPen = fn.mkPen(self.opts["medianPen"])
         
         p = QtGui.QPainter(self.picture)
-        # for calculating bounding rect
-        pw = pen.widthF() * 0.7072
-        boxBounds = QRectF()
-        pixelPadding = 0
         for pos, dataset in zip(loc, data):
             dataset = np.asarray(dataset)
             p75, median, p25 = np.percentile(dataset, [75, 50, 25])
@@ -148,7 +151,7 @@ class BoxplotItem(GraphicsObject):
                 mask = np.logical_or(dataset<lower, dataset>upper)
                 self.outlierData[pos] = dataset[mask]
             
-            p.setPen(pen)
+            p.setPen(self._pen)
             # whiskers
             if locAsX:
                 p.drawLine(QPointF(pos-width/4, upper), QPointF(pos+width/4, upper))
@@ -161,31 +164,18 @@ class BoxplotItem(GraphicsObject):
                 p.drawLine(QPointF(upper, pos), QPointF(p75, pos))
                 p.drawLine(QPointF(lower, pos), QPointF(p25, pos))
             # box
-            p.setBrush(brush)
+            p.setBrush(self._brush)
             if locAsX:
                 p.drawRect(QRectF(pos-width/2, p25, width, p75-p25))
             else:
                 p.drawRect(QRectF(p25, pos-width/2, p75-p25, width))
             # median
-            p.setPen(medianPen)
+            p.setPen(self._medianPen)
             if locAsX:
                 p.drawLine(QPointF(pos-width/2, median), QPointF(pos+width/2, median))
             else:
                 p.drawLine(QPointF(median, pos-width/2), QPointF(median, pos+width/2))
-            # bounding rect
-            if locAsX:
-                rect = QRectF(pos-width/2, lower, width, upper-lower)
-            else:
-                rect = QRectF(lower, pos-width/2, upper-lower, width)
-            if pen.isCosmetic():
-                boxBounds |= rect
-                pixelPadding = max(pixelPadding, pw)
-            else:
-                boxBounds |= rect.adjusted(-pw, -pw, pw, pw)
-            
         p.end()
-        self._boxBounds = boxBounds
-        self._pixelPadding = pixelPadding
             
     def paint(self, p, *args):
         if self.picture is None:
@@ -203,12 +193,10 @@ class BoxplotItem(GraphicsObject):
             symbol = s
         else:
             symbol = Symbols["o"]
-        symbolPen = fn.mkPen(self.opts["symbolPen"])
+        
         symbolSize = DEFAULT_SYM_SIZE if self.opts["symbolSize"] is None else self.opts["symbolSize"]
-        symbolBrush = fn.mkBrush(self.opts["symbolBrush"])
-
-        p.setPen(symbolPen)
-        p.setBrush(symbolBrush)
+        p.setPen(self._symbolPen)
+        p.setBrush(self._symbolBrush)
         tr = p.transform()
         for pos, outliers in self.outlierData.items():
             for o in outliers:
@@ -219,8 +207,9 @@ class BoxplotItem(GraphicsObject):
                 p.drawPath(symbol)
                     
     def boundingRect(self):
-        if self.picture is None:
-            self.generatePicture()
+        xmn, xmx = self.dataBounds(ax=0)
+        ymn, ymx = self.dataBounds(ax=1)
+        rect = QRectF(xmn, ymn, xmx-xmn, ymx-ymn)
         
         bpx = bpy = 0.0
         spx = spy = 0.0
@@ -240,24 +229,13 @@ class BoxplotItem(GraphicsObject):
                 spy = py * symbolPad
         
         # bounding rect of boxes
-        rect = self._boxBounds.adjusted(-bpx, -bpy, bpx, bpy)
+        rect = rect.adjusted(-bpx, -bpy, bpx, bpy)
         # bounding rect of outliers
         if self.opts["outlier"]:
-            pos_min = min(self.outlierData.keys())
-            pos_max = max(self.outlierData.keys())
-            out_min = None
-            out_max = None
-            for v in self.outlierData.values():
-                if len(v) == 0:
-                    continue
-                out_min = v.min() if out_min is None else min(out_min, v.min())
-                out_max = v.max() if out_max is None else max(out_max, v.max())
-            
-            if out_min is not None and out_max is not None:
-                if self.opts["locAsX"]:
-                    rect |= QRectF(pos_min-spx, out_min-spy, pos_max-pos_min+2*spx, out_max-out_min+2*spy)
-                else:
-                    rect |= QRectF(out_min-spx, pos_min-spy, out_max-out_min+2*spx, pos_max-pos_min+2*spy)
+            if self.opts["locAsX"]:
+                rect = rect.adjusted(0, -spy, 0, spy)
+            else:
+                rect = rect.adjusted(-spx, 0, spx, 0)
         return rect
 
     def calculateDataBounds(self):
@@ -292,13 +270,13 @@ class BoxplotItem(GraphicsObject):
         return QRectF(QPointF(minx, miny), QPointF(maxx, maxy))
 
     def dataBounds(self, ax, frac=1.0, orthoRange=None):
-        br = self.calculateDataBounds()
+        if self._dataBoundRect is None:
+            self._dataBoundRect = self.calculateDataBounds()
+            
         if ax == 0:
-            return [br.left(), br.right()]
+            return [self._dataBoundRect.left(), self._dataBoundRect.right()]
         else:
-            return [br.top(), br.bottom()]
+            return [self._dataBoundRect.top(), self._dataBoundRect.bottom()]
 
     def pixelPadding(self):
-        if self.picture is None:
-            self.generatePicture()
         return self._pixelPadding
