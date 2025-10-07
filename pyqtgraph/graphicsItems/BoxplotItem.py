@@ -108,7 +108,8 @@ class BoxplotItem(GraphicsObject):
         self._symbolBrush = fn.mkBrush(self.opts["symbolBrush"])
         
         self._dataBoundRect = None
-        self._pixelPadding = self._pen.widthF() * 0.7072 if self._pen.isCosmetic() else 0
+        self._penWidth = self._pen.widthF() if self._pen.isCosmetic() else 0
+        self._symbolSize = self.opts["symbolSize"] or DEFAULT_SYM_SIZE
 
         self.picture = None
         self.outlierData = {}
@@ -218,10 +219,8 @@ class BoxplotItem(GraphicsObject):
         rect = QRectF(xmn, ymn, xmx-xmn, ymx-ymn)
         
         bpx = bpy = 0.0
-        spx = spy = 0.0
-        pxPad = self._pixelPadding
-        symbolPad = 0.7072 * (DEFAULT_SYM_SIZE if self.opts["symbolSize"] is None else self.opts["symbolSize"])
-        if pxPad > 0 or symbolPad > 0:
+        pxPad = self.pixelPadding()
+        if pxPad > 0:
             # determine length of pixel in local x, y directions
             px, py = self.pixelVectors()
             px = px.length() or 0
@@ -230,20 +229,9 @@ class BoxplotItem(GraphicsObject):
             if pxPad > 0:
                 bpx = px * pxPad
                 bpy = py * pxPad
-            if symbolPad > 0:
-                spx = px * symbolPad
-                spy = py * symbolPad
         
         # bounding rect of boxes
         rect = rect.adjusted(-bpx, -bpy, bpx, bpy)
-        # bounding rect of outliers
-        if self.opts["outlier"]:
-            if self.opts["locAsX"]:
-                ydelta = spy - bpy if spy > bpy else 0
-                rect = rect.adjusted(0, -ydelta, 0, ydelta)
-            else:
-                xdelta = spx - bpx if spx > bpx else 0
-                rect = rect.adjusted(-xdelta, 0, xdelta, 0)
         return rect
 
     def calculateDataBounds(self):
@@ -287,4 +275,6 @@ class BoxplotItem(GraphicsObject):
             return [self._dataBoundRect.top(), self._dataBoundRect.bottom()]
 
     def pixelPadding(self):
-        return self._pixelPadding
+        symPadding = 0.7072 * self._symbolSize if self.opts["outlier"] else 0
+        penPadding = 0.5 * self._penWidth
+        return max(symPadding, penPadding)
