@@ -217,20 +217,19 @@ class BoxplotItem(GraphicsObject):
         ymn, ymx = self.dataBounds(ax=1)
         rect = QRectF(xmn, ymn, xmx-xmn, ymx-ymn)
         
-        bpx = bpy = 0.0
+        px = py = 0
         pxPad = self.pixelPadding()
         if pxPad > 0:
             # determine length of pixel in local x, y directions
             px, py = self.pixelVectors()
-            px = px.length() or 0
-            py = py.length() or 0
+            px = 0 if px is None else px.length()
+            py = 0 if py is None else py.length()
             # return bounds expanded by pixel size
-            if pxPad > 0:
-                bpx = px * pxPad
-                bpy = py * pxPad
+            px *= pxPad
+            py *= pxPad
         
         # bounding rect of boxes
-        rect = rect.adjusted(-bpx, -bpy, bpx, bpy)
+        rect = rect.adjusted(-px, -py, px, py)
         return rect
 
     def calculateDataBounds(self):
