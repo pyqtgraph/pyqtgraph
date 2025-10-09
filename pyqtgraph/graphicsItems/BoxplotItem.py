@@ -201,7 +201,6 @@ class BoxplotItem(GraphicsObject):
         else:
             symbol = Symbols["o"]
         
-        symbolSize = DEFAULT_SYM_SIZE if self.opts["symbolSize"] is None else self.opts["symbolSize"]
         p.setPen(self._symbolPen)
         p.setBrush(self._symbolBrush)
         tr = p.transform()
@@ -210,7 +209,7 @@ class BoxplotItem(GraphicsObject):
                 x, y = (pos, o) if self.opts["locAsX"] else (o, pos)
                 p.resetTransform()
                 p.translate(*tr.map(x, y))
-                p.scale(symbolSize, symbolSize)                
+                p.scale(self._symbolSize, self._symbolSize)                
                 p.drawPath(symbol)
                     
     def boundingRect(self):
