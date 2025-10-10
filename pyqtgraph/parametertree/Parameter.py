@@ -311,19 +311,14 @@ class Parameter(QtCore.QObject):
         Set the value of this Parameter; return the actual value that was set.
         (this may be different from the value that was requested)
         """
-        try:
-            if blockSignal is not None:
-                self.sigValueChanged.disconnect(blockSignal)
-            value = self._interpretValue(value)
-            if fn.eq(self.opts.get('value', None), value):
-                return value
-            self._modifiedSinceReset = True
-            self.opts['value'] = value
+        value = self._interpretValue(value)
+        if fn.eq(self.opts.get('value', None), value):
+            return value
+        self._modifiedSinceReset = True
+        self.opts['value'] = value
+        if not blockSignal:
             self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
-        finally:
-            if blockSignal is not None:
-                self.sigValueChanged.connect(blockSignal)
-            
+
         return self.opts['value']
 
     def _interpretValue(self, v):
