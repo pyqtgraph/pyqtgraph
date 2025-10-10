@@ -92,13 +92,15 @@ class BoxplotItem(GraphicsObject):
         `symbolBrush`:  Brush for filling outlier symbols.
         '''
         self.opts.update(opts)
-        # set box width to a tiny number if not draw
-        if (self.opts["pen"] is None and 
-            self.opts["brush"] is None and
-            self.opts["medianPen"] is None):
-            self.opts["width"] = 0.001
-        else:
-            self.opts["width"] = self.opts["width"] or DEFAULT_BOX_WIDTH
+
+        if self.opts["width"] is None:
+            self.opts["width"] = DEFAULT_BOX_WIDTH
+
+        if self.opts["pen"] is None and \
+           self.opts["brush"] is None and \
+           self.opts["medianPen"] is None:
+            # set width to 0 when box is not drew
+            self.opts["width"] = 0
         
         # prepare pen and brush object
         self._pen = fn.mkPen(self.opts["pen"])
@@ -157,6 +159,10 @@ class BoxplotItem(GraphicsObject):
             if self.opts["outlier"]:
                 mask = np.logical_or(dataset<lower, dataset>upper)
                 self.outlierData[pos] = dataset[mask]
+            
+            # box width to 0 means hide box lines
+            if width == 0:
+                continue
             
             p.setPen(self._pen)
             # whiskers
