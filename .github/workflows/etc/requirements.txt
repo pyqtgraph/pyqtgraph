@@ -15,7 +15,7 @@ pyopengl==3.1.9
 
 # supplimental tools
 matplotlib==3.10.6
-h5py==3.14.0
+h5py==3.15.0
 
 # testing
 pytest==8.4.2
