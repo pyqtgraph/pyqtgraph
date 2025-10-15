@@ -45,7 +45,7 @@ class Dock(QtWidgets.QWidget):
         self.dockdrop.raiseOverlay()
         self.hStyle = """
         Dock > QWidget {
-            border: 1px solid #000;
+            border: 1px solid #ddd;
             border-radius: 5px;
             border-top-left-radius: 0px;
             border-top-right-radius: 0px;
@@ -53,7 +53,7 @@ class Dock(QtWidgets.QWidget):
         }"""
         self.vStyle = """
         Dock > QWidget {
-            border: 1px solid #000;
+            border: 1px solid #ddd;
             border-radius: 5px;
             border-top-left-radius: 0px;
             border-bottom-left-radius: 0px;
