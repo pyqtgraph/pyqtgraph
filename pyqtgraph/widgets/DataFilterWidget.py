@@ -130,7 +130,7 @@ class RangeFilterItem(ptree.types.SimpleParameter):
         self.fieldName = name
         units = opts.get('units', '')
         self.units = units
-        self.unitsPower = opts.get('unitsPower', 1)
+        self.unitPower = opts.get('unitPower', 1)
         ptree.types.SimpleParameter.__init__(self, 
             name=name, autoIncrementName=True, type='bool', value=True, removable=True, renamable=True, 
             children=[
@@ -145,7 +145,7 @@ class RangeFilterItem(ptree.types.SimpleParameter):
         return mask
     
     def describe(self):
-        return "%s < %s < %s" % (fn.siFormat(self['Min'], suffix=self.units, power=self.unitsPower), self.fieldName, fn.siFormat(self['Max'], suffix=self.units, power=self.unitsPower))
+        return "%s < %s < %s" % (fn.siFormat(self['Min'], suffix=self.units, power=self.unitPower), self.fieldName, fn.siFormat(self['Max'], suffix=self.units, power=self.unitPower))
 
     def updateFilter(self, opts):
         pass
