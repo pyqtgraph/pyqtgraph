@@ -94,7 +94,8 @@ def siScale(x, minVal=1e-25, allowUnicode=True, power:int|float=1):
     """
     Return the recommended scale factor and SI prefix string for x.
 
-    Parameters:
+    Parameters
+    ----------
     x : float
         The value to be scaled.
     minVal : float, optional
@@ -105,18 +106,19 @@ def siScale(x, minVal=1e-25, allowUnicode=True, power:int|float=1):
         The power to which the units are raised. For example, if units='m²', the
         power should be 2. This ensures correct scaling of the prefix in 
         nonlinear units. Supports positive, negative and non-integral powers. 
-            
-    Returns:
-    tuple (scale, prefix)
-        scale : float
-            The scale factor to apply to x.
-        prefix : str
-            The SI prefix string.
-    
-    Example::
-    
-        siScale(0.0001)   # returns (1e6, 'μ')
-        # This indicates that the number 0.0001 is best represented as 0.0001 * 1e6 = 100 μUnits
+
+    Returns
+    -------
+    scale : float
+        The scale factor to apply to x.
+    prefix : str
+        The SI prefix string.
+
+    Examples
+    --------
+    >>> siScale(0.0001)
+    (1000000.0, 'μ')
+    # This indicates that the number 0.0001 is best represented as 0.0001 * 1e6 = 100 μUnits
     """
     
     if isinstance(x, decimal.Decimal):
@@ -152,38 +154,45 @@ def siScale(x, minVal=1e-25, allowUnicode=True, power:int|float=1):
 
 def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, allowUnicode=True, power = 1):
     """
-    Return the number x formatted in engineering notation with SI prefix.
-    Parameters:
+    Format a number in engineering notation with SI prefix.
+
+    Parameters
+    ----------
     x : float
         The value to be formatted.
     precision : int, optional
-        The number of decimal places to include in the formatted output. Default is 3.
+        Number of decimal places to include in the formatted output. Default is 3.
     suffix : str, optional
-        An optional suffix to append to the formatted output.
+        Suffix to append to the formatted output.
     space : bool, optional
         Whether to include a space between the SI prefix and the value. Default is True.
     error : float, optional
-        An optional error value to include in the formatted output.
+        Error value to include in the formatted output.
     minVal : float, optional
-        The minimum value considered for scaling. Default is 1e-25.
+        Minimum value considered for scaling. Default is 1e-25.
     allowUnicode : bool, optional
         Whether to allow Unicode SI prefixes. Default is True.
     power : int or float, optional
-        The power to which the units are raised. For example, if suffix='m²', the
-        power should be 2. This ensures correct scaling when the units are nonlinear.
-        Supports positive, negative and non-integral powers.
-        Note: The power only affects the scaling, not the suffix.
+        Power to which the units are raised. For example, if suffix='m²', the power should be 2.
+        This ensures correct scaling when the units are nonlinear. Supports positive, negative,
+        and non-integral powers. Note: The power only affects the scaling, not the suffix.
 
-    Example::
-        siFormat(0.0001, suffix='V')  # returns "100 μV"
+    Returns
+    -------
+    str
+        The formatted string in engineering notation with SI prefix.
+
+    Examples
+    --------
+    >>> siFormat(0.0001, suffix='V')
+    '100 μV'
     """
     
     if space is True:
         space = ' '
     if space is False:
         space = ''
-        
-    
+            
     (p, pref) = siScale(x, minVal, allowUnicode, power)
     if not (len(pref) > 0 and pref[0] == 'e'):
         pref = space + pref
@@ -203,9 +212,8 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
 def siParse(s, regex=FLOAT_REGEX, suffix=None):
     """Convert a value written in SI notation to a tuple (number, si_prefix, suffix).
 
-    Example::
-
-        siParse('100 µV")  # returns ('100', 'µ', 'V')
+    Example:
+        siParse('100 µV')  # returns ('100', 'µ', 'V')
 
     Note that in the above example, the µ symbol is the "micro sign" (UTF-8
     0xC2B5), as opposed to the Greek letter mu (UTF-8 0xCEBC).
