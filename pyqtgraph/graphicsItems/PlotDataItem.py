@@ -633,7 +633,7 @@ class PlotDataItem(GraphicsObject):
         if 'clickButtons' in kwargs:
             self.opts['clickButtons'] = kwargs['clickButtons']
         self.setCurveClickable(kwargs.get('clickable', False))
-        self.setScatterClickable(kwargs.get('clickable', False))
+        self.setScatterClickable(kwargs.get('clickable', True))
         self.setData(*args, **kwargs)
     
     # Fix "NotImplementedError: QGraphicsObject.paint() is abstract and must be overridden"
