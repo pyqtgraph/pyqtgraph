@@ -690,7 +690,7 @@ class PlotDataItem(GraphicsObject):
         bool
             Return if the curve is set to be clickable.
         """
-        return self.curve.clickable
+        return self.curve.opts["clickable"]
 
     def setScatterClickable(self, state: bool):
         """
