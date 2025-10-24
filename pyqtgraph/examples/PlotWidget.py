@@ -21,7 +21,7 @@ pw = pg.PlotWidget(name='Plot1')  ## giving the plots names allows us to link th
 l.addWidget(pw)
 pw2 = pg.PlotWidget(name='Plot2')
 l.addWidget(pw2)
-pw3 = pg.PlotWidget()
+pw3 = pg.PlotWidget(name='Plot3')
 l.addWidget(pw3)
 
 mw.show()
@@ -66,27 +66,96 @@ for i in range(0, 5):
         yd, xd = rand(10000)
         pw2.plot(y=yd*(j+1), x=xd, params={'iter': i, 'val': j})
 
-## Test large numbers
-curve = pw3.plot(np.random.normal(size=100)*1e0, clickable=True)
-curve.curve.setClickable(True)
-curve.setPen('w')  ## white pen
-curve.setShadowPen(pg.mkPen((70,70,30), width=6, cosmetic=True))
+## Demonstrate multi-button click support with three different examples on pw3
+pw3.setTitle("Multi-button Click Examples")
 
-def clicked(curve,ev):
+n = 100  # Same length for all plots
+
+## Example 1: Scatter plot only with left/right buttons
+scatter1 = pw3.plot(
+    x=np.arange(n),
+    y=np.random.normal(size=n) * 0.5 + 5,
+    pen=None,
+    symbol='o',
+    symbolSize=8,
+    symbolBrush=(100, 100, 255, 200),
+    name='Scatter (L/R)',
+    clickable=True,
+    clickButtons=QtCore.Qt.MouseButton.LeftButton | QtCore.Qt.MouseButton.RightButton
+)
+
+def scatter1_clicked(item, ev):
     if ev.button() == QtCore.Qt.MouseButton.LeftButton:
-        print("curve left clicked")
-    elif ev.button() == QtCore.Qt.MouseButton.MiddleButton:
-        print("curve middle clicked")        
+        print("Scatter 1: Left button clicked")
     elif ev.button() == QtCore.Qt.MouseButton.RightButton:
-        print("curve right clicked")
+        print("Scatter 1: Right button clicked")
 
-curve.sigClicked.connect(clicked)
+def scatter1_points_clicked(item, points, ev):
+    button_name = "Left" if ev.button() == QtCore.Qt.MouseButton.LeftButton else "Right"
+    print(f"Scatter 1: {button_name} clicked on {len(points)} point(s) at x={points[0].pos().x():.2f}")
 
-lr = pg.LinearRegionItem([1, 30], bounds=[0,100], movable=True)
+scatter1.sigClicked.connect(scatter1_clicked)
+scatter1.sigPointsClicked.connect(scatter1_points_clicked)
+
+## Example 2: Curve only with left button
+curve_only = pw3.plot(
+    x=np.arange(n),
+    y=np.sin(np.arange(n) * 0.1),
+    pen=pg.mkPen('w', width=2),
+    name='Curve (L only)',
+    clickable=True,
+    clickButtons=QtCore.Qt.MouseButton.LeftButton
+)
+curve_only.setShadowPen(pg.mkPen((70,70,30), width=6, cosmetic=True))
+
+def curve_clicked(item, ev):
+    print(f"Curve: Left clicked at x={ev.pos().x():.2f}")
+
+curve_only.sigClicked.connect(curve_clicked)
+
+## Example 3: Combined scatter + curve with left/right/middle buttons
+combined = pw3.plot(
+    x=np.arange(n),
+    y=np.cos(np.arange(n) * 0.15) - 3 + np.random.normal(size=n) * 0.2,
+    pen=pg.mkPen('c', width=2),
+    symbol='t',
+    symbolSize=10,
+    symbolBrush=(255, 100, 100, 150),
+    name='Combined (L/R/M)',
+    clickable=True,
+    clickButtons=QtCore.Qt.MouseButton.LeftButton |
+                 QtCore.Qt.MouseButton.RightButton |
+                 QtCore.Qt.MouseButton.MiddleButton
+)
+
+def combined_clicked(item, ev):
+    button_name = {
+        QtCore.Qt.MouseButton.LeftButton: "Left",
+        QtCore.Qt.MouseButton.RightButton: "Right",
+        QtCore.Qt.MouseButton.MiddleButton: "Middle"
+    }.get(ev.button(), "Unknown")
+    print(f"Combined: {button_name} button clicked (curve or scatter)")
+
+def combined_points_clicked(item, points, ev):
+    button_name = {
+        QtCore.Qt.MouseButton.LeftButton: "Left",
+        QtCore.Qt.MouseButton.RightButton: "Right",
+        QtCore.Qt.MouseButton.MiddleButton: "Middle"
+    }.get(ev.button(), "Unknown")
+    print(f"Combined: {button_name} clicked on scatter point at x={points[0].pos().x():.2f}, y={points[0].pos().y():.2f}")
+
+combined.sigClicked.connect(combined_clicked)
+combined.sigPointsClicked.connect(combined_points_clicked)
+
+pw3.addLegend()
+pw3.setXRange(-5, 105)
+pw3.setYRange(-5, 7)
+
+lr = pg.LinearRegionItem([30, 70], bounds=[0, 100], movable=True)
 pw3.addItem(lr)
-line = pg.InfiniteLine(angle=90, movable=True)
+line = pg.InfiniteLine(angle=90, movable=True, pos=50)
 pw3.addItem(line)
-line.setBounds([0,200])
+line.setBounds([0, 100])
 
 if __name__ == '__main__':
     pg.exec()
