@@ -243,6 +243,8 @@ class PlotCurveItem(GraphicsObject):
         parent          The parent GraphicsObject (optional)
         clickable       If `True`, the item will emit ``sigClicked`` when it is
                         clicked on. Defaults to `False`.
+        clickButtons   A Qt.MouseButton or combination specifying which mouse buttons
+                        will trigger the ``sigClicked`` signal when the item is clicked.
         ==============  =======================================================
         """
         GraphicsObject.__init__(self, kargs.get('parent', None))
@@ -253,23 +255,23 @@ class PlotCurveItem(GraphicsObject):
 
         self.metaData = {}
         self.opts = {
-            'shadowPen': None,
-            'fillLevel': None,
-            'fillOutline': False,
-            'brush': None,
-            'stepMode': None,
-            'name': None,
-            'antialias': getConfigOption('antialias'),
-            'connect': 'all',
-            'mouseWidth': 8, # width of shape responding to mouse click
-            'compositionMode': None,
-            'skipFiniteCheck': False,
-            'segmentedLineMode': getConfigOption('segmentedLineMode'),
+            "shadowPen": None,
+            "fillLevel": None,
+            "fillOutline": False,
+            "brush": None,
+            "stepMode": None,
+            "name": None,
+            "antialias": getConfigOption("antialias"),
+            "connect": "all",
+            "mouseWidth": 8,  # width of shape responding to mouse click
+            "compositionMode": None,
+            "skipFiniteCheck": False,
+            "segmentedLineMode": getConfigOption("segmentedLineMode"),
+            "clickable": False,
+            "clickButtons": QtCore.Qt.MouseButton.LeftButton,
         }
         if 'pen' not in kargs:
             self.opts['pen'] = fn.mkPen('w')
-        self.setClickable(kargs.get('clickable', False))
-        self.clickButtons = kargs.get('clickButtons', QtCore.Qt.MouseButton.LeftButton)
         self.setData(*args, **kargs)
         self.glstate = None
 
@@ -288,7 +290,7 @@ class PlotCurveItem(GraphicsObject):
         The `width` argument specifies the width in pixels orthogonal to the
         curve that will respond to a mouse click.
         """
-        self.clickable = s
+        self.opts["clickable"] = s
         if width is not None:
             self.opts['mouseWidth'] = width
             self._mouseShape = None
@@ -405,12 +407,13 @@ class PlotCurveItem(GraphicsObject):
     def pixelPadding(self):
         pen = self.opts['pen']
         spen = self.opts['shadowPen']
+        clickable = self.opts["clickable"]
         w = 0
         if  pen is not None and pen.isCosmetic() and pen.style() != QtCore.Qt.PenStyle.NoPen:
             w += pen.widthF()*0.7072
         if spen is not None and spen.isCosmetic() and spen.style() != QtCore.Qt.PenStyle.NoPen:
             w = max(w, spen.widthF()*0.7072)
-        if self.clickable:
+        if clickable:
             w = max(w, self.opts['mouseWidth']//2 + 1)
         return w
 
@@ -565,18 +568,18 @@ class PlotCurveItem(GraphicsObject):
                         associated to the mid-points between the boundaries of
                         each step. This is commonly used when drawing
                         histograms. Note that in this case, ``len(x) == len(y) + 1``
-                        
+
                         If 'left' or 'right', the step is drawn assuming that
                         the `y` value is associated to the left or right boundary,
                         respectively. In this case ``len(x) == len(y)``
                         If not passed or an empty string or `None` is passed, the
                         step mode is not enabled.
         connect         Argument specifying how vertexes should be connected
-                        by line segments. 
-                        
-                            | 'all' (default) indicates full connection. 
+                        by line segments.
+
+                            | 'all' (default) indicates full connection.
                             | 'pairs' draws one separate line segment for each two points given.
-                            | 'finite' omits segments attached to `NaN` or `Inf` values. 
+                            | 'finite' omits segments attached to `NaN` or `Inf` values.
                             | For any other connectivity, specify an array of boolean values.
         compositionMode See :func:`setCompositionMode
                         <pyqtgraph.PlotCurveItem.setCompositionMode>`.
@@ -585,15 +588,21 @@ class PlotCurveItem(GraphicsObject):
                         `NaN` values.  If set to `True`, and `NaN` values exist, the
                         data may not be displayed or the plot may take a
                         significant performance hit.
+        name            (str) Name of this plot curve. Used by
+                        :class:`LegendItem <pyqtgraph.LegendItem>`.
+        clickable      (bool) If `True`, the item will emit ``sigClicked`` when it is
+                        clicked on. Defaults to `False`.
+        clickButtons   (Qt.MouseButton) Specifies which mouse buttons will
+                        trigger click events. Defaults to `Qt.LeftButton`.
         =============== =================================================================
 
         If non-keyword arguments are used, they will be interpreted as
         ``setData(y)`` for a single argument and ``setData(x, y)`` for two
         arguments.
-        
+
         **Notes on performance:**
-        
-        Line widths greater than 1 pixel affect the performance as discussed in 
+
+        Line widths greater than 1 pixel affect the performance as discussed in
         the documentation of :class:`PlotDataItem <pyqtgraph.PlotDataItem>`.
         """
         self.updateData(*args, **kargs)
@@ -678,8 +687,10 @@ class PlotCurveItem(GraphicsObject):
             self.opts['antialias'] = kargs['antialias']
         if 'skipFiniteCheck' in kargs:
             self.opts['skipFiniteCheck'] = kargs['skipFiniteCheck']
+        if 'clickable' in kargs:
+            self.setClickable(kargs['clickable'])
         if 'clickButtons' in kargs:
-            self.clickButtons = kargs['clickButtons']
+            self.opts["clickButtons"] = kargs["clickButtons"]
 
         profiler('set')
         self.update()
@@ -1267,9 +1278,9 @@ class PlotCurveItem(GraphicsObject):
         return self._mouseShape
 
     def mouseClickEvent(self, ev):
-        if not self.clickable:
+        if not self.opts["clickable"]:
             return
-        if not (ev.button() & self.clickButtons):
+        if not (ev.button() & self.opts["clickButtons"]):
             return
         if self.mouseShape().contains(ev.pos()):
             ev.accept()
