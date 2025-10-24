@@ -404,6 +404,8 @@ class ScatterPlotItem(GraphicsObject):
             'brush': fn.mkBrush(100, 100, 150),
             'hoverable': False,
             'tip': 'x: {x:.3g}\ny: {y:.3g}\ndata={data}'.format,
+            'clickable': True,
+            'clickButtons': QtCore.Qt.MouseButton.LeftButton,
         }
         self.opts.update(
             {'hover' + opt.title(): _DEFAULT_STYLE[opt] for opt in ['symbol', 'size', 'pen', 'brush']}
@@ -567,6 +569,10 @@ class ScatterPlotItem(GraphicsObject):
             self.opts['tip'] = kargs['tip']
         if 'useCache' in kargs:
             self.opts['useCache'] = kargs['useCache']
+        if 'clickable' in kargs:
+            self.opts['clickable'] = bool(kargs['clickable'])
+        if 'clickButtons' in kargs:
+            self.opts['clickButtons'] = kargs['clickButtons']
 
         ## Set any extra parameters provided in keyword arguments
         for k in ['pen', 'brush', 'symbol', 'size']:
@@ -1073,6 +1079,10 @@ class ScatterPlotItem(GraphicsObject):
                 & (self.data['y'] - h < b))
 
     def mouseClickEvent(self, ev):
+        if not self.opts['clickable']:
+            return
+        if not (ev.button() & self.opts['clickButtons']):
+            return
         pts = self.pointsAt(ev.pos())
         if len(pts) > 0:
             self.ptsClicked = pts

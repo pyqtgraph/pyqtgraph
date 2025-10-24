@@ -269,6 +269,7 @@ class PlotCurveItem(GraphicsObject):
         if 'pen' not in kargs:
             self.opts['pen'] = fn.mkPen('w')
         self.setClickable(kargs.get('clickable', False))
+        self.clickButtons = kargs.get('clickButtons', QtCore.Qt.MouseButton.LeftButton)
         self.setData(*args, **kargs)
         self.glstate = None
 
@@ -677,6 +678,8 @@ class PlotCurveItem(GraphicsObject):
             self.opts['antialias'] = kargs['antialias']
         if 'skipFiniteCheck' in kargs:
             self.opts['skipFiniteCheck'] = kargs['skipFiniteCheck']
+        if 'clickButtons' in kargs:
+            self.clickButtons = kargs['clickButtons']
 
         profiler('set')
         self.update()
@@ -1265,6 +1268,8 @@ class PlotCurveItem(GraphicsObject):
 
     def mouseClickEvent(self, ev):
         if not self.clickable:
+            return
+        if not (ev.button() & self.clickButtons):
             return
         if self.mouseShape().contains(ev.pos()):
             ev.accept()

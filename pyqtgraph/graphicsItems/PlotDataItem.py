@@ -626,8 +626,14 @@ class PlotDataItem(GraphicsObject):
             'dynamicRangeLimit': 1e6,
             'dynamicRangeHyst': 3.0,
             'data': None,
+            'clickable': False,
+            'clickButtons': QtCore.Qt.MouseButton.LeftButton,
         }
+        # Update clickButtons from kwargs before setData if provided
+        if 'clickButtons' in kwargs:
+            self.opts['clickButtons'] = kwargs['clickButtons']
         self.setCurveClickable(kwargs.get('clickable', False))
+        self.setScatterClickable(kwargs.get('clickable', False))
         self.setData(*args, **kwargs)
     
     # Fix "NotImplementedError: QGraphicsObject.paint() is abstract and must be overridden"
@@ -685,6 +691,28 @@ class PlotDataItem(GraphicsObject):
             Return if the curve is set to be clickable.
         """
         return self.curve.clickable
+
+    def setScatterClickable(self, state: bool):
+        """
+        Set the attribute for the scatter being clickable.
+
+        Parameters
+        ----------
+        state : bool
+            Set the scatter to be clickable.
+        """
+        self.scatter.opts['clickable'] = state
+
+    def scatterClickable(self) -> bool:
+        """
+        Get the attribute if the scatter is clickable.
+
+        Returns
+        -------
+        bool
+            Return if the scatter is set to be clickable.
+        """
+        return self.scatter.opts['clickable']
 
     def boundingRect(self):
         return QtCore.QRectF()  # let child items handle this
@@ -1357,7 +1385,8 @@ class PlotDataItem(GraphicsObject):
                 ('antialias', 'antialias'),
                 ('connect', 'connect'),
                 ('stepMode', 'stepMode'),
-                ('skipFiniteCheck', 'skipFiniteCheck')
+                ('skipFiniteCheck', 'skipFiniteCheck'),
+                ('clickButtons', 'clickButtons')
             ]:
                 if k in self.opts:
                     curveArgs[v] = self.opts[k]
@@ -1370,7 +1399,9 @@ class PlotDataItem(GraphicsObject):
                 ('data', 'data'),
                 ('pxMode', 'pxMode'),
                 ('antialias', 'antialias'),
-                ('useCache', 'useCache')
+                ('useCache', 'useCache'),
+                ('clickable', 'clickable'),
+                ('clickButtons', 'clickButtons')
             ]:
                 if k in self.opts:
                     scatterArgs[v] = self.opts[k]
