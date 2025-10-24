@@ -23,7 +23,8 @@ MATPLOTLIB_CMAPS = [
             'hot', 'afmhot', 'gist_heat', 'copper']),
          ('Diverging', [
             'PiYG', 'PRGn', 'BrBG', 'PuOr', 'RdGy', 'RdBu',
-            'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm', 'bwr', 'seismic']),
+            'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm', 'bwr', 'seismic',
+            'berlin', 'managua', 'vanimo']),
          ('Cyclic', ['twilight', 'twilight_shifted', 'hsv']),
          ('Qualitative', [
             'Pastel1', 'Pastel2', 'Paired', 'Accent',
