@@ -320,7 +320,7 @@ jobs:
           # Use latest Python, so it understands all syntax.
           python-version: "3.13"
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           pattern: coverage-data-*
           merge-multiple: true
