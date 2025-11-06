@@ -118,10 +118,10 @@ class AxisItem(GraphicsWidget):
         self.labelUnitPrefix = ""
         self.labelStyle = {}
         self._siPrefixEnableRanges = None
+        self.setRange(0, 1)
         self.setLabel(**args)
         self.showLabel(False)
 
-        self.setRange(0, 1)
 
         if pen is None:
             self.setPen()
