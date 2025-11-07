@@ -191,7 +191,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        excessive widget decoration. Default is True.
         locale         (QtCore.QLocale) Sets the locale used for formatting and parsing numbers.
                        Affects the decimal point behavior. Default is system locale.
-        ======================================================================================
+        ============== ========================================================================
         """
         #print opts
         for k,v in opts.items():
