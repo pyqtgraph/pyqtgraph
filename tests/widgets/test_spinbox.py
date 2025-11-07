@@ -10,6 +10,8 @@ def test_SpinBox_defaults():
     assert sb.opts['decimals'] == 6
     assert sb.opts['int'] is False
 
+englishLocale = pg.QtCore.QLocale(pg.QtCore.QLocale.Language.English)
+germanLocale = pg.QtCore.QLocale(pg.QtCore.QLocale.Language.German, pg.QtCore.QLocale.Country.Germany)
 
 @pytest.mark.parametrize("value,expected_text,opts", [
     (0, '0', dict(suffix='', siPrefix=False, dec=False, int=False)),
@@ -30,13 +32,41 @@ def test_SpinBox_defaults():
     (0, '0 mV', dict(suffix='V', siPrefix=True, step=1e-3)),
     (0, '0 mV', dict(suffix='V', dec=True, siPrefix=True, minStep=15e-3)),
 ])
-def test_SpinBox_formatting(value, expected_text, opts):
+def test_SpinBox_formatting(value, expected_text, opts):    
     sb = pg.SpinBox(**opts)
+    sb.setLocale(englishLocale)
     sb.setValue(value)
 
     assert sb.value() == value
     assert sb.text() == expected_text
 
+
+@pytest.mark.parametrize("value,expected_text,opts", [
+    (0, '0', dict(suffix='', siPrefix=False, dec=False, int=False)),
+    (100, '100', dict()),
+    (1000000, '1e+06', dict()),
+    (1000, '1e+03', dict(decimals=2)),
+    (1000000, '1000000 V', dict(int=True, suffix='V')),
+    (12345678955, '12345678955', dict(int=True, decimals=100)),
+    (1.45e-9, '1,45e-09 A', dict(int=False, decimals=6, suffix='A', siPrefix=False)),
+    (1.45e-9, '1,45 nA', dict(int=False, decimals=6, suffix='A', siPrefix=True)),
+    (1.45, '1,45 PSI', dict(int=False, decimals=6, suffix='PSI', siPrefix=True)),
+    (1.45e-3, '1,45 mPSI', dict(int=False, decimals=6, suffix='PSI', siPrefix=True)),
+    (-2500.3427, '$-2500.34', dict(int=False, format='${value:0.02f}')),#format specifier provided, so decimal separator unaffected by locale
+    (1000, '1 k', dict(siPrefix=True, suffix="")),
+    (1.45e-9, 'i = 1,45e-09 A', dict(int=False, decimals=6, suffix='A', siPrefix=False, prefix='i =')),
+    (0, '0 mV', dict(suffix='V', siPrefix=True, scaleAtZero=1e-3)),
+    (0, '0 mV', dict(suffix='V', siPrefix=True, minStep=5e-6, scaleAtZero=1e-3)),
+    (0, '0 mV', dict(suffix='V', siPrefix=True, step=1e-3)),
+    (0, '0 mV', dict(suffix='V', dec=True, siPrefix=True, minStep=15e-3)),
+])
+def test_SpinBox_formatting_with_comma_decimal_separator(value, expected_text, opts):
+    sb = pg.SpinBox(**opts)
+    sb.setLocale(germanLocale)
+    sb.setValue(value)
+
+    assert sb.value() == value
+    assert sb.text() == expected_text
 
 def test_evalFunc():
     sb = pg.SpinBox(evalFunc=lambda s: 100)
@@ -50,14 +80,17 @@ def test_evalFunc():
     assert sb.value() == 100
 
 
-@pytest.mark.parametrize("suffix", ["", "V"])
-def test_SpinBox_gui_set_value(suffix):
-    sb = pg.SpinBox(suffix=suffix)
+def spinBox_gui_set_value_test(expected, valueText, suffix, locale):
+    sb = pg.SpinBox(suffix=suffix, locale=locale)
 
-    sb.lineEdit().setText(f'0.1{suffix}')
+    sb.lineEdit().setText(f'{valueText}{suffix}')
     sb.editingFinishedEvent()
-    assert sb.value() == 0.1
+    assert sb.value() == expected
 
-    sb.lineEdit().setText(f'0.1 m{suffix}')
-    sb.editingFinishedEvent()
-    assert sb.value() == 0.1e-3
+@pytest.mark.parametrize("expected,valueText,suffix", [(0.1, "0.1", ""), (0.1e-3, "0.1 m", "V"), (0, "0,325", "A")])
+def test_SpinBox_gui_set_value_english(expected, valueText, suffix):
+    spinBox_gui_set_value_test(expected, valueText, suffix, locale=englishLocale)
+
+@pytest.mark.parametrize("expected,valueText,suffix", [(0.1, "0,1", ""), (0.1e-3, "0,1 m", "V"), (0, "0.325", "A")])
+def test_SpinBox_gui_set_value_german(expected, valueText, suffix):
+    spinBox_gui_set_value_test(expected, valueText, suffix, locale=germanLocale) 
