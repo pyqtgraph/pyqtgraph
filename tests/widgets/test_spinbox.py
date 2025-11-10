@@ -32,7 +32,10 @@ germanLocale = pg.QtCore.QLocale(pg.QtCore.QLocale.Language.German, pg.QtCore.QL
     (0, '0 mV', dict(suffix='V', siPrefix=True, step=1e-3)),
     (0, '0 mV', dict(suffix='V', dec=True, siPrefix=True, minStep=15e-3)),
 ])
-def test_SpinBox_formatting(value, expected_text, opts):    
+def test_SpinBox_formatting(value, expected_text, opts):
+    if 'e' in expected_text and compare_semantic_versions(pg.Qt.QtVersion, '6.9.0') < 0:
+        pytest.xfail("A known bug in Qt < 6.9.0 causes scientific notation with 'g' format to use capital 'E' for the exponent.")
+    
     sb = pg.SpinBox(**opts)
     sb.setLocale(englishLocale)
     sb.setValue(value)
@@ -62,11 +65,9 @@ def test_SpinBox_formatting(value, expected_text, opts):
     (0, '0 mV', dict(suffix='V', dec=True, siPrefix=True, minStep=15e-3)),
 ])
 def test_SpinBox_formatting_with_comma_decimal_separator(value, expected_text, opts):
-    if 'e' in expected_text:
-        if compare_semantic_versions(pg.Qt.QtVersion, '6.9.0') < 0:
-            pytest.xfail("A known bug in Qt < 6.9.0 causes scientific notation with 'g' format to use capital 'E' for the exponent under european locales.")
-        print("Qt version: " + pg.Qt.QtVersion)#Print Qt version if test fails
-    
+    if 'e' in expected_text and compare_semantic_versions(pg.Qt.QtVersion, '6.9.0') < 0:
+        pytest.xfail("A known bug in Qt < 6.9.0 causes scientific notation with 'g' format to use capital 'E' for the exponent.")
+           
     sb = pg.SpinBox(**opts)
     sb.setLocale(germanLocale)
     sb.setValue(value)
