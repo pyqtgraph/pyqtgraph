@@ -1,9 +1,7 @@
 import pytest
 
 import pyqtgraph as pg
-
-pg.mkQApp()
-
+from pyqtgraph.Qt.QtCore import QT_VERSION_STR
 
 def test_SpinBox_defaults():
     sb = pg.SpinBox()
@@ -41,6 +39,7 @@ def test_SpinBox_formatting(value, expected_text, opts):
     assert sb.text() == expected_text
 
 
+
 @pytest.mark.parametrize("value,expected_text,opts", [
     (0, '0', dict(suffix='', siPrefix=False, dec=False, int=False)),
     (100, '100', dict()),
@@ -61,6 +60,9 @@ def test_SpinBox_formatting(value, expected_text, opts):
     (0, '0 mV', dict(suffix='V', dec=True, siPrefix=True, minStep=15e-3)),
 ])
 def test_SpinBox_formatting_with_comma_decimal_separator(value, expected_text, opts):
+    if 'e' in expected_text and compare_semantic_versions(QT_VERSION_STR, '6.9.0') < 0:
+        pytest.xfail("A known bug in Qt < 6.9.0 causes scientific notation with 'g' format to use capital 'E' for the exponent under european locales.")
+    
     sb = pg.SpinBox(**opts)
     sb.setLocale(germanLocale)
     sb.setValue(value)
@@ -94,3 +96,17 @@ def test_SpinBox_gui_set_value_english(expected, valueText, suffix):
 @pytest.mark.parametrize("expected,valueText,suffix", [(0.1, "0,1", ""), (0.1e-3, "0,1 m", "V"), (0, "0.325", "A")])
 def test_SpinBox_gui_set_value_german(expected, valueText, suffix):
     spinBox_gui_set_value_test(expected, valueText, suffix, locale=germanLocale) 
+
+
+def compare_semantic_versions(v1, v2):
+    try:
+        parts1 = [int(p) for p in v1.split('.')]
+        parts2 = [int(p) for p in v2.split('.')]
+        for p1, p2 in zip(parts1, parts2):
+            if p1 < p2:
+                return -1
+            elif p1 > p2:
+                return 1
+        return 0
+    except:
+        return 0
