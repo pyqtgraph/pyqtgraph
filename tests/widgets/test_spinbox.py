@@ -1,7 +1,6 @@
 import pytest
 
 import pyqtgraph as pg
-from pyqtgraph.Qt.QtCore import QT_VERSION_STR
 
 def test_SpinBox_defaults():
     sb = pg.SpinBox()
@@ -60,7 +59,7 @@ def test_SpinBox_formatting(value, expected_text, opts):
     (0, '0 mV', dict(suffix='V', dec=True, siPrefix=True, minStep=15e-3)),
 ])
 def test_SpinBox_formatting_with_comma_decimal_separator(value, expected_text, opts):
-    if 'e' in expected_text and compare_semantic_versions(QT_VERSION_STR, '6.9.0') < 0:
+    if 'e' in expected_text and compare_semantic_versions(pg.Qt.QtVersion, '6.9.0') < 0:
         pytest.xfail("A known bug in Qt < 6.9.0 causes scientific notation with 'g' format to use capital 'E' for the exponent under european locales.")
     
     sb = pg.SpinBox(**opts)
