@@ -2,6 +2,9 @@ import pytest
 
 import pyqtgraph as pg
 
+pg.mkQApp()
+
+
 def test_SpinBox_defaults():
     sb = pg.SpinBox()
     assert sb.opts['decimals'] == 6
@@ -59,8 +62,10 @@ def test_SpinBox_formatting(value, expected_text, opts):
     (0, '0 mV', dict(suffix='V', dec=True, siPrefix=True, minStep=15e-3)),
 ])
 def test_SpinBox_formatting_with_comma_decimal_separator(value, expected_text, opts):
-    if 'e' in expected_text and compare_semantic_versions(pg.Qt.QtVersion, '6.9.0') < 0:
-        pytest.xfail("A known bug in Qt < 6.9.0 causes scientific notation with 'g' format to use capital 'E' for the exponent under european locales.")
+    if 'e' in expected_text:
+        if compare_semantic_versions(pg.Qt.QtVersion, '6.9.0') < 0:
+            pytest.xfail("A known bug in Qt < 6.9.0 causes scientific notation with 'g' format to use capital 'E' for the exponent under european locales.")
+        print("Qt version: " + pg.Qt.QtVersion)#Print Qt version if test fails
     
     sb = pg.SpinBox(**opts)
     sb.setLocale(germanLocale)
@@ -107,5 +112,5 @@ def compare_semantic_versions(v1, v2):
             elif p1 > p2:
                 return 1
         return 0
-    except:
+    except ValueError:
         return 0
