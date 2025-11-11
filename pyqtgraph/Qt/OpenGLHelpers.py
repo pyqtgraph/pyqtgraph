@@ -105,7 +105,7 @@ class GraphicsViewGLWidget(QtOpenGLWidgets.QOpenGLWidget):
         self.m_vbo.destroy()
         self._functions = None
 
-        ctx = self.context()
+        ctx = QtGui.QOpenGLContext.currentContext()
         if not ctx.isOpenGLES() and ctx.format().version() >= (3, 1):
             vert_src = "#version 140\nin vec4 a_pos; void main() { gl_Position = a_pos; }"
             frag_src = "#version 140\nout vec4 fragColor; void main() { fragColor = vec4(1.0); }"
