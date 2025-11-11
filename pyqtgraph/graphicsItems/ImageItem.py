@@ -601,10 +601,6 @@ class ImageItem(GraphicsObject):
             self.image = image
             self._imageHasNans = None
             self._imageNanLocations = None
-            if 'autoDownsample' not in kwargs and (
-                self.image.shape[0] > 2**15-1 or self.image.shape[1] > 2**15-1
-            ):
-                kwargs['autoDownsample'] = True
             if shapeChanged:
                 self.prepareGeometryChange()
                 self.informViewBoundsChanged()

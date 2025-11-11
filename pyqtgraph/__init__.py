@@ -3,7 +3,7 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.14.0dev0'
+__version__ = "0.14.0dev1"
 
 ### import all the goodies and add some helper functions for easy CLI use
 
@@ -21,57 +21,58 @@ from .Qt import exec_ as exec
 from .Qt import mkQApp
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
-#if QtWidgets.QApplication.instance() is None:
-    #app = QtWidgets.QApplication([])
+# if QtWidgets.QApplication.instance() is None:
+# app = QtWidgets.QApplication([])
 
-              ## (import here to avoid massive error dump later on if numpy is not available)
+## (import here to avoid massive error dump later on if numpy is not available)
 
 
 CONFIG_OPTIONS = {
-    'useOpenGL': False, ## Set to True or False to explicitly enable/disable opengl.
-    'leftButtonPan': True,  ## if false, left button drags a rubber band for zooming in viewbox
+    "useOpenGL": False,  ## Set to True or False to explicitly enable/disable opengl.
+    "leftButtonPan": True,  ## if false, left button drags a rubber band for zooming in viewbox
     # foreground/background take any arguments to the 'mkColor' in /pyqtgraph/functions.py
-    'foreground': 'd',  ## default foreground color for axes, labels, etc.
-    'background': 'k',        ## default background for GraphicsWidget
-    'antialias': False,
-    'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
-    'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
-    'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
-    'crashWarning': False,  # If True, print warnings about situations that may result in a crash
-    'mouseRateLimit': 100,  # For ignoring frequent mouse events, max number of mouse move events per second, if <= 0, then it is switched off
-    'imageAxisOrder': 'col-major',  # For 'row-major', image data is expected in the standard (row, col) order.
-                                 # For 'col-major', image data is expected in reversed (col, row) order.
-                                 # The default is 'col-major' for backward compatibility, but this may
-                                 # change in the future.
-    'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
-    'useNumba': False, # When True, use numba
-    'segmentedLineMode': 'auto',  # segmented line mode, controls if lines are plotted in segments or continuous
-                                  # 'auto': whether lines are plotted in segments is automatically decided using pen properties and whether anti-aliasing is enabled
-                                  # 'on' or True: lines are always plotted in segments
-                                  # 'off' or False: lines are never plotted in segments
+    "foreground": "d",  ## default foreground color for axes, labels, etc.
+    "background": "k",  ## default background for GraphicsWidget
+    "antialias": False,
+    "editorCommand": None,  ## command used to invoke code editor from ConsoleWidgets
+    "exitCleanup": True,  ## Attempt to work around some exit crash bugs in PyQt and PySide
+    "enableExperimental": False,  ## Enable experimental features (the curious can search for this key in the code)
+    "crashWarning": False,  # If True, print warnings about situations that may result in a crash
+    "mouseRateLimit": 100,  # For ignoring frequent mouse events, max number of mouse move events per second, if <= 0, then it is switched off
+    "imageAxisOrder": "col-major",  # For 'row-major', image data is expected in the standard (row, col) order.
+    # For 'col-major', image data is expected in reversed (col, row) order.
+    # The default is 'col-major' for backward compatibility, but this may
+    # change in the future.
+    "useCupy": False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
+    "useNumba": False,  # When True, use numba
+    "segmentedLineMode": "auto",  # segmented line mode, controls if lines are plotted in segments or continuous
+    # 'auto': whether lines are plotted in segments is automatically decided using pen properties and whether anti-aliasing is enabled
+    # 'on' or True: lines are always plotted in segments
+    # 'off' or False: lines are never plotted in segments
 }
 
 
 def setConfigOption(opt, value):
     if opt not in CONFIG_OPTIONS:
         raise KeyError('Unknown configuration option "%s"' % opt)
-    if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
+    if opt == "imageAxisOrder" and value not in ("row-major", "col-major"):
         raise ValueError('imageAxisOrder must be either "row-major" or "col-major"')
-    if opt == 'segmentedLineMode' and value not in ('auto', 'on', 'off'):
+    if opt == "segmentedLineMode" and value not in ("auto", "on", "off"):
         raise ValueError('segmentedLineMode must be "auto", "on" or "off"')
     CONFIG_OPTIONS[opt] = value
+
 
 def setConfigOptions(**opts):
     """Set global configuration options.
 
     Each keyword argument sets one global option.
     """
-    for k,v in opts.items():
+    for k, v in opts.items():
         setConfigOption(k, v)
 
+
 def getConfigOption(opt):
-    """Return the value of a single global configuration option.
-    """
+    """Return the value of a single global configuration option."""
     return CONFIG_OPTIONS[opt]
 
 
@@ -79,20 +80,27 @@ def systemInfo():
     print("sys.platform: %s" % sys.platform)
     print("sys.version: %s" % sys.version)
     from .Qt import VERSION_INFO
+
     print("qt bindings: %s" % VERSION_INFO)
 
     global __version__
     rev = None
-    if __version__ is None:  ## this code was probably checked out from bzr; look up the last-revision file
-        lastRevFile = os.path.join(os.path.dirname(__file__), '..', '.bzr', 'branch', 'last-revision')
+    if (
+        __version__ is None
+    ):  ## this code was probably checked out from bzr; look up the last-revision file
+        lastRevFile = os.path.join(
+            os.path.dirname(__file__), "..", ".bzr", "branch", "last-revision"
+        )
         if os.path.exists(lastRevFile):
-            with open(lastRevFile, 'r') as fd:
+            with open(lastRevFile, "r") as fd:
                 rev = fd.read().strip()
 
     print("pyqtgraph: %s; %s" % (__version__, rev))
     print("config:")
     import pprint
+
     pprint.pprint(CONFIG_OPTIONS)
+
 
 ## Rename orphaned .pyc files. This is *probably* safe :)
 ## We only do this if __version__ is None, indicating the code was probably pulled
@@ -109,13 +117,13 @@ def renamePyc(startDir):
     printed = False
     startDir = os.path.abspath(startDir)
     for path, dirs, files in os.walk(startDir):
-        if '__pycache__' in path:
+        if "__pycache__" in path:
             continue
         for f in files:
             fileName = os.path.join(path, f)
             base, ext = os.path.splitext(fileName)
             py = base + ".py"
-            if ext == '.pyc' and not os.path.isfile(py):
+            if ext == ".pyc" and not os.path.isfile(py):
                 if not printed:
                     print("NOTE: Renaming orphaned .pyc files:")
                     printed = True
@@ -128,6 +136,7 @@ def renamePyc(startDir):
                 print("  " + fileName + "  ==>")
                 print("  " + name2)
                 os.rename(fileName, name2)
+
 
 path = os.path.split(__file__)[0]
 
@@ -229,17 +238,20 @@ from .widgets.VerticalLabel import *
 ##     This is potentially dangerous
 
 _cleanupCalled = False
+
+
 def cleanup():
     global _cleanupCalled
     if _cleanupCalled:
         return
 
-    if not getConfigOption('exitCleanup'):
+    if not getConfigOption("exitCleanup"):
         return
 
     ViewBox.quit()  ## tell ViewBox that it doesn't need to deregister views anymore.
 
     _cleanupCalled = True
+
 
 atexit.register(cleanup)
 
@@ -248,6 +260,8 @@ atexit.register(cleanup)
 # Note: cannot connect this function until QApplication has been created, so
 # instead we have GraphicsView.__init__ call this for us.
 _cleanupConnected = False
+
+
 def _connectCleanup():
     global _cleanupConnected
     if _cleanupConnected:
@@ -283,16 +297,18 @@ def exit():
     atexit._run_exitfuncs()
 
     ## close file handles
-    if sys.platform == 'darwin':
+    if sys.platform == "darwin":
         for fd in range(3, 4096):
-            if fd in [7]:  # trying to close 7 produces an illegal instruction on the Mac.
+            if fd in [
+                7
+            ]:  # trying to close 7 produces an illegal instruction on the Mac.
                 continue
             try:
                 os.close(fd)
             except OSError:
                 pass
     else:
-        os.closerange(3, 4096) ## just guessing on the maximum descriptor count..
+        os.closerange(3, 4096)  ## just guessing on the maximum descriptor count..
 
     os._exit(0)
 
@@ -302,6 +318,7 @@ plots = []
 images = []
 QAPP = None
 
+
 def plot(*args, **kargs):
     """
     Create and return a :class:`PlotWidget <pyqtgraph.PlotWidget>`
@@ -309,7 +326,16 @@ def plot(*args, **kargs):
     All other arguments are used to plot data. (see :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`)
     """
     mkQApp()
-    pwArgList = ['title', 'labels', 'name', 'left', 'right', 'top', 'bottom', 'background']
+    pwArgList = [
+        "title",
+        "labels",
+        "name",
+        "left",
+        "right",
+        "top",
+        "bottom",
+        "background",
+    ]
     pwArgs = {}
     dataArgs = {}
     for k in kargs:
@@ -326,6 +352,7 @@ def plot(*args, **kargs):
     w.show()
     return w
 
+
 def image(*args, **kargs):
     """
     Create and return an :class:`ImageView <pyqtgraph.ImageView>`
@@ -341,6 +368,8 @@ def image(*args, **kargs):
     images.append(w)
     w.show()
     return w
+
+
 show = image  ## for backward compatibility
 
 
@@ -352,6 +381,7 @@ def dbg(*args, **kwds):
     """
     mkQApp()
     from . import console
+
     c = console.ConsoleWidget(*args, **kwds)
     c.catchAllExceptions()
     c.show()
@@ -371,6 +401,7 @@ def stack(*args, **kwds):
     """
     mkQApp()
     from . import console
+
     c = console.ConsoleWidget(*args, **kwds)
     c.setStack()
     c.show()
@@ -385,14 +416,14 @@ def stack(*args, **kwds):
 def setPalette(app, style):
     if isinstance(style, str):
         style = style.lower()
-        if style == 'qdarkstylelight':
+        if style == "qdarkstylelight":
             p = palette.getQDarkStyleLightQPalette()
-        elif style in ['qdarkstyle','qdarkstyledark']:
+        elif style in ["qdarkstyle", "qdarkstyledark"]:
             p = palette.getQDarkStyleDarkQPalette()
         else:
-            raise ValueError(f'no palette by the name {style} exists')
+            raise ValueError(f"no palette by the name {style} exists")
     elif isinstance(style, QtGui.QPalette):
         p = style
     else:
-        raise TypeError('style either be a string or QPalette')
+        raise TypeError("style either be a string or QPalette")
     app.setPalette(p)

@@ -81,6 +81,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             
             'prefix': '', ## string to be prepended to spin box value
             'suffix': '',
+            'suffixPower': 1,  ## power to which the suffix units are raised (for correct SI prefix scaling)
             'siPrefix': False,   ## Set to True to display numbers with SI prefix (ie, 100pA instead of 1e-10A)
             'scaleAtZero': None,
 
@@ -134,6 +135,9 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        the value represents a dimensionless quantity that might span many
                        orders of magnitude, such as a Reynolds number, an SI
                        prefix is allowed with no suffix. Default is False.
+        suffixPower    (int or float) The power to which the suffix units are raised. This is used
+                       for correct scaling of the SI prefix when the units are nonlinear. Supports
+                       positive, negative and non-integral powers. Default is 1.
         prefix         (str) String to be prepended to the spin box value. Default is an empty string.
         scaleAtZero    (float) If siPrefix is also True, this option then sets the default SI prefix
                        that a value of 0 will have applied (and thus the default scale of the first
@@ -494,11 +498,11 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
 
             if self.val == 0:
                 if self.opts['scaleAtZero'] is not None:
-                    (s, p) = fn.siScale(self.opts['scaleAtZero'])
+                    (s, p) = fn.siScale(self.opts['scaleAtZero'], power=self.opts['suffixPower'])
                 else:
-                    (s, p) = fn.siScale(self._stepByValue(1))
+                    (s, p) = fn.siScale(self._stepByValue(1), power=self.opts['suffixPower'])
             else:
-                (s, p) = fn.siScale(val)
+                (s, p) = fn.siScale(val, power=self.opts['suffixPower'])
             val *= s #Scale value
             parts['siPrefix'] = p
 

@@ -34,6 +34,7 @@ germanLocale = pg.QtCore.QLocale(pg.QtCore.QLocale.Language.German, pg.QtCore.QL
     (0, '0 mV', dict(suffix='V', dec=True, siPrefix=True, minStep=15e-3)),
     (123456.789, '123457', dict(int=False)),#No group separator expected
 ])
+def test_SpinBox_formatting(value, expected_text, opts):    
 def test_SpinBox_formatting(value, expected_text, opts):
     if 'e' in expected_text:
         expect_failure_on_buggy_qt()

@@ -94,14 +94,35 @@ color_like: TypeAlias = (
 )
 
 
-def siScale(x, minVal=1e-25, allowUnicode=True):
+def siScale(x, minVal=1e-25, allowUnicode=True, power:int|float=1):
     """
     Return the recommended scale factor and SI prefix string for x.
-    
-    Example::
-    
-        siScale(0.0001)   # returns (1e6, 'μ')
-        # This indicates that the number 0.0001 is best represented as 0.0001 * 1e6 = 100 μUnits
+
+    Parameters
+    ----------
+    x : float
+        The value to be scaled.
+    minVal : float, optional
+        The minimum value considered for scaling. Default is 1e-25.
+    allowUnicode : bool, optional
+        Whether to allow Unicode SI prefixes. Default is True.
+    power : int or float, optional
+        The power to which the units are raised. For example, if units='m²', the
+        power should be 2. This ensures correct scaling of the prefix in 
+        nonlinear units. Supports positive, negative and non-integral powers. 
+
+    Returns
+    -------
+    scale : float
+        The scale factor to apply to x.
+    prefix : str
+        The SI prefix string.
+
+    Examples
+    --------
+    >>> siScale(0.0001)
+    (1000000.0, 'μ')
+    # This indicates that the number 0.0001 is best represented as 0.0001 * 1e6 = 100 μUnits
     """
     
     if isinstance(x, decimal.Decimal):
@@ -114,7 +135,13 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
     if abs(x) < minVal:
         m = 0
     else:
-        m = int(clip_scalar(math.floor(math.log(abs(x))/math.log(1000)), -9.0, 9.0))
+        # log of x with base 1000^power
+        log1000x = math.log(abs(x))/(math.log(1000)*power)
+        if power > 0:
+            log1000x = math.floor(log1000x)
+        else:
+            log1000x = math.ceil(log1000x)
+        m = int(clip_scalar(log1000x, -9.0, 9.0))
     if m == 0:
         pref = ''
     elif m < -8 or m > 8:
@@ -124,26 +151,53 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
             pref = SI_PREFIXES[m+8]
         else:
             pref = SI_PREFIXES_ASCII[m+8]
-    m1 = -3*m
+    m1 = -3*m*power
     p = 10.**m1
     return (p, pref)
 
 
-def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, allowUnicode=True):
+def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, allowUnicode=True, power = 1):
     """
-    Return the number x formatted in engineering notation with SI prefix.
-    
-    Example::
-        siFormat(0.0001, suffix='V')  # returns "100 μV"
+    Format a number in engineering notation with SI prefix.
+
+    Parameters
+    ----------
+    x : float
+        The value to be formatted.
+    precision : int, optional
+        Number of decimal places to include in the formatted output. Default is 3.
+    suffix : str, optional
+        Suffix to append to the formatted output.
+    space : bool, optional
+        Whether to include a space between the SI prefix and the value. Default is True.
+    error : float, optional
+        Error value to include in the formatted output.
+    minVal : float, optional
+        Minimum value considered for scaling. Default is 1e-25.
+    allowUnicode : bool, optional
+        Whether to allow Unicode SI prefixes. Default is True.
+    power : int or float, optional
+        Power to which the units are raised. For example, if suffix='m²', the power should be 2.
+        This ensures correct scaling when the units are nonlinear. Supports positive, negative,
+        and non-integral powers. Note: The power only affects the scaling, not the suffix.
+
+    Returns
+    -------
+    str
+        The formatted string in engineering notation with SI prefix.
+
+    Examples
+    --------
+    >>> siFormat(0.0001, suffix='V')
+    '100 μV'
     """
     
     if space is True:
         space = ' '
     if space is False:
         space = ''
-        
-    
-    (p, pref) = siScale(x, minVal, allowUnicode)
+            
+    (p, pref) = siScale(x, minVal, allowUnicode, power)
     if not (len(pref) > 0 and pref[0] == 'e'):
         pref = space + pref
     
@@ -156,15 +210,14 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
         else:
             plusminus = " +/- "
         fmt = "%." + str(precision) + "g%s%s%s%s"
-        return fmt % (x*p, pref, suffix, plusminus, siFormat(error, precision=precision, suffix=suffix, space=space, minVal=minVal))
+        return fmt % (x*p, pref, suffix, plusminus, siFormat(error, precision=precision, suffix=suffix, space=space, minVal=minVal, power=power))
 
 
 def siParse(s, regex=FLOAT_REGEX_PERIOD, suffix=None):
     """Convert a value written in SI notation to a tuple (number, si_prefix, suffix).
 
-    Example::
-
-        siParse('100 µV")  # returns ('100', 'µ', 'V')
+    Example:
+        siParse('100 µV')  # returns ('100', 'µ', 'V')
 
     Note that in the above example, the µ symbol is the "micro sign" (UTF-8
     0xC2B5), as opposed to the Greek letter mu (UTF-8 0xCEBC).
@@ -214,7 +267,7 @@ def siParse(s, regex=FLOAT_REGEX_PERIOD, suffix=None):
     return m.group('number'), '' if sip is None else sip, '' if suf is None else suf
 
 
-def siEval(s, typ=float, regex=FLOAT_REGEX_PERIOD, suffix=None):
+def siEval(s, typ=float, regex=FLOAT_REGEX_PERIOD, suffix=None, unitPower=1):
     """
     Convert a value written in SI notation to its equivalent prefixless value.
 
@@ -224,13 +277,14 @@ def siEval(s, typ=float, regex=FLOAT_REGEX_PERIOD, suffix=None):
     """
     val, siprefix, suffix = siParse(s, regex, suffix=suffix)
     v = typ(val)
-    return siApply(v, siprefix)
+    return siApply(v, siprefix, unitPower=unitPower)
 
     
-def siApply(val, siprefix):
+def siApply(val, siprefix, unitPower=1):
     """
     """
     n = SI_PREFIX_EXPONENTS[siprefix] if siprefix != '' else 0
+    n = n * unitPower
     if n > 0:
         return val * 10**n
     elif n < 0:

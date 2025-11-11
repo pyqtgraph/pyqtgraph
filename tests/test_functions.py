@@ -261,6 +261,30 @@ def test_siParse(s, suffix, expected):
 def test_siParse_with_comma_as_decimal_separator(s, suffix, expected):
     assert pg.siParse(s, suffix=suffix, regex=pg.functions.FLOAT_REGEX_COMMA) == expected
 
+
+@pytest.mark.parametrize("s,suffix,power,expected", [
+    # usual cases
+    ("100 uV", "V", 1, 1e-4),
+    ("100 µV", "V", 1, 1e-4),
+    ("4.2 nV", None, 1, 4.2e-9),
+    ("1.2 m", "m", 1, 1.2),
+    # siPrefix with explicit empty suffix
+    ("1.2 m", "", 1, 1.2e-3),
+    ("5.0e-9 M", "", 1, 5.0e-3),
+    # weirder cases that should return the reasonable thing    
+    ("4.2 nV", "", 1, 4.2e-9),
+    ("1.2 j", "", 1, 1.2),
+    ("1.2 j", None, 1, 1.2),
+    # cases with power != 1
+    ("100 uV^2", "V^2", 2, 1e-10),
+    ("4.2 nV^2", None, 3, 4.2e-27),
+    ("100.2 um^(1/2)", "m^(1/2)", 0.5, 0.1002),
+    ("100 km^2", "m^2", 2, 1e+8),
+])
+def test_siEval(s, suffix, power, expected):
+    result = pg.siEval(s, suffix=suffix, unitPower=power)
+    assert np.isclose(result, expected)
+
 def test_CIELab_reconversion():
     color_list = [ pg.Qt.QtGui.QColor('#100235') ] # known problematic values
     for _ in range(20):
@@ -486,3 +510,43 @@ def test_signal_block_unconnected():
         pass
     sender.signal.emit()
     assert receiver.counter == 0
+
+@pytest.mark.parametrize("x,precision,suffix,power,expected", [
+    # usual cases
+    (0, 3, 'V', 1, "0 V"),
+    (1, 3, 'V', 1, "1 V"),
+    (1.2, 3, 'V', 1, "1.2 V"),
+    (1.23456, 3, 'V', 1, "1.23 V"),
+    (1.23456, 4, 'V', 1, "1.235 V"),
+    (12.3456, 3, 'V', 1, "12.3 V"),
+    (123.456, 3, 'V', 1, "123 V"),
+    (1234.56, 3, 'V', 1, "1.23 kV"),
+    (12345.6, 3, 'V', 1, "12.3 kV"),
+    (123456., 3, 'V', 1, "123 kV"),
+    (1234567., 3, 'V', 1, "1.23 MV"),
+    (12345678., 3, 'V', 1, "12.3 MV"),
+    (123456789., 3, 'V', 1, "123 MV"),
+    (1234567890., 3, 'V', 1, "1.23 GV"),
+    (12345678900., 3, 'V', 1, "12.3 GV"),
+    (123456789000., 3, 'V', 1, "123 GV"),
+    (0.123456789, 3, 'V', 1, "123 mV"),
+    (0.0123456789, 3, 'V', 1, "12.3 mV"),
+    (0.00123456789, 3, 'V', 1, "1.23 mV"),
+    # Different power
+    (0, 3, 'V²', 2, "0 V²"),
+    (123.456, 3, 'V²', 2, "123 V²"),
+    (1234.56, 4, 'V²', 2, "1235 V²"),
+    (1234567.8, 3, 'V²', 2, "1.23 kV²"),
+    (0.00000123, 3, 'V²', 2, "1.23 mV²"),
+    (1, 3, 'V^-1', -1, "1 V^-1"),
+    (0.1, 3, 'V^-1', -1, "100 kV^-1"),
+    (0.001, 3, 'V^-1', -1, "1 kV^-1"),
+    (123.456, 3, 'V^-1', -1, "123 V^-1"),
+    (123456.7, 3, 'V^-1', -1, "123 mV^-1"),
+    (12345.6, 3, 'V^-1', -1, "12.3 mV^-1"),
+    (12345.6, 3, 'V^(1/2)', 0.5, "12.3 MV^(1/2)"),
+
+])
+def test_siFormat(x, precision, suffix, power, expected):
+    result = pg.siFormat(x, precision=precision, suffix=suffix, power=power)
+    assert result == expected

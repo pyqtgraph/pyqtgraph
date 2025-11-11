@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from functools import lru_cache
 from itertools import product
 from unittest import mock
+import numpy as np
 
 import pytest
 
@@ -23,6 +24,7 @@ from pyqtgraph.graphicsItems.DateAxisItem import (
     YEAR_MONTH_ZOOM_LEVEL,
     YEAR_SPACING,
     ZoomLevel,
+    TickSpec,
     applyOffsetFromUtc,
     calculateUtcOffset,
     getPreferredOffsetFromUtc,
@@ -56,7 +58,7 @@ def getViewLengthInPxForZoomLevel(level, valuesRange):
 
 def assert_subarray(subarray, array):
     start = array.index(subarray[0])
-    assert array[start:start+len(subarray)] == subarray
+    assert array[start : start + len(subarray)] == subarray
 
 
 @contextmanager
@@ -97,7 +99,7 @@ def test_preferred_utc_offset_respects_chosen_offset():
 
 @pytest.mark.qt_no_exception_capture
 def test_preferred_utc_offset_doesnt_break_with_big_timestamps():
-    timestamp = SEC_PER_YEAR ** 13
+    timestamp = SEC_PER_YEAR**13
 
     assert -16 * 3600 <= getPreferredOffsetFromUtc(timestamp) <= 16 * 3600
     assert getPreferredOffsetFromUtc(timestamp, 3600) == 3600
@@ -180,8 +182,7 @@ def test_applyOffsetFromUtc_does_what_it_promises_to_do():
     ),
     ids=(
         f"{zone}-{direction}"
-        for zone, direction
-        in product(
+        for zone, direction in product(
             ("Berlin", "Chatham", "St_Johns", "Lord_Howe"),
             ("backward", "forward"),
         )
@@ -278,7 +279,6 @@ def test_custom_utc_offset_works(zoomLevel, expectedHourTickStrings, dateAxis):
         (QTimeZone(b"UTC+5"), WEEK_SPACING, 5),
         (QTimeZone(b"UTC+4"), MONTH_SPACING, 4),
         (QTimeZone(b"UTC+3"), YEAR_SPACING, 3),
-
         (QTimeZone(b"UTC"), MS_SPACING, 0),
         (QTimeZone(b"UTC"), SECOND_SPACING, 0),
         (QTimeZone(b"UTC"), MINUTE_SPACING, 0),
@@ -290,7 +290,9 @@ def test_custom_utc_offset_works(zoomLevel, expectedHourTickStrings, dateAxis):
     ),
 )
 def test_extendTimeRangeForSpacing_repsects_utc_offset(
-    localZone, spacing, expectedExtentionInHours,
+    localZone,
+    spacing,
+    expectedExtentionInHours,
 ):
     utcZone = QTimeZone(b"UTC")
     date = QDate(2001, 1, 1)
@@ -303,3 +305,20 @@ def test_extendTimeRangeForSpacing_repsects_utc_offset(
         extMin, extMax = zoom.extendTimeRangeForSpacing(spacing, minTime, maxTime)
     assert extMax - maxTime == expectedExtentionInHours * 3600
     assert minTime - extMin == expectedExtentionInHours * 3600
+
+
+@pytest.mark.parametrize(
+    ("autoskip", "minspc", "expectedSkipFactor"),
+    (
+        (np.array([1.0, 4.0, 8.0]), 3, 4),
+        (np.array([1, 4, 8]), 16, 8),
+        (np.array([1, 4, 8]), 17, 10),
+        (np.array([1, 4, 8]), 501, 400),
+        (np.array([1, 4, 8]), 0.01, 1),
+    ),
+)
+def test_skipFactor(autoskip, minspc, expectedSkipFactor):
+    tickSpec = TickSpec(2.0, None, None, autoskip)
+    result = tickSpec.skipFactor(minspc)
+
+    assert result == expectedSkipFactor
