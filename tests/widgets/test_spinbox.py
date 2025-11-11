@@ -5,6 +5,7 @@ import pyqtgraph as pg
 pg.mkQApp()
 
 
+
 def test_SpinBox_defaults():
     sb = pg.SpinBox()
     assert sb.opts['decimals'] == 6
@@ -31,10 +32,11 @@ germanLocale = pg.QtCore.QLocale(pg.QtCore.QLocale.Language.German, pg.QtCore.QL
     (0, '0 mV', dict(suffix='V', siPrefix=True, minStep=5e-6, scaleAtZero=1e-3)),
     (0, '0 mV', dict(suffix='V', siPrefix=True, step=1e-3)),
     (0, '0 mV', dict(suffix='V', dec=True, siPrefix=True, minStep=15e-3)),
+    (123456.789, '123457', dict(int=False)),#No group separator expected
 ])
 def test_SpinBox_formatting(value, expected_text, opts):
-    if 'e' in expected_text and compare_semantic_versions(pg.Qt.QtVersion, '6.9.0') < 0:
-        pytest.xfail("A known bug in Qt < 6.9.0 causes scientific notation with 'g' format to use capital 'E' for the exponent.")
+    if 'e' in expected_text:
+        expect_failure_on_buggy_qt()
     
     sb = pg.SpinBox(**opts)
     sb.setLocale(englishLocale)
@@ -63,10 +65,11 @@ def test_SpinBox_formatting(value, expected_text, opts):
     (0, '0 mV', dict(suffix='V', siPrefix=True, minStep=5e-6, scaleAtZero=1e-3)),
     (0, '0 mV', dict(suffix='V', siPrefix=True, step=1e-3)),
     (0, '0 mV', dict(suffix='V', dec=True, siPrefix=True, minStep=15e-3)),
+    (123456.789, '123457', dict(int=False)),#No group separator expected
 ])
 def test_SpinBox_formatting_with_comma_decimal_separator(value, expected_text, opts):
-    if 'e' in expected_text and compare_semantic_versions(pg.Qt.QtVersion, '6.9.0') < 0:
-        pytest.xfail("A known bug in Qt < 6.9.0 causes scientific notation with 'g' format to use capital 'E' for the exponent.")
+    if 'e' in expected_text:
+        expect_failure_on_buggy_qt()
            
     sb = pg.SpinBox(**opts)
     sb.setLocale(germanLocale)
@@ -100,7 +103,8 @@ def test_SpinBox_gui_set_value_english(expected, valueText, suffix):
 
 @pytest.mark.parametrize("expected,valueText,suffix", [(0.1, "0,1", ""), (0.1e-3, "0,1 m", "V"), (0, "0.325", "A")])
 def test_SpinBox_gui_set_value_german(expected, valueText, suffix):
-    spinBox_gui_set_value_test(expected, valueText, suffix, locale=germanLocale) 
+    spinBox_gui_set_value_test(expected, valueText, suffix, locale=germanLocale)
+
 
 
 def compare_semantic_versions(v1, v2):
@@ -115,3 +119,9 @@ def compare_semantic_versions(v1, v2):
         return 0
     except ValueError:
         return 0
+
+
+def expect_failure_on_buggy_qt():
+    if compare_semantic_versions(pg.Qt.QtVersion, '6.9.0') < 0 \
+        and compare_semantic_versions(pg.Qt.QtVersion, '6.0.0') >= 0:
+        pytest.xfail("A known bug in Qt 6.0.0 - 6.8.x causes scientific notation with 'g' format to use capital 'E' for the exponent.")

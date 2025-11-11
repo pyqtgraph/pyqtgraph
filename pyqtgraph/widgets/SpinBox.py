@@ -508,7 +508,9 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             parts['scaledValueString'] = str(parts['scaledValue'])
         else:
             parts['scaledValue'] = val 
-            parts['scaledValueString'] = self.locale().toString(val, 'g', decimals)
+            valuestring = self.locale().toString(val, 'g', decimals)
+            #Remove group separator if any
+            parts['scaledValueString'] = valuestring.replace(self.locale().groupSeparator(), '')             
         parts['prefixGap'] = '' if parts['prefix'] == '' else ' '
         parts['suffixGap'] = '' if (parts['suffix'] == '' and parts['siPrefix'] == '') else ' '
         
