@@ -597,7 +597,7 @@ class PColorMeshItem(GraphicsObject):
 
         glstate.render_cache = [origin, dirty_bits]
 
-        widget.drawStencil(view)
+        widget.setViewboxClip(view)
 
         glstate.m_vao.bind()
         glstate.m_texture.bind()
