@@ -64,7 +64,11 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
 SI_PREFIX_EXPONENTS['u'] = -6
 
-FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+#For comma as decimal separator
+FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+#For period as decimal separator
+FLOAT_REGEX_PERIOD = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+
 INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
 class HueKeywordArgs(TypedDict):
@@ -155,7 +159,7 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
         return fmt % (x*p, pref, suffix, plusminus, siFormat(error, precision=precision, suffix=suffix, space=space, minVal=minVal))
 
 
-def siParse(s, regex=FLOAT_REGEX, suffix=None):
+def siParse(s, regex=FLOAT_REGEX_PERIOD, suffix=None):
     """Convert a value written in SI notation to a tuple (number, si_prefix, suffix).
 
     Example::
@@ -210,7 +214,7 @@ def siParse(s, regex=FLOAT_REGEX, suffix=None):
     return m.group('number'), '' if sip is None else sip, '' if suf is None else suf
 
 
-def siEval(s, typ=float, regex=FLOAT_REGEX, suffix=None):
+def siEval(s, typ=float, regex=FLOAT_REGEX_PERIOD, suffix=None):
     """
     Convert a value written in SI notation to its equivalent prefixless value.
 
@@ -235,6 +239,13 @@ def siApply(val, siprefix):
     else:
         return val
     
+def float_regex_for_locale(locale = QtCore.QLocale()) -> re.Pattern:
+    """Return a FLOAT_REGEX pattern appropriate for the given locale."""
+    decimal_point = locale.decimalPoint()
+    if decimal_point == ',':
+        return FLOAT_REGEX_COMMA
+    else:
+        return FLOAT_REGEX_PERIOD
 
 class Color(QtGui.QColor):
     def __init__(self, *args):

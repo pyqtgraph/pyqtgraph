@@ -254,6 +254,13 @@ def test_siParse(s, suffix, expected):
         with pytest.raises(expected):
             pg.siParse(s, suffix=suffix)
 
+@pytest.mark.parametrize("s,suffix,expected", [
+    ("1,2 j", "", ("1,2", "", "")),
+    ("1,2 j", None, ("1,2", "", "j")),
+    (",2 j", None, (",2", "", "j")),])
+def test_siParse_with_comma_as_decimal_separator(s, suffix, expected):
+    assert pg.siParse(s, suffix=suffix, regex=pg.functions.FLOAT_REGEX_COMMA) == expected
+
 def test_CIELab_reconversion():
     color_list = [ pg.Qt.QtGui.QColor('#100235') ] # known problematic values
     for _ in range(20):
