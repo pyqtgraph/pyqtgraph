@@ -123,8 +123,8 @@ class Parameter(QtCore.QObject):
             #pass
         #return QtCore.QObject.__new__(cls, *args, **opts)
 
-    @staticmethod
-    def create(**opts):
+    @classmethod
+    def create(cls, **opts):
         """
         Static method that creates a new Parameter (or subclass) instance using 
         opts['type'] to select the appropriate class.
@@ -134,10 +134,10 @@ class Parameter(QtCore.QObject):
         """
         typ = opts.get('type', None)
         if typ is None:
-            cls = Parameter
+            klass = cls
         else:
-            cls = PARAM_TYPES[opts['type']]
-        return cls(**opts)
+            klass = PARAM_TYPES[opts['type']]
+        return klass(**opts)
 
     def __init__(self, **opts):
         """
