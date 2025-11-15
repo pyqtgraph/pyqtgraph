@@ -1164,7 +1164,7 @@ class PlotCurveItem(GraphicsObject):
                 glstate.m_vbo.release()
 
 
-        widget.drawStencil(view)
+        widget.setViewboxClip(view)
 
         glstate.m_vao.bind()
         program.bind()
