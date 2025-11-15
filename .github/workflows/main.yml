@@ -32,7 +32,7 @@ jobs:
           make -C doc dash
       - run: tar --exclude='.DS_Store' -cvzf pyqtgraph.tgz doc/pyqtgraph.docset
       - name: Upload docset
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: pyqtgraph.docset
           path: pyqtgraph.tgz
@@ -150,7 +150,7 @@ jobs:
           pytest pyqtgraph/examples -v -n 2
         shell: bash
       - name: Upload coverage data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-data-${{ matrix.python-version }}-${{ matrix.qt-lib }}-${{ matrix.os }}
           path: .coverage.*
@@ -158,7 +158,7 @@ jobs:
           include-hidden-files: true
       - name: Upload Screenshots
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Screenshots (Python ${{ matrix.python-version }} - Qt-Bindings ${{ matrix.qt-lib }} - OS ${{ matrix.os }})
           path: ${{ env.SCREENSHOT_DIR }}
@@ -249,7 +249,7 @@ jobs:
           pytest pyqtgraph/examples -v -n 2
       - name: Upload Screenshots
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Screenshots (Conda - Qt-Bindings ${{ matrix.qt-lib }} - OS ${{ matrix.os }})
           path: ${{ env.SCREENSHOT_DIR }}
@@ -272,7 +272,7 @@ jobs:
           pip install build
           python -m build --wheel
       - name: Upload Wheel
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: wheel
           path: dist/*.whl
@@ -340,7 +340,7 @@ jobs:
           # coverage report --fail-under=100
 
       - name: Upload HTML report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: html-report
           path: htmlcov

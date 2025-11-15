@@ -101,7 +101,7 @@ jobs:
       shell: bash
     - name: Upload Screenshots
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: Screenshots - Qt-Bindings ${{ matrix.qt-lib }} - ${{ matrix.os }})
         path: ${{ env.SCREENSHOT_DIR }}
