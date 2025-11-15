@@ -100,6 +100,7 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [Antenna Array Analysis](https://github.com/rookiepeng/antenna-array-analysis)
 * [argos](https://github.com/titusjan/argos)
 * [Atomize](https://github.com/Anatoly1010/Atomize)
+* [BEC Widgets](https://github.com/bec-project/bec_widgets)
 * [EnMAP-Box](https://enmap-box.readthedocs.io)
 * [EO Time Series Viewer](https://eo-time-series-viewer.readthedocs.io)
 * [ephyviewer](https://ephyviewer.readthedocs.io)
