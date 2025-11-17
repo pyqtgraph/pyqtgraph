@@ -95,20 +95,21 @@ class SliderParameterItem(WidgetParameterItem):
             # This is fine, since errors are from the parent scope which will stabilize after the widget is
             # constructed anyway
             pass
-        span = opts.get('span', None)
-        if span is None:
-            step = opts.get('step', 1)
-            start, stop = opts.get('limits', param.opts['limits'])
-            # Add a bit to 'stop' since python slicing excludes the last value
-            span = np.arange(start, stop + step, step)
-        precision = opts.get('precision', 2)
-        if precision is not None:
-            span = span.round(precision)
-        self.span = span
-        self.charSpan = np.char.array(span)
-        w = self.slider
-        w.setMinimum(0)
-        w.setMaximum(len(span) - 1)
+        if not hasattr(self,'span') or 'limits' in opts or 'step' in opts or 'span' in opts:
+            span = opts.get('span', None)
+            if span is None:
+                step = opts.get('step', 1)
+                start, stop = opts.get('limits', param.opts['limits'])
+                # Add a bit to 'stop' since python slicing excludes the last value
+                span = np.arange(start, stop + step, step)
+            precision = opts.get('precision', 2)
+            if precision is not None:
+                span = span.round(precision)
+            self.span = span
+            self.charSpan = np.char.array(span)
+            w = self.slider
+            w.setMinimum(0)
+            w.setMaximum(len(span) - 1)
         if 'suffix' in opts:
             self.setSuffix(opts['suffix'])
 
