@@ -425,79 +425,79 @@ class PlotDataItem(GraphicsObject):
 
         *Optimization Keyword Arguments*
 
-        =================== ============================================================
-        Property            Description
-        =================== ============================================================
-        useCache            ``bool``, default ``True``
-
-                            Generated point graphics of the scatter plot are cached to
-                            improve performance.  Setting this to ``False`` can improve
-                            image quality in some situations.
-
-        antialias           ``bool``, default inherited from
-                            ``pyqtgraph.getConfigOption('antialias')``
-
-                            Disabling antialiasing can improve performance. In some
-                            cases, in particular when ``pxMode=True``, points will be 
-                            rendered with antialiasing regardless of this setting.
-
-        autoDownsample      ``bool``, default ``False``
-
-                            Resample the data before plotting to avoid plotting multiple
-                            line segments per pixel. This can improve performance when
-                            viewing very high-density data, but increases initial
-                            overhead and memory usage. See :meth:`setDownsampling` for
-                            more information.
-
-        downsample          ``int``, default ``1``
-
-                            Resample the data before plotting, reducing the number of 
-                            displayed elements by the specified factor.
-                            See :meth:`setDownsampling` for more information.
-
-        downsampleMethod    ``str``, default ``'peak'``
-
-                            Method for downsampling data. See
-                            :meth:`setDownsampling` for more information.
-
-        clipToView          ``bool``, default ``False``
-
-                            Clip the data to only the visible range on the x-axis.
-                            See :meth:`setClipToView` for more information.
-
-        dynamicRangeLimit   ``float``, default ``1e6``
-
-                            Limit off-screen y positions of data points. ``None``
-                            disables the limiting. This can increase performance but may
-                            cause plots to disappear at high levels of magnification. 
-                            See :meth:`setDynamicRangeLimit` for more information.
-
-        dynamicRangeHyst    ``float``, default ``3.0``
-        
-                            Permit vertical zoom to change up to the given hysteresis
-                            factor before the limit calculation is repeated. See
-                            :meth:`setDynamicRangeLimit` for more information.
-
-        skipFiniteCheck     ``bool``, default ``False``
-
-                            If ``True``, the special handling of non-finite values such as
-                            ``NaN`` in :class:`~pyqtgraph.PlotCurveItem` is skipped.
-                            This speeds up the plot, but creates error or causes the
-                            plotting to fail entirely if any such values are present.
-                            If ``connect='auto'``, PlotDataItem manages the check and
-                            this item will be overridden.
-
-        useDownsamplingCache ``bool``, default ``True``
-
-                            Use cache instead of "real-time" computation of downsampled signal.
-                            See :meth: `setDownsamplingCacheMode` for more information.
-
-        downsamplingCacheSize ``int``, default ``20000``
-        
-                            Set the size of the cache for downsampling.
-                            See :meth: `setDownsamplingCacheMode` for more information.
-
-        =================== ============================================================
+        ====================== ====================================================================
+        Property               Description
+        ====================== ====================================================================
+        useCache               ``bool``, default ``True``
+   
+                               Generated point graphics of the scatter plot are cached to
+                               improve performance.  Setting this to ``False`` can improve
+                               image quality in some situations.
+   
+        antialias              ``bool``, default inherited from
+                               ``pyqtgraph.getConfigOption('antialias')``
+   
+                               Disabling antialiasing can improve performance. In some
+                               cases, in particular when ``pxMode=True``, points will be 
+                               rendered with antialiasing regardless of this setting.
+   
+        autoDownsample         ``bool``, default ``False``
+   
+                               Resample the data before plotting to avoid plotting multiple
+                               line segments per pixel. This can improve performance when
+                               viewing very high-density data, but increases initial
+                               overhead and memory usage. See :meth:`setDownsampling` for
+                               more information.
+   
+        downsample             ``int``, default ``1``
+   
+                               Resample the data before plotting, reducing the number of 
+                               displayed elements by the specified factor.
+                               See :meth:`setDownsampling` for more information.
+   
+        downsampleMethod       ``str``, default ``'peak'``
+   
+                               Method for downsampling data. See
+                               :meth:`setDownsampling` for more information.
+   
+        clipToView             ``bool``, default ``False``
+   
+                               Clip the data to only the visible range on the x-axis.
+                               See :meth:`setClipToView` for more information.
+   
+        dynamicRangeLimit      ``float``, default ``1e6``
+   
+                               Limit off-screen y positions of data points. ``None``
+                               disables the limiting. This can increase performance but may
+                               cause plots to disappear at high levels of magnification. 
+                               See :meth:`setDynamicRangeLimit` for more information.
+   
+        dynamicRangeHyst       ``float``, default ``3.0``
+           
+                               Permit vertical zoom to change up to the given hysteresis
+                               factor before the limit calculation is repeated. See
+                               :meth:`setDynamicRangeLimit` for more information.
+   
+        skipFiniteCheck        ``bool``, default ``False``
+   
+                               If ``True``, the special handling of non-finite values such as
+                               ``NaN`` in :class:`~pyqtgraph.PlotCurveItem` is skipped.
+                               This speeds up the plot, but creates error or causes the
+                               plotting to fail entirely if any such values are present.
+                               If ``connect='auto'``, PlotDataItem manages the check and
+                               this item will be overridden.
+   
+        useDownsamplingCache   ``bool``, default ``True``
+   
+                               Use cache instead of "real-time" computation of downsampled signal.
+                               See :meth: `setDownsamplingCacheMode` for more information.
+   
+        downsamplingCacheSize  ``int``, default ``20000``
+           
+                               Set the size of the cache for downsampling.
+                               See :meth: `setDownsamplingCacheMode` for more information.
+   
+        ====================== ====================================================================
 
         *Meta Keyword Arguments*
 
