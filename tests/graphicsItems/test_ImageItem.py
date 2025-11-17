@@ -19,11 +19,11 @@ def test_useCupy_can_be_set_after_init():
     prev_setting = pg.getConfigOption("useCupy")
     try:
         pg.setConfigOption("useCupy", False)
-        w = pg.GraphicsLayoutWidget()
-        w.show()
+        w = pg.GraphicsView()
         view = pg.ViewBox()
         w.setCentralWidget(view)
         w.resize(200, 200)
+        w.show()
         img = cupy.random.randint(0, 255, size=(32, 32)).astype(cupy.uint8)
         ii = pg.ImageItem()
         view.addItem(ii)
@@ -63,11 +63,11 @@ def test_ensuring_substrate():
 
 
 def test_ImageItem(transpose=False):
-    w = pg.GraphicsLayoutWidget()
-    w.show()
+    w = pg.GraphicsView()
     view = pg.ViewBox()
     w.setCentralWidget(view)
     w.resize(200, 200)
+    w.show()
     img = TransposedImageItem(border=0.5, transpose=transpose)
 
     view.addItem(img)

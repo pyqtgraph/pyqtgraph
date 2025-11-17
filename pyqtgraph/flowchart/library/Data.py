@@ -431,10 +431,10 @@ class Slice(CtrlNode):
     """
     nodeName = 'Slice'
     uiTemplate = [
-        ('axis', 'intSpin', {'value': 0, 'min': 0, 'max': 1e6}),
-        ('start', 'intSpin', {'value': 0, 'min': -1e6, 'max': 1e6}),
-        ('stop', 'intSpin', {'value': -1, 'min': -1e6, 'max': 1e6}),
-        ('step', 'intSpin', {'value': 1, 'min': -1e6, 'max': 1e6}),
+        ('axis', 'intSpin', {'value': 0, 'min': 0, 'max': 1000000}),
+        ('start', 'intSpin', {'value': 0, 'min': -1000000, 'max': 1000000}),
+        ('stop', 'intSpin', {'value': -1, 'min': -1000000, 'max': 1000000}),
+        ('step', 'intSpin', {'value': 1, 'min': -1000000, 'max': 1000000}),
     ]
     
     def processData(self, data):

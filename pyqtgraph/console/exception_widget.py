@@ -193,7 +193,7 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
             print("Exception in systrace:")
             traceback.print_exc()
         finally:
-            self.inSystrace = False
+            self._inSystrace = False
         return self.systrace
         
     def checkException(self, excType, exc, tb):

@@ -232,7 +232,7 @@ class TargetItem(UIGraphicsItem):
         return self._shape
 
     def generateShape(self):
-        dt = self.deviceTransform()
+        dt = self.deviceTransform_()
         if dt is None:
             self._shape = self._path
             return None

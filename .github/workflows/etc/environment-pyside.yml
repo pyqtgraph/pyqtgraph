@@ -2,7 +2,7 @@ name: test
 channels:
   - conda-forge
 dependencies:
-  - pyside6
+  - pyside6[version='!=6.9.1']
   - numpy
   - nomkl
   - scipy

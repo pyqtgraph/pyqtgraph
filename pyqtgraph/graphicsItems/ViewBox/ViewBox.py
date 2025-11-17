@@ -806,8 +806,12 @@ class ViewBox(GraphicsWidget):
         if self.state['aspectLocked'] is not False:
             if x is None:
                 scale[0] = scale[1]
-            if y is None:
+            elif y is None:
                 scale[1] = scale[0]
+            else:
+                # scale to y if neither x nor y is None.
+                # this path is entered when dragging the mouse with right-button pressed.
+                scale[0] = scale[1]
 
         vr = self.targetRect()
         if center is None:
@@ -1060,11 +1064,13 @@ class ViewBox(GraphicsWidget):
     def blockLink(self, b):
         self.linksBlocked = b  ## prevents recursive plot-change propagation
 
+    @QtCore.Slot()
     def linkedXChanged(self):
         ## called when x range of linked view has changed
         view = self.linkedView(0)
         self.linkedViewChanged(view, ViewBox.XAxis)
 
+    @QtCore.Slot()
     def linkedYChanged(self):
         ## called when y range of linked view has changed
         view = self.linkedView(1)

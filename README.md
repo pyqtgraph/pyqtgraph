@@ -100,6 +100,7 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [Antenna Array Analysis](https://github.com/rookiepeng/antenna-array-analysis)
 * [argos](https://github.com/titusjan/argos)
 * [Atomize](https://github.com/Anatoly1010/Atomize)
+* [BEC Widgets](https://github.com/bec-project/bec_widgets)
 * [EnMAP-Box](https://enmap-box.readthedocs.io)
 * [EO Time Series Viewer](https://eo-time-series-viewer.readthedocs.io)
 * [ephyviewer](https://ephyviewer.readthedocs.io)
@@ -118,5 +119,6 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
 * [Semi-Supervised Semantic Annotator](https://gitlab.com/s3a/s3a)
 * [STDF-Viewer](https://github.com/noonchen/STDF-Viewer)
+* [QT-DataViewer](https://gitlab.tudelft.nl/qutech-qdlabs/qt-dataviewer)
 
 Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!

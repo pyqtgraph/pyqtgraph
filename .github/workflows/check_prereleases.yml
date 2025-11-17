@@ -20,7 +20,7 @@ jobs:
         qt-lib: [pyqt6, pyside]
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: "Install Linux VirtualDisplay"
       if: runner.os == 'Linux'
       run: |
@@ -45,7 +45,7 @@ jobs:
         7z x mesa.7z -o*
         powershell.exe mesa\systemwidedeploy.cmd 1
     - name: Setup Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.13'
     - name: Install PySide6
@@ -101,7 +101,7 @@ jobs:
       shell: bash
     - name: Upload Screenshots
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: Screenshots - Qt-Bindings ${{ matrix.qt-lib }} - ${{ matrix.os }})
         path: ${{ env.SCREENSHOT_DIR }}

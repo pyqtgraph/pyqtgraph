@@ -18,9 +18,9 @@ jobs:
   make_dash_docset:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.x"
           cache: pip
@@ -32,7 +32,7 @@ jobs:
           make -C doc dash
       - run: tar --exclude='.DS_Store' -cvzf pyqtgraph.tgz doc/pyqtgraph.docset
       - name: Upload docset
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: pyqtgraph.docset
           path: pyqtgraph.tgz
@@ -40,11 +40,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install mypy
         run: pip install mypy
       - name: Run mypy
@@ -76,22 +76,22 @@ jobs:
             qt-version: "PyQt6"
           - python-version: "3.12"
             qt-lib: "pyside"
-            qt-version: "PySide6-Essentials"
+            qt-version: "PySide6-Essentials!=6.9.1"
           - python-version: "3.13"
             qt-lib: "pyqt"
             qt-version: "PyQt6"
           - python-version: "3.13"
             qt-lib: "pyside"
-            qt-version: "PySide6-Essentials"
+            qt-version: "PySide6-Essentials!=6.9.1"
         exclude:
           - os: macos-latest
             python-version: "3.10"
             qt-lib: "pyside"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -150,7 +150,7 @@ jobs:
           pytest pyqtgraph/examples -v -n 2
         shell: bash
       - name: Upload coverage data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-data-${{ matrix.python-version }}-${{ matrix.qt-lib }}-${{ matrix.os }}
           path: .coverage.*
@@ -158,7 +158,7 @@ jobs:
           include-hidden-files: true
       - name: Upload Screenshots
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Screenshots (Python ${{ matrix.python-version }} - Qt-Bindings ${{ matrix.qt-lib }} - OS ${{ matrix.os }})
           path: ${{ env.SCREENSHOT_DIR }}
@@ -184,7 +184,7 @@ jobs:
             environment-file: .github/workflows/etc/environment-pyside.yml
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: latest
@@ -249,7 +249,7 @@ jobs:
           pytest pyqtgraph/examples -v -n 2
       - name: Upload Screenshots
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Screenshots (Conda - Qt-Bindings ${{ matrix.qt-lib }} - OS ${{ matrix.os }})
           path: ${{ env.SCREENSHOT_DIR }}
@@ -261,9 +261,9 @@ jobs:
     name: build wheel
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
           cache: pip
@@ -272,7 +272,7 @@ jobs:
           pip install build
           python -m build --wheel
       - name: Upload Wheel
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: wheel
           path: dist/*.whl
@@ -286,11 +286,11 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
           cache: pip
@@ -298,14 +298,14 @@ jobs:
         run: |
           python -m pip install PyQt5 numpy scipy
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: "python"
           queries: +security-and-quality
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@v4
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
 
   coverage:
     name: combine & check coverage
@@ -314,13 +314,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           # Use latest Python, so it understands all syntax.
           python-version: "3.13"
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           pattern: coverage-data-*
           merge-multiple: true
@@ -340,7 +340,7 @@ jobs:
           # coverage report --fail-under=100
 
       - name: Upload HTML report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: html-report
           path: htmlcov

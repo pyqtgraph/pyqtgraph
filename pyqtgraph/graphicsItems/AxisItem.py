@@ -116,12 +116,13 @@ class AxisItem(GraphicsWidget):
         self.labelText = ""
         self.labelUnits = ""
         self.labelUnitPrefix = ""
+        self.unitPower = 1
         self.labelStyle = {}
         self._siPrefixEnableRanges = None
+        self.setRange(0, 1)
         self.setLabel(**args)
         self.showLabel(False)
 
-        self.setRange(0, 1)
 
         if pen is None:
             self.setPen()
@@ -231,12 +232,22 @@ class AxisItem(GraphicsWidget):
             showValues            ``bool``
                                   indicates whether text is displayed adjacent to ticks.
             
-            tickAlpha             ``float``,``int`` or ``None`` 
+            tickAlpha             ``float``, ``int`` or ``None`` 
                                   If ``None``, pyqtgraph will draw the ticks with the
                                   alpha it deems appropriate. Otherwise, the alpha will
                                   be fixed at the value passed. With ``int``, accepted
                                   values are [0..255]. With value of type ``float``,
                                   accepted values are from [0..1].
+
+            maxTickLevel          ``int``
+                                  default: 2
+
+                                  Tick (and grid line) density level.
+
+                                  - 0: Show major ticks only
+                                  - 1: Show major ticks and one level of minor ticks
+                                  - 2: Show major ticks and two levels of minor ticks
+                                    (higher CPU usage)
             ===================== ======================================================
 
         Raises
@@ -430,6 +441,7 @@ class AxisItem(GraphicsWidget):
         units: str | None=None,
         unitPrefix: str | None=None,
         siPrefixEnableRanges: tuple[tuple[float, float], ...] | None=None,
+        unitPower: int | float=1,
         **kwargs
     ):
         """
@@ -449,6 +461,12 @@ class AxisItem(GraphicsWidget):
             The ranges in which automatic SI prefix scaling is enabled. Defaults to
             everywhere, unless units is empty, in which case it defaults to
             ``((0., 1.), (1e9, inf))``.
+        unitPower : int or float, optional
+            The power to which the units are raised. For example, if units='m²', the
+            unitPower should be 2. This ensures correct scaling when using SI prefixes.
+            Supports positive, negative and non-integral powers.  Default is 1.
+            Note: The power only affects the scaling, not the units themselves. For
+            example, with units='m' and unitPower=2, the displayed units will still be 'm'.
         **kwargs
             All extra keyword arguments become CSS style options for the ``<span>`` tag
             which will surround the axis label and units. Note that CSS attributes are
@@ -464,6 +482,7 @@ class AxisItem(GraphicsWidget):
         self.labelText = text or ""
         self.labelUnits = units or ""
         self.labelUnitPrefix = unitPrefix or ""
+        self.unitPower = unitPower
         if kwargs:
             self.labelStyle = kwargs
         self.setSIPrefixEnableRanges(siPrefixEnableRanges)
@@ -809,7 +828,7 @@ class AxisItem(GraphicsWidget):
             _range = 10**np.array(self.range) if self.logMode else self.range
             scaling_value = max(abs(_range[0]), abs(_range[1])) * self.scale
             if any(low <= scaling_value <= high for low, high in self.getSIPrefixEnableRanges()):
-                (scale, prefix) = fn.siScale(scaling_value)
+                (scale, prefix) = fn.siScale(scaling_value, power=self.unitPower)
 
         self.autoSIPrefixScale = scale
         self.labelUnitPrefix = prefix
@@ -1165,17 +1184,19 @@ class AxisItem(GraphicsWidget):
                     break # find the first value that is smaller or equal
         majorInterval = majorScaleFactor * p10unit
         # manual sanity check: print(f"{majorMaxSpacing:.2e} > {majorInterval:.2e} = {majorScaleFactor:.2e} x {p10unit:.2e}")
-
-        minorMinSpacing = 2 * dif/size   # no more than one minor tick per two pixels
-        trials = (5, 10) if majorScaleFactor == 10 else (10, 20, 50)
-        for minorScaleFactor in trials:
-            minorInterval = minorScaleFactor * p10unit
-            if minorInterval >= minorMinSpacing:
-                break # find the first value that is larger or equal to allowed minimum of 1 per 2px
         levels = [
             (majorInterval, 0),
-            (minorInterval, 0)
         ]
+
+        if self.style['maxTickLevel'] >= 1:
+            minorMinSpacing = 2 * dif/size   # no more than one minor tick per two pixels
+            trials = (5, 10) if majorScaleFactor == 10 else (10, 20, 50)
+            for minorScaleFactor in trials:
+                minorInterval = minorScaleFactor * p10unit
+                if minorInterval >= minorMinSpacing:
+                    break # find the first value that is larger or equal to allowed minimum of 1 per 2px
+            levels.append((minorInterval, 0))
+
         # extra ticks at 10% of major interval are pretty, but eat up CPU
         if self.style['maxTickLevel'] >= 2: # consider only when enabled
             if majorScaleFactor == 10:
