@@ -64,7 +64,7 @@ class PlotDataset:
     
     After a search has been performed, typically during a call to
     :meth:`dataRect <pyqtgraph.PlotDataset.dataRect>`, ``dataset.containsNonfinite``
-    is ``True`` if any coordinate values are non-finite (e.g. ``NaN`` or ``Inf``) or 
+    is ``True`` if any coordinate values are non-finite (e.g. ``NaN`` or ``Inf``) or
     ``False`` if all values are finite. If no search has been performed yet,
     `dataset.containsNonfinite` is ``None``.
 
@@ -88,7 +88,7 @@ class PlotDataset:
     Warnings
     --------
     :orphan:
-    .. warning:: 
+    .. warning::
         
         This class is intended for internal use of :class:`~pyqtgraph.PlotDataItem`.
         The interface may change without warning.  It is not considered part of the
@@ -123,7 +123,7 @@ class PlotDataset:
         return not (self.xAllFinite and self.yAllFinite)
 
     def _updateDataRect(self):
-        """ 
+        """
         Identify plottable bounds and presence of non-finite data.
         """
         if self.y is None or self.x is None:
@@ -172,7 +172,7 @@ class PlotDataset:
             The bounding rect of the data in view-space.  Will return ``None`` if there
             is no data or if all `x` and `y` values are ``NaN``.
         """
-        if self._dataRect is None: 
+        if self._dataRect is None:
             self._updateDataRect()
         return self._dataRect
 
@@ -249,9 +249,10 @@ class PlotDataItem(GraphicsObject):
     PlotDataItem's performance is usually sufficient for real-time interaction even for
     large numbers of points. If you do encounter performance issues, consider the
     following.
+    
 
     * Use a :class:`QPen` with ``width=1``. All wider pens cause a loss in performance.
-      This loss can be partially mitigated by using fully opaque colors 
+      This loss can be partially mitigated by using fully opaque colors
       (``alphaF=1.0``), solid lines, and no anti-aliasing. 
     * For scatter plots that use multiple pen or brush settings, passing a list of
       string representation to `symbolPen` or `symbolBrush` creates many internal
@@ -260,7 +261,7 @@ class PlotDataItem(GraphicsObject):
       instead. This lets a smaller number of stored instances be reused.
     * If you know that all points in your data set will have numerical, finite values,
       :meth:`setSkipFiniteCheck` can disable a check to identify points that require
-      special treatment.  
+      special treatment.
     * When passing `x` and `y` data to :meth:`PlotDataItem.setData`, use
       :class:`numpy.ndarray` instead of python's built-in lists.
 
@@ -307,7 +308,7 @@ class PlotDataItem(GraphicsObject):
         Property    Description
         =========== ====================================================================
         symbol      ``str``, :class:`QPainterPath`,
-                     
+                    
                     list of ``str`` or :class:`QPainterPath`,
                     
                     or ``None``, default ``None``
@@ -495,7 +496,6 @@ class PlotDataItem(GraphicsObject):
         
                             Set the size of the cache for downsampling.
                             See :meth: `setDownsamplingCacheMode` for more information.
-
 
         =================== ============================================================
 
