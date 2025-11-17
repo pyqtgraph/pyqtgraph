@@ -163,6 +163,7 @@ from .graphicsItems.ItemGroup import *
 from .graphicsItems.LabelItem import *
 from .graphicsItems.LegendItem import *
 from .graphicsItems.LinearRegionItem import *
+from .graphicsItems.NonUniformImage import *
 from .graphicsItems.PColorMeshItem import *
 from .graphicsItems.PlotCurveItem import *
 from .graphicsItems.PlotDataItem import *

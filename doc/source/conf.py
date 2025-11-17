@@ -66,7 +66,10 @@ intersphinx_mapping = {
 nitpick_ignore_regex = [
     ("py:class", "re.Pattern"),  # doesn't seem to be a good ref in python docs
     ("py:class", "numpy._typing._array_like._SupportsArray"),
-    ("py:class", "numpy._typing._nested_sequence._NestedSequence")
+    ("py:class", "numpy._typing._nested_sequence._NestedSequence"),
+    ("py:class", "PYQT_SLOT"),
+    ("py:class", "PYQT_SIGNAL"),
+    ("py:class", "QObjectT"),
 ]
 
 # looks way better with pydata-sphinx-theme
@@ -76,12 +79,13 @@ napoleon_use_admonition_for_references = True
 
 # if napoleon_use_param is True, there are issues, it merges
 # Parameters  Other Parameters, see  https://github.com/sphinx-doc/sphinx/issues/10330
-napoleon_use_param = False
-# napoleon_use_keyword = False
+# need set to True for sphinx-autodoc-typehints to work
+napoleon_use_param = True
+napoleon_use_keyword = False
 
 # makes so Attributes/Variables aren't rendered like methods, but like Parameters
 napoleon_use_ivar = True
-napoleon_attr_annotations = False
+napoleon_attr_annotations = True
 napoleon_custom_sections = [
     ("Signals", "params_style"),
     ("Slots", "params_style")
@@ -110,6 +114,7 @@ spelling_word_list_filename = [
     'dictionaries/custom.dic'
 ]
 
+# inheritance diagram settings
 graphviz_dot_args = ['-Gbgcolor=transparent']
 graphviz_output_format = 'svg'  
 inheritance_graph_attrs = dict(
@@ -180,20 +185,19 @@ pygments_style = 'sphinx'
 # Automatically extract typehints when specified and place them in
 # descriptions of the relevant function/method.
 # autodoc_typehints = "description"
-autodoc_typehints = "both"
-autodoc_typehints_format = 'short'
-autodoc_typehints_description_target = 'documented_params'
+# autodoc_typehints = "both"
+autodoc_typehints = "none"  # Conflicts with sphinx_autodoc_typehints
+autodoc_typehints_description_target = 'all'
 
 # sphinx-autodoc-typehints settings
 always_use_bars_union = True
-typehints_defaults = 'braces'
-
-napoleon_use_rtype = True
-typehints_use_rtype = True
-typehints_document_rtype = True
-
-typehints_use_signature = True
-typehints_use_signature_return = True
+always_document_param_types = True
+typehints_defaults = 'comma'
+napoleon_use_rtype = False
+typehints_use_rtype = False
+typehints_document_rtype = False
+typehints_use_signature = False
+typehints_use_signature_return = False
 
 autodoc_inherit_docstrings = False
 autodoc_mock_imports = [
@@ -201,9 +205,6 @@ autodoc_mock_imports = [
     "h5py",
     "matplotlib",
 ]
-
-# autodoc_type_aliases = {}
-
 
 # -- Options for HTML output ---------------------------------------------------
 
