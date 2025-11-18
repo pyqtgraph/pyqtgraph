@@ -1,7 +1,6 @@
 import argparse
-import sys
 import numpy as np
-from PyQt6.QtWidgets import (
+from pyqtgraph.Qt.QtWidgets import (
     QApplication,
     QMainWindow,
     QVBoxLayout,
@@ -11,7 +10,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QSpinBox,
 )
-from PyQt6 import QtCore
+from pyqtgraph.Qt import QtCore
 
 import pyqtgraph as pg
 

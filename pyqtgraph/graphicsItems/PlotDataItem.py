@@ -492,7 +492,7 @@ class PlotDataItem(GraphicsObject):
                                Use cache instead of "real-time" computation of downsampled signal.
                                See :meth: `setDownsamplingCacheMode` for more information.
    
-        cacheDsFactor         ``int``, default ``20000``
+        cacheDsFactor          ``int``, default ``20000``
            
                                Set the downsampling factor for the downsampling cache.
                                See :meth: `setDownsamplingCacheMode` for more information.
