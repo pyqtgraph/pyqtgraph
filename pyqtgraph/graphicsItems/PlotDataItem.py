@@ -52,7 +52,7 @@ class OptimizationKeywordArgs(TypedDict):
     dynamicRangeHyst: float
     skipFiniteCheck: bool
     useDownsamplingCache: bool
-    downsamplingCacheSize: int
+    cacheDsFactor: int
 
 
 class PlotDataset:
@@ -492,9 +492,9 @@ class PlotDataItem(GraphicsObject):
                                Use cache instead of "real-time" computation of downsampled signal.
                                See :meth: `setDownsamplingCacheMode` for more information.
    
-        downsamplingCacheSize  ``int``, default ``20000``
+        cacheDsFactor         ``int``, default ``20000``
            
-                               Set the size of the cache for downsampling.
+                               Set the downsampling factor for the downsampling cache.
                                See :meth: `setDownsamplingCacheMode` for more information.
    
         ====================== ====================================================================
@@ -637,7 +637,7 @@ class PlotDataItem(GraphicsObject):
             'downsampleMethod': 'peak',
             'autoDownsampleFactor': 5.0,  # draw ~5 samples per pixel
             'useDownsamplingCache': True,
-            'downsamplingCacheSize': 20000,  # Number of samples after downsampling (with autodownsample and caching)
+            'cacheDsFactor': 20000,  #The downsampling factor for the cache
             'minSampPerPxForCache': 2.0,  # Draw at least this many samples per pixel when using cache
             'clipToView': False,
             'dynamicRangeLimit': 1e6,
@@ -1063,37 +1063,36 @@ class PlotDataItem(GraphicsObject):
         if changed:
             self._reloadYValues()
 
-    def setDownsamplingCacheMode(self, useCache: bool = True, cacheSize: int = 20000):
+    def setDownsamplingCacheMode(self, useCache: bool = True, cacheDsFactor: int = 20000):
         """
         If downsampling is enabled, this method sets the use of cache for downsampling.
         Downsampling with cache reduces CPU load while changing view (zooming), since
         the downsampled signal will not have to be re-calculated each time the plot is
         re-drawn. For fixed downsampling, caching has no drawbacks except a minor increase
         in memory usage. For auto-downsampling, there is a tradeoff between CPU-use for
-        downsampling and the number of samples shown. Experimenting to find the best settings
-        for your use case is encouraged.
+        downsampling and graphics processing for the number of samples shown. 
+        You can use the DownsamplingCache demo to experiment with the `cacheDsFactor` 
+        setting to find the best value for your setup.
 
         Parameters
         ----------
         useCache : bool, default True
             `True` to used downsampling cache, `False` to not use cache.
-        cacheSize: int, default 20000
-            Number of samples to store in the cache. This is also the number of
-            samples actually drawn when the full data is in view when using
-            downsampling cache with autoDownsample. When there are many
-            PlotDataItems with long sequences in a Plot, it may be advantageous
-            to reduce the downsampleCache size to reduce the number of samples
-            drawn on screen at one time, at the cost of somewhat reduced zooming
-            performance at higher zoom-levels. This setting has no effect when
-            `autoDownsample` is off.
+        cacheDsFactor: int, default 20000
+            Downsampling factor used for the cache when autoDownsample is enabled.
+            The ideal downsampling factor is a tradeoff between CPU load for 
+            downsampling and graphics load for drawing the number of samples shown. 
+            A higher downsampling factor means fewer samples are drawn when the full
+            data is in view, reducing graphics load but increasing CPU load for
+            downsampling.This setting has no effect when `autoDownsample` is off.
         """
         changed = False
         if self.opts["useDownsamplingCache"] != useCache:
             changed = True
             self.opts["useDownsamplingCache"] = useCache
-        if cacheSize != self.opts["downsamplingCacheSize"]:
+        if cacheDsFactor != self.opts["cacheDsFactor"]:
             changed = True
-            self.opts["downsamplingCacheSize"] = cacheSize
+            self.opts["cacheDsFactor"] = cacheDsFactor
         if changed:
             self._reloadYValues()
 
@@ -1647,7 +1646,7 @@ class PlotDataItem(GraphicsObject):
             self._cache_downsampling_factor = self.opts["downsample"]
         else:
             self._cache_downsampling_factor = max(
-                1, int(len(x) / self.opts["downsamplingCacheSize"])
+                1, int(self.opts["cacheDsFactor"])
             )
         self._ds = self._cache_downsampling_factor
         (
