@@ -48,7 +48,7 @@ and unrelated changes may be rejected.
 For major changes, it is recommended to discuss your plans on the mailing list or in a
 github issue/discussion before putting in too much effort.
 
-PyQtGraph has adopted [NEP-29](https://numpy.org/neps/nep-0029-deprecation_policy.html)
+PyQtGraph has adopted [SPEC-0](https://scientific-python.org/specs/spec-0000/)
 which governs the timeline for phasing out support for numpy and python versions.
 
 ## Documentation

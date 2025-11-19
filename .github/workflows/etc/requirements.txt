@@ -1,24 +1,24 @@
-# numpy based on python version and NEP-29 requirements
-numpy; python_version == '3.11'
-numpy; python_version == '3.12'
-numpy; python_version == '3.13'
-numpy~=1.25.0; python_version == '3.10'
+# numpy based on python version and SPEC-0 requirements
+
+numpy~=2.0.0; python_version == '3.12'
+numpy~=2.1.0; python_version == '3.13'
+numpy; python_version == '3.14'
 
 # image testing
-scipy==1.15.2
+scipy==1.16.3
 
 # optional high performance paths
-numba==0.60.0; python_version == '3.10'
+numba==0.62.1; python_version == '3.12'
 
 # optional 3D
 pyopengl==3.1.10
 
 # supplimental tools
-matplotlib==3.10.6
+matplotlib==3.10.7
 h5py==3.15.1
 
 # testing
-pytest==8.4.2
-pytest-qt==4.4.0
+pytest==9.0.1
+pytest-qt==4.5.0
 pytest-xdist==3.8.0
 pytest-xvfb==3.1.1; sys_platform == 'linux'

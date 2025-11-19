@@ -1,6 +1,6 @@
 DESCRIPTION = """\
-PyQtGraph is a pure-python graphics and GUI library built on PyQt5/PySide2 and
-numpy. 
+PyQtGraph is a pure-python graphics and GUI library built on Qt and
+NumPy. 
 
 It is intended for use in mathematics / scientific / engineering applications.
 Despite being written entirely in python, the library is very fast due to its
@@ -23,7 +23,6 @@ setupOpts = dict(
     classifiers = [
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Development Status :: 4 - Beta",
         "Environment :: Other Environment",
         "Intended Audience :: Science/Research",
         "Operating System :: OS Independent",
@@ -96,16 +95,10 @@ class Install(install.install):
 setup(
     version=version,
     cmdclass={
-        'install': Install,
-        'deb': helpers.DebCommand, 
-        'test': helpers.TestCommand,
-        'debug': helpers.DebugCommand,
-        'mergetest': helpers.MergeTestCommand,
         'asv_config': helpers.ASVConfigCommand,
-        'style': helpers.StyleCommand
     },
     packages=find_namespace_packages(include=['pyqtgraph', 'pyqtgraph.*']),
-    python_requires=">=3.10",
+    python_requires=">=3.12",
     package_dir={"pyqtgraph": "pyqtgraph"},
     package_data={
         'pyqtgraph.examples': ['optics/*.gz', 'relativity/presets/*.cfg'],
@@ -117,7 +110,7 @@ setup(
         ],
     },
     install_requires = [
-        'numpy>=1.25.0',
+        'numpy>=2.0.0',
         'colorama'
     ],
     **setupOpts
