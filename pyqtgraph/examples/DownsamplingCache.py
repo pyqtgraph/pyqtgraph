@@ -15,13 +15,6 @@ from pyqtgraph.Qt import QtCore
 import pyqtgraph as pg
 
 
-class wait_cursor:
-    def __enter__(self):
-        QApplication.setOverrideCursor(QtCore.Qt.CursorShape.WaitCursor)
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        QApplication.restoreOverrideCursor()
-
 
 class TimeSeriesPlot(QMainWindow):
     def __init__(self, signal_length, n_signals, 
@@ -64,7 +57,7 @@ class TimeSeriesPlot(QMainWindow):
         self.cache_ds_factor_spinbox.setValue(self._cache_ds_factor)
         self.cache_ds_factor_spinbox.setSingleStep(1000)
         self.cache_ds_factor_spinbox.setToolTip("Downsampling factor for cache")
-        self.cache_ds_factor_spinbox.editingFinished.connect(self.on_cache_ds_changed)        
+        self.cache_ds_factor_spinbox.valueChanged.connect(self.on_cache_ds_changed)    
         
         cache_layout.addWidget(self.use_cache_button)
         cache_layout.addSpacing(10)
@@ -96,6 +89,12 @@ class TimeSeriesPlot(QMainWindow):
         self.signal_length_spinbox.setSingleStep(1000000)
         self.signal_length_spinbox.setToolTip("Length of each signal")
         
+        # Memory usage label
+        self.memory_label = QLabel()
+        self.update_memory_label()
+        self.num_signals_spinbox.valueChanged.connect(self.update_memory_label)
+        self.signal_length_spinbox.valueChanged.connect(self.update_memory_label)
+        
 
         recalc_layout.addWidget(self.recalc_button)
         recalc_layout.addSpacing(20)  # Add some space after button
@@ -104,6 +103,8 @@ class TimeSeriesPlot(QMainWindow):
         recalc_layout.addSpacing(10)  # Add space between spinboxes
         recalc_layout.addWidget(length_label)
         recalc_layout.addWidget(self.signal_length_spinbox)
+        recalc_layout.addSpacing(10)
+        recalc_layout.addWidget(self.memory_label)
         recalc_layout.addStretch()  # Push everything to the left
         
         recalc_widget = QWidget()
@@ -134,18 +135,18 @@ class TimeSeriesPlot(QMainWindow):
         self.plot_random_time_series(num_signals, signal_length)
 
     def plot_random_time_series(self, num_lines, length):
-        with wait_cursor():
+        with pg.BusyCursor():
             self.plot_widget.clear()
             x = np.arange(0, length)
             self.items = []
             for i in range(num_lines):
                 y = np.random.default_rng().normal(size=length)
                 color = pg.intColor(i, hues=num_lines)
-                item = self.plot_widget.plot(x, y, useDownsamplingCache=self._use_cache, minSampPerPxForCache = 1.1, clear=False, pen=pg.mkPen(color))
+                item = self.plot_widget.plot(x, y, useDownsamplingCache=self._use_cache, clear=False, pen=pg.mkPen(color))
                 self.items.append(item)
 
     def on_use_cache_toggled(self):
-        with wait_cursor():
+        with pg.BusyCursor():
             for item in self.items:
                 item.setDownsamplingCacheMode(useCache=self.use_cache_button.isChecked(), cacheDsFactor=self._cache_ds_factor)
         if self.use_cache_button.isChecked():
@@ -160,10 +161,23 @@ class TimeSeriesPlot(QMainWindow):
     def on_cache_ds_changed(self):
         """Update cache size when spinbox value changes (if cache is currently enabled)"""
         if self.use_cache_button.isChecked():
-            with wait_cursor():
+            with pg.BusyCursor():
                 self._cache_ds_factor = self.cache_ds_factor_spinbox.value()
-                for item in self.items:
-                    item.setDownsamplingCacheMode(useCache=True, cacheDsFactor=self._cache_ds_factor)
+                self.plot_widget.setDownsamplingCacheMode(useCache=True, cacheDsFactor=self._cache_ds_factor)
+
+    def update_memory_label(self):
+        """Update memory usage label based on current spinbox values"""
+        num_signals = self.num_signals_spinbox.value()
+        signal_length = self.signal_length_spinbox.value()
+        bytes_per_point = 16  # Assuming float64 for x and y
+        total_bytes = num_signals * signal_length * bytes_per_point
+        if total_bytes < 1e6:
+            mem_str = f"{total_bytes / 1e3:.2f} KB"
+        elif total_bytes < 1e9:
+            mem_str = f"{total_bytes / 1e6:.2f} MB"
+        else:
+            mem_str = f"{total_bytes / 1e9:.2f} GB"
+        self.memory_label.setText(f"Estimated memory usage: {mem_str}")
     
     def autozoom(self):
         # Gradually zoom all the way in on the x-axis, then all the way out
@@ -195,56 +209,16 @@ class TimeSeriesPlot(QMainWindow):
             vb.setXRange(start, end, padding=0)
 
 
-def parse_args():
-    """Parse command line arguments for the TimeSeriesPlot constructor."""
-    parser = argparse.ArgumentParser(
-        description="Demo PlotDataItem downsampling cache performance",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-    parser.add_argument(
-        '--signal-length', '-l',
-        type=int,
-        default=500_000_000, #Huge signal tha actually shows benefit of cache
-        help='Length of each signal in data points'
-    )    
-    parser.add_argument(
-        '--n-signals', '-n',
-        type=int,
-        default=1,
-        help='Number of signals to plot'
-    )    
-    parser.add_argument(
-        '--use-cache',
-        default=False,
-        action='store_true',
-        help='Start with downsampling cache enabled'
-    )    
-    parser.add_argument(
-        '--cache-ds-factor',
-        type=int,
-        default=20000,
-        help='Downsampling factor for cache'
-    )    
-    parser.add_argument(
-        '--autostart-zoom',
-        default=False,
-        action='store_true',
-        help='Automatically start zoom sequence on startup'
-    )    
-    return parser.parse_args()
-
 
 if __name__ == "__main__":
-    #Use command line arguments if run from command line
-    args = parse_args()
-    
+        
     pg.mkQApp("Downsampling Cache Demo")
     window = TimeSeriesPlot(
-        signal_length=args.signal_length,
-        n_signals=args.n_signals,
-        use_cache=args.use_cache,
-        cache_ds_factor=args.cache_ds_factor,
-        autostart_zoom_sequence=args.autostart_zoom
+        signal_length=100_000_000,#Use a large signal length to demonstrate cache benefit
+        n_signals=1,
+        use_cache=False,
+        cache_ds_factor=20000,
+        autostart_zoom_sequence=False
     )
     window.show()
     pg.exec()

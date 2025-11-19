@@ -638,7 +638,7 @@ class PlotDataItem(GraphicsObject):
             'autoDownsampleFactor': 5.0,  # draw ~5 samples per pixel
             'useDownsamplingCache': True,
             'cacheDsFactor': 20000,  #The downsampling factor for the cache
-            'minSampPerPxForCache': 2.0,  # Draw at least this many samples per pixel when using cache
+            'minSampPerPxForCache': 1.1,  # Draw at least this many samples per pixel when using cache
             'clipToView': False,
             'dynamicRangeLimit': 1e6,
             'dynamicRangeHyst': 3.0,
