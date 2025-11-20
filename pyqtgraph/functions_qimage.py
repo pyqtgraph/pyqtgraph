@@ -313,11 +313,7 @@ def try_make_qimage(image, *, levels, lut, transparentLocations=None):
         ubyte_nolvl and image.ndim == 2 and lut is not None and lut.shape[0] <= 256
     )
     is_passthru16 = image.dtype == xp.uint16 and levels is None and lut is None
-    can_grayscale16 = (
-        is_passthru16
-        and image.ndim == 2
-        and hasattr(QtGui.QImage.Format, "Format_Grayscale16")
-    )
+    can_grayscale16 = is_passthru16 and image.ndim == 2
     is_rgba64 = is_passthru16 and image.ndim == 3 and image.shape[2] == 4
 
     # bypass makeARGB for supported combinations

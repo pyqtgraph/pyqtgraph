@@ -1697,12 +1697,7 @@ def ndarray_from_qimage(qimg):
     logical_bpl = w * depth // 8
 
     if QT_LIB.startswith('PyQt'):
-        # sizeInBytes() was introduced in Qt 5.10
-        # however PyQt5 5.12 will fail with:
-        #   "TypeError: QImage.sizeInBytes() is a private method"
-        # note that sizeInBytes() works fine with:
-        #   PyQt5 5.15, PySide2 5.12, PySide2 5.15
-        img_ptr.setsize(h * bpl)
+        img_ptr.setsize(qimg.sizeInBytes())
 
     memory = np.frombuffer(img_ptr, dtype=np.ubyte).reshape((h, bpl))
     memory = memory[:, :logical_bpl]
@@ -1911,18 +1906,16 @@ def _arrayToQPath_all(x, y, finiteCheck):
             arr[:, 1] = y[finite_idx]
 
         path = QtGui.QPainterPath()
-        if hasattr(path, 'reserve'):    # Qt 5.13
-            path.reserve(n)
+        path.reserve(n)
         path.addPolygon(poly)
         return path
 
     # at this point, we have numchunks >= minchunks
 
     path = QtGui.QPainterPath()
-    if hasattr(path, 'reserve'):    # Qt 5.13
-        path.reserve(n)
+    path.reserve(n)
     subpoly = QtGui.QPolygonF()
-    subpath = None
+    subpath = QtGui.QPainterPath()
     for idx in range(numchunks):
         sl = slice(idx*chunksize, min((idx+1)*chunksize, n))
         currsize = sl.stop - sl.start
@@ -1939,14 +1932,9 @@ def _arrayToQPath_all(x, y, finiteCheck):
             fiv = finite_idx[sl]  # view
             subarr[:, 0] = x[fiv]
             subarr[:, 1] = y[fiv]
-        if subpath is None:
-            subpath = QtGui.QPainterPath()
+        subpath.clear()
         subpath.addPolygon(subpoly)
         path.connectPath(subpath)
-        if hasattr(subpath, 'clear'):   # Qt 5.13
-            subpath.clear()
-        else:
-            subpath = None
     return path
 
 
@@ -1959,8 +1947,7 @@ def _arrayToQPath_finite(x, y, isfinite=None):
         isfinite = np.isfinite(x) & np.isfinite(y)
 
     path = QtGui.QPainterPath()
-    if hasattr(path, 'reserve'):    # Qt 5.13
-        path.reserve(n)
+    path.reserve(n)
 
     sidx = np.nonzero(~isfinite)[0] + 1
     # note: the chunks are views
@@ -2106,8 +2093,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         return _arrayToQPath_all(x, y, finiteCheck)
 
     path = QtGui.QPainterPath()
-    if hasattr(path, 'reserve'):    # Qt 5.13
-        path.reserve(n)
+    path.reserve(n)
 
     if getConfigOption('enableExperimental'):
         backstore = None
