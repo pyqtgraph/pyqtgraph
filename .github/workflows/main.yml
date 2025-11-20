@@ -218,7 +218,7 @@ jobs:
     timeout-minutes: 30
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash -el {0}
     strategy:
       fail-fast: false
       matrix:
@@ -234,13 +234,11 @@ jobs:
         uses: actions/checkout@v5
       - uses: conda-incubator/setup-miniconda@v3
         with:
-          miniforge-variant: Miniforge3
           miniforge-version: latest
           environment-file: ${{ matrix.environment-file }}
           python-version: "3.13"
           auto-update-conda: false
           conda-remove-defaults: true
-          use-mamba: true
       - name: "Install Test Framework"
         run: pip install pytest pytest-qt pytest-xdist
       - name: "Install Windows-Mesa OpenGL DLL"
