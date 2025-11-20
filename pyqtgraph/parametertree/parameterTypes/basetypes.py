@@ -1,4 +1,5 @@
 import builtins
+from functools import partial
 
 from ... import functions as fn
 from ... import icons
@@ -455,19 +456,12 @@ class GroupParameterItem(ParameterItem):
     def _addLeafAction(self, menu, name, path):
         """Add a leaf action to the menu"""
         action = menu.addAction(name)
-        action.triggered.connect(lambda checked, data=path: self.addMenuItemSelected(data))
-
+        action.triggered.connect(partial(self.addMenuItemSelected, path))
 
 
     def addMenuItemSelected(self, path_tuple):
-        """Called when a menu item is selected from the nested add menu
-        The parameter MUST have an 'addNew' method defined.
-        """
-        # Call the parameter's addNew method with the selected type
+        """Called when a menu item is selected from the nested add menu"""
         self.param.addNew(path_tuple)
-        
-        # Reset the button text back to the original addText
-        # (equivalent to setCurrentIndex(0) for the combo)
         if hasattr(self.param.opts, 'addText'):
             self.addWidget.setText(self.param.opts['addText'])
 
