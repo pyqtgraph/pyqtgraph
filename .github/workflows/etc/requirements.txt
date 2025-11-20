@@ -14,7 +14,6 @@ numba==0.62.1; python_version == '3.12'
 pyopengl==3.1.10
 
 # supplimental tools
-matplotlib==3.10.7
 h5py==3.15.1
 
 # testing
