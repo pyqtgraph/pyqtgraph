@@ -1643,3 +1643,124 @@ class PlotItem(GraphicsWidget):
         self.fileDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         self.fileDialog.show()
         self.fileDialog.fileSelected.connect(handler)
+
+    def _expandForAxisText(self, axis_orientation, required_space):
+        """
+        Expand layout when axes request more space for text.
+        Called by AxisItem when autoExpandTextSpace is enabled and text would be clipped.
+        
+        This addresses the issue where autoExpandTextSpace doesn't work properly
+        with PlotItem content margins (GitHub issue #3375).
+        
+        Parameters:
+            axis_orientation (str): The orientation of the requesting axis ('left', 'right', 'top', 'bottom')
+            required_space (float): The total space needed in pixels
+        """
+        try:
+            if not hasattr(self.layout, 'setContentsMargins'):
+                return
+                
+            # Get current margins using the appropriate method
+            if hasattr(self.layout, 'getContentsMargins'):
+                current_margins_tuple = self.layout.getContentsMargins()
+                # Convert tuple to margins object for easier manipulation
+                class MarginsHelper:
+                    def __init__(self, left, top, right, bottom):
+                        self._left, self._top, self._right, self._bottom = left, top, right, bottom
+                    def left(self): return self._left
+                    def top(self): return self._top  
+                    def right(self): return self._right
+                    def bottom(self): return self._bottom
+                current_margins = MarginsHelper(*current_margins_tuple)
+            elif hasattr(self.layout, 'contentsMargins'):
+                current_margins = self.layout.contentsMargins()
+            else:
+                return
+            margins_changed = False
+            
+            if axis_orientation in ['bottom', 'top']:
+                # For horizontal axes, check if we need to expand right margin
+                current_width = self.geometry().width()
+                if current_width > 0 and required_space > current_width:
+                    extra_needed = required_space - current_width
+                    
+                    # Calculate new right margin (conservative approach)
+                    additional_margin = min(extra_needed * 0.3, 50)  # Cap at 50px max
+                    new_right_margin = current_margins.right() + additional_margin
+                    
+                    self.layout.setContentsMargins(
+                        current_margins.left(),
+                        current_margins.top(),
+                        new_right_margin,
+                        current_margins.bottom()
+                    )
+                    margins_changed = True
+                    
+            elif axis_orientation in ['left', 'right']:
+                # For vertical axes, check if we need to expand top/bottom margins
+                current_height = self.geometry().height()
+                if current_height > 0 and required_space > current_height:
+                    extra_needed = required_space - current_height
+                    
+                    # Calculate new bottom margin (conservative approach)
+                    additional_margin = min(extra_needed * 0.3, 30)  # Cap at 30px max
+                    new_bottom_margin = current_margins.bottom() + additional_margin
+                    
+                    self.layout.setContentsMargins(
+                        current_margins.left(),
+                        current_margins.top(),
+                        current_margins.right(),
+                        new_bottom_margin
+                    )
+                    margins_changed = True
+            
+            # Notify all axes of margin changes if we modified them
+            if margins_changed:
+                self._notifyAxesOfMarginChange()
+                
+        except (AttributeError, TypeError, RuntimeError):
+            # Gracefully handle any issues
+            pass
+
+    def _notifyAxesOfMarginChange(self):
+        """
+        Notify all axes when layout margins change.
+        This helps axes adjust their calculations accordingly.
+        """
+        try:
+            # Get margins using the appropriate method
+            if hasattr(self.layout, 'getContentsMargins'):
+                new_margins = self.layout.getContentsMargins()
+            elif hasattr(self.layout, 'contentsMargins'):
+                new_margins = self.layout.contentsMargins()
+            else:
+                return
+            
+            for axis_name in ['left', 'right', 'top', 'bottom']:
+                if axis_name in self.axes:
+                    axis = self.axes[axis_name]['item']
+                    if axis and hasattr(axis, '_onParentMarginsChanged'):
+                        axis._onParentMarginsChanged(new_margins)
+        except (AttributeError, KeyError, RuntimeError):
+            pass
+
+    def setContentsMargins(self, left, top, right, bottom):
+        """
+        Set the content margins for the plot layout.
+        
+        This method overrides the base implementation to ensure that
+        axes are properly notified of margin changes, which helps
+        with text space calculations.
+        
+        Parameters:
+            left, top, right, bottom (float): Margin values in pixels
+        """
+        try:
+            # Set the margins on the layout
+            if hasattr(self.layout, 'setContentsMargins'):
+                self.layout.setContentsMargins(left, top, right, bottom)
+                
+                # Notify axes of the change for better text space handling
+                self._notifyAxesOfMarginChange()
+        except (AttributeError, RuntimeError):
+            pass
