@@ -67,7 +67,7 @@ jobs:
             qt-version: "PySide6-Essentials~=6.6.0"
           - python-version: "3.13"
             qt-lib: "pyqt"
-            qt-version: "PyQt6~=6.5.0 PyQt6-Qt6~=6.5.0"
+            qt-version: "PyQt6~=6.6.0 PyQt6-Qt6~=6.5.0"
           - python-version: "3.13"
             qt-lib: "pyside"
             qt-version: "PySide6-Essentials~=6.8.0"
@@ -136,8 +136,7 @@ jobs:
       - name: Run Tests
         run: |
           mkdir "$SCREENSHOT_DIR"
-          # coverage run -m pytest tests -v
-          pytest tests -v
+          coverage run -m pytest tests -v
           pytest pyqtgraph/examples -v -n 2
         shell: bash
       - name: Upload coverage data
@@ -300,40 +299,40 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
 
-  # coverage:
-  #   name: combine & check coverage
-  #   if: always()
-  #   needs: tests-pip
-  #   runs-on: ubuntu-latest
+  coverage:
+    name: combine & check coverage
+    if: always()
+    needs: tests-pip
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - uses: actions/checkout@v5
-  #     - uses: actions/setup-python@v6
-  #       with:
-  #         # Use latest Python, so it understands all syntax.
-  #         python-version: "3.14"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          # Use latest Python, so it understands all syntax.
+          python-version: "3.14"
 
-  #     - uses: actions/download-artifact@v6
-  #       with:
-  #         pattern: coverage-data-*
-  #         merge-multiple: true
+      - uses: actions/download-artifact@v6
+        with:
+          pattern: coverage-data-*
+          merge-multiple: true
 
-  #     - name: Combine coverage
-  #       run: |
-  #         python -m pip install --upgrade coverage
+      - name: Combine coverage
+        run: |
+          python -m pip install --upgrade coverage
 
-  #         coverage combine
-  #         coverage html
+          coverage combine
+          coverage html
 
-  #         # Report and write to summary.
-  #         coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
+          # Report and write to summary.
+          coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
 
-  #         # Report again and fail if under 100%.
-  #         # yeah... we're not going to do this just yet...
-  #         # coverage report --fail-under=100
+          # Report again and fail if under 100%.
+          # yeah... we're not going to do this just yet...
+          # coverage report --fail-under=100
 
-  #     - name: Upload HTML report
-  #       uses: actions/upload-artifact@v5
-  #       with:
-  #         name: html-report
-  #         path: htmlcov
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v5
+        with:
+          name: html-report
+          path: htmlcov
