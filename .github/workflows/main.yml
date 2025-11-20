@@ -42,7 +42,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.14"
+          python-versionp: "3.14"
       - name: Checkout
         uses: actions/checkout@v5
       - name: Install mypy
@@ -55,7 +55,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-14]
         qt-lib: [pyqt, pyside]
         python-version: ["3.12", "3.13", "3.14"]
         include:
