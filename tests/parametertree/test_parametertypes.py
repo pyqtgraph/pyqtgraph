@@ -59,8 +59,6 @@ def test_types():
         'list': [1,2,3], 'dict': {'1': 2}, 'color': pg.mkColor('k'), 
         'brush': pg.mkBrush('k'), 'pen': pg.mkPen('k'), 'none': None
     }
-    if hasattr(QtCore, 'QString'):
-        all_objs['qstring'] = QtCore.QString('xxxµ')
 
     # float
     types = ['int0', 'int', 'float', 'bigfloat', 'npfloat', 'npint', 'npinf', 'npnan', 'bool']

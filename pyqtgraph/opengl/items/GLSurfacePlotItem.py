@@ -2,6 +2,8 @@ import numpy as np
 
 from ..MeshData import MeshData
 from .GLMeshItem import GLMeshItem
+from .GLLinePlotItem import GLLinePlotItem
+from OpenGL import GL as ogl
 
 __all__ = ['GLSurfacePlotItem']
 
@@ -9,27 +11,48 @@ class GLSurfacePlotItem(GLMeshItem):
     """
     **Bases:** :class:`GLMeshItem <pyqtgraph.opengl.GLMeshItem>`
     
-    Displays a surface plot on a regular x,y grid
+    Displays a surface plot on a regular x,y grid with optional wireframe overlay.
     """
-    def __init__(self, x=None, y=None, z=None, colors=None, parentItem=None, **kwds):
+
+    mesh_keys = ('x', 'y', 'z', 'colors')
+    grid_keys = ('showGrid', 'lineColor', 'lineWidth', 'lineAntialias')
+
+    def __init__(self, parentItem=None, **kwds):
         """
-        The x, y, z, and colors arguments are passed to setData().
+        The x, y, z, colors, showGrid, lineColor, lineWidth and lineAntialias
+        arguments are passed to setData().
         All other keyword arguments are passed to GLMeshItem.__init__().
         """
-        
         self._x = None
         self._y = None
         self._z = None
         self._color = None
+        self._showGrid = False
+        self._lineColor = (0, 0, 0, 1)
+        self._lineWidth = 1.0
+        self._lineAntialias = False
         self._vertexes = None
         self._meshdata = MeshData()
-        super().__init__(parentItem=parentItem, meshdata=self._meshdata, **kwds)
+
+        # splitout GLSurfacePlotItem from kwds
+        surface_keys = self.mesh_keys + self.grid_keys
+        surface_kwds = {}
+        for arg in surface_keys:
+            if arg in kwds:
+                surface_kwds[arg] = kwds.pop(arg)
+
+        super().__init__(meshdata=self._meshdata, **kwds)
         
-        self.setData(x, y, z, colors)
+        self.lineplot = GLLinePlotItem(parentItem=self, mode='lines', glOptions='translucent')
+        # in GLViewWidget.drawItemTree(), at the same depth value, child items
+        # come before the parent. make it such that our grid lines get drawn
+        # after the surface mesh.
+        self.lineplot.setDepthValue(self.depthValue() + 1)
+        self.setParentItem(parentItem)
+
+        self.setData(**surface_kwds)
         
-        
-        
-    def setData(self, x=None, y=None, z=None, colors=None):
+    def setData(self, **kwds):
         """
         Update the data in this surface plot. 
         
@@ -40,6 +63,10 @@ class GLSurfacePlotItem(GLMeshItem):
                         integers.
         z               2D array of height values for each grid vertex.
         colors          (width, height, 4) array of vertex colors.
+        showGrid        Show the grid lines.
+        lineColor       Color of the grid lines.
+        lineWidth       Width of the grid lines.
+        lineAntialias   Enable antialiasing for the grid lines.
         ==============  =====================================================================
         
         All arguments are optional.
@@ -49,6 +76,13 @@ class GLSurfacePlotItem(GLMeshItem):
         and very expensive if smooth=True. For faster performance, initialize with 
         computeNormals=False and use per-vertex colors or a normal-independent shader program.
         """
+
+        for arg in self.grid_keys:
+            if arg in kwds:
+                setattr(self, '_' + arg, kwds[arg])
+
+        x, y, z, colors = map(kwds.get, self.mesh_keys)
+
         if x is not None:
             if self._x is None or len(x) != len(self._x):
                 self._vertexes = None
@@ -60,13 +94,6 @@ class GLSurfacePlotItem(GLMeshItem):
             self._y = y
         
         if z is not None:
-            #if self._x is None:
-                #self._x = np.arange(z.shape[0])
-                #self._vertexes = None
-            #if self._y is None:
-                #self._y = np.arange(z.shape[1])
-                #self._vertexes = None
-                
             if self._x is not None and z.shape[0] != len(self._x):
                 raise Exception('Z values must have shape (len(x), len(y))')
             if self._y is not None and z.shape[1] != len(self._y):
@@ -115,13 +142,24 @@ class GLSurfacePlotItem(GLMeshItem):
         if newVertexes or z is not None:
             self._vertexes[...,2] = self._z
             updateMesh = True
-        
+
         ## Update MeshData
         if updateMesh:
             self._meshdata.setVertexes(self._vertexes.reshape(self._vertexes.shape[0]*self._vertexes.shape[1], 3))
             self.meshDataChanged()
-        
-        
+
+        # rebuild grid whenever mesh or parent changes
+        self._update_grid()
+
+    def paint(self):
+        if self._showGrid:
+            ogl.glEnable(ogl.GL_POLYGON_OFFSET_FILL)
+            ogl.glPolygonOffset(1.0, 1.0)
+        super().paint()
+        if self._showGrid:
+            ogl.glDisable(ogl.GL_POLYGON_OFFSET_FILL)
+            ogl.glPolygonOffset(0.0, 0.0)
+
     def generateFaces(self):
         cols = self._z.shape[1]-1
         rows = self._z.shape[0]-1
@@ -133,3 +171,31 @@ class GLSurfacePlotItem(GLMeshItem):
             faces[start:start+cols] = rowtemplate1 + row * (cols+1)
             faces[start+cols:start+(cols*2)] = rowtemplate2 + row * (cols+1)
         self._faces = faces
+
+    def _update_grid(self):
+        if not self._showGrid or self._z is None:
+            return
+
+        opts = {
+            'antialias':  self._lineAntialias,
+            'color':      self._lineColor,
+            'width':      self._lineWidth,
+        }
+
+        z = self._z.astype(np.float32)
+        rows, cols = z.shape
+
+        x = (self._x if self._x is not None else np.arange(rows, dtype=z.dtype))
+        y = (self._y if self._y is not None else np.arange(cols, dtype=z.dtype))
+
+        xvals, yvals = np.meshgrid(x, y, indexing='ij')  # shape (rows, cols)
+        verts_flat = np.column_stack((xvals.ravel(), yvals.ravel(), z.ravel()))
+
+        idx = np.arange(z.size, dtype=np.int32).reshape(rows, cols)
+        h = np.column_stack((idx[:, :-1].ravel(), idx[:, 1:].ravel()))
+        v = np.column_stack((idx[:-1, :].ravel(), idx[1:, :].ravel()))
+        edges = np.vstack((h, v))
+
+        pts = verts_flat[edges].reshape(-1, 3)
+
+        self.lineplot.setData(pos=pts, **opts)

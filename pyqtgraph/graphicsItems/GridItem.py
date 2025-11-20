@@ -107,7 +107,7 @@ class GridItem(UIGraphicsItem):
 
     def generatePicture(self):
         lvr = self.boundingRect()
-        device_transform = self.deviceTransform()
+        device_transform = self.deviceTransform_()
         if lvr.isNull() or device_transform is None:
             return
 

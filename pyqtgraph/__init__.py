@@ -3,7 +3,7 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.14.0dev0'
+__version__ = '0.15.0.dev0'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
@@ -19,12 +19,6 @@ from .colors import palette
 from .Qt import QtCore, QtGui, QtWidgets
 from .Qt import exec_ as exec
 from .Qt import mkQApp
-
-## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
-#if QtWidgets.QApplication.instance() is None:
-    #app = QtWidgets.QApplication([])
-
-              ## (import here to avoid massive error dump later on if numpy is not available)
 
 
 CONFIG_OPTIONS = {
@@ -139,6 +133,7 @@ from .functions import *
 from .graphicsItems.ArrowItem import *
 from .graphicsItems.AxisItem import *
 from .graphicsItems.BarGraphItem import *
+from .graphicsItems.BoxplotItem import *
 from .graphicsItems.ButtonItem import *
 from .graphicsItems.ColorBarItem import *
 from .graphicsItems.CurvePoint import *

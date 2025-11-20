@@ -123,8 +123,8 @@ class Parameter(QtCore.QObject):
             #pass
         #return QtCore.QObject.__new__(cls, *args, **opts)
 
-    @staticmethod
-    def create(**opts):
+    @classmethod
+    def create(cls, **opts):
         """
         Static method that creates a new Parameter (or subclass) instance using 
         opts['type'] to select the appropriate class.
@@ -134,10 +134,10 @@ class Parameter(QtCore.QObject):
         """
         typ = opts.get('type', None)
         if typ is None:
-            cls = Parameter
+            klass = cls
         else:
-            cls = PARAM_TYPES[opts['type']]
-        return cls(**opts)
+            klass = PARAM_TYPES[opts['type']]
+        return klass(**opts)
 
     def __init__(self, **opts):
         """
@@ -311,19 +311,14 @@ class Parameter(QtCore.QObject):
         Set the value of this Parameter; return the actual value that was set.
         (this may be different from the value that was requested)
         """
-        try:
-            if blockSignal is not None:
-                self.sigValueChanged.disconnect(blockSignal)
-            value = self._interpretValue(value)
-            if fn.eq(self.opts.get('value', None), value):
-                return value
-            self._modifiedSinceReset = True
-            self.opts['value'] = value
+        value = self._interpretValue(value)
+        if fn.eq(self.opts.get('value', None), value):
+            return value
+        self._modifiedSinceReset = True
+        self.opts['value'] = value
+        if not blockSignal:
             self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
-        finally:
-            if blockSignal is not None:
-                self.sigValueChanged.connect(blockSignal)
-            
+
         return self.opts['value']
 
     def _interpretValue(self, v):

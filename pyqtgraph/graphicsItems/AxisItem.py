@@ -116,12 +116,13 @@ class AxisItem(GraphicsWidget):
         self.labelText = ""
         self.labelUnits = ""
         self.labelUnitPrefix = ""
+        self.unitPower = 1
         self.labelStyle = {}
         self._siPrefixEnableRanges = None
+        self.setRange(0, 1)
         self.setLabel(**args)
         self.showLabel(False)
 
-        self.setRange(0, 1)
 
         if pen is None:
             self.setPen()
@@ -440,6 +441,7 @@ class AxisItem(GraphicsWidget):
         units: str | None=None,
         unitPrefix: str | None=None,
         siPrefixEnableRanges: tuple[tuple[float, float], ...] | None=None,
+        unitPower: int | float=1,
         **kwargs
     ):
         """
@@ -459,6 +461,12 @@ class AxisItem(GraphicsWidget):
             The ranges in which automatic SI prefix scaling is enabled. Defaults to
             everywhere, unless units is empty, in which case it defaults to
             ``((0., 1.), (1e9, inf))``.
+        unitPower : int or float, optional
+            The power to which the units are raised. For example, if units='m²', the
+            unitPower should be 2. This ensures correct scaling when using SI prefixes.
+            Supports positive, negative and non-integral powers.  Default is 1.
+            Note: The power only affects the scaling, not the units themselves. For
+            example, with units='m' and unitPower=2, the displayed units will still be 'm'.
         **kwargs
             All extra keyword arguments become CSS style options for the ``<span>`` tag
             which will surround the axis label and units. Note that CSS attributes are
@@ -474,6 +482,7 @@ class AxisItem(GraphicsWidget):
         self.labelText = text or ""
         self.labelUnits = units or ""
         self.labelUnitPrefix = unitPrefix or ""
+        self.unitPower = unitPower
         if kwargs:
             self.labelStyle = kwargs
         self.setSIPrefixEnableRanges(siPrefixEnableRanges)
@@ -819,7 +828,7 @@ class AxisItem(GraphicsWidget):
             _range = 10**np.array(self.range) if self.logMode else self.range
             scaling_value = max(abs(_range[0]), abs(_range[1])) * self.scale
             if any(low <= scaling_value <= high for low, high in self.getSIPrefixEnableRanges()):
-                (scale, prefix) = fn.siScale(scaling_value)
+                (scale, prefix) = fn.siScale(scaling_value, power=self.unitPower)
 
         self.autoSIPrefixScale = scale
         self.labelUnitPrefix = prefix

@@ -626,6 +626,7 @@ class ImageView(QtWidgets.QWidget):
             self.roiChanged()
             self.sigProcessingChanged.emit(self)
 
+    @QtCore.Slot(bool)
     def normToggled(self, b):
         self.ui.normGroup.setVisible(b)
         self.normRoi.setVisible(b and self.ui.normROICheck.isChecked())
@@ -904,7 +905,8 @@ class ImageView(QtWidgets.QWidget):
             self.updateImage()
         else:
             self.imageItem.save(fileName)
-            
+
+    @QtCore.Slot()
     def exportClicked(self):
         fileName, _ = QtWidgets.QFileDialog.getSaveFileName()
         if not fileName:

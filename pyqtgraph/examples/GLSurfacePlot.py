@@ -34,7 +34,7 @@ w.addItem(g)
 ## Simple surface plot example
 ## x, y values are not specified, so assumed to be 0:50
 z = pg.gaussianFilter(np.random.normal(size=(50,50)), (1,1))
-p1 = gl.GLSurfacePlotItem(z=z, shader='shaded', color=(0.5, 0.5, 1, 1))
+p1 = gl.GLSurfacePlotItem(z=z, shader='shaded', color=(0.5, 0.5, 1, 1), showGrid=True)
 p1.scale(16./49., 16./49., 1.0)
 p1.translate(-18, 2, 0)
 w.addItem(p1)
@@ -44,7 +44,8 @@ w.addItem(p1)
 x = np.linspace(-8, 8, 50)
 y = np.linspace(-8, 8, 50)
 z = 0.1 * ((x.reshape(50,1) ** 2) - (y.reshape(1,50) ** 2))
-p2 = gl.GLSurfacePlotItem(x=x, y=y, z=z, shader='normalColor')
+p2 = gl.GLSurfacePlotItem(x=x, y=y, z=z, shader='normalColor',
+                          showGrid=True, lineColor=(0.25,0.25,0.25,1))
 p2.translate(-10,-10,0)
 w.addItem(p2)
 
