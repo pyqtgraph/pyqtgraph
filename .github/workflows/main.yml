@@ -15,6 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
   build-wheel:
     name: build wheel
     runs-on: ubuntu-latest
@@ -130,9 +131,9 @@ jobs:
           - python-version: "3.14"
             qt-lib: "pyqt"
             qt-version: "PyQt6"
-        exclude:
           - python-version: "3.14"
             qt-lib: "pyside"
+            qt-version: "PySide6-Essentials"
     steps:
       - name: Checkout
         uses: actions/checkout@v5
