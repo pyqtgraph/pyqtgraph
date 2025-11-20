@@ -15,6 +15,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build-wheel:
+    name: build wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Build Wheel
+        run: |
+          pip install build twine
+          python -m build --wheel
+      - name: Twine Check Wheel
+        run: |
+          twine check "dist/*.whl"
+      - name: Upload Wheel
+        uses: actions/upload-artifact@v5
+        with:
+          name: wheel
+          path: dist/*.whl  
+
   make_dash_docset:
     runs-on: macos-latest
     steps:
@@ -30,12 +53,14 @@ jobs:
       - name: Build docset
         run: |
           make -C doc dash
+          dot_clean -m doc/pyqtgraph.docset
       - run: tar --exclude='.DS_Store' -cvzf pyqtgraph.tgz doc/pyqtgraph.docset
       - name: Upload docset
         uses: actions/upload-artifact@v5
         with:
           name: pyqtgraph.docset
           path: pyqtgraph.tgz
+
   run-mypy:
     runs-on: ubuntu-latest
     steps:
@@ -49,6 +74,37 @@ jobs:
         run: pip install mypy
       - name: Run mypy
         run: mypy
+  
+  analyze:
+    name: analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+          cache: pip
+      - name: Install Dependencies
+        run: |
+          python -m pip install PyQt6 numpy scipy
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: "python"
+          queries: +security-and-quality
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v4
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+
   tests-pip:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
@@ -64,13 +120,13 @@ jobs:
             qt-version: "PyQt5~=5.15.0"
           - python-version: "3.12"
             qt-lib: "pyside"
-            qt-version: "PySide6-Essentials~=6.6.0"
+            qt-version: "PySide6-Essentials~=6.8.0"
           - python-version: "3.13"
             qt-lib: "pyqt"
-            qt-version: "PyQt6~=6.6.0 PyQt6-Qt6~=6.6.0"
+            qt-version: "PyQt6~=6.8.0 PyQt6-Qt6~=6.8.0"
           - python-version: "3.13"
             qt-lib: "pyside"
-            qt-version: "PySide6-Essentials~=6.8.0"
+            qt-version: "PySide6-Essentials"
           - python-version: "3.14"
             qt-lib: "pyqt"
             qt-version: "PyQt6"
@@ -247,56 +303,6 @@ jobs:
           if-no-files-found: ignore
     env:
       SCREENSHOT_DIR: screenshots
-
-  build-wheel:
-    name: build wheel
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.14"
-          cache: pip
-      - name: Build Wheel
-        run: |
-          pip install build
-          python -m build --wheel
-      - name: Upload Wheel
-        uses: actions/upload-artifact@v5
-        with:
-          name: wheel
-          path: dist/*.whl
-
-  analyze:
-    name: analyze
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 2
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.14"
-          cache: pip
-      - name: Install Dependencies
-        run: |
-          python -m pip install PyQt5 numpy scipy
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: "python"
-          queries: +security-and-quality
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
 
   coverage:
     name: combine & check coverage

@@ -26,7 +26,7 @@ source .venv/bin/activate
 python -m pip install numpy scipy pyqt6 -e .
 ```
 
-PyQtGraph supports PySide2, PyQt5, PySide6 and PyQt6 bindings, but if a contributor is
+PyQtGraph supports PyQt5, PySide6 and PyQt6 bindings, but if a contributor is
 to test against only one set of bindings, we suggest that it be PyQt6.  PyQt6 is the
 only bindings that enforces the use of fully scoped enums. For example, apart from
 PyQt6, `QGraphicsItem.ItemIgnoresTransformations` would be recognized, but that would

@@ -6,7 +6,7 @@ PyQtGraph
 [![Build Status](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/actions/?query=workflow%3Amain)
 [![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
 
-A pure-Python graphics library for PyQt5/PyQt6/PySide2/PySide6
+A pure-Python graphics library for PyQt5/PyQt6/PySide6
 
 Copyright 2025 PyQtGraph developers
 
@@ -20,19 +20,18 @@ heavy leverage of numpy for number crunching, Qt's GraphicsView framework for
 Requirements
 ------------
 
-PyQtGraph has adopted [SPEC 0](https://scientific-python.org/specs/spec-0000/) and
-supports versions of Qt with [commercial support](https://endoflife.date/qt).
+PyQtGraph has adopted [SPEC 0](https://scientific-python.org/specs/spec-0000/).
 
 This project supports:
 
 * Python versions released within the last 3 years
 * NumPy, SciPy and matplotlib versions released within the last 2 years
-* Qt5 5.15, and Qt6 6.5+
+* Qt5 5.15 or Qt6 6.8+
 
 Currently this means:
 
 * Python 3.12+
-* Qt 5.15, 6.5+
+* Qt 5.15 or 6.8+
 * [PyQt5](https://www.riverbankcomputing.com/software/pyqt/),
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/), or
   [PySide6](https://wiki.qt.io/Qt_for_Python)

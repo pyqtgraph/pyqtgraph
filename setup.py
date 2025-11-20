@@ -1,17 +1,11 @@
-DESCRIPTION = """\
-PyQtGraph is a pure-python graphics and GUI library built on Qt and
-NumPy. 
+from pathlib import Path
 
-It is intended for use in mathematics / scientific / engineering applications.
-Despite being written entirely in python, the library is very fast due to its
-heavy leverage of numpy for number crunching, Qt's GraphicsView framework for
-2D display, and OpenGL for 3D display.
-"""
-
+long_description = (Path(__file__).parent / "README.md").read_text()
 setupOpts = dict(
     name='pyqtgraph',
     description='Scientific Graphics and GUI Library for Python',
-    long_description=DESCRIPTION,
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     license =  'MIT',
     url='http://www.pyqtgraph.org',
     project_urls={
