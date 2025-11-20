@@ -164,7 +164,7 @@ $ asv run
 Note for pyenv users, you need to ensure all the python versions you want to test are
 accessible.  This is easiest done by running `pyenv shell` followed by a space
 sparated list of all the python environments you want accessible.  For example,
-`pyenv shell asv 3.10.14 3.11.12 3.12.9 3.13.2`.
+`pyenv shell asv 3.12.12 3.13.9 3.14.0`.
 
 To view the results, from the root pyqtgraph directory run
 
