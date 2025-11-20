@@ -184,7 +184,6 @@ jobs:
           auto-update-conda: false
           conda-remove-defaults: true
           use-mamba: true
-          activate-environment: test
       - name: "Install Test Framework"
         run: pip install pytest pytest-qt pytest-xdist
       - name: "Install Windows-Mesa OpenGL DLL"
