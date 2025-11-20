@@ -18,9 +18,7 @@ matplotlib==3.10.7
 h5py==3.15.1
 
 # testing
-pytest==9.0.1
-pytest-qt==4.4.0; python_version == '3.12'
-pytest-qt; python_version == '3.13'
-pytest-qt; python_version == '3.14'
+pytest==8.4.2
+pytest-qt==4.5.0
 pytest-xdist==3.8.0
 pytest-xvfb==3.1.1; sys_platform == 'linux'
