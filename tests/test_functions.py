@@ -102,6 +102,20 @@ def check_interpolateArray(order):
     assert_array_almost_equal(r1, r2)
 
 
+@pytest.mark.parametrize("order", [0, 1])
+def test_interpolateArray_flat(order: int):
+    # Inputing an array with a dimension of length 1 should still
+    # produce a non-zero result
+    data = np.ones((3, 1, 5))
+    x = np.asarray([
+        [[0.,  0.5], [0.,  1.5], [0.,  2.5]],
+        [[1.,  0.5], [1.,  1.5],[1.,  2.5]],
+        [[2.,  0.5],[2.,  1.5],[2.,  2.5]],
+    ])
+    result = pg.interpolateArray(data, x, order=order)
+    assert np.any(result)
+
+
 def test_subArray():
     a = np.array([0, 0, 111, 112, 113, 0, 121, 122, 123, 0, 0, 0, 211, 212, 213, 0, 221, 222, 223, 0, 0, 0, 0])
     b = pg.subArray(a, offset=2, shape=(2,2,3), stride=(10,4,1))
