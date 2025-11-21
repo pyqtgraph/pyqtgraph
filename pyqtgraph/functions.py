@@ -1026,7 +1026,7 @@ def interpolateArray(data, x, default=0.0, order=1):
         indexes = np.concatenate([xmin[np.newaxis, ...], xmax[np.newaxis, ...]])
         fieldInds = []
         for ax in range(md):
-            mask = (xmin[...,ax] >= 0) & (x[...,ax] < data.shape[ax])
+            mask = (xmin[...,ax] >= 0) & (x[...,ax] <= max(data.shape[ax] - 1, 1))
             # keep track of points that need to be set to default
             totalMask &= mask
             
