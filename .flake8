@@ -1,7 +1,0 @@
-[flake8]
-exclude = .git,.tox,__pycache__,doc,old,build,dist
-show_source = True
-statistics = True
-verbose = 2
-max-line-length = 88
-extend-ignore = E203, W503

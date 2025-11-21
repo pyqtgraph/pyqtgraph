@@ -6,7 +6,7 @@ PyQtGraph
 [![Build Status](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/actions/?query=workflow%3Amain)
 [![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
 
-A pure-Python graphics library for PyQt5/PyQt6/PySide2/PySide6
+A pure-Python graphics library for PyQt5/PyQt6/PySide6
 
 Copyright 2025 PyQtGraph developers
 
@@ -20,27 +20,27 @@ heavy leverage of numpy for number crunching, Qt's GraphicsView framework for
 Requirements
 ------------
 
-PyQtGraph has adopted [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html).
+PyQtGraph has adopted [SPEC 0](https://scientific-python.org/specs/spec-0000/).
 
 This project supports:
 
-* All minor versions of Python released 42 months prior to the project, and at minimum the two latest minor versions.
-* All minor versions of numpy released in the 24 months prior to the project, and at minimum the last three minor versions.
-* Qt5 5.15, and Qt6 6.2+
+* Python versions released within the last 3 years
+* NumPy, SciPy and matplotlib versions released within the last 2 years
+* Qt5 5.15 or Qt6 6.8+
 
 Currently this means:
 
-* Python 3.10+
-* Qt 5.15, 6.2+
+* Python 3.12+
+* Qt 5.15 or 6.8+
 * [PyQt5](https://www.riverbankcomputing.com/software/pyqt/),
-  [PyQt6](https://www.riverbankcomputing.com/software/pyqt/),
-  [PySide2](https://wiki.qt.io/Qt_for_Python), or
+  [PyQt6](https://www.riverbankcomputing.com/software/pyqt/), or
   [PySide6](https://wiki.qt.io/Qt_for_Python)
-* [`numpy`](https://github.com/numpy/numpy) 1.25+
+* [`numpy`](https://github.com/numpy/numpy) 2.0+
 
 ### Optional added functionalities
 
-Through 3rd party libraries, additional functionality may be added to PyQtGraph, see the table below for a summary.
+Through 3rd party libraries, additional functionality may be added to PyQtGraph, see
+the table below for a summary.
 
 | Library        | Added functionality |
 |----------------|-|
@@ -89,7 +89,8 @@ Documentation
 
 The official documentation lives at [pyqtgraph.readthedocs.io](https://pyqtgraph.readthedocs.io)
 
-The easiest way to learn PyQtGraph is to browse through the examples; run `python -m pyqtgraph.examples` to launch the examples application.
+The easiest way to learn PyQtGraph is to browse through the examples; run
+`python -m pyqtgraph.examples` to launch the examples application.
 
 Used By
 -------
@@ -100,6 +101,7 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [Antenna Array Analysis](https://github.com/rookiepeng/antenna-array-analysis)
 * [argos](https://github.com/titusjan/argos)
 * [Atomize](https://github.com/Anatoly1010/Atomize)
+* [BEC Widgets](https://github.com/bec-project/bec_widgets)
 * [EnMAP-Box](https://enmap-box.readthedocs.io)
 * [EO Time Series Viewer](https://eo-time-series-viewer.readthedocs.io)
 * [ephyviewer](https://ephyviewer.readthedocs.io)
@@ -120,4 +122,5 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [STDF-Viewer](https://github.com/noonchen/STDF-Viewer)
 * [QT-DataViewer](https://gitlab.tudelft.nl/qutech-qdlabs/qt-dataviewer)
 
-Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!
+Do you use PyQtGraph in your own project, and want to add it to the list?
+Submit a pull request to update this listing!
