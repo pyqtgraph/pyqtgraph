@@ -116,6 +116,7 @@ def test_plotitem_menu_initialize():
     assert item.menuEnabled() is True
     viewbox = item.vb
     assert viewbox is not None
+    assert viewbox._menu is None
     assert viewbox.menu is not None
     assert viewbox.menuEnabled() is True
 
@@ -123,6 +124,7 @@ def test_plotitem_menu_initialize():
     assert item.menuEnabled() is False
     viewbox = item.vb
     assert viewbox is not None
+    assert viewbox._menu is None
     assert viewbox.menu is None
     assert viewbox.menuEnabled() is False
 
@@ -131,6 +133,7 @@ def test_plotitem_menu_initialize():
     assert item.menuEnabled() is False
     viewbox = item.vb
     assert viewbox is not None
+    assert viewbox._menu is None
     assert viewbox.menu is not None
     assert viewbox.menuEnabled() is True
 
