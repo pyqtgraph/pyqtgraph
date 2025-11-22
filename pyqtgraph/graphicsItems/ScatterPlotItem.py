@@ -404,6 +404,8 @@ class ScatterPlotItem(GraphicsObject):
             'brush': fn.mkBrush(100, 100, 150),
             'hoverable': False,
             'tip': 'x: {x:.3g}\ny: {y:.3g}\ndata={data}'.format,
+            'clickable': True,
+            'clickButtons': QtCore.Qt.MouseButton.LeftButton,
         }
         self.opts.update(
             {'hover' + opt.title(): _DEFAULT_STYLE[opt] for opt in ['symbol', 'size', 'pen', 'brush']}
@@ -436,10 +438,10 @@ class ScatterPlotItem(GraphicsObject):
                                Otherwise, size is in scene coordinates and the spots scale with the view. To ensure
                                effective caching, QPen and QBrush objects should be reused as much as possible.
                                Default is True
-        *symbol*               can be one (or a list) of symbols. For a list of supported symbols, see 
+        *symbol*               can be one (or a list) of symbols. For a list of supported symbols, see
                                :func:`~ScatterPlotItem.setSymbol`. QPainterPath is also supported to specify custom symbol
                                shapes. To properly obey the position and size, custom symbols should be centered at (0,0) and
-                               width and height of 1.0. Note that it is also possible to 'install' custom shapes by setting 
+                               width and height of 1.0. Note that it is also possible to 'install' custom shapes by setting
                                ScatterPlotItem.Symbols[key] = shape.
         *pen*                  The pen (or list of pens) to use for drawing spot outlines.
         *brush*                The brush (or list of brushes) to use for filling spots.
@@ -464,6 +466,8 @@ class ScatterPlotItem(GraphicsObject):
                                scatter plot (see QPainter::CompositionMode in the Qt documentation).
         *name*                 The name of this item. Names are used for automatically
                                generating LegendItem entries and by some exporters.
+        *clickable*            If True, sigClicked is emitted when points are clicked. Default is True.
+        *clickButtons*         A Qt.MouseButton or combination specifying which mouse buttons
         ====================== ===============================================================================================
         """
         oldData = self.data  ## this causes cached pixmaps to be preserved while new data is registered.
@@ -567,6 +571,10 @@ class ScatterPlotItem(GraphicsObject):
             self.opts['tip'] = kargs['tip']
         if 'useCache' in kargs:
             self.opts['useCache'] = kargs['useCache']
+        if 'clickable' in kargs:
+            self.opts['clickable'] = bool(kargs['clickable'])
+        if 'clickButtons' in kargs:
+            self.opts['clickButtons'] = kargs['clickButtons']
 
         ## Set any extra parameters provided in keyword arguments
         for k in ['pen', 'brush', 'symbol', 'size']:
@@ -1073,16 +1081,17 @@ class ScatterPlotItem(GraphicsObject):
                 & (self.data['y'] - h < b))
 
     def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
-            pts = self.pointsAt(ev.pos())
-            if len(pts) > 0:
-                self.ptsClicked = pts
-                ev.accept()
-                self.sigClicked.emit(self, self.ptsClicked, ev)
-            else:
-                #print "no spots"
-                ev.ignore()
+        if not self.opts['clickable']:
+            return
+        if not (ev.button() & self.opts['clickButtons']):
+            return
+        pts = self.pointsAt(ev.pos())
+        if len(pts) > 0:
+            self.ptsClicked = pts
+            ev.accept()
+            self.sigClicked.emit(self, self.ptsClicked, ev)
         else:
+            #print "no spots"
             ev.ignore()
 
     def hoverEvent(self, ev):
