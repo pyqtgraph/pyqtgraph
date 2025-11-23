@@ -8,11 +8,9 @@ This module exists to smooth out some of the differences between Qt versions.
 import contextlib
 import os
 import platform
-import re
 import subprocess
 import sys
 import time
-import warnings
 from importlib import resources
 
 PYSIDE = 'PySide'
@@ -301,17 +299,6 @@ if QT_LIB in [PYQT5, PYQT6]:
     compat.voidptr = sip.voidptr
 
 from . import internals
-
-# Alert user if using Qt < 5.15, but do not raise exception
-versionReq = [5, 15]
-m = re.match(r'(\d+)\.(\d+).*', QtVersion)
-if m is not None and list(map(int, m.groups())) < versionReq:
-    warnings.warn(
-        f"PyQtGraph supports Qt version >= {versionReq[0]}.{versionReq[1]},"
-        f" but {QtVersion} detected.",
-        RuntimeWarning,
-        stacklevel=2
-    )
 
 App = QtWidgets.QApplication
 # subclassing QApplication causes segfaults on PySide{2, 6} / Python 3.8.7+
