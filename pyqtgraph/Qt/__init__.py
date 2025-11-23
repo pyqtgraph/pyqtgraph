@@ -255,6 +255,7 @@ else:
 # Common to PySide2 and PySide6
 if QT_LIB in [PYSIDE2, PYSIDE6]:
     QtVersion = QtCore.__version__
+    QtVersionInfo = QtCore.__version_info__
     loadUiType = _loadUiType
     isQObjectAlive = shiboken.isValid
 
@@ -276,6 +277,7 @@ if QT_LIB in [PYSIDE2, PYSIDE6]:
 # Common to PyQt5 and PyQt6
 if QT_LIB in [PYQT5, PYQT6]:
     QtVersion = QtCore.QT_VERSION_STR
+    QtVersionInfo = tuple((QtCore.QT_VERSION >> i) & 0xff for i in [16,8,0])
 
     # PyQt, starting in v5.5, calls qAbort when an exception is raised inside
     # a slot. To maintain backward compatibility (and sanity for interactive
@@ -334,11 +336,10 @@ def mkQApp(name=None):
         # let's add some sane defaults
 
         # hidpi handling
-        qtVersionCompare = tuple(map(int, QtVersion.split(".")))
-        if qtVersionCompare > (6, 0):
+        if QtVersionInfo > (6, 0):
             # Qt6 seems to support hidpi without needing to do anything so continue
             pass
-        elif qtVersionCompare > (5, 14):
+        elif QtVersionInfo > (5, 14):
             os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
             QtWidgets.QApplication.setHighDpiScaleFactorRoundingPolicy(
                 QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough

@@ -107,21 +107,6 @@ def test_SpinBox_gui_set_value_german(expected, valueText, suffix):
 
 
 
-def compare_semantic_versions(v1, v2):
-    try:
-        parts1 = [int(p) for p in v1.split('.')]
-        parts2 = [int(p) for p in v2.split('.')]
-        for p1, p2 in zip(parts1, parts2):
-            if p1 < p2:
-                return -1
-            elif p1 > p2:
-                return 1
-        return 0
-    except ValueError:
-        return 0
-
-
 def expect_failure_on_buggy_qt():
-    if compare_semantic_versions(pg.Qt.QtVersion, '6.9.0') < 0 \
-        and compare_semantic_versions(pg.Qt.QtVersion, '6.0.0') >= 0:
+    if (6, 0) <= pg.Qt.QtVersionInfo < (6, 9):
         pytest.xfail("A known bug in Qt 6.0.0 - 6.8.x causes scientific notation with 'g' format to use capital 'E' for the exponent.")
