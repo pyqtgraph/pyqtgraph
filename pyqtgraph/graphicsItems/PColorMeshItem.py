@@ -9,13 +9,13 @@ from .. import getConfigOption
 from ..Qt import compat
 from ..Qt import OpenGLConstants as GLC
 from ..Qt import OpenGLHelpers
-from ..Qt import QtCore, QtGui, QT_LIB
+from ..Qt import QtCore, QtGui, QT_LIB, QtVersionInfo
 from .GraphicsObject import GraphicsObject
 
-if QT_LIB in ["PyQt5", "PySide2"]:
-    QtOpenGL = QtGui
+if QtVersionInfo[0] >= 6:
+    QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
 else:
-    QtOpenGL = importlib.import_module(f'{QT_LIB}.QtOpenGL')
+    QtOpenGL = QtGui
 
 __all__ = ['PColorMeshItem']
 
