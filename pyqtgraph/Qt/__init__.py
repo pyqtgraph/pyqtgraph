@@ -5,12 +5,10 @@ This module exists to smooth out some of the differences between Qt versions.
 * Allow you to import QtCore/QtGui from pyqtgraph.Qt without specifying which Qt wrapper
   you want to use.
 """
-import contextlib
 import os
 import platform
 import subprocess
 import sys
-import time
 from importlib import resources
 
 PYSIDE = 'PySide'
@@ -256,17 +254,6 @@ if QT_LIB in [PYSIDE2, PYSIDE6]:
     QtVersionInfo = QtCore.__version_info__
     loadUiType = _loadUiType
     isQObjectAlive = shiboken.isValid
-
-    # PySide does not implement qWait
-    if not isinstance(QtTest, FailedImport):
-        if not hasattr(QtTest.QTest, 'qWait'):
-            @staticmethod
-            def qWait(msec):
-                start = time.time()
-                QtWidgets.QApplication.processEvents()
-                while time.time() < start + msec * 0.001:
-                    QtWidgets.QApplication.processEvents()
-            QtTest.QTest.qWait = qWait
 
     compat.wrapinstance = shiboken.wrapInstance
     compat.unwrapinstance = lambda x : shiboken.getCppPointer(x)[0]
