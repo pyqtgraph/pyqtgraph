@@ -1252,28 +1252,7 @@ def clip_scalar(val, vmin, vmax):
     return vmin if val < vmin else vmax if val > vmax else val
 
 
-def clip_array(arr, vmin, vmax, out=None):
-    # replacement for np.clip due to regression in
-    # performance since numpy 1.17
-    # https://github.com/numpy/numpy/issues/14281
-
-    if vmin is None and vmax is None:
-        # let np.clip handle the error
-        return np.clip(arr, vmin, vmax, out=out)
-
-    if vmin is None:
-        return np.core.umath.minimum(arr, vmax, out=out)
-    elif vmax is None:
-        return np.core.umath.maximum(arr, vmin, out=out)
-    else:
-        return np.core.umath.clip(arr, vmin, vmax, out=out)
-
-if tuple(map(int, np.__version__.split(".")[:2])) >= (1, 25):
-    # The linked issue above has been closed as of 2023/04/25
-    # and states that the issue has been fixed.
-    # And furthermore, because NumPy 2.0 has made np.core private,
-    # we will just use the native np.clip
-    clip_array = np.clip
+clip_array = np.clip
 
 
 def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
