@@ -72,18 +72,6 @@ class FailedImport(object):
 # Credit:
 # http://stackoverflow.com/questions/4442286/python-code-genration-with-pyside-uic/14195313#14195313
 
-class _StringIO(object):
-    """Alternative to built-in StringIO needed to circumvent unicode/ascii issues"""
-    def __init__(self):
-        self.data = []
-    
-    def write(self, data):
-        self.data.append(data)
-        
-    def getvalue(self):
-        return ''.join(map(str, self.data)).encode('utf8')
-
-    
 def _loadUiType(uiFile):
     """
     PySide lacks a "loadUiType" command like PyQt4's, so we have to convert
@@ -97,19 +85,6 @@ def _loadUiType(uiFile):
         http://stackoverflow.com/a/8717832
     """
 
-    pyside2uic = None
-    if QT_LIB == PYSIDE2:
-        try:
-            import pyside2uic
-        except ImportError:
-            # later versions of pyside2 have dropped pyside2uic; use the uic binary instead.
-            pyside2uic = None
-
-        if pyside2uic is None:
-            pyside2version = tuple(map(int, PySide2.__version__.split(".")))
-            if (5, 14) <= pyside2version < (5, 14, 2, 2):
-                warnings.warn('For UI compilation, it is recommended to upgrade to PySide >= 5.15', RuntimeWarning, stacklevel=2)
-
     # get class names from ui file
     import xml.etree.ElementTree as xml
     parsed = xml.parse(uiFile)
@@ -117,14 +92,8 @@ def _loadUiType(uiFile):
     form_class = parsed.find('class').text
 
     # convert ui file to python code
-    if pyside2uic is None:
-        uic_executable = QT_LIB.lower() + '-uic'
-        uipy = subprocess.check_output([uic_executable, uiFile])
-    else:
-        o = _StringIO()
-        with open(uiFile, 'r') as f:
-            pyside2uic.compileUi(f, o, indent=0)
-        uipy = o.getvalue()
+    uic_executable = QT_LIB.lower() + '-uic'
+    uipy = subprocess.check_output([uic_executable, uiFile])
 
     # execute python code
     pyc = compile(uipy, '<string>', 'exec')
