@@ -607,9 +607,9 @@ class PColorMeshItem(GraphicsObject):
         rng = hi - lo
         if rng == 0:
             rng = 1
-        OpenGLHelpers.setUniformValue(program, "u_rescale", QtGui.QVector2D(1/rng, lo))
+        program.setUniformValue("u_rescale", QtGui.QVector2D(1/rng, lo))
 
-        OpenGLHelpers.setUniformValue(program, "u_mvp", mvp)
+        program.setUniformValue("u_mvp", mvp)
 
         NULL = compat.voidptr(0) if QT_LIB.startswith("PySide") else None
         glfn.glDrawElements(GLC.GL_TRIANGLES, num_ind_mesh, GLC.GL_UNSIGNED_INT, NULL)

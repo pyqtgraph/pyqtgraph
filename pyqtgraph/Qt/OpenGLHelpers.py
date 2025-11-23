@@ -1,7 +1,4 @@
 import importlib
-import warnings
-
-import numpy as np
 
 from . import QT_LIB, QtGui, QtWidgets
 from . import OpenGLConstants as GLC
@@ -59,13 +56,6 @@ def getFunctions(context):
         raise RuntimeError(f"failed to obtain functions for OpenGL {kind} {format.version()} {format.profile()}")
 
     return glfn
-
-def setUniformValue(program, key, value):
-    # convenience function to mask the warnings
-    with warnings.catch_warnings():
-        # PySide2 : RuntimeWarning: SbkConverter: Unimplemented C++ array type.
-        warnings.simplefilter("ignore")
-        program.setUniformValue(key, value)
 
 class GraphicsViewGLWidget(QtOpenGLWidgets.QOpenGLWidget):
     def __init__(self):

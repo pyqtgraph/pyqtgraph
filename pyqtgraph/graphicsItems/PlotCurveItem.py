@@ -1168,7 +1168,7 @@ class PlotCurveItem(GraphicsObject):
 
         glstate.m_vao.bind()
         program.bind()
-        OpenGLHelpers.setUniformValue(program, "u_mvp", mvp)
+        program.setUniformValue("u_mvp", mvp)
 
         # filling occurs first so that the curve outline gets painted over it.
         for brush in [self.opts["brush"]]:
@@ -1176,7 +1176,7 @@ class PlotCurveItem(GraphicsObject):
                 continue
             if brush is None or brush.style() == QtCore.Qt.BrushStyle.NoBrush:
                 continue
-            OpenGLHelpers.setUniformValue(program, "u_color", brush.color())
+            program.setUniformValue("u_color", brush.color())
 
             glf.glEnable(GLC.GL_BLEND)
             glf.glBlendFuncSeparate(GLC.GL_SRC_ALPHA, GLC.GL_ONE_MINUS_SRC_ALPHA, 1, GLC.GL_ONE_MINUS_SRC_ALPHA)
@@ -1213,7 +1213,7 @@ class PlotCurveItem(GraphicsObject):
                 width = 1
 
             glf.glLineWidth(width)
-            OpenGLHelpers.setUniformValue(program, "u_color", pen.color())
+            program.setUniformValue("u_color", pen.color())
 
             match connect_kind:
                 case "pairs" | "array":
