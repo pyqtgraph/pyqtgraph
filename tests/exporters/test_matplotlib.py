@@ -1,26 +1,12 @@
-from importlib.metadata import version
-
 import pytest
 
 import pyqtgraph as pg
 from pyqtgraph.exporters import MatplotlibExporter
 
 pytest.importorskip("matplotlib")
-from packaging.version import Version, parse
 
 
 app = pg.mkQApp()
-
-# see https://github.com/matplotlib/matplotlib/pull/24172
-if (
-    pg.Qt.QT_LIB == "PySide6"
-    and parse(pg.Qt.PySide6.__version__) > Version('6.4')
-    and parse(version('matplotlib')) < Version('3.6.2')
-):
-    pytest.skip(
-        "matplotlib + PySide6 6.4 bug",
-        allow_module_level=True
-    )
 
 
 def test_MatplotlibExporter():
