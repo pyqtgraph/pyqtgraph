@@ -49,7 +49,7 @@ the table below for a summary.
 | [`h5py`]       | <ul><li> Export in hdf5 format </li></ul> |
 | [`colorcet`]   | <ul><li> Add a collection of perceptually uniform colormaps </li></ul> |
 | [`matplotlib`] | <ul><li> Export of PlotItem in matplotlib figure </li><li> Add matplotlib collection of colormaps </li></ul> |
-| [`cupy`]       | <ul><li> CUDA-enhanced image processing </li><li> Note: On Windows, CUDA toolkit must be >= 11.1 </li></ul> |
+| [`cupy`]       | <ul><li> CUDA-enhanced image processing </li></ul> |
 | [`numba`]      | <ul><li> Faster image processing </li></ul> |
 | [`jupyter_rfb`]| <ul><li> Jupyter Notebook support </li> <li> [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pyqtgraph/pyqtgraph/HEAD?urlpath=%2Flab%2Ftree%2Fpyqtgraph%2Fexamples%2Fnotebooks) </li> </ul> |
 
