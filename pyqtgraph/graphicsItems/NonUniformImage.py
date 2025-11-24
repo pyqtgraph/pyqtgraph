@@ -1,4 +1,3 @@
-import warnings
 import numpy as np
 
 from .. import functions as fn
@@ -6,7 +5,6 @@ from ..colormap import ColorMap
 from .. import Qt
 from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
-from .HistogramLUTItem import HistogramLUTItem
 
 __all__ = ['NonUniformImage']
 
@@ -48,17 +46,6 @@ class NonUniformImage(GraphicsObject):
         self.update()
 
     def setLookupTable(self, lut, update=True, **kwargs):
-        # backwards compatibility hack
-        if isinstance(lut, HistogramLUTItem):
-            warnings.warn(
-                "NonUniformImage::setLookupTable(HistogramLUTItem) is deprecated "
-                "and will be removed in a future version of PyQtGraph. "
-                "use HistogramLUTItem::setImageItem(NonUniformImage) instead",
-                DeprecationWarning, stacklevel=2
-            )
-            lut.setImageItem(self)
-            return
-
         self.cmap = None    # invalidate since no longer consistent with lut
         self.lut = lut
         self.picture = None
