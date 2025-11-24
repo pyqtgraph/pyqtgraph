@@ -140,8 +140,10 @@ class NonUniformImage(GraphicsObject):
         # sorted_indices effectively groups together the
         # (flattened) indices of the same coloridx together.
         sorted_indices = np.argsort(Z, axis=None)
-        for arr in X, Y, W, H:
-            arr.shape = -1      # in-place unravel
+        X = X.ravel()
+        Y = Y.ravel()
+        W = W.ravel()
+        H = H.ravel()
 
         self.picture = QtGui.QPicture()
         painter = QtGui.QPainter(self.picture)

@@ -801,11 +801,8 @@ def affineSliceCoords(shape, origin, vectors, axes):
     shape = list(map(np.ceil, shape))
 
     ## make sure vectors are arrays
-    if not isinstance(vectors, np.ndarray):
-        vectors = np.array(vectors)
-    if not isinstance(origin, np.ndarray):
-        origin = np.array(origin)
-    origin.shape = (len(axes),) + (1,)*len(shape)
+    vectors = np.asarray(vectors)
+    origin = np.asarray(origin).reshape((len(axes),) + (1,)*len(shape))
 
     ## Build array of sample locations. 
     grid = np.mgrid[tuple([slice(0,x) for x in shape])]  ## mesh grid of indexes
@@ -1823,8 +1820,7 @@ def downsample(data, n, axis=0, xvals='subsample', *, nanPolicy='propagate'):
     s.insert(axis+1, n)
     sl = [slice(None)] * data.ndim
     sl[axis] = slice(0, nPts*n)
-    d1 = data[tuple(sl)]
-    d1.shape = tuple(s)
+    d1 = data[tuple(sl)].reshape(tuple(s))
     if nanPolicy == 'propagate':
         d2 = d1.mean(axis+1)
     elif nanPolicy == 'omit':
@@ -2958,7 +2954,7 @@ def _pinv_fallback(tr):
     arr = np.array([tr.m11(), tr.m12(), tr.m13(),
                     tr.m21(), tr.m22(), tr.m23(),
                     tr.m31(), tr.m32(), tr.m33()])
-    arr.shape = (3, 3)
+    arr = arr.reshape((3, 3))
     pinv = np.linalg.pinv(arr)
     return QtGui.QTransform(*pinv.ravel().tolist())
 
