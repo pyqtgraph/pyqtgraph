@@ -641,12 +641,7 @@ class PlotCurveItem(GraphicsObject):
         if 'stepMode' in kargs:
             self.opts['stepMode'] = kargs['stepMode']
 
-        if self.opts['stepMode'] in ("center", True):  ## check against True for backwards compatibility
-            if self.opts['stepMode'] is True:
-                warnings.warn(
-                    'stepMode=True is deprecated and will result in an error after October 2022. Use stepMode="center" instead.',
-                    DeprecationWarning, stacklevel=3
-                )
+        if self.opts['stepMode'] == "center":
             if len(self.xData) != len(self.yData)+1:  ## allow difference of 1 for step mode plots
                 raise Exception("len(X) must be len(Y)+1 since stepMode=True (got %s and %s)" % (self.xData.shape, self.yData.shape))
         else:
