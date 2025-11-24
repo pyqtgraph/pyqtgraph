@@ -29,7 +29,7 @@ cw.setLayout(layout)
 ## Create flowchart, define input/output terminals
 fc = Flowchart(terminals={
     'dataIn': {'io': 'in'},
-    'dataOut': {'io': 'out'}    
+    'dataOut': {'io': 'out'}
 })
 w = fc.widget()
 

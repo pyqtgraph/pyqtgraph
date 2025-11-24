@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from ...graphicsItems.LinearRegionItem import LinearRegionItem
@@ -12,17 +11,18 @@ from .common import CtrlNode
 class ColumnSelectNode(Node):
     """Select named columns from a record array."""
     nodeName = "ColumnSelect"
-    def __init__(self, name):
+
+    def __init__(self, name: str) -> None:
         Node.__init__(self, name, terminals={'In': {'io': 'in'}})
         self.columns = set()
         self.columnList = QtWidgets.QListWidget()
         self.axis = 0
         self.columnList.itemChanged.connect(self.itemChanged)
-        
-    def process(self, In, display=True):
+
+    def process(self, In, display: bool = True) -> dict:
         if display:
             self.updateList(In)
-                
+
         out = {}
         if isinstance(In, np.ndarray) and In.dtype.fields is not None:
             for c in self.columns:
@@ -31,8 +31,9 @@ class ColumnSelectNode(Node):
             self.In.setValueAcceptable(False)
             raise Exception("Input must be ndarray with named fields")
 
+
         return out
-        
+
     def ctrlWidget(self):
         return self.columnList
 
@@ -45,19 +46,18 @@ class ColumnSelectNode(Node):
                 self.removeTerminal(c)
                 rem.add(c)
         self.columns -= rem
-                
+
         self.columnList.blockSignals(True)
         self.columnList.clear()
         for c in cols:
             item = QtWidgets.QListWidgetItem(c)
-            item.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled|QtCore.Qt.ItemFlag.ItemIsUserCheckable)
+            item.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsUserCheckable)
             if c in self.columns:
                 item.setCheckState(QtCore.Qt.CheckState.Checked)
             else:
                 item.setCheckState(QtCore.Qt.CheckState.Unchecked)
             self.columnList.addItem(item)
         self.columnList.blockSignals(False)
-        
 
     def itemChanged(self, item):
         col = str(item.text())
@@ -70,18 +70,17 @@ class ColumnSelectNode(Node):
                 self.columns.remove(col)
                 self.removeTerminal(col)
         self.update()
-        
+
     def saveState(self):
         state = Node.saveState(self)
         state['columns'] = list(self.columns)
         return state
-    
+
     def restoreState(self, state):
         Node.restoreState(self, state)
         self.columns = set(state.get('columns', []))
         for c in self.columns:
             self.addOutput(c)
-
 
 
 class RegionSelectNode(CtrlNode):
@@ -93,7 +92,7 @@ class RegionSelectNode(CtrlNode):
         ('display', 'check', {'value': True}),
         ('movable', 'check', {'value': True}),
     ]
-    
+
     def __init__(self, name):
         self.items = {}
         CtrlNode.__init__(self, name, terminals={
@@ -104,21 +103,20 @@ class RegionSelectNode(CtrlNode):
         })
         self.ctrls['display'].toggled.connect(self.displayToggled)
         self.ctrls['movable'].toggled.connect(self.movableToggled)
-        
+
     def displayToggled(self, b):
         for item in self.items.values():
             item.setVisible(b)
-            
+
     def movableToggled(self, b):
         for item in self.items.values():
             item.setMovable(b)
-            
-        
+
     def process(self, data=None, display=True):
-        #print "process.."
+        # print "process.."
         s = self.stateGroup.state()
         region = [s['start'], s['stop']]
-        
+
         if display:
             conn = self['widget'].connections()
             for c in conn:
@@ -128,18 +126,18 @@ class RegionSelectNode(CtrlNode):
                 if c in self.items:
                     item = self.items[c]
                     item.setRegion(region)
-                    #print "  set rgn:", c, region
-                    #item.setXVals(events)
+                    # print "  set rgn:", c, region
+                    # item.setXVals(events)
                 else:
                     item = LinearRegionItem(values=region)
                     self.items[c] = item
-                    #item.connect(item, QtCore.SIGNAL('regionChanged'), self.rgnChanged)
+                    # item.connect(item, QtCore.SIGNAL('regionChanged'), self.rgnChanged)
                     item.sigRegionChanged.connect(self.rgnChanged)
                     item.setVisible(s['display'])
                     item.setMovable(s['movable'])
-                    #print "  new rgn:", c, region
-                    #self.items[c].setYRange([0., 0.2], relative=True)
-        
+                    # print "  new rgn:", c, region
+                    # self.items[c].setYRange([0., 0.2], relative=True)
+
         if self['selected'].isConnected():
             if data is None:
                 sliced = None
@@ -149,14 +147,13 @@ class RegionSelectNode(CtrlNode):
         else:
             sliced = None
         return {'selected': sliced, 'widget': self.items, 'region': region}
-        
-        
+
     def rgnChanged(self, item):
         region = item.getRegion()
         self.stateGroup.setState({'start': region[0], 'stop': region[1]})
         self.update()
-        
-        
+
+
 class TextEdit(QtWidgets.QTextEdit):
     def __init__(self, on_update):
         super().__init__()
@@ -177,26 +174,27 @@ class EvalNode(Node):
     For expressions, a single value may be evaluated for a single output, or a dict for multiple outputs.
     For a script, the text will be executed as the body of a function."""
     nodeName = 'PythonEval'
-    
+
     def __init__(self, name):
-        Node.__init__(self, name, 
-            terminals = {
-                'input': {'io': 'in', 'renamable': True, 'multiable': True},
-                'output': {'io': 'out', 'renamable': True, 'multiable': True},
-            },
-            allowAddInput=True, allowAddOutput=True)
-        
+        Node.__init__(self, name,
+                      terminals={
+                          'input': {'io': 'in', 'renamable': True, 'multiable': True},
+                          'output': {'io': 'out', 'renamable': True, 'multiable': True},
+                      },
+                      allowAddInput=True, allowAddOutput=True)
+
         self.ui = QtWidgets.QWidget()
         self.layout = QtWidgets.QGridLayout()
         self.text = TextEdit(self.update)
         self.text.setTabStopWidth(30)
-        self.text.setPlainText("# Access inputs as args['input_name']\nreturn {'output': None} ## one key per output terminal")
+        self.text.setPlainText(
+            "# Access inputs as args['input_name']\nreturn {'output': None} ## one key per output terminal")
         self.layout.addWidget(self.text, 1, 0, 1, 2)
         self.ui.setLayout(self.layout)
-        
+
     def ctrlWidget(self):
         return self.ui
-        
+
     def setCode(self, code):
         # unindent code; this allows nicer inline code specification when 
         # calling this method.
@@ -209,24 +207,24 @@ class EvalNode(Node):
         if len(ind) > 0:
             ind = min(ind)
             code = '\n'.join([line[ind:] for line in lines])
-        
+
         self.text.clear()
         self.text.insertPlainText(code)
 
     def code(self):
         return self.text.toPlainText()
-        
+
     def process(self, display=True, **args):
         l = locals()
         l.update(args)
         ## try eval first, then exec
-        try:  
+        try:
             text = self.text.toPlainText().replace('\n', ' ')
             output = eval(text, globals(), l)
         except SyntaxError:
             fn = "def fn(**args):\n"
             run = "\noutput=fn(**args)\n"
-            text = fn + "\n".join(["    "+l for l in self.text.toPlainText().split('\n')]) + run
+            text = fn + "\n".join(["    " + l for l in self.text.toPlainText().split('\n')]) + run
             ldict = locals()
             exec(text, globals(), ldict)
             output = ldict['output']
@@ -234,39 +232,39 @@ class EvalNode(Node):
             print(f"Error processing node: {self.name()}")
             raise
         return output
-        
+
     def saveState(self):
         state = Node.saveState(self)
         state['text'] = self.text.toPlainText()
-        #state['terminals'] = self.saveTerminals()
+        # state['terminals'] = self.saveTerminals()
         return state
-        
+
     def restoreState(self, state):
         Node.restoreState(self, state)
         self.setCode(state['text'])
         self.restoreTerminals(state['terminals'])
         self.update()
 
-        
+
 class ColumnJoinNode(Node):
     """Concatenates record arrays and/or adds new columns"""
     nodeName = 'ColumnJoin'
-    
+
     def __init__(self, name):
-        Node.__init__(self, name, terminals = {
+        Node.__init__(self, name, terminals={
             'output': {'io': 'out'},
         })
-        
-        #self.items = []
-        
+
+        # self.items = []
+
         self.ui = QtWidgets.QWidget()
         self.layout = QtWidgets.QGridLayout()
         self.ui.setLayout(self.layout)
-        
+
         self.tree = TreeWidget()
         self.addInBtn = QtWidgets.QPushButton('+ Input')
         self.remInBtn = QtWidgets.QPushButton('- Input')
-        
+
         self.layout.addWidget(self.tree, 0, 0, 1, 2)
         self.layout.addWidget(self.addInBtn, 1, 0)
         self.layout.addWidget(self.remInBtn, 1, 1)
@@ -274,18 +272,18 @@ class ColumnJoinNode(Node):
         self.addInBtn.clicked.connect(self.addInput)
         self.remInBtn.clicked.connect(self.remInput)
         self.tree.sigItemMoved.connect(self.update)
-        
+
     def ctrlWidget(self):
         return self.ui
-        
+
     def addInput(self):
-        #print "ColumnJoinNode.addInput called."
+        # print "ColumnJoinNode.addInput called."
         term = Node.addInput(self, 'input', renamable=True, removable=True, multiable=True)
-        #print "Node.addInput returned. term:", term
+        # print "Node.addInput returned. term:", term
         item = QtWidgets.QTreeWidgetItem([term.name()])
         item.term = term
         term.joinItem = item
-        #self.items.append((term, item))
+        # self.items.append((term, item))
         self.tree.addTopLevelItem(item)
 
     def remInput(self):
@@ -317,7 +315,7 @@ class ColumnJoinNode(Node):
         state = Node.saveState(self)
         state['order'] = self.order()
         return state
-        
+
     def restoreState(self, state):
         Node.restoreState(self, state)
         inputs = self.inputs()
@@ -333,14 +331,14 @@ class ColumnJoinNode(Node):
         for name in inputs:
             if name not in order:
                 order.append(name)
-        
+
         self.tree.clear()
         for name in order:
             term = self[name]
             item = QtWidgets.QTreeWidgetItem([name])
             item.term = term
             term.joinItem = item
-            #self.items.append((term, item))
+            # self.items.append((term, item))
             self.tree.addTopLevelItem(item)
 
     def terminalRenamed(self, term, oldName):
@@ -348,8 +346,8 @@ class ColumnJoinNode(Node):
         item = term.joinItem
         item.setText(0, term.name())
         self.update()
-        
-        
+
+
 class Mean(CtrlNode):
     """Calculate the mean of an array across an axis.
     """
@@ -357,7 +355,7 @@ class Mean(CtrlNode):
     uiTemplate = [
         ('axis', 'intSpin', {'value': 0, 'min': -1, 'max': 1000000}),
     ]
-    
+
     def processData(self, data):
         s = self.stateGroup.state()
         ax = None if s['axis'] == -1 else s['axis']
@@ -371,7 +369,7 @@ class Max(CtrlNode):
     uiTemplate = [
         ('axis', 'intSpin', {'value': 0, 'min': -1, 'max': 1000000}),
     ]
-    
+
     def processData(self, data):
         s = self.stateGroup.state()
         ax = None if s['axis'] == -1 else s['axis']
@@ -385,7 +383,7 @@ class Min(CtrlNode):
     uiTemplate = [
         ('axis', 'intSpin', {'value': 0, 'min': -1, 'max': 1000000}),
     ]
-    
+
     def processData(self, data):
         s = self.stateGroup.state()
         ax = None if s['axis'] == -1 else s['axis']
@@ -399,7 +397,7 @@ class Stdev(CtrlNode):
     uiTemplate = [
         ('axis', 'intSpin', {'value': -0, 'min': -1, 'max': 1000000}),
     ]
-    
+
     def processData(self, data):
         s = self.stateGroup.state()
         ax = None if s['axis'] == -1 else s['axis']
@@ -414,7 +412,7 @@ class Index(CtrlNode):
         ('axis', 'intSpin', {'value': 0, 'min': 0, 'max': 1000000}),
         ('index', 'intSpin', {'value': 0, 'min': 0, 'max': 1000000}),
     ]
-    
+
     def processData(self, data):
         s = self.stateGroup.state()
         ax = s['axis']
@@ -424,7 +422,7 @@ class Index(CtrlNode):
             return data[ind]
         else:
             return data.take(ind, axis=ax)
-        
+
 
 class Slice(CtrlNode):
     """Select a slice from an array axis.
@@ -436,7 +434,7 @@ class Slice(CtrlNode):
         ('stop', 'intSpin', {'value': -1, 'min': -1000000, 'max': 1000000}),
         ('step', 'intSpin', {'value': 1, 'min': -1000000, 'max': 1000000}),
     ]
-    
+
     def processData(self, data):
         s = self.stateGroup.state()
         ax = s['axis']
@@ -450,16 +448,18 @@ class Slice(CtrlNode):
             sl = [slice(None) for i in range(data.ndim)]
             sl[ax] = slice(start, stop, step)
             return data[sl]
-        
+
 
 class AsType(CtrlNode):
     """Convert an array to a different dtype.
     """
     nodeName = 'AsType'
     uiTemplate = [
-        ('dtype', 'combo', {'values': ['float', 'int', 'float32', 'float64', 'float128', 'int8', 'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32', 'uint64'], 'index': 0}),
+        ('dtype', 'combo', {
+            'values': ['float', 'int', 'float32', 'float64', 'float128', 'int8', 'int16', 'int32', 'int64', 'uint8',
+                       'uint16', 'uint32', 'uint64'], 'index': 0}),
     ]
-    
+
     def processData(self, data):
         s = self.stateGroup.state()
         return data.astype(s['dtype'])
