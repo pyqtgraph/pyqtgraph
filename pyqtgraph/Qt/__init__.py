@@ -311,7 +311,8 @@ def mkQApp(name=None):
 
         # enable hidpi handling for Qt5
         if QtVersionInfo[0] == 5:
-            os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+            QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+            QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
             QtWidgets.QApplication.setHighDpiScaleFactorRoundingPolicy(
                 QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
             )
