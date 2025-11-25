@@ -4,19 +4,12 @@ import sys
 
 import numpy as np
 
-from . import QT_LIB, QtCore, QtGui, compat
+from . import QT_LIB, QtCore, QtGui, compat, QtVersionInfo
 
 __all__ = ["get_qpainterpath_element_array"]
 
 if QT_LIB.startswith('PyQt'):
     from . import sip
-    qt_version_info = tuple((QtCore.QT_VERSION >> i) & 0xff for i in [16,8,0])
-elif QT_LIB == 'PySide2':
-    from PySide2 import __version_info__ as pyside_version_info
-    qt_version_info = QtCore.__version_info__
-elif QT_LIB == 'PySide6':
-    from PySide6 import __version_info__ as pyside_version_info
-    qt_version_info = QtCore.__version_info__
 
 
 class Element(ctypes.Structure):
@@ -28,7 +21,7 @@ class QArrayData(ctypes.Structure):
 class QPainterPathPrivate(ctypes.Structure):
     pass
 
-if qt_version_info[0] == 5:
+if QtVersionInfo[0] == 5:
     QArrayData._fields_ = [
         ("ref", ctypes.c_int),
         ("size", ctypes.c_int),
@@ -41,7 +34,7 @@ if qt_version_info[0] == 5:
         ("adata", ctypes.POINTER(QArrayData)),
     ]
 
-elif qt_version_info[0] == 6:
+elif QtVersionInfo[0] == 6:
     QArrayData._fields_ = [
         ("ref", ctypes.c_int),
         ("flags", ctypes.c_uint),
@@ -53,7 +46,7 @@ elif qt_version_info[0] == 6:
         ("adata", ctypes.POINTER(QArrayData)),
         ("data", ctypes.c_void_p),
         ("size", ctypes.c_ssize_t),
-    ][int(qt_version_info >= (6, 10)):]
+    ][int(QtVersionInfo >= (6, 10)):]
 
 def get_qpainterpath_element_array(qpath, nelems=None):
     resize = nelems is not None
@@ -66,12 +59,12 @@ def get_qpainterpath_element_array(qpath, nelems=None):
 
     ppp = ctypes.cast(ptr, ctypes.POINTER(QPainterPathPrivate)).contents
 
-    if qt_version_info[0] == 5:
+    if QtVersionInfo[0] == 5:
         qad = ppp.adata.contents
         eptr = ctypes.addressof(qad) + qad.offset
         if resize:
             qad.size = nelems
-    elif qt_version_info[0] == 6:
+    elif QtVersionInfo[0] == 6:
         eptr = ppp.data
         if resize:
             ppp.size = nelems
@@ -125,11 +118,14 @@ class PrimitiveArray:
                 )
             self.use_sip_array = use_array
 
-        if QT_LIB.startswith('PySide'):
+        elif QT_LIB.startswith('PySide'):
             if use_array is None:
                 use_array = (
+                    # here we are actually testing for PySide version rather
+                    # than Qt version. But PySide version mostly matches
+                    # Qt version anyway.
                     Klass is QtGui.QPainter.PixmapFragment
-                    or pyside_version_info >= (6, 4, 3)
+                    or QtVersionInfo >= (6, 4, 3)
                 )
             self.use_ptr_to_array = use_array
 

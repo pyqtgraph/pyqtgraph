@@ -1,17 +1,12 @@
 import importlib
-import warnings
 
-import numpy as np
-
-from . import QT_LIB, QtGui, QtWidgets
+from . import QT_LIB, QtWidgets, QtVersionInfo
 from . import OpenGLConstants as GLC
 
-if QT_LIB in ["PyQt5", "PySide2"]:
-    QtOpenGL = QtGui
-    QtOpenGLWidgets = QtWidgets
-else:
-    QtOpenGL = importlib.import_module(f'{QT_LIB}.QtOpenGL')
+if QtVersionInfo[0] >= 6:
     QtOpenGLWidgets = importlib.import_module(f"{QT_LIB}.QtOpenGLWidgets")
+else:
+    QtOpenGLWidgets = QtWidgets
 
 __all__ = ["getFunctions", "GraphicsViewGLWidget"]
 
@@ -19,7 +14,7 @@ def getFunctions(context):
     glfn = None
     format = context.format()
 
-    if QT_LIB in ["PySide2", "PySide6"]:
+    if QT_LIB.startswith("PySide"):
         glfn = context.extraFunctions()
 
     elif QT_LIB in ["PyQt5", "PyQt6"]:
@@ -59,13 +54,6 @@ def getFunctions(context):
         raise RuntimeError(f"failed to obtain functions for OpenGL {kind} {format.version()} {format.profile()}")
 
     return glfn
-
-def setUniformValue(program, key, value):
-    # convenience function to mask the warnings
-    with warnings.catch_warnings():
-        # PySide2 : RuntimeWarning: SbkConverter: Unimplemented C++ array type.
-        warnings.simplefilter("ignore")
-        program.setUniformValue(key, value)
 
 class GraphicsViewGLWidget(QtOpenGLWidgets.QOpenGLWidget):
     def __init__(self):

@@ -5,14 +5,10 @@ This module exists to smooth out some of the differences between Qt versions.
 * Allow you to import QtCore/QtGui from pyqtgraph.Qt without specifying which Qt wrapper
   you want to use.
 """
-import contextlib
 import os
 import platform
-import re
 import subprocess
 import sys
-import time
-import warnings
 from importlib import resources
 
 PYSIDE = 'PySide'
@@ -72,18 +68,6 @@ class FailedImport(object):
 # Credit:
 # http://stackoverflow.com/questions/4442286/python-code-genration-with-pyside-uic/14195313#14195313
 
-class _StringIO(object):
-    """Alternative to built-in StringIO needed to circumvent unicode/ascii issues"""
-    def __init__(self):
-        self.data = []
-    
-    def write(self, data):
-        self.data.append(data)
-        
-    def getvalue(self):
-        return ''.join(map(str, self.data)).encode('utf8')
-
-    
 def _loadUiType(uiFile):
     """
     PySide lacks a "loadUiType" command like PyQt4's, so we have to convert
@@ -97,19 +81,6 @@ def _loadUiType(uiFile):
         http://stackoverflow.com/a/8717832
     """
 
-    pyside2uic = None
-    if QT_LIB == PYSIDE2:
-        try:
-            import pyside2uic
-        except ImportError:
-            # later versions of pyside2 have dropped pyside2uic; use the uic binary instead.
-            pyside2uic = None
-
-        if pyside2uic is None:
-            pyside2version = tuple(map(int, PySide2.__version__.split(".")))
-            if (5, 14) <= pyside2version < (5, 14, 2, 2):
-                warnings.warn('For UI compilation, it is recommended to upgrade to PySide >= 5.15', RuntimeWarning, stacklevel=2)
-
     # get class names from ui file
     import xml.etree.ElementTree as xml
     parsed = xml.parse(uiFile)
@@ -117,14 +88,8 @@ def _loadUiType(uiFile):
     form_class = parsed.find('class').text
 
     # convert ui file to python code
-    if pyside2uic is None:
-        uic_executable = QT_LIB.lower() + '-uic'
-        uipy = subprocess.check_output([uic_executable, uiFile])
-    else:
-        o = _StringIO()
-        with open(uiFile, 'r') as f:
-            pyside2uic.compileUi(f, o, indent=0)
-        uipy = o.getvalue()
+    uic_executable = QT_LIB.lower() + '-uic'
+    uipy = subprocess.check_output([uic_executable, uiFile])
 
     # execute python code
     pyc = compile(uipy, '<string>', 'exec')
@@ -286,19 +251,9 @@ else:
 # Common to PySide2 and PySide6
 if QT_LIB in [PYSIDE2, PYSIDE6]:
     QtVersion = QtCore.__version__
+    QtVersionInfo = QtCore.__version_info__
     loadUiType = _loadUiType
     isQObjectAlive = shiboken.isValid
-
-    # PySide does not implement qWait
-    if not isinstance(QtTest, FailedImport):
-        if not hasattr(QtTest.QTest, 'qWait'):
-            @staticmethod
-            def qWait(msec):
-                start = time.time()
-                QtWidgets.QApplication.processEvents()
-                while time.time() < start + msec * 0.001:
-                    QtWidgets.QApplication.processEvents()
-            QtTest.QTest.qWait = qWait
 
     compat.wrapinstance = shiboken.wrapInstance
     compat.unwrapinstance = lambda x : shiboken.getCppPointer(x)[0]
@@ -307,6 +262,7 @@ if QT_LIB in [PYSIDE2, PYSIDE6]:
 # Common to PyQt5 and PyQt6
 if QT_LIB in [PYQT5, PYQT6]:
     QtVersion = QtCore.QT_VERSION_STR
+    QtVersionInfo = tuple((QtCore.QT_VERSION >> i) & 0xff for i in [16,8,0])
 
     # PyQt, starting in v5.5, calls qAbort when an exception is raised inside
     # a slot. To maintain backward compatibility (and sanity for interactive
@@ -331,17 +287,6 @@ if QT_LIB in [PYQT5, PYQT6]:
 
 from . import internals
 
-# Alert user if using Qt < 5.15, but do not raise exception
-versionReq = [5, 15]
-m = re.match(r'(\d+)\.(\d+).*', QtVersion)
-if m is not None and list(map(int, m.groups())) < versionReq:
-    warnings.warn(
-        f"PyQtGraph supports Qt version >= {versionReq[0]}.{versionReq[1]},"
-        f" but {QtVersion} detected.",
-        RuntimeWarning,
-        stacklevel=2
-    )
-
 App = QtWidgets.QApplication
 # subclassing QApplication causes segfaults on PySide{2, 6} / Python 3.8.7+
 
@@ -364,22 +309,16 @@ def mkQApp(name=None):
         # We do not have an already instantiated QApplication
         # let's add some sane defaults
 
-        # hidpi handling
-        qtVersionCompare = tuple(map(int, QtVersion.split(".")))
-        if qtVersionCompare > (6, 0):
-            # Qt6 seems to support hidpi without needing to do anything so continue
-            pass
-        elif qtVersionCompare > (5, 14):
-            os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+        # enable hidpi handling for Qt5
+        if QtVersionInfo[0] == 5:
+            QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+            QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
             QtWidgets.QApplication.setHighDpiScaleFactorRoundingPolicy(
                 QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
             )
-        else:  # qt 5.12 and 5.13
-            QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
-            QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
 
         QAPP = QtWidgets.QApplication(sys.argv or ["pyqtgraph"])
-        if QtVersion.startswith("6"):
+        if QtVersionInfo[0] != 5:
             # issues with dark mode + windows + qt5
             QAPP.setStyle("fusion")
 

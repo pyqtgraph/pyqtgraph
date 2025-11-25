@@ -18,9 +18,7 @@ def downsample(data, n, axis=0, xvals='subsample'):
     s.insert(axis+1, n)
     sl = [slice(None)] * data.ndim
     sl[axis] = slice(0, nPts*n)
-    d1 = data[tuple(sl)]
-    #print d1.shape, s
-    d1.shape = tuple(s)
+    d1 = data[tuple(sl)].reshape(tuple(s))
     d2 = d1.mean(axis+1)
     return d2
 

@@ -1,6 +1,6 @@
 from ..Parameter import registerParameterType
 from .action import ActionParameter, ActionParameterItem
-from .actiongroup import ActionGroup, ActionGroupParameter, ActionGroupParameterItem
+from .actiongroup import ActionGroupParameter, ActionGroupParameterItem
 from .basetypes import (
     GroupParameter,
     GroupParameterItem,

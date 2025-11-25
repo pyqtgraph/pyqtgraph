@@ -194,15 +194,7 @@ class PenParameter(GroupParameter):
                 if p.type() != 'color':
                     p.sigValueChanging.connect(newSetter)
                 # Force children to emulate self's value instead of being part of a tree like normal
-                try:
-                    p.sigValueChanged.disconnect(p._emitValueChanged)
-                except RuntimeError:
-                    # workaround https://bugreports.qt.io/projects/PYSIDE/issues/PYSIDE-2487
-                    # that affects PySide 6.5.3
-                    # Since the child param was freshly created by us, there can only have been one slot
-                    # connected. So we can just disconnect all the slots without specifying which one.
-                    assert p.receivers(QtCore.SIGNAL("sigValueChanged(PyObject,PyObject)")) == 1
-                    p.sigValueChanged.disconnect()
+                p.sigValueChanged.disconnect(p._emitValueChanged)
                 # Some widgets (e.g. checkbox, combobox) don't emit 'changing' signals, so tie to 'changed' as well
                 p.sigValueChanged.connect(newSetter)
 
