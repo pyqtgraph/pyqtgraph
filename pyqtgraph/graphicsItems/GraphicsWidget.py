@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui, QtWidgets
+from ..Qt import QtWidgets
 from .GraphicsItem import GraphicsItem
 from ..GraphicsScene.GraphicsScene import GraphicsScene
 from typing import TYPE_CHECKING
@@ -11,36 +11,14 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
         """
         **Bases:** :class:`GraphicsItem <pyqtgraph.GraphicsItem>`, :class:`QtWidgets.QGraphicsWidget`
         
-        Extends QGraphicsWidget with several helpful methods and workarounds for PyQt bugs. 
+        Extends QGraphicsWidget with several helpful methods.
         Most of the extra functionality is inherited from :class:`GraphicsItem <pyqtgraph.GraphicsItem>`.
         """
         QtWidgets.QGraphicsWidget.__init__(self, *args, **kwargs)
         GraphicsItem.__init__(self)
 
-        # cache bounding rect and geometry
-        self._boundingRectCache = self._previousGeometry = None
-        self._painterPathCache = None
-        self.geometryChanged.connect(self._resetCachedProperties)
-
-        # done by GraphicsItem init
-        # GraphicsScene.registerObject(self)  # workaround for pyqt bug in GraphicsScene.items()
     if TYPE_CHECKING:
         def scene(self) -> GraphicsScene: ...
-    # Removed due to https://bugreports.qt-project.org/browse/PYSIDE-86
-    # def itemChange(self, change, value):
-    #     # BEWARE: Calling QGraphicsWidget.itemChange can lead to crashing!
-    #     # ret = QtWidgets.QGraphicsWidget.itemChange(self, change, value)  # segv occurs here
-    #     # The default behavior is just to return the value argument, so we'll do that
-    #     # without calling the original method.
-    #     ret = value
-    #     if change in [self.ItemParentHasChanged, self.ItemSceneHasChanged]:
-    #         self._updateView()
-    #     return ret
-
-    @QtCore.Slot()
-    def _resetCachedProperties(self):
-        self._boundingRectCache = self._previousGeometry = None
-        self._painterPathCache = None
 
     def setFixedHeight(self, h):
         self.setMaximumHeight(h)
@@ -56,20 +34,15 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
     def width(self):
         return self.geometry().width()
 
-    def boundingRect(self):
-        geometry = self.geometry()
-        if geometry != self._previousGeometry:
-            self._painterPathCache = None
-            br = self.mapRectFromParent(geometry).normalized()
-            self._boundingRectCache = br
-            self._previousGeometry = geometry
-        else:
-            br = self._boundingRectCache
-        return QtCore.QRectF(br)
+    # The default implementations of boundingRect() and shape()
+    # provided by QGraphicsWidget are sufficient unless your
+    # subclass sets its own transform.
+    # Sample implementations to override in your subclass are shown below.
 
-    def shape(self):
-        p = self._painterPathCache
-        if p is None:
-            self._painterPathCache = p = QtGui.QPainterPath()
-            p.addRect(self.boundingRect())
-        return p
+    # def boundingRect(self):
+    #     return self.mapRectFromParent(self.geometry()).normalized()
+
+    # def shape(self):
+    #     path = QtGui.QPainterPath()
+    #     path.addRect(self.boundingRect())
+    #     return path
