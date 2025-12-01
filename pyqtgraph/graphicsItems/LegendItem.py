@@ -1,4 +1,5 @@
 import math
+import weakref
 
 from .. import functions as fn
 from ..icons import invisibleEye
@@ -202,6 +203,27 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             self.anchor(itemPos=anchor, parentPos=anchor, offset=offset)
         return ret
 
+    def _updateItemLabel(self, item):
+        """Update the label text if the item's name has changed.
+
+        This method is called when an item emits sigPlotChanged, allowing
+        the legend to automatically update when setData() is called with
+        a new name parameter.
+
+        Parameters
+        ----------
+        item : PlotDataItem
+            The plot item whose name may have changed.
+        """
+        for sample, label in self.items:
+            if sample.item is item:
+                if hasattr(item, 'name'):
+                    new_name = item.name()
+                    if new_name is not None and label.text != new_name:
+                        label.setText(new_name)
+                        self.updateSize()
+                break
+
     def addItem(self, item, name):
         """
         Add a new entry to the legend.
@@ -223,6 +245,10 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             sample = self.sampleType(item)
 
         sample.sigClicked.connect(self.sigSampleClicked)
+
+        # Connect to sigPlotChanged to update label when name changes via setData()
+        if hasattr(item, 'sigPlotChanged'):
+            item.sigPlotChanged.connect(self._updateItemLabel)
 
         self.items.append((sample, label))
         self._addItemToLayout(sample, label)
@@ -296,6 +322,12 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         for sample, label in self.items:
             if sample.item is item or label.text == item:
+                # Disconnect the sigPlotChanged signal if connected
+                if hasattr(sample.item, 'sigPlotChanged'):
+                    try:
+                        sample.item.sigPlotChanged.disconnect(self._updateItemLabel)
+                    except (TypeError, RuntimeError):
+                        pass  # Signal was not connected or already disconnected
                 self.items.remove((sample, label))  # remove from itemlist
                 self._removeItemFromLayout(sample, label)
                 self.updateSize()  # redraw box
@@ -304,6 +336,12 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     def clear(self):
         """Remove all items from the legend."""
         for sample, label in self.items:
+            # Disconnect the sigPlotChanged signal if connected
+            if hasattr(sample.item, 'sigPlotChanged'):
+                try:
+                    sample.item.sigPlotChanged.disconnect(self._updateItemLabel)
+                except (TypeError, RuntimeError):
+                    pass  # Signal was not connected or already disconnected
             self._removeItemFromLayout(sample, label)
 
         self.items = []
@@ -410,4 +448,3 @@ class ItemSample(GraphicsWidget):
         event.accept()
         self.update()
         self.sigClicked.emit(self.item)
-
