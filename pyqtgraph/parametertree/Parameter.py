@@ -213,6 +213,15 @@ class Parameter(QtCore.QObject):
         self.blockTreeChangeEmit = 0
         self.setName(name)
 
+        # Checks that the parameter class and the specified type match the values registered in 'PARAM_TYPES'
+        if not self.check_type():
+            raise TypeError(
+                f"The specified type '{self.type()}' does not match the class registered in 'PARAM_TYPES'."
+                f"\nExpected class: {PARAM_TYPES.get(self.type(), 'Unknown')}, but got: {self.__class__}."
+                f"\nUse the 'registerParameterType' function to register a type with its associated class in "
+                f"'PARAM_TYPES'.")
+
+
         self.addChildren(self.opts.pop('children', []))
         if 'value' in self.opts and 'default' not in self.opts:
             self.opts['default'] = self.opts['value']
@@ -292,6 +301,22 @@ class Parameter(QtCore.QObject):
         if cls is None:
             raise ValueError(f"Type name '{typ}' is not registered.")
         return self.__class__ is cls
+
+    def check_type(self):
+        """
+        Checks if the specified type in the parameter options is valid for the current class.
+        This method checks that:
+            - the type specified (self.opts['type']) is registered in the 'PARAM_TYPES' dictionary
+            - the class associated with the type in 'PARAM_TYPES' matches the current parameter class.
+
+        Returns
+        -------
+        bool: Returns True if the type is valid, False otherwise.
+        """
+        if self.type() and not self.__class__ == PARAM_TYPES[self.type()]:
+            return False
+        return True
+
         
     def childPath(self, child):
         """
