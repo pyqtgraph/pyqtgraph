@@ -5,6 +5,7 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.parametertree as pt
 from pyqtgraph.functions import eq
+from pyqtgraph.parametertree.utils import compare_parameters
 from pyqtgraph.parametertree.parameterTypes import ChecklistParameterItem
 from pyqtgraph.Qt import QtCore, QtGui
 
@@ -236,3 +237,4 @@ def test_recreate_from_savestate():
     state = created.saveState()
     created2 = pt.Parameter.create(**state)
     assert pg.eq(state, created2.saveState())
+    assert compare_parameters(created, created2)

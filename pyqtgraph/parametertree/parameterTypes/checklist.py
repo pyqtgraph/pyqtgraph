@@ -1,3 +1,5 @@
+
+from ..Parameter import PARAM_TYPES, registerParameterItemType
 from ... import functions as fn
 from ...Qt import QtCore, QtWidgets
 from ...SignalProxy import SignalProxy
@@ -128,15 +130,10 @@ class RadioParameterItem(BoolParameterItem):
         self.emitter.sigChanged.emit(self, val)
 
 
-# Proxy around radio/bool type so the correct item class gets instantiated
-class BoolOrRadioParameter(SimpleParameter):
+class RadioParameter(SimpleParameter):
+    itemClass = RadioParameterItem
 
-    @property
-    def itemClass(self):
-        if self.opts.get('type') == 'bool':
-            return BoolParameterItem
-        else:
-            return RadioParameterItem
+registerParameterItemType('radio', RadioParameterItem, RadioParameter)
 
 
 class ChecklistParameter(GroupParameter):
@@ -217,7 +214,7 @@ class ChecklistParameter(GroupParameter):
         for chName in self.forward:
             # Recycle old values if they match the new limits
             newVal = bool(oldOpts.get(chName, False))
-            child = BoolOrRadioParameter(type=typ, name=chName, value=newVal, default=None)
+            child = PARAM_TYPES[typ](type=typ, name=chName, value=newVal, default=None)
             self.addChild(child)
             # Prevent child from broadcasting tree state changes, since this is handled by self
             child.blockTreeChangeSignal()
