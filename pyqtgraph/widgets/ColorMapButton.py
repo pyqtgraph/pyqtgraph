@@ -65,6 +65,7 @@ class ColorMapDisplayMixin:
         return self._menu
 
     def paintColorMap(self, painter, rect):
+        # rect can be either a QRect or a QRectF
         painter.save()
         image = self.getImage()
         painter.drawImage(rect, image)
@@ -86,7 +87,8 @@ class ColorMapDisplayMixin:
         trect = painter.boundingRect(rect, AF.AlignCenter, text)
         # draw the foreground text
         painter.setPen(pen)
-        painter.drawText(trect, text)
+        # trect has the same type as rect (QRect or QRectF)
+        painter.drawText(trect, 0, text)
 
         painter.restore()
 
