@@ -3,12 +3,6 @@ from pyqtgraph.parametertree.utils import compare_parameters
 
 import pytest
 
-def create_simple_param():
-    return pt.Parameter.create(name='params', type='group', children=[
-        dict(name='a', type='int', value=1),
-        dict(name='b', type='float', value=2.0),
-    ])
-
 
 def test_compare_parameters():
 
