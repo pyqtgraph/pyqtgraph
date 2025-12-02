@@ -1,4 +1,3 @@
-import collections
 import importlib.util
 import re
 
@@ -38,9 +37,6 @@ MATPLOTLIB_CMAPS = [
     ]
 
 
-PrivateActionData = collections.namedtuple("ColorMapMenuPrivateActionData", ["name", "source"])
-
-
 def buildMenuEntryWidget(cmap, text):
     lut = cmap.getLookupTable(nPts=32, alpha=True)
     qimg = QtGui.QImage(lut, len(lut), 1, QtGui.QImage.Format.Format_RGBA8888)
@@ -66,7 +62,7 @@ def buildMenuEntryAction(menu, name, source):
     else:
         cmap = colormap.get(name, source=source)
     act = QtWidgets.QWidgetAction(menu)
-    act.setData(PrivateActionData(name, source))
+    act.setData(ColorMapMenuActionData(name, source))
     act.setDefaultWidget(buildMenuEntryWidget(cmap, name))
     menu.addAction(act)
 
@@ -152,7 +148,7 @@ class ColorMapMenu(QtWidgets.QMenu):
 
         topmenu = self
         act = topmenu.addAction('None')
-        act.setData(PrivateActionData(None, None))
+        act.setData(ColorMapMenuActionData(None, None))
 
         if userList is not None:
             buildUserSubMenu(topmenu, userList)
@@ -207,9 +203,9 @@ class ColorMapMenu(QtWidgets.QMenu):
 
     @QtCore.Slot(QtGui.QAction)
     def onTriggered(self, action):
-        if not isinstance(data := action.data(), PrivateActionData):
+        if not isinstance(data := action.data(), ColorMapMenuActionData):
             return
-        cmap = self.actionDataToColorMap(data)
+        cmap = data.toColorMap()
         self.sigColorMapTriggered.emit(cmap)
 
     @QtCore.Slot()
@@ -283,9 +279,13 @@ class ColorMapMenu(QtWidgets.QMenu):
         for name in names:
             buildMenuEntryAction(menu, name, source)
 
-    @staticmethod
-    def actionDataToColorMap(data):
-        name, source = data
+
+class ColorMapMenuActionData:
+    def __init__(self, *args):
+        self.args = args
+
+    def toColorMap(self):
+        name, source = self.args
         if isinstance(source, colormap.ColorMap):
             cmap = source
         elif name is None:
