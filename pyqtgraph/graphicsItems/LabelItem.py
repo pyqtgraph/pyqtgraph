@@ -10,11 +10,11 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
     """
     GraphicsWidget displaying text.
     Used mainly as axis labels, titles, etc.
-    
+
     Note: To display text inside a scaled view (ViewBox, PlotWidget, etc) use TextItem
     """
-    
-    
+
+
     def __init__(self, text=' ', parent=None, angle=0, **args):
         GraphicsWidget.__init__(self, parent)
         GraphicsWidgetAnchor.__init__(self)
@@ -25,13 +25,16 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         }
         self.opts.update(args)
         self._sizeHint = {}
-        self.setText(text)
+        if text:
+            self.setText(text)
+        else:
+            self.text = text
         self.setAngle(angle)
-            
+
     def setAttr(self, attr, value):
         """Set default text properties. See setText() for accepted parameters."""
         self.opts[attr] = value
-        
+
     def setText(self, text, **args):
         """Set the text and text properties in the label. Accepts optional arguments for auto-generating
         a CSS style string:
@@ -49,9 +52,9 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         opts = self.opts
         for k in args:
             opts[k] = args[k]
-        
+
         optlist = []
-        
+
         color = self.opts['color']
         if color is None:
             color = getConfigOption('foreground')
@@ -71,7 +74,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         self.updateMin()
         self.resizeEvent(None)
         self.updateGeometry()
-        
+
     def resizeEvent(self, ev):
         #c1 = self.boundingRect().center()
         #c2 = self.item.mapToParent(self.item.boundingRect().center()) # + self.item.pos()
@@ -82,7 +85,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
         bounds = self.itemRect()
         left = self.mapFromItem(self.item, QtCore.QPointF(0,0)) - self.mapFromItem(self.item, QtCore.QPointF(1,0))
         rect = self.rect()
-        
+
         if self.opts['justify'] == 'left':
             if left.x() != 0:
                 bounds.moveLeft(rect.left())
@@ -90,7 +93,7 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
                 bounds.moveTop(rect.top())
             elif left.y() > 0:
                 bounds.moveBottom(rect.bottom())
-                
+
         elif self.opts['justify'] == 'center':
             bounds.moveCenter(rect.center())
             #bounds = self.itemRect()
@@ -104,22 +107,21 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
                 bounds.moveTop(rect.top())
             #bounds = self.itemRect()
             #self.item.setPos(self.width() - bounds.width(), 0)
-            
+
         self.item.setPos(bounds.topLeft() - self.itemRect().topLeft())
         self.updateMin()
-        
+
     def setAngle(self, angle):
         self.angle = angle
         self.item.resetTransform()
         self.item.setRotation(angle)
         self.updateMin()
-        
-        
+
     def updateMin(self):
         bounds = self.itemRect()
         self.setMinimumWidth(bounds.width())
         self.setMinimumHeight(bounds.height())
-        
+
         self._sizeHint = {
             QtCore.Qt.SizeHint.MinimumSize: (bounds.width(), bounds.height()),
             QtCore.Qt.SizeHint.PreferredSize: (bounds.width(), bounds.height()),
@@ -127,18 +129,17 @@ class LabelItem(GraphicsWidgetAnchor, GraphicsWidget):
             QtCore.Qt.SizeHint.MinimumDescent: (0, 0)  ##?? what is this?
         }
         self.updateGeometry()
-        
+
     def sizeHint(self, hint, constraint):
         if hint not in self._sizeHint:
             return QtCore.QSizeF(0, 0)
         return QtCore.QSizeF(*self._sizeHint[hint])
-        
+
     def itemRect(self):
         return self.item.mapRectToParent(self.item.boundingRect())
-        
+
     #def paint(self, p, *args):
         #p.setPen(fn.mkPen('r'))
         #p.drawRect(self.rect())
         #p.setPen(fn.mkPen('g'))
         #p.drawRect(self.itemRect())
-        
