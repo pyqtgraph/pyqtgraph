@@ -5,7 +5,6 @@ import numpy as np
 
 from .. import Qt, colormap
 from .. import functions as fn
-from .. import getConfigOption
 from ..Qt import compat
 from ..Qt import OpenGLConstants as GLC
 from ..Qt import OpenGLHelpers
@@ -184,9 +183,10 @@ class PColorMeshItem(GraphicsObject):
         # User only specified z
         elif len(args)==1:
             # If x and y is None, the polygons will be displaced on a grid
-            x = np.arange(0, args[0].shape[0]+1, 1)
-            y = np.arange(0, args[0].shape[1]+1, 1)
-            self.x, self.y = np.meshgrid(x, y, indexing='ij')
+            nrows, ncols = args[0].shape
+            x = np.arange(ncols+1)
+            y = np.arange(nrows+1)
+            self.x, self.y = np.meshgrid(x, y)
             self.z = args[0]
 
             self._dataBounds = ((x[0], x[-1]), (y[0], y[-1]))
