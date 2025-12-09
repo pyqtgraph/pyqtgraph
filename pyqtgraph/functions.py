@@ -2965,6 +2965,8 @@ def invertQTransform(tr):
     """
     try:
         det = tr.determinant()
+        if np.isinf(det):
+            return np_invert_qtransform(tr)
         detr = 1.0 / det    # let singular matrices raise ZeroDivisionError
         inv = tr.adjoint()
         inv *= detr
@@ -2972,6 +2974,34 @@ def invertQTransform(tr):
     except ZeroDivisionError:
         return _pinv_fallback(tr)
     
+
+def turnInfToSysMax(val):
+    """Turns infinite values into sys.float_info.max and -infinite values into -sys.float_info.max.
+       Used for QPointF and QTransform or normal float values.
+    """
+    if isinstance(val, QtCore.QPointF):
+        return QtCore.QPointF(turnInfToSysMax(val.x()), turnInfToSysMax(val.y()))
+    if isinstance(val, QtGui.QTransform):
+        return QtGui.QTransform(turnInfToSysMax(val.m11()), turnInfToSysMax(val.m12()), turnInfToSysMax(val.m13()),
+                                turnInfToSysMax(val.m21()), turnInfToSysMax(val.m22()), turnInfToSysMax(val.m23()),
+                                turnInfToSysMax(val.m31()), turnInfToSysMax(val.m32()), turnInfToSysMax(val.m33()))
+    if val == math.inf:
+        return sys.float_info.max
+    if val == -math.inf:
+        return -sys.float_info.max
+    return val
+
+
+def np_invert_qtransform(tr):
+    """
+    Inverts a QTransform without using the Qt API. This is useful when the Qt API fails to invert a matrix and produces NaNs.
+    """
+    np_inv_tr = np.linalg.inv(np.array([[tr.m11(), tr.m12(), tr.m13()],
+                                       [tr.m21(), tr.m22(), tr.m23()],
+                                       [tr.m31(), tr.m32(), tr.m33()]]))
+    q_transform = QtGui.QTransform(*np_inv_tr.ravel().tolist())
+    q_transform = turnInfToSysMax(q_transform)
+    return q_transform
 
 def pseudoScatter(data, spacing=None, shuffle=True, bidir=False, method='exact'):
     """Return an array of position values needed to make beeswarm or column scatter plots.
