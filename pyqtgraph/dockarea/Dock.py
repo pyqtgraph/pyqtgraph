@@ -45,7 +45,7 @@ class Dock(QtWidgets.QWidget):
         self.dockdrop.raiseOverlay()
         self.hStyle = """
         Dock > QWidget {
-            border: 1px solid #000;
+            border: 1px solid #ddd;
             border-radius: 5px;
             border-top-left-radius: 0px;
             border-top-right-radius: 0px;
@@ -53,7 +53,7 @@ class Dock(QtWidgets.QWidget):
         }"""
         self.vStyle = """
         Dock > QWidget {
-            border: 1px solid #000;
+            border: 1px solid #ddd;
             border-radius: 5px;
             border-top-left-radius: 0px;
             border-bottom-left-radius: 0px;
@@ -262,7 +262,27 @@ class DockLabel(VerticalLabel):
     sigClicked = QtCore.Signal(object, object)
     sigCloseClicked = QtCore.Signal()
 
-    def __init__(self, text, closable=False, fontSize="12px"):
+    def __init__(self, text, closable=False, fontSize=12, tabColor='#4a5c96'):
+        self.r = '5px'  # Tab radius
+        if isinstance(tabColor, str) and tabColor.startswith('#') and len(tabColor) ==7:
+            h = tabColor.lstrip('#')      # Remove #
+            r, g, b = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))  # Get 1 color channel per variable (0-255)
+            self.bg = tabColor            # Set tab background color value
+        elif isinstance(tabColor, tuple) and len(tabColor) == 3:
+            r, g, b = tabColor            # Get 1 color channel per variable (0-255)
+            h = f'{r:02x}{g:02x}{b:02x}'  # Get HEX color value from r, g, b
+            self.bg = '#' + h             # Set tab background color value
+        else:
+            raise ValueError(
+                "tabColor must be either a 6-digit HEX color string '#rrggbb'"
+                "or a RGB tuple (r, g, b) with values in 0-255."
+                )
+
+        if (r*0.299 + g*0.587 + b*0.114) > 186:  # Check tab color luminance and set font color accordingly (black or white)
+            self.fg = '#000000'
+        else:
+            self.fg = '#ffffff'
+        
         self.dim = False
         self.fixedWidth = False
         self.fontSize = fontSize
@@ -281,15 +301,12 @@ class DockLabel(VerticalLabel):
             self.closeButton.setIcon(QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_TitleBarCloseButton))
 
     def updateStyle(self):
-        r = '3px'
         if self.dim:
+            bg = '#ddd'
             fg = '#aaa'
-            bg = '#44a'
-            border = '#339'
         else:
-            fg = '#fff'
-            bg = '#66c'
-            border = '#55B'
+            bg = self.bg
+            fg = self.fg
 
         if self.orientation == 'vertical':
             self.vStyle = """DockLabel {
@@ -300,11 +317,10 @@ class DockLabel(VerticalLabel):
                 border-bottom-right-radius: 0px;
                 border-bottom-left-radius: %s;
                 border-width: 0px;
-                border-right: 2px solid %s;
                 padding-top: 3px;
                 padding-bottom: 3px;
                 font-size: %s;
-            }""" % (bg, fg, r, r, border, self.fontSize)
+            }""" % (bg, fg, self.r, self.r, str(self.fontSize) + 'px')
             self.setStyleSheet(self.vStyle)
         else:
             self.hStyle = """DockLabel {
@@ -315,11 +331,10 @@ class DockLabel(VerticalLabel):
                 border-bottom-right-radius: 0px;
                 border-bottom-left-radius: 0px;
                 border-width: 0px;
-                border-bottom: 2px solid %s;
                 padding-left: 3px;
                 padding-right: 3px;
                 font-size: %s;
-            }""" % (bg, fg, r, r, border, self.fontSize)
+            }""" % (bg, fg, self.r, self.r, str(self.fontSize) + 'px')
             self.setStyleSheet(self.hStyle)
 
     def setDim(self, d):
