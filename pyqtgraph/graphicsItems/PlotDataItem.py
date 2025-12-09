@@ -51,6 +51,8 @@ class OptimizationKeywordArgs(TypedDict):
     dynamicRangeLimit: float | None
     dynamicRangeHyst: float
     skipFiniteCheck: bool
+    useDownsamplingCache: bool
+    cacheDsFactor: int
 
 
 class PlotDataset:
@@ -62,7 +64,7 @@ class PlotDataset:
     
     After a search has been performed, typically during a call to
     :meth:`dataRect <pyqtgraph.PlotDataset.dataRect>`, ``dataset.containsNonfinite``
-    is ``True`` if any coordinate values are non-finite (e.g. ``NaN`` or ``Inf``) or 
+    is ``True`` if any coordinate values are non-finite (e.g. ``NaN`` or ``Inf``) or
     ``False`` if all values are finite. If no search has been performed yet,
     `dataset.containsNonfinite` is ``None``.
 
@@ -86,7 +88,7 @@ class PlotDataset:
     Warnings
     --------
     :orphan:
-    .. warning:: 
+    .. warning::
         
         This class is intended for internal use of :class:`~pyqtgraph.PlotDataItem`.
         The interface may change without warning.  It is not considered part of the
@@ -121,7 +123,7 @@ class PlotDataset:
         return not (self.xAllFinite and self.yAllFinite)
 
     def _updateDataRect(self):
-        """ 
+        """
         Identify plottable bounds and presence of non-finite data.
         """
         if self.y is None or self.x is None:
@@ -170,7 +172,7 @@ class PlotDataset:
             The bounding rect of the data in view-space.  Will return ``None`` if there
             is no data or if all `x` and `y` values are ``NaN``.
         """
-        if self._dataRect is None: 
+        if self._dataRect is None:
             self._updateDataRect()
         return self._dataRect
 
@@ -247,9 +249,10 @@ class PlotDataItem(GraphicsObject):
     PlotDataItem's performance is usually sufficient for real-time interaction even for
     large numbers of points. If you do encounter performance issues, consider the
     following.
+    
 
     * Use a :class:`QPen` with ``width=1``. All wider pens cause a loss in performance.
-      This loss can be partially mitigated by using fully opaque colors 
+      This loss can be partially mitigated by using fully opaque colors
       (``alphaF=1.0``), solid lines, and no anti-aliasing. 
     * For scatter plots that use multiple pen or brush settings, passing a list of
       string representation to `symbolPen` or `symbolBrush` creates many internal
@@ -258,7 +261,7 @@ class PlotDataItem(GraphicsObject):
       instead. This lets a smaller number of stored instances be reused.
     * If you know that all points in your data set will have numerical, finite values,
       :meth:`setSkipFiniteCheck` can disable a check to identify points that require
-      special treatment.  
+      special treatment.
     * When passing `x` and `y` data to :meth:`PlotDataItem.setData`, use
       :class:`numpy.ndarray` instead of python's built-in lists.
 
@@ -305,7 +308,7 @@ class PlotDataItem(GraphicsObject):
         Property    Description
         =========== ====================================================================
         symbol      ``str``, :class:`QPainterPath`,
-                     
+                    
                     list of ``str`` or :class:`QPainterPath`,
                     
                     or ``None``, default ``None``
@@ -422,68 +425,79 @@ class PlotDataItem(GraphicsObject):
 
         *Optimization Keyword Arguments*
 
-        =================== ============================================================
-        Property            Description
-        =================== ============================================================
-        useCache            ``bool``, default ``True``
-
-                            Generated point graphics of the scatter plot are cached to
-                            improve performance.  Setting this to ``False`` can improve
-                            image quality in some situations.
-
-        antialias           ``bool``, default inherited from
-                            ``pyqtgraph.getConfigOption('antialias')``
-
-                            Disabling antialiasing can improve performance. In some
-                            cases, in particular when ``pxMode=True``, points will be 
-                            rendered with antialiasing regardless of this setting.
-
-        autoDownsample      ``bool``, default ``False``
-
-                            Resample the data before plotting to avoid plotting multiple
-                            line segments per pixel. This can improve performance when
-                            viewing very high-density data, but increases initial
-                            overhead and memory usage. See :meth:`setDownsampling` for
-                            more information.
-
-        downsample          ``int``, default ``1``
-
-                            Resample the data before plotting, reducing the number of 
-                            displayed elements by the specified factor.
-                            See :meth:`setDownsampling` for more information.
-
-        downsampleMethod    ``str``, default ``'peak'``
-
-                            Method for downsampling data. See
-                            :meth:`setDownsampling` for more information.
-
-        clipToView          ``bool``, default ``False``
-
-                            Clip the data to only the visible range on the x-axis.
-                            See :meth:`setClipToView` for more information.
-
-        dynamicRangeLimit   ``float``, default ``1e6``
-
-                            Limit off-screen y positions of data points. ``None``
-                            disables the limiting. This can increase performance but may
-                            cause plots to disappear at high levels of magnification. 
-                            See :meth:`setDynamicRangeLimit` for more information.
-
-        dynamicRangeHyst    ``float``, default ``3.0``
-        
-                            Permit vertical zoom to change up to the given hysteresis
-                            factor before the limit calculation is repeated. See
-                            :meth:`setDynamicRangeLimit` for more information.
-
-        skipFiniteCheck     ``bool``, default ``False``
-
-                            If ``True``, the special handling of non-finite values such as
-                            ``NaN`` in :class:`~pyqtgraph.PlotCurveItem` is skipped.
-                            This speeds up the plot, but creates error or causes the
-                            plotting to fail entirely if any such values are present.
-                            If ``connect='auto'``, PlotDataItem manages the check and
-                            this item will be overridden.
-        =================== ============================================================
+        ====================== ====================================================================
+        Property               Description
+        ====================== ====================================================================
+        useCache               ``bool``, default ``True``
+   
+                               Generated point graphics of the scatter plot are cached to
+                               improve performance.  Setting this to ``False`` can improve
+                               image quality in some situations.
+   
+        antialias              ``bool``, default inherited from
+                               ``pyqtgraph.getConfigOption('antialias')``
+   
+                               Disabling antialiasing can improve performance. In some
+                               cases, in particular when ``pxMode=True``, points will be 
+                               rendered with antialiasing regardless of this setting.
+   
+        autoDownsample         ``bool``, default ``False``
+   
+                               Resample the data before plotting to avoid plotting multiple
+                               line segments per pixel. This can improve performance when
+                               viewing very high-density data, but increases initial
+                               overhead and memory usage. See :meth:`setDownsampling` for
+                               more information.
+   
+        downsample             ``int``, default ``1``
+   
+                               Resample the data before plotting, reducing the number of 
+                               displayed elements by the specified factor.
+                               See :meth:`setDownsampling` for more information.
+   
+        downsampleMethod       ``str``, default ``'peak'``
+   
+                               Method for downsampling data. See
+                               :meth:`setDownsampling` for more information.
+   
+        clipToView             ``bool``, default ``False``
+   
+                               Clip the data to only the visible range on the x-axis.
+                               See :meth:`setClipToView` for more information.
+   
+        dynamicRangeLimit      ``float``, default ``1e6``
+   
+                               Limit off-screen y positions of data points. ``None``
+                               disables the limiting. This can increase performance but may
+                               cause plots to disappear at high levels of magnification. 
+                               See :meth:`setDynamicRangeLimit` for more information.
+   
+        dynamicRangeHyst       ``float``, default ``3.0``
+           
+                               Permit vertical zoom to change up to the given hysteresis
+                               factor before the limit calculation is repeated. See
+                               :meth:`setDynamicRangeLimit` for more information.
+   
+        skipFiniteCheck        ``bool``, default ``False``
+   
+                               If ``True``, the special handling of non-finite values such as
+                               ``NaN`` in :class:`~pyqtgraph.PlotCurveItem` is skipped.
+                               This speeds up the plot, but creates error or causes the
+                               plotting to fail entirely if any such values are present.
+                               If ``connect='auto'``, PlotDataItem manages the check and
+                               this item will be overridden.
+   
+        useDownsamplingCache   ``bool``, default ``True``
+   
+                               Use cache instead of "real-time" computation of downsampled signal.
+                               See :meth: `setDownsamplingCacheMode` for more information.
+   
+        cacheDsFactor          ``int``, default ``20000``
+           
+                               Set the downsampling factor for the downsampling cache.
+                               See :meth: `setDownsamplingCacheMode` for more information.
+   
+        ====================== ====================================================================
 
         *Meta Keyword Arguments*
 
@@ -621,7 +635,10 @@ class PlotDataItem(GraphicsObject):
             'downsample': 1,
             'autoDownsample': False,
             'downsampleMethod': 'peak',
-            'autoDownsampleFactor': 5.,  # draw ~5 samples per pixel
+            'autoDownsampleFactor': 5.0,  # draw ~5 samples per pixel
+            'useDownsamplingCache': True,
+            'cacheDsFactor': 20000,  #The downsampling factor for the cache
+            'minSampPerPxForCache': 1.1,  # Draw at least this many samples per pixel when using cache
             'clipToView': False,
             'dynamicRangeLimit': 1e6,
             'dynamicRangeHyst': 3.0,
@@ -736,10 +753,7 @@ class PlotDataItem(GraphicsObject):
         if self.opts['fftMode'] == state:
             return
         self.opts['fftMode'] = state
-        self._datasetMapped  = None
-        self._datasetDisplay = None
-        self.updateItems(styleUpdate=False)
-        self.informViewBoundsChanged()
+        self._reloadYValues()
 
     def setLogMode(self, xState: bool, yState: bool):
         """
@@ -759,11 +773,7 @@ class PlotDataItem(GraphicsObject):
         if self.opts['logMode'] == [xState, yState]:
             return
         self.opts['logMode'] = [xState, yState]
-        self._datasetMapped  = None  # invalidate mapped data
-        self._datasetDisplay = None  # invalidate display data
-        self._adsLastValue   = 1     # reset auto-downsample value
-        self.updateItems(styleUpdate=False)
-        self.informViewBoundsChanged()
+        self._reloadYValues()
 
     def setSubtractMeanMode(self, state: bool):
         """
@@ -779,11 +789,7 @@ class PlotDataItem(GraphicsObject):
         if self.opts['subtractMeanMode'] == state:
             return
         self.opts['subtractMeanMode'] = state
-        self._datasetMapped = None  # invalidate mapped data
-        self._datasetDisplay = None  # invalidate display data
-        self._adsLastValue = 1  # reset auto-downsample value
-        self.updateItems(styleUpdate=False)
-        self.informViewBoundsChanged()
+        self._reloadYValues()
 
     def setDerivativeMode(self, state: bool):
         """
@@ -801,11 +807,7 @@ class PlotDataItem(GraphicsObject):
         if self.opts['derivativeMode'] == state:
             return
         self.opts['derivativeMode'] = state
-        self._datasetMapped  = None  # invalidate mapped data
-        self._datasetDisplay = None  # invalidate display data
-        self._adsLastValue   = 1     # reset auto-downsample value
-        self.updateItems(styleUpdate=False)
-        self.informViewBoundsChanged()
+        self._reloadYValues()
 
     def setPhasemapMode(self, state: bool):
         """
@@ -823,11 +825,7 @@ class PlotDataItem(GraphicsObject):
         if self.opts['phasemapMode'] == state:
             return
         self.opts['phasemapMode'] = state
-        self._datasetMapped  = None  # invalidate mapped data
-        self._datasetDisplay = None  # invalidate display data
-        self._adsLastValue   = 1     # reset auto-downsample value
-        self.updateItems(styleUpdate=False)
-        self.informViewBoundsChanged()
+        self._reloadYValues()
 
     def setPen(self, *args, **kwargs):
         """
@@ -1063,10 +1061,40 @@ class PlotDataItem(GraphicsObject):
             self.opts['downsampleMethod'] = method
 
         if changed:
-            self._datasetMapped  = None  # invalidate mapped data
-            self._datasetDisplay = None  # invalidate display data
-            self._adsLastValue   = 1     # reset auto-downsample value
-            self.updateItems(styleUpdate=False)
+            self._reloadYValues()
+
+    def setDownsamplingCacheMode(self, useCache: bool = True, cacheDsFactor: int = 20000):
+        """
+        If downsampling is enabled, this method sets the use of cache for downsampling.
+        Downsampling with cache reduces CPU load while changing view (zooming), since
+        the downsampled signal will not have to be re-calculated each time the plot is
+        re-drawn. For fixed downsampling, caching has no drawbacks except a minor increase
+        in memory usage. For auto-downsampling, there is a tradeoff between CPU-use for
+        downsampling and graphics processing for the number of samples shown. 
+        You can use the DownsamplingCache demo to experiment with the `cacheDsFactor` 
+        setting to find the best value for your setup.
+
+        Parameters
+        ----------
+        useCache : bool, default True
+            `True` to used downsampling cache, `False` to not use cache.
+        cacheDsFactor: int, default 20000
+            Downsampling factor used for the cache when autoDownsample is enabled.
+            The ideal downsampling factor is a tradeoff between CPU load for 
+            downsampling and graphics load for drawing the number of samples shown. 
+            A higher downsampling factor means fewer samples are drawn when the full
+            data is in view, reducing graphics load but increasing CPU load for
+            downsampling.This setting has no effect when `autoDownsample` is off.
+        """
+        changed = False
+        if self.opts["useDownsamplingCache"] != useCache:
+            changed = True
+            self.opts["useDownsamplingCache"] = useCache
+        if cacheDsFactor != self.opts["cacheDsFactor"]:
+            changed = True
+            self.opts["cacheDsFactor"] = cacheDsFactor
+        if changed:
+            self._reloadYValues()
 
     def setClipToView(self, state: bool):
         """
@@ -1303,21 +1331,14 @@ class PlotDataItem(GraphicsObject):
             self._dataset = None
         else:
             self._dataset = PlotDataset( xData, yData )
-        # invalidate mapped data , will be generated in getData() / _getDisplayDataset()
-        self._datasetMapped  = None
-        # invalidate display data, will be generated in getData() / _getDisplayDataset()
-        self._datasetDisplay = None
-        # reset auto-downsample value
-        self._adsLastValue   = 1
 
         profiler('set data')
 
-        self.updateItems( styleUpdate=self.property('styleWasChanged') )
+        self._reloadYValues(styleUpdate=self.property("styleWasChanged"))
+        
         # items have been updated
         self.setProperty('styleWasChanged', False)
         profiler('update items')
-
-        self.informViewBoundsChanged()
 
         self.sigPlotChanged.emit(self)
         profiler('emit')
@@ -1516,114 +1537,50 @@ class PlotDataItem(GraphicsObject):
         if view_range is None:
             view_range = self.viewRect()
 
-        ds = self.opts['downsample']
-        if not isinstance(ds, int):
-            ds = 1
+        self._ds = self.opts['downsample']
+        if not isinstance(self._ds, int):
+            self._ds = 1
 
         if self.opts['autoDownsample']:
             # this option presumes that x-values have uniform spacing
-            if xAllFinite:
-                finite_x = x
-            else:
-                # False: (we checked and found non-finites)
-                # None : (we haven't performed a check for non-finites yet)
-                finite_x = x[np.isfinite(x)]  # ignore infinite and nan values
-            if view_range is not None and len(finite_x) > 1:
-                dx = float(finite_x[-1]-finite_x[0]) / (len(finite_x)-1)
-                if dx != 0.0:
-                    width = self.getViewBox().width()
-                    if width != 0.0:  # autoDownsampleFactor _should_ be > 1.0
-                        ds_float = max(
-                            1.0,
-                            abs(
-                                view_range.width() /
-                                dx /
-                                (width * self.opts['autoDownsampleFactor'])
-                            )
-                        )
-                        if math.isfinite(ds_float):
-                            ds = int(ds_float)
+            x_finite = x if xAllFinite else x[np.isfinite(x)]
+            self._ds = self._getAutoDownsampleFactor(x_finite, view_range)
 
-            # use the last computed value if our new value is not too different.
-            # this guards against an infinite cycle where the plot never stabilizes.
-            if math.isclose(ds, self._adsLastValue, rel_tol=0.01):
-                ds = self._adsLastValue
-            self._adsLastValue = ds
-            # downsampling is expensive; delay until after clipping.
-
-        connect = self.opts['connect'] if isinstance(self.opts['connect'], np.ndarray) else None
+        connect = (
+            self.opts['connect']
+            if isinstance(self.opts['connect'], np.ndarray)
+            else None
+        )
         if self.opts['clipToView']:
             if view is None or view.autoRangeEnabled()[0]:
                 pass  # no ViewBox to clip to, or view will autoscale to data range.
             else:
                 # clip-to-view always presumes that x-values are in increasing order
                 if view_range is not None and len(x) > 1:
-                    # find first in-view value (left edge) and first out-of-view value
-                    # (right edge) since we want the curve to go to the edge of the
-                    # screen, we need to preserve one down-sampled point on the left and
-                    # one of the right, so we extend the interval
+                    x, y, connect = self._clipToView(
+                        x,
+                        y,
+                        connect,
+                        view_range.left(),
+                        view_range.right(),
+                        shift=self._ds,
+                    )
 
-                    # np.searchsorted performs poorly when the array.dtype does not
-                    # match the type of the value (float) being searched.
-                    # see: https://github.com/pyqtgraph/pyqtgraph/pull/2719
-                    # x0 = np.searchsorted(x, view_range.left()) - ds
-                    x0 = bisect.bisect_left(x, view_range.left()) - ds
-                    # x0 = np.clip(x0, 0, len(x))
-                    x0 = fn.clip_scalar(x0, 0, len(x))  # workaround
-
-                    # x1 = np.searchsorted(x, view_range.right()) + ds
-                    x1 = bisect.bisect_left(x, view_range.right()) + ds
-                    # x1 = np.clip(x1, 0, len(x))
-                    x1 = fn.clip_scalar(x1, x0, len(x))
-                    x = x[x0:x1]
-                    y = y[x0:x1]
-                    if connect is not None:
-                        connect = connect[x0:x1]
-
-
-        if ds > 1:
-            if self.opts['downsampleMethod'] == 'subsample':
-                x = x[::ds]
-                y = y[::ds]
-                if connect is not None:
-                    connect = connect[::ds]
-            elif self.opts['downsampleMethod'] == 'mean':
-                n = len(x) // ds
-                # start of x-values try to select a somewhat centered point
-                stx = ds // 2
-                x = x[stx:stx + n * ds:ds]
-                y = y[:n * ds].reshape(n, ds).mean(axis=1)
-                if connect is not None:
-                    connect = connect[:n*ds].reshape(n,ds).all(axis=1)
-            elif self.opts['downsampleMethod'] == 'peak':
-                n = len(x) // ds
-                x1 = np.empty((n, 2))
-                # start of x-values; try to select a somewhat centered point
-                stx = ds // 2
-                x1[:] = x[stx:stx + n * ds:ds, np.newaxis]
-                x = x1.reshape(n * 2)
-                y1 = np.empty((n, 2))
-                y2 = y[:n * ds].reshape((n, ds))
-                y1[:, 0] = y2.max(axis=1)
-                y1[:, 1] = y2.min(axis=1)
-                y = y1.reshape(n * 2)
-                if connect is not None:
-                    c = np.ones((n*2), dtype=bool)
-                    c[1::2] = connect[:n*ds].reshape(n,ds).all(axis=1)
-                    connect = c
+        if self._ds > 1:
+            x, y, connect = self._downsample(x, y, connect)
 
         if self.opts['dynamicRangeLimit'] is not None and view_range is not None:
             data_range = self._datasetMapped.dataRect()
             if data_range is not None:
                 view_height = view_range.height()
                 limit = self.opts['dynamicRangeLimit']
-                hyst  = self.opts['dynamicRangeHyst']
+                hyst = self.opts['dynamicRangeHyst']
                 # never clip data if it fits into +/- (extended) limit * view height
                 if (
                     # note that "bottom" is the larger number, and "top" is the smaller
                     # one. Never clip if the view does not show anything and would cause
                     # division by zero
-                    view_height > 0                               
+                    view_height > 0
                     # never clip if all data is too small to see
                     and not data_range.bottom() < view_range.top()
                     # never clip if all data is too large to see
@@ -1636,11 +1593,15 @@ class PlotDataItem(GraphicsObject):
                         # top is minimum value, bottom is maximum value
                         # how many multiples of the current view height does the clipped
                         # plot extend to the top and bottom?
-                        top_exc = -(self._drlLastClip[0]-view_range.bottom()) / view_height
-                        bot_exc =  (self._drlLastClip[1]-view_range.top()   ) / view_height
+                        top_exc = (
+                            -(self._drlLastClip[0] - view_range.bottom()) / view_height
+                        )
+                        bot_exc = (
+                            self._drlLastClip[1] - view_range.top()
+                        ) / view_height
                         if (
-                            limit / hyst <= top_exc <= limit * hyst and
-                            limit / hyst <= bot_exc <= limit * hyst
+                            limit / hyst <= top_exc <= limit * hyst
+                            and limit / hyst <= bot_exc <= limit * hyst
                         ):
                             # restore cached values
                             x = self._datasetDisplay.x
@@ -1648,7 +1609,7 @@ class PlotDataItem(GraphicsObject):
                             cache_is_good = True
                     if not cache_is_good:
                         min_val = view_range.bottom() - limit * view_height
-                        max_val = view_range.top()    + limit * view_height
+                        max_val = view_range.top() + limit * view_height
                         y = fn.clip_array(y, min_val, max_val)
                         self._drlLastClip = (min_val, max_val)
         self._datasetDisplay = PlotDataset(x, y, xAllFinite, yAllFinite, connect)
@@ -1656,6 +1617,158 @@ class PlotDataItem(GraphicsObject):
         self.setProperty('yViewRangeWasChanged', False)
 
         return self._datasetDisplay
+
+    def _reloadYValues(self, styleUpdate=False):
+        """Invalidate display data and update items."""
+        self._datasetMapped = None  # invalidate mapped data
+        self._datasetDisplay = None  # invalidate display data
+        self._adsLastValue = 1  # reset auto-downsample value
+        self._downsampling_cache_x = None  # Invalidate downsampling cache
+        self._downsampling_cache_y = None
+        self._downsampling_cache_connect = None
+        self._cache_downsampling_factor = 1
+        self.updateItems(styleUpdate=styleUpdate)
+        self._buildDownsamplingCache()
+        self.informViewBoundsChanged()
+
+    def _buildDownsamplingCache(self):
+        """Build a cache of downsampled data."""
+        if not self.opts["useDownsamplingCache"]:
+            return
+        if self._datasetMapped is None:
+            return
+        x = self._datasetMapped.x
+        y = self._datasetMapped.y
+        connect = self._datasetMapped.connect
+        if not self.opts["autoDownsample"]:
+            if self.opts["downsample"] == 1:
+                return
+            self._cache_downsampling_factor = self.opts["downsample"]
+        else:
+            self._cache_downsampling_factor = max(
+                1, int(self.opts["cacheDsFactor"])
+            )
+        self._ds = self._cache_downsampling_factor
+        (
+            self._downsampling_cache_x,
+            self._downsampling_cache_y,
+            self._downsampling_cache_connect,
+        ) = self._downsample(x, y, connect)
+
+    def _downsample(self, x, y, connect):
+        if self._use_downsampling_cache():
+            return self._clipToView(
+                self._downsampling_cache_x,
+                self._downsampling_cache_y,
+                self._downsampling_cache_connect,
+                x[0],
+                x[-1],
+            )
+        if self.opts["downsampleMethod"] == "subsample":
+            return self._subsample(x, y, connect)
+        if self.opts["downsampleMethod"] == "mean":
+            return self._mean_downsample(x, y, connect)
+        if self.opts["downsampleMethod"] == "peak":
+            return self._peak_downsample(x, y, connect)
+        raise ValueError(
+            "Unknown downsample method: %s" % self.opts["downsampleMethod"]
+        )
+
+    def _use_downsampling_cache(self):
+        has_cache = self._downsampling_cache_x is not None
+        return has_cache and (self._ds == self._cache_downsampling_factor)
+
+    def _subsample(self, x, y, connect):
+        x = x[:: self._ds]
+        y = y[:: self._ds]
+        if connect is not None:
+            connect = connect[:: self._ds]
+        return x, y, connect
+
+    def _mean_downsample(self, x, y, connect):
+        n = len(x) // self._ds
+        # start of x-values try to select a somewhat centered point
+        stx = self._ds // 2
+        x = x[stx : stx + n * self._ds : self._ds]
+        y = y[: n * self._ds].reshape(n, self._ds).mean(axis=1)
+        if connect is not None:
+            connect = connect[: n * self._ds].reshape(n, self._ds).all(axis=1)
+        return x, y, connect
+
+    def _peak_downsample(self, x, y, connect):
+        n = len(x) // self._ds
+        x1 = np.empty((n, 2))
+        # start of x-values; try to select a somewhat centered point
+        stx = self._ds // 2
+        x1[:] = x[stx : stx + n * self._ds : self._ds, np.newaxis]
+        x = x1.reshape(n * 2)
+        y1 = np.empty((n, 2))
+        y2 = y[: n * self._ds].reshape((n, self._ds))
+        y1[:, 0] = y2.max(axis=1)
+        y1[:, 1] = y2.min(axis=1)
+        y = y1.reshape(n * 2)
+        if connect is not None:
+            c = np.ones((n * 2), dtype=bool)
+            c[1::2] = connect[: n * self._ds].reshape(n, self._ds).all(axis=1)
+            connect = c
+        return x, y, connect
+
+    def _getAutoDownsampleFactor(self, finite_x, view_range) -> int:
+        ds = 1
+        if view_range is not None and len(finite_x) > 1:
+            dx = float(finite_x[-1] - finite_x[0]) / (len(finite_x) - 1)
+            if dx != 0.0:
+                width = self.getViewBox().width()
+                if (
+                    self._downsampling_cache_x is not None
+                    and ((view_range.width() / dx) // self._cache_downsampling_factor)
+                    > width * self.opts["minSampPerPxForCache"]
+                ):
+                    # Keep the maximum value, which allows for caching
+                    ds = self._cache_downsampling_factor
+                else:
+                    if width != 0.0:  # autoDownsampleFactor _should_ be > 1.0
+                        ds_float = max(
+                            1.0,
+                            abs(
+                                view_range.width()
+                                / dx
+                                / (width * self.opts["autoDownsampleFactor"])
+                            ),
+                        )
+                        if math.isfinite(ds_float):
+                            ds = int(ds_float)
+
+        # use the last computed value if our new value is not too different.
+        # this guards against an infinite cycle where the plot never stabilizes.
+        if math.isclose(ds, self._adsLastValue, rel_tol=0.01):
+            ds = self._adsLastValue
+        self._adsLastValue = ds
+        return ds
+
+    def _clipToView(self, x, y, connect, startx, endx, shift=0):
+        # find first in-view value (left edge) and first out-of-view value
+        # (right edge) since we want the curve to go to the edge of the
+        # screen, we need to preserve one down-sampled point on the left and
+        # one of the right, so we extend the interval
+
+        # np.searchsorted performs poorly when the array.dtype does not
+        # match the type of the value (float) being searched.
+        # see: https://github.com/pyqtgraph/pyqtgraph/pull/2719
+        # x0 = np.searchsorted(x, view_range.left()) - ds
+        x0 = bisect.bisect_left(x, startx) - shift
+        # x0 = np.clip(x0, 0, len(x))
+        x0 = fn.clip_scalar(x0, 0, len(x))  # workaround
+
+        # x1 = np.searchsorted(x, view_range.right()) + ds
+        x1 = bisect.bisect_left(x, endx) + shift
+        # x1 = np.clip(x1, 0, len(x))
+        x1 = fn.clip_scalar(x1, x0, len(x))
+        x = x[x0:x1]
+        y = y[x0:x1]
+        if connect is not None:
+            connect = connect[x0:x1]
+        return x, y, connect
 
     def getData(self) -> tuple[None, None] | tuple[np.ndarray, np.ndarray]:
         """

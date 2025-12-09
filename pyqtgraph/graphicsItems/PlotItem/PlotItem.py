@@ -3,7 +3,7 @@ import os
 import warnings
 import weakref
 
-from typing import Iterable
+from typing import Iterable, Optional
 
 import numpy as np
 
@@ -1192,6 +1192,22 @@ class PlotItem(GraphicsWidget):
                 raise ValueError(
                     "mode argument must be 'subsample', 'mean', or 'peak'."
                 )
+    
+    def setDownsamplingCacheMode(self, useCache: bool, cacheDsFactor: Optional[int] = None):
+        """
+        Set the caching mode for downsampling for all curves. More details are found in
+        :meth:`PlotDataItem.setDownsamplingCacheMode`.
+
+        Parameters
+        ----------
+        useCache : bool
+            If ``True``, a downsampling cache is used.
+        cacheDownsamplingFactor : int, optional
+            The downsampling factor to use for the cache. Only relevant if autodownsampling is on.
+            If ``None``, the default downsampling factor is used.
+        """
+        for c in self.curves:   
+            c.setDownsamplingCacheMode(useCache, cacheDsFactor)
             
     @QtCore.Slot()
     def updateDownsampling(self):
