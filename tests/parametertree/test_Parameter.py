@@ -18,6 +18,7 @@ from pyqtgraph.Qt import QtGui
 
 pg.mkQApp()
 
+
 def test_parameter_hasdefault():
     opts = {"name": "param", "type": 'int', "value": 1}
 

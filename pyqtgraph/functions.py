@@ -715,6 +715,9 @@ def eq(a, b):
         if math.isnan(a) and math.isnan(b):
             return True
 
+    if isinstance(a, QtGui.QColor) and isinstance(b, QtGui.QColor):
+        return a.rgba() == b.rgba()
+
     # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.
     aIsArr = isinstance(a, np.ndarray)
     bIsArr = isinstance(b, np.ndarray)
@@ -736,7 +739,7 @@ def eq(a, b):
         for k, v in a.items():
             if not eq(v, b[k]):
                 return False
-        if isinstance(a, OrderedDict) or sys.version_info >= (3, 7):
+        if isinstance(a, OrderedDict):
             for a_item, b_item in zip(a.items(), b.items()):
                 if not eq(a_item, b_item):
                     return False

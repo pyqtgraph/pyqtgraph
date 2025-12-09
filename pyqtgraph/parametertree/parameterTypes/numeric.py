@@ -1,7 +1,6 @@
 from ...widgets.SpinBox import SpinBox
 from .basetypes import WidgetParameterItem
 
-
 class NumericParameterItem(WidgetParameterItem):
     """
     Subclasses `WidgetParameterItem` to provide the following types:
