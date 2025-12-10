@@ -38,7 +38,13 @@ iso.setParentItem(img)
 iso.setZValue(5)
 
 # Contrast/color control
-hist = pg.HistogramLUTItem()
+
+# use custom colormap menu
+userList = ['viridis', 'cividis', 'magma', 'turbo']
+cmapMenu = pg.ColorMapMenu(userList=userList)
+
+hist = pg.HistogramLUTItem(colorMapMenu=cmapMenu)
+hist.gradient.setColorMap('viridis')
 hist.setImageItem(img)
 win.addItem(hist)
 

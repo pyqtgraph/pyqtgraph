@@ -36,6 +36,7 @@ class ColorMapDisplayMixin:
         self._cmap = cmap
         self._image = None
 
+    @QtCore.Slot(object)
     def setColorMap(self, cmap):
         # calls main class methods
         self._setColorMap(cmap)
@@ -64,11 +65,16 @@ class ColorMapDisplayMixin:
             self._menu.sigColorMapTriggered.connect(self.setColorMap)
         return self._menu
 
-    def paintColorMap(self, painter, rect):
+    def paintColorMap(self, painter, rect, *, renderColorMapName=False):
         # rect can be either a QRect or a QRectF
-        painter.save()
+
         image = self.getImage()
         painter.drawImage(rect, image)
+
+        if not renderColorMapName:
+            return
+
+        painter.save()
 
         if not self.horizontal:
             painter.translate(rect.center())
@@ -107,7 +113,7 @@ class ColorMapButton(ColorMapDisplayMixin, QtWidgets.QWidget):
 
     def paintEvent(self, evt):
         painter = QtGui.QPainter(self)
-        self.paintColorMap(painter, self.contentsRect())
+        self.paintColorMap(painter, self.contentsRect(), renderColorMapName=True)
         painter.end()
 
     def mouseReleaseEvent(self, evt):
