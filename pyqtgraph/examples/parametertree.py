@@ -16,14 +16,14 @@ from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("Parameter Tree Example")
 import pyqtgraph.parametertree.parameterTypes as pTypes
-from pyqtgraph.parametertree import Parameter, ParameterTree
+from pyqtgraph.parametertree import Parameter, ParameterTree, registerParameterType
 
 
 ## test subclassing parameters
 ## This parameter automatically generates two child parameters which are always reciprocals of each other
 class ComplexParameter(pTypes.GroupParameter):
     def __init__(self, **opts):
-        opts['type'] = 'bool'
+        opts['type'] = 'complexparam'
         opts['value'] = True
         pTypes.GroupParameter.__init__(self, **opts)
         
@@ -45,7 +45,7 @@ class ComplexParameter(pTypes.GroupParameter):
 ## this group includes a menu allowing the user to add new parameters into its child list
 class ScalableGroup(pTypes.GroupParameter):
     def __init__(self, **opts):
-        opts['type'] = 'group'
+        opts['type'] = 'scalablegroup'
         opts['addText'] = "Add"
         opts['addList'] = ['str', 'float', 'int']
         pTypes.GroupParameter.__init__(self, **opts)
@@ -59,10 +59,13 @@ class ScalableGroup(pTypes.GroupParameter):
         self.addChild(dict(name="ScalableParam %d" % (len(self.childs)+1), type=typ, value=val, removable=True, renamable=True))
 
 
+all_params_types = makeAllParamTypes()
 
+registerParameterType('complexparam', ComplexParameter)
+registerParameterType('scalablegroup', ScalableGroup)
 
 params = [
-    makeAllParamTypes(),
+    all_params_types,
     {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
         {'name': 'Save State', 'type': 'action'},
         {'name': 'Restore State', 'type': 'action', 'children': [
