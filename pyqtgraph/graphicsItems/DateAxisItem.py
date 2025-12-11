@@ -358,6 +358,7 @@ class DateAxisItem(AxisItem):
         return formatStrings
 
     def tickValues(self, minVal, maxVal, size):
+        minVal, maxVal = sorted((minVal, maxVal))
         density = (maxVal - minVal) / size
         self.setZoomLevelForDensity(density)
         values = self.zoomLevel.tickValues(minVal, maxVal, minSpc=self.minSpacing)
