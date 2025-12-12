@@ -7,6 +7,7 @@ import pyqtgraph.parametertree as pt
 from pyqtgraph.functions import eq
 from pyqtgraph.parametertree.parameterTypes import ChecklistParameterItem
 from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.parametertree import Parameter
 
 import pytest
 
@@ -235,4 +236,13 @@ def test_recreate_from_savestate():
     created = _buildParamTypes.makeAllParamTypes()
     state = created.saveState()
     created2 = pt.Parameter.create(**state)
+    assert pg.eq(state, created2.saveState())
+
+
+def test_json_encode_decode():
+    from pyqtgraph.examples import _buildParamTypes
+    created = _buildParamTypes.makeAllParamTypes()
+    state = created.saveState()
+    json_str = Parameter.to_json(created)
+    created2 = pt.Parameter.from_json(json_str)
     assert pg.eq(state, created2.saveState())

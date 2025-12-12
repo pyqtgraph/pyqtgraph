@@ -6,6 +6,7 @@ from collections import OrderedDict
 from .. import functions as fn
 from ..Qt import QtCore
 from .ParameterItem import ParameterItem
+from .utils import JsonEncoderDecoder
 
 PARAM_TYPES = {}
 PARAM_NAMES = {}
@@ -863,6 +864,43 @@ class Parameter(QtCore.QObject):
             self.treeStateChanges = []
             if len(changes) > 0:
                 self.sigTreeStateChanged.emit(self, changes)
+
+
+    @staticmethod
+    def to_json(parameter: "Parameter") -> str:
+        """
+        Encode a Parameter object into a JSON string.
+
+        Parameters
+        ----------
+        parameter: Parameter
+            The Parameter object to encode.
+
+        Returns
+        -------
+        str
+            A JSON string representing the encoded Parameter.
+        """
+        return JsonEncoderDecoder().encode(parameter.saveState())
+
+
+    @staticmethod
+    def from_json(json_str: str) -> "Parameter":
+        """
+        Decode a JSON string and recreate a corresponding Parameter instance.
+
+        Parameters
+        ----------
+        json_str: str
+            A JSON string representing an encoded Parameter.
+
+        Returns
+        -------
+        Parameter
+            A Parameter instance created from the JSON string.
+        """
+        decoded_state = JsonEncoderDecoder().decode(json_str)
+        return Parameter.create(**decoded_state)
 
 
 class SignalBlocker(object):
