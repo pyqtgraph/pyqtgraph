@@ -36,6 +36,7 @@ class ColorMapDisplayMixin:
         self._cmap = cmap
         self._image = None
 
+    @QtCore.Slot(object)
     def setColorMap(self, cmap):
         # calls main class methods
         self._setColorMap(cmap)
@@ -58,10 +59,14 @@ class ColorMapDisplayMixin:
                 self._image = qimg.flipped() if hasattr(qimg, 'flipped') else qimg.mirrored()
         return self._image
 
+    def setMenu(self, menu : ColorMapMenu):
+        self._menu = menu
+        self._menu.sigColorMapTriggered.connect(self.setColorMap)
+
     def getMenu(self):
         if self._menu is None:
-            self._menu = ColorMapMenu(showColorMapSubMenus=True)
-            self._menu.sigColorMapTriggered.connect(self.setColorMap)
+            menu = ColorMapMenu(showColorMapSubMenus=True)
+            self.setMenu(menu)
         return self._menu
 
     def paintColorMap(self, painter, rect):
