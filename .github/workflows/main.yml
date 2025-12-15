@@ -316,7 +316,7 @@ jobs:
           # Use latest Python, so it understands all syntax.
           python-version: "3.14"
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           pattern: coverage-data-*
           merge-multiple: true
