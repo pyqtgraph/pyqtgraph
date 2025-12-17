@@ -1,6 +1,5 @@
 from typing import Any
 from json import JSONEncoder, JSONDecoder
-import json
 import numpy as np
 
 from ..colormap import ColorMap
@@ -42,17 +41,15 @@ class JsonEncoderDecoder(JSONEncoder):
             A serializable representation of the object.
         """
         if isinstance(o, np.ndarray):
-            return dict({'__ndarray__': o.tolist()})
+            return {'__ndarray__': o.tolist()}
 
         elif isinstance(o, ColorMap):
             attrs = dict()
-            attrs['pos'] = json.dumps(o.pos, cls=JsonEncoderDecoder)
-            attrs['color'] = o.color
+            attrs['pos'], attrs['color'] = o.getStops()
             attrs['mapping_mode'] = o.mapping_mode
             attrs['name'] = o.name
-            attrs['stopsCache'] = o.stopsCache
 
-            return dict({'__colormap__': attrs})
+            return {'__colormap__': attrs}
 
         return super().default(o)
 
@@ -74,7 +71,7 @@ class JsonEncoderDecoder(JSONEncoder):
 
         def hint_special(o: Any):
             if isinstance(o, tuple):
-                return dict({'__tuple__': [hint_special(e) for e in o]})
+                return {'__tuple__': [hint_special(e) for e in o]}
             elif isinstance(o, list):
                 return [hint_special(e) for e in o]
             elif isinstance(o, dict):
@@ -108,12 +105,7 @@ class JsonEncoderDecoder(JSONEncoder):
 
         if '__colormap__' in dct:
             elt = dct['__colormap__']
-            rgba_color = []
-            for c in elt['color']:
-                rgba_color.append(QColor.fromRgbF(*c))
-
-            return ColorMap(pos=JSONDecoder(object_hook=JsonEncoderDecoder._decode_hook).decode(elt['pos']),
-                            color=rgba_color, mapping=elt['mapping_mode'], name=elt['name'])
+            return ColorMap(pos=elt['pos'], color=elt['color'], mapping=elt['mapping_mode'], name=elt['name'])
 
         if '__tuple__' in dct:
             return tuple(dct['__tuple__'])
