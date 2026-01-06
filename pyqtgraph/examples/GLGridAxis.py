@@ -3,9 +3,8 @@
 import numpy as np
 
 import pyqtgraph as pg
-import pyqtgraph.opengl as gl
-from pyqtgraph.Qt import mkQApp, QtCore
-from pyqtgraph.opengl import GLGridAxis, GLSurfacePlotItem
+from pyqtgraph.Qt import mkQApp
+from pyqtgraph.opengl import GLViewWidget, GLGridAxis, GLSurfacePlotItem
 
 
 def float_to_str(*args, decimals=1):
@@ -13,7 +12,7 @@ def float_to_str(*args, decimals=1):
 
 mkQApp("GLGridAxis Example")
 
-w = gl.GLViewWidget()
+w = GLViewWidget()
 w.show()
 
 grid_axes = GLGridAxis()
