@@ -63,15 +63,29 @@ class ScalableGroup(pTypes.GroupParameter):
 
 params = [
     makeAllParamTypes(),
+    {'name': 'Icon Examples', 'type': 'group', 'children': [
+        {'name': 'Single parameter with icon', 'type': 'int', 'value': 42, 'icon': QtWidgets.QStyle.StandardPixmap.SP_ComputerIcon},
+        {'name': 'Group with icon', 'type': 'group', 'icon': QtWidgets.QStyle.StandardPixmap.SP_DirOpenIcon, 'children': [
+            {'name': 'Child 1', 'type': 'str', 'value': 'nested parameter'},
+            {'name': 'Child 2', 'type': 'float', 'value': 3.14},
+        ]},
+        {'name': 'Action with icon', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_DialogSaveButton},
+        {'name': 'Action with action_icon', 'type': 'action', 'action_icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload},
+        {'name': 'Action with icon + action_icon', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload, 'action_icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload},
+        {'name': 'Action group with icons', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_TitleBarMenuButton, 'children': [
+            {'name': 'Sub-action 1', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_ArrowUp},
+            {'name': 'Sub-action 2', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_ArrowDown},
+        ]},
+    ]},
     {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
         {'name': 'functionality', 'type': 'bool', 'value': True},
-        {'name': 'Save State', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_DialogSaveButton},
-        {'name': 'Restore State', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload, 'children': [
+        {'name': 'Save State', 'type': 'action'},
+        {'name': 'Restore State', 'type': 'action', 'children': [
             {'name': 'Add missing items', 'type': 'bool', 'value': True},
             {'name': 'Remove extra items', 'type': 'bool', 'value': True},
         ]},
     ]},
-    {'name': 'Custom context menu', 'type': 'group', 'icon': QtWidgets.QStyle.StandardPixmap.SP_TitleBarMenuButton, 'children': [
+    {'name': 'Custom context menu', 'type': 'group', 'children': [
         {'name': 'List contextMenu', 'type': 'float', 'value': 0, 'context': [
             'menu1',
             'menu2'
@@ -82,7 +96,7 @@ params = [
         }},
     ]},
     ComplexParameter(name='Custom parameter group (reciprocal values)'),
-    ScalableGroup(name="Expandable Parameter Group", tip='Click to add children', icon=QtWidgets.QStyle.StandardPixmap.SP_DirOpenIcon, children=[
+    ScalableGroup(name="Expandable Parameter Group", tip='Click to add children', children=[
         {'name': 'ScalableParam 1', 'type': 'str', 'value': "default param 1"},
         {'name': 'ScalableParam 2', 'type': 'str', 'value': "default param 2"},
     ]),

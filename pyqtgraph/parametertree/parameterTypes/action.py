@@ -5,7 +5,7 @@ from ...util.icons import iconToQIcon
 
 class ParameterControlledButton(QtWidgets.QPushButton):
     settableAttributes = {
-        "title", "tip", "icon", "shortcut", "enabled", "visible"
+        "title", "tip", "action_icon", "shortcut", "enabled", "visible"
     }
 
     def __init__(self, parameter=None, parent=None):
@@ -20,7 +20,7 @@ class ParameterControlledButton(QtWidgets.QPushButton):
     def updateOpts(self, param, opts):
         # Of the attributes that can be set on a QPushButton, only the text
         # and tooltip attributes are different from standard pushbutton names
-        nameMap = dict(title="text", tip="toolTip")
+        nameMap = dict(title="text", tip="toolTip", action_icon="icon")
         # Special case: "title" could be none, in which case make it something
         # readable by the simple copy-paste logic later
         opts = opts.copy()
@@ -30,9 +30,9 @@ class ParameterControlledButton(QtWidgets.QPushButton):
             opts["title"] = param.title()
         # Another special case: icons should be converted to QIcon before
         # being passed to the button
-        if "icon" in opts:
-            icon = opts["icon"]
-            opts["icon"] = iconToQIcon(icon)
+        if "action_icon" in opts:
+            icon = opts["action_icon"]
+            opts["action_icon"] = iconToQIcon(icon)
 
         for attr in self.settableAttributes.intersection(opts):
             buttonAttr = nameMap.get(attr, attr)
@@ -50,7 +50,7 @@ class ActionParameterItem(ParameterItem):
         ParameterItem.__init__(self, param, depth)
         # For action parameters, icons are displayed in the button, not the tree item
         # Clear any icon that was set by the parent __init__
-        self.setIcon(0, QtGui.QIcon())
+        # self.setIcon(0, QtGui.QIcon())
         self.layoutWidget = QtWidgets.QWidget()
         self.layout = QtWidgets.QHBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -61,13 +61,13 @@ class ActionParameterItem(ParameterItem):
         self.layout.addStretch()
         self.titleChanged()
 
-    def optsChanged(self, param, opts):
-        # For action parameters, don't update the tree item icon
-        # The icon is displayed in the button instead
-        if 'icon' in opts:
-            opts = opts.copy()
-            del opts['icon']
-        ParameterItem.optsChanged(self, param, opts)
+    # def optsChanged(self, param, opts):
+    #     # For action parameters, don't update the tree item icon
+    #     # The icon is displayed in the button instead
+    #     if 'icon' in opts:
+    #         opts = opts.copy()
+    #         del opts['icon']
+    #     ParameterItem.optsChanged(self, param, opts)
 
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
