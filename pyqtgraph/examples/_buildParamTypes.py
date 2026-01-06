@@ -33,17 +33,8 @@ def makeChild(chType, cfgDict):
     for p in optsChildren:
         setOpt(p, p.value() if p.hasValue() else None)
 
-    # Map parameter names to icons
-    typeIcons = {
-        'file': QtWidgets.QStyle.StandardPixmap.SP_FileIcon,
-        'list': QtWidgets.QStyle.StandardPixmap.SP_FileDialogListView,
-        'bool': QtWidgets.QStyle.StandardPixmap.SP_MessageBoxQuestion,
-        'checklist': QtWidgets.QStyle.StandardPixmap.SP_FileDialogContentsView,
-        'text': QtWidgets.QStyle.StandardPixmap.SP_MessageBoxInformation,
-    }
-    icon = typeIcons.get(chType, None)
     grp = Parameter.create(
-        name=f'Sample {chType.title()}', type='group', icon=icon,
+        name=f'Sample {chType.title()}', type='group',
         children=metaChildren + [param] + optsChildren
     )
     grp.setOpts(expanded=False)
@@ -59,12 +50,8 @@ def makeMetaChild(name, cfgDict):
             ch = Parameter.create(name=chName, **chOpts)
         _encounteredTypes.add(ch.type())
         children.append(ch)
-    # Map meta names to icons
-    metaIcons = {
-        'Applies to All Types': QtWidgets.QStyle.StandardPixmap.SP_MessageBoxInformation,
-    }
-    icon = metaIcons.get(name, None)
-    param = Parameter.create(name=name, type='group', icon=icon, children=children)
+        
+    param = Parameter.create(name=name, type='group', children=children)
     param.setOpts(expanded=False)
     return param
 

@@ -63,7 +63,7 @@ class ScalableGroup(pTypes.GroupParameter):
 
 params = [
     makeAllParamTypes(),
-    {'name': 'Icon Examples', 'type': 'group', 'children': [
+    {'name': 'Icon Examples', 'type': 'group', 'expanded':False, 'children': [
         {'name': 'Single parameter with icon', 'type': 'int', 'value': 42, 'icon': QtWidgets.QStyle.StandardPixmap.SP_ComputerIcon},
         {'name': 'Group with icon', 'type': 'group', 'icon': QtWidgets.QStyle.StandardPixmap.SP_DirOpenIcon, 'children': [
             {'name': 'Child 1', 'type': 'str', 'value': 'nested parameter'},
