@@ -1,4 +1,5 @@
 from ..Qt import QtCore, QtGui, QtWidgets
+from ..util.icons import iconToQIcon
 
 translate = QtCore.QCoreApplication.translate
 
@@ -32,6 +33,10 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
         param.sigParentChanged.connect(self.parentChanged)
         
         self.updateFlags()
+
+        ## Set initial icon if provided
+        if 'icon' in param.opts:
+            self.setIcon(0, iconToQIcon(param.opts['icon']))
 
         ## flag used internally during name editing
         self.ignoreNameColumnChange = False
@@ -191,6 +196,9 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
 
         if 'title' in opts:
             self.titleChanged()
+
+        if 'icon' in opts:
+            self.setIcon(0, iconToQIcon(opts['icon']))
 
         self.updateFlags()
 

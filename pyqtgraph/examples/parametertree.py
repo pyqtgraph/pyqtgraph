@@ -64,13 +64,14 @@ class ScalableGroup(pTypes.GroupParameter):
 params = [
     makeAllParamTypes(),
     {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
-        {'name': 'Save State', 'type': 'action'},
-        {'name': 'Restore State', 'type': 'action', 'children': [
+        {'name': 'functionality', 'type': 'bool', 'value': True},
+        {'name': 'Save State', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_DialogSaveButton},
+        {'name': 'Restore State', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload, 'children': [
             {'name': 'Add missing items', 'type': 'bool', 'value': True},
             {'name': 'Remove extra items', 'type': 'bool', 'value': True},
         ]},
     ]},
-    {'name': 'Custom context menu', 'type': 'group', 'children': [
+    {'name': 'Custom context menu', 'type': 'group', 'icon': QtWidgets.QStyle.StandardPixmap.SP_TitleBarMenuButton, 'children': [
         {'name': 'List contextMenu', 'type': 'float', 'value': 0, 'context': [
             'menu1',
             'menu2'
@@ -81,7 +82,7 @@ params = [
         }},
     ]},
     ComplexParameter(name='Custom parameter group (reciprocal values)'),
-    ScalableGroup(name="Expandable Parameter Group", tip='Click to add children', children=[
+    ScalableGroup(name="Expandable Parameter Group", tip='Click to add children', icon=QtWidgets.QStyle.StandardPixmap.SP_DirOpenIcon, children=[
         {'name': 'ScalableParam 1', 'type': 'str', 'value': "default param 1"},
         {'name': 'ScalableParam 2', 'type': 'str', 'value': "default param 2"},
     ]),
