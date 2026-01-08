@@ -204,9 +204,9 @@ class GLAxis(GLGraphicsItem):
         ====================  ==================================================
         """
         args = ('coords', 'coords_labels', 'limits', 'other_limits', 'axis',
-                'faces', 'tick_axis', 'label_side', 'font', 'label_color',
-                'line_color', 'line_antialias', 'line_width', 'azimuth_range',
-                'elevates')
+                'faces', 'tick_axis', 'label_side', 'tick_offset_factor',
+                'font', 'label_color', 'line_color', 'line_antialias',
+                'line_width', 'azimuth_range', 'elevates')
         for arg in args:
             if arg in kwargs:
                 setattr(self, arg, kwargs[arg])
