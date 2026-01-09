@@ -76,8 +76,10 @@ class GLGridPlane(GLGraphicsItem):
                               second axis and the grid
         limits                tuples with the limits for the first and
                               second axis and the grid
-        face_color            RGBA tuple for the grid plane surface color
-        line_color            RGBA tuple for the grid lines color
+        face_color            RGBA tuple with floats (0.0-1.0) for the grid
+                              plane surface color
+        line_color            RGBA tuple with floats (0.0-1.0) for the grid
+                              lines color
         line_antialias        boolean indicating if grid lines are antialiased
         line_width            float indicating the grid lines width
         azimuth_range         tuple (min, max) or list of tuples for visibility
@@ -85,7 +87,7 @@ class GLGridPlane(GLGraphicsItem):
         ====================  ==================================================
         """
         args = ('axis', 'offset', 'coords', 'limits', 'face_color',
-                'line_color', 'line_antialias', 'line_width', 'azimuth_range', 
+                'line_color', 'line_antialias', 'line_width', 'azimuth_range',
                 'elevation_range')
         for arg in args:
             if arg in kwargs:
@@ -163,7 +165,7 @@ class GLAxis(GLGraphicsItem):
         self.tick_offset_factor = 0.02
         self.font = QtGui.QFont('Helvetica', 10)
         black_fg = getConfigOption('foreground') == 'k'
-        self.label_color = (0, 0, 0, 255) if black_fg else (220, 220, 220, 255)
+        self.label_color = (0, 0, 0, 1) if black_fg else (0.86, 0.86, 0.86, 1)
         self.line_color = (0, 0, 0, 1) if black_fg else (1, 1, 1, 1)
         self.line_antialias = False
         self.line_width = 1.0
@@ -194,8 +196,10 @@ class GLAxis(GLGraphicsItem):
                               high
         tick_offset_factor    float for tick label offset scaling factor
         font                  QFont for the labels
-        label_color           RGBA tuple for the labels and axis line color
-        line_color            RGBA tuple for the axis line color
+        label_color           RGBA tuple with floats (0.0-1.0) for the labels
+                              and axis line color
+        line_color            RGBA tuple with floats (0.0-1.0) for the axis line
+                              color
         line_antialias        boolean indicating if axis line is antialiased
         line_width            float indicating the axis line width
         azimuth_range         tuple (min, max) or list of tuples for visibility
@@ -265,16 +269,17 @@ class GLAxis(GLGraphicsItem):
 
     def update_labels(self):
         """Update existing labels or create new ones as needed."""
-        alignment = self.sides[self.label_side]
         if len(self.coords) != len(self.coords_labels):
             raise InconsistentCoordsError("coords and coords_labels must have the same length.")
+        alignment = self.sides[self.label_side]
+        color = tuple(round(c * 255) for c in self.label_color)
         for index, (coord, label) in enumerate(zip(self.coords, self.coords_labels)):
             pos = self.tick_coordinates(coord)[1]
             if index < len(self._labels):
                 self._labels[index].setData(
                     pos=pos,
                     text=label,
-                    color=self.label_color,
+                    color=color,
                     alignment=alignment
                 )
             else:
@@ -282,7 +287,7 @@ class GLAxis(GLGraphicsItem):
                     parentItem=self,
                     pos=pos,
                     text=label,
-                    color=self.label_color,
+                    color=color,
                     font=self.font,
                     alignment=alignment,
                 ))
