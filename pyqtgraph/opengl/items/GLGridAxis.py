@@ -5,6 +5,7 @@ from ...Qt import QtGui, QtCore
 from ...Vector import Vector
 from ..GLGraphicsItem import GLGraphicsItem
 from ...opengl import GLLinePlotItem, GLMeshItem, GLTextItem
+from OpenGL import GL
 
 
 def check_visibility(azimuth_range, azimuth, elevation_range=None, elevation=None):
@@ -39,6 +40,17 @@ def other_axes(axis):
     return [i for i in range(3) if i != axis]
 
 
+class GLPolygonOffsetMeshItem(GLMeshItem):
+    """GLMeshItem with modified painter."""
+
+    def paint(self):
+        GL.glEnable(GL.GL_POLYGON_OFFSET_FILL)
+        GL.glPolygonOffset(1.0, 1.0)
+        super().paint()
+        GL.glDisable(GL.GL_POLYGON_OFFSET_FILL)
+        GL.glPolygonOffset(0.0, 0.0)
+
+
 class GLGridPlane(GLGraphicsItem):
     """Grid plane in 3D space."""
 
@@ -56,12 +68,12 @@ class GLGridPlane(GLGraphicsItem):
         self.azimuth_range: tuple | None = None
         self.elevation_range: tuple | None = None
 
-        self._lineplot = GLLinePlotItem(parentItem=self, mode='lines')
+        self._mesh = GLPolygonOffsetMeshItem(parentItem=self)
+
+        self._lineplot = GLLinePlotItem(parentItem=self, mode='lines', glOptions='translucent')
         self._lineplot.setDepthValue(self.depthValue() + 1)
+
         self.setParentItem(parentItem)
-
-        self._mesh = GLMeshItem(parentItem=self)
-
         self.setData(**kwargs)
 
     def setData(self, **kwargs):
@@ -174,7 +186,7 @@ class GLAxis(GLGraphicsItem):
 
         self._is_bottom = True
         self._labels = []
-        self._lineplot = GLLinePlotItem(parentItem=self, mode='lines')
+        self._lineplot = GLLinePlotItem(parentItem=self, mode='lines', glOptions='translucent')
         self._lineplot.setDepthValue(self.depthValue() + 1)
 
         self.setData(**kwargs)
