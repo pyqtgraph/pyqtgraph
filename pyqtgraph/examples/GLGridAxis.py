@@ -1,4 +1,4 @@
-"""Demonstrate removal and addition of child items in a GLGraphicsItem."""
+"""Demonstrate GLGridAxis with GLSurfacePlotItem."""
 
 import numpy as np
 
