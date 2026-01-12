@@ -68,7 +68,7 @@ class GLGridPlane(GLGraphicsItem):
         self.azimuth_range: tuple | None = None
         self.elevation_range: tuple | None = None
 
-        self._mesh = GLPolygonOffsetMeshItem(parentItem=self)
+        self._mesh = GLPolygonOffsetMeshItem(parentItem=self, computeNormals=False)
 
         self._lineplot = GLLinePlotItem(parentItem=self, mode='lines', glOptions='translucent')
         self._lineplot.setDepthValue(self.depthValue() + 1)
