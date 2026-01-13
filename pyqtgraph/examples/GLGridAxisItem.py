@@ -1,21 +1,21 @@
-"""Demonstrate GLGridAxis with GLSurfacePlotItem."""
+"""Demonstrate GLGridAxisItem with GLSurfacePlotItem."""
 
 import numpy as np
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import mkQApp
-from pyqtgraph.opengl import GLViewWidget, GLGridAxis, GLSurfacePlotItem
+from pyqtgraph.opengl import GLViewWidget, GLGridAxisItem, GLSurfacePlotItem
 
 
 def float_to_str(*args, decimals=1):
     return [f'{x:.{decimals}f}' for x in args]
 
-mkQApp("GLGridAxis Example")
+mkQApp("GLGridAxisItem Example")
 
 w = GLViewWidget()
 w.show()
 
-grid_axes = GLGridAxis()
+grid_axes = GLGridAxisItem()
 w.addItem(grid_axes)
 
 extent = 10

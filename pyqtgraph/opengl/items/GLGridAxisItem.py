@@ -4,7 +4,7 @@ from ... import getConfigOption
 from ...Qt import QtGui, QtCore
 from ...Vector import Vector
 from ..GLGraphicsItem import GLGraphicsItem
-from ...opengl import GLLinePlotItem, GLMeshItem, GLTextItem
+from .. import GLLinePlotItem, GLMeshItem, GLTextItem
 from OpenGL import GL
 
 
@@ -51,7 +51,7 @@ class GLPolygonOffsetMeshItem(GLMeshItem):
         GL.glPolygonOffset(0.0, 0.0)
 
 
-class GLGridPlane(GLGraphicsItem):
+class GLGridPlaneItem(GLGraphicsItem):
     """Grid plane in 3D space."""
 
     def __init__(self, parentItem=None, **kwargs):
@@ -156,7 +156,7 @@ class InconsistentCoordsError(Exception):
     """Raised when coords and coords labels do not have the same length."""
 
 
-class GLAxis(GLGraphicsItem):
+class GLAxisItem(GLGraphicsItem):
     """Axis with ticks and labels in 3D space."""
 
     sides = (
@@ -334,7 +334,7 @@ class GLAxis(GLGraphicsItem):
         self._lineplot.setData(pos=self._build_line_segments(z))
 
 
-class GLGridAxis(GLGraphicsItem):
+class GLGridAxisItem(GLGraphicsItem):
     """Draw a grid with axes, ticks and labels in 3D space."""
 
     grid_plane_config = (
@@ -371,7 +371,7 @@ class GLGridAxis(GLGraphicsItem):
         self.limits = {axis: [-1.05, 1.05] for axis in 'xyz'}
         self._last_view = [0.0, 0.0]
         self._grid = [
-            GLGridPlane(
+            GLGridPlaneItem(
                 parentItem=self,
                 axis=axis,
                 azimuth_range=azimuth_range,
@@ -380,7 +380,7 @@ class GLGridAxis(GLGraphicsItem):
             for axis, _, azimuth_range, elevation_range in self.grid_plane_config
         ]
         self._axes = [
-            GLAxis(
+            GLAxisItem(
                 parentItem=self,
                 axis=axis,
                 faces=faces,
