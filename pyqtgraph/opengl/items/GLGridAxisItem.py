@@ -40,17 +40,6 @@ def other_axes(axis):
     return [i for i in range(3) if i != axis]
 
 
-class GLPolygonOffsetMeshItem(GLMeshItem):
-    """GLMeshItem with modified painter."""
-
-    def paint(self):
-        GL.glEnable(GL.GL_POLYGON_OFFSET_FILL)
-        GL.glPolygonOffset(1.0, 1.0)
-        super().paint()
-        GL.glDisable(GL.GL_POLYGON_OFFSET_FILL)
-        GL.glPolygonOffset(0.0, 0.0)
-
-
 class GLGridPlaneItem(GLGraphicsItem):
     """Grid plane in 3D space."""
 
@@ -68,9 +57,13 @@ class GLGridPlaneItem(GLGraphicsItem):
         self.azimuth_range: tuple | None = None
         self.elevation_range: tuple | None = None
 
-        self._mesh = GLPolygonOffsetMeshItem(parentItem=self, computeNormals=False)
+        self._mesh = GLMeshItem(
+            parentItem=self, computeNormals=False, polygonOffset=True
+        )
 
-        self._lineplot = GLLinePlotItem(parentItem=self, mode='lines', glOptions='translucent')
+        self._lineplot = GLLinePlotItem(
+            parentItem=self, mode='lines', glOptions='translucent'
+        )
         self._lineplot.setDepthValue(self.depthValue() + 1)
 
         self.setParentItem(parentItem)

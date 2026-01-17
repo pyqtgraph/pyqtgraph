@@ -42,7 +42,7 @@ class GLSurfacePlotItem(GLMeshItem):
                 surface_kwds[arg] = kwds.pop(arg)
 
         super().__init__(meshdata=self._meshdata, **kwds)
-        
+
         self.lineplot = GLLinePlotItem(parentItem=self, mode='lines', glOptions='translucent')
         # in GLViewWidget.drawItemTree(), at the same depth value, child items
         # come before the parent. make it such that our grid lines get drawn
@@ -109,6 +109,9 @@ class GLSurfacePlotItem(GLMeshItem):
         if self._z is None:
             return
         
+        if self._showGrid:
+            self.setPolygonOffset(True)
+
         updateMesh = False
         newVertexes = False
         
@@ -150,15 +153,6 @@ class GLSurfacePlotItem(GLMeshItem):
 
         # rebuild grid whenever mesh or parent changes
         self._update_grid()
-
-    def paint(self):
-        if self._showGrid:
-            ogl.glEnable(ogl.GL_POLYGON_OFFSET_FILL)
-            ogl.glPolygonOffset(1.0, 1.0)
-        super().paint()
-        if self._showGrid:
-            ogl.glDisable(ogl.GL_POLYGON_OFFSET_FILL)
-            ogl.glPolygonOffset(0.0, 0.0)
 
     def generateFaces(self):
         cols = self._z.shape[1]-1
