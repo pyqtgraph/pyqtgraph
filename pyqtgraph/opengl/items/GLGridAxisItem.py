@@ -5,7 +5,6 @@ from ...Qt import QtGui, QtCore
 from ...Vector import Vector
 from ..GLGraphicsItem import GLGraphicsItem
 from .. import GLLinePlotItem, GLMeshItem, GLTextItem
-from OpenGL import GL
 
 
 def check_visibility(azimuth_range, azimuth, elevation_range=None, elevation=None):
