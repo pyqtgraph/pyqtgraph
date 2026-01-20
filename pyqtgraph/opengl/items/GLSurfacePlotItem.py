@@ -109,8 +109,7 @@ class GLSurfacePlotItem(GLMeshItem):
         if self._z is None:
             return
         
-        if self._showGrid:
-            self.setPolygonOffset(True)
+        self.setPolygonOffset(self._showGrid)
 
         updateMesh = False
         newVertexes = False
