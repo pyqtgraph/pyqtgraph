@@ -65,7 +65,6 @@ class GLGridPlaneItem(GLGraphicsItem):
         )
         self._lineplot.setDepthValue(self.depthValue() + 1)
 
-        self.setParentItem(parentItem)
         self.setData(**kwargs)
 
     def setData(self, **kwargs):
