@@ -194,19 +194,44 @@ class PythonHighlighter(QSyntaxHighlighter):
         return DARK_STYLES if app.property('darkMode') else LIGHT_STYLES
 
     def highlightBlock(self, text):
-        """Apply syntax highlighting to the given block of text.
-        """
-        # Do other syntax formatting
-        rules = self.rules.copy()
-        for expression, nth, format in rules:
-            format = self.styles[format]
+        """Apply syntax highlighting to the given block of text."""
 
+        rules = self.rules.copy()
+        string_spans = []
+
+        # Special case: full-line comment
+        stripped = text.lstrip()
+        if stripped.startswith('#'):
+            start = len(text) - len(stripped)
+            self.setFormat(start, len(text) - start, self.styles['comment'])
+            self.setCurrentBlockState(0)
+            self.applySearchHighlight(text)
+            return
+
+        # Next: apply string rules and record spans
+        for expression, nth, format in rules:
+            if format not in ('string', 'string2'):
+                continue
+            format = self.styles[format]
             for n, match in enumerate(re.finditer(expression, text)):
                 if n < nth:
                     continue
-                start = match.start()
-                length = match.end() - start
-                self.setFormat(start, length, format)
+                start, end = match.span()
+                self.setFormat(start, end - start, format)
+                string_spans.append((start, end))
+
+        # Then: apply other rules only if not in a string
+        for expression, nth, format in rules:
+            if format in ('string', 'string2'):
+                continue
+            format = self.styles[format]
+            for n, match in enumerate(re.finditer(expression, text)):
+                if n < nth:
+                    continue
+                start, end = match.span()
+                if any(start < e and end > s for s, e in string_spans):
+                    continue  # Skip overlapping with string
+                self.setFormat(start, end - start, format)
 
         self.applySearchHighlight(text)
         self.setCurrentBlockState(0)
