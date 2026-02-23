@@ -626,6 +626,7 @@ class ImageView(QtWidgets.QWidget):
             self.roiChanged()
             self.sigProcessingChanged.emit(self)
 
+    @QtCore.Slot(bool)
     def normToggled(self, b):
         self.ui.normGroup.setVisible(b)
         self.normRoi.setVisible(b and self.ui.normROICheck.isChecked())
@@ -777,16 +778,14 @@ class ImageView(QtWidgets.QWidget):
             (sind, start) = self.timeIndex(self.normRgn.lines[0])
             (eind, end) = self.timeIndex(self.normRgn.lines[1])
             #print start, end, sind, eind
-            n = image[sind:eind+1].mean(axis=0)
-            n.shape = (1,) + n.shape
+            n = image[sind:eind+1].mean(axis=0, keepdims=True)
             if div:
                 norm /= n
             else:
                 norm -= n
                 
         if self.ui.normFrameCheck.isChecked() and image.ndim == 3:
-            n = image.mean(axis=1).mean(axis=1)
-            n.shape = n.shape + (1, 1)
+            n = image.mean(axis=(1, 2), keepdims=True)
             if div:
                 norm /= n
             else:
@@ -904,7 +903,8 @@ class ImageView(QtWidgets.QWidget):
             self.updateImage()
         else:
             self.imageItem.save(fileName)
-            
+
+    @QtCore.Slot()
     def exportClicked(self):
         fileName, _ = QtWidgets.QFileDialog.getSaveFileName()
         if not fileName:

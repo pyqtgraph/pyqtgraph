@@ -1,39 +1,14 @@
-from importlib.metadata import version
-
 import pytest
 
 import pyqtgraph as pg
 from pyqtgraph.exporters import MatplotlibExporter
 
 pytest.importorskip("matplotlib")
-import matplotlib
-from packaging.version import Version, parse
 
 
 app = pg.mkQApp()
 
-skip_qt6 = pytest.mark.skipif(
-    # availability of QtAgg signifies Qt6 support
-    pg.Qt.QT_LIB in ["PySide6", "PyQt6"] and "QtAgg" not in matplotlib.rcsetup.interactive_bk,
-    reason= (
-        "installed version of Matplotlib does not support Qt6, "
-        "see https://github.com/matplotlib/matplotlib/pull/19255"
-    )
-)
 
-# see https://github.com/matplotlib/matplotlib/pull/24172
-if (
-    pg.Qt.QT_LIB == "PySide6"
-    and parse(pg.Qt.PySide6.__version__) > Version('6.4')
-    and parse(version('matplotlib')) < Version('3.6.2')
-):
-    pytest.skip(
-        "matplotlib + PySide6 6.4 bug",
-        allow_module_level=True
-    )
-
-
-@skip_qt6
 def test_MatplotlibExporter():
     plt = pg.PlotWidget()
     plt.show()
@@ -48,7 +23,6 @@ def test_MatplotlibExporter():
     exp = MatplotlibExporter(plt.getPlotItem())
     exp.export()
 
-@skip_qt6
 def test_MatplotlibExporter_nonplotitem():
     # attempting to export something other than a PlotItem raises an exception
     plt = pg.PlotWidget()
@@ -58,7 +32,6 @@ def test_MatplotlibExporter_nonplotitem():
     with pytest.raises(Exception):
         exp.export()
 
-@skip_qt6
 @pytest.mark.parametrize('scale', [1e10, 1e-9])
 def test_MatplotlibExporter_siscale(scale):
     # coarse test to verify that plot data is scaled before export when

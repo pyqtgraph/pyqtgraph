@@ -19,6 +19,7 @@ class GLTextItem(GLGraphicsItem):
         self.color = QtCore.Qt.GlobalColor.white
         self.text = ''
         self.font = QtGui.QFont('Helvetica', 16)
+        self.alignment = QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignBottom
 
         self.setData(**kwds)
 
@@ -34,9 +35,10 @@ class GLTextItem(GLGraphicsItem):
         color                 QColor or array of ints [R,G,B] or [R,G,B,A]. (Default: Qt.white)
         text                  String to display.
         font                  QFont (Default: QFont('Helvetica', 16))
+        alignment             QtCore.Qt.AlignmentFlag (Default: QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignBottom)
         ====================  ==================================================
         """
-        args = ['pos', 'color', 'text', 'font']
+        args = ['pos', 'color', 'text', 'font', 'alignment']
         for k in kwds.keys():
             if k not in args:
                 raise ValueError('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
@@ -65,7 +67,7 @@ class GLTextItem(GLGraphicsItem):
 
         project = self.compute_projection()
         vec3 = QtGui.QVector3D(*self.pos)
-        text_pos = project.map(vec3).toPointF()
+        text_pos = self.align_text(project.map(vec3).toPointF())
 
         painter = QtGui.QPainter(self.view())
         painter.setPen(self.color)
@@ -80,3 +82,24 @@ class GLTextItem(GLGraphicsItem):
         ndc_to_viewport = QtGui.QMatrix4x4()
         ndc_to_viewport.viewport(rect.left(), rect.bottom(), rect.width(), -rect.height())
         return ndc_to_viewport * self.mvpMatrix()
+
+    def align_text(self, pos):
+        """
+        Aligns the text at the given position according to the given alignment.
+        """
+        font_metrics = QtGui.QFontMetrics(self.font)
+        rect = font_metrics.tightBoundingRect(self.text)
+        width = rect.width()
+        height = rect.height()
+        dx = dy = 0.0
+        if self.alignment & QtCore.Qt.AlignmentFlag.AlignRight:
+            dx = width
+        if self.alignment & QtCore.Qt.AlignmentFlag.AlignHCenter:
+            dx = width / 2.0
+        if self.alignment & QtCore.Qt.AlignmentFlag.AlignTop:
+            dy = height
+        if self.alignment & QtCore.Qt.AlignmentFlag.AlignVCenter:
+            dy = height / 2.0
+        pos.setX(pos.x() - dx)
+        pos.setY(pos.y() + dy)
+        return pos

@@ -5,17 +5,16 @@ import numpy as np
 
 from .. import Qt, colormap
 from .. import functions as fn
-from .. import getConfigOption
 from ..Qt import compat
 from ..Qt import OpenGLConstants as GLC
 from ..Qt import OpenGLHelpers
-from ..Qt import QtCore, QtGui, QT_LIB
+from ..Qt import QtCore, QtGui, QT_LIB, QtVersionInfo
 from .GraphicsObject import GraphicsObject
 
-if QT_LIB in ["PyQt5", "PySide2"]:
-    QtOpenGL = QtGui
+if QtVersionInfo[0] >= 6:
+    QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
 else:
-    QtOpenGL = importlib.import_module(f'{QT_LIB}.QtOpenGL')
+    QtOpenGL = QtGui
 
 __all__ = ['PColorMeshItem']
 
@@ -184,9 +183,10 @@ class PColorMeshItem(GraphicsObject):
         # User only specified z
         elif len(args)==1:
             # If x and y is None, the polygons will be displaced on a grid
-            x = np.arange(0, args[0].shape[0]+1, 1)
-            y = np.arange(0, args[0].shape[1]+1, 1)
-            self.x, self.y = np.meshgrid(x, y, indexing='ij')
+            nrows, ncols = args[0].shape
+            x = np.arange(ncols+1)
+            y = np.arange(nrows+1)
+            self.x, self.y = np.meshgrid(x, y)
             self.z = args[0]
 
             self._dataBounds = ((x[0], x[-1]), (y[0], y[-1]))
@@ -399,8 +399,7 @@ class PColorMeshItem(GraphicsObject):
             return
 
         if (
-            getConfigOption('enableExperimental')
-            and isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
+            isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
             and self.cmap is not None   # don't support setting colormap by setLookupTable
         ):
             if self.glstate is None:
@@ -598,7 +597,7 @@ class PColorMeshItem(GraphicsObject):
 
         glstate.render_cache = [origin, dirty_bits]
 
-        widget.drawStencil(view)
+        widget.setViewboxClip(view)
 
         glstate.m_vao.bind()
         glstate.m_texture.bind()
@@ -608,9 +607,9 @@ class PColorMeshItem(GraphicsObject):
         rng = hi - lo
         if rng == 0:
             rng = 1
-        OpenGLHelpers.setUniformValue(program, "u_rescale", QtGui.QVector2D(1/rng, lo))
+        program.setUniformValue("u_rescale", QtGui.QVector2D(1/rng, lo))
 
-        OpenGLHelpers.setUniformValue(program, "u_mvp", mvp)
+        program.setUniformValue("u_mvp", mvp)
 
         NULL = compat.voidptr(0) if QT_LIB.startswith("PySide") else None
         glfn.glDrawElements(GLC.GL_TRIANGLES, num_ind_mesh, GLC.GL_UNSIGNED_INT, NULL)
@@ -631,10 +630,13 @@ class OpenGLState(QtCore.QObject):
         }
     """
     FRAG_SRC_COMPAT = """
-        varying mediump float v_luminance;
-        uniform mediump sampler2D u_texture;
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+        varying float v_luminance;
+        uniform sampler2D u_texture;
         void main() {
-            if (isnan(v_luminance)) discard;
+            if (!(v_luminance == v_luminance)) discard;
             float s = clamp(v_luminance, 0.0, 1.0);
             gl_FragColor = texture2D(u_texture, vec2(s, 0));
         }
@@ -712,11 +714,14 @@ class OpenGLState(QtCore.QObject):
         program = glwidget.retrieveProgram("PColorMeshItem")
         if program is None:
             program = QtOpenGL.QOpenGLShaderProgram()
-            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, VERT_SRC)
-            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, FRAG_SRC)
+            if not program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, VERT_SRC):
+                raise RuntimeError(program.log())
+            if not program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, FRAG_SRC):
+                raise RuntimeError(program.log())
             program.bindAttributeLocation("a_position", 0)
             program.bindAttributeLocation("a_luminance", 1)
-            program.link()
+            if not program.link():
+                raise RuntimeError(program.log())
         glwidget.storeProgram("PColorMeshItem", program)
 
         self.m_vao.create()

@@ -1,3 +1,214 @@
+pyqtgraph-0.14.0
+
+## What's Changed
+
+
+### Highlights
+
+* implement cuda OpenGL interops by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3379
+* PColorMeshItem: implement opengl rendering by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3090
+* Port PlotCurveItem experimental opengl codepath to shaders by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3055
+* Remove MetaArray, MultiPlotItem and MultiPlotWidget by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3051
+* Add Boxplot feature by @noonchen in https://github.com/pyqtgraph/pyqtgraph/pull/2562
+* Unvendor very old colorama by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3064
+* implement fill for connect="finite" by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3071
+* Add legend double-click and legend sample click signals. by @kevinanewman in https://github.com/pyqtgraph/pyqtgraph/pull/3111
+* pcmi: add support for OpenGL ES 3.0 by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3094
+* Bump min numpy to 1.25+ by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3241
+* Create FUNDING.yml by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3034
+
+
+### API/Behavior Changes and Additions
+
+* GLMeshItem: allow ubyte color buffers by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3231
+* Allow OpenGL without enableExperimental by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3277
+* Do away with Parameter deprecation by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3286
+* Transform3D.map should return the type of obj passed in by @outofculture in https://github.com/pyqtgraph/pyqtgraph/pull/3050
+* Remove MetaArray, MultiPlotItem and MultiPlotWidget by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3051
+* Remove canvas module by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3056
+* implement fill for connect="finite" by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3071
+* Raise ParseError on duplicate keys in configfile by @outofculture in https://github.com/pyqtgraph/pyqtgraph/pull/3121
+* Add legend double-click and legend sample click signals. by @kevinanewman in https://github.com/pyqtgraph/pyqtgraph/pull/3111
+* Parameter Tree: ListParameter: Add deprecation warning when values is present. by @Tillsten in https://github.com/pyqtgraph/pyqtgraph/pull/3160
+* allow conditional siPrefixing of axis labels by @outofculture in https://github.com/pyqtgraph/pyqtgraph/pull/3136
+* PlotItem.autoBtnClicked to emit PlotItem.sigRangeChangedManually by @tikuma-lsuhsc in https://github.com/pyqtgraph/pyqtgraph/pull/3049
+* add setSymbol method by @kevinanewman in https://github.com/pyqtgraph/pyqtgraph/pull/3180
+* Option to execute repl commands in a non-GUI thread by @outofculture in https://github.com/pyqtgraph/pyqtgraph/pull/3130
+* AxisItem: Allow hiding minor ticks by @2xB in https://github.com/pyqtgraph/pyqtgraph/pull/3318
+* allow returned camera params to be set back by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3408
+* Plot option to subtract mean value from all samples by @wetzeld in https://github.com/pyqtgraph/pyqtgraph/pull/3240
+* Locale aware spinbox by @oyvindlr in https://github.com/pyqtgraph/pyqtgraph/pull/3414
+* Parameter: define create as a classmethod by @seb5g in https://github.com/pyqtgraph/pyqtgraph/pull/3403
+* Add overlay grid option to GLSurfacePlotItem by @swvanbuuren in https://github.com/pyqtgraph/pyqtgraph/pull/3349
+* Alignment option for GLTextItem by @swvanbuuren in https://github.com/pyqtgraph/pyqtgraph/pull/3314
+
+
+### Bug Fixes
+
+* Correctly handle SI-prefixes for nonlinear units by @oyvindlr in https://github.com/pyqtgraph/pyqtgraph/pull/3394
+* fix aspect-locked zoom with mouse-drag while right-button pressed by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3354
+* fix: isnan is not available in OpenGL 2.1 nor OpenGL ES 2.0 by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3248
+* fix: GL_POINT_SPRITE was not enabled for NoProfile by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3236
+* Fix LinearRegionItem mouseDragEvent by @dingo9 in https://github.com/pyqtgraph/pyqtgraph/pull/3168
+* render comparison: resize before show by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3415
+* fix: GLLinePlotItem uploading vbo perpetually by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3297
+* Various OpenGL fixes by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3260
+* Support downsampling of image data with NaNs by @nup002 in https://github.com/pyqtgraph/pyqtgraph/pull/3061
+* Catch SystemError During Signal.disconnect() by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3021
+* RawImageGLWidget: update uploaded state on cleanup by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3043
+* enable blending to take into account alpha transparency by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3045
+* Fixes: Error when using FFT on data with one point by @Silas-K in https://github.com/pyqtgraph/pyqtgraph/pull/3070
+* Fix ViewBox wheel event propagation by @tikuma-lsuhsc in https://github.com/pyqtgraph/pyqtgraph/pull/3052
+* bugfix: PlotCurveItem OpenGL didn't invalidate render_cache on cleanup by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3089
+* Format DateAxisItem ticks in different timezones correctly by @Gatsik in https://github.com/pyqtgraph/pyqtgraph/pull/3083
+* fix ComboBox.items() by @MrHenning in https://github.com/pyqtgraph/pyqtgraph/pull/3113
+* connect darkMode slots only once by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3145
+* Minor fixes for a memory debugging tool by @campagnola in https://github.com/pyqtgraph/pyqtgraph/pull/3158
+* ParseError line numbers should account for empty lines by @outofculture in https://github.com/pyqtgraph/pyqtgraph/pull/3131
+* workaround PySide QByteArray leak on conda builds by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3268
+* Fix ConsoleWidget ReplWidget.write() always scrolling to bottom (`scrollToBottom` not working) by @jack-mil in https://github.com/pyqtgraph/pyqtgraph/pull/3140
+* initialize the pressPos attribute with default value to prevent error by @seb5g in https://github.com/pyqtgraph/pyqtgraph/pull/3177
+* Apoptose dock area when temporary window is closed by @UsYer in https://github.com/pyqtgraph/pyqtgraph/pull/3134
+* Fix bug in PlotItem.setAxisItem when called befor scene is set by @tblum in https://github.com/pyqtgraph/pyqtgraph/pull/3182
+* Emit sigRegionChanged only once for LinearRegionItem by @jdranczewski in https://github.com/pyqtgraph/pyqtgraph/pull/3291
+* Removes GraphicsScene.mouseMoveEvent duplicate events by @boringbyte in https://github.com/pyqtgraph/pyqtgraph/pull/3189
+* Fix 'GridItem.generatePicture' for cases of invalid size by @bbc131 in https://github.com/pyqtgraph/pyqtgraph/pull/3284
+* Fix scaling with locked aspect by @a17sol in https://github.com/pyqtgraph/pyqtgraph/pull/3100
+* Update removeItem() by @psyuktha in https://github.com/pyqtgraph/pyqtgraph/pull/3167
+* GLLinePlotItem: restore changes to state by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3223
+* PlotDataItem setData() listOfDicts fix? by @kevinanewman in https://github.com/pyqtgraph/pyqtgraph/pull/3190
+* To align mark and the label vertically in a Legend by @jiban in https://github.com/pyqtgraph/pyqtgraph/pull/3206
+* Fix bug causing DateTimeAxis to not display tick labels #3185 by @tblum in https://github.com/pyqtgraph/pyqtgraph/pull/3187
+* Update syntax.py to correctly colorize commented code by @kevinanewman in https://github.com/pyqtgraph/pyqtgraph/pull/3339
+* Fix bug preventing console showing more than one uncaught exception by @campagnola in https://github.com/pyqtgraph/pyqtgraph/pull/3309
+* fixed the issue where x and y column would be added regardless of the columnMode while exporting to csv by @virgile-hernicot in https://github.com/pyqtgraph/pyqtgraph/pull/3215
+* GraphicsLayout: Fix removeItem() regression by @dnadlinger in https://github.com/pyqtgraph/pyqtgraph/pull/3226
+* fix GLIsosurface overflow warning on numpy 2 by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3235
+* Fix parameter item compare unpack order by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3264
+* Fix recarray support in PlotDataItem by @ixjlyons in https://github.com/pyqtgraph/pyqtgraph/pull/3278
+* Two minor corrections in flowchart and debug by @campagnola in https://github.com/pyqtgraph/pyqtgraph/pull/3399
+* Fix exception when AxisItem is initialized with text argument (fixes #3410) by @simonkeys in https://github.com/pyqtgraph/pyqtgraph/pull/3412
+* ensure comparison returns bool instead of np.bool in TableWidget by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3333
+* fix: blockSignal=True in Parameter.setValue() by @cogsy23 in https://github.com/pyqtgraph/pyqtgraph/pull/3305
+
+
+### Performance Improvements
+
+* invalidate nan locations when downsampling image by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3368
+* ImageItem: implement persistent default autolevels by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/2883
+* finer grained VBO upload by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3298
+* Skip nan values in mesh by @sldesnoo-Delft in https://github.com/pyqtgraph/pyqtgraph/pull/3114
+* Fixed bug that significantly degraded zooming performance for line plots by @oyvindlr in https://github.com/pyqtgraph/pyqtgraph/pull/3330
+* use native c++ construction of QPixmap from QImage by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3208
+* implement cuda OpenGL interops by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3379
+* Port PlotCurveItem experimental opengl codepath to shaders by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3055
+* PlotCurveItem: implement OpenGL curve fill by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3068
+* PColorMeshItem: implement opengl rendering by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3090
+* pcmi: add support for OpenGL ES 3.0 by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3094
+* De-ancient-ify OpenGL shaders by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3109
+* prevent grid lines from getting mouse events by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3152
+* Make PlotCurveItem and PColorMeshItem work in Core Profile by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3257
+* Lazy evaluation of mkColor error string by @jdranczewski in https://github.com/pyqtgraph/pyqtgraph/pull/3292
+* Make shaders in shaders.py run on macOS OpenGL 4.1 Core by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3256
+* ViewBox: Only update auto-range before painting. by @agausmann in https://github.com/pyqtgraph/pyqtgraph/pull/2947
+* create a default VAO if using Core profile by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3246
+* GLVolumeItem: calculate camera pos using ModelView matrix by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3262
+* don't relink shader program where it is not needed by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3295
+* Adding support for connect PlotItem connect vector during view clipping and downsampling by @tblum in https://github.com/pyqtgraph/pyqtgraph/pull/3161
+
+
+### Testing
+
+* test image formats outside of ImageItem by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3014
+* Remove now unneeded test skip conditions, use packaging library for version comparison. by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3042
+* Add coverage reporting by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3054
+* Use packaging library for version comparison by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3127
+
+
+### Documentation
+
+* Add Qtimer, multi threading and multiprocessing to docs by @kadheer in https://github.com/pyqtgraph/pyqtgraph/pull/3087
+* Substantially upgrade ImageItem docs by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3028
+* Overhaul PlotDataItem documentation by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3039
+* Documentation text review for PlotDataItem by @NilsNemitz in https://github.com/pyqtgraph/pyqtgraph/pull/3057
+* Convert PlotItem and AxisItem to use numpydoc Docstring Style by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3261
+* Do upgrade to CONTRIBUTING.md, it's been a while by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3058
+* Bump sphinx-design from 0.5.0 to 0.6.0 in /doc by @dependabot[bot] in https://github.com/pyqtgraph/pyqtgraph/pull/3032
+* Bump sphinx-design from 0.6.0 to 0.6.1 in /doc by @dependabot[bot] in https://github.com/pyqtgraph/pyqtgraph/pull/3119
+* Update to pydata-sphinx-theme 0.15.4 by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3079
+* Bump pydata-sphinx-theme from 0.15.4 to 0.16.0 in /doc by @dependabot[bot] in https://github.com/pyqtgraph/pyqtgraph/pull/3175
+* Upgrade to PyData-Sphinx-Theme 0.16.1 by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3258
+* Bump sphinx from 7.3.7 to 7.4.6 in /doc by @dependabot[bot] in https://github.com/pyqtgraph/pyqtgraph/pull/3104
+* Bump sphinx from 7.4.6 to 7.4.7 in /doc by @dependabot[bot] in https://github.com/pyqtgraph/pyqtgraph/pull/3106
+* Bump sphinxcontrib-images from 0.9.4 to 1.0.1 in /doc by @dependabot[bot] in https://github.com/pyqtgraph/pyqtgraph/pull/3325
+
+
+### Misc
+
+* replace stencil test with scissor test by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3395
+* ColorMapMenu: add new matplotlib colormaps by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3304
+* Use filtfilt for bidirectional filtering in Flowchart by @MxFxM in https://github.com/pyqtgraph/pyqtgraph/pull/3237
+* Added type annotations to GraphicsWidget by @RushabhMehta2005 in https://github.com/pyqtgraph/pyqtgraph/pull/3178
+* adapt to changes in QPainterPathPrivate in Qt 6.10 by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3370
+* Update Flowchart.py by @ghylander in https://github.com/pyqtgraph/pyqtgraph/pull/3060
+* Update ASV config to use paramers by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/2776
+* Fix libegl1 not found by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3228
+* Fix Comment Error in examples/dockarea.py by @ChenQiang-AISS in https://github.com/pyqtgraph/pyqtgraph/pull/3216
+* pcmi opengl: discard nan fragments by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3170
+* Annotate slots with `QtCore.Slot` by @bersbersbers in https://github.com/pyqtgraph/pyqtgraph/pull/3123
+* Annotate ViewBox slots by @moritz-h in https://github.com/pyqtgraph/pyqtgraph/pull/3380
+* GraphicsItem: don't override Qt methods by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3359
+* pyside6: don't take QByteArray memoryview too by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3270
+* Probe QByteArray leak at runtime by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3274
+* REPL fonts should be consistently monospaced by @kevinanewman in https://github.com/pyqtgraph/pyqtgraph/pull/3183
+* refactor getting of OpenGLFunctions by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3095
+* Create FUNDING.yml by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3034
+* remove numba for rescaleData by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3025
+* RawImageGLWidget: implement using QOpenGLTextureBlitter by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3031
+* Unvendor very old colorama by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3064
+* don't draw non-finite pairs by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3082
+* fix: minor improvements to the visibility of the colormap button by @wakonig in https://github.com/pyqtgraph/pyqtgraph/pull/3179
+* assume matplotlib supports Qt6 by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3205
+* Use Monospace font in Console Widget CmdInput by @jack-mil in https://github.com/pyqtgraph/pyqtgraph/pull/3137
+* fix variable name typo by @pijyoi in https://github.com/pyqtgraph/pyqtgraph/pull/3338
+* CI Updates by @j9ac9k in https://github.com/pyqtgraph/pyqtgraph/pull/3016
+
+
+## New Contributors
+* @ghylander made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3060
+* @soulsyrup made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3067
+* @Silas-K made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3070
+* @tikuma-lsuhsc made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3052
+* @Gatsik made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3083
+* @kadheer made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3087
+* @nup002 made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3061
+* @MrHenning made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3113
+* @Tillsten made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3160
+* @jack-mil made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3140
+* @sldesnoo-Delft made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3114
+* @a17sol made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3100
+* @psyuktha made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3167
+* @RushabhMehta2005 made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3178
+* @wakonig made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3179
+* @seb5g made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3177
+* @ChenQiang-AISS made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3216
+* @jiban made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3206
+* @tblum made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3182
+* @MxFxM made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3237
+* @boringbyte made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3189
+* @wetzeld made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3240
+* @virgile-hernicot made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3215
+* @agausmann made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/2947
+* @jdranczewski made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3292
+* @oyvindlr made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3330
+* @simonkeys made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3412
+* @wyzula-jan made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3409
+* @moritz-h made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3380
+* @cogsy23 made their first contribution in https://github.com/pyqtgraph/pyqtgraph/pull/3305
+
+**Full Changelog**: https://github.com/pyqtgraph/pyqtgraph/compare/pyqtgraph-0.13.7...pyqtgraph-0.14.0
+
+
 pyqtgraph-0.13.7
 
 ## What's Changed

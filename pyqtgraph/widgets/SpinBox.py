@@ -81,6 +81,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             
             'prefix': '', ## string to be prepended to spin box value
             'suffix': '',
+            'suffixPower': 1,  ## power to which the suffix units are raised (for correct SI prefix scaling)
             'siPrefix': False,   ## Set to True to display numbers with SI prefix (ie, 100pA instead of 1e-10A)
             'scaleAtZero': None,
 
@@ -90,8 +91,8 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             
             'decimals': 6,
             
-            'format': "{prefix}{prefixGap}{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}",
-            'regex': fn.FLOAT_REGEX,
+            'format': "{prefix}{prefixGap}{scaledValueString}{suffixGap}{siPrefix}{suffix}",
+            'regex': fn.float_regex_for_locale(self.locale()), #Default regex based on system locale
             'evalFunc': decimal.Decimal,
             
             'compactHeight': True,  # manually remove extra margin outside of text
@@ -134,6 +135,9 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        the value represents a dimensionless quantity that might span many
                        orders of magnitude, such as a Reynolds number, an SI
                        prefix is allowed with no suffix. Default is False.
+        suffixPower    (int or float) The power to which the suffix units are raised. This is used
+                       for correct scaling of the SI prefix when the units are nonlinear. Supports
+                       positive, negative and non-integral powers. Default is 1.
         prefix         (str) String to be prepended to the spin box value. Default is an empty string.
         scaleAtZero    (float) If siPrefix is also True, this option then sets the default SI prefix
                        that a value of 0 will have applied (and thus the default scale of the first
@@ -168,6 +172,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                            string otherwise
                          * *suffix* - the suffix string
                          * *scaledValue* - the scaled value to use when an SI prefix is present
+                         * *scaledValueString* - scaled value as a string, formatted according to locale
                          * *siPrefix* - the SI prefix string (if any), or an empty string if
                            this feature has been disabled
                          * *suffixGap* - a single space if a suffix is present, or an empty
@@ -179,13 +184,17 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        * *siPrefix* - matches the SI prefix string
                        * *suffix* - matches the suffix string
                        
-                       Default is defined in ``pyqtgraph.functions.FLOAT_REGEX``.
+                       Default depends on locale, and is either 
+                       ``pyqtgraph.functions.FLOAT_REGEX_PERIOD`` or
+                       ``pyqtgraph.functions.FLOAT_REGEX_COMMA``.
         evalFunc       (callable) Fucntion that converts a numerical string to a number,
                        preferrably a Decimal instance. This function handles only the numerical
                        of the text; it does not have access to the suffix or SI prefix.
         compactHeight  (bool) if True, then set the maximum height of the spinbox based on the
                        height of its font. This allows more compact packing on platforms with
                        excessive widget decoration. Default is True.
+        locale         (QtCore.QLocale) Sets the locale used for formatting and parsing numbers.
+                       Affects the decimal point behavior. Default is system locale.
         ============== ========================================================================
         """
         #print opts
@@ -205,6 +214,8 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                 self.opts[k] = str(v)
             elif k == 'regex' and isinstance(v, str):
                 self.opts[k] = re.compile(v)
+            elif k == 'locale':
+                self.setLocale(v)
             elif k in self.opts:
                 self.opts[k] = v
             else:
@@ -230,9 +241,6 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                     ms = 1
                 self.opts['minStep'] = ms
 
-            if 'format' not in opts:
-                self.opts['format'] = "{prefix}{prefixGap}{value:d}{suffixGap}{suffix}"
-
         if self.opts['dec']:
             if self.opts.get('minStep') is None:
                 self.opts['minStep'] = self.opts['step']
@@ -240,6 +248,17 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         if 'delay' in opts:
             self.proxy.setDelay(opts['delay'])
         
+        self.updateText()
+
+    def setLocale(self, locale):
+        """Set the locale used for formatting and parsing numbers.
+        
+        Arguments:
+            locale (QtCore.QLocale): The locale to use.
+        """
+        super().setLocale(locale)
+        # Update regex to match new locale decimal point
+        self.opts['regex'] = fn.float_regex_for_locale(locale)
         self.updateText()
 
     def setMaximum(self, m, update=True):
@@ -449,12 +468,12 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                     return False
         return True
 
-    def updateText(self, **kwargs):
+    def updateText(self):
         # temporarily disable validation
         self.skipValidate = True
-        
-        txt = self.formatText(**kwargs)
-        
+
+        txt = self.formatText()
+
         # actually set the text
         self.lineEdit().setText(txt)
         self.lastText = txt
@@ -462,13 +481,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         # re-enable the validation
         self.skipValidate = False
         
-    def formatText(self, **kwargs):
-        if 'prev' in kwargs:
-            warnings.warn(
-                "updateText and formatText no longer take prev argument. This will error after January 2025.",
-                DeprecationWarning,
-                stacklevel=2
-            )  # TODO remove all kwargs handling here and updateText after January 2025
+    def formatText(self):
         # get the number of decimal places to print
         decimals = self.opts['decimals']
         suffix = self.opts['suffix']
@@ -476,22 +489,33 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
 
         # format the string 
         val = self.value()
+
+        #Default: no scaling, no prefix
+        parts = {'value': val, 'suffix': suffix, 'decimals': decimals, 'siPrefix': '', 'prefix':prefix}
+
         if self.opts['siPrefix'] is True:
             # SI prefix was requested, so scale the value accordingly
 
             if self.val == 0:
                 if self.opts['scaleAtZero'] is not None:
-                    (s, p) = fn.siScale(self.opts['scaleAtZero'])
+                    (s, p) = fn.siScale(self.opts['scaleAtZero'], power=self.opts['suffixPower'])
                 else:
-                    (s, p) = fn.siScale(self._stepByValue(1))
+                    (s, p) = fn.siScale(self._stepByValue(1), power=self.opts['suffixPower'])
             else:
-                (s, p) = fn.siScale(val)
-            parts = {'value': val, 'suffix': suffix, 'decimals': decimals, 'siPrefix': p, 'scaledValue': s*val, 'prefix':prefix}
+                (s, p) = fn.siScale(val, power=self.opts['suffixPower'])
+            
+            val *= s #Scale value
+            parts['siPrefix'] = p
 
+        if self.opts['int']:
+            #Keeping scaledValue for backward compatibility
+            parts['scaledValue'] = int(round(val))
+            parts['scaledValueString'] = str(parts['scaledValue'])
         else:
-            # no SI prefix /suffix requested; scale is 1
-            parts = {'value': val, 'suffix': suffix, 'decimals': decimals, 'siPrefix': '', 'scaledValue': val, 'prefix':prefix}
-
+            parts['scaledValue'] = val 
+            valuestring = self.locale().toString(val, 'g', decimals)
+            #Remove group separator if any
+            parts['scaledValueString'] = valuestring.replace(self.locale().groupSeparator(), '')             
         parts['prefixGap'] = '' if parts['prefix'] == '' else ' '
         parts['suffixGap'] = '' if (parts['suffix'] == '' and parts['siPrefix'] == '') else ' '
         
@@ -556,7 +580,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             return False
            
         # generate value
-        val = self.opts['evalFunc'](val)
+        val = self.opts['evalFunc'](val.replace(',', '.')) #Ensure decimal point is '.'
 
         if (self.opts['int'] or self.opts['finite']) and (isinf(val) or isnan(val)):
             return False

@@ -274,7 +274,7 @@ class ChecklistParameter(GroupParameter):
         # Could be replaced by "value in self.reverse[0]" and "reverse[0].index",
         # but this allows for using pg.eq to cover more diverse value options
         for val in values:
-            for limitName, limitValue in zip(*self.reverse):
+            for limitValue, limitName in zip(*self.reverse):
                 if fn.eq(limitValue, val):
                     allowedNames.append(limitName)
                     allowedValues.append(val)

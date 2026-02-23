@@ -3,7 +3,7 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.14.0dev0'
+__version__ = '0.15.0.dev0'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
@@ -20,25 +20,9 @@ from .Qt import QtCore, QtGui, QtWidgets
 from .Qt import exec_ as exec
 from .Qt import mkQApp
 
-## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
-#if QtWidgets.QApplication.instance() is None:
-    #app = QtWidgets.QApplication([])
-
-              ## (import here to avoid massive error dump later on if numpy is not available)
-
-
-## in general openGL is poorly supported with Qt+GraphicsView.
-## we only enable it where the performance benefit is critical.
-## Note this only applies to 2D graphics; 3D graphics always use OpenGL.
-if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
-    useOpenGL = False
-elif 'darwin' in sys.platform: ## openGL can have a major impact on mac, but also has serious bugs
-    useOpenGL = False
-else:
-    useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff.
 
 CONFIG_OPTIONS = {
-    'useOpenGL': useOpenGL, ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
+    'useOpenGL': False, ## Set to True or False to explicitly enable/disable opengl.
     'leftButtonPan': True,  ## if false, left button drags a rubber band for zooming in viewbox
     # foreground/background take any arguments to the 'mkColor' in /pyqtgraph/functions.py
     'foreground': 'd',  ## default foreground color for axes, labels, etc.
@@ -149,6 +133,7 @@ from .functions import *
 from .graphicsItems.ArrowItem import *
 from .graphicsItems.AxisItem import *
 from .graphicsItems.BarGraphItem import *
+from .graphicsItems.BoxplotItem import *
 from .graphicsItems.ButtonItem import *
 from .graphicsItems.ColorBarItem import *
 from .graphicsItems.CurvePoint import *

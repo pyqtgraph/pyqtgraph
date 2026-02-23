@@ -1,10 +1,13 @@
 import numpy as np
+
 import pyqtgraph as pg
 
 rng = np.random.default_rng(12345)
 
 class _TimeSuite:
+    param_names = ["Size", "Connection Type"]
     params = ([10_000, 100_000, 1_000_000], ['all', 'finite', 'pairs', 'array'])
+
 
     def setup(self, nelems, connect):
         self.xdata = np.arange(nelems, dtype=np.float64)

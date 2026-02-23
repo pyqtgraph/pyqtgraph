@@ -1192,7 +1192,7 @@ class ThreadTrace(object):
                     if id == threading.current_thread().ident:
                         continue
 
-                    name = threadName()
+                    name = threadName(id)
 
                     printFile.write("<< thread %d \"%s\" >>\n" % (id, name))
                     tb = str(''.join(traceback.format_stack(frame)))

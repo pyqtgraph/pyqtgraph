@@ -1,11 +1,12 @@
+import typing
+
 import numpy as np
+import numpy.typing as npt
 
 import pyqtgraph as pg
 
 try:
     import cupy as cp
-
-    pg.setConfigOption("useCupy", True)
 except ImportError:
     cp = None
 
@@ -22,117 +23,196 @@ def renderQImage(*args, **kwargs):
     imgitem.setImage(*args, **kwargs)
     imgitem.render()
 
-
-def prime_numba():
+def prime(data, lut, levels):
     shape = (64, 64)
-    lut_small = np.random.randint(256, size=(256, 3), dtype=np.uint8)
-    lut_big = np.random.randint(256, size=(512, 3), dtype=np.uint8)
-    for lut in [lut_small, lut_big]:
-        renderQImage(np.zeros(shape, dtype=np.uint8), levels=(20, 220), lut=lut)
-        renderQImage(np.zeros(shape, dtype=np.uint16), levels=(250, 3000), lut=lut)
-        renderQImage(np.zeros(shape, dtype=np.float32), levels=(-4.0, 4.0), lut=lut)
+    data = data[:shape[0], :shape[1]]
+    kwargs = {}
+    if levels is not None:
+        kwargs["levels"] = levels
+    if lut is not None:
+        kwargs["lut"] = lut
+    renderQImage(data, **kwargs)  # prime the gpu
 
 
-class _TimeSuite(object):
+class Parameters(typing.NamedTuple):
+    sizes: list[tuple[int, int]]
+    acceleration: list[str]
+    uses_levels: list[bool]
+    dtypes: list[npt.DTypeLike]
+    channels: list[int]
+    lut_lengths: list[npt.DTypeLike | None]
+
+class TimeSuite:
+    unit = "seconds"
+    param_names = ["size", "acceleration", "use_levels", "dtype", "channels", "lut_length"]
+    params = Parameters(
+        [
+            # (256, 256),               # other sizes useful to test for
+            # (512, 512),               # seeing performance scale
+            # (1024, 1024),             # but not helpful for tracking history
+            # (2048, 2048),             # so we test the most taxing size only
+            # (3072, 3072),
+            (4096, 4096)
+        ],                              # size
+        ["numpy"],     # acceleration
+        [True, False],                  # use_levels
+        ['uint8', 'uint16', 'float32'], # dtype
+        [1, 3, 4],                      # channels
+        ['uint8', 'uint16', None]       # lut_length
+    )
     def __init__(self):
-        super(_TimeSuite, self).__init__()
-        self.size = None
-        self.float_data = None
-        self.uint8_data = None
-        self.uint8_lut = None
-        self.uint16_data = None
-        self.uint16_lut = None
-        self.cupy_uint16_lut = None
-        self.cupy_uint8_lut = None
+        self.data = np.empty((), dtype=np.uint8)
+        self.lut = np.empty((), dtype=np.ubyte)
 
-    def setup(self):
-        size = (self.size, self.size)
-        self.float_data, self.uint16_data, self.uint8_data, self.uint16_lut, self.uint8_lut = self._create_data(
-            size, np
-        )
+        # No need to add acceleration that isn't available
         if numba is not None:
-            # ensure JIT compilation
+            self.params.acceleration.append('numba')
+
+        if cp is not None:
+            self.params.acceleration.append('cupy')
+
+        self.levels = None
+
+    def teardown(self, *args, **kwargs):
+        # toggle options off
+        pg.setConfigOption("useNumba", False)
+        pg.setConfigOption("useCupy", False)
+
+    def setup_cache(self) -> dict:
+        accelerations = [np]
+        if cp is not None:
+            accelerations.append(cp)
+        cache = {}
+
+        for xp in accelerations:
+            cache[xp.__name__] = {"lut": {}, "data": {}}
+            random_generator = xp.random.default_rng(42) # answer to everything
+            # handle lut caching
+            c_map = xp.array([[-500.0, 255.0], [-255.0, 255.0], [0.0, 500.0]])
+            for lut_length in self.params.lut_lengths:
+                if lut_length is None:
+                    continue
+                bits = xp.dtype(lut_length).itemsize * 8
+                # create the LUT
+                lut = xp.zeros((2 ** bits, 4), dtype="ubyte")
+                for i in range(3):
+                    lut[:, i] = xp.clip(xp.linspace(c_map[i][0], c_map[i][1], 2 ** bits), 0, 255)
+                lut[:, -1] = 255
+                cache[xp.__name__]["lut"][lut_length] = lut
+
+            # handle data caching
+            for dtype in self.params.dtypes:
+                cache[xp.__name__]["data"][dtype] = {}
+                for channels in self.params.channels:
+                    cache[xp.__name__]["data"][dtype][channels] = {}
+
+                    for size in self.params.sizes:
+                        size_with_channels = (size[0], size[1], channels) if channels != 1 else size
+                        if xp.dtype(dtype) in (xp.float32, xp.float64):
+                            data = random_generator.standard_normal(
+                                size=size_with_channels,
+                                dtype=dtype
+                            )
+                        else:
+                            iinfo = xp.iinfo(dtype)
+                            data = random_generator.integers(
+                                low=iinfo.min,
+                                high=iinfo.max,
+                                size=size_with_channels,
+                                dtype=dtype,
+                                endpoint=True
+                            )
+                        cache[xp.__name__]["data"][dtype][channels][size] = data
+        return cache
+
+
+    def setup(
+            self,
+            cache: dict,
+            size: tuple[int, int],
+            acceleration: str,
+            use_levels: bool,
+            dtype: npt.DTypeLike,
+            channels: int,
+            lut_length: typing.Optional[npt.DTypeLike]
+    ):
+        xp = np
+        if acceleration == "numba":
+            if numba is None:
+                # if numba is not available, skip it...
+                raise NotImplementedError("numba not available")
             pg.setConfigOption("useNumba", True)
-            prime_numba()
-            pg.setConfigOption("useNumba", False)
-        if cp:
-            _d1, _d2, _d3, self.cupy_uint16_lut, self.cupy_uint8_lut = self._create_data(size, cp)
-            renderQImage(cp.asarray(self.uint16_data["data"]))  # prime the gpu
+        elif acceleration == "cupy":
+            if cp is None:
+                # if cupy is not available, skip it...
+                raise NotImplementedError("cupy not available")
+            pg.setConfigOption("useCupy", True)
+            xp = cp  # use cupy instead of numpy
 
-    @property
-    def numba_uint16_lut(self):
-        return self.uint16_lut
+        # does it even make sense to have a LUT with multiple channels?
+        if lut_length is not None and channels != 1:
+            raise NotImplementedError(
+                f"{lut_length=} and {channels=} not implemented. LUT with multiple channels not supported."
+            )
 
-    @property
-    def numba_uint8_lut(self):
-        return self.uint8_lut
+        # skip when the code paths bypass makeARGB
+        if acceleration != "numpy":
+            if xp.dtype(dtype) == xp.ubyte and not use_levels:
+                if lut_length is None:
+                    # Grayscale8, RGB888 or RGB[AX]8888
+                    raise NotImplementedError(
+                        f"{dtype=} and {use_levels=} not tested for {acceleration=} with {lut_length=}"
+                    )
+                elif channels == 1 and xp.dtype(lut_length) == xp.uint8:
+                    # Indexed8
+                    raise NotImplementedError(
+                        f"{dtype=} and {use_levels=} not tested with {acceleration=} for {channels=} and {lut_length=}"
+                    )
 
-    @property
-    def numpy_uint16_lut(self):
-        return self.uint16_lut
+            elif xp.dtype(dtype) == xp.uint16 and not use_levels and lut_length is None:
+                if channels == 1:
+                    # Grayscale16
+                    raise NotImplementedError(
+                        f"{dtype=} {use_levels=} {lut_length=} and {channels=} not tested for {acceleration=}"
+                    )
+                elif channels == 4:
+                    # RGBA64
+                    raise NotImplementedError(
+                        f"{dtype=} {use_levels=} {lut_length=} and {channels=} not tested with {acceleration=}"
+                    )
 
-    @property
-    def numpy_uint8_lut(self):
-        return self.uint8_lut
-
-    @staticmethod
-    def _create_data(size, xp):
-        float_data = {
-            "data": xp.random.normal(size=size).astype("float32"),
-            "levels": [-4.0, 4.0],
-        }
-        uint16_data = {
-            "data": xp.random.randint(100, 4500, size=size).astype("uint16"),
-            "levels": [250, 3000],
-        }
-        uint8_data = {
-            "data": xp.random.randint(0, 255, size=size).astype("ubyte"),
-            "levels": [20, 220],
-        }
-        c_map = xp.array([[-500.0, 255.0], [-255.0, 255.0], [0.0, 500.0]])
-        uint8_lut = xp.zeros((256, 4), dtype="ubyte")
-        for i in range(3):
-            uint8_lut[:, i] = xp.clip(xp.linspace(c_map[i][0], c_map[i][1], 256), 0, 255)
-        uint8_lut[:, 3] = 255
-        uint16_lut = xp.zeros((2 ** 16, 4), dtype="ubyte")
-        for i in range(3):
-            uint16_lut[:, i] = xp.clip(xp.linspace(c_map[i][0], c_map[i][1], 2 ** 16), 0, 255)
-        uint16_lut[:, 3] = 255
-        return float_data, uint16_data, uint8_data, uint16_lut, uint8_lut
-
-
-def make_test(dtype, kind, use_levels, lut_name, func_name):
-    def time_test(self):
-        data = getattr(self, dtype + "_data")
-        levels = data["levels"] if use_levels else None
-        lut = getattr(self, f"{kind}_{lut_name}_lut", None) if lut_name is not None else None
-        pg.setConfigOption("useNumba", kind == "numba")
-        img_data = data["data"]
-        if kind == "cupy":
-            img_data = cp.asarray(img_data)
-        renderQImage(img_data, lut=lut, levels=levels)
-
-    time_test.__name__ = func_name
-    return time_test
-
-
-for option in ["cupy", "numba", "numpy"]:
-    if option == "cupy" and cp is None:
-        continue
-    if option == "numba" and numba is None:
-        continue
-    for data_type in ["float", "uint16", "uint8"]:
-        for lvls in [True, False]:
-            if data_type == "float" and not lvls:
-                continue
-            for lutname in [None, "uint8", "uint16"]:
-                name = (
-                    f'time_1x_renderImageItem_{option}_{data_type}_{"" if lvls else "no"}levels_{lutname or "no"}lut'
+        if use_levels:
+            if xp.dtype(dtype) == xp.float32:
+                self.levels = (-4.0, 4.0)
+            elif xp.dtype(dtype) == xp.uint16:
+                self.levels = (250, 3000)
+            elif xp.dtype(dtype) == xp.uint8:
+                self.levels = (20, 220)
+            else:
+                raise ValueError(
+                    "dtype needs to be one of {'float32', 'uint8', 'uint16'}"
                 )
-                setattr(_TimeSuite, name, make_test(data_type, option, lvls, lutname, name))
+        elif xp.dtype(dtype) in (xp.float32, xp.float64):
+            # float images always need levels
+            raise NotImplementedError(
+                f"{use_levels=} {dtype=} is not supported. Float images always need levels."
+            )
+        else:
+            self.levels = None
 
+        if lut_length is None:
+            self.lut = None
+        else:
+            self.lut = cache[xp.__name__]["lut"][lut_length]
 
-class Time4096Suite(_TimeSuite):
-    def __init__(self):
-        super(Time4096Suite, self).__init__()
-        self.size = 4096
+        self.data = cache[xp.__name__]["data"][dtype][channels][size]
+        if acceleration in {"numba", "cupy"}:
+            prime(self.data, self.lut, self.levels)
+
+    def time_test(self, *args, **kwargs):
+        kwargs = {}
+        if self.lut is not None:
+            kwargs["lut"] = self.lut
+        if self.levels is not None:
+            kwargs["levels"] = self.levels
+        renderQImage(self.data, **kwargs)

@@ -327,7 +327,7 @@ class SymbolAtlas(object):
         else:
             img = fn.ndarray_to_qimage(self._data,
                 QtGui.QImage.Format.Format_ARGB32_Premultiplied)
-            pm = QtGui.QPixmap(img)
+            pm = QtGui.QPixmap.fromImage(img)
         return pm
 
 

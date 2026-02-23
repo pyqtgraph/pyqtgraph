@@ -26,7 +26,7 @@ inserted into your GUI.
 .. code-block:: python
   :caption: Example PyQtGraph Integration Into Qt
 
-  from PyQt6 import QtWidgets  # Should work with PyQt5 / PySide2 / PySide6 as well
+  from PyQt6 import QtWidgets  # Works with PyQt5 / PySide6 as well
   import pyqtgraph as pg
   
   # Always start by initializing Qt (only once per application)
@@ -55,7 +55,7 @@ inserted into your GUI.
   w.show()
   
   # Start the Qt event loop
-  app.exec()  # or app.exec_() for PyQt5 / PySide2
+  app.exec()
 
 More complex interfaces may be designed graphically using Qt Designer, which allows you
 to simply drag widgets into your window to define its appearance.
@@ -191,7 +191,7 @@ Integration with PyQtGraph
   :caption: Handling Keyboard Inputs
 
   from PyQt6.QtWidgets import QApplication, QMainWindow
-  # Should work with PyQt5 / PySide2 / PySide6 as well
+  # Works with PyQt5 / PySide6 as well
   from PyQt6.QtCore import Qt
 
   class MainWindow(QMainWindow):

@@ -19,8 +19,20 @@ class CSVExporter(Exporter):
     def __init__(self, item):
         Exporter.__init__(self, item)
         self.params = Parameter.create(name='params', type='group', children=[
-            {'name': 'separator', 'title': translate("Exporter", 'separator'), 'type': 'list', 'value': 'comma', 'limits': ['comma', 'tab']},
-            {'name': 'precision', 'title': translate("Exporter", 'precision'), 'type': 'int', 'value': 10, 'limits': [0, None]},
+            {
+                'name': 'separator',
+                'title': translate("Exporter", 'separator'),
+                'type': 'list',
+                'value': 'comma',
+                'limits': ['comma', 'tab']
+            },
+            {
+                'name': 'precision',
+                'title': translate("Exporter", 'precision'),
+                'type': 'int',
+                'value': 10,
+                'limits': [0, None]
+            },
             {
                 'name': 'columnMode',
                 'title': translate("Exporter", 'columnMode'),
@@ -66,16 +78,10 @@ class CSVExporter(Exporter):
         return None
 
     def _exportPlotDataItem(self, plotDataItem) -> None:
-        if hasattr(plotDataItem, 'getOriginalDataset'):
-            # try to access unmapped, unprocessed data
-            cd = plotDataItem.getOriginalDataset()
-        else:
-             # fall back to earlier access method
-            cd = plotDataItem.getData()
+        cd = plotDataItem.getOriginalDataset()
         if cd[0] is None:
             # no data found, break out...
             return None
-        self.data.append(cd)
 
         index = next(self.index_counter)
         if plotDataItem.name() is not None:
@@ -88,8 +94,10 @@ class CSVExporter(Exporter):
         appendAllX = self.params['columnMode'] == '(x,y) per plot'
         if appendAllX or index == 0:
             self.header.extend([xName, yName])
+            self.data.append(cd)
         else:
             self.header.extend([yName])
+            self.data.append([cd[1]])
         return None
 
     def export(self, fileName=None):

@@ -471,6 +471,6 @@ class TableWidgetItem(QtWidgets.QTableWidgetItem):
         if self.sortMode == 'index' and hasattr(other, 'index'):
             return self.index < other.index
         if self.sortMode == 'value' and hasattr(other, 'value'):
-            return self.value < other.value
+            return bool(self.value < other.value)
         else:
             return self.text() < other.text()

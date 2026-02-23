@@ -1,13 +1,22 @@
 """
 Demonstrates use of GLScatterPlotItem with rapidly-updating plots.
 """
+import sys
 
 import numpy as np
 
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 import pyqtgraph.opengl as gl
 from pyqtgraph import functions as fn
 from pyqtgraph.Qt import QtCore
+
+if 'darwin' in sys.platform:
+    fmt = QtGui.QSurfaceFormat()
+    fmt.setRenderableType(fmt.RenderableType.OpenGL)
+    fmt.setProfile(fmt.OpenGLContextProfile.CoreProfile)
+    fmt.setVersion(4, 1)
+    QtGui.QSurfaceFormat.setDefaultFormat(fmt)
 
 app = pg.mkQApp("GLScatterPlotItem Example")
 w = gl.GLViewWidget()

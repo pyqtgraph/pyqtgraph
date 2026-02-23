@@ -1,4 +1,3 @@
-import collections
 import importlib.util
 import re
 
@@ -23,7 +22,8 @@ MATPLOTLIB_CMAPS = [
             'hot', 'afmhot', 'gist_heat', 'copper']),
          ('Diverging', [
             'PiYG', 'PRGn', 'BrBG', 'PuOr', 'RdGy', 'RdBu',
-            'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm', 'bwr', 'seismic']),
+            'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm', 'bwr', 'seismic',
+            'berlin', 'managua', 'vanimo']),
          ('Cyclic', ['twilight', 'twilight_shifted', 'hsv']),
          ('Qualitative', [
             'Pastel1', 'Pastel2', 'Paired', 'Accent',
@@ -35,9 +35,6 @@ MATPLOTLIB_CMAPS = [
             'gist_rainbow', 'rainbow', 'jet', 'turbo', 'nipy_spectral',
             'gist_ncar'])
     ]
-
-
-PrivateActionData = collections.namedtuple("ColorMapMenuPrivateActionData", ["name", "source"])
 
 
 def buildMenuEntryWidget(cmap, text):
@@ -65,7 +62,7 @@ def buildMenuEntryAction(menu, name, source):
     else:
         cmap = colormap.get(name, source=source)
     act = QtWidgets.QWidgetAction(menu)
-    act.setData(PrivateActionData(name, source))
+    act.setData(ColorMapMenuActionData(name, source))
     act.setDefaultWidget(buildMenuEntryWidget(cmap, name))
     menu.addAction(act)
 
@@ -151,7 +148,7 @@ class ColorMapMenu(QtWidgets.QMenu):
 
         topmenu = self
         act = topmenu.addAction('None')
-        act.setData(PrivateActionData(None, None))
+        act.setData(ColorMapMenuActionData(None, None))
 
         if userList is not None:
             buildUserSubMenu(topmenu, userList)
@@ -206,9 +203,9 @@ class ColorMapMenu(QtWidgets.QMenu):
 
     @QtCore.Slot(QtGui.QAction)
     def onTriggered(self, action):
-        if not isinstance(data := action.data(), PrivateActionData):
+        if not isinstance(data := action.data(), ColorMapMenuActionData):
             return
-        cmap = self.actionDataToColorMap(data)
+        cmap = data.toColorMap()
         self.sigColorMapTriggered.emit(cmap)
 
     @QtCore.Slot()
@@ -282,9 +279,13 @@ class ColorMapMenu(QtWidgets.QMenu):
         for name in names:
             buildMenuEntryAction(menu, name, source)
 
-    @staticmethod
-    def actionDataToColorMap(data):
-        name, source = data
+
+class ColorMapMenuActionData:
+    def __init__(self, *args):
+        self.args = args
+
+    def toColorMap(self):
+        name, source = self.args
         if isinstance(source, colormap.ColorMap):
             cmap = source
         elif name is None:

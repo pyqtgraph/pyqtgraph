@@ -7,9 +7,6 @@ __all__ = ['GraphicsWidget']
 
 
 class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
-    
-    _qtBaseClass = QtWidgets.QGraphicsWidget
-
     def __init__(self, *args, **kwargs):
         """
         **Bases:** :class:`GraphicsItem <pyqtgraph.GraphicsItem>`, :class:`QtWidgets.QGraphicsWidget`

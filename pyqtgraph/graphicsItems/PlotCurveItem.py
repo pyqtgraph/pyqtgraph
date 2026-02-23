@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
+from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB, QtVersionInfo
 
 import importlib
 import math
@@ -13,10 +13,10 @@ from ..Qt import OpenGLConstants as GLC
 from ..Qt import OpenGLHelpers
 from .GraphicsObject import GraphicsObject
 
-if QT_LIB in ["PyQt5", "PySide2"]:
-    QtOpenGL = QtGui
+if QtVersionInfo[0] >= 6:
+    QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
 else:
-    QtOpenGL = importlib.import_module(f'{QT_LIB}.QtOpenGL')
+    QtOpenGL = QtGui
 
 __all__ = ['PlotCurveItem']
 
@@ -33,6 +33,22 @@ class OpenGLState(QtCore.QObject):
         uniform highp vec4 u_color;
         void main() {
             gl_FragColor = u_color;
+        }
+    """
+    VERT_SRC_140 = """
+        #version 140
+        in vec4 a_position;
+        uniform mat4 u_mvp;
+        void main() {
+            gl_Position = u_mvp * a_position;
+        }
+    """
+    FRAG_SRC_140 = """
+        #version 140
+        uniform vec4 u_color;
+        out vec4 fragColor;
+        void main() {
+            fragColor = u_color;
         }
     """
 
@@ -59,10 +75,24 @@ class OpenGLState(QtCore.QObject):
         program = glwidget.retrieveProgram("PlotCurveItem")
         if program is None:
             program = QtOpenGL.QOpenGLShaderProgram()
-            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, OpenGLState.VERT_SRC)
-            program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, OpenGLState.FRAG_SRC)
+
+            is_opengles = self.context.isOpenGLES()
+            gl_version = self.context.format().version()
+
+            if not is_opengles and gl_version >= (3, 1):
+                vert_src = OpenGLState.VERT_SRC_140
+                frag_src = OpenGLState.FRAG_SRC_140
+            else:
+                vert_src = OpenGLState.VERT_SRC
+                frag_src = OpenGLState.FRAG_SRC
+
+            if not program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, vert_src):
+                raise RuntimeError(program.log())
+            if not program.addShaderFromSourceCode(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, frag_src):
+                raise RuntimeError(program.log())
             program.bindAttributeLocation("a_position", 0)
-            program.link()
+            if not program.link():
+                raise RuntimeError(program.log())
             glwidget.storeProgram("PlotCurveItem", program)
 
         self.m_vao.create()
@@ -611,12 +641,7 @@ class PlotCurveItem(GraphicsObject):
         if 'stepMode' in kargs:
             self.opts['stepMode'] = kargs['stepMode']
 
-        if self.opts['stepMode'] in ("center", True):  ## check against True for backwards compatibility
-            if self.opts['stepMode'] is True:
-                warnings.warn(
-                    'stepMode=True is deprecated and will result in an error after October 2022. Use stepMode="center" instead.',
-                    DeprecationWarning, stacklevel=3
-                )
+        if self.opts['stepMode'] == "center":
             if len(self.xData) != len(self.yData)+1:  ## allow difference of 1 for step mode plots
                 raise Exception("len(X) must be len(Y)+1 since stepMode=True (got %s and %s)" % (self.xData.shape, self.yData.shape))
         else:
@@ -847,8 +872,8 @@ class PlotCurveItem(GraphicsObject):
         # Set suitable chunk size for current configuration:
         #   * Without OpenGL split in small chunks
         #   * With OpenGL split in rather big chunks
-        #     Note, the present code is used only if config option 'enableExperimental' is False,
-        #     otherwise the 'paintGL' method is used.
+        #     Note: when OpenGL mode is enabled, we should normally be using the
+        #     'paintGL' method, and should not even reach here.
         # Values were found using 'PlotSpeedTest.py' example, see #2257.
         chunksize = 50 if not isinstance(widget, QtWidgets.QOpenGLWidget) else 5000
 
@@ -928,8 +953,7 @@ class PlotCurveItem(GraphicsObject):
         )
 
         if (
-            getConfigOption('enableExperimental')
-            and isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
+            isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
             and opengl_supported_fill
             and not self.opts['stepMode']
         ):
@@ -1135,11 +1159,11 @@ class PlotCurveItem(GraphicsObject):
                 glstate.m_vbo.release()
 
 
-        widget.drawStencil(view)
+        widget.setViewboxClip(view)
 
         glstate.m_vao.bind()
         program.bind()
-        OpenGLHelpers.setUniformValue(program, "u_mvp", mvp)
+        program.setUniformValue("u_mvp", mvp)
 
         # filling occurs first so that the curve outline gets painted over it.
         for brush in [self.opts["brush"]]:
@@ -1147,7 +1171,7 @@ class PlotCurveItem(GraphicsObject):
                 continue
             if brush is None or brush.style() == QtCore.Qt.BrushStyle.NoBrush:
                 continue
-            OpenGLHelpers.setUniformValue(program, "u_color", brush.color())
+            program.setUniformValue("u_color", brush.color())
 
             glf.glEnable(GLC.GL_BLEND)
             glf.glBlendFuncSeparate(GLC.GL_SRC_ALPHA, GLC.GL_ONE_MINUS_SRC_ALPHA, 1, GLC.GL_ONE_MINUS_SRC_ALPHA)
@@ -1170,7 +1194,7 @@ class PlotCurveItem(GraphicsObject):
         if aa:
             glf.glEnable(GLC.GL_LINE_SMOOTH)
             glf.glEnable(GLC.GL_BLEND)
-            glf.glBlendFunc(GLC.GL_SRC_ALPHA, GLC.GL_ONE_MINUS_SRC_ALPHA)
+            glf.glBlendFuncSeparate(GLC.GL_SRC_ALPHA, GLC.GL_ONE_MINUS_SRC_ALPHA, 1, GLC.GL_ONE_MINUS_SRC_ALPHA)
             glf.glHint(GLC.GL_LINE_SMOOTH_HINT, GLC.GL_NICEST)
         else:
             glf.glDisable(GLC.GL_LINE_SMOOTH)
@@ -1184,7 +1208,7 @@ class PlotCurveItem(GraphicsObject):
                 width = 1
 
             glf.glLineWidth(width)
-            OpenGLHelpers.setUniformValue(program, "u_color", pen.color())
+            program.setUniformValue("u_color", pen.color())
 
             match connect_kind:
                 case "pairs" | "array":

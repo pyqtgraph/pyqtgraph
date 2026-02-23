@@ -59,8 +59,6 @@ def test_types():
         'list': [1,2,3], 'dict': {'1': 2}, 'color': pg.mkColor('k'), 
         'brush': pg.mkBrush('k'), 'pen': pg.mkPen('k'), 'none': None
     }
-    if hasattr(QtCore, 'QString'):
-        all_objs['qstring'] = QtCore.QString('xxxµ')
 
     # float
     types = ['int0', 'int', 'float', 'bigfloat', 'npfloat', 'npint', 'npinf', 'npnan', 'bool']
@@ -189,6 +187,34 @@ def test_checklist_show_hide():
     pi.setHidden.assert_called_with(False)
     assert p.opts["visible"]
 
+@pytest.mark.parametrize("limits,value",[
+    ([1, 2, 3], [1, 2, 3]),
+    ([1, 2, 3],  []),
+    (['a', 'b', 'c'], ['a', 'b', 'c']),
+    (['a', 'b', 'c'], []),
+])
+def test_checklist_check_and_clear_all(limits, value):
+    p = pt.Parameter.create(name='checklist', type='checklist', limits=limits, value=value)
+    pi = ChecklistParameterItem(p, 0)
+
+    clearButton = pi.metaBtns['Clear']
+    selectButton = pi.metaBtns['Select']
+    
+    # ensure only the specified ones are selected by default
+    assert pi.param.value() == value
+
+    # make all are selected after selecting all
+    selectButton.clicked.emit()
+    assert pi.param.value() == limits
+
+    # make sure they all get cleared when hitting clear all
+    clearButton.clicked.emit()
+    assert pi.param.value() == []
+
+    # make sure all are selected again
+    selectButton.clicked.emit()
+    assert pi.param.value() == limits
+
 
 def test_pen_settings():
     # Option from constructor
@@ -200,6 +226,7 @@ def test_pen_settings():
     # Opts from changing child
     p["width"] = 10
     assert p.pen.width() == 10
+
 
 def test_recreate_from_savestate():
     from pyqtgraph.examples import _buildParamTypes

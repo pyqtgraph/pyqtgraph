@@ -64,7 +64,11 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
 SI_PREFIX_EXPONENTS['u'] = -6
 
-FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+#For comma as decimal separator
+FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+#For period as decimal separator
+FLOAT_REGEX_PERIOD = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+
 INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
 class HueKeywordArgs(TypedDict):
@@ -90,14 +94,35 @@ color_like: TypeAlias = (
 )
 
 
-def siScale(x, minVal=1e-25, allowUnicode=True):
+def siScale(x, minVal=1e-25, allowUnicode=True, power:int|float=1):
     """
     Return the recommended scale factor and SI prefix string for x.
-    
-    Example::
-    
-        siScale(0.0001)   # returns (1e6, 'μ')
-        # This indicates that the number 0.0001 is best represented as 0.0001 * 1e6 = 100 μUnits
+
+    Parameters
+    ----------
+    x : float
+        The value to be scaled.
+    minVal : float, optional
+        The minimum value considered for scaling. Default is 1e-25.
+    allowUnicode : bool, optional
+        Whether to allow Unicode SI prefixes. Default is True.
+    power : int or float, optional
+        The power to which the units are raised. For example, if units='m²', the
+        power should be 2. This ensures correct scaling of the prefix in 
+        nonlinear units. Supports positive, negative and non-integral powers. 
+
+    Returns
+    -------
+    scale : float
+        The scale factor to apply to x.
+    prefix : str
+        The SI prefix string.
+
+    Examples
+    --------
+    >>> siScale(0.0001)
+    (1000000.0, 'μ')
+    # This indicates that the number 0.0001 is best represented as 0.0001 * 1e6 = 100 μUnits
     """
     
     if isinstance(x, decimal.Decimal):
@@ -110,7 +135,13 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
     if abs(x) < minVal:
         m = 0
     else:
-        m = int(clip_scalar(math.floor(math.log(abs(x))/math.log(1000)), -9.0, 9.0))
+        # log of x with base 1000^power
+        log1000x = math.log(abs(x))/(math.log(1000)*power)
+        if power > 0:
+            log1000x = math.floor(log1000x)
+        else:
+            log1000x = math.ceil(log1000x)
+        m = int(clip_scalar(log1000x, -9.0, 9.0))
     if m == 0:
         pref = ''
     elif m < -8 or m > 8:
@@ -120,26 +151,53 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
             pref = SI_PREFIXES[m+8]
         else:
             pref = SI_PREFIXES_ASCII[m+8]
-    m1 = -3*m
+    m1 = -3*m*power
     p = 10.**m1
     return (p, pref)
 
 
-def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, allowUnicode=True):
+def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, allowUnicode=True, power = 1):
     """
-    Return the number x formatted in engineering notation with SI prefix.
-    
-    Example::
-        siFormat(0.0001, suffix='V')  # returns "100 μV"
+    Format a number in engineering notation with SI prefix.
+
+    Parameters
+    ----------
+    x : float
+        The value to be formatted.
+    precision : int, optional
+        Number of decimal places to include in the formatted output. Default is 3.
+    suffix : str, optional
+        Suffix to append to the formatted output.
+    space : bool, optional
+        Whether to include a space between the SI prefix and the value. Default is True.
+    error : float, optional
+        Error value to include in the formatted output.
+    minVal : float, optional
+        Minimum value considered for scaling. Default is 1e-25.
+    allowUnicode : bool, optional
+        Whether to allow Unicode SI prefixes. Default is True.
+    power : int or float, optional
+        Power to which the units are raised. For example, if suffix='m²', the power should be 2.
+        This ensures correct scaling when the units are nonlinear. Supports positive, negative,
+        and non-integral powers. Note: The power only affects the scaling, not the suffix.
+
+    Returns
+    -------
+    str
+        The formatted string in engineering notation with SI prefix.
+
+    Examples
+    --------
+    >>> siFormat(0.0001, suffix='V')
+    '100 μV'
     """
     
     if space is True:
         space = ' '
     if space is False:
         space = ''
-        
-    
-    (p, pref) = siScale(x, minVal, allowUnicode)
+            
+    (p, pref) = siScale(x, minVal, allowUnicode, power)
     if not (len(pref) > 0 and pref[0] == 'e'):
         pref = space + pref
     
@@ -152,15 +210,14 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
         else:
             plusminus = " +/- "
         fmt = "%." + str(precision) + "g%s%s%s%s"
-        return fmt % (x*p, pref, suffix, plusminus, siFormat(error, precision=precision, suffix=suffix, space=space, minVal=minVal))
+        return fmt % (x*p, pref, suffix, plusminus, siFormat(error, precision=precision, suffix=suffix, space=space, minVal=minVal, power=power))
 
 
-def siParse(s, regex=FLOAT_REGEX, suffix=None):
+def siParse(s, regex=FLOAT_REGEX_PERIOD, suffix=None):
     """Convert a value written in SI notation to a tuple (number, si_prefix, suffix).
 
-    Example::
-
-        siParse('100 µV")  # returns ('100', 'µ', 'V')
+    Example:
+        siParse('100 µV')  # returns ('100', 'µ', 'V')
 
     Note that in the above example, the µ symbol is the "micro sign" (UTF-8
     0xC2B5), as opposed to the Greek letter mu (UTF-8 0xCEBC).
@@ -210,7 +267,7 @@ def siParse(s, regex=FLOAT_REGEX, suffix=None):
     return m.group('number'), '' if sip is None else sip, '' if suf is None else suf
 
 
-def siEval(s, typ=float, regex=FLOAT_REGEX, suffix=None):
+def siEval(s, typ=float, regex=FLOAT_REGEX_PERIOD, suffix=None, unitPower=1):
     """
     Convert a value written in SI notation to its equivalent prefixless value.
 
@@ -220,13 +277,14 @@ def siEval(s, typ=float, regex=FLOAT_REGEX, suffix=None):
     """
     val, siprefix, suffix = siParse(s, regex, suffix=suffix)
     v = typ(val)
-    return siApply(v, siprefix)
+    return siApply(v, siprefix, unitPower=unitPower)
 
     
-def siApply(val, siprefix):
+def siApply(val, siprefix, unitPower=1):
     """
     """
     n = SI_PREFIX_EXPONENTS[siprefix] if siprefix != '' else 0
+    n = n * unitPower
     if n > 0:
         return val * 10**n
     elif n < 0:
@@ -235,6 +293,13 @@ def siApply(val, siprefix):
     else:
         return val
     
+def float_regex_for_locale(locale = QtCore.QLocale()) -> re.Pattern:
+    """Return a FLOAT_REGEX pattern appropriate for the given locale."""
+    decimal_point = locale.decimalPoint()
+    if decimal_point == ',':
+        return FLOAT_REGEX_COMMA
+    else:
+        return FLOAT_REGEX_PERIOD
 
 class Color(QtGui.QColor):
     def __init__(self, *args):
@@ -267,7 +332,7 @@ def mkColor(*args) -> QtGui.QColor:
      QColor          QColor instance; makes a copy.
     ================ ================================================
     """
-    err = 'Not sure how to make a color from "%s"' % str(args)
+    err = lambda: 'Not sure how to make a color from "%s"' % str(args)
     if len(args) == 1:
         if isinstance(args[0], str):
             c = args[0]
@@ -303,18 +368,18 @@ def mkColor(*args) -> QtGui.QColor:
             elif len(args[0]) == 2:
                 return intColor(*args[0])
             else:
-                raise TypeError(err)
+                raise TypeError(err())
         elif np.issubdtype(type(args[0]), np.integer):
             return intColor(args[0])
         else:
-            raise TypeError(err)
+            raise TypeError(err())
     elif len(args) == 3:
         r, g, b = args
         a = 255
     elif len(args) == 4:
         r, g, b, a = args
     else:
-        raise TypeError(err)
+        raise TypeError(err())
     args = [int(a) if np.isfinite(a) else 0 for a in (r, g, b, a)]
     return QtGui.QColor(*args)
 
@@ -736,11 +801,8 @@ def affineSliceCoords(shape, origin, vectors, axes):
     shape = list(map(np.ceil, shape))
 
     ## make sure vectors are arrays
-    if not isinstance(vectors, np.ndarray):
-        vectors = np.array(vectors)
-    if not isinstance(origin, np.ndarray):
-        origin = np.array(origin)
-    origin.shape = (len(axes),) + (1,)*len(shape)
+    vectors = np.asarray(vectors)
+    origin = np.asarray(origin).reshape((len(axes),) + (1,)*len(shape))
 
     ## Build array of sample locations. 
     grid = np.mgrid[tuple([slice(0,x) for x in shape])]  ## mesh grid of indexes
@@ -1187,28 +1249,7 @@ def clip_scalar(val, vmin, vmax):
     return vmin if val < vmin else vmax if val > vmax else val
 
 
-def clip_array(arr, vmin, vmax, out=None):
-    # replacement for np.clip due to regression in
-    # performance since numpy 1.17
-    # https://github.com/numpy/numpy/issues/14281
-
-    if vmin is None and vmax is None:
-        # let np.clip handle the error
-        return np.clip(arr, vmin, vmax, out=out)
-
-    if vmin is None:
-        return np.core.umath.minimum(arr, vmax, out=out)
-    elif vmax is None:
-        return np.core.umath.maximum(arr, vmin, out=out)
-    else:
-        return np.core.umath.clip(arr, vmin, vmax, out=out)
-
-if tuple(map(int, np.__version__.split(".")[:2])) >= (1, 25):
-    # The linked issue above has been closed as of 2023/04/25
-    # and states that the issue has been fixed.
-    # And furthermore, because NumPy 2.0 has made np.core private,
-    # we will just use the native np.clip
-    clip_array = np.clip
+clip_array = np.clip
 
 
 def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
@@ -1499,11 +1540,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
     # apply nan mask through alpha channel
     if nanMask is not None:
         alpha = True
-        # Workaround for https://github.com/cupy/cupy/issues/4693, fixed in cupy 10.0.0
-        if xp == cp and tuple(map(int, cp.__version__.split("."))) < (10, 0):
-            imgData[nanMask, :, dst_order[3]] = 0
-        else:
-            imgData[nanMask, dst_order[3]] = 0
+        imgData[nanMask, dst_order[3]] = 0
 
     profile('alpha channel')
     return imgData, alpha
@@ -1632,12 +1669,7 @@ def ndarray_from_qimage(qimg):
     logical_bpl = w * depth // 8
 
     if QT_LIB.startswith('PyQt'):
-        # sizeInBytes() was introduced in Qt 5.10
-        # however PyQt5 5.12 will fail with:
-        #   "TypeError: QImage.sizeInBytes() is a private method"
-        # note that sizeInBytes() works fine with:
-        #   PyQt5 5.15, PySide2 5.12, PySide2 5.15
-        img_ptr.setsize(h * bpl)
+        img_ptr.setsize(qimg.sizeInBytes())
 
     memory = np.frombuffer(img_ptr, dtype=np.ubyte).reshape((h, bpl))
     memory = memory[:, :logical_bpl]
@@ -1784,8 +1816,7 @@ def downsample(data, n, axis=0, xvals='subsample', *, nanPolicy='propagate'):
     s.insert(axis+1, n)
     sl = [slice(None)] * data.ndim
     sl[axis] = slice(0, nPts*n)
-    d1 = data[tuple(sl)]
-    d1.shape = tuple(s)
+    d1 = data[tuple(sl)].reshape(tuple(s))
     if nanPolicy == 'propagate':
         d2 = d1.mean(axis+1)
     elif nanPolicy == 'omit':
@@ -1846,18 +1877,16 @@ def _arrayToQPath_all(x, y, finiteCheck):
             arr[:, 1] = y[finite_idx]
 
         path = QtGui.QPainterPath()
-        if hasattr(path, 'reserve'):    # Qt 5.13
-            path.reserve(n)
+        path.reserve(n)
         path.addPolygon(poly)
         return path
 
     # at this point, we have numchunks >= minchunks
 
     path = QtGui.QPainterPath()
-    if hasattr(path, 'reserve'):    # Qt 5.13
-        path.reserve(n)
+    path.reserve(n)
     subpoly = QtGui.QPolygonF()
-    subpath = None
+    subpath = QtGui.QPainterPath()
     for idx in range(numchunks):
         sl = slice(idx*chunksize, min((idx+1)*chunksize, n))
         currsize = sl.stop - sl.start
@@ -1874,14 +1903,9 @@ def _arrayToQPath_all(x, y, finiteCheck):
             fiv = finite_idx[sl]  # view
             subarr[:, 0] = x[fiv]
             subarr[:, 1] = y[fiv]
-        if subpath is None:
-            subpath = QtGui.QPainterPath()
+        subpath.clear()
         subpath.addPolygon(subpoly)
         path.connectPath(subpath)
-        if hasattr(subpath, 'clear'):   # Qt 5.13
-            subpath.clear()
-        else:
-            subpath = None
     return path
 
 
@@ -1894,8 +1918,7 @@ def _arrayToQPath_finite(x, y, isfinite=None):
         isfinite = np.isfinite(x) & np.isfinite(y)
 
     path = QtGui.QPainterPath()
-    if hasattr(path, 'reserve'):    # Qt 5.13
-        path.reserve(n)
+    path.reserve(n)
 
     sidx = np.nonzero(~isfinite)[0] + 1
     # note: the chunks are views
@@ -2041,18 +2064,24 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         return _arrayToQPath_all(x, y, finiteCheck)
 
     path = QtGui.QPainterPath()
-    if hasattr(path, 'reserve'):    # Qt 5.13
-        path.reserve(n)
+    path.reserve(n)
 
-    if hasattr(path, 'reserve') and getConfigOption('enableExperimental'):
+    if getConfigOption('enableExperimental'):
         backstore = None
         arr = Qt.internals.get_qpainterpath_element_array(path, n)
     else:
-        backstore = QtCore.QByteArray()
-        backstore.resize(4 + n*20 + 8)      # contents uninitialized
-        backstore.replace(0, 4, struct.pack('>i', n))
-        # cStart, fillRule (Qt.FillRule.OddEvenFill)
-        backstore.replace(4+n*20, 8, struct.pack('>ii', 0, 0))
+        if Qt.internals.qbytearray_leaks():
+            backstore = bytearray(4 + n*20 + 8) # initialized to zero
+            struct.pack_into('>i', backstore, 0, n)
+            # cStart, fillRule (Qt.FillRule.OddEvenFill)
+            struct.pack_into('>ii', backstore, 4+n*20, 0, 0)
+        else:
+            backstore = QtCore.QByteArray()
+            backstore.resize(4 + n*20 + 8)      # contents uninitialized
+            backstore.replace(0, 4, struct.pack('>i', n))
+            # cStart, fillRule (Qt.FillRule.OddEvenFill)
+            backstore.replace(4+n*20, 8, struct.pack('>ii', 0, 0))
+
         arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
             count=n, offset=4)
 
@@ -2091,6 +2120,10 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
 
     if isinstance(backstore, QtCore.QByteArray):
         ds = QtCore.QDataStream(backstore)
+        ds >> path
+    elif isinstance(backstore, bytearray):
+        qba = QtCore.QByteArray(backstore)  # a copy is made here
+        ds = QtCore.QDataStream(qba)
         ds >> path
     return path
 
@@ -2833,7 +2866,7 @@ def isosurface(data, level):
     cutEdges = np.zeros([x+1 for x in index.shape]+[3], dtype=np.uint32)
     edges = edgeTable[index]
     for i, shift in enumerate(edgeShifts[:12]):        
-        slices = [slice(shift[j],cutEdges.shape[j]+(shift[j]-1)) for j in range(3)]
+        slices = [slice(int(shift[j]),cutEdges.shape[j]+(int(shift[j])-1)) for j in range(3)]
         cutEdges[slices[0], slices[1], slices[2], shift[3]] += edges & 2**i
     
     ## for each cut edge, interpolate to see where exactly the edge is cut and generate vertex positions
@@ -2917,7 +2950,7 @@ def _pinv_fallback(tr):
     arr = np.array([tr.m11(), tr.m12(), tr.m13(),
                     tr.m21(), tr.m22(), tr.m23(),
                     tr.m31(), tr.m32(), tr.m33()])
-    arr.shape = (3, 3)
+    arr = arr.reshape((3, 3))
     pinv = np.linalg.pinv(arr)
     return QtGui.QTransform(*pinv.ravel().tolist())
 

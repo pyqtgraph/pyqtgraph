@@ -20,7 +20,7 @@ jobs:
         qt-lib: [pyqt6, pyside]
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: "Install Linux VirtualDisplay"
       if: runner.os == 'Linux'
       run: |
@@ -41,13 +41,13 @@ jobs:
     - name: "Install Windows-Mesa OpenGL DLL"
       if: runner.os == 'Windows'
       run: |
-        curl -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/24.0.6/mesa3d-24.0.6-release-msvc.7z
+        curl -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/24.3.4/mesa3d-24.3.4-release-msvc.7z
         7z x mesa.7z -o*
         powershell.exe mesa\systemwidedeploy.cmd 1
     - name: Setup Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
-        python-version: '3.12'
+        python-version: '3.13'
     - name: Install PySide6
       if: matrix.qt-lib == 'pyside'
       run: |
@@ -101,7 +101,7 @@ jobs:
       shell: bash
     - name: Upload Screenshots
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: Screenshots - Qt-Bindings ${{ matrix.qt-lib }} - ${{ matrix.os }})
         path: ${{ env.SCREENSHOT_DIR }}

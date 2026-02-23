@@ -20,6 +20,7 @@ b = gl.GLBoxItem()
 w.addItem(b)
 
 ax2 = gl.GLAxisItem()
+ax2.setSize(1.5, 1.5, 1.5)
 ax2.setParentItem(b)
 
 b.translate(1,1,1)

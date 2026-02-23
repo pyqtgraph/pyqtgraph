@@ -13,6 +13,6 @@ updates:
     directory: ".github/workflows/etc"
     ignore:
       - dependency-name: "numpy"
-      # NEP-29 governs supported versions of NumPy
+      # SPEC-0 governs supported versions of NumPy
     schedule:
       interval: "daily"

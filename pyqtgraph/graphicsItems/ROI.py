@@ -1362,7 +1362,11 @@ class Handle(UIGraphicsItem):
         if deletable:
             self.setAcceptedMouseButtons(QtCore.Qt.MouseButton.RightButton)        
         self.setZValue(11)
-            
+
+    def pos(self):
+        # ROI class assumes that Handle class returns pg.Point
+        return Point(super().pos())
+
     def connectROI(self, roi):
         ### roi is the "parent" roi, i is the index of the handle in roi.handles
         self.rois.append(roi)
@@ -1508,7 +1512,7 @@ class Handle(UIGraphicsItem):
         return self.shape().boundingRect()
             
     def generateShape(self):
-        dt = self.deviceTransform()
+        dt = self.deviceTransform_()
         
         if dt is None:
             self._shape = self.path

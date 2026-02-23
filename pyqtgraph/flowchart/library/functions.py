@@ -18,9 +18,7 @@ def downsample(data, n, axis=0, xvals='subsample'):
     s.insert(axis+1, n)
     sl = [slice(None)] * data.ndim
     sl[axis] = slice(0, nPts*n)
-    d1 = data[tuple(sl)]
-    #print d1.shape, s
-    d1.shape = tuple(s)
+    d1 = data[tuple(sl)].reshape(tuple(s))
     d2 = d1.mean(axis+1)
     return d2
 
@@ -39,7 +37,7 @@ def applyFilter(data, b, a, padding=100, bidir=True):
         d1 = np.hstack([d1[:padding], d1, d1[-padding:]])
     
     if bidir:
-        d1 = scipy.signal.lfilter(b, a, scipy.signal.lfilter(b, a, d1)[::-1])[::-1]
+        d1 = scipy.signal.filtfilt(b, a, d1)
     else:
         d1 = scipy.signal.lfilter(b, a, d1)
     

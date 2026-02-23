@@ -1,4 +1,3 @@
-from OpenGL.GL import *  # noqa
 from OpenGL import GL
 
 from .. import Transform3D
@@ -6,21 +5,22 @@ from ..Qt import QtCore, QtGui
 
 GLOptions = {
     'opaque': {
-        GL_DEPTH_TEST: True,
-        GL_BLEND: False,
-        GL_CULL_FACE: False,
+        GL.GL_DEPTH_TEST: True,
+        GL.GL_BLEND: False,
+        GL.GL_CULL_FACE: False,
     },
     'translucent': {
-        GL_DEPTH_TEST: True,
-        GL_BLEND: True,
-        GL_CULL_FACE: False,
-        'glBlendFunc': (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA),
+        GL.GL_DEPTH_TEST: True,
+        GL.GL_BLEND: True,
+        GL.GL_CULL_FACE: False,
+        'glBlendFuncSeparate': (GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA,
+                                GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA),
     },
     'additive': {
-        GL_DEPTH_TEST: False,
-        GL_BLEND: True,
-        GL_CULL_FACE: False,
-        'glBlendFunc': (GL_SRC_ALPHA, GL_ONE),
+        GL.GL_DEPTH_TEST: False,
+        GL.GL_BLEND: True,
+        GL.GL_CULL_FACE: False,
+        'glBlendFunc': (GL.GL_SRC_ALPHA, GL.GL_ONE),
     },
 }    
 
@@ -35,7 +35,7 @@ class GLGraphicsItem(QtCore.QObject):
         
         self.__parent: GLGraphicsItem | None = None
         self.__view = None
-        self.__children: set[GLGraphicsItem] = set()
+        self.__children: list[GLGraphicsItem] = list()
         self.__transform = Transform3D()
         self.__visible = True
         self.__initialized = False
@@ -48,13 +48,16 @@ class GLGraphicsItem(QtCore.QObject):
         if self.__parent is not None:
             self.__parent.__children.remove(self)
         if item is not None:
-            item.__children.add(self)
+            item.__children.append(self)
+
+        # if we had a __view, we were a top level object
+        if self.__view is not None:
+            self.__view.removeItem(self)
+
+        # we are now either a child or an orphan.
+        # either way, we don't have our own __view
         self.__parent = item
-        
-        if self.__parent is not None and self.view() is not self.__parent.view():
-            if self.view() is not None:
-                self.view().removeItem(self)
-            self.__parent.view().addItem(self)
+        self.__view = None
     
     def setGLOptions(self, opts):
         """
@@ -114,7 +117,12 @@ class GLGraphicsItem(QtCore.QObject):
         self.__view = v
         
     def view(self):
-        return self.__view
+        if self.__parent is None:
+            # top level object
+            return self.__view
+        else:
+            # recurse
+            return self.__parent.view()
         
     def setDepthValue(self, value):
         """
@@ -256,9 +264,9 @@ class GLGraphicsItem(QtCore.QObject):
                 func(*v)
             else:
                 if v is True:
-                    glEnable(k)
+                    GL.glEnable(k)
                 else:
-                    glDisable(k)
+                    GL.glDisable(k)
     
     def paint(self):
         """
@@ -303,25 +311,16 @@ class GLGraphicsItem(QtCore.QObject):
         return tr.inverted()[0].map(point)
 
     def modelViewMatrix(self) -> QtGui.QMatrix4x4:
-        topobj = self
-        while (view := topobj.view()) is None:
-            topobj = topobj.parentItem()
-            if topobj is None:
-                return QtGui.QMatrix4x4()
+        if (view := self.view()) is None:
+            return QtGui.QMatrix4x4()
         return view.currentModelView()
 
     def projectionMatrix(self) -> QtGui.QMatrix4x4:
-        topobj = self
-        while (view := topobj.view()) is None:
-            topobj = topobj.parentItem()
-            if topobj is None:
-                return QtGui.QMatrix4x4()
+        if (view := self.view()) is None:
+            return QtGui.QMatrix4x4()
         return view.currentProjection()
 
     def mvpMatrix(self) -> QtGui.QMatrix4x4:
-        topobj = self
-        while (view := topobj.view()) is None:
-            topobj = topobj.parentItem()
-            if topobj is None:
-                return QtGui.QMatrix4x4()
+        if (view := self.view()) is None:
+            return QtGui.QMatrix4x4()
         return view.currentProjection() * view.currentModelView()
