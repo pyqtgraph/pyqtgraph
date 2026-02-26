@@ -12,8 +12,10 @@ from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB, QtVersionInfo
 
 if QtVersionInfo[0] >= 6:
     QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
+    QtOpenGLWidgets = importlib.import_module(f"{QT_LIB}.QtOpenGLWidgets")
 else:
     QtOpenGL = QtGui
+    QtOpenGLWidgets = QtWidgets
 
 class GLViewMixin:
     def __init__(self, *args, rotationMethod='euler', **kwargs):
@@ -551,7 +553,7 @@ class GLViewMixin:
         return output
 
 
-class GLViewWidget(GLViewMixin, QtWidgets.QOpenGLWidget):
+class GLViewWidget(GLViewMixin, QtOpenGLWidgets.QOpenGLWidget):
     def __init__(self, *args, devicePixelRatio=None, **kwargs):
         """
         Basic widget for displaying 3D data

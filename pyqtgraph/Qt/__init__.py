@@ -140,10 +140,6 @@ elif QT_LIB == PYQT6:
     except ImportError as err:
         QtSvg = FailedImport(err)
     try:
-        from PyQt6 import QtOpenGLWidgets
-    except ImportError as err:
-        QtOpenGLWidgets = FailedImport(err)
-    try:
         from PyQt6 import QtTest
     except ImportError as err:
         QtTest = FailedImport(err)
@@ -169,10 +165,6 @@ elif QT_LIB == PYSIDE6:
     except ImportError as err:
         QtSvg = FailedImport(err)
     try:
-        from PySide6 import QtOpenGLWidgets
-    except ImportError as err:
-        QtOpenGLWidgets = FailedImport(err)
-    try:
         from PySide6 import QtTest
     except ImportError as err:
         QtTest = FailedImport(err)
@@ -187,12 +179,6 @@ else:
 
 
 if QT_LIB in [PYQT6, PYSIDE6]:
-    # We're using Qt6 which has a different structure so we're going to use a shim to
-    # recreate the Qt5 structure
-
-    if not isinstance(QtOpenGLWidgets, FailedImport):
-        QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
-
     # PySide6 incorrectly placed QFileSystemModel inside QtWidgets
     if QT_LIB == PYSIDE6 and hasattr(QtWidgets, 'QFileSystemModel'):
         module = getattr(QtWidgets, "QFileSystemModel")
