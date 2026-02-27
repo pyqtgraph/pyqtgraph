@@ -60,7 +60,7 @@ class AxisItem(GraphicsWidget):
     ):
         super().__init__(parent)
         self.label = QtWidgets.QGraphicsTextItem(self)
-        self.picture = None
+        self.drawSpecs = None
         self.orientation = orientation
 
         if orientation in {'left', 'right'}:
@@ -286,7 +286,7 @@ class AxisItem(GraphicsWidget):
             else:
                 self.style[kwd] = value
 
-        self.picture = None
+        self.drawSpecs = None
         self._adjustSize()
         self.update()
 
@@ -316,7 +316,7 @@ class AxisItem(GraphicsWidget):
             grid = min(grid, 255)
             grid = max(grid, 0)
         self.grid = grid
-        self.picture = None
+        self.drawSpecs = None
         self.prepareGeometryChange()
         self.update()
 
@@ -375,7 +375,7 @@ class AxisItem(GraphicsWidget):
             elif self.orientation in ('left', 'right'):
                 self._linkedView().setLogMode('y', self.logMode)
 
-        self.picture = None
+        self.drawSpecs = None
         self.update()
 
     def setTickFont(self, font: QtGui.QFont | None):
@@ -388,7 +388,7 @@ class AxisItem(GraphicsWidget):
             The font to use for the tick values. Set to ``None`` for the default font.
         """
         self.style['tickFont'] = font
-        self.picture = None
+        self.drawSpecs = None
         self.prepareGeometryChange()
         # Need to re-allocate space depending on font size?
         self.update()
@@ -398,7 +398,7 @@ class AxisItem(GraphicsWidget):
         nudge = 5
         # self.label is set to None on close, but resize events can still occur.
         if self.label is None:
-            self.picture = None
+            self.drawSpecs = None
             return
 
         br = self.label.boundingRect()
@@ -416,7 +416,7 @@ class AxisItem(GraphicsWidget):
             p.setX(int(self.size().width()/2. - br.width()/2.))
             p.setY(int(self.size().height()-br.height()+nudge))
         self.label.setPos(p)
-        self.picture = None
+        self.drawSpecs = None
 
     def showLabel(self, show: bool=True):
         """
@@ -530,7 +530,7 @@ class AxisItem(GraphicsWidget):
     def _updateLabel(self):
         self.label.setHtml(self.labelString())
         self._adjustSize()
-        self.picture = None
+        self.drawSpecs = None
         self.update()
 
     def labelString(self) -> str:
@@ -622,7 +622,7 @@ class AxisItem(GraphicsWidget):
 
         self.setMaximumHeight(h)
         self.setMinimumHeight(h)
-        self.picture = None
+        self.drawSpecs = None
 
     def setWidth(self, w: int | None=None):
         """
@@ -658,7 +658,7 @@ class AxisItem(GraphicsWidget):
 
         self.setMaximumWidth(w)
         self.setMinimumWidth(w)
-        self.picture = None
+        self.drawSpecs = None
 
     def pen(self) -> QtGui.QPen:
         """
@@ -694,7 +694,7 @@ class AxisItem(GraphicsWidget):
         :func:`setConfigOption <pyqtgraph.setConfigOption>`
             Option to change the default foreground color.
         """        
-        self.picture = None
+        self.drawSpecs = None
         if args or kwargs:
             self._pen = fn.mkPen(*args, **kwargs)
         else:
@@ -736,7 +736,7 @@ class AxisItem(GraphicsWidget):
         :func:`setConfigOption <pyqtgraph.setConfigOption>`
             Option to change the default foreground color.
         """     
-        self.picture = None
+        self.drawSpecs = None
         if args or kwargs:
             self._textPen = fn.mkPen(*args, **kwargs)
         else:
@@ -776,7 +776,7 @@ class AxisItem(GraphicsWidget):
         :func:`setConfigOption <pyqtgraph.setConfigOption>`
             Option to change the default foreground color.
         """   
-        self.picture = None
+        self.drawSpecs = None
         self._tickPen = fn.mkPen(*args, **kwargs) if args or kwargs else None
         self._updateLabel()
 
@@ -861,7 +861,7 @@ class AxisItem(GraphicsWidget):
             # XXX: Will already update once!
             self.updateAutoSIPrefix()
         else:
-            self.picture = None
+            self.drawSpecs = None
             self.update()
 
     def linkedView(self):
@@ -980,23 +980,16 @@ class AxisItem(GraphicsWidget):
         path.addRect(rect)
         return path
 
-    def paint(self, p, opt, widget):
+    def paint(self, painter, opt, widget):
         profiler = debug.Profiler()
-        if self.picture is None:
-            try:
-                picture = QtGui.QPicture()
-                painter = QtGui.QPainter(picture)
-                if self.style["tickFont"]:
-                    painter.setFont(self.style["tickFont"])
-                specs = self.generateDrawSpecs(painter)
-                profiler('generate specs')
-                if specs is not None:
-                    self.drawPicture(painter, *specs)
-                    profiler('draw picture')
-            finally:
-                painter.end()
-            self.picture = picture
-        self.picture.play(p)
+        if self.drawSpecs is None:
+            if self.style["tickFont"]:
+                painter.setFont(self.style["tickFont"])
+            self.drawSpecs = self.generateDrawSpecs(painter)
+            profiler('generate specs')
+        if self.drawSpecs is not None:
+            self.drawPicture(painter, *self.drawSpecs)
+            profiler('draw picture')
 
 
     def setTickDensity(self, density=1.0):
@@ -1013,7 +1006,7 @@ class AxisItem(GraphicsWidget):
             Density of ticks to display, by default 1.0.
         """
         self._tickDensity = density
-        self.picture = None
+        self.drawSpecs = None
         self.update()
 
 
@@ -1064,7 +1057,7 @@ class AxisItem(GraphicsWidget):
         """        
 
         self._tickLevels = ticks
-        self.picture = None
+        self.drawSpecs = None
         self.update()
 
     def setTickSpacing(
@@ -1106,7 +1099,7 @@ class AxisItem(GraphicsWidget):
         if levels is None:
             levels = None if major is None else [(major, 0.), (minor, 0.)]
         self._tickSpacing = levels
-        self.picture = None
+        self.drawSpecs = None
         self.update()
 
     def tickSpacing(self, minVal: float, maxVal: float, size: float):
