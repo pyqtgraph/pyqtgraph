@@ -64,7 +64,6 @@ class ScalableGroup(pTypes.GroupParameter):
         opts["type"] = "group"
         opts["addText"] = "Add"
         # opts['addList'] = ['str', 'float', 'int']
-        # opts['addMenu'] = ['str', 'float', 'int']
         addMenu = [
             {
                 "Basic Types": ["int", "float", "str", "bool"],
@@ -82,7 +81,7 @@ class ScalableGroup(pTypes.GroupParameter):
         opts["addMenu"] = addMenu
         pTypes.GroupParameter.__init__(self, **opts)
 
-    def addNew(self, typ):
+    def addNew(self, typ=None):
         if isinstance(typ, tuple):
             typ = typ[-1]  # Get the last element from the path tuple
 
