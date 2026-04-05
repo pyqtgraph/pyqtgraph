@@ -329,6 +329,8 @@ class GroupParameterItem(ParameterItem):
         self.addItem = None
         if 'addText' in param.opts:
             addText = param.opts['addText']
+            if 'addMenu' in param.opts: # Prefer addMenu over addList
+                param.opts.pop('addList', None)            
             if 'addList' in param.opts:
                 self.addWidget = QtWidgets.QComboBox()
                 self.addWidget.setSizeAdjustPolicy(QtWidgets.QComboBox.SizeAdjustPolicy.AdjustToContents)
@@ -336,7 +338,7 @@ class GroupParameterItem(ParameterItem):
                 self.addWidget.currentIndexChanged.connect(self.addChanged)
             elif "addMenu" in param.opts:
                 self.addWidget = QtWidgets.QToolButton()
-                self.addWidget.setText(addText)
+                self.addWidget.setText(f"{addText}")
                 self.addWidget.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
                 self.addMenu = QtWidgets.QMenu(self.addWidget)
                 self.addWidget.setMenu(self.addMenu)
