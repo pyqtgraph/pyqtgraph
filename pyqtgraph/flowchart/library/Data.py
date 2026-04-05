@@ -189,7 +189,7 @@ class EvalNode(Node):
         self.ui = QtWidgets.QWidget()
         self.layout = QtWidgets.QGridLayout()
         self.text = TextEdit(self.update)
-        self.text.setTabStopWidth(30)
+        self.text.setTabStopDistance(30)
         self.text.setPlainText("# Access inputs as args['input_name']\nreturn {'output': None} ## one key per output terminal")
         self.layout.addWidget(self.text, 1, 0, 1, 2)
         self.ui.setLayout(self.layout)

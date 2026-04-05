@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
+from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB, QtVersionInfo
 
 import importlib
 import math
@@ -13,10 +13,10 @@ from ..Qt import OpenGLConstants as GLC
 from ..Qt import OpenGLHelpers
 from .GraphicsObject import GraphicsObject
 
-if QT_LIB in ["PyQt5", "PySide2"]:
-    QtOpenGL = QtGui
+if QtVersionInfo[0] >= 6:
+    QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
 else:
-    QtOpenGL = importlib.import_module(f'{QT_LIB}.QtOpenGL')
+    QtOpenGL = QtGui
 
 __all__ = ['PlotCurveItem']
 
@@ -641,12 +641,7 @@ class PlotCurveItem(GraphicsObject):
         if 'stepMode' in kargs:
             self.opts['stepMode'] = kargs['stepMode']
 
-        if self.opts['stepMode'] in ("center", True):  ## check against True for backwards compatibility
-            if self.opts['stepMode'] is True:
-                warnings.warn(
-                    'stepMode=True is deprecated and will result in an error after October 2022. Use stepMode="center" instead.',
-                    DeprecationWarning, stacklevel=3
-                )
+        if self.opts['stepMode'] == "center":
             if len(self.xData) != len(self.yData)+1:  ## allow difference of 1 for step mode plots
                 raise Exception("len(X) must be len(Y)+1 since stepMode=True (got %s and %s)" % (self.xData.shape, self.yData.shape))
         else:
@@ -1168,7 +1163,7 @@ class PlotCurveItem(GraphicsObject):
 
         glstate.m_vao.bind()
         program.bind()
-        OpenGLHelpers.setUniformValue(program, "u_mvp", mvp)
+        program.setUniformValue("u_mvp", mvp)
 
         # filling occurs first so that the curve outline gets painted over it.
         for brush in [self.opts["brush"]]:
@@ -1176,7 +1171,7 @@ class PlotCurveItem(GraphicsObject):
                 continue
             if brush is None or brush.style() == QtCore.Qt.BrushStyle.NoBrush:
                 continue
-            OpenGLHelpers.setUniformValue(program, "u_color", brush.color())
+            program.setUniformValue("u_color", brush.color())
 
             glf.glEnable(GLC.GL_BLEND)
             glf.glBlendFuncSeparate(GLC.GL_SRC_ALPHA, GLC.GL_ONE_MINUS_SRC_ALPHA, 1, GLC.GL_ONE_MINUS_SRC_ALPHA)
@@ -1213,7 +1208,7 @@ class PlotCurveItem(GraphicsObject):
                 width = 1
 
             glf.glLineWidth(width)
-            OpenGLHelpers.setUniformValue(program, "u_color", pen.color())
+            program.setUniformValue("u_color", pen.color())
 
             match connect_kind:
                 case "pairs" | "array":
