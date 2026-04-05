@@ -1,5 +1,4 @@
 import builtins
-from functools import partial
 
 from ... import functions as fn
 from ... import icons
@@ -297,6 +296,24 @@ class SimpleParameter(Parameter):
         return interpreter(v)
 
 
+class _MenuActionHandler(QtCore.QObject):
+    """QObject helper that receives triggered signals from QActions in the add menu.
+
+    GroupParameterItem inherits QTreeWidgetItem, not QObject, so it cannot call
+    sender(). This helper acts as the actual slot receiver so that sender() works.
+    """
+
+    def __init__(self, param):
+        super().__init__()
+        self._param = param
+
+    def onTriggered(self):
+        action = self.sender()
+        if action is None or not hasattr(action, 'pathForTriggered'):
+            return
+        self._param.addNew(action.pathForTriggered)
+
+
 class GroupParameterItem(ParameterItem):
     """
     Group parameters are used mainly as a generic parent item that holds (and groups!) a set
@@ -318,13 +335,13 @@ class GroupParameterItem(ParameterItem):
                 self.updateAddList()
                 self.addWidget.currentIndexChanged.connect(self.addChanged)
             elif "addMenu" in param.opts:
-                # Create a QPushButton that will show the menu
-                self.addWidget = QtWidgets.QPushButton(addText)
-                # Create the nested menu
+                self.addWidget = QtWidgets.QToolButton()
+                self.addWidget.setText(addText)
+                self.addWidget.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
                 self.addMenu = QtWidgets.QMenu(self.addWidget)
                 self.addWidget.setMenu(self.addMenu)
-                # Populate the nested menu structure
-                self.updateAddMenu()                        
+                self._menuActionHandler = _MenuActionHandler(param)
+                self.updateAddMenu()
             else:
                 self.addWidget = QtWidgets.QPushButton(addText)
                 self.addWidget.clicked.connect(self.addClicked)
@@ -456,14 +473,8 @@ class GroupParameterItem(ParameterItem):
     def _addLeafAction(self, menu, name, path):
         """Add a leaf action to the menu"""
         action = menu.addAction(name)
-        action.triggered.connect(partial(self.addMenuItemSelected, path))
-
-
-    def addMenuItemSelected(self, path_tuple):
-        """Called when a menu item is selected from the nested add menu"""
-        self.param.addNew(path_tuple)
-        if hasattr(self.param.opts, 'addText'):
-            self.addWidget.setText(self.param.opts['addText'])
+        action.pathForTriggered = path
+        action.triggered.connect(self._menuActionHandler.onTriggered)
 
 class GroupParameter(Parameter):
     """
