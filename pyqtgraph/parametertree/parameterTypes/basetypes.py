@@ -3,7 +3,7 @@ import builtins
 from ... import functions as fn
 from ...Qt import QtCore, QtWidgets
 from ..Parameter import Parameter
-from ..ParameterItem import ParameterItem
+from ..ParameterItem import ParameterItem, _MenuActionHandler, build_menu_from_iterable
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -275,24 +275,6 @@ class SimpleParameter(Parameter):
         return interpreter(v)
 
 
-class _MenuActionHandler(QtCore.QObject):
-    """QObject helper that receives triggered signals from QActions in the add menu.
-
-    GroupParameterItem inherits QTreeWidgetItem, not QObject, so it cannot call
-    sender(). This helper acts as the actual slot receiver so that sender() works.
-    """
-
-    def __init__(self, param):
-        super().__init__()
-        self._param = param
-
-    def onTriggered(self):
-        action = self.sender()
-        if action is None or not hasattr(action, 'pathForTriggered'):
-            return
-        self._param.addNew(action.pathForTriggered)
-
-
 class GroupParameterItem(ParameterItem):
     """
     Group parameters are used mainly as a generic parent item that holds (and groups!) a set
@@ -321,7 +303,7 @@ class GroupParameterItem(ParameterItem):
                 self.addWidget.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
                 self.addMenu = QtWidgets.QMenu(self.addWidget)
                 self.addWidget.setMenu(self.addMenu)
-                self._menuActionHandler = _MenuActionHandler(param)
+                self._menuActionHandler = _MenuActionHandler(param.addNew)
                 self.updateAddMenu()
             else:
                 self.addWidget = QtWidgets.QPushButton(addText)
@@ -419,43 +401,9 @@ class GroupParameterItem(ParameterItem):
         try:
             self.addMenu.clear()
             addMenu = self.param.opts.get('addMenu', [])
-            self._buildMenuFromIterable(self.addMenu, addMenu)
+            build_menu_from_iterable(self.addMenu, addMenu, self._menuActionHandler)
         finally:
             self.addWidget.blockSignals(False)
-
-    def _buildMenuFromIterable(self, menu, items, path=()):
-        if isinstance(items, dict):
-            for key, value in items.items():
-                self._handleMenuItem(menu, key, value, path)
-        elif isinstance(items, (list, tuple)):
-            for item in items:
-                if isinstance(item, dict):
-                    for key, value in item.items():
-                        self._handleMenuItem(menu, key, value, path)
-                elif isinstance(item, str):
-                    self._addLeafAction(menu, item, path + (item,))
-
-    def _handleMenuItem(self, menu, key, value, path):
-        """Handle a single menu item (key-value pair)"""
-        new_path = path + (key,)
-        
-        if self._isNested(value):
-            # Create submenu and recurse
-            submenu = menu.addMenu(key)
-            self._buildMenuFromIterable(submenu, value, new_path)
-        else:
-            # Create leaf action
-            self._addLeafAction(menu, key, new_path)
-
-    def _isNested(self, value):
-        """Check if a value represents nested structure"""
-        return isinstance(value, (dict, list, tuple)) and value  # Not empty
-
-    def _addLeafAction(self, menu, name, path):
-        """Add a leaf action to the menu"""
-        action = menu.addAction(name)
-        action.pathForTriggered = path
-        action.triggered.connect(self._menuActionHandler.onTriggered)
 
 class GroupParameter(Parameter):
     """

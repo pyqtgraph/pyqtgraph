@@ -49,6 +49,94 @@ class CtrlButton(QtWidgets.QToolButton):
         self.setMenu(self._menu)
 
 
+
+class _MenuActionHandler(QtCore.QObject):
+    """QObject helper that receives triggered signals from QActions in a menu.
+
+    The handler avoids lambda closures in signal connections by storing
+    the path directly on the action (``action.pathForTriggered``) and using
+    ``sender()`` to retrieve it at call time.  This prevents unintended strong
+    reference cycles between Qt objects.
+
+    Parameters
+    ----------
+    callback : callable
+        Called with a single argument — the ``pathForTriggered`` tuple of the
+        triggered action.
+    """
+
+    def __init__(self, callback):
+        super().__init__()
+        self._callback = callback
+
+    def onTriggered(self):
+        action = self.sender()
+        if action is not None and hasattr(action, 'pathForTriggered'):
+            self._callback(action.pathForTriggered)
+
+
+def build_menu_from_iterable(menu, items, handler, path=()):
+    """Recursively populate *menu* from *items*.
+
+    Each leaf action is connected to ``handler.onTriggered`` and has its
+    ``pathForTriggered`` attribute set to the full tuple path from the root.
+
+    Parameters
+    ----------
+    menu : QMenu
+        The menu (or submenu) to populate.
+    items : dict | list | tuple
+        Structure describing the menu.  Each element is either:
+
+        - a plain ``str`` — a leaf action whose display text and path
+          component are both the string.
+        - a ``dict`` — key/value pairs interpreted as:
+
+          ============  ====================================================
+          value type    meaning
+          ============  ====================================================
+          falsy         leaf; display text = key, path component = key
+          ``str``       leaf; display text = value, path component = key
+                        (human-readable alias, e.g. ``{"internalName": "Label"}``)
+          non-empty     submenu named *key*; recurse into *value*
+          dict/list/
+          tuple
+          ============  ====================================================
+
+    handler : _MenuActionHandler
+        QObject whose ``onTriggered`` slot is connected to every leaf action.
+    path : tuple
+        Path prefix accumulated during recursion; callers should omit this.
+    """
+    if isinstance(items, dict):
+        for key, value in items.items():
+            _menu_handle_item(menu, key, value, handler, path)
+    elif isinstance(items, (list, tuple)):
+        for item in items:
+            if isinstance(item, dict):
+                for key, value in item.items():
+                    _menu_handle_item(menu, key, value, handler, path)
+            elif isinstance(item, str):
+                _menu_add_leaf(menu, item, handler, path + (item,))
+
+
+def _menu_handle_item(menu, key, value, handler, path):
+    new_path = path + (key,)
+    if isinstance(value, (dict, list, tuple)) and value:
+        submenu = menu.addMenu(key)
+        build_menu_from_iterable(submenu, value, handler, new_path)
+    elif isinstance(value, str):
+        _menu_add_leaf(menu, value, handler, new_path)
+    else:
+        _menu_add_leaf(menu, key, handler, new_path)
+
+
+def _menu_add_leaf(menu, display, handler, path):
+    action = menu.addAction(display)
+    action.pathForTriggered = path
+    action.triggered.connect(handler.onTriggered)
+
+
 class ParameterItem(QtWidgets.QTreeWidgetItem):
     """
     Abstract ParameterTree item.
@@ -156,11 +244,11 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
                 
     def contextMenuEvent(self, ev):
         opts = self.param.opts
-        
+
         if not opts.get('removable', False) and not opts.get('renamable', False)\
                 and "context" not in opts:
             return
-        
+
         ## Generate context menu for renaming/removing parameter
         self.contextMenu = QtWidgets.QMenu() # Put in global name space to prevent garbage collection
         self.contextMenu.addSeparator()
@@ -191,12 +279,10 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
             act.triggered.connect(self.requestRemove)
 
         context = opts.get('context', None)
-        if isinstance(context, list):
-            for name in context:
-                menu.addAction(name).triggered.connect(self.contextMenuTriggered(name))
-        elif isinstance(context, dict):
-            for name, title in context.items():
-                menu.addAction(title).triggered.connect(self.contextMenuTriggered(name))
+        if context is not None:
+            if not hasattr(self, '_contextMenuHandler'):
+                self._contextMenuHandler = _MenuActionHandler(self.param.contextMenu)
+            build_menu_from_iterable(menu, context, self._contextMenuHandler)
 
     # ── Ctrl button ───────────────────────────────────────────────────────────
 
@@ -251,7 +337,7 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
         enabled = self.param.opts.get('enabled', True)
 
         # ── Value ─────────────────────────────────────────────────────────────
-        value_count = 0 # Used to decide whether to add separators
+        value_count = 0
         if 'default' in ctrl and self.param.hasDefault() and not readonly:
             act = self.ctrlMenu.addAction(
                 icons.getGraphIcon('revert_default'),
@@ -273,7 +359,7 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
         # ── State ──────────────────────────────────────────────────────────────
         self._enabledAct = None
         self._readonlyAct = None
-        state_count = 0 # Used to decide whether to add separators
+        state_count = 0
         if 'enabled' in ctrl or 'readonly' in ctrl:
             if value_count:
                 self.ctrlMenu.addSeparator()
@@ -298,9 +384,7 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
             self._readonlyAct.triggered.connect(self._toggleReadonly)
             state_count += 1
 
-        # ── Rename / Remove / Context ───────────────────────────────────────────
-        # Either the parameter opt OR the presence of the key in ctrlActions
-        # is sufficient to show the action.
+        # ── Rename / Remove / Context ──────────────────────────────────────────
         opts = self.param.opts
         show_rename = bool(opts.get('renamable') or 'rename' in ctrl)
         show_remove = bool(opts.get('removable') or 'remove' in ctrl)
@@ -424,11 +508,6 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
             self.titleChanged()
 
         self.updateFlags()
-
-    def contextMenuTriggered(self, name):
-        def trigger():
-            self.param.contextMenu(name)
-        return trigger
 
     def editName(self):
         self.treeWidget().editItem(self, 0)

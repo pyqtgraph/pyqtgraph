@@ -162,6 +162,21 @@ params = [
                     "internal": "What the user sees",
                 },
             },
+            {
+                "name": "Nested contextMenu",
+                "type": "float",
+                "value": 0,
+                "context": {
+                    "flat_action": None,
+                    "submenu": {
+                        "action_a": None,
+                        "action_b": None,
+                        "deeper": {
+                            "action_c": None,
+                        },
+                    },
+                },
+            },
         ],
     },
     {'name': 'Ctrl button actions', 'type': 'group', 'children': [
@@ -211,6 +226,15 @@ def change(param, changes):
 
 
 p.sigTreeStateChanged.connect(change)
+
+
+def contextMenuTriggered(param, path):
+    # path is a tuple, e.g. ('flat_action',) or ('submenu', 'action_a')
+    print(f"Context menu triggered on '{param.name()}': path={path}")
+
+
+for child in p.child("Custom context menu"):
+    child.sigContextMenu.connect(contextMenuTriggered)
 
 
 def valueChanging(param, value):
