@@ -80,6 +80,22 @@ params = [
             'internal': 'What the user sees',
         }},
     ]},
+    {'name': 'Ctrl button actions', 'type': 'group', 'children': [
+        # The wrench (ctrl) button on each parameter opens a menu organised into
+        # sections: Value (Reset/Set as default/Enable/Lock/Rename/Remove).  Use the 'ctrlActions' option to restrict
+        # which built-in sections appear.
+        {'name': 'Value actions', 'type': 'float', 'value': 1.0, 'default': 1.0,
+         'tip': 'Change the value, then use the ctrl button to reset or re-set the default'},
+        {'name': 'State actions only', 'type': 'int', 'value': 0,
+         'ctrlActions': {'enabled', 'readonly'},
+         'tip': 'Only Enable/Disable and Lock/Unlock are shown (no value actions)'},
+        {'name': 'Renamable + removable', 'type': 'str', 'value': 'hello',
+         'renamable': True, 'removable': True, 'ctrlActions': {},
+         'tip': 'Rename and Remove appear in the Manage section of the ctrl menu'},
+        {'name': 'Extra context actions', 'type': 'int', 'value': 0,
+         'context': {'log': 'Print value to console'},
+         'tip': 'User-defined context actions appear in the Manage section'},
+    ]},
     ComplexParameter(name='Custom parameter group (reciprocal values)'),
     ScalableGroup(name="Expandable Parameter Group", tip='Click to add children', children=[
         {'name': 'ScalableParam 1', 'type': 'str', 'value': "default param 1"},
@@ -126,6 +142,11 @@ def restore():
     p.restoreState(state, addChildren=add, removeChildren=rem)
 p.param('Save/Restore functionality', 'Save State').sigActivated.connect(save)
 p.param('Save/Restore functionality', 'Restore State').sigActivated.connect(restore)
+
+def ctrlMenuAction(param, action):
+    if action == 'log':
+        print(f"Value of '{param.name()}': {param.value()}")
+p.param('Ctrl button actions', 'Extra context actions').sigContextMenu.connect(ctrlMenuAction)
 
 
 ## Create two ParameterTree widgets, both accessing the same data
