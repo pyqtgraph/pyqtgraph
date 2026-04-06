@@ -87,13 +87,12 @@ library to use by making the following checks:
 #. If PyQt6 is already imported, use that
 #. Else, if PySide6 is already imported, use that
 #. Else, if PyQt5 is already imported, use that
-#. Else, if PySide2 is already imported, use that
-#. Else, attempt to import PyQt6, PySide6, PyQt5, PySide2, in that order.
+#. Else, attempt to import PyQt6, PySide6, PyQt5, in that order.
 
 If you have both libraries installed on your system and you wish to force pyqtgraph to use one or the other, simply
 make sure it is imported before pyqtgraph::
     
-    import PySide2  ## this will force pyqtgraph to use PySide2 instead of PyQt6
+    import PySide6  ## this will force pyqtgraph to use PySide6 instead of PyQt6
     import pyqtgraph as pg
 
 

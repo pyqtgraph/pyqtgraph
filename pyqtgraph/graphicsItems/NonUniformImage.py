@@ -1,4 +1,3 @@
-import warnings
 import numpy as np
 
 from .. import functions as fn
@@ -6,7 +5,6 @@ from ..colormap import ColorMap
 from .. import Qt
 from ..Qt import QtCore, QtGui
 from .GraphicsObject import GraphicsObject
-from .HistogramLUTItem import HistogramLUTItem
 
 __all__ = ['NonUniformImage']
 
@@ -48,17 +46,6 @@ class NonUniformImage(GraphicsObject):
         self.update()
 
     def setLookupTable(self, lut, update=True, **kwargs):
-        # backwards compatibility hack
-        if isinstance(lut, HistogramLUTItem):
-            warnings.warn(
-                "NonUniformImage::setLookupTable(HistogramLUTItem) is deprecated "
-                "and will be removed in a future version of PyQtGraph. "
-                "use HistogramLUTItem::setImageItem(NonUniformImage) instead",
-                DeprecationWarning, stacklevel=2
-            )
-            lut.setImageItem(self)
-            return
-
         self.cmap = None    # invalidate since no longer consistent with lut
         self.lut = lut
         self.picture = None
@@ -140,8 +127,10 @@ class NonUniformImage(GraphicsObject):
         # sorted_indices effectively groups together the
         # (flattened) indices of the same coloridx together.
         sorted_indices = np.argsort(Z, axis=None)
-        for arr in X, Y, W, H:
-            arr.shape = -1      # in-place unravel
+        X = X.ravel()
+        Y = Y.ravel()
+        W = W.ravel()
+        H = H.ravel()
 
         self.picture = QtGui.QPicture()
         painter = QtGui.QPainter(self.picture)

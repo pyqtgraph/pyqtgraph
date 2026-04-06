@@ -60,13 +60,16 @@ qt_documentation = "Qt6"
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
-    'numpy': ('https://numpy.org/doc/stable/', None)
+    'numpy': ('https://numpy.org/doc/stable/', None),
 }
 
 nitpick_ignore_regex = [
     ("py:class", "re.Pattern"),  # doesn't seem to be a good ref in python docs
     ("py:class", "numpy._typing._array_like._SupportsArray"),
-    ("py:class", "numpy._typing._nested_sequence._NestedSequence")
+    ("py:class", "numpy._typing._nested_sequence._NestedSequence"),
+    ("py:class", "PYQT_SLOT"),
+    ("py:class", "PYQT_SIGNAL"),
+    ("py:class", "QObjectT")
 ]
 
 # looks way better with pydata-sphinx-theme

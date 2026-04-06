@@ -801,11 +801,8 @@ def affineSliceCoords(shape, origin, vectors, axes):
     shape = list(map(np.ceil, shape))
 
     ## make sure vectors are arrays
-    if not isinstance(vectors, np.ndarray):
-        vectors = np.array(vectors)
-    if not isinstance(origin, np.ndarray):
-        origin = np.array(origin)
-    origin.shape = (len(axes),) + (1,)*len(shape)
+    vectors = np.asarray(vectors)
+    origin = np.asarray(origin).reshape((len(axes),) + (1,)*len(shape))
 
     ## Build array of sample locations. 
     grid = np.mgrid[tuple([slice(0,x) for x in shape])]  ## mesh grid of indexes
@@ -1252,28 +1249,7 @@ def clip_scalar(val, vmin, vmax):
     return vmin if val < vmin else vmax if val > vmax else val
 
 
-def clip_array(arr, vmin, vmax, out=None):
-    # replacement for np.clip due to regression in
-    # performance since numpy 1.17
-    # https://github.com/numpy/numpy/issues/14281
-
-    if vmin is None and vmax is None:
-        # let np.clip handle the error
-        return np.clip(arr, vmin, vmax, out=out)
-
-    if vmin is None:
-        return np.core.umath.minimum(arr, vmax, out=out)
-    elif vmax is None:
-        return np.core.umath.maximum(arr, vmin, out=out)
-    else:
-        return np.core.umath.clip(arr, vmin, vmax, out=out)
-
-if tuple(map(int, np.__version__.split(".")[:2])) >= (1, 25):
-    # The linked issue above has been closed as of 2023/04/25
-    # and states that the issue has been fixed.
-    # And furthermore, because NumPy 2.0 has made np.core private,
-    # we will just use the native np.clip
-    clip_array = np.clip
+clip_array = np.clip
 
 
 def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
@@ -1564,11 +1540,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=Tr
     # apply nan mask through alpha channel
     if nanMask is not None:
         alpha = True
-        # Workaround for https://github.com/cupy/cupy/issues/4693, fixed in cupy 10.0.0
-        if xp == cp and tuple(map(int, cp.__version__.split("."))) < (10, 0):
-            imgData[nanMask, :, dst_order[3]] = 0
-        else:
-            imgData[nanMask, dst_order[3]] = 0
+        imgData[nanMask, dst_order[3]] = 0
 
     profile('alpha channel')
     return imgData, alpha
@@ -1697,12 +1669,7 @@ def ndarray_from_qimage(qimg):
     logical_bpl = w * depth // 8
 
     if QT_LIB.startswith('PyQt'):
-        # sizeInBytes() was introduced in Qt 5.10
-        # however PyQt5 5.12 will fail with:
-        #   "TypeError: QImage.sizeInBytes() is a private method"
-        # note that sizeInBytes() works fine with:
-        #   PyQt5 5.15, PySide2 5.12, PySide2 5.15
-        img_ptr.setsize(h * bpl)
+        img_ptr.setsize(qimg.sizeInBytes())
 
     memory = np.frombuffer(img_ptr, dtype=np.ubyte).reshape((h, bpl))
     memory = memory[:, :logical_bpl]
@@ -1849,8 +1816,7 @@ def downsample(data, n, axis=0, xvals='subsample', *, nanPolicy='propagate'):
     s.insert(axis+1, n)
     sl = [slice(None)] * data.ndim
     sl[axis] = slice(0, nPts*n)
-    d1 = data[tuple(sl)]
-    d1.shape = tuple(s)
+    d1 = data[tuple(sl)].reshape(tuple(s))
     if nanPolicy == 'propagate':
         d2 = d1.mean(axis+1)
     elif nanPolicy == 'omit':
@@ -1911,18 +1877,16 @@ def _arrayToQPath_all(x, y, finiteCheck):
             arr[:, 1] = y[finite_idx]
 
         path = QtGui.QPainterPath()
-        if hasattr(path, 'reserve'):    # Qt 5.13
-            path.reserve(n)
+        path.reserve(n)
         path.addPolygon(poly)
         return path
 
     # at this point, we have numchunks >= minchunks
 
     path = QtGui.QPainterPath()
-    if hasattr(path, 'reserve'):    # Qt 5.13
-        path.reserve(n)
+    path.reserve(n)
     subpoly = QtGui.QPolygonF()
-    subpath = None
+    subpath = QtGui.QPainterPath()
     for idx in range(numchunks):
         sl = slice(idx*chunksize, min((idx+1)*chunksize, n))
         currsize = sl.stop - sl.start
@@ -1939,14 +1903,9 @@ def _arrayToQPath_all(x, y, finiteCheck):
             fiv = finite_idx[sl]  # view
             subarr[:, 0] = x[fiv]
             subarr[:, 1] = y[fiv]
-        if subpath is None:
-            subpath = QtGui.QPainterPath()
+        subpath.clear()
         subpath.addPolygon(subpoly)
         path.connectPath(subpath)
-        if hasattr(subpath, 'clear'):   # Qt 5.13
-            subpath.clear()
-        else:
-            subpath = None
     return path
 
 
@@ -1959,8 +1918,7 @@ def _arrayToQPath_finite(x, y, isfinite=None):
         isfinite = np.isfinite(x) & np.isfinite(y)
 
     path = QtGui.QPainterPath()
-    if hasattr(path, 'reserve'):    # Qt 5.13
-        path.reserve(n)
+    path.reserve(n)
 
     sidx = np.nonzero(~isfinite)[0] + 1
     # note: the chunks are views
@@ -2106,8 +2064,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         return _arrayToQPath_all(x, y, finiteCheck)
 
     path = QtGui.QPainterPath()
-    if hasattr(path, 'reserve'):    # Qt 5.13
-        path.reserve(n)
+    path.reserve(n)
 
     if getConfigOption('enableExperimental'):
         backstore = None
@@ -2993,7 +2950,7 @@ def _pinv_fallback(tr):
     arr = np.array([tr.m11(), tr.m12(), tr.m13(),
                     tr.m21(), tr.m22(), tr.m23(),
                     tr.m31(), tr.m32(), tr.m33()])
-    arr.shape = (3, 3)
+    arr = arr.reshape((3, 3))
     pinv = np.linalg.pinv(arr)
     return QtGui.QTransform(*pinv.ravel().tolist())
 

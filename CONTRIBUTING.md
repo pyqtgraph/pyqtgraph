@@ -26,7 +26,7 @@ source .venv/bin/activate
 python -m pip install numpy scipy pyqt6 -e .
 ```
 
-PyQtGraph supports PySide2, PyQt5, PySide6 and PyQt6 bindings, but if a contributor is
+PyQtGraph supports PyQt5, PySide6 and PyQt6 bindings, but if a contributor is
 to test against only one set of bindings, we suggest that it be PyQt6.  PyQt6 is the
 only bindings that enforces the use of fully scoped enums. For example, apart from
 PyQt6, `QGraphicsItem.ItemIgnoresTransformations` would be recognized, but that would
@@ -48,7 +48,7 @@ and unrelated changes may be rejected.
 For major changes, it is recommended to discuss your plans on the mailing list or in a
 github issue/discussion before putting in too much effort.
 
-PyQtGraph has adopted [NEP-29](https://numpy.org/neps/nep-0029-deprecation_policy.html)
+PyQtGraph has adopted [SPEC-0](https://scientific-python.org/specs/spec-0000/)
 which governs the timeline for phasing out support for numpy and python versions.
 
 ## Documentation
@@ -164,7 +164,7 @@ $ asv run
 Note for pyenv users, you need to ensure all the python versions you want to test are
 accessible.  This is easiest done by running `pyenv shell` followed by a space
 sparated list of all the python environments you want accessible.  For example,
-`pyenv shell asv 3.10.14 3.11.12 3.12.9 3.13.2`.
+`pyenv shell asv 3.12.12 3.13.9 3.14.0`.
 
 To view the results, from the root pyqtgraph directory run
 

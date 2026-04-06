@@ -148,7 +148,7 @@ class Optic(pg.GraphicsObject, ParamObj):
         }
         defaults.update(params)
         self._ior_cache = {}
-        self._connRoiChanged = self.roi.sigRegionChanged.connect(self.roiChanged)
+        self.roi.sigRegionChanged.connect(self.roiChanged)
         self.setParams(**defaults)
         
     def updateTransform(self):
@@ -168,22 +168,14 @@ class Optic(pg.GraphicsObject, ParamObj):
         
         # Move ROI to match
         try:
-            # workaround PYSIDE-2487 that affects PySide 6.5.3 by
-            # disconnecting through a handle
-            if isinstance(self._connRoiChanged, QtCore.QMetaObject.Connection):
-                self.roi.sigRegionChanged.disconnect(self._connRoiChanged)
-            else:
-                # this branch is for PySide2 5.15 which returns a
-                # boolean instead of a QMetaObject.Connection
-                self.roi.sigRegionChanged.disconnect(self.roiChanged)
-
+            self.roi.sigRegionChanged.disconnect(self.roiChanged)
             br = self.gitem.boundingRect()
             o = self.gitem.mapToParent(br.topLeft())
             self.roi.setAngle(self['angle'])
             self.roi.setPos(o)
             self.roi.setSize([br.width(), br.height()])
         finally:
-            self._connRoiChanged = self.roi.sigRegionChanged.connect(self.roiChanged)
+            self.roi.sigRegionChanged.connect(self.roiChanged)
         
         self.sigStateChanged.emit()
 

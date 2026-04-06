@@ -5,14 +5,14 @@ from OpenGL import GL
 from OpenGL.GL import shaders
 import numpy as np
 
-from ...Qt import QtGui, QT_LIB
+from ...Qt import QtGui, QT_LIB, QtVersionInfo
 from ... import functions as fn
 from ..GLGraphicsItem import GLGraphicsItem
 
-if QT_LIB in ["PyQt5", "PySide2"]:
-    QtOpenGL = QtGui
-else:
+if QtVersionInfo[0] >= 6:
     QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
+else:
+    QtOpenGL = QtGui
 
 __all__ = ['GLLinePlotItem']
 
