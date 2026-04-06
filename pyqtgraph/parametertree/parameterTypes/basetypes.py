@@ -1,11 +1,9 @@
 import builtins
 
 from ... import functions as fn
-from ... import icons
 from ...Qt import QtCore, QtWidgets
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
-
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -13,9 +11,11 @@ class WidgetParameterItem(ParameterItem):
 
       * label in second column for displaying value
       * simple widget for editing value (displayed instead of label when item is selected)
-      * button that resets value to default
+      * ctrl button (ctrl icon) that opens a menu with actions: Reset to default,
+        Set as default, Enable/Disable, Lock/Unlock, Rename, Remove
 
-    This class can be subclassed by overriding makeWidget() to provide a custom widget.
+    This class can be subclassed by overriding :meth:`makeWidget` to provide a
+    custom widget, and :meth:`populateCtrlMenu` to customise the ctrl menu.
     """
 
     def __init__(self, param, depth):
@@ -36,7 +36,7 @@ class WidgetParameterItem(ParameterItem):
             self.subItem.setFlags(QtCore.Qt.ItemFlag.NoItemFlags)
             self.addChild(self.subItem)
 
-        self.defaultBtn = self.makeDefaultButton()
+        self.ctrlBtn = self.makeCtrlButton()
 
         self.displayLabel = QtWidgets.QLabel()
 
@@ -47,7 +47,7 @@ class WidgetParameterItem(ParameterItem):
             layout.addWidget(w, 1)
         layout.addWidget(self.displayLabel, 1)
         layout.addStretch(0)
-        layout.addWidget(self.defaultBtn)
+        layout.addWidget(self.ctrlBtn)
         self.layoutWidget = QtWidgets.QWidget()
         self.layoutWidget.setLayout(layout)
 
@@ -71,7 +71,7 @@ class WidgetParameterItem(ParameterItem):
 
         # set size hints
         sw = self.widget.sizeHint()
-        sb = self.defaultBtn.sizeHint()
+        sb = self.ctrlBtn.sizeHint()
         # shrink row heights a bit for more compact look
         sw.setHeight(int(sw.height() * 0.9))
         sb.setHeight(int(sb.height() * 0.9))
@@ -115,15 +115,6 @@ class WidgetParameterItem(ParameterItem):
 
         return False
 
-    def makeDefaultButton(self):
-        defaultBtn = QtWidgets.QPushButton()
-        defaultBtn.setAutoDefault(False)
-        defaultBtn.setFixedWidth(20)
-        defaultBtn.setFixedHeight(20)
-        defaultBtn.setIcon(icons.getGraphIcon('default'))
-        defaultBtn.clicked.connect(self.defaultClicked)
-        return defaultBtn
-
     def setFocus(self):
         self.showEditor()
 
@@ -146,14 +137,6 @@ class WidgetParameterItem(ParameterItem):
                 self.param.sigValueChanged.connect(self.valueChanged)
         self.updateDisplayLabel()  ## always make sure label is updated, even if values match!
         self.updateDefaultBtn()
-
-    def updateDefaultBtn(self):
-        self.defaultBtn.setEnabled(
-            self.param.valueModifiedSinceResetToDefault()
-            and self.param.opts['enabled']
-            and self.param.writable())
-
-        self.defaultBtn.setVisible(self.param.hasDefault() and not self.param.readonly())
 
     def updateDisplayLabel(self, value=None):
         """Update the display label to reflect the value of the parameter."""
@@ -215,10 +198,6 @@ class WidgetParameterItem(ParameterItem):
             tree.setItemWidget(self, 1, self.layoutWidget)
             self.displayLabel.hide()
             self.selected(False)
-
-    def defaultClicked(self):
-        self.param.setToDefault()
-        self.updateDefaultBtn()
 
     def optsChanged(self, param, opts):
         """Called when any options are changed that are not

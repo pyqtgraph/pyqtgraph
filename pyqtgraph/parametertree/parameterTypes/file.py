@@ -1,9 +1,12 @@
 import os
 import re
 
+from ... import icons
 from ...Qt import QtCore, QtGui, QtWidgets
 from ..Parameter import Parameter
 from .str import StrParameterItem
+
+translate = QtCore.QCoreApplication.translate
 
 
 def _set_filepicker_kwargs(fileDlg, **kwargs):
@@ -151,18 +154,30 @@ class FileParameterItem(StrParameterItem):
         if fname := popupFilePicker(None, **opts):
             self.param.setValue(fname)
 
-    def updateDefaultBtn(self):
-        # Override since a readonly label should still allow reverting to default
-        ## enable/disable default btn
-        self.defaultBtn.setEnabled(
-            not self.param.valueIsDefault() and self.param.opts['enabled'])
-
-        # hide / show
-        self.defaultBtn.setVisible(self.param.hasDefault())
+    def populateCtrlMenu(self):
+        super().populateCtrlMenu()
+        # FileParameter defaults to readonly=True, but reverting to a default
+        # path should still be possible. The base class skips "Reset to default"
+        # when readonly, so we insert it here when needed.
+        if self.param.readonly() and self.param.hasDefault():
+            enabled = self.param.opts.get('enabled', True)
+            act = self.ctrlMenu.addAction(
+                icons.getGraphIcon('revert_default'),
+                translate("ParameterItem", "Reset to default"),
+            )
+            act.setEnabled(not self.param.valueIsDefault() and enabled)
+            act.triggered.connect(self.defaultClicked)
+            # Move to top so value actions stay grouped together
+            first = next(iter(self.ctrlMenu.actions()), None)
+            if first is not act:
+                self.ctrlMenu.removeAction(act)
+                self.ctrlMenu.insertAction(first, act)
 
     def updateDisplayLabel(self, value=None):
         lbl = self.displayLabel
         if value is None:
+            if not self.param.hasValue():
+                return
             value = self.param.value()
         value = str(value)
         font = lbl.font()
