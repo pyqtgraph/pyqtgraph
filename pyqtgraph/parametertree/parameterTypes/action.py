@@ -1,11 +1,11 @@
 from ...Qt import QtCore, QtWidgets, QtGui
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
-
+from ...util.icons import iconToQIcon
 
 class ParameterControlledButton(QtWidgets.QPushButton):
     settableAttributes = {
-        "title", "tip", "icon", "shortcut", "enabled", "visible"
+        "title", "tip", "btn_icon", "shortcut", "enabled", "visible"
     }
 
     def __init__(self, parameter=None, parent=None):
@@ -20,7 +20,7 @@ class ParameterControlledButton(QtWidgets.QPushButton):
     def updateOpts(self, param, opts):
         # Of the attributes that can be set on a QPushButton, only the text
         # and tooltip attributes are different from standard pushbutton names
-        nameMap = dict(title="text", tip="toolTip")
+        nameMap = dict(title="text", tip="toolTip", btn_icon="icon")
         # Special case: "title" could be none, in which case make it something
         # readable by the simple copy-paste logic later
         opts = opts.copy()
@@ -28,11 +28,11 @@ class ParameterControlledButton(QtWidgets.QPushButton):
             opts.setdefault("title", opts["name"])
         if "title" in opts and opts["title"] is None:
             opts["title"] = param.title()
-
-        # Another special case: icons should be loaded from data before
+        # Another special case: icons should be converted to QIcon before
         # being passed to the button
-        if "icon" in opts:
-            opts["icon"] = QtGui.QIcon(opts["icon"])
+        if "btn_icon" in opts:
+            icon = opts["btn_icon"]
+            opts["btn_icon"] = iconToQIcon(icon)
 
         for attr in self.settableAttributes.intersection(opts):
             buttonAttr = nameMap.get(attr, attr)
@@ -48,6 +48,8 @@ class ActionParameterItem(ParameterItem):
     """ParameterItem displaying a clickable button."""
     def __init__(self, param, depth):
         ParameterItem.__init__(self, param, depth)
+        # For action parameters, icons are displayed in the button, not the tree item
+        # Clear any icon that was set by the parent __init__
         self.layoutWidget = QtWidgets.QWidget()
         self.layout = QtWidgets.QHBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)

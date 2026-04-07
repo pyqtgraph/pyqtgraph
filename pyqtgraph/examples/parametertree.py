@@ -194,6 +194,27 @@ params = [
         {'name': 'Extra context actions', 'type': 'int', 'value': 0,
          'context': {'log': 'Print value to console'},
          'tip': 'User-defined context actions appear in the Manage section'},
+    {'name': 'Icon Examples', 'type': 'group', 'expanded':False, 'children': [
+        {'name': 'Single parameter with icon', 'type': 'int', 'value': 42, 'icon': QtWidgets.QStyle.StandardPixmap.SP_ComputerIcon},
+        {'name': 'Group with icon', 'type': 'group', 'icon': QtWidgets.QStyle.StandardPixmap.SP_DirOpenIcon, 'children': [
+            {'name': 'Child 1', 'type': 'str', 'value': 'nested parameter'},
+            {'name': 'Child 2', 'type': 'float', 'value': 3.14},
+        ]},
+        {'name': 'Action with icon', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_DialogSaveButton},
+        {'name': 'Action with btn_icon', 'type': 'action', 'btn_icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload},
+        {'name': 'Action with icon + btn_icon', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload, 'btn_icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload},
+        {'name': 'Action group with icons', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_TitleBarMenuButton, 'children': [
+            {'name': 'Sub-action 1', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_ArrowUp},
+            {'name': 'Sub-action 2', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_ArrowDown},
+        ]},
+    ]},
+    {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
+        {'name': 'functionality', 'type': 'bool', 'value': True},
+        {'name': 'Save State', 'type': 'action'},
+        {'name': 'Restore State', 'type': 'action', 'children': [
+            {'name': 'Add missing items', 'type': 'bool', 'value': True},
+            {'name': 'Remove extra items', 'type': 'bool', 'value': True},
+        ]},
     ]},
     ComplexParameter(name="Custom parameter group (reciprocal values)"),
     ScalableGroup(
@@ -205,7 +226,8 @@ params = [
         ],
     ),
 ]
-
+}
+]
 ## Create tree of Parameter objects
 p = Parameter.create(name="params", type="group", children=params)
 
