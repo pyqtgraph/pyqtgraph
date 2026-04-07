@@ -5,7 +5,7 @@ from ...util.icons import iconToQIcon
 
 class ParameterControlledButton(QtWidgets.QPushButton):
     settableAttributes = {
-        "title", "tip", "action_icon", "shortcut", "enabled", "visible"
+        "title", "tip", "btn_icon", "shortcut", "enabled", "visible"
     }
 
     def __init__(self, parameter=None, parent=None):
@@ -20,7 +20,7 @@ class ParameterControlledButton(QtWidgets.QPushButton):
     def updateOpts(self, param, opts):
         # Of the attributes that can be set on a QPushButton, only the text
         # and tooltip attributes are different from standard pushbutton names
-        nameMap = dict(title="text", tip="toolTip", action_icon="icon")
+        nameMap = dict(title="text", tip="toolTip", btn_icon="icon")
         # Special case: "title" could be none, in which case make it something
         # readable by the simple copy-paste logic later
         opts = opts.copy()
@@ -30,9 +30,9 @@ class ParameterControlledButton(QtWidgets.QPushButton):
             opts["title"] = param.title()
         # Another special case: icons should be converted to QIcon before
         # being passed to the button
-        if "action_icon" in opts:
-            icon = opts["action_icon"]
-            opts["action_icon"] = iconToQIcon(icon)
+        if "btn_icon" in opts:
+            icon = opts["btn_icon"]
+            opts["btn_icon"] = iconToQIcon(icon)
 
         for attr in self.settableAttributes.intersection(opts):
             buttonAttr = nameMap.get(attr, attr)
