@@ -70,8 +70,8 @@ params = [
             {'name': 'Child 2', 'type': 'float', 'value': 3.14},
         ]},
         {'name': 'Action with icon', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_DialogSaveButton},
-        {'name': 'Action with action_icon', 'type': 'action', 'action_icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload},
-        {'name': 'Action with icon + action_icon', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload, 'action_icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload},
+        {'name': 'Action with btn_icon', 'type': 'action', 'btn_icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload},
+        {'name': 'Action with icon + btn_icon', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload, 'btn_icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload},
         {'name': 'Action group with icons', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_TitleBarMenuButton, 'children': [
             {'name': 'Sub-action 1', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_ArrowUp},
             {'name': 'Sub-action 2', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_ArrowDown},
