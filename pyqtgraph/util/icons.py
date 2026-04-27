@@ -1,4 +1,4 @@
-from qtpy import QtGui, QtWidgets
+from ..Qt import QtGui, QtWidgets
 
 def iconToQIcon(icon):
     """Convert various icon formats to QIcon.
