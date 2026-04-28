@@ -310,11 +310,11 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
                 self.ctrlMenu.addSeparator()
             self._buildParamMenu(self.ctrlMenu, show_rename, show_remove)
 
-    def updateDefaultBtn(self):
+    def updateCtrlButton(self):
         """Refresh the ctrl button menu to reflect current parameter state.
 
         Called automatically on value and opts changes. Override in a subclass
-        to add custom refresh logic; call ``super().updateDefaultBtn()`` to
+        to add custom refresh logic; call ``super().updateCtrlButton()`` to
         retain the built-in menu refresh.
 
         When the menu is currently visible (e.g. a persistent action was just
@@ -324,6 +324,15 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
         """
         if hasattr(self, 'ctrlMenu') and not self.ctrlMenu.isVisible():
             self.populateCtrlMenu()
+
+    def updateDefaultBtn(self):
+        """Deprecated. Use :meth:`updateCtrlButton` instead."""
+        warnings.warn(
+            "updateDefaultBtn is deprecated; use updateCtrlButton instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.updateCtrlButton()
 
     def defaultClicked(self):
         self.param.setToDefault()
