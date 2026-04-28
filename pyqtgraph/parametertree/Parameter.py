@@ -217,6 +217,18 @@ class Parameter(QtCore.QObject):
         self.blockTreeChangeEmit = 0
         self.setName(name)
 
+        registered = PARAM_TYPES.get(self.type())
+        if registered is not None and self.__class__ is not registered:
+            warnings.warn(
+                f"Parameter type '{self.type()}' is registered to "
+                f"{registered.__name__}, but this instance is "
+                f"{self.__class__.__name__}. Use registerParameterType() to register "
+                f"a unique type name, or this parameter may not survive a "
+                f"saveState()/restoreState() round-trip.",
+                UserWarning,
+                stacklevel=2,
+            )
+
         self.addChildren(self.opts.pop('children', []))
         if 'value' in self.opts and 'default' not in self.opts:
             self.opts['default'] = self.opts['value']
@@ -312,7 +324,7 @@ class Parameter(QtCore.QObject):
         if cls is None:
             raise ValueError(f"Type name '{typ}' is not registered.")
         return self.__class__ is cls
-        
+
     def childPath(self, child):
         """
         Return the path of parameter names from self to child.
