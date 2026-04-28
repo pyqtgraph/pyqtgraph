@@ -41,7 +41,6 @@ Public helpers
 """
 from __future__ import annotations
 
-import json
 from json import JSONDecoder, JSONEncoder
 from typing import Any
 
