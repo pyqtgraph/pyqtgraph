@@ -12,8 +12,10 @@ from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB, QtVersionInfo
 
 if QtVersionInfo[0] >= 6:
     QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
+    QtOpenGLWidgets = importlib.import_module(f"{QT_LIB}.QtOpenGLWidgets")
 else:
     QtOpenGL = QtGui
+    QtOpenGLWidgets = QtWidgets
 
 class GLViewMixin:
     def __init__(self, *args, rotationMethod='euler', **kwargs):
@@ -211,6 +213,10 @@ class GLViewMixin:
         return [self._itemNames[i[1]] for i in items]
     
     def paintGL(self):
+        # Qt may have triggered some OpenGL errors, drain those errors away.
+        while GL.glGetError() != GL.GL_NO_ERROR:
+            pass
+
         # when called by Qt, glViewport has already been called
         # with device pixel ratio taken of
         region = self.getViewport()
@@ -547,7 +553,7 @@ class GLViewMixin:
         return output
 
 
-class GLViewWidget(GLViewMixin, QtWidgets.QOpenGLWidget):
+class GLViewWidget(GLViewMixin, QtOpenGLWidgets.QOpenGLWidget):
     def __init__(self, *args, devicePixelRatio=None, **kwargs):
         """
         Basic widget for displaying 3D data
