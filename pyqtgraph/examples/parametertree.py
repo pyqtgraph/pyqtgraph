@@ -133,21 +133,6 @@ class ScalableGroup(pTypes.GroupParameter):
 params = [
     makeAllParamTypes(),
     {
-        "name": "Save/Restore functionality",
-        "type": "group",
-        "children": [
-            {"name": "Save State", "type": "action"},
-            {
-                "name": "Restore State",
-                "type": "action",
-                "children": [
-                    {"name": "Add missing items", "type": "bool", "value": True},
-                    {"name": "Remove extra items", "type": "bool", "value": True},
-                ],
-            },
-        ],
-    },
-    {
         "name": "Custom context menu",
         "type": "group",
         "children": [
@@ -198,6 +183,7 @@ params = [
         {'name': 'Extra context actions', 'type': 'int', 'value': 0,
          'context': {'log': 'Print value to console'},
          'tip': 'User-defined context actions appear in the Manage section'},
+    ]},
     {'name': 'Icon Examples', 'type': 'group', 'expanded':False, 'children': [
         {'name': 'Single parameter with icon', 'type': 'int', 'value': 42, 'icon': QtWidgets.QStyle.StandardPixmap.SP_ComputerIcon},
         {'name': 'Group with icon', 'type': 'group', 'icon': QtWidgets.QStyle.StandardPixmap.SP_DirOpenIcon, 'children': [
@@ -213,7 +199,6 @@ params = [
         ]},
     ]},
     {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
-        {'name': 'functionality', 'type': 'bool', 'value': True},
         {'name': 'Save State', 'type': 'action'},
         {'name': 'Restore State', 'type': 'action', 'children': [
             {'name': 'Add missing items', 'type': 'bool', 'value': True},
@@ -231,8 +216,6 @@ params = [
             {"name": "ScalableParam 2", "type": "str", "value": "default param 2"},
         ],
     ),
-]
-}
 ]
 ## Create tree of Parameter objects
 p = Parameter.create(name="params", type="group", children=params)
