@@ -1,17 +1,158 @@
+import warnings
+
+from .. import icons
 from ..Qt import QtCore, QtGui, QtWidgets
+from ..util.icons import iconToQIcon
 
 translate = QtCore.QCoreApplication.translate
 
+#: Default set of built-in actions shown in the ctrl button menu.
+#: Pass a subset as the ``ctrlActions`` parameter option to restrict the menu.
+#: Valid values: ``'default'``, ``'setDefault'``, ``'enabled'``, ``'readonly'``,
+#: ``'rename'``, ``'remove'``.  For ``'rename'`` and ``'remove'``, including the
+#: key in ``ctrlActions`` is sufficient — ``renamable`` / ``removable`` opts are
+#: not required, though either alone is also enough.
+DEFAULT_CTRL_ACTIONS = frozenset({'default', 'setDefault', 'enabled', 'readonly'})
+
+
+class _CtrlMenu(QtWidgets.QMenu):
+    """QMenu that stays open when an action marked with ``persistentMenu`` is triggered."""
+
+    def mouseReleaseEvent(self, event):
+        action = self.activeAction()
+        if action is not None and action.property("persistentMenu"):
+            action.trigger()
+            event.accept()
+        else:
+            super().mouseReleaseEvent(event)
+
+
+class CtrlButton(QtWidgets.QToolButton):
+    """Self-contained ctrl button for :class:`ParameterItem`.
+
+    Owns the :class:`_CtrlMenu` and delegates menu population to
+    :meth:`ParameterItem.populateCtrlMenu` on the associated item.
+    The item is responsible for filling the menu; this class only manages
+    widget appearance and menu lifecycle.
+    """
+
+    def __init__(self, param_item):
+        super().__init__()
+        self._item = param_item
+        self.setFixedWidth(20)
+        self.setFixedHeight(20)
+        self.setIcon(icons.getGraphIcon('ctrl'))
+        self.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
+        # hide the built-in drop-arrow so the icon fills the button cleanly
+        self.setStyleSheet("QToolButton::menu-indicator { image: none; }")
+        self._menu = _CtrlMenu()  # keep a Python reference to prevent GC
+        self._menu.aboutToShow.connect(param_item.populateCtrlMenu)
+        self.setMenu(self._menu)
+
+
+
+class _MenuActionHandler(QtCore.QObject):
+    """QObject helper that receives triggered signals from QActions in a menu.
+
+    The handler avoids lambda closures in signal connections by storing
+    the path directly on the action (``action.pathForTriggered``) and using
+    ``sender()`` to retrieve it at call time.  This prevents unintended strong
+    reference cycles between Qt objects.
+
+    Parameters
+    ----------
+    callback : callable
+        Called with a single argument — the ``pathForTriggered`` tuple of the
+        triggered action.
+    """
+
+    def __init__(self, callback):
+        super().__init__()
+        self._callback = callback
+
+    def onTriggered(self):
+        action = self.sender()
+        if action is not None and hasattr(action, 'pathForTriggered'):
+            self._callback(action.pathForTriggered)
+
+
+def build_menu_from_iterable(menu, items, handler, path=()):
+    """Recursively populate *menu* from *items*.
+
+    Each leaf action is connected to ``handler.onTriggered`` and has its
+    ``pathForTriggered`` attribute set to the full tuple path from the root.
+
+    Parameters
+    ----------
+    menu : QMenu
+        The menu (or submenu) to populate.
+    items : dict | list | tuple
+        Structure describing the menu.  Each element is either:
+
+        - a plain ``str`` — a leaf action whose display text and path
+          component are both the string.
+        - a ``dict`` — key/value pairs interpreted as:
+
+          ============  ====================================================
+          value type    meaning
+          ============  ====================================================
+          falsy         leaf; display text = key, path component = key
+          ``str``       leaf; display text = value, path component = key
+                        (human-readable alias, e.g. ``{"internalName": "Label"}``)
+          non-empty     submenu named *key*; recurse into *value*
+          dict/list/
+          tuple
+          ============  ====================================================
+
+    handler : _MenuActionHandler
+        QObject whose ``onTriggered`` slot is connected to every leaf action.
+    path : tuple
+        Path prefix accumulated during recursion; callers should omit this.
+    """
+    if isinstance(items, dict):
+        for key, value in items.items():
+            _menu_handle_item(menu, key, value, handler, path)
+    elif isinstance(items, (list, tuple)):
+        for item in items:
+            if isinstance(item, dict):
+                for key, value in item.items():
+                    _menu_handle_item(menu, key, value, handler, path)
+            elif isinstance(item, str):
+                _menu_add_leaf(menu, item, handler, path + (item,))
+
+
+def _menu_handle_item(menu, key, value, handler, path):
+    new_path = path + (key,)
+    if isinstance(value, (dict, list, tuple)) and value:
+        submenu = menu.addMenu(key)
+        build_menu_from_iterable(submenu, value, handler, new_path)
+    elif isinstance(value, str):
+        _menu_add_leaf(menu, value, handler, new_path)
+    else:
+        _menu_add_leaf(menu, key, handler, new_path)
+
+
+def _menu_add_leaf(menu, display, handler, path):
+    action = menu.addAction(display)
+    action.pathForTriggered = path
+    action.triggered.connect(handler.onTriggered)
+
+
 class ParameterItem(QtWidgets.QTreeWidgetItem):
     """
-    Abstract ParameterTree item. 
+    Abstract ParameterTree item.
     Used to represent the state of a Parameter from within a ParameterTree.
     
       - Sets first column of item to name
       - generates context menu if item is renamable or removable
       - handles child added / removed events
       - provides virtual functions for handling changes from parameter
-    
+
+    Subclasses that display a value widget may call :meth:`makeCtrlButton` to
+    add a ctrl button (gear icon) with a menu that exposes built-in actions
+    (Reset to default, Set as default, Enable/Disable, Lock/Unlock, Rename,
+    Remove).  Override :meth:`populateCtrlMenu` to customise the menu.
+
     For more ParameterItem types, see ParameterTree.parameterTypes module.
     """
 
@@ -33,15 +174,21 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
         
         self.updateFlags()
 
+        ## Set initial icon if provided
+        if 'icon' in param.opts:
+            self.setIcon(0, iconToQIcon(param.opts['icon']))
+
         ## flag used internally during name editing
         self.ignoreNameColumnChange = False
 
     def updateFlags(self):
         ## called when Parameter opts changed
         opts = self.param.opts
-        
+        ctrl = opts.get('ctrlActions', DEFAULT_CTRL_ACTIONS)
+        renamable = opts.get('renamable', False) or 'rename' in ctrl
+
         flags = QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled
-        if opts.get('renamable', False):
+        if renamable:
             if opts.get('title', None) is not None:
                 raise Exception("Cannot make parameter with both title != None and renamable == True.")
             flags |= QtCore.Qt.ItemFlag.ItemIsEditable
@@ -102,32 +249,205 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
                 
     def contextMenuEvent(self, ev):
         opts = self.param.opts
-        
+
         if not opts.get('removable', False) and not opts.get('renamable', False)\
                 and "context" not in opts:
             return
-        
+
         ## Generate context menu for renaming/removing parameter
         self.contextMenu = QtWidgets.QMenu() # Put in global name space to prevent garbage collection
         self.contextMenu.addSeparator()
-        if opts.get('renamable', False):
-            self.contextMenu.addAction(translate("ParameterItem", 'Rename')).triggered.connect(self.editName)
-        if opts.get('removable', False):
-            self.contextMenu.addAction(translate("ParameterItem", "Remove")).triggered.connect(self.requestRemove)
-        
-        # context menu
-        context = opts.get('context', None)
-        if isinstance(context, list):
-            for name in context:
-                self.contextMenu.addAction(name).triggered.connect(
-                    self.contextMenuTriggered(name))
-        elif isinstance(context, dict):
-            for name, title in context.items():
-                self.contextMenu.addAction(title).triggered.connect(
-                    self.contextMenuTriggered(name))
-        
+        self._buildParamMenu(self.contextMenu)
         self.contextMenu.popup(ev.globalPos())
-        
+
+    def _buildParamMenu(self, menu, show_rename=None, show_remove=None):
+        """Add rename/remove/context actions to *menu*.
+
+        *show_rename* and *show_remove* default to the ``renamable`` /
+        ``removable`` parameter options when not provided, which is the
+        behaviour used by the standalone right-click context menu.
+        ``populateCtrlMenu`` passes explicit values so that ``ctrlActions``
+        can also govern these entries.
+        """
+        opts = self.param.opts
+
+        if show_rename is None:
+            show_rename = opts.get('renamable', False)
+        if show_remove is None:
+            show_remove = opts.get('removable', False)
+
+        if show_rename:
+            act = menu.addAction(icons.getGraphIcon('rename'), translate("ParameterItem", 'Rename'))
+            act.triggered.connect(self.editName)
+        if show_remove:
+            act = menu.addAction(icons.getGraphIcon('delete'), translate("ParameterItem", "Remove"))
+            act.triggered.connect(self.requestRemove)
+
+        context = opts.get('context', None)
+        if context is not None:
+            if not hasattr(self, '_contextMenuHandler'):
+                self._contextMenuHandler = _MenuActionHandler(self.param.contextMenu)
+            build_menu_from_iterable(menu, context, self._contextMenuHandler)
+
+    # ── Ctrl button ───────────────────────────────────────────────────────────
+
+    @property
+    def defaultBtn(self):
+        """Backward-compatible alias for :attr:`ctrlBtn`."""
+        return getattr(self, 'ctrlBtn', None)
+
+    @defaultBtn.setter
+    def defaultBtn(self, value):
+        self.ctrlBtn = value
+
+    def makeCtrlButton(self):
+        """Create and return the ctrl :class:`CtrlButton`.
+
+        Also sets ``self.ctrlBtn`` (and the ``self.defaultBtn`` alias) and
+        ``self.ctrlMenu`` for use in :meth:`populateCtrlMenu`.
+        Call once during ``__init__`` and add the returned widget to the layout.
+        """
+        btn = CtrlButton(self)
+        self.ctrlMenu = btn._menu
+        self.ctrlBtn = btn
+        return btn
+
+    def makeDefaultButton(self):
+        """Deprecated. Use :meth:`makeCtrlButton` instead."""
+        warnings.warn(
+            "makeDefaultButton is deprecated; use makeCtrlButton instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.makeCtrlButton()
+
+    def populateCtrlMenu(self):
+        """Rebuild the ctrl button menu to reflect current parameter state.
+
+        Override in a subclass to add custom entries; call
+        ``super().populateCtrlMenu()`` to retain the built-in actions.
+
+        Which built-in actions appear is controlled by the ``ctrlActions``
+        parameter option (a set of strings, default :data:`DEFAULT_CTRL_ACTIONS`).
+        Valid values are ``'default'``, ``'setDefault'``, ``'enabled'``,
+        ``'readonly'``, ``'rename'``, and ``'remove'``.  For ``'rename'`` and
+        ``'remove'``, either including the key in ``ctrlActions`` **or** setting
+        ``renamable=True`` / ``removable=True`` on the parameter is sufficient —
+        both are treated as equivalent.  ``'context'`` actions always follow the
+        ``context`` parameter option and are not controlled by ``ctrlActions``.
+        """
+        self.ctrlMenu.clear()
+        ctrl = self.param.opts.get('ctrlActions', DEFAULT_CTRL_ACTIONS)
+        readonly = self.param.readonly()
+        enabled = self.param.opts.get('enabled', True)
+
+        # ── Value ─────────────────────────────────────────────────────────────
+        value_count = 0
+        if 'default' in ctrl and self.param.hasDefault() and not readonly:
+            act = self.ctrlMenu.addAction(
+                icons.getGraphIcon('revert_default'),
+                translate("ParameterItem", "Reset to default"),
+            )
+            act.setEnabled(self.param.valueModifiedSinceResetToDefault() and enabled)
+            act.triggered.connect(self.defaultClicked)
+            value_count += 1
+
+        if 'setDefault' in ctrl and not readonly:
+            act = self.ctrlMenu.addAction(
+                icons.getGraphIcon('set_default'),
+                translate("ParameterItem", "Set as default"),
+            )
+            act.setEnabled(not self.param.valueIsDefault())
+            act.triggered.connect(self._setAsDefault)
+            value_count += 1
+
+        # ── State ──────────────────────────────────────────────────────────────
+        self._enabledAct = None
+        self._readonlyAct = None
+        state_count = 0
+        if 'enabled' in ctrl or 'readonly' in ctrl:
+            if value_count:
+                self.ctrlMenu.addSeparator()
+
+        if 'enabled' in ctrl:
+            self._enabledAct = self.ctrlMenu.addAction(
+                icons.getGraphIcon('visibleEye') if enabled else icons.getGraphIcon('invisibleEye'),
+                translate("ParameterItem", "Disable") if enabled
+                else translate("ParameterItem", "Enable"),
+            )
+            self._enabledAct.setProperty("persistentMenu", True)
+            self._enabledAct.triggered.connect(self._toggleEnabled)
+            state_count += 1
+
+        if 'readonly' in ctrl:
+            self._readonlyAct = self.ctrlMenu.addAction(
+                icons.getGraphIcon('lock') if not readonly else icons.getGraphIcon('unlock'),
+                translate("ParameterItem", "Lock") if not readonly
+                else translate("ParameterItem", "Unlock"),
+            )
+            self._readonlyAct.setProperty("persistentMenu", True)
+            self._readonlyAct.triggered.connect(self._toggleReadonly)
+            state_count += 1
+
+        # ── Rename / Remove / Context ──────────────────────────────────────────
+        opts = self.param.opts
+        show_rename = bool(opts.get('renamable') or 'rename' in ctrl)
+        show_remove = bool(opts.get('removable') or 'remove' in ctrl)
+        has_manage = show_rename or show_remove or 'context' in opts
+        if has_manage:
+            if value_count or state_count:
+                self.ctrlMenu.addSeparator()
+            self._buildParamMenu(self.ctrlMenu, show_rename, show_remove)
+
+    def updateDefaultBtn(self):
+        """Refresh the ctrl button menu to reflect current parameter state.
+
+        Called automatically on value and opts changes. Override in a subclass
+        to add custom refresh logic; call ``super().updateDefaultBtn()`` to
+        retain the built-in menu refresh.
+
+        When the menu is currently visible (e.g. a persistent action was just
+        triggered), the rebuild is skipped — individual toggle actions update
+        their own icon and text in-place, and ``aboutToShow`` ensures a full
+        refresh the next time the menu opens.
+        """
+        if hasattr(self, 'ctrlMenu') and not self.ctrlMenu.isVisible():
+            self.populateCtrlMenu()
+
+    def defaultClicked(self):
+        self.param.setToDefault()
+
+    def _setAsDefault(self):
+        self.param.setDefault(self.param.value())
+
+    def _toggleEnabled(self):
+        new_enabled = not self.param.opts.get('enabled', True)
+        self.param.setOpts(enabled=new_enabled)
+        if self._enabledAct is not None:
+            self._enabledAct.setIcon(
+                icons.getGraphIcon('visibleEye') if new_enabled
+                else icons.getGraphIcon('invisibleEye')
+            )
+            self._enabledAct.setText(
+                translate("ParameterItem", "Disable") if new_enabled
+                else translate("ParameterItem", "Enable")
+            )
+
+    def _toggleReadonly(self):
+        new_readonly = not self.param.readonly()
+        self.param.setOpts(readonly=new_readonly)
+        if self._readonlyAct is not None:
+            self._readonlyAct.setIcon(
+                icons.getGraphIcon('lock') if not new_readonly
+                else icons.getGraphIcon('unlock')
+            )
+            self._readonlyAct.setText(
+                translate("ParameterItem", "Lock") if not new_readonly
+                else translate("ParameterItem", "Unlock")
+            )
+
+    # ── Standard item methods ─────────────────────────────────────────────────
+
     def columnChangedEvent(self, col):
         """Called when the text in a column has been edited (or otherwise changed).
         By default, we only use changes to column 0 to rename the parameter.
@@ -192,12 +512,10 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
         if 'title' in opts:
             self.titleChanged()
 
-        self.updateFlags()
+        if 'icon' in opts:
+            self.setIcon(0, iconToQIcon(opts['icon']))
 
-    def contextMenuTriggered(self, name):
-        def trigger():
-            self.param.contextMenu(name)
-        return trigger
+        self.updateFlags()
 
     def editName(self):
         self.treeWidget().editItem(self, 0)

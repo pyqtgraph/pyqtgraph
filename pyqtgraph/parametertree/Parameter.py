@@ -86,7 +86,11 @@ class Parameter(QtCore.QObject):
     sigDefaultChanged(self, default)     Emitted when this parameter's default value has changed
     sigNameChanged(self, name)           Emitted when this parameter's name has changed
     sigOptionsChanged(self, opts)        Emitted when any of this parameter's options have changed
-    sigContextMenu(self, name)           Emitted when a context menu was clicked
+    sigContextMenu(self, path)           Emitted when a context menu item was clicked.
+                                         *path* is a tuple of strings representing the
+                                         full path to the selected item, e.g. ``('action',)``
+                                         for a flat item or ``('submenu', 'action')`` for a
+                                         nested one.
     ===================================  =========================================================
     """
     ## name, type, limits, etc.
@@ -254,9 +258,25 @@ class Parameter(QtCore.QObject):
             title = self.name()
         return title
 
-    def contextMenu(self, name):
-        """"A context menu entry was clicked"""
-        self.sigContextMenu.emit(self, name)
+    def contextMenu(self, name_or_path):
+        """A context menu entry was clicked.
+
+        *name_or_path* should be a tuple of strings representing the path to
+        the selected item (e.g. ``('action',)`` or ``('submenu', 'action')``).
+        Passing a plain string is deprecated and will be removed in a future
+        version; the string is automatically wrapped in a one-element tuple.
+        """
+        if isinstance(name_or_path, str):
+            warnings.warn(
+                "contextMenu() received a plain string; in a future version the "
+                "path will always be a tuple. Update your sigContextMenu handler "
+                "to expect a tuple, e.g. change ``name == 'foo'`` to "
+                "``name == ('foo',)`` or ``name[-1] == 'foo'``.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            name_or_path = (name_or_path,)
+        self.sigContextMenu.emit(self, name_or_path)
 
     def setName(self, name):
         """Attempt to change the name of this parameter; return the actual name. 
@@ -496,6 +516,35 @@ class Parameter(QtCore.QObject):
         self.sigLimitsChanged.emit(self, limits)
         return limits
 
+    def setIcon(self, icon):
+        """Set an icon to be displayed next to this parameter's title.
+
+        The icon will appear to the left of the parameter name/title in the ParameterTree.
+
+        Parameters
+        ----------
+        icon : QIcon, str, or None
+            The icon to display. Can be:
+            - A QIcon instance
+            - A file path (str) to an icon image
+            - A QIcon.StandardPixmap enum value
+            - None to remove the icon
+
+        Returns
+        -------
+        icon
+            The icon that was set
+        """        
+        if 'icon' in self.opts and self.opts['icon'] is icon:
+            return icon
+        self.opts['icon'] = icon
+        self.sigOptionsChanged.emit(self, {'icon': icon})
+        return icon
+
+    def icon(self):
+        """Return the icon for this parameter, or None if no icon is set."""
+        return self.opts.get('icon', None)
+
     def writable(self):
         """
         Returns True if this parameter's value can be changed by the user.
@@ -541,10 +590,12 @@ class Parameter(QtCore.QObject):
                 self.setLimits(opts[k])
             elif k == 'default':
                 self.setDefault(opts[k])
+            elif k == 'icon':
+                self.setIcon(opts[k])
             elif k not in self.opts or not fn.eq(self.opts[k], opts[k]):
                 self.opts[k] = opts[k]
                 changed[k] = opts[k]
-                
+
         if len(changed) > 0:
             self.sigOptionsChanged.emit(self, changed)
         

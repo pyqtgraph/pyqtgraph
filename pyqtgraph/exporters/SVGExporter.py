@@ -424,6 +424,11 @@ def correctCoordinates(node, defs, item, options):
                 if oldCoords == '':
                     continue
                 for c in oldCoords.split(' '):
+                    c = c.strip()
+                    if c == 'Z' or c == 'z':
+                        # Preserve the Z command as-is
+                        newCoords += c + ' '
+                        continue                    
                     x,y = c.split(',')
                     if x[0].isalpha():
                         t = x[0]
