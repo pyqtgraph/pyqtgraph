@@ -17,6 +17,10 @@ from pyqtgraph.Qt import QtWidgets
 app = pg.mkQApp("Parameter Tree Example")
 import pyqtgraph.parametertree.parameterTypes as pTypes
 from pyqtgraph.parametertree import Parameter, ParameterTree, registerParameterType
+from pyqtgraph.parametertree.iojson import (
+    parameter_restore_from_json_file,
+    parameter_to_json_file,
+)
 
 
 ## test subclassing parameters
@@ -132,21 +136,6 @@ registerParameterType('scalablegroup', ScalableGroup)
 params = [
     all_param_types,
     {
-        "name": "Save/Restore functionality",
-        "type": "group",
-        "children": [
-            {"name": "Save State", "type": "action"},
-            {
-                "name": "Restore State",
-                "type": "action",
-                "children": [
-                    {"name": "Add missing items", "type": "bool", "value": True},
-                    {"name": "Remove extra items", "type": "bool", "value": True},
-                ],
-            },
-        ],
-    },
-    {
         "name": "Custom context menu",
         "type": "group",
         "children": [
@@ -197,6 +186,7 @@ params = [
         {'name': 'Extra context actions', 'type': 'int', 'value': 0,
          'context': {'log': 'Print value to console'},
          'tip': 'User-defined context actions appear in the Manage section'},
+    ]},
     {'name': 'Icon Examples', 'type': 'group', 'expanded':False, 'children': [
         {'name': 'Single parameter with icon', 'type': 'int', 'value': 42, 'icon': QtWidgets.QStyle.StandardPixmap.SP_ComputerIcon},
         {'name': 'Group with icon', 'type': 'group', 'icon': QtWidgets.QStyle.StandardPixmap.SP_DirOpenIcon, 'children': [
@@ -212,12 +202,13 @@ params = [
         ]},
     ]},
     {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
-        {'name': 'functionality', 'type': 'bool', 'value': True},
         {'name': 'Save State', 'type': 'action'},
         {'name': 'Restore State', 'type': 'action', 'children': [
             {'name': 'Add missing items', 'type': 'bool', 'value': True},
             {'name': 'Remove extra items', 'type': 'bool', 'value': True},
         ]},
+        {'name': 'Save to JSON', 'type': 'action'},
+        {'name': 'Restore from JSON', 'type': 'action'},
     ]},
     ComplexParameter(name="Custom parameter group (reciprocal values)"),
     ScalableGroup(
@@ -228,8 +219,6 @@ params = [
             {"name": "ScalableParam 2", "type": "str", "value": "default param 2"},
         ],
     ),
-]
-}
 ]
 ## Create tree of Parameter objects
 p = Parameter.create(name="params", type="group", children=params)
@@ -282,8 +271,25 @@ def restore():
     add = p["Save/Restore functionality", "Restore State", "Add missing items"]
     rem = p["Save/Restore functionality", "Restore State", "Remove extra items"]
     p.restoreState(state, addChildren=add, removeChildren=rem)
+
+def saveJson():
+    path, _ = QtWidgets.QFileDialog.getSaveFileName(
+        None, 'Save parameters to JSON', '', 'JSON files (*.json)'
+    )
+    if path:
+        parameter_to_json_file(p, path)
+
+def restoreJson():
+    path, _ = QtWidgets.QFileDialog.getOpenFileName(
+        None, 'Load parameters from JSON', '', 'JSON files (*.json)'
+    )
+    if path:
+        parameter_restore_from_json_file(p, path)
+
 p.param('Save/Restore functionality', 'Save State').sigActivated.connect(save)
 p.param('Save/Restore functionality', 'Restore State').sigActivated.connect(restore)
+p.param('Save/Restore functionality', 'Save to JSON').sigActivated.connect(saveJson)
+p.param('Save/Restore functionality', 'Restore from JSON').sigActivated.connect(restoreJson)
 
 
 ## Create two ParameterTree widgets, both accessing the same data

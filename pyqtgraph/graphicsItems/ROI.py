@@ -38,6 +38,39 @@ __all__ = [
 def rectStr(r):
     return "[%f, %f] + [%f, %f]" % (r.x(), r.y(), r.width(), r.height())
 
+def _calculate_bounding_rect(points, state):
+    """
+    Helper function to calculate bounding rectangle after applying transformations.
+
+    Parameters
+    ----------
+    points : list of Points
+        Original points of the ROI
+    state : dict
+        State dictionary containing position and angle
+
+    Returns
+    -------
+    QRectF
+        Transformed bounding rectangle
+    """
+    tr = QtGui.QTransform()
+    tr.translate(state['pos'][0], state['pos'][1])
+    tr.rotate(state['angle'])
+
+    transformed_points = [tr.map(pt) for pt in points]
+
+    if not transformed_points:
+        return QtCore.QRectF(state['pos'][0], state['pos'][1], 0, 0)
+
+    xs = [pt.x() for pt in transformed_points]
+    ys = [pt.y() for pt in transformed_points]
+
+    min_x, max_x = min(xs), max(xs)
+    min_y, max_y = min(ys), max(ys)
+
+    return QtCore.QRectF(min_x, min_y, max_x - min_x, max_y - min_y)
+
 class ROI(GraphicsObject):
     """
     Generic region-of-interest widget.
@@ -1047,7 +1080,7 @@ class ROI(GraphicsObject):
     def stateRect(self, state):
         r = QtCore.QRectF(0, 0, state['size'][0], state['size'][1])
         tr = QtGui.QTransform()
-        tr.rotate(-state['angle'])
+        tr.rotate(state['angle'])
         r = tr.mapRect(r)
         return r.adjusted(state['pos'][0], state['pos'][1], state['pos'][0], state['pos'][1])
     
@@ -1929,8 +1962,27 @@ class EllipseROI(ROI):
             self.path = path
         
         return self.path
-        
-        
+
+    def stateRect(self, state):
+        """
+        Return the axis-aligned bounding rectangle of the ellipse in the given state.
+
+        Uses the analytic formula for the bounding box of a rotated ellipse: for
+        semi-axes *a* (x) and *b* (y) rotated by *theta*, the half-extents are
+        ``sqrt(a²cos²θ + b²sin²θ)`` and ``sqrt(a²sin²θ + b²cos²θ)``.
+        """
+        w, h = state['size']
+        a, b = w / 2.0, h / 2.0
+        angle = np.radians(state['angle'])
+        hw = np.sqrt(a**2 * np.cos(angle)**2 + b**2 * np.sin(angle)**2)
+        hh = np.sqrt(a**2 * np.sin(angle)**2 + b**2 * np.cos(angle)**2)
+        tr = QtGui.QTransform()
+        tr.rotate(state['angle'])
+        center = tr.map(QtCore.QPointF(a, b))
+        cx = state['pos'][0] + center.x()
+        cy = state['pos'][1] + center.y()
+        return QtCore.QRectF(cx - hw, cy - hh, 2 * hw, 2 * hh)
+
 
 class CircleROI(EllipseROI):
     r"""
@@ -2129,6 +2181,15 @@ class PolyLineROI(ROI):
         for seg in self.segments:
             seg.setPen(*args, **kwds)
 
+    def stateRect(self, state):
+        """
+        Return the axis-aligned bounding rectangle of the polyline in the given state.
+
+        Computes the bounding box from the current handle positions mapped through
+        the state's translation and rotation.
+        """
+        points = [Point(h.pos()) for h in self.getHandles()]
+        return _calculate_bounding_rect(points, state)
 
 
 class LineSegmentROI(ROI):
@@ -2235,7 +2296,17 @@ class LineSegmentROI(ROI):
         rgn = fn.affineSlice(data, shape=(int(d.length()),), vectors=[Point(d.norm())], origin=o, axes=axes, order=order, returnCoords=returnMappedCoords, **kwds)
 
         return rgn
-        
+
+    def stateRect(self, state):
+        """
+        Return the axis-aligned bounding rectangle of the line segment in the given state.
+
+        Computes the bounding box from the two endpoint handle positions mapped through
+        the state's translation and rotation.
+        """
+        points = [Point(h.pos()) for h in self.getHandles()]
+        return _calculate_bounding_rect(points, state)
+
 
 class _PolyLineSegment(LineSegmentROI):
     # Used internally by PolyLineROI
@@ -2354,12 +2425,12 @@ class TriangleROI(ROI):
     def __init__(self, pos, size, **args):
         ROI.__init__(self, pos, [size, size], aspectLocked=True, **args)
         angles = np.linspace(0, np.pi * 4 / 3, 3)
-        verticies = (np.array((np.sin(angles), np.cos(angles))).T + 1.0) / 2.0
+        vertices = (np.array((np.sin(angles), np.cos(angles))).T + 1.0) / 2.0
         self.poly = QtGui.QPolygonF()
-        for pt in verticies:
+        for pt in vertices:
             self.poly.append(QtCore.QPointF(*pt))
-        self.addRotateHandle(verticies[0], [0.5, 0.5])
-        self.addScaleHandle(verticies[1], [0.5, 0.5])
+        self.addRotateHandle(vertices[0], [0.5, 0.5])
+        self.addScaleHandle(vertices[1], [0.5, 0.5])
 
     def paint(self, p, *args):
         r = self.boundingRect()
@@ -2379,6 +2450,19 @@ class TriangleROI(ROI):
         t.scale(r.width(), r.height())
         self.path.addPolygon(self.poly)
         return t.map(self.path)
+
+    def stateRect(self, state):
+        """
+        Return the axis-aligned bounding rectangle of the triangle in the given state.
+
+        Reconstructs the three vertex positions (matching the formula used in
+        ``__init__``) scaled by ``state['size']``, then maps them through the
+        state's translation and rotation to compute the bounding box.
+        """
+        angles = np.linspace(0, np.pi * 4 / 3, 3)
+        verts = (np.array((np.sin(angles), np.cos(angles))).T + 1.0) / 2.0
+        pts = [Point(v[0] * state['size'][0], v[1] * state['size'][1]) for v in verts]
+        return _calculate_bounding_rect(pts, state)
 
     def getArrayRegion(self, *args, **kwds):
         return self._getArrayRegionForArbitraryShape(*args, **kwds)

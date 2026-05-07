@@ -26,7 +26,7 @@ class PenParameterItem(GroupParameterItem):
 
     def optsChanged(self, param, opts):
         if "enabled" in opts or "readonly" in opts:
-            self.updateDefaultBtn()
+            self.updateCtrlButton()
 
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
@@ -36,7 +36,7 @@ class PenParameterItem(GroupParameterItem):
         tw.setItemWidget(self, 1, self.itemWidget)
 
     def valueChanged(self, param, val):
-        self.updateDefaultBtn()
+        self.updateCtrlButton()
 
 
 def cap_first(s: str):

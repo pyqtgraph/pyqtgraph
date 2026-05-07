@@ -178,12 +178,43 @@ class Parameter(QtCore.QObject):
         syncExpanded                 If True, the `expanded` state of this Parameter is
                                      synchronized with all ParameterTrees it is displayed in.
                                      (default=False)
-        title                        (str or None) If specified, then the parameter will be 
-                                     displayed to the user using this string as its name. 
-                                     However, the parameter will still be referred to 
+        title                        (str or None) If specified, then the parameter will be
+                                     displayed to the user using this string as its name.
+                                     However, the parameter will still be referred to
                                      internally using the *name* specified above. Note that
                                      this option is not compatible with renamable=True.
                                      (default=None; added in version 0.9.9)
+        context                      Specifies items for a context menu shown on right-click
+                                     and inside the ctrl button menu. Accepts a dict, list,
+                                     or tuple; nested structures produce submenus. See
+                                     :func:`~pyqtgraph.parametertree.ParameterItem.build_menu_from_iterable`
+                                     for the accepted format. Clicking an item emits
+                                     sigContextMenu with the full path tuple to that item.
+                                     (default=None)
+        ctrlActions                  A set of strings controlling which built-in actions
+                                     appear in the ctrl button menu (the gear icon shown by
+                                     widget-based parameter types). Valid values:
+                                     ``'default'`` (Reset to default), ``'setDefault'``
+                                     (Set as default), ``'enabled'`` (Enable/Disable
+                                     toggle), ``'readonly'`` (Lock/Unlock toggle),
+                                     ``'rename'``, ``'remove'``. Including ``'rename'`` or
+                                     ``'remove'`` here is equivalent to setting
+                                     ``renamable=True`` / ``removable=True``.
+                                     (default: {'default', 'setDefault', 'enabled',
+                                     'readonly'})
+        icon                         An icon to display next to the parameter name in a
+                                     ParameterTree. Accepts a QIcon instance, a file path
+                                     string, or a QIcon.StandardPixmap value. Pass None to
+                                     remove the icon. See also :meth:`setIcon`.
+                                     (default=None)
+        showCtrlButton               If False, the ctrl button (gear icon) will be hidden
+                                     for widget-based parameter types. The button can be
+                                     shown again later via ``setOpts(showCtrlButton=True)``.
+                                     (default=True)
+        movable                      If True, the parameter item can be dragged within a
+                                     ParameterTree (sets ItemIsDragEnabled). (default=False)
+        dropEnabled                  If True, the parameter item accepts drops from other
+                                     items (sets ItemIsDropEnabled). (default=False)
         =======================      =========================================================
         """
         super().__init__()

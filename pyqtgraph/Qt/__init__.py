@@ -110,23 +110,10 @@ def _loadUiType(uiFile):
 # To avoid this, we now maintain a local "mirror" of QtCore, QtGui and QtWidgets.
 # Thus, when monkey-patching happens later on in this file, they will only affect
 # the local modules and not the global modules.
-def _copy_attrs(src, dst):
-    for o in dir(src):
-        if not hasattr(dst, o):
-            setattr(dst, o, getattr(src, o))
 
 from . import QtCore, QtGui, QtWidgets, compat
 
 if QT_LIB == PYQT5:
-    # We're using PyQt5 which has a different structure so we're going to use a shim to
-    # recreate the Qt4 structure for Qt5
-    import PyQt5.QtCore
-    import PyQt5.QtGui
-    import PyQt5.QtWidgets
-    _copy_attrs(PyQt5.QtCore, QtCore)
-    _copy_attrs(PyQt5.QtGui, QtGui)
-    _copy_attrs(PyQt5.QtWidgets, QtWidgets)
-
     try:
         from PyQt5 import sip
     except ImportError:
@@ -146,23 +133,12 @@ if QT_LIB == PYQT5:
     VERSION_INFO = 'PyQt5 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 elif QT_LIB == PYQT6:
-    import PyQt6.QtCore
-    import PyQt6.QtGui
-    import PyQt6.QtWidgets
-    _copy_attrs(PyQt6.QtCore, QtCore)
-    _copy_attrs(PyQt6.QtGui, QtGui)
-    _copy_attrs(PyQt6.QtWidgets, QtWidgets)
-
     from PyQt6 import sip, uic
 
     try:
         from PyQt6 import QtSvg
     except ImportError as err:
         QtSvg = FailedImport(err)
-    try:
-        from PyQt6 import QtOpenGLWidgets
-    except ImportError as err:
-        QtOpenGLWidgets = FailedImport(err)
     try:
         from PyQt6 import QtTest
     except ImportError as err:
@@ -171,13 +147,6 @@ elif QT_LIB == PYQT6:
     VERSION_INFO = 'PyQt6 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 elif QT_LIB == PYSIDE2:
-    import PySide2.QtCore
-    import PySide2.QtGui
-    import PySide2.QtWidgets
-    _copy_attrs(PySide2.QtCore, QtCore)
-    _copy_attrs(PySide2.QtGui, QtGui)
-    _copy_attrs(PySide2.QtWidgets, QtWidgets)
-    
     try:
         from PySide2 import QtSvg
     except ImportError as err:
@@ -191,21 +160,10 @@ elif QT_LIB == PYSIDE2:
     import shiboken2 as shiboken
     VERSION_INFO = 'PySide2 ' + PySide2.__version__ + ' Qt ' + QtCore.__version__
 elif QT_LIB == PYSIDE6:
-    import PySide6.QtCore
-    import PySide6.QtGui
-    import PySide6.QtWidgets
-    _copy_attrs(PySide6.QtCore, QtCore)
-    _copy_attrs(PySide6.QtGui, QtGui)
-    _copy_attrs(PySide6.QtWidgets, QtWidgets)
-
     try:
         from PySide6 import QtSvg
     except ImportError as err:
         QtSvg = FailedImport(err)
-    try:
-        from PySide6 import QtOpenGLWidgets
-    except ImportError as err:
-        QtOpenGLWidgets = FailedImport(err)
     try:
         from PySide6 import QtTest
     except ImportError as err:
@@ -221,12 +179,6 @@ else:
 
 
 if QT_LIB in [PYQT6, PYSIDE6]:
-    # We're using Qt6 which has a different structure so we're going to use a shim to
-    # recreate the Qt5 structure
-
-    if not isinstance(QtOpenGLWidgets, FailedImport):
-        QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
-
     # PySide6 incorrectly placed QFileSystemModel inside QtWidgets
     if QT_LIB == PYSIDE6 and hasattr(QtWidgets, 'QFileSystemModel'):
         module = getattr(QtWidgets, "QFileSystemModel")
