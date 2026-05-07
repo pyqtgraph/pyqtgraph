@@ -37,6 +37,8 @@ class WidgetParameterItem(ParameterItem):
             self.addChild(self.subItem)
 
         self.ctrlBtn = self.makeCtrlButton()
+        if not param.opts.get('showCtrlButton', True):
+            self.ctrlBtn.hide()
 
         self.displayLabel = QtWidgets.QLabel()
 
@@ -65,7 +67,7 @@ class WidgetParameterItem(ParameterItem):
             ## no starting value was given; use whatever the widget has
             self.widgetValueChanged()
 
-        self.updateDefaultBtn()
+        self.updateCtrlButton()
 
         self.optsChanged(self.param, self.param.opts)
 
@@ -136,7 +138,7 @@ class WidgetParameterItem(ParameterItem):
                     self.widget.sigChanged.connect(self.widgetValueChanged)
                 self.param.sigValueChanged.connect(self.valueChanged)
         self.updateDisplayLabel()  ## always make sure label is updated, even if values match!
-        self.updateDefaultBtn()
+        self.updateCtrlButton()
 
     def updateDisplayLabel(self, value=None):
         """Update the display label to reflect the value of the parameter."""
@@ -181,7 +183,7 @@ class WidgetParameterItem(ParameterItem):
         ParameterItem.limitsChanged(self, param, limits)
 
     def defaultChanged(self, param, value):
-        self.updateDefaultBtn()
+        self.updateCtrlButton()
 
     def treeWidgetChanged(self):
         """Called when this item is added or removed from a tree."""
@@ -205,11 +207,11 @@ class WidgetParameterItem(ParameterItem):
         ParameterItem.optsChanged(self, param, opts)
 
         if 'enabled' in opts:
-            self.updateDefaultBtn()
+            self.updateCtrlButton()
             self.widget.setEnabled(opts['enabled'])
 
         if 'readonly' in opts:
-            self.updateDefaultBtn()
+            self.updateCtrlButton()
 
             if opts['readonly']:
                 self.displayLabel.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
@@ -220,6 +222,9 @@ class WidgetParameterItem(ParameterItem):
                 self.widget.setReadOnly(opts['readonly'])
             else:
                 self.widget.setEnabled(self.param.opts['enabled'] and not opts['readonly'])
+
+        if 'showCtrlButton' in opts:
+            self.ctrlBtn.setVisible(opts['showCtrlButton'])
 
         if 'tip' in opts:
             self.widget.setToolTip(opts['tip'])

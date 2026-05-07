@@ -78,14 +78,14 @@ class ChecklistParameterItem(GroupParameterItem):
         self.btnGrp.setExclusive(exclusive)
         # "Limits" will force update anyway, no need to duplicate if it's present
         if 'limits' not in opts and ('enabled' in opts or 'readonly' in opts):
-            self.updateDefaultBtn()
+            self.updateCtrlButton()
 
     def expandedChangedEvent(self, expanded):
         for btn in self.metaBtns.values():
             btn.setVisible(expanded)
 
     def valueChanged(self, param, val):
-        self.updateDefaultBtn()
+        self.updateCtrlButton()
 
 
 class RadioParameterItem(BoolParameterItem):
