@@ -322,8 +322,8 @@ class AxisItem(GraphicsWidget):
 
     def setLogMode(
         self,
-        *args: tuple[bool] | tuple[bool, bool] | None,
-        **kwargs: dict[str, bool] | None
+        *args: bool,
+        **kwargs: bool
     ):
         """
         Set log scaling for x and / or y axes.
@@ -339,15 +339,14 @@ class AxisItem(GraphicsWidget):
 
         Parameters
         ----------
-        *args : tuple of bool
-            If length 1, sets log mode regardless of orientation.  If length 2, the
-            first element toggles log mode for x-axis, and the second element toggles
-            log mode for the y-axis.
-        **kwargs : dict
-            Pass a dictionary with keys `x` and `y`, where the values are ``bool`` to
-            set the log mode for the respective `x` or `y` axis.  Trying to set the `y`
-            axis log mode while this axis item is horizontal (or vice versa) will be
-            ignored.
+        *args : bool
+            If one value is provided, it sets log mode regardless of orientation.
+            If two values are provided, the first toggles log mode for the x-axis
+            and the second toggles log mode for the y-axis.
+        **kwargs : bool
+            Pass `x` and / or `y` keyword arguments with ``bool`` values to set
+            the log mode for the respective axis. Trying to set the `y` axis log
+            mode while this axis item is horizontal (or vice versa) will be ignored.
 
         See Also
         --------
