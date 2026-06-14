@@ -109,6 +109,8 @@ class MatplotlibExporter(Exporter):
         self.cleanAxes(ax)
         for item in self.item.curves:
             x, y = item.getData()
+            if x is None or y is None:
+                continue
             x = x * xscale
             y = y * yscale
 

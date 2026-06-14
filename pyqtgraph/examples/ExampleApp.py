@@ -12,8 +12,6 @@ from typing import Optional
 import pyqtgraph as pg
 from pyqtgraph.Qt import QT_LIB, QtCore, QtGui, QtWidgets
 
-app = pg.mkQApp()
-
 
 path = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, path)

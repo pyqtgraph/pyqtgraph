@@ -15,8 +15,9 @@ class GLTextItem(GLGraphicsItem):
         glopts = kwds.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
 
-        self.pos = np.array([0.0, 0.0, 0.0])
-        self.color = QtCore.Qt.GlobalColor.white
+        self.items = []
+        self.pos = [0.0, 0.0, 0.0]
+        self.color = QtGui.QColor(QtCore.Qt.GlobalColor.white)
         self.text = ''
         self.font = QtGui.QFont('Helvetica', 16)
         self.alignment = QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignBottom
@@ -32,13 +33,16 @@ class GLTextItem(GLGraphicsItem):
         **Arguments:**
         ------------------------------------------------------------------------
         pos                   (3,) array of floats specifying text location.
-        color                 QColor or array of ints [R,G,B] or [R,G,B,A]. (Default: Qt.white)
         text                  String to display.
+        color                 QColor or array of ints [R,G,B] or [R,G,B,A]. (Default: Qt.white)
         font                  QFont (Default: QFont('Helvetica', 16))
         alignment             QtCore.Qt.AlignmentFlag (Default: QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignBottom)
+        items                 Optional list of dicts. Each dict specifies parameters for a single textitem:
+                              {'pos', 'text', 'color', 'font', 'alignment'}. This allows rendering multiple
+                              text items. 'pos' and 'text' are required keys, the rest are optional.
         ====================  ==================================================
         """
-        args = ['pos', 'color', 'text', 'font', 'alignment']
+        args = ['pos', 'text', 'color', 'font', 'alignment', 'items']
         for k in kwds.keys():
             if k not in args:
                 raise ValueError('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
@@ -57,49 +61,68 @@ class GLTextItem(GLGraphicsItem):
                 elif arg == 'font':
                     if isinstance(value, QtGui.QFont) is False:
                         raise TypeError('"font" must be QFont.')
+                elif arg == 'items':
+                    if not isinstance(value, list):
+                        raise ValueError('"items" must be list of dicts')
                 setattr(self, arg, value)
         self.update()
 
     def paint(self):
-        if len(self.text) < 1:
+        items = [dict(text=self.text, pos=self.pos)] if len(self.text) != 0 else self.items
+        if len(items) == 0:
             return
+
         self.setupGLState()
 
-        project = self.compute_projection()
-        vec3 = QtGui.QVector3D(*self.pos)
-        text_pos = self.align_text(project.map(vec3).toPointF())
-
-        painter = QtGui.QPainter(self.view())
-        painter.setPen(self.color)
-        painter.setFont(self.font)
+        device = self.view()
+        rect = QtCore.QRectF(0, 0, device.width(), device.height())
+        project = self.compute_projection(rect)
+        painter = QtGui.QPainter(device)
         painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
-        painter.drawText(text_pos, self.text)
+
+        for item in items:
+            # text and pos must be specified
+            text = item['text']
+            pos = item['pos']
+
+            if len(text) == 0:
+                continue
+
+            # alignment, color, font fallback to defaults
+            alignment = item.get('alignment', self.alignment)
+            color = item.get('color')
+            color = fn.mkColor(color) if color is not None else self.color
+            font = item.get('font', self.font)
+
+            vec3 = QtGui.QVector3D(*pos)
+            pos_2d = self.align_text(project.map(vec3).toPointF(), text, font, alignment)
+            painter.setPen(color)
+            painter.setFont(font)
+            painter.drawText(pos_2d, text)
+
         painter.end()
 
-    def compute_projection(self):
+    def compute_projection(self, rect : QtCore.QRectF):
         # note that QRectF.bottom() != QRect.bottom()
-        rect = QtCore.QRectF(self.view().rect())
         ndc_to_viewport = QtGui.QMatrix4x4()
         ndc_to_viewport.viewport(rect.left(), rect.bottom(), rect.width(), -rect.height())
         return ndc_to_viewport * self.mvpMatrix()
 
-    def align_text(self, pos):
+    def align_text(self, pos, text, font, alignment):
         """
         Aligns the text at the given position according to the given alignment.
         """
-        font_metrics = QtGui.QFontMetrics(self.font)
-        rect = font_metrics.tightBoundingRect(self.text)
+        font_metrics = QtGui.QFontMetrics(font)
+        rect = font_metrics.tightBoundingRect(text)
         width = rect.width()
         height = rect.height()
         dx = dy = 0.0
-        if self.alignment & QtCore.Qt.AlignmentFlag.AlignRight:
+        if alignment & QtCore.Qt.AlignmentFlag.AlignRight:
             dx = width
-        if self.alignment & QtCore.Qt.AlignmentFlag.AlignHCenter:
+        if alignment & QtCore.Qt.AlignmentFlag.AlignHCenter:
             dx = width / 2.0
-        if self.alignment & QtCore.Qt.AlignmentFlag.AlignTop:
+        if alignment & QtCore.Qt.AlignmentFlag.AlignTop:
             dy = height
-        if self.alignment & QtCore.Qt.AlignmentFlag.AlignVCenter:
+        if alignment & QtCore.Qt.AlignmentFlag.AlignVCenter:
             dy = height / 2.0
-        pos.setX(pos.x() - dx)
-        pos.setY(pos.y() + dy)
-        return pos
+        return QtCore.QPointF(pos.x() - dx, pos.y() + dy)

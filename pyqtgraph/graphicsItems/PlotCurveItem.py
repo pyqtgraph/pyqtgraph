@@ -15,8 +15,10 @@ from .GraphicsObject import GraphicsObject
 
 if QtVersionInfo[0] >= 6:
     QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
+    QtOpenGLWidgets = importlib.import_module(f"{QT_LIB}.QtOpenGLWidgets")
 else:
     QtOpenGL = QtGui
+    QtOpenGLWidgets = QtWidgets
 
 __all__ = ['PlotCurveItem']
 
@@ -846,13 +848,14 @@ class PlotCurveItem(GraphicsObject):
 
         return path
 
-    def _shouldUseFillPathList(self):
+    def _shouldUseFillPathList(self, brush):
         connect = self.opts['connect']
         return (
             # not meaningful to fill disjoint lines
             isinstance(connect, str) and connect in ['all', 'finite']
             # guard against odd-ball argument 'enclosed'
             and isinstance(self.opts['fillLevel'], (int, float))
+            and brush.style() == QtCore.Qt.BrushStyle.SolidPattern
         )
 
     def _getFillPathList(self, widget):
@@ -875,7 +878,7 @@ class PlotCurveItem(GraphicsObject):
         #     Note: when OpenGL mode is enabled, we should normally be using the
         #     'paintGL' method, and should not even reach here.
         # Values were found using 'PlotSpeedTest.py' example, see #2257.
-        chunksize = 50 if not isinstance(widget, QtWidgets.QOpenGLWidget) else 5000
+        chunksize = 50 if not isinstance(widget, QtOpenGLWidgets.QOpenGLWidget) else 5000
 
         connect_kind = self.opts['connect']
         if isinstance(connect_kind, np.ndarray):
@@ -986,7 +989,7 @@ class PlotCurveItem(GraphicsObject):
         do_fill_outline = do_fill and self.opts['fillOutline']
 
         if do_fill:
-            if self._shouldUseFillPathList():
+            if self._shouldUseFillPathList(brush):
                 paths = self._getFillPathList(widget)
             else:
                 paths = [self._getFillPath()]

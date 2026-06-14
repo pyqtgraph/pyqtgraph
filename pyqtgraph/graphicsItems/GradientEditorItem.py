@@ -9,6 +9,7 @@ from ..Qt import QtCore, QtGui, QtWidgets
 from ..widgets.SpinBox import SpinBox
 from ..widgets.ColorMapMenu import ColorMapMenu
 from .GraphicsWidget import GraphicsWidget
+from .GraphicsObject import GraphicsObject
 from .GradientPresets import Gradients
 
 translate = QtCore.QCoreApplication.translate
@@ -73,18 +74,14 @@ class TickSliderItem(GraphicsWidget):
         #self.setBackgroundRole(QtGui.QPalette.ColorRole.NoRole)
         #self.setMouseTracking(True)
         
-    #def boundingRect(self):
-        #return self.mapRectFromParent(self.geometry()).normalized()
+    def boundingRect(self):
+        # overriding boundingRect() is needed as this item has set its own transform
+        return self.mapRectFromParent(self.geometry()).normalized()
         
-    #def shape(self):  ## No idea why this is necessary, but rotated items do not receive clicks otherwise.
-        #p = QtGui.QPainterPath()
-        #p.addRect(self.boundingRect())
-        #return p
-        
-    def paint(self, p, opt, widget):
-        #p.setPen(fn.mkPen('g', width=3))
-        #p.drawRect(self.boundingRect())
-        return
+    def shape(self):  ## No idea why this is necessary, but rotated items do not receive clicks otherwise.
+        p = QtGui.QPainterPath()
+        p.addRect(self.boundingRect())
+        return p
         
     def keyPressEvent(self, ev):
         ev.ignore()
@@ -837,19 +834,16 @@ class GradientEditorItem(TickSliderItem):
                 self.sigGradientChanged.disconnect(fn)
 
 
-class Tick(QtWidgets.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsObject instead results in
-                                    ## activating this bug: https://bugreports.qt-project.org/browse/PYSIDE-86
+class Tick(GraphicsObject):
     ## private class
-
-    # When making Tick a subclass of QtWidgets.QGraphicsObject as origin,
-    # ..GraphicsScene.items(self, *args) will get Tick object as a
-    # class of QtGui.QMultimediaWidgets.QGraphicsVideoItem in python2.7-PyQt5(5.4.0)
 
     sigMoving = QtCore.Signal(object, object)
     sigMoved = QtCore.Signal(object)
     sigClicked = QtCore.Signal(object, object)
     
     def __init__(self, pos, color, movable=True, scale=10, pen='w', removeAllowed=True):
+        super().__init__()
+
         self.movable = movable
         self.moving = False
         self.scale = scale
@@ -863,7 +857,6 @@ class Tick(QtWidgets.QGraphicsWidget):  ## NOTE: Making this a subclass of Graph
         self.pg.lineTo(QtCore.QPointF(scale/3**0.5, scale))
         self.pg.closeSubpath()
         
-        QtWidgets.QGraphicsWidget.__init__(self)
         self.setPos(pos[0], pos[1])
         if self.movable:
             self.setZValue(1)
