@@ -176,7 +176,7 @@ class GLAxisItem(GLGraphicsItem):
         self.elevates: bool = True
 
         self._is_bottom = True
-        self._labels = []
+        self._labels = GLTextItem(parentItem=self)
         self._lineplot = GLLinePlotItem(parentItem=self, mode='lines', glOptions='translucent')
         self._lineplot.setDepthValue(self.depthValue() + 1)
 
@@ -217,7 +217,12 @@ class GLAxisItem(GLGraphicsItem):
         for arg in args:
             if arg in kwargs:
                 setattr(self, arg, kwargs[arg])
-        self.update_labels()
+        self._labels.setData(
+            items=list(self.label_items()),
+            color=tuple(round(c * 255) for c in self.label_color),
+            font=self.font,
+            alignment=self.sides[self.label_side]
+        )
         self._lineplot.setData(
             pos=self._build_line_segments(),
             color=self.line_color,
@@ -270,35 +275,10 @@ class GLAxisItem(GLGraphicsItem):
         base = self.axis_coordinates(coord)
         return np.vstack([base, base + self.tick_offset()*self.tick_delta()])
 
-    def update_labels(self):
-        """Update existing labels or create new ones as needed."""
-        if len(self.coords) != len(self.coords_labels):
-            raise InconsistentCoordsError("coords and coords_labels must have the same length.")
-        alignment = self.sides[self.label_side]
-        color = tuple(round(c * 255) for c in self.label_color)
-        for index, (coord, label) in enumerate(zip(self.coords, self.coords_labels)):
+    def label_items(self):
+        for coord, label in zip(self.coords, self.coords_labels):
             pos = self.tick_coordinates(coord)[1]
-            if index < len(self._labels):
-                self._labels[index].setData(
-                    pos=pos,
-                    text=label,
-                    color=color,
-                    alignment=alignment
-                )
-            else:
-                self._labels.append(GLTextItem(
-                    parentItem=self,
-                    pos=pos,
-                    text=label,
-                    color=color,
-                    font=self.font,
-                    alignment=alignment,
-                ))
-
-        num_needed = len(self.coords)
-        for label in self._labels[num_needed:]:
-            label.setParentItem(None)
-        self._labels = self._labels[:num_needed]
+            yield dict(text=label, pos=pos)
 
     def _build_line_segments(self, z=None):
         if segments := list(self._yield_line_segments(z)):
@@ -319,9 +299,9 @@ class GLAxisItem(GLGraphicsItem):
         yield axis
 
     def _move_axis_z(self, z):
-        for label in self._labels:
-            x, y, _ = label.pos
-            label.setData(pos=(x, y, z))
+        for item in self._labels.items:
+            item['pos'][2] = z
+        self._labels.setData()
         self._lineplot.setData(pos=self._build_line_segments(z))
 
 
