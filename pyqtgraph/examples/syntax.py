@@ -3,7 +3,10 @@
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
-QRegExp = QtCore.QRegExp
+import keyword
+import re
+
+QRegularExpression = QtCore.QRegularExpression
 
 QFont = QtGui.QFont
 QColor = QtGui.QColor
@@ -11,7 +14,7 @@ QTextCharFormat = QtGui.QTextCharFormat
 QSyntaxHighlighter = QtGui.QSyntaxHighlighter
 
 
-def format(color, style=''):
+def charFormat(color, style='', background=None):
     """
     Return a QTextCharFormat with the given attributes.
     """
@@ -23,6 +26,8 @@ def format(color, style=''):
         _format.setFontWeight(QFont.Weight.Bold)
     if 'italic' in style:
         _format.setFontItalic(True)
+    if background is not None:
+        _format.setBackground(pg.mkColor(background))
 
     return _format
 
@@ -74,28 +79,28 @@ class DarkThemeColors:
 
 
 LIGHT_STYLES = {
-    'keyword': format(LightThemeColors.Blue, 'bold'),
-    'operator': format(LightThemeColors.Red, 'bold'),
-    'brace': format(LightThemeColors.Purple),
-    'defclass': format(LightThemeColors.Indigo, 'bold'),
-    'string': format(LightThemeColors.Amber),
-    'string2': format(LightThemeColors.DeepPurple),
-    'comment': format(LightThemeColors.Green, 'italic'),
-    'self': format(LightThemeColors.Blue, 'bold'),
-    'numbers': format(LightThemeColors.Teal),
+    'keyword': charFormat(LightThemeColors.Blue, 'bold'),
+    'operator': charFormat(LightThemeColors.Red, 'bold'),
+    'brace': charFormat(LightThemeColors.Purple),
+    'defclass': charFormat(LightThemeColors.Indigo, 'bold'),
+    'string': charFormat(LightThemeColors.Amber),
+    'string2': charFormat(LightThemeColors.DeepPurple),
+    'comment': charFormat(LightThemeColors.Green, 'italic'),
+    'self': charFormat(LightThemeColors.Blue, 'bold'),
+    'numbers': charFormat(LightThemeColors.Teal),
 }
 
 
 DARK_STYLES = {
-    'keyword': format(DarkThemeColors.Blue, 'bold'),
-    'operator': format(DarkThemeColors.Red, 'bold'),
-    'brace': format(DarkThemeColors.Purple),
-    'defclass': format(DarkThemeColors.Indigo, 'bold'),
-    'string': format(DarkThemeColors.Amber),
-    'string2': format(DarkThemeColors.DeepPurple),
-    'comment': format(DarkThemeColors.Green, 'italic'),
-    'self': format(DarkThemeColors.Blue, 'bold'),
-    'numbers': format(DarkThemeColors.Teal),
+    'keyword': charFormat(DarkThemeColors.Blue, 'bold'),
+    'operator': charFormat(DarkThemeColors.Red, 'bold'),
+    'brace': charFormat(DarkThemeColors.Purple),
+    'defclass': charFormat(DarkThemeColors.Indigo, 'bold'),
+    'string': charFormat(DarkThemeColors.Amber),
+    'string2': charFormat(DarkThemeColors.DeepPurple),
+    'comment': charFormat(DarkThemeColors.Green, 'italic'),
+    'self': charFormat(DarkThemeColors.Blue, 'bold'),
+    'numbers': charFormat(DarkThemeColors.Teal),
 }
 
 
@@ -103,14 +108,7 @@ class PythonHighlighter(QSyntaxHighlighter):
     """Syntax highlighter for the Python language.
     """
     # Python keywords
-    keywords = [
-        'and', 'assert', 'break', 'class', 'continue', 'def',
-        'del', 'elif', 'else', 'except', 'exec', 'finally',
-        'for', 'from', 'global', 'if', 'import', 'in',
-        'is', 'lambda', 'not', 'or', 'pass', 'print',
-        'raise', 'return', 'try', 'while', 'yield',
-        'None', 'True', 'False', 'async', 'await',
-    ]
+    keywords = keyword.kwlist
 
     # Python operators
     operators = [
@@ -118,11 +116,11 @@ class PythonHighlighter(QSyntaxHighlighter):
         # Comparison
         r'==', r'!=', r'<', r'<=', r'>', r'>=',
         # Arithmetic
-        r'\+', r'-', r'\*', r'/', r'//', r'\%', r'\*\*',
+        r'\+', r"-", r'\*', r'/', r'//', r'%', r'\*\*',
         # In-place
         r'\+=', r'-=', r'\*=', r'/=', r'\%=',
         # Bitwise
-        r'\^', r'\|', r'\&', r'\~', r'>>', r'<<',
+        r'\^', r'\|', r'&', r'~', r'>>', r'<<',
     ]
 
     # Python braces
@@ -131,27 +129,24 @@ class PythonHighlighter(QSyntaxHighlighter):
     ]
 
     def __init__(self, document):
-        QSyntaxHighlighter.__init__(self, document)
+        super().__init__(document)
 
         # Multi-line strings (expression, flag, style)
-        # FIXME: The triple-quotes in these two lines will mess up the
-        # syntax highlighting from this point onward
-        self.tri_single = (QRegExp("'''"), 1, 'string2')
-        self.tri_double = (QRegExp('"""'), 2, 'string2')
+        self.tri_single = (QRegularExpression("'''"), 1, 'string2')
+        self.tri_double = (QRegularExpression('"""'), 2, 'string2')
 
         rules = []
 
         # Keyword, operator, and brace rules
         rules += [(r'\b%s\b' % w, 0, 'keyword')
                   for w in PythonHighlighter.keywords]
-        rules += [(r'%s' % o, 0, 'operator')
+        rules += [(o, 0, 'operator')
                   for o in PythonHighlighter.operators]
-        rules += [(r'%s' % b, 0, 'brace')
+        rules += [(b, 0, 'brace')
                   for b in PythonHighlighter.braces]
 
         # All other rules
         rules += [
-
             # 'self'
             (r'\bself\b', 0, 'self'),
 
@@ -172,12 +167,9 @@ class PythonHighlighter(QSyntaxHighlighter):
 
             # From '#' until a newline
             (r'#[^\n]*', 0, 'comment'),
-
         ]
-
-        # Build a QRegExp for each pattern
-        self.rules = [(QRegExp(pat), index, fmt)
-                      for (pat, index, fmt) in rules]
+        self.rules = rules
+        self.searchText = None
 
     @property
     def styles(self):
@@ -190,7 +182,16 @@ class PythonHighlighter(QSyntaxHighlighter):
         rules = self.rules.copy()
         string_spans = []
 
-        # First: apply string rules and record spans
+        # Special case: full-line comment
+        stripped = text.lstrip()
+        if stripped.startswith('#'):
+            start = len(text) - len(stripped)
+            self.setFormat(start, len(text) - start, self.styles['comment'])
+            self.setCurrentBlockState(0)
+            self.applySearchHighlight(text)
+            return
+
+        # Next: apply string rules and record spans
         for expression, nth, format in rules:
             if format not in ('string', 'string2'):
                 continue
@@ -224,11 +225,16 @@ class PythonHighlighter(QSyntaxHighlighter):
             in_multiline = self.match_multiline(text, *self.tri_double)
 
     def match_multiline(self, text, delimiter, in_state, style):
-        """Do highlighting of multi-line strings. ``delimiter`` should be a
-        ``QRegExp`` for triple-single-quotes or triple-double-quotes, and
-        ``in_state`` should be a unique integer to represent the corresponding
-        state changes when inside those strings. Returns True if we're still
-        inside a multi-line string when this function is finished.
+        """Do highlighting of multi-line strings.
+
+        =========== ==========================================================
+        delimiter   (QRegularExpression) for triple-single-quotes or
+                    triple-double-quotes
+        in_state    (int) to represent the corresponding state changes when
+                    inside those strings. Returns True if we're still inside a
+                    multi-line string when this function is finished.
+        style       (str) representation of the kind of style to use
+        =========== ==========================================================
         """
         # If inside triple-single quotes, start at 0
         if self.previousBlockState() == in_state:
@@ -236,17 +242,19 @@ class PythonHighlighter(QSyntaxHighlighter):
             add = 0
         # Otherwise, look for the delimiter on this line
         else:
-            start = delimiter.indexIn(text)
+            match = delimiter.match(text)
+            start = match.capturedStart()
             # Move past this match
-            add = delimiter.matchedLength()
+            add = match.capturedLength()
 
         # As long as there's a delimiter match on this line...
         while start >= 0:
             # Look for the ending delimiter
-            end = delimiter.indexIn(text, start + add)
+            match = delimiter.match(text, start + add)
+            end = match.capturedEnd()
             # Ending delimiter on this line?
             if end >= add:
-                length = end - start + add + delimiter.matchedLength()
+                length = end - start + add + match.capturedLength()
                 self.setCurrentBlockState(0)
             # No; multi-line string
             else:
@@ -254,11 +262,29 @@ class PythonHighlighter(QSyntaxHighlighter):
                 length = len(text) - start + add
             # Apply formatting
             self.setFormat(start, length, self.styles[style])
+            # Highlighting sits on top of this formatting
             # Look for the next match
-            start = delimiter.indexIn(text, start + length)
+            match = delimiter.match(text, start + length)
+            start = match.capturedStart()
+
+        self.applySearchHighlight(text)
 
         # Return True if still inside a multi-line string, False otherwise
         if self.currentBlockState() == in_state:
             return True
         else:
             return False
+
+    def applySearchHighlight(self, text):
+        if not self.searchText:
+            return
+        expr = f'(?i){self.searchText}'
+        palette: QtGui.QPalette = app.palette()
+        color = palette.highlight().color()
+        fgndColor = palette.color(palette.ColorGroup.Current,
+                                  palette.ColorRole.Text).name()
+        style = charFormat(fgndColor, background=color.name())
+        for match in re.finditer(expr, text):
+            start = match.start()
+            length = match.end() - start
+            self.setFormat(start, length, style)
