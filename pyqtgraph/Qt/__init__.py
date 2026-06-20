@@ -5,9 +5,9 @@ This module exists to smooth out some of the differences between Qt versions.
 * Allow you to import QtCore/QtGui from pyqtgraph.Qt without specifying which Qt wrapper
   you want to use.
 """
+import importlib
 import os
 import platform
-import subprocess
 import sys
 from importlib import resources
 
@@ -63,44 +63,9 @@ class FailedImport(object):
         raise self.err
 
 
-# Make a loadUiType function like PyQt has
-
-# Credit:
-# http://stackoverflow.com/questions/4442286/python-code-genration-with-pyside-uic/14195313#14195313
-
 def _loadUiType(uiFile):
-    """
-    PySide lacks a "loadUiType" command like PyQt4's, so we have to convert
-    the ui file to py code in-memory first and then execute it in a
-    special frame to retrieve the form_class.
-
-    from stackoverflow: http://stackoverflow.com/a/14195313/3781327
-
-    seems like this might also be a legitimate solution, but I'm not sure
-    how to make PyQt4 and pyside look the same...
-        http://stackoverflow.com/a/8717832
-    """
-
-    # get class names from ui file
-    import xml.etree.ElementTree as xml
-    parsed = xml.parse(uiFile)
-    widget_class = parsed.find('widget').get('class')
-    form_class = parsed.find('class').text
-
-    # convert ui file to python code
-    uic_executable = QT_LIB.lower() + '-uic'
-    uipy = subprocess.check_output([uic_executable, uiFile])
-
-    # execute python code
-    pyc = compile(uipy, '<string>', 'exec')
-    frame = {}
-    exec(pyc, frame)
-
-    # fetch the base_class and form class based on their type in the xml from designer
-    form_class = frame['Ui_%s'%form_class]
-    base_class = eval('QtWidgets.%s'%widget_class)
-
-    return form_class, base_class
+    QtUiTools = importlib.import_module(QT_LIB + '.QtUiTools')
+    return QtUiTools.loadUiType(uiFile)
 
 
 # For historical reasons, pyqtgraph maintains a Qt4-ish interface back when
@@ -344,7 +309,7 @@ def _onColorSchemeChange(colorScheme):
     app.setProperty('darkMode', darkMode)
 
 
-# exec() is used within _loadUiType, so we define as exec_() here and rename in pg namespace
+# exec() is a builtin function, so we define as exec_() here and rename in pg namespace
 def exec_():
     app = mkQApp()
     return app.exec() if hasattr(app, 'exec') else app.exec_()
