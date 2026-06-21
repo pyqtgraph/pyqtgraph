@@ -848,13 +848,14 @@ class PlotCurveItem(GraphicsObject):
 
         return path
 
-    def _shouldUseFillPathList(self):
+    def _shouldUseFillPathList(self, brush):
         connect = self.opts['connect']
         return (
             # not meaningful to fill disjoint lines
             isinstance(connect, str) and connect in ['all', 'finite']
             # guard against odd-ball argument 'enclosed'
             and isinstance(self.opts['fillLevel'], (int, float))
+            and brush.style() == QtCore.Qt.BrushStyle.SolidPattern
         )
 
     def _getFillPathList(self, widget):
@@ -988,7 +989,7 @@ class PlotCurveItem(GraphicsObject):
         do_fill_outline = do_fill and self.opts['fillOutline']
 
         if do_fill:
-            if self._shouldUseFillPathList():
+            if self._shouldUseFillPathList(brush):
                 paths = self._getFillPathList(widget)
             else:
                 paths = [self._getFillPath()]
