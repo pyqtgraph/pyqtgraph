@@ -1441,6 +1441,48 @@ class PlotDataItem(GraphicsObject):
         dataset = self._dataset
         return (None, None) if dataset is None else (dataset.x, dataset.y)
 
+    def _getMappedDataset(self) -> PlotDataset | None:
+        if self._dataset is None:
+            return None
+
+        if self._datasetMapped is not None:
+            return self._datasetMapped
+
+        x = self._dataset.x
+        y = self._dataset.y
+        if y.dtype == bool:
+            y = y.astype(np.uint8)
+        if x.dtype == bool:
+            x = x.astype(np.uint8)
+        if self.opts['subtractMeanMode']:
+            y = y - np.mean(y)
+        if self.opts['fftMode']:
+            x, y = self._fourierTransform(x, y)
+            # Ignore the first bin for fft data if we have a logx scale
+            if self.opts['logMode'][0]:
+                x = x[1:]
+                y = y[1:]
+        if self.opts['derivativeMode']:  # plot dV/dt
+            y = np.diff(self._dataset.y) / np.diff(self._dataset.x)
+            x = x[:-1]
+        if self.opts['phasemapMode']:  # plot dV/dt vs V
+            x = self._dataset.y[:-1]
+            y = np.diff(self._dataset.y) / np.diff(self._dataset.x)
+
+        dataset = PlotDataset(
+            x,
+            y,
+            self._dataset.xAllFinite,
+            self._dataset.yAllFinite
+        )
+
+        if True in self.opts['logMode']:
+            # Apply log scaling for x and/or y-axis
+            dataset.applyLogMapping( self.opts['logMode'] )
+
+        self._datasetMapped = dataset
+        return dataset
+
     def _getDisplayDataset(self) -> PlotDataset | None:
         """
         Get data suitable for display as a :class:`PlotDataset`.
@@ -1466,41 +1508,8 @@ class PlotDataItem(GraphicsObject):
         ):
             return self._datasetDisplay
 
-        # Apply data mapping functions if mapped dataset is not yet available: 
-        if self._datasetMapped is None:
-            x = self._dataset.x
-            y = self._dataset.y
-            if y.dtype == bool:
-                y = y.astype(np.uint8)
-            if x.dtype == bool:
-                x = x.astype(np.uint8)
-            if self.opts['subtractMeanMode']:
-                y = y - np.mean(y)
-            if self.opts['fftMode']:
-                x, y = self._fourierTransform(x, y)
-                # Ignore the first bin for fft data if we have a logx scale
-                if self.opts['logMode'][0]:
-                    x = x[1:]
-                    y = y[1:]
-            if self.opts['derivativeMode']:  # plot dV/dt
-                y = np.diff(self._dataset.y) / np.diff(self._dataset.x)
-                x = x[:-1]
-            if self.opts['phasemapMode']:  # plot dV/dt vs V
-                x = self._dataset.y[:-1]
-                y = np.diff(self._dataset.y) / np.diff(self._dataset.x)
-
-            dataset = PlotDataset(
-                x,
-                y,
-                self._dataset.xAllFinite,
-                self._dataset.yAllFinite
-            )
-            
-            if True in self.opts['logMode']:
-                # Apply log scaling for x and/or y-axis
-                dataset.applyLogMapping( self.opts['logMode'] )
-
-            self._datasetMapped = dataset
+        if self._getMappedDataset() is None:
+            return None
         
         # apply processing that affects the on-screen display of data:
         x = self._datasetMapped.x
@@ -1689,6 +1698,71 @@ class PlotDataItem(GraphicsObject):
         """
         return None if self._dataset is None else self._dataset.dataRect()
 
+    def _mappedDataBounds(
+        self,
+        ax: int,
+        frac: float = 1.0,
+        orthoRange: tuple[float, float] | None = None
+    ) -> tuple[float, float] | tuple[None, None]:
+        dataset = self._getMappedDataset()
+        if dataset is None or len(dataset.x) == 0:
+            return (None, None)
+
+        if ax == 0:
+            d = dataset.x
+            d2 = dataset.y
+        elif ax == 1:
+            d = dataset.y
+            d2 = dataset.x
+        else:
+            raise ValueError("Invalid axis value")
+
+        if orthoRange is not None:
+            mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
+            if self.opts.get("stepMode", None) == "center":
+                mask = mask[:-1]  # len(y) == len(x) - 1 when stepMode is center
+            d = d[mask]
+
+        if len(d) == 0:
+            return (None, None)
+
+        if frac >= 1.0:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                bounds = (float(np.nanmin(d)), float(np.nanmax(d)))
+            if math.isinf(bounds[0]) or math.isinf(bounds[1]):
+                finite = np.isfinite(d)
+                d = d[finite]
+                if len(d) == 0:
+                    return (None, None)
+                bounds = (float(d.min()), float(d.max()))
+        elif frac <= 0.0:
+            raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
+        else:
+            finite = np.isfinite(d)
+            d = d[finite]
+            if len(d) == 0:
+                return (None, None)
+            bounds = np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
+
+        curve_visible = self.curve.isVisible()
+
+        if curve_visible and ax == 1 and self.opts['fillLevel'] not in [None, 'enclosed']:
+            bounds = (
+                float(min(bounds[0], self.opts['fillLevel'])),
+                float(max(bounds[1], self.opts['fillLevel']))
+            )
+
+        if curve_visible:
+            pen = None if self.opts['pen'] is None else fn.mkPen(self.opts['pen'])
+            spen = None if self.opts['shadowPen'] is None else fn.mkPen(self.opts['shadowPen'])
+            if pen is not None and not pen.isCosmetic() and pen.style() != QtCore.Qt.PenStyle.NoPen:
+                bounds = (bounds[0] - pen.widthF()*0.7072, bounds[1] + pen.widthF()*0.7072)
+            if spen is not None and not spen.isCosmetic() and spen.style() != QtCore.Qt.PenStyle.NoPen:
+                bounds = (bounds[0] - spen.widthF()*0.7072, bounds[1] + spen.widthF()*0.7072)
+
+        return bounds
+
     def dataBounds(
         self,
         ax: int,
@@ -1725,6 +1799,9 @@ class PlotDataItem(GraphicsObject):
             The maximum end of the range that the data occupies along the specified
             axis. ``None`` if there is no data.
         """
+        if self.opts['autoDownsample'] and (self.curve.isVisible() or self.scatter.isVisible()):
+            return self._mappedDataBounds(ax, frac, orthoRange)
+
         bounds: tuple[None, None] | tuple[float, float] = (None, None)
         if self.curve.isVisible():
             bounds = self.curve.dataBounds(ax, frac, orthoRange)
