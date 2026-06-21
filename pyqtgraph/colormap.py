@@ -1,3 +1,4 @@
+
 __all__ = ['ColorMap']
 
 from collections.abc import Callable, Sequence
