@@ -6,13 +6,6 @@ from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 import keyword
 import re
 
-QRegularExpression = QtCore.QRegularExpression
-
-QFont = QtGui.QFont
-QColor = QtGui.QColor
-QTextCharFormat = QtGui.QTextCharFormat
-QSyntaxHighlighter = QtGui.QSyntaxHighlighter
-
 
 def charFormat(color, style='', background=None):
     """
@@ -20,10 +13,10 @@ def charFormat(color, style='', background=None):
     """
     _color = pg.functions.mkColor(color)
 
-    _format = QTextCharFormat()
+    _format = QtGui.QTextCharFormat()
     _format.setForeground(_color)
     if 'bold' in style:
-        _format.setFontWeight(QFont.Weight.Bold)
+        _format.setFontWeight(QtGui.QFont.Weight.Bold)
     if 'italic' in style:
         _format.setFontItalic(True)
     if background is not None:
@@ -104,7 +97,7 @@ DARK_STYLES = {
 }
 
 
-class PythonHighlighter(QSyntaxHighlighter):
+class PythonHighlighter(QtGui.QSyntaxHighlighter):
     """Syntax highlighter for the Python language.
     """
     # Python keywords
@@ -132,8 +125,8 @@ class PythonHighlighter(QSyntaxHighlighter):
         super().__init__(document)
 
         # Multi-line strings (expression, flag, style)
-        self.tri_single = (QRegularExpression("'''"), 1, 'string2')
-        self.tri_double = (QRegularExpression('"""'), 2, 'string2')
+        self.tri_single = (QtCore.QRegularExpression("'''"), 1, 'string2')
+        self.tri_double = (QtCore.QRegularExpression('"""'), 2, 'string2')
 
         rules = []
 
