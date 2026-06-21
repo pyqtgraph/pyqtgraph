@@ -279,6 +279,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         if not self.searchText:
             return
         expr = f'(?i){self.searchText}'
+        app = QtWidgets.QApplication.instance()
         palette: QtGui.QPalette = app.palette()
         color = palette.highlight().color()
         fgndColor = palette.color(palette.ColorGroup.Current,
