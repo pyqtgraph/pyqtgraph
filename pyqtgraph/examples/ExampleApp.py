@@ -306,15 +306,13 @@ class PythonHighlighter(QSyntaxHighlighter):
             self.setFormat(start, length, style)
 
 
-def unnestedDict(exDict):
-    """Converts a dict-of-dicts to a singly nested dict for non-recursive parsing"""
-    out = {}
+def walkNestedDict(exDict):
+    """Converts a dict-of-dicts to a singly nested list for non-recursive parsing"""
     for kk, vv in exDict.items():
         if isinstance(vv, dict):
-            out.update(unnestedDict(vv))
+            yield from walkNestedDict(vv)
         else:
-            out[kk] = vv
-    return out
+            yield kk, vv
 
 
 
@@ -451,20 +449,19 @@ class ExampleLoader(QtWidgets.QMainWindow):
             self.ui.exampleFilter.setStyleSheet(f'background: rgba{errorColor.getRgb()}')
         if not validRegex:
             return
-        checkDict = unnestedDict(utils.examples_)
         self.hl.searchText = text
         # Need to reapply to current document
         self.hl.setDocument(self.ui.codeView.document())
-        titles = []
+        filenames = []
         text = text.lower()
-        for kk, vv in checkDict.items():
+        for kk, vv in walkNestedDict(utils.examples_):
             if isinstance(vv, Namespace):
                 vv = vv.filename
             filename = os.path.join(path, vv)
             contents = self.getExampleContent(filename).lower()
             if text in contents:
-                titles.append(kk)
-        self.showExamplesByTitle(titles)
+                filenames.append(vv)
+        self.showExamplesByTitle([], filenames=filenames)
 
     def getMatchingTitles(self, text, exDict=None, acceptAll=False):
         if exDict is None:
@@ -479,14 +476,18 @@ class ExampleLoader(QtWidgets.QMainWindow):
                 titles.append(kk)
         return titles
 
-    def showExamplesByTitle(self, titles):
+    def showExamplesByTitle(self, titles, *, filenames=None):
         QTWI = QtWidgets.QTreeWidgetItemIterator
         flag = QTWI.IteratorFlag.NoChildren
         treeIter = QTWI(self.ui.exampleTree, flag)
         item = treeIter.value()
         while item is not None:
             parent = item.parent()
-            show = (item.childCount() or item.text(0) in titles)
+            show = (
+                (item.childCount() != 0) or
+                (item.text(0) in titles) or
+                (filenames is not None and item.file in filenames)
+            )
             item.setHidden(not show)
 
             # If all children of a parent are gone, hide it
