@@ -61,15 +61,17 @@ Colors = {
 
 SI_PREFIXES = 'yzafpnµm kMGTPEZY'
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
+SI_PREFIXES_INPUT = 'uμ' + SI_PREFIXES
 SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
 SI_PREFIX_EXPONENTS['u'] = -6
+SI_PREFIX_EXPONENTS['μ'] = -6
 
 #For comma as decimal separator
-FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>\w.*))?$')
 #For period as decimal separator
-FLOAT_REGEX_PERIOD = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+FLOAT_REGEX_PERIOD = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>\w.*))?$')
 
-INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
+INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>.*)$')
 
 class HueKeywordArgs(TypedDict):
     hues: int
@@ -219,8 +221,8 @@ def siParse(s, regex=FLOAT_REGEX_PERIOD, suffix=None):
     Example:
         siParse('100 µV')  # returns ('100', 'µ', 'V')
 
-    Note that in the above example, the µ symbol is the "micro sign" (UTF-8
-    0xC2B5), as opposed to the Greek letter mu (UTF-8 0xCEBC).
+    Both the micro sign (UTF-8 0xC2B5) and Greek letter mu (UTF-8 0xCEBC)
+    are accepted as the micro prefix.
 
     Parameters
     ----------
