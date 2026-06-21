@@ -1067,7 +1067,21 @@ class ROI(GraphicsObject):
         )
     
     def boundingRect(self):
-        return QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
+        rect = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
+
+        # calculate effective pen width
+        pen = self.currentPen
+        if pen.style() == QtCore.Qt.PenStyle.NoPen:
+            return rect
+        pxPad = (pen.widthF() or 1) * 0.5
+
+        px = py = pxPad
+        if pen.isCosmetic():
+            # determine length of pixel in local x, y directions
+            vx, vy = self.pixelVectors()
+            px *= 0 if vx is None else vx.length()
+            py *= 0 if vy is None else vy.length()
+        return rect.adjusted(-px, -py, px, py)
 
     def paint(self, p, opt, widget):
         # Note: don't use self.boundingRect here, because subclasses may need to redefine it.
