@@ -294,6 +294,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         if not self.searchText:
             return
         expr = f'(?i){self.searchText}'
+        app = QtWidgets.QApplication.instance()
         palette: QtGui.QPalette = app.palette()
         color = palette.highlight().color()
         fgndColor = palette.color(palette.ColorGroup.Current,
@@ -441,6 +442,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
             re.compile(text)
             self.ui.exampleFilter.setStyleSheet('')
         except re.error:
+            app = QtWidgets.QApplication.instance()
             colors = DarkThemeColors if app.property('darkMode') else LightThemeColors
             errorColor = pg.mkColor(colors.Red)
             validRegex = False
