@@ -184,10 +184,21 @@ class ParameterJsonEncoder(JSONEncoder):
                 }
             }
 
-        # QIcon has no lossless JSON representation; only string file paths
-        # (handled natively) survive a round-trip.  Serialize as null so that
-        # saveState() / restoreState() still works for Python-to-Python use.
+        # QIcon has no lossless JSON representation — Qt does not expose the
+        # original file path after construction.  String paths and
+        # QIcon.StandardPixmap integers are handled by the standard encoder
+        # before reaching here, so this branch is only hit when a QIcon object
+        # was stored directly.  Serialize as null and warn so the caller knows
+        # the icon will not survive the JSON round-trip.
         if isinstance(o, QtGui.QIcon):
+            import warnings
+            warnings.warn(
+                "A QIcon object cannot be serialized to JSON and will be stored as null. "
+                "Pass a string file path or a QIcon.StandardPixmap integer instead "
+                "to make the icon survive a saveState/JSON round-trip.",
+                UserWarning,
+                stacklevel=2,
+            )
             return None
 
         return super().default(o)
