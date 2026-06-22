@@ -1,3 +1,5 @@
+import warnings
+
 from ..Parameter import PARAM_TYPES, registerParameterItemType
 from ... import functions as fn
 from ...Qt import QtCore, QtWidgets
@@ -124,6 +126,18 @@ class RadioParameter(SimpleParameter):
 
 
 registerParameterItemType('radio', RadioParameterItem, RadioParameter)
+
+
+def __getattr__(name):
+    if name == "BoolOrRadioParameter":
+        warnings.warn(
+            "BoolOrRadioParameter has been renamed to RadioParameter. "
+            "Update your imports to use RadioParameter instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return RadioParameter
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 class ChecklistParameter(GroupParameter):

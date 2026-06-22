@@ -20,6 +20,15 @@ emits but that the standard ``json`` module cannot encode:
 - **numpy scalar types** (``np.integer``, ``np.floating``, ``np.bool_``) —
   silently promoted to the matching Python primitive; no sentinel needed.
 
+- **set / frozenset** — serialized as a sorted list.  All built-in opts that
+  use a set (e.g. ``ctrlActions``) only require ``in`` membership checks, so
+  restoring as a list is transparent.
+
+- **QIcon** — serialized as ``null``.  A ``QIcon`` object has no lossless JSON
+  representation; only a plain string file path (which the standard encoder
+  handles directly) survives a round-trip.  ``QIcon.StandardPixmap`` integer
+  values are already JSON-native and need no special handling.
+
 - **ColorMap** — two forms depending on whether the map is named:
 
   1. *Named colormaps* (``colormap.name`` is set) are stored as
@@ -47,6 +56,7 @@ from typing import Any
 import numpy as np
 
 from ..colormap import ColorMap
+from ..Qt import QtGui
 import pyqtgraph.colormap as pgcm
 
 
@@ -65,6 +75,9 @@ def _mark_special(o: Any) -> Any:
     """
     if isinstance(o, tuple):
         return {'__tuple__': [_mark_special(e) for e in o]}
+    if isinstance(o, (set, frozenset)):
+        # JSON has no set type; restore as a sorted list (all callers use `in`, so list is fine)
+        return sorted(o)
     if isinstance(o, dict):
         return {k: _mark_special(v) for k, v in o.items()}
     if isinstance(o, list):
@@ -170,6 +183,12 @@ class ParameterJsonEncoder(JSONEncoder):
                     'name': o.name,
                 }
             }
+
+        # QIcon has no lossless JSON representation; only string file paths
+        # (handled natively) survive a round-trip.  Serialize as null so that
+        # saveState() / restoreState() still works for Python-to-Python use.
+        if isinstance(o, QtGui.QIcon):
+            return None
 
         return super().default(o)
 

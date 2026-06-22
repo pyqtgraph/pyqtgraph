@@ -1,3 +1,5 @@
+import warnings
+
 from ...Qt import QtCore, QtWidgets, QtGui
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
@@ -28,6 +30,19 @@ class ParameterControlledButton(QtWidgets.QPushButton):
             opts.setdefault("title", opts["name"])
         if "title" in opts and opts["title"] is None:
             opts["title"] = param.title()
+        # Backward compat: 'icon' was the button-icon key before 'btn_icon' was
+        # introduced.  'icon' now sets the tree-item icon (via ParameterItem),
+        # so silently passing it here would produce the wrong result.
+        if "icon" in opts and "btn_icon" not in opts:
+            warnings.warn(
+                "The 'icon' option on ActionParameter sets the tree-item icon as of "
+                "pyqtgraph 0.14. Use 'btn_icon' to set the button icon instead.",
+                DeprecationWarning,
+                stacklevel=4,
+            )
+            opts = opts.copy()
+            opts["btn_icon"] = opts.pop("icon")
+
         # Another special case: icons should be converted to QIcon before
         # being passed to the button
         if "btn_icon" in opts:
@@ -81,7 +96,7 @@ class ActionParameter(Parameter):
 
     Parameters
     ----------
-    icon: str
+    btn_icon: str
         Icon to display in the button. Can be any argument accepted
         by :class:`QIcon <QtGui.QIcon>`.
     shortcut: str
