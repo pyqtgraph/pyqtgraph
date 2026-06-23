@@ -180,6 +180,21 @@ class Parameter(QtCore.QObject):
                                      internally using the *name* specified above. Note that
                                      this option is not compatible with renamable=True.
                                      (default=None; added in version 0.9.9)
+        ctrlActions                  A set of strings controlling which built-in actions
+                                     appear in the ctrl button menu (the gear icon shown by
+                                     widget-based parameter types). Valid values:
+                                     ``'default'`` (Reset to default), ``'setDefault'``
+                                     (Set as default), ``'enabled'`` (Enable/Disable
+                                     toggle), ``'readonly'`` (Lock/Unlock toggle),
+                                     ``'rename'``, ``'remove'``. Including ``'rename'`` or
+                                     ``'remove'`` here is equivalent to setting
+                                     ``renamable=True`` / ``removable=True``.
+                                     (default: {'default', 'setDefault', 'enabled',
+                                     'readonly'})
+        showCtrlButton               If False, the ctrl button (gear icon) will be hidden
+                                     for widget-based parameter types. The button can be
+                                     shown again later via ``setOpts(showCtrlButton=True)``.
+                                     (default=True)
         =======================      =========================================================
         """
         super().__init__()
