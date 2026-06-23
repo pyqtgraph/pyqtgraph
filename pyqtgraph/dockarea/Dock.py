@@ -3,6 +3,7 @@ import warnings
 from ..Qt import QtCore, QtGui, QtWidgets
 from ..widgets.VerticalLabel import VerticalLabel
 from .DockDrop import DockDrop
+from ..functions import mkColor
 
 
 class Dock(QtWidgets.QWidget):
@@ -242,7 +243,7 @@ class Dock(QtWidgets.QWidget):
         self.sigClosed.emit(self)
 
     def __repr__(self):
-        return "<Dock %s %s>" % (self.name(), self.stretch())
+        return f"<Dock {self.name()} {self.stretch()}>"
 
     def dragEnterEvent(self, *args):
         self.dockdrop.dragEnterEvent(*args)
@@ -262,7 +263,26 @@ class DockLabel(VerticalLabel):
     sigClicked = QtCore.Signal(object, object)
     sigCloseClicked = QtCore.Signal()
 
-    def __init__(self, text, closable=False, fontSize="12px"):
+    def __init__(self, text, closable=False, fontSize="12px", fontColor=None, tabColor=None):
+        self.r = '3px'  # Tab radius
+
+        # Set specific tab color if specified
+        self.bg = mkColor(tabColor) if tabColor else mkColor("#55B")
+
+        # Set specific font color if specified
+        if fontColor:
+            self.fg = mkColor(fontColor)
+        else:
+            # Check tabColor luminance 
+            r = self.bg.redF()
+            g = self.bg.greenF()
+            b = self.bg.blueF()
+
+            luminance = r*0.299 + g*0.587 + b*0.114  # Luminance value between 0 and 1
+
+            # Set font color (black or white) according to background color luminance
+            self.fg = mkColor('k') if luminance > 0.7 else mkColor('w')
+        
         self.dim = False
         self.fixedWidth = False
         self.fontSize = fontSize
@@ -281,45 +301,40 @@ class DockLabel(VerticalLabel):
             self.closeButton.setIcon(QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_TitleBarCloseButton))
 
     def updateStyle(self):
-        r = '3px'
         if self.dim:
-            fg = '#aaa'
-            bg = '#44a'
-            border = '#339'
+            bg = mkColor('#ddd')
+            fg = mkColor('#aaa')
         else:
-            fg = '#fff'
-            bg = '#66c'
-            border = '#55B'
+            bg = self.bg
+            fg = self.fg
 
         if self.orientation == 'vertical':
-            self.vStyle = """DockLabel {
-                background-color : %s;
-                color : %s;
+            self.vStyle = f"""DockLabel {{
+                background-color : {bg.name()};
+                color : {fg.name()};
                 border-top-right-radius: 0px;
-                border-top-left-radius: %s;
+                border-top-left-radius: {self.r};
                 border-bottom-right-radius: 0px;
-                border-bottom-left-radius: %s;
+                border-bottom-left-radius: {self.r};
                 border-width: 0px;
-                border-right: 2px solid %s;
                 padding-top: 3px;
                 padding-bottom: 3px;
-                font-size: %s;
-            }""" % (bg, fg, r, r, border, self.fontSize)
+                font-size: {self.fontSize};
+            }}"""
             self.setStyleSheet(self.vStyle)
         else:
-            self.hStyle = """DockLabel {
-                background-color : %s;
-                color : %s;
-                border-top-right-radius: %s;
-                border-top-left-radius: %s;
+            self.hStyle = f"""DockLabel {{
+                background-color : {bg.name()};
+                color : {fg.name()};
+                border-top-right-radius: {self.r};
+                border-top-left-radius: {self.r};
                 border-bottom-right-radius: 0px;
                 border-bottom-left-radius: 0px;
                 border-width: 0px;
-                border-bottom: 2px solid %s;
                 padding-left: 3px;
                 padding-right: 3px;
-                font-size: %s;
-            }""" % (bg, fg, r, r, border, self.fontSize)
+                font-size: {self.fontSize};
+            }}"""
             self.setStyleSheet(self.hStyle)
 
     def setDim(self, d):
