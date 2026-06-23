@@ -184,6 +184,13 @@ class Parameter(QtCore.QObject):
                                      internally using the *name* specified above. Note that
                                      this option is not compatible with renamable=True.
                                      (default=None; added in version 0.9.9)
+        context                      Specifies items for the context menu shown on
+                                     right-click. Accepts a dict, list, or tuple; nested
+                                     structures produce submenus. See
+                                     :func:`~pyqtgraph.parametertree.ParameterItem.build_menu_from_iterable`
+                                     for the accepted format. Clicking an item emits
+                                     sigContextMenu with the full path tuple to that item.
+                                     (default=None)
         =======================      =========================================================
         """
         super().__init__()
