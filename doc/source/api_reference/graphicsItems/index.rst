@@ -46,4 +46,5 @@ Contents:
     uigraphicsitem
     graphicswidgetanchor
     dateaxisitem
+    timedeltaaxisitem
     targetitem
