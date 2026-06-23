@@ -156,6 +156,43 @@ class RawImageGLWidget(QtOpenGLWidgets.QOpenGLWidget):
         self.uploaded = False
         self.update()
 
+    @staticmethod
+    def canUseOpenGL():
+        """Return True if OpenGL is usable in this environment, False otherwise.
+
+        This method can be used to determine whether it is safe to create a RawImageGLWidget.
+        On some systems, attempting to create a QOpenGLWidget when OpenGL is not usable
+        will cause the application to hang.
+        """
+        if RawImageGLWidget is None:
+            return False
+        # Use a throwaway context to detect whether OpenGL is usable; Qt will hang
+        # later when the QOpenGLWidget tries to initialize if context creation
+        # continually fails, so bail out early instead.
+        surface = None
+        try:
+            fmt = QtGui.QSurfaceFormat.defaultFormat()
+            ctx = QtGui.QOpenGLContext()
+            ctx.setFormat(fmt)
+            if not ctx.create():
+                return False
+            surface = QtGui.QOffscreenSurface()
+            surface.setFormat(ctx.format())
+            surface.create()
+            if not surface.isValid():
+                return False
+            if not ctx.makeCurrent(surface):
+                return False
+            ctx.doneCurrent()
+            return True
+        except Exception:
+            return False
+        finally:
+            if surface is not None and surface.isValid():
+                surface.destroy()
+
+
+
     def initializeGL(self):
         ctx = self.context()
 
