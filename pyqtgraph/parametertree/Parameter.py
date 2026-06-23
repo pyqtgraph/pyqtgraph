@@ -180,6 +180,11 @@ class Parameter(QtCore.QObject):
                                      internally using the *name* specified above. Note that
                                      this option is not compatible with renamable=True.
                                      (default=None; added in version 0.9.9)
+        icon                         An icon to display next to the parameter name in a
+                                     ParameterTree. Accepts a QIcon instance, a file path
+                                     string, or a QIcon.StandardPixmap value. Pass None to
+                                     remove the icon. See also :meth:`setIcon`.
+                                     (default=None)
         =======================      =========================================================
         """
         super().__init__()
