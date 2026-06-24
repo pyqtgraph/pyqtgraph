@@ -61,7 +61,6 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.autoPanCheck, 4, 2, 1, 2)
 
         self.retranslateUi(Form)
-        QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate

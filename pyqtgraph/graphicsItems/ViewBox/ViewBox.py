@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 import sys
 import weakref
@@ -9,7 +11,7 @@ from ... import debug as debug
 from ... import functions as fn
 from ... import getConfigOption
 from ...Point import Point
-from ...Qt import QtCore, QtGui, QtWidgets, isQObjectAlive, QT_LIB
+from ...Qt import QT_LIB, QtCore, QtGui, QtWidgets, isQObjectAlive
 from ..GraphicsWidget import GraphicsWidget
 from ..ItemGroup import ItemGroup
 
@@ -164,12 +166,12 @@ class ViewBox(GraphicsWidget):
             'wheelScaleFactor': -1.0 / 8.0,
 
             'background': None,
-            
+
             'logMode': [False, False],
 
             # Limits
             # maximum value of double float is 1.7E+308, but internal caluclations exceed this limit before the range reaches it.
-            'limits': { 
+            'limits': {
                 'xLimits': [-1E307, +1E307],   # Maximum and minimum visible X values
                 'yLimits': [-1E307, +1E307],   # Maximum and minimum visible Y values
                 'xRange': [None, None],   # Maximum and minimum X range
@@ -220,16 +222,19 @@ class ViewBox(GraphicsWidget):
 
         self.setAspectLocked(lockAspect)
 
-        if enableMenu:
-            self.menu = ViewBoxMenu(self)
-        else:
-            self.menu = None
+        self._menu = None
 
         self.register(name)
         if name is None:
             self.updateViewLists()
 
         self._viewPixelSizeCache  = None
+
+    @property
+    def menu(self) -> ViewBoxMenu | None:
+        if self.menuEnabled() and self._menu is None:
+            self._menu = ViewBoxMenu(self)
+        return self._menu
 
     @property
     def rbScaleBox(self):
@@ -414,12 +419,12 @@ class ViewBox(GraphicsWidget):
 
     def _applyMenuEnabled(self):
         enableMenu = self.state.get("enableMenu", True)
-        if enableMenu and self.menu is None:
-            self.menu = ViewBoxMenu(self)
+        if enableMenu and self._menu is None:
+            self._menu = ViewBoxMenu(self)
             self.updateViewLists()
-        elif not enableMenu and self.menu is not None:
-            self.menu.setParent(None)
-            self.menu = None
+        elif not enableMenu and self._menu is not None:
+            self._menu.setParent(None)
+            self._menu = None
 
     def addItem(self, item, ignoreBounds=False):
         """
@@ -472,7 +477,7 @@ class ViewBox(GraphicsWidget):
 
             self.background.setRect(self.rect())
             self.borderRect.setRect(self.rect())
-        
+
             self.sigStateChanged.emit(self)
             self.sigResized.emit(self)
 
@@ -516,7 +521,7 @@ class ViewBox(GraphicsWidget):
         # This is used during mouse interaction to prevent unpredictable
         # behavior (because the user is unaware of targetRange).
         self.state['targetRange'] = [self.state['viewRange'][0][:], self.state['viewRange'][1][:]]
-            
+
     def _effectiveLimits(self):
         # Determines restricted effective scaling range when in log mapping mode
         if self.state['logMode'][0]:
@@ -526,8 +531,8 @@ class ViewBox(GraphicsWidget):
             )
         else:
             xlimits = self.state['limits']['xLimits']
-        
-        if self.state['logMode'][1]: 
+
+        if self.state['logMode'][1]:
             ylimits = (# constrain to the +1.7E308 to 2.2E-308 range of double float values
                 max( self.state['limits']['yLimits'][0], -307.6 ),
                 min( self.state['limits']['yLimits'][1], +308.2 )
@@ -584,7 +589,7 @@ class ViewBox(GraphicsWidget):
             yOff = False if setRequested[1] else None
             self.enableAutoRange(x=xOff, y=yOff)
             changed.append(True)
-            
+
         limits = self._effectiveLimits()
         # print('rng:limits ', limits) # diagnostic output should reflect additional limit in log mode
         # limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
@@ -608,7 +613,7 @@ class ViewBox(GraphicsWidget):
             # Make sure that the range includes a usable number of quantization steps:
             #    approx. eps  : 3e-16
             #    * min. steps : 10
-            #    * mean value : (mn+mx)*0.5 
+            #    * mean value : (mn+mx)*0.5
             quantization_limit = (mn+mx) * 1.5e-15 # +/-10 discrete steps of double resolution
             if mx-mn < 2*quantization_limit:
                 mn -= quantization_limit
@@ -712,7 +717,7 @@ class ViewBox(GraphicsWidget):
         ==============  =============================================================
         **Arguments:**
         padding         The fraction of the total data range to add on to the final
-                        visible range. By default, this value is set between the 
+                        visible range. By default, this value is set between the
                         default padding and 0.1 depending on the size of the ViewBox.
         items           If specified, this is a list of items to consider when
                         determining the visible range.
@@ -729,7 +734,7 @@ class ViewBox(GraphicsWidget):
     def suggestPadding(self, axis):
         l = self.width() if axis==0 else self.height()
         def_pad = self.state['defaultPadding']
-        if def_pad == 0.: 
+        if def_pad == 0.:
             return def_pad # respect requested zero padding
         max_pad = max(0.1, def_pad) # don't shrink a large default padding
         if l > 0:
@@ -1002,7 +1007,7 @@ class ViewBox(GraphicsWidget):
     def setYLink(self, view):
         """Link this view's Y axis to another view. (see LinkView)"""
         self.linkView(self.YAxis, view)
-        
+
     def setLogMode(self, axis, logMode):
         """Informs ViewBox that log mode is active for the specified axis, so that the view range cen be restricted"""
         if axis == 'x':
@@ -1198,7 +1203,7 @@ class ViewBox(GraphicsWidget):
         """
         self.border = fn.mkPen(*args, **kwds)
         self.borderRect.setPen(self.border)
-    
+
     def setDefaultPadding(self, padding=0.02):
         """
         Sets the fraction of the data range that is used to pad the view range in when auto-ranging.
@@ -1288,7 +1293,7 @@ class ViewBox(GraphicsWidget):
             px, py = [Point(self.mapToView(v) - o) for v in self.pixelVectors()]
             self._viewPixelSizeCache  = (px.length(), py.length())
 
-        return self._viewPixelSizeCache 
+        return self._viewPixelSizeCache
 
     def itemBoundingRect(self, item):
         """Return the bounding rect of the item in view coordinates"""
@@ -1563,8 +1568,8 @@ class ViewBox(GraphicsWidget):
 
     # Including a prepareForPaint call is part of the Qt strategy to
     # defer expensive redraw opertions until requested by a 'sigPrepareForPaint' signal
-    # 
-    # However, as currently implemented, a call to prepareForPaint as part of the regular 
+    #
+    # However, as currently implemented, a call to prepareForPaint as part of the regular
     # 'update' call results in an undesired reset of pan/zoom:
     # https://github.com/pyqtgraph/pyqtgraph/issues/2029
     #
@@ -1585,7 +1590,7 @@ class ViewBox(GraphicsWidget):
         aspect = self.state['aspectLocked']  # size ratio / view ratio
         tr = self.targetRect()
         bounds = self.rect()
-        
+
         limits = self._effectiveLimits()
         # print('upd:limits ', limits) # diagnostic output should reflect additional limit in log mode
         minRng = [self.state['limits']['xRange'][0], self.state['limits']['yRange'][0]]
@@ -1768,8 +1773,8 @@ class ViewBox(GraphicsWidget):
         if self in nv:
             nv.remove(self)
 
-        if self.menu is not None:
-            self.menu.setViewList(nv)
+        if self._menu is not None:
+            self._menu.setViewList(nv)
 
         for ax in [0,1]:
             link = self.state['linkedViews'][ax]
