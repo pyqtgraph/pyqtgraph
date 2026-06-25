@@ -20,7 +20,7 @@ jobs:
     name: build wheel
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
@@ -34,7 +34,7 @@ jobs:
         run: |
           twine check "dist/*.whl"
       - name: Upload Wheel
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: wheel
           path: dist/*.whl  
@@ -42,7 +42,7 @@ jobs:
   make_dash_docset:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
@@ -57,7 +57,7 @@ jobs:
           dot_clean -m doc/pyqtgraph.docset
       - run: tar --exclude='.DS_Store' -cvzf pyqtgraph.tgz doc/pyqtgraph.docset
       - name: Upload docset
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: pyqtgraph.docset
           path: pyqtgraph.tgz
@@ -70,7 +70,7 @@ jobs:
         with:
           python-version: "3.14"
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install mypy
         run: pip install mypy
       - name: Run mypy
@@ -85,7 +85,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 2
       - name: Setup Python
@@ -136,7 +136,7 @@ jobs:
             qt-version: "PySide6-Essentials"
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
@@ -197,7 +197,7 @@ jobs:
           pytest pyqtgraph/examples -v -n 2
         shell: bash
       - name: Upload coverage data
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-data-${{ matrix.python-version }}-${{ matrix.qt-lib }}-${{ matrix.os }}
           path: .coverage.*
@@ -205,7 +205,7 @@ jobs:
           include-hidden-files: true
       - name: Upload Screenshots
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: Screenshots (Python ${{ matrix.python-version }} - Qt-Bindings ${{ matrix.qt-lib }} - OS ${{ matrix.os }})
           path: ${{ env.SCREENSHOT_DIR }}
@@ -231,8 +231,8 @@ jobs:
             environment-file: .github/workflows/etc/environment-pyside.yml
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
-      - uses: conda-incubator/setup-miniconda@v3
+        uses: actions/checkout@v7
+      - uses: conda-incubator/setup-miniconda@v4
         with:
           miniforge-version: latest
           environment-file: ${{ matrix.environment-file }}
@@ -295,7 +295,7 @@ jobs:
           pytest pyqtgraph/examples -v -n 2
       - name: Upload Screenshots
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: Screenshots (Conda - Qt-Bindings ${{ matrix.qt-lib }} - OS ${{ matrix.os }})
           path: ${{ env.SCREENSHOT_DIR }}
@@ -310,13 +310,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           # Use latest Python, so it understands all syntax.
           python-version: "3.14"
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           pattern: coverage-data-*
           merge-multiple: true
@@ -336,7 +336,7 @@ jobs:
           # coverage report --fail-under=100
 
       - name: Upload HTML report
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: html-report
           path: htmlcov

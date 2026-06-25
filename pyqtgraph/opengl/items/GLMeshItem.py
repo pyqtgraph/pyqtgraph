@@ -52,6 +52,8 @@ class GLMeshItem(GLGraphicsItem):
         computeNormals If False, then computation of normal vectors is 
                        disabled. This can provide a performance boost for 
                        meshes that do not make use of normals.
+        polygonOffset  If True, polygon offset is enabled, this is useful 
+                       when drawing edges on top of faces.
         ============== =====================================================
         """
         self.opts = {
@@ -63,6 +65,7 @@ class GLMeshItem(GLGraphicsItem):
             'shader': None,
             'smooth': True,
             'computeNormals': True,
+            'polygonOffset': False,
         }
         
         super().__init__(parentItem=parentItem)
@@ -103,6 +106,11 @@ class GLMeshItem(GLGraphicsItem):
         self.opts['color'] = c
         self.update()
         
+    def setPolygonOffset(self, enable):
+        """Enable or disable polygon offset for this mesh item."""
+        self.opts['polygonOffset'] = enable
+        self.update()
+
     def setMeshData(self, **kwds):
         """
         Set mesh data for this item. This can be invoked two ways:
@@ -232,7 +240,11 @@ class GLMeshItem(GLGraphicsItem):
 
     def paint(self):
         self.setupGLState()
-        
+
+        if self.opts['polygonOffset']:
+            GL.glEnable(GL.GL_POLYGON_OFFSET_FILL)
+            GL.glPolygonOffset(1.0, 1.0)
+
         if (dirty_bits := self.parseMeshData()):
             self.upload_vertex_buffers(dirty_bits)
 
@@ -333,4 +345,6 @@ class GLMeshItem(GLGraphicsItem):
             for loc in enabled_locs:
                 GL.glDisableVertexAttribArray(loc)
 
-
+        if self.opts['polygonOffset']:
+            GL.glDisable(GL.GL_POLYGON_OFFSET_FILL)
+            GL.glPolygonOffset(0.0, 0.0)

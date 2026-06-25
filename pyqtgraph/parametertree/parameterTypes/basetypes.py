@@ -199,6 +199,9 @@ class WidgetParameterItem(ParameterItem):
             self.displayLabel.hide()
             self.selected(False)
 
+    def defaultClicked(self):
+        self.param.setToDefault()
+
     def optsChanged(self, param, opts):
         """Called when any options are changed that are not
         name, value, default, or limits"""

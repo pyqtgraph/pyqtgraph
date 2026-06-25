@@ -16,7 +16,7 @@ from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("Parameter Tree Example")
 import pyqtgraph.parametertree.parameterTypes as pTypes
-from pyqtgraph.parametertree import Parameter, ParameterTree
+from pyqtgraph.parametertree import Parameter, ParameterTree, registerParameterType
 from pyqtgraph.parametertree.iojson import (
     parameter_restore_from_json_file,
     parameter_to_json_file,
@@ -27,8 +27,8 @@ from pyqtgraph.parametertree.iojson import (
 ## This parameter automatically generates two child parameters which are always reciprocals of each other
 class ComplexParameter(pTypes.GroupParameter):
     def __init__(self, **opts):
-        opts["type"] = "bool"
-        opts["value"] = True
+        opts['type'] = 'complexparam'
+        opts['value'] = True
         pTypes.GroupParameter.__init__(self, **opts)
 
         self.addChild(
@@ -65,7 +65,7 @@ class ComplexParameter(pTypes.GroupParameter):
 ## this group includes a menu allowing the user to add new parameters into its child list
 class ScalableGroup(pTypes.GroupParameter):
     def __init__(self, **opts):
-        opts["type"] = "group"
+        opts["type"] = "scalablegroup"
         opts["addText"] = "Add"
         # opts['addList'] = ['str', 'float', 'int']
         addMenu = [
@@ -128,75 +128,21 @@ class ScalableGroup(pTypes.GroupParameter):
             )
 
         self.addChild(param_dict)
-
+all_params_types = makeAllParamTypes()
+registerParameterType('complexparam', ComplexParameter)
+registerParameterType('scalablegroup', ScalableGroup)
 
 params = [
-    makeAllParamTypes(),
-    {
-        "name": "Custom context menu",
-        "type": "group",
-        "children": [
-            {
-                "name": "List contextMenu",
-                "type": "float",
-                "value": 0,
-                "context": ["menu1", "menu2"],
-            },
-            {
-                "name": "Dict contextMenu",
-                "type": "float",
-                "value": 0,
-                "context": {
-                    "changeName": "Title",
-                    "internal": "What the user sees",
-                },
-            },
-            {
-                "name": "Nested contextMenu",
-                "type": "float",
-                "value": 0,
-                "context": {
-                    "flat_action": None,
-                    "submenu": {
-                        "action_a": None,
-                        "action_b": None,
-                        "deeper": {
-                            "action_c": None,
-                        },
-                    },
-                },
-            },
-        ],
-    },
-    {'name': 'Ctrl button actions', 'type': 'group', 'children': [
-        # The wrench (ctrl) button on each parameter opens a menu organised into
-        # sections: Value (Reset/Set as default/Enable/Lock/Rename/Remove).  Use the 'ctrlActions' option to restrict
-        # which built-in sections appear.
-        {'name': 'Value actions', 'type': 'float', 'value': 1.0, 'default': 1.0,
-         'tip': 'Change the value, then use the ctrl button to reset or re-set the default'},
-        {'name': 'State actions only', 'type': 'int', 'value': 0,
-         'ctrlActions': {'enabled', 'readonly'},
-         'tip': 'Only Enable/Disable and Lock/Unlock are shown (no value actions)'},
-        {'name': 'Renamable + removable', 'type': 'str', 'value': 'hello',
-         'renamable': True, 'removable': True, 'ctrlActions': {},
-         'tip': 'Rename and Remove appear in the Manage section of the ctrl menu'},
-        {'name': 'Extra context actions', 'type': 'int', 'value': 0,
-         'context': {'log': 'Print value to console'},
-         'tip': 'User-defined context actions appear in the Manage section'},
-    ]},
-    {'name': 'Icon Examples', 'type': 'group', 'expanded':False, 'children': [
-        {'name': 'Single parameter with icon', 'type': 'int', 'value': 42, 'icon': QtWidgets.QStyle.StandardPixmap.SP_ComputerIcon},
-        {'name': 'Group with icon', 'type': 'group', 'icon': QtWidgets.QStyle.StandardPixmap.SP_DirOpenIcon, 'children': [
-            {'name': 'Child 1', 'type': 'str', 'value': 'nested parameter'},
-            {'name': 'Child 2', 'type': 'float', 'value': 3.14},
+    all_params_types,
+      {'name': 'Custom context menu', 'type': 'group', 'children': [
+        {'name': 'List contextMenu', 'type': 'float', 'value': 0, 'context': [
+            'menu1',
+            'menu2'
         ]},
-        {'name': 'Action with icon', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_DialogSaveButton},
-        {'name': 'Action with btn_icon', 'type': 'action', 'btn_icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload},
-        {'name': 'Action with icon + btn_icon', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload, 'btn_icon': QtWidgets.QStyle.StandardPixmap.SP_BrowserReload},
-        {'name': 'Action group with icons', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_TitleBarMenuButton, 'children': [
-            {'name': 'Sub-action 1', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_ArrowUp},
-            {'name': 'Sub-action 2', 'type': 'action', 'icon': QtWidgets.QStyle.StandardPixmap.SP_ArrowDown},
-        ]},
+        {'name': 'Dict contextMenu', 'type': 'float', 'value': 0, 'context': {
+            'changeName': 'Title',
+            'internal': 'What the user sees',
+        }},
     ]},
     {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
         {'name': 'Save State', 'type': 'action'},
