@@ -218,7 +218,6 @@ class WidgetParameterItem(ParameterItem):
 
     def defaultClicked(self):
         self.param.setToDefault()
-        self.updateDefaultBtn()
 
     def optsChanged(self, param, opts):
         """Called when any options are changed that are not

@@ -1,7 +1,7 @@
 import math
 
 from .. import functions as fn
-from ..icons import invisibleEye
+from ..icons import getGraphPixmap
 from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
 from .BarGraphItem import BarGraphItem
@@ -67,7 +67,6 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         GraphicsWidget.__init__(self)
         GraphicsWidgetAnchor.__init__(self)
-        self.setFlag(self.GraphicsItemFlag.ItemIgnoresTransformations)
         self.layout = QtWidgets.QGraphicsGridLayout()
         self.layout.setVerticalSpacing(verSpacing)
         self.layout.setHorizontalSpacing(horSpacing)
@@ -372,8 +371,7 @@ class ItemSample(GraphicsWidget):
 
         visible = self.item.isVisible()
         if not visible:
-            icon = invisibleEye.qicon
-            p.drawPixmap(QtCore.QPoint(1, 1), icon.pixmap(18, 18))
+            p.drawPixmap(QtCore.QPoint(1, 1), getGraphPixmap('invisibleEye', size=(18, 18)))
             return
 
         if not isinstance(self.item, ScatterPlotItem):
