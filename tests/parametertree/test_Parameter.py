@@ -89,6 +89,12 @@ def test_parameter_defaults_and_pristineness():
     p.setDefault(7, updatePristineValues=True)
     assert p.value() == 7
 
+    # if the value is coerced away from the raw default, the parameter remains modified
+    p = Parameter.create(name="param", type='int', value=1, default=2.5)
+    p.setToDefault()
+    assert p.value() == 2
+    assert p.valueModifiedSinceResetToDefault() is True
+
     # init with neither value nor default
     p = Parameter.create(name="param", type='int')
     assert p.valueModifiedSinceResetToDefault() is False
