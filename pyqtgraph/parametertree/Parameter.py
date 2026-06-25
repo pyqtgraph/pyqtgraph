@@ -500,7 +500,11 @@ class Parameter(QtCore.QObject):
         """Set this parameter's value to the default. Raises ValueError if no default is set."""
         with self.treeChangeBlocker():
             self.setValue(self.defaultValue())
-            self._modifiedSinceReset = False
+            self._modifiedSinceReset = not self.valueIsDefault()
+            for item in list(self.items):
+                updateDefaultBtn = getattr(item, 'updateDefaultBtn', None)
+                if updateDefaultBtn is not None:
+                    updateDefaultBtn()
 
     def hasDefault(self):
         """Returns True if this parameter has a default value."""
