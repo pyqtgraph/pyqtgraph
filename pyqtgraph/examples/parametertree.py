@@ -61,7 +61,7 @@ class ComplexParameter(pTypes.GroupParameter):
 ## this group includes a menu allowing the user to add new parameters into its child list
 class ScalableGroup(pTypes.GroupParameter):
     def __init__(self, **opts):
-        opts["type"] = "group"
+        opts["type"] = "scalablegroup"
         opts["addText"] = "Add"
         # opts['addList'] = ['str', 'float', 'int']
         addMenu = [
@@ -124,12 +124,12 @@ class ScalableGroup(pTypes.GroupParameter):
             )
 
         self.addChild(param_dict)
-
+all_params_types = makeAllParamTypes()
 registerParameterType('complexparam', ComplexParameter)
 registerParameterType('scalablegroup', ScalableGroup)
 
 params = [
-    makeAllParamTypes(),
+    all_params_types,
     {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
         {'name': 'Save State', 'type': 'action'},
         {'name': 'Restore State', 'type': 'action', 'children': [
