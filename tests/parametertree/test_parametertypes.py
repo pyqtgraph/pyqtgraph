@@ -5,6 +5,7 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.parametertree as pt
 from pyqtgraph.functions import eq
+from pyqtgraph.parametertree.utils import compare_parameters
 from pyqtgraph.parametertree.parameterTypes import ChecklistParameterItem
 from pyqtgraph.Qt import QtCore, QtGui
 
@@ -155,6 +156,18 @@ def test_limits_enforcement(k, v_in, v_out):
     assert p[k] == v_out
 
 
+def test_set_to_default_updates_reset_button():
+    p = pt.Parameter.create(name='int', type='int', value=1, default=2)
+    tree = pt.ParameterTree()
+    tree.addParameters(p)
+
+    item = next(iter(p.items))
+    assert item.defaultBtn.isEnabled() is True
+
+    p.setToDefault()
+    assert item.defaultBtn.isEnabled() is False
+
+
 def test_data_race():
     # Ensure widgets don't override user setting of param values whether
     # they connect the signal before or after it's added to a tree
@@ -234,6 +247,7 @@ def test_recreate_from_savestate():
     state = created.saveState()
     created2 = pt.Parameter.create(**state)
     assert pg.eq(state, created2.saveState())
+    assert compare_parameters(created, created2)
 
 
 # ---------------------------------------------------------------------------
