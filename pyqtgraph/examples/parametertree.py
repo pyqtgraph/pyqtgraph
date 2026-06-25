@@ -129,7 +129,7 @@ registerParameterType('complexparam', ComplexParameter)
 registerParameterType('scalablegroup', ScalableGroup)
 
 params = [
-    all_params_types,
+    makeAllParamTypes(),
     {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
         {'name': 'Save State', 'type': 'action'},
         {'name': 'Restore State', 'type': 'action', 'children': [
