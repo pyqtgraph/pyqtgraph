@@ -306,12 +306,13 @@ class Parameter(QtCore.QObject):
         """
         Checks if the specified type in the parameter options is valid for the current class.
         This method checks that:
-            - the type specified (self.opts['type']) is registered in the 'PARAM_TYPES' dictionary
-            - the class associated with the type in 'PARAM_TYPES' matches the current parameter class.
+
+          - the type specified (self.opts['type']) is registered in the 'PARAM_TYPES' dictionary
+          - the class associated with the type in 'PARAM_TYPES' matches the current parameter class.
 
         Returns
         -------
-        bool: Returns True if the type is valid, False otherwise.
+        bool: True if the type is valid, False otherwise.
         """
         if self.type() and not self.__class__ == PARAM_TYPES[self.type()]:
             return False
