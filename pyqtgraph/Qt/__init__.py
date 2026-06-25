@@ -5,9 +5,9 @@ This module exists to smooth out some of the differences between Qt versions.
 * Allow you to import QtCore/QtGui from pyqtgraph.Qt without specifying which Qt wrapper
   you want to use.
 """
+import importlib
 import os
 import platform
-import subprocess
 import sys
 from importlib import resources
 
@@ -63,44 +63,9 @@ class FailedImport(object):
         raise self.err
 
 
-# Make a loadUiType function like PyQt has
-
-# Credit:
-# http://stackoverflow.com/questions/4442286/python-code-genration-with-pyside-uic/14195313#14195313
-
 def _loadUiType(uiFile):
-    """
-    PySide lacks a "loadUiType" command like PyQt4's, so we have to convert
-    the ui file to py code in-memory first and then execute it in a
-    special frame to retrieve the form_class.
-
-    from stackoverflow: http://stackoverflow.com/a/14195313/3781327
-
-    seems like this might also be a legitimate solution, but I'm not sure
-    how to make PyQt4 and pyside look the same...
-        http://stackoverflow.com/a/8717832
-    """
-
-    # get class names from ui file
-    import xml.etree.ElementTree as xml
-    parsed = xml.parse(uiFile)
-    widget_class = parsed.find('widget').get('class')
-    form_class = parsed.find('class').text
-
-    # convert ui file to python code
-    uic_executable = QT_LIB.lower() + '-uic'
-    uipy = subprocess.check_output([uic_executable, uiFile])
-
-    # execute python code
-    pyc = compile(uipy, '<string>', 'exec')
-    frame = {}
-    exec(pyc, frame)
-
-    # fetch the base_class and form class based on their type in the xml from designer
-    form_class = frame['Ui_%s'%form_class]
-    base_class = eval('QtWidgets.%s'%widget_class)
-
-    return form_class, base_class
+    QtUiTools = importlib.import_module(QT_LIB + '.QtUiTools')
+    return QtUiTools.loadUiType(uiFile)
 
 
 # For historical reasons, pyqtgraph maintains a Qt4-ish interface back when
@@ -110,23 +75,10 @@ def _loadUiType(uiFile):
 # To avoid this, we now maintain a local "mirror" of QtCore, QtGui and QtWidgets.
 # Thus, when monkey-patching happens later on in this file, they will only affect
 # the local modules and not the global modules.
-def _copy_attrs(src, dst):
-    for o in dir(src):
-        if not hasattr(dst, o):
-            setattr(dst, o, getattr(src, o))
 
 from . import QtCore, QtGui, QtWidgets, compat
 
 if QT_LIB == PYQT5:
-    # We're using PyQt5 which has a different structure so we're going to use a shim to
-    # recreate the Qt4 structure for Qt5
-    import PyQt5.QtCore
-    import PyQt5.QtGui
-    import PyQt5.QtWidgets
-    _copy_attrs(PyQt5.QtCore, QtCore)
-    _copy_attrs(PyQt5.QtGui, QtGui)
-    _copy_attrs(PyQt5.QtWidgets, QtWidgets)
-
     try:
         from PyQt5 import sip
     except ImportError:
@@ -146,23 +98,12 @@ if QT_LIB == PYQT5:
     VERSION_INFO = 'PyQt5 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 elif QT_LIB == PYQT6:
-    import PyQt6.QtCore
-    import PyQt6.QtGui
-    import PyQt6.QtWidgets
-    _copy_attrs(PyQt6.QtCore, QtCore)
-    _copy_attrs(PyQt6.QtGui, QtGui)
-    _copy_attrs(PyQt6.QtWidgets, QtWidgets)
-
     from PyQt6 import sip, uic
 
     try:
         from PyQt6 import QtSvg
     except ImportError as err:
         QtSvg = FailedImport(err)
-    try:
-        from PyQt6 import QtOpenGLWidgets
-    except ImportError as err:
-        QtOpenGLWidgets = FailedImport(err)
     try:
         from PyQt6 import QtTest
     except ImportError as err:
@@ -171,13 +112,6 @@ elif QT_LIB == PYQT6:
     VERSION_INFO = 'PyQt6 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 elif QT_LIB == PYSIDE2:
-    import PySide2.QtCore
-    import PySide2.QtGui
-    import PySide2.QtWidgets
-    _copy_attrs(PySide2.QtCore, QtCore)
-    _copy_attrs(PySide2.QtGui, QtGui)
-    _copy_attrs(PySide2.QtWidgets, QtWidgets)
-    
     try:
         from PySide2 import QtSvg
     except ImportError as err:
@@ -191,21 +125,10 @@ elif QT_LIB == PYSIDE2:
     import shiboken2 as shiboken
     VERSION_INFO = 'PySide2 ' + PySide2.__version__ + ' Qt ' + QtCore.__version__
 elif QT_LIB == PYSIDE6:
-    import PySide6.QtCore
-    import PySide6.QtGui
-    import PySide6.QtWidgets
-    _copy_attrs(PySide6.QtCore, QtCore)
-    _copy_attrs(PySide6.QtGui, QtGui)
-    _copy_attrs(PySide6.QtWidgets, QtWidgets)
-
     try:
         from PySide6 import QtSvg
     except ImportError as err:
         QtSvg = FailedImport(err)
-    try:
-        from PySide6 import QtOpenGLWidgets
-    except ImportError as err:
-        QtOpenGLWidgets = FailedImport(err)
     try:
         from PySide6 import QtTest
     except ImportError as err:
@@ -221,12 +144,6 @@ else:
 
 
 if QT_LIB in [PYQT6, PYSIDE6]:
-    # We're using Qt6 which has a different structure so we're going to use a shim to
-    # recreate the Qt5 structure
-
-    if not isinstance(QtOpenGLWidgets, FailedImport):
-        QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
-
     # PySide6 incorrectly placed QFileSystemModel inside QtWidgets
     if QT_LIB == PYSIDE6 and hasattr(QtWidgets, 'QFileSystemModel'):
         module = getattr(QtWidgets, "QFileSystemModel")
@@ -392,7 +309,7 @@ def _onColorSchemeChange(colorScheme):
     app.setProperty('darkMode', darkMode)
 
 
-# exec() is used within _loadUiType, so we define as exec_() here and rename in pg namespace
+# exec() is a builtin function, so we define as exec_() here and rename in pg namespace
 def exec_():
     app = mkQApp()
     return app.exec() if hasattr(app, 'exec') else app.exec_()

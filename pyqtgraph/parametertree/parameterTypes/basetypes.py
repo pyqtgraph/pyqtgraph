@@ -3,7 +3,7 @@ import builtins
 from ... import functions as fn
 from ...Qt import QtCore, QtWidgets
 from ..Parameter import Parameter
-from ..ParameterItem import ParameterItem
+from ..ParameterItem import ParameterItem, _MenuActionHandler, build_menu_from_iterable
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -201,6 +201,9 @@ class WidgetParameterItem(ParameterItem):
             self.displayLabel.hide()
             self.selected(False)
 
+    def defaultClicked(self):
+        self.param.setToDefault()
+
     def optsChanged(self, param, opts):
         """Called when any options are changed that are not
         name, value, default, or limits"""
@@ -295,11 +298,21 @@ class GroupParameterItem(ParameterItem):
         self.addItem = None
         if 'addText' in param.opts:
             addText = param.opts['addText']
+            if 'addMenu' in param.opts: # Prefer addMenu over addList
+                param.opts.pop('addList', None)            
             if 'addList' in param.opts:
                 self.addWidget = QtWidgets.QComboBox()
                 self.addWidget.setSizeAdjustPolicy(QtWidgets.QComboBox.SizeAdjustPolicy.AdjustToContents)
                 self.updateAddList()
                 self.addWidget.currentIndexChanged.connect(self.addChanged)
+            elif "addMenu" in param.opts:
+                self.addWidget = QtWidgets.QToolButton()
+                self.addWidget.setText(f"{addText}")
+                self.addWidget.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
+                self.addMenu = QtWidgets.QMenu(self.addWidget)
+                self.addWidget.setMenu(self.addMenu)
+                self._menuActionHandler = _MenuActionHandler(param.addNew)
+                self.updateAddMenu()
             else:
                 self.addWidget = QtWidgets.QPushButton(addText)
                 self.addWidget.clicked.connect(self.addClicked)
@@ -370,6 +383,9 @@ class GroupParameterItem(ParameterItem):
 
         if 'addList' in opts:
             self.updateAddList()
+        
+        if 'addMenu' in opts:
+            self.updateAddMenu()
 
         if hasattr(self, 'addWidget'):
             if 'enabled' in opts:
@@ -388,6 +404,14 @@ class GroupParameterItem(ParameterItem):
         finally:
             self.addWidget.blockSignals(False)
 
+    def updateAddMenu(self):
+        self.addWidget.blockSignals(True)
+        try:
+            self.addMenu.clear()
+            addMenu = self.param.opts.get('addMenu', [])
+            build_menu_from_iterable(self.addMenu, addMenu, self._menuActionHandler)
+        finally:
+            self.addWidget.blockSignals(False)
 
 class GroupParameter(Parameter):
     """

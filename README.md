@@ -121,6 +121,7 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [Semi-Supervised Semantic Annotator](https://gitlab.com/s3a/s3a)
 * [STDF-Viewer](https://github.com/noonchen/STDF-Viewer)
 * [QT-DataViewer](https://gitlab.tudelft.nl/qutech-qdlabs/qt-dataviewer)
+* [TemCompanion](https://github.com/matao1984/temcompanion)
 
 Do you use PyQtGraph in your own project, and want to add it to the list?
 Submit a pull request to update this listing!

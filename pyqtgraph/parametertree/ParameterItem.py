@@ -5,6 +5,94 @@ from ..Qt import QtCore, QtGui, QtWidgets
 
 translate = QtCore.QCoreApplication.translate
 
+
+class _MenuActionHandler(QtCore.QObject):
+    """QObject helper that receives triggered signals from QActions in a menu.
+
+    The handler avoids lambda closures in signal connections by storing
+    the path directly on the action (``action.pathForTriggered``) and using
+    ``sender()`` to retrieve it at call time.  This prevents unintended strong
+    reference cycles between Qt objects.
+
+    Parameters
+    ----------
+    callback : callable
+        Called with a single argument — the ``pathForTriggered`` tuple of the
+        triggered action.
+    """
+
+    def __init__(self, callback):
+        super().__init__()
+        self._callback = callback
+
+    def onTriggered(self):
+        action = self.sender()
+        if action is not None and hasattr(action, 'pathForTriggered'):
+            self._callback(action.pathForTriggered)
+
+
+def build_menu_from_iterable(menu, items, handler, path=()):
+    """Recursively populate *menu* from *items*.
+
+    Each leaf action is connected to ``handler.onTriggered`` and has its
+    ``pathForTriggered`` attribute set to the full tuple path from the root.
+
+    Parameters
+    ----------
+    menu : QMenu
+        The menu (or submenu) to populate.
+    items : dict | list | tuple
+        Structure describing the menu.  Each element is either:
+
+        - a plain ``str`` — a leaf action whose display text and path
+          component are both the string.
+        - a ``dict`` — key/value pairs interpreted as:
+
+          ============  ====================================================
+          value type    meaning
+          ============  ====================================================
+          falsy         leaf; display text = key, path component = key
+          ``str``       leaf; display text = value, path component = key
+                        (human-readable alias, e.g. ``{"internalName": "Label"}``)
+          non-empty     submenu named *key*; recurse into *value*
+          dict/list/
+          tuple
+          ============  ====================================================
+
+    handler : _MenuActionHandler
+        QObject whose ``onTriggered`` slot is connected to every leaf action.
+    path : tuple
+        Path prefix accumulated during recursion; callers should omit this.
+    """
+    if isinstance(items, dict):
+        for key, value in items.items():
+            _menu_handle_item(menu, key, value, handler, path)
+    elif isinstance(items, (list, tuple)):
+        for item in items:
+            if isinstance(item, dict):
+                for key, value in item.items():
+                    _menu_handle_item(menu, key, value, handler, path)
+            elif isinstance(item, str):
+                _menu_add_leaf(menu, item, handler, path + (item,))
+
+
+def _menu_handle_item(menu, key, value, handler, path):
+    new_path = path + (key,)
+    if isinstance(value, (dict, list, tuple)) and value:
+        submenu = menu.addMenu(key)
+        build_menu_from_iterable(submenu, value, handler, new_path)
+    elif isinstance(value, str):
+        _menu_add_leaf(menu, value, handler, new_path)
+    else:
+        _menu_add_leaf(menu, key, handler, new_path)
+
+
+def _menu_add_leaf(menu, display, handler, path):
+    action = menu.addAction(display)
+    action.pathForTriggered = path
+    action.triggered.connect(handler.onTriggered)
+
+
 #: Default set of built-in actions shown in the ctrl button menu.
 #: Pass a subset as the ``ctrlActions`` parameter option to restrict the menu.
 #: Valid values: ``'default'``, ``'setDefault'``, ``'enabled'``, ``'readonly'``,
