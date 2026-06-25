@@ -1072,7 +1072,8 @@ class PlotDataItem(GraphicsObject):
         """
         Clip the displayed data to the visible range of the x-axis.
 
-        This setting can result in significant performance improvements. 
+        This setting can result in significant performance improvements. For
+        predictable clipping behavior, the x-data should be ordered.
 
         Parameters
         ----------
