@@ -7,7 +7,7 @@ from ...util.icons import iconToQIcon
 
 class ParameterControlledButton(QtWidgets.QPushButton):
     settableAttributes = {
-        "title", "tip", "btn_icon", "shortcut", "enabled", "visible"
+        "title", "tip", "action_icon", "shortcut", "enabled", "visible"
     }
 
     def __init__(self, parameter=None, parent=None):
@@ -22,7 +22,7 @@ class ParameterControlledButton(QtWidgets.QPushButton):
     def updateOpts(self, param, opts):
         # Of the attributes that can be set on a QPushButton, only the text
         # and tooltip attributes are different from standard pushbutton names
-        nameMap = dict(title="text", tip="toolTip", btn_icon="icon")
+        nameMap = dict(title="text", tip="toolTip", action_icon="icon")
         # Special case: "title" could be none, in which case make it something
         # readable by the simple copy-paste logic later
         opts = opts.copy()
@@ -30,24 +30,24 @@ class ParameterControlledButton(QtWidgets.QPushButton):
             opts.setdefault("title", opts["name"])
         if "title" in opts and opts["title"] is None:
             opts["title"] = param.title()
-        # Backward compat: 'icon' was the button-icon key before 'btn_icon' was
+        # Backward compat: 'icon' was the button-icon key before 'action_icon' was
         # introduced.  'icon' now sets the tree-item icon (via ParameterItem),
         # so silently passing it here would produce the wrong result.
-        if "icon" in opts and "btn_icon" not in opts:
+        if "icon" in opts and "action_icon" not in opts:
             warnings.warn(
                 "The 'icon' option on ActionParameter sets the tree-item icon as of "
-                "pyqtgraph 0.14. Use 'btn_icon' to set the button icon instead.",
+                "pyqtgraph 0.14. Use 'action_icon' to set the button icon instead.",
                 DeprecationWarning,
                 stacklevel=4,
             )
             opts = opts.copy()
-            opts["btn_icon"] = opts.pop("icon")
+            opts["action_icon"] = opts.pop("icon")
 
         # Another special case: icons should be converted to QIcon before
         # being passed to the button
-        if "btn_icon" in opts:
-            icon = opts["btn_icon"]
-            opts["btn_icon"] = iconToQIcon(icon)
+        if "action_icon" in opts:
+            icon = opts["action_icon"]
+            opts["action_icon"] = iconToQIcon(icon)
 
         for attr in self.settableAttributes.intersection(opts):
             buttonAttr = nameMap.get(attr, attr)
@@ -96,7 +96,7 @@ class ActionParameter(Parameter):
 
     Parameters
     ----------
-    btn_icon: str
+    action_icon: str
         Icon to display in the button. Can be any argument accepted
         by :class:`QIcon <QtGui.QIcon>`.
     shortcut: str

@@ -518,7 +518,7 @@ def test_interact_with_icon():
     parent = Parameter.create(name="parent", type="group")
 
     @interact.decorate(
-        runActionTemplate=dict(btn_icon=randomPixmap),
+        runActionTemplate=dict(action_icon=randomPixmap),
         parent=parent,
         runOptions=RunOptions.ON_ACTION,
     )
