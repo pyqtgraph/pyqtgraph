@@ -16,15 +16,15 @@ from pyqtgraph.Qt import QtWidgets
 
 app = pg.mkQApp("Parameter Tree Example")
 import pyqtgraph.parametertree.parameterTypes as pTypes
-from pyqtgraph.parametertree import Parameter, ParameterTree
+from pyqtgraph.parametertree import Parameter, ParameterTree, registerParameterType
 
 
 ## test subclassing parameters
 ## This parameter automatically generates two child parameters which are always reciprocals of each other
 class ComplexParameter(pTypes.GroupParameter):
     def __init__(self, **opts):
-        opts["type"] = "bool"
-        opts["value"] = True
+        opts['type'] = 'complexparam'
+        opts['value'] = True
         pTypes.GroupParameter.__init__(self, **opts)
 
         self.addChild(
@@ -61,7 +61,7 @@ class ComplexParameter(pTypes.GroupParameter):
 ## this group includes a menu allowing the user to add new parameters into its child list
 class ScalableGroup(pTypes.GroupParameter):
     def __init__(self, **opts):
-        opts["type"] = "group"
+        opts["type"] = "scalablegroup"
         opts["addText"] = "Add"
         # opts['addList'] = ['str', 'float', 'int']
         addMenu = [
@@ -124,55 +124,34 @@ class ScalableGroup(pTypes.GroupParameter):
             )
 
         self.addChild(param_dict)
-
+all_params_types = makeAllParamTypes()
+registerParameterType('complexparam', ComplexParameter)
+registerParameterType('scalablegroup', ScalableGroup)
 
 params = [
-    makeAllParamTypes(),
-    {
-        "name": "Save/Restore functionality",
-        "type": "group",
-        "children": [
-            {"name": "Save State", "type": "action"},
-            {
-                "name": "Restore State",
-                "type": "action",
-                "children": [
-                    {"name": "Add missing items", "type": "bool", "value": True},
-                    {"name": "Remove extra items", "type": "bool", "value": True},
-                ],
-            },
-        ],
-    },
-    {
-        "name": "Custom context menu",
-        "type": "group",
-        "children": [
-            {
-                "name": "List contextMenu",
-                "type": "float",
-                "value": 0,
-                "context": ["menu1", "menu2"],
-            },
-            {
-                "name": "Dict contextMenu",
-                "type": "float",
-                "value": 0,
-                "context": {
-                    "changeName": "Title",
-                    "internal": "What the user sees",
-                },
-            },
-        ],
-    },
-    ComplexParameter(name="Custom parameter group (reciprocal values)"),
-    ScalableGroup(
-        name="Expandable Parameter Group",
-        tip="Click to add children",
-        children=[
-            {"name": "ScalableParam 1", "type": "str", "value": "default param 1"},
-            {"name": "ScalableParam 2", "type": "str", "value": "default param 2"},
-        ],
-    ),
+    all_params_types,
+    {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
+        {'name': 'Save State', 'type': 'action'},
+        {'name': 'Restore State', 'type': 'action', 'children': [
+            {'name': 'Add missing items', 'type': 'bool', 'value': True},
+            {'name': 'Remove extra items', 'type': 'bool', 'value': True},
+        ]},
+    ]},
+    {'name': 'Custom context menu', 'type': 'group', 'children': [
+        {'name': 'List contextMenu', 'type': 'float', 'value': 0, 'context': [
+            'menu1',
+            'menu2'
+        ]},
+        {'name': 'Dict contextMenu', 'type': 'float', 'value': 0, 'context': {
+            'changeName': 'Title',
+            'internal': 'What the user sees',
+        }},
+    ]},
+    ComplexParameter(name='Custom parameter group (reciprocal values)'),
+    ScalableGroup(name="Expandable Parameter Group", tip='Click to add children', children=[
+        {'name': 'ScalableParam 1', 'type': 'str', 'value': "default param 1"},
+        {'name': 'ScalableParam 2', 'type': 'str', 'value': "default param 2"},
+    ]),
 ]
 
 ## Create tree of Parameter objects
