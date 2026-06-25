@@ -252,13 +252,14 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
 
         # ── Value ─────────────────────────────────────────────────────────────
         value_count = 0 # Used to decide whether to add separators
+        self._defaultAct = None
         if 'default' in ctrl and self.param.hasDefault() and not readonly:
-            act = self.ctrlMenu.addAction(
+            self._defaultAct = self.ctrlMenu.addAction(
                 icons.getGraphIcon('revert_default'),
                 translate("ParameterItem", "Reset to default"),
             )
-            act.setEnabled(self.param.valueModifiedSinceResetToDefault() and enabled)
-            act.triggered.connect(self.defaultClicked)
+            self._defaultAct.setEnabled(self.param.valueModifiedSinceResetToDefault() and enabled)
+            self._defaultAct.triggered.connect(self.defaultClicked)
             value_count += 1
 
         if 'setDefault' in ctrl and not readonly:

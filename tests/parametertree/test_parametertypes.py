@@ -155,6 +155,18 @@ def test_limits_enforcement(k, v_in, v_out):
     assert p[k] == v_out
 
 
+def test_set_to_default_updates_reset_action():
+    p = pt.Parameter.create(name='int', type='int', value=1, default=2)
+    tree = pt.ParameterTree()
+    tree.addParameters(p)
+
+    item = next(iter(p.items))
+    assert item._defaultAct.isEnabled() is True
+
+    p.setToDefault()
+    assert item._defaultAct.isEnabled() is False
+
+
 def test_data_race():
     # Ensure widgets don't override user setting of param values whether
     # they connect the signal before or after it's added to a tree
