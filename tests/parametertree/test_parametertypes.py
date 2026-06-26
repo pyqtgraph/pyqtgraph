@@ -288,6 +288,7 @@ def test_json_round_trip(example_params):
     original_state = example_params.saveState()
     restored = parameter_from_json(parameter_to_json(example_params))
     assert pg.eq(original_state, restored.saveState())
+    assert compare_parameters(example_params, restored)
 
 
 def test_json_file_round_trip(example_params, tmp_path):
@@ -298,6 +299,7 @@ def test_json_file_round_trip(example_params, tmp_path):
     assert dest.exists()
     restored = parameter_from_json_file(dest)
     assert pg.eq(original_state, restored.saveState())
+    assert compare_parameters(example_params, restored)
 
 
 # --- encoder edge cases ------------------------------------------------------
@@ -318,12 +320,15 @@ def test_json_tuple_preservation():
     assert isinstance(restored_state['value'], tuple), \
         "Tuple value must be preserved through JSON round-trip"
     assert pg.eq(original_state, restored_state)
+    assert compare_parameters(pen, restored)
 
 
 def test_json_color_parameter():
     """Color parameter (QColor → RGBA tuple via saveState) round-trips correctly."""
     p = pt.Parameter.create(name='c', type='color', value='#ff8800')
-    assert pg.eq(p.saveState(), parameter_from_json(parameter_to_json(p)).saveState())
+    restored = parameter_from_json(parameter_to_json(p))
+    assert pg.eq(p.saveState(), restored.saveState())
+    assert compare_parameters(p, restored)
 
 
 def test_json_limits_tuple():
@@ -333,6 +338,7 @@ def test_json_limits_tuple():
     ])
     restored = parameter_from_json(parameter_to_json(p))
     assert isinstance(restored.saveState()['children']['x'].get('limits'), tuple)
+    assert compare_parameters(p, restored)
 
 
 # --- filter='user' and restore path ------------------------------------------
