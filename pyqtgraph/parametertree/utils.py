@@ -78,12 +78,12 @@ def _mark_special(o: Any) -> Any:
     """
     if isinstance(o, tuple):
         return {'__tuple__': [_mark_special(e) for e in o]}
-    if isinstance(o, (set, frozenset)):
+    elif isinstance(o, (set, frozenset)):
         # JSON has no set type; restore as a sorted list (all callers use `in`, so list is fine)
         return sorted(o)
-    if isinstance(o, dict):
+    elif isinstance(o, dict):
         return {k: _mark_special(v) for k, v in o.items()}
-    if isinstance(o, list):
+    elif isinstance(o, list):
         return [_mark_special(e) for e in o]
     return o
 
@@ -167,9 +167,9 @@ class ParameterJsonEncoder(JSONEncoder):
         # numpy scalar types — promote to Python primitives, no sentinel needed
         if isinstance(o, np.integer):
             return int(o)
-        if isinstance(o, np.floating):
+        elif isinstance(o, np.floating):
             return float(o)
-        if isinstance(o, np.bool_):
+        elif isinstance(o, np.bool_):
             return bool(o)
 
         if isinstance(o, ColorMap):
