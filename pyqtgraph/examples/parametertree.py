@@ -152,21 +152,51 @@ params = [
             {'name': 'Remove extra items', 'type': 'bool', 'value': True},
         ]},
     ]},
-    {'name': 'Custom context menu', 'type': 'group', 'children': [
-        {'name': 'List contextMenu', 'type': 'float', 'value': 0, 'context': [
-            'menu1',
-            'menu2'
-        ]},
-        {'name': 'Dict contextMenu', 'type': 'float', 'value': 0, 'context': {
-            'changeName': 'Title',
-            'internal': 'What the user sees',
-        }},
-    ]},
-    ComplexParameter(name='Custom parameter group (reciprocal values)'),
-    ScalableGroup(name="Expandable Parameter Group", tip='Click to add children', children=[
-        {'name': 'ScalableParam 1', 'type': 'str', 'value': "default param 1"},
-        {'name': 'ScalableParam 2', 'type': 'str', 'value': "default param 2"},
-    ]),
+    {
+        "name": "Custom context menu",
+        "type": "group",
+        "children": [
+            {
+                "name": "List contextMenu",
+                "type": "float",
+                "value": 0,
+                "context": ["menu1", "menu2"],
+            },
+            {
+                "name": "Dict contextMenu",
+                "type": "float",
+                "value": 0,
+                "context": {
+                    "changeName": "Title",
+                    "internal": "What the user sees",
+                },
+            },
+            {
+                "name": "Nested contextMenu",
+                "type": "float",
+                "value": 0,
+                "context": {
+                    "flat_action": None,
+                    "submenu": {
+                        "action_a": None,
+                        "action_b": None,
+                        "deeper": {
+                            "action_c": None,
+                        },
+                    },
+                },
+            },
+        ],
+    },
+    ComplexParameter(name="Custom parameter group (reciprocal values)"),
+    ScalableGroup(
+        name="Expandable Parameter Group",
+        tip="Click to add children",
+        children=[
+            {"name": "ScalableParam 1", "type": "str", "value": "default param 1"},
+            {"name": "ScalableParam 2", "type": "str", "value": "default param 2"},
+        ],
+    ),
 ]
 
 ## Create tree of Parameter objects
@@ -189,6 +219,15 @@ def change(param, changes):
 
 
 p.sigTreeStateChanged.connect(change)
+
+
+def contextMenuTriggered(param, path):
+    # path is a tuple, e.g. ('flat_action',) or ('submenu', 'action_a')
+    print(f"Context menu triggered on '{param.name()}': path={path}")
+
+
+for child in p.child("Custom context menu"):
+    child.sigContextMenu.connect(contextMenuTriggered)
 
 
 def valueChanging(param, value):
