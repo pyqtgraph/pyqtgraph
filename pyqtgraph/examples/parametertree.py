@@ -137,16 +137,42 @@ params = [
             {'name': 'Remove extra items', 'type': 'bool', 'value': True},
         ]},
     ]},
-    {'name': 'Custom context menu', 'type': 'group', 'children': [
-        {'name': 'List contextMenu', 'type': 'float', 'value': 0, 'context': [
-            'menu1',
-            'menu2'
-        ]},
-        {'name': 'Dict contextMenu', 'type': 'float', 'value': 0, 'context': {
-            'changeName': 'Title',
-            'internal': 'What the user sees',
-        }},
-    ]},
+    {
+        "name": "Custom context menu",
+        "type": "group",
+        "children": [
+            {
+                "name": "List contextMenu",
+                "type": "float",
+                "value": 0,
+                "context": ["menu1", "menu2"],
+            },
+            {
+                "name": "Dict contextMenu",
+                "type": "float",
+                "value": 0,
+                "context": {
+                    "changeName": "Title",
+                    "internal": "What the user sees",
+                },
+            },
+            {
+                "name": "Nested contextMenu",
+                "type": "float",
+                "value": 0,
+                "context": {
+                    "flat_action": None,
+                    "submenu": {
+                        "action_a": None,
+                        "action_b": None,
+                        "deeper": {
+                            "action_c": None,
+                        },
+                    },
+                },
+            },
+        ],
+    },
     {'name': 'Ctrl button actions', 'type': 'group', 'children': [
         # The wrench (ctrl) button on each parameter opens a menu organised into
         # sections: Value (Reset/Set as default/Enable/Lock/Rename/Remove).  Use the 'ctrlActions' option to restrict
@@ -190,6 +216,15 @@ def change(param, changes):
 
 
 p.sigTreeStateChanged.connect(change)
+
+
+def contextMenuTriggered(param, path):
+    # path is a tuple, e.g. ('flat_action',) or ('submenu', 'action_a')
+    print(f"Context menu triggered on '{param.name()}': path={path}")
+
+
+for child in p.child("Custom context menu"):
+    child.sigContextMenu.connect(contextMenuTriggered)
 
 
 def valueChanging(param, value):

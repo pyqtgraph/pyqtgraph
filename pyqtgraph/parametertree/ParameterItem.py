@@ -279,12 +279,10 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
             act.triggered.connect(self.requestRemove)
 
         context = opts.get('context', None)
-        if isinstance(context, list):
-            for name in context:
-                menu.addAction(name).triggered.connect(self.contextMenuTriggered(name))
-        elif isinstance(context, dict):
-            for name, title in context.items():
-                menu.addAction(title).triggered.connect(self.contextMenuTriggered(name))
+        if context is not None:
+            if not hasattr(self, '_contextMenuHandler'):
+                self._contextMenuHandler = _MenuActionHandler(self.param.contextMenu)
+            build_menu_from_iterable(self.contextMenu, context, self._contextMenuHandler)
 
     # ── Ctrl button ───────────────────────────────────────────────────────────
 
@@ -522,11 +520,6 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
             self.titleChanged()
 
         self.updateFlags()
-
-    def contextMenuTriggered(self, name):
-        def trigger():
-            self.param.contextMenu(name)
-        return trigger
 
     def editName(self):
         self.treeWidget().editItem(self, 0)

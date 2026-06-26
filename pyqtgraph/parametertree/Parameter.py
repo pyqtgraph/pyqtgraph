@@ -86,7 +86,11 @@ class Parameter(QtCore.QObject):
     sigDefaultChanged(self, default)     Emitted when this parameter's default value has changed
     sigNameChanged(self, name)           Emitted when this parameter's name has changed
     sigOptionsChanged(self, opts)        Emitted when any of this parameter's options have changed
-    sigContextMenu(self, name)           Emitted when a context menu was clicked
+    sigContextMenu(self, path)           Emitted when a context menu item was clicked.
+                                         *path* is a tuple of strings representing the
+                                         full path to the selected item, e.g. ``('action',)``
+                                         for a flat item or ``('submenu', 'action')`` for a
+                                         nested one.
     ===================================  =========================================================
     """
     ## name, type, limits, etc.
@@ -195,6 +199,13 @@ class Parameter(QtCore.QObject):
                                      for widget-based parameter types. The button can be
                                      shown again later via ``setOpts(showCtrlButton=True)``.
                                      (default=True)
+        context                      Specifies items for the context menu shown on
+                                     right-click. Accepts a dict, list, or tuple; nested
+                                     structures produce submenus. See
+                                     :func:`~pyqtgraph.parametertree.ParameterItem.build_menu_from_iterable`
+                                     for the accepted format. Clicking an item emits
+                                     sigContextMenu with the full path tuple to that item.
+                                     (default=None)
         =======================      =========================================================
         """
         super().__init__()
@@ -278,9 +289,25 @@ class Parameter(QtCore.QObject):
             title = self.name()
         return title
 
-    def contextMenu(self, name):
-        """"A context menu entry was clicked"""
-        self.sigContextMenu.emit(self, name)
+    def contextMenu(self, name_or_path):
+        """A context menu entry was clicked.
+
+        *name_or_path* should be a tuple of strings representing the path to
+        the selected item (e.g. ``('action',)`` or ``('submenu', 'action')``).
+        Passing a plain string is deprecated and will be removed in a future
+        version; the string is automatically wrapped in a one-element tuple.
+        """
+        if isinstance(name_or_path, str):
+            warnings.warn(
+                "contextMenu() received a plain string; in a future version the "
+                "path will always be a tuple. Update your sigContextMenu handler "
+                "to expect a tuple, e.g. change ``name == 'foo'`` to "
+                "``name == ('foo',)`` or ``name[-1] == 'foo'``.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            name_or_path = (name_or_path,)
+        self.sigContextMenu.emit(self, name_or_path)
 
     def setName(self, name):
         """Attempt to change the name of this parameter; return the actual name. 
