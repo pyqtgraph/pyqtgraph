@@ -67,9 +67,14 @@ class AxisItem(GraphicsWidget):
             self.label.setRotation(-90)
             # allow labels on vertical axis to extend above and below the length of the axis
             hide_overlapping_labels = False
+            # For vertical axes, prefer not reducing text space to maintain readability
+            auto_reduce_text_space = False
         elif orientation in {'top', 'bottom'}:
-            # stop labels on horizontal axis from overlapping so vertical axis labels have room
-            hide_overlapping_labels = True
+            # For horizontal axes, allow text to extend to prevent clipping
+            # This addresses the issue where rightmost labels get clipped
+            hide_overlapping_labels = False  ## Changed from True - allow extension
+            # For horizontal axes, be more conservative about reducing space
+            auto_reduce_text_space = False
         else:
             raise ValueError(
                 "Orientation argument must be one of 'left', 'right', 'top', or 'bottom'."
@@ -79,7 +84,7 @@ class AxisItem(GraphicsWidget):
             'tickTextWidth': 30,  ## space reserved for tick text
             'tickTextHeight': 18,
             'autoExpandTextSpace': True,  ## automatically expand text space if needed
-            'autoReduceTextSpace': True,
+            'autoReduceTextSpace': auto_reduce_text_space,  ## improved default based on orientation
             'hideOverlappingLabels': hide_overlapping_labels,
             'tickFont': None,
             'stopAxisAtTick': (False, False),  ## whether axis is drawn to edge of box or to last tick
@@ -580,7 +585,230 @@ class AxisItem(GraphicsWidget):
                 if mx > self.textHeight or mx < self.textHeight - 10:
                     self.textHeight = mx
             if self.style['autoExpandTextSpace']:
+                # Enhanced text space handling for horizontal axes
+                if hasattr(self, '_tickSpacing') and self._tickSpacing:
+                    self._checkAndRequestLayoutExpansion(x)
                 self._updateHeight()
+
+    def _checkAndRequestLayoutExpansion(self, current_text_size):
+        """
+        Check if text would be clipped and request layout expansion if needed.
+        This addresses the issue where autoExpandTextSpace doesn't work properly
+        with PlotItem content margins.
+        """
+        if not self.style.get('autoExpandTextSpace', False):
+            return
+            
+        # Calculate required space for rightmost tick labels
+        required_space = self._calculateRequiredTextSpace()
+        if required_space <= 0:
+            return
+            
+        # Get available space considering parent margins
+        available_space = self._getAvailableTextSpace()
+        
+        # If we need more space, request layout expansion
+        if required_space > available_space:
+            self._requestLayoutExpansion(required_space)
+
+    def _calculateRequiredTextSpace(self):
+        """
+        Calculate the actual space needed for all tick labels,
+        including potential overflow of the rightmost label.
+        
+        Returns:
+            float: Required space in pixels, or 0 if calculation not possible
+        """
+        try:
+            # Need tick spacing and values to calculate required space
+            if not hasattr(self, '_tickSpacing') or not self._tickSpacing:
+                return 0
+                
+            # Get the current tick values
+            if hasattr(self, 'range') and self.range is not None:
+                range_size = abs(self.range[1] - self.range[0])
+                if range_size == 0:
+                    return 0
+                    
+                # Get ticks for current range and spacing
+                ticks = self.tickValues(self.range, range_size, self._tickSpacing)
+                if not ticks:
+                    return 0
+                    
+                # Get tick strings
+                tick_strings = self.tickStrings(ticks, self.autoSIPrefix, self.autoSIPrefixScale)
+                if not tick_strings:
+                    return 0
+                    
+                # Calculate font metrics
+                font = self.style.get('tickFont', QtGui.QFont())
+                fm = QtGui.QFontMetrics(font)
+                
+                max_required_width = 0
+                
+                # Check each tick label position
+                for i, (tick_val, tick_str) in enumerate(zip(ticks, tick_strings)):
+                    # Get text dimensions
+                    if hasattr(fm, 'horizontalAdvance'):  # Qt 5.11+
+                        text_width = fm.horizontalAdvance(tick_str)
+                    else:  # Older Qt versions
+                        text_width = fm.width(tick_str)
+                    
+                    if self.orientation in ['bottom', 'top']:
+                        # For horizontal axes, check rightmost label overflow
+                        # Calculate where this tick would be positioned
+                        axis_length = self.geometry().width()
+                        if axis_length > 0:
+                            # Normalize tick position (0 to 1)
+                            if len(ticks) > 1:
+                                tick_pos_norm = i / (len(ticks) - 1)
+                            else:
+                                tick_pos_norm = 0.5
+                                
+                            # Convert to pixel position
+                            tick_pixel_pos = tick_pos_norm * axis_length
+                            
+                            # Check if text extends beyond axis
+                            text_right_edge = tick_pixel_pos + (text_width / 2)
+                            max_required_width = max(max_required_width, text_right_edge)
+                
+                return max_required_width
+                
+        except (AttributeError, TypeError, ValueError):
+            # If anything goes wrong, fall back to current behavior
+            pass
+            
+        return 0
+
+    def _getAvailableTextSpace(self):
+        """
+        Get available space for text considering parent layout margins.
+        
+        Returns:
+            float: Available space in pixels
+        """
+        try:
+            # Get current geometry
+            geom = self.geometry()
+            available_width = geom.width()
+            
+            # Try to get parent margins
+            parent_margins = self._getParentLayoutMargins()
+            if parent_margins and hasattr(parent_margins, 'right'):
+                # Account for right margin that might limit available space
+                available_width -= parent_margins.right() / 2  # Conservative adjustment
+            
+            return max(0, available_width)
+            
+        except (AttributeError, TypeError):
+            # Fallback to geometry width
+            return self.geometry().width()
+
+    def _getParentLayoutMargins(self):
+        """
+        Get layout margins from parent PlotItem.
+        
+        Returns:
+            QtCore.QMarginsF or None: The content margins, or None if unavailable
+        """
+        try:
+            # Walk up the parent hierarchy to find PlotItem
+            parent = self.parentItem()
+            while parent:
+                # Check if this parent has a layout with margins
+                if hasattr(parent, 'layout'):
+                    # Try different methods for getting margins
+                    margins = None
+                    if hasattr(parent.layout, 'getContentsMargins'):
+                        # QGraphicsGridLayout uses getContentsMargins()
+                        margins_tuple = parent.layout.getContentsMargins()
+                        if isinstance(margins_tuple, (tuple, list)) and len(margins_tuple) == 4:
+                            # Convert tuple to QMarginsF-like object
+                            if hasattr(QtCore, 'QMarginsF'):
+                                margins = QtCore.QMarginsF(
+                                    float(margins_tuple[0]), 
+                                    float(margins_tuple[1]),
+                                    float(margins_tuple[2]), 
+                                    float(margins_tuple[3])
+                                )
+                            else:
+                                # Create a simple margins object for older Qt
+                                class SimpleMargins:
+                                    def __init__(self, left, top, right, bottom):
+                                        self._left, self._top, self._right, self._bottom = left, top, right, bottom
+                                    def left(self): return self._left
+                                    def top(self): return self._top
+                                    def right(self): return self._right
+                                    def bottom(self): return self._bottom
+                                margins = SimpleMargins(*margins_tuple)
+                    elif hasattr(parent.layout, 'contentsMargins'):
+                        # Regular Qt layouts use contentsMargins()
+                        margins = parent.layout.contentsMargins()
+                        
+                    if margins:
+                        return margins
+                parent = parent.parentItem()
+        except (AttributeError, RuntimeError):
+            pass
+            
+        return None
+
+    def _requestLayoutExpansion(self, required_space):
+        """
+        Request the parent PlotItem to expand layout to accommodate text.
+        
+        Parameters:
+            required_space (float): The space needed in pixels
+        """
+        try:
+            # Find parent PlotItem
+            parent = self.parentItem()
+            while parent:
+                # Check if parent has our expansion method
+                if hasattr(parent, '_expandForAxisText'):
+                    parent._expandForAxisText(self.orientation, required_space)
+                    break
+                # Also check if parent is a PlotItem directly
+                elif hasattr(parent, 'layout') and hasattr(parent.layout, 'setContentsMargins'):
+                    # Direct expansion for PlotItem-like objects
+                    self._directLayoutExpansion(parent, required_space)
+                    break
+                parent = parent.parentItem()
+        except (AttributeError, RuntimeError):
+            pass
+
+    def _directLayoutExpansion(self, plot_parent, required_space):
+        """
+        Directly expand PlotItem layout margins when needed.
+        
+        Parameters:
+            plot_parent: The PlotItem parent
+            required_space (float): Space needed in pixels
+        """
+        try:
+            if not hasattr(plot_parent.layout, 'contentsMargins'):
+                return
+                
+            current_margins = plot_parent.layout.contentsMargins()
+            
+            if self.orientation in ['bottom', 'top']:
+                # For horizontal axes, we may need to expand right margin
+                axis_width = self.geometry().width()
+                if required_space > axis_width and axis_width > 0:
+                    extra_needed = required_space - axis_width
+                    
+                    # Increase right margin to accommodate overflow
+                    new_right_margin = current_margins.right() + extra_needed * 0.5  # Conservative
+                    
+                    plot_parent.layout.setContentsMargins(
+                        current_margins.left(),
+                        current_margins.top(),
+                        new_right_margin,
+                        current_margins.bottom()
+                    )
+                    
+        except (AttributeError, TypeError):
+            pass
 
     def _adjustSize(self):
         if self.orientation in ['left', 'right']:
