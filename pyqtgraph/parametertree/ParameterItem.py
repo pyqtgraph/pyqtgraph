@@ -282,7 +282,7 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
         if context is not None:
             if not hasattr(self, '_contextMenuHandler'):
                 self._contextMenuHandler = _MenuActionHandler(self.param.contextMenu)
-            build_menu_from_iterable(self.contextMenu, context, self._contextMenuHandler)
+            build_menu_from_iterable(menu, context, self._contextMenuHandler)
 
     # ── Ctrl button ───────────────────────────────────────────────────────────
 
