@@ -86,8 +86,7 @@ def _mark_special(o: Any) -> Any:
             return {k: _mark_special(v) for k, v in o.items()}
         case list():
             return [_mark_special(e) for e in o]
-        case _:
-            return o
+    return o
 
 
 # ---------------------------------------------------------------------------
@@ -130,8 +129,7 @@ def _decode_hook(dct: dict) -> Any:
                 mapping=attrs['mapping_mode'],
                 name=name,
             )
-        case _:
-            return dct
+    return dct
 
 
 # ---------------------------------------------------------------------------
@@ -202,8 +200,7 @@ class ParameterJsonEncoder(JSONEncoder):
                     stacklevel=2,
                 )
                 return None
-            case _:
-                return super().default(o)
+        return super().default(o)
 
     def decode(self, json_str: str) -> Any:
         """Decode a JSON string produced by this encoder back to Python objects."""
