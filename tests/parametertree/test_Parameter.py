@@ -570,3 +570,90 @@ def test_interact_existing_parent():
     assert outParam in parent.names.values()
     outParam.activate()
     assert lastValue == 5
+
+
+# ---------------------------------------------------------------------------
+# Tests for Parameter.setValue() blockSignal behaviour (regression for #3305)
+# ---------------------------------------------------------------------------
+
+def test_setValue_blockSignal_callable_blocks_only_that_slot():
+    """
+    blockSignal=<callable> must temporarily disconnect *only* that slot while
+    still emitting sigValueChanged to every other connected listener.
+    This exercises the backward-compatible `if callable(blockSignal)` branch.
+    """
+    p = Parameter.create(name="param", type="float", value=0.0)
+
+    blocked_received = []
+    other_received = []
+
+    def blocked_slot(param, value):
+        blocked_received.append(value)
+
+    def other_slot(param, value):
+        other_received.append(value)
+
+    p.sigValueChanged.connect(blocked_slot)
+    p.sigValueChanged.connect(other_slot)
+
+    # blockSignal=blocked_slot → blocked_slot should NOT fire, other_slot SHOULD
+    p.setValue(1.0, blockSignal=blocked_slot)
+
+    assert blocked_received == [], (
+        "Blocked slot must not receive the signal when passed as blockSignal"
+    )
+    assert other_received == [1.0], (
+        "Other connected slots must still receive sigValueChanged"
+    )
+
+    # After the call the slot must be reconnected; next plain setValue fires both
+    p.setValue(2.0)
+    assert blocked_received == [2.0], (
+        "Blocked slot must be reconnected after the setValue call"
+    )
+    assert other_received == [1.0, 2.0]
+
+
+def test_setValue_blockSignal_true_suppresses_signal_entirely():
+    """
+    blockSignal=True must prevent sigValueChanged from being emitted at all.
+    This preserves the behaviour introduced in #3305.
+    """
+    p = Parameter.create(name="param", type="float", value=0.0)
+
+    received = []
+
+    def slot(param, value):
+        received.append(value)
+
+    p.sigValueChanged.connect(slot)
+
+    p.setValue(99.0, blockSignal=True)
+
+    assert received == [], (
+        "sigValueChanged must not be emitted when blockSignal=True"
+    )
+    # Value must still be stored despite the signal being blocked
+    assert p.value() == 99.0
+
+
+def test_setValue_blockSignal_none_emits_normally():
+    """
+    The default blockSignal=None (falsy) must emit sigValueChanged as usual.
+    """
+    p = Parameter.create(name="param", type="float", value=0.0)
+
+    received = []
+
+    def slot(param, value):
+        received.append(value)
+
+    p.sigValueChanged.connect(slot)
+
+    p.setValue(42.0)          # blockSignal defaults to None
+    p.setValue(43.0, blockSignal=None)
+    p.setValue(44.0, blockSignal=False)
+
+    assert received == [42.0, 43.0, 44.0], (
+        "sigValueChanged must fire for all falsy blockSignal values"
+    )

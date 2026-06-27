@@ -362,15 +362,22 @@ class Parameter(QtCore.QObject):
     def setValue(self, value, blockSignal=None):
         """
         Set the value of this Parameter; return the actual value that was set.
-        (this may be different from the value that was requested)
+        (this may be different from the value that was requested).
+        blockSignal specifies what to block during emission: a slot (callable) or the entire signal (True).
         """
         value = self._interpretValue(value)
         if fn.eq(self.opts.get('value', None), value):
             return value
         self._modifiedSinceReset = True
         self.opts['value'] = value
-        if not blockSignal:
-            self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
+        if callable(blockSignal):
+            self.sigValueChanged.disconnect(blockSignal)
+            try:
+                self.sigValueChanged.emit(self, value)
+            finally:
+                self.sigValueChanged.connect(blockSignal)
+        elif not blockSignal:  # falsy: emit normally
+            self.sigValueChanged.emit(self, value)
 
         return self.opts['value']
 
