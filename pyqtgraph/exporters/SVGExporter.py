@@ -258,7 +258,10 @@ def _generateItemSvg(item, nodes=None, root=None, options=None):
         p = QtGui.QPainter()
         p.begin(svg)
         if hasattr(item, 'setExportMode'):
-            item.setExportMode(True, {'painter': p})
+            item.setExportMode(
+                True,
+                {'painter': p, 'svgCoordinatesOffset': True}
+            )
         try:
             p.setTransform(tr)
             opt = QtWidgets.QStyleOptionGraphicsItem()

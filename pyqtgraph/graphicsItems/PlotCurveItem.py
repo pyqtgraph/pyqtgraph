@@ -988,32 +988,59 @@ class PlotCurveItem(GraphicsObject):
         )
         do_fill_outline = do_fill and self.opts['fillOutline']
 
-        if do_fill:
-            if self._shouldUseFillPathList(brush):
-                paths = self._getFillPathList(widget)
-            else:
-                paths = [self._getFillPath()]
+        path_transform = None
+        if (
+            self._exportOpts is not False
+            and self._exportOpts.get('svgCoordinatesOffset', False)
+        ):
+            center = self.boundingRect().center()
+            if np.isfinite(center.x()) and np.isfinite(center.y()):
+                path_transform = QtGui.QTransform.fromTranslate(
+                    -center.x(), -center.y()
+                )
+                p.save()
+                p.translate(center)
 
-            profiler('generate fill path')
-            for path in paths:
-                p.fillPath(path, brush)
-            profiler('draw fill path')
-
-        for pen_kind in ['shadowPen', 'pen']:
-            pen = self.opts[pen_kind]
-            if pen is None or pen.style() == QtCore.Qt.PenStyle.NoPen:
-                continue
-            p.setPen(pen)
-
-            if self._shouldUseDrawLineSegments(pen):
-                p.drawLines(*self._getLineSegments())
-                if do_fill_outline:
-                    p.drawLines(self._getClosingSegments())
-            else:
-                if do_fill_outline:
-                    p.drawPath(self._getFillPath())
+        try:
+            if do_fill:
+                if self._shouldUseFillPathList(brush):
+                    paths = self._getFillPathList(widget)
                 else:
-                    p.drawPath(self.getPath())
+                    paths = [self._getFillPath()]
+
+                if path_transform is not None:
+                    paths = [path_transform.map(path) for path in paths]
+
+                profiler('generate fill path')
+                for path in paths:
+                    p.fillPath(path, brush)
+                profiler('draw fill path')
+
+            for pen_kind in ['shadowPen', 'pen']:
+                pen = self.opts[pen_kind]
+                if pen is None or pen.style() == QtCore.Qt.PenStyle.NoPen:
+                    continue
+                p.setPen(pen)
+
+                if (
+                    path_transform is None
+                    and self._shouldUseDrawLineSegments(pen)
+                ):
+                    p.drawLines(*self._getLineSegments())
+                    if do_fill_outline:
+                        p.drawLines(self._getClosingSegments())
+                else:
+                    if do_fill_outline:
+                        path = self._getFillPath()
+                    else:
+                        path = self.getPath()
+
+                    if path_transform is not None:
+                        path = path_transform.map(path)
+                    p.drawPath(path)
+        finally:
+            if path_transform is not None:
+                p.restore()
 
         profiler('drawPath')
 
