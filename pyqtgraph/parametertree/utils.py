@@ -76,16 +76,18 @@ def _mark_special(o: Any) -> Any:
     found.  Non-container objects (including non-serializable ones like numpy
     arrays) are returned unchanged and will later hit ``default()``.
     """
-    if isinstance(o, tuple):
-        return {'__tuple__': [_mark_special(e) for e in o]}
-    elif isinstance(o, (set, frozenset)):
-        # JSON has no set type; restore as a sorted list (all callers use `in`, so list is fine)
-        return sorted(o)
-    elif isinstance(o, dict):
-        return {k: _mark_special(v) for k, v in o.items()}
-    elif isinstance(o, list):
-        return [_mark_special(e) for e in o]
-    return o
+    match o:
+        case tuple():
+            return {'__tuple__': [_mark_special(e) for e in o]}
+        case set() | frozenset():
+            # JSON has no set type; restore as a sorted list (all callers use `in`, so list is fine)
+            return sorted(o)
+        case dict():
+            return {k: _mark_special(v) for k, v in o.items()}
+        case list():
+            return [_mark_special(e) for e in o]
+        case _:
+            return o
 
 
 # ---------------------------------------------------------------------------
@@ -106,32 +108,30 @@ def _decode_hook(dct: dict) -> Any:
     - ``{"__colormap__": {"name": ...}}``→ named :class:`~pyqtgraph.ColorMap`
     - ``{"__colormap__": {...}}``        → anonymous :class:`~pyqtgraph.ColorMap`
     """
-    if '__tuple__' in dct:
-        # Elements may already be reconstructed tuples/arrays from inner calls
-        return tuple(dct['__tuple__'])
-
-    if '__ndarray__' in dct:
-        arr = np.array(dct['__ndarray__'])
-        dtype = dct.get('dtype')
-        if dtype:
-            arr = arr.astype(dtype, copy=False)
-        return arr
-
-    if '__colormap__' in dct:
-        attrs = dct['__colormap__']
-        name = attrs.get('name')
-        if name and 'pos' not in attrs:
-            # Named colormap — reconstruct from the registry
-            return pgcm.get(name)
-        # pos and color have already been decoded as ndarrays by this point
-        return ColorMap(
-            pos=attrs['pos'],
-            color=attrs['color'],
-            mapping=attrs['mapping_mode'],
-            name=name,
-        )
-
-    return dct
+    match dct:
+        case {'__tuple__': elements}:
+            # Elements may already be reconstructed tuples/arrays from inner calls
+            return tuple(elements)
+        case {'__ndarray__': data, **rest}:
+            arr = np.array(data)
+            dtype = rest.get('dtype')
+            if dtype:
+                arr = arr.astype(dtype, copy=False)
+            return arr
+        case {'__colormap__': attrs}:
+            name = attrs.get('name')
+            if name and 'pos' not in attrs:
+                # Named colormap — reconstruct from the registry
+                return pgcm.get(name)
+            # pos and color have already been decoded as ndarrays by this point
+            return ColorMap(
+                pos=attrs['pos'],
+                color=attrs['color'],
+                mapping=attrs['mapping_mode'],
+                name=name,
+            )
+        case _:
+            return dct
 
 
 # ---------------------------------------------------------------------------
@@ -161,50 +161,49 @@ class ParameterJsonEncoder(JSONEncoder):
 
     def default(self, o: Any) -> Any:
         """Handle non-serializable objects not covered by ``saveState()`` overrides."""
-        if isinstance(o, np.ndarray):
-            return {'__ndarray__': o.tolist(), 'dtype': str(o.dtype)}
-
-        # numpy scalar types — promote to Python primitives, no sentinel needed
-        if isinstance(o, np.integer):
-            return int(o)
-        elif isinstance(o, np.floating):
-            return float(o)
-        elif isinstance(o, np.bool_):
-            return bool(o)
-
-        if isinstance(o, ColorMap):
-            if o.name:
-                # Named colormaps: store only the name — far more compact
-                return {'__colormap__': {'name': o.name}}
-            pos, color = o.getStops()
-            # pos and color are ndarrays; they will re-enter default() below
-            return {
-                '__colormap__': {
-                    'pos': pos,
-                    'color': color,
-                    'mapping_mode': o.mapping_mode,
-                    'name': o.name,
+        match o:
+            case np.ndarray():
+                return {'__ndarray__': o.tolist(), 'dtype': str(o.dtype)}
+            # numpy scalar types — promote to Python primitives, no sentinel needed
+            # np.bool_ first: it does not inherit from np.integer/np.floating
+            case np.bool_():
+                return bool(o)
+            case np.integer():
+                return int(o)
+            case np.floating():
+                return float(o)
+            case ColorMap():
+                if o.name:
+                    # Named colormaps: store only the name — far more compact
+                    return {'__colormap__': {'name': o.name}}
+                pos, color = o.getStops()
+                # pos and color are ndarrays; they will re-enter default() below
+                return {
+                    '__colormap__': {
+                        'pos': pos,
+                        'color': color,
+                        'mapping_mode': o.mapping_mode,
+                        'name': o.name,
+                    }
                 }
-            }
-
-        # QIcon has no lossless JSON representation — Qt does not expose the
-        # original file path after construction.  String paths and
-        # QIcon.StandardPixmap integers are handled by the standard encoder
-        # before reaching here, so this branch is only hit when a QIcon object
-        # was stored directly.  Serialize as null and warn so the caller knows
-        # the icon will not survive the JSON round-trip.
-        if isinstance(o, QtGui.QIcon):
-            import warnings
-            warnings.warn(
-                "A QIcon object cannot be serialized to JSON and will be stored as null. "
-                "Pass a string file path or a QIcon.StandardPixmap integer instead "
-                "to make the icon survive a saveState/JSON round-trip.",
-                UserWarning,
-                stacklevel=2,
-            )
-            return None
-
-        return super().default(o)
+            # QIcon has no lossless JSON representation — Qt does not expose the
+            # original file path after construction.  String paths and
+            # QIcon.StandardPixmap integers are handled by the standard encoder
+            # before reaching here, so this branch is only hit when a QIcon object
+            # was stored directly.  Serialize as null and warn so the caller knows
+            # the icon will not survive the JSON round-trip.
+            case QtGui.QIcon():
+                import warnings
+                warnings.warn(
+                    "A QIcon object cannot be serialized to JSON and will be stored as null. "
+                    "Pass a string file path or a QIcon.StandardPixmap integer instead "
+                    "to make the icon survive a saveState/JSON round-trip.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                return None
+            case _:
+                return super().default(o)
 
     def decode(self, json_str: str) -> Any:
         """Decode a JSON string produced by this encoder back to Python objects."""
