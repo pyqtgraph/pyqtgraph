@@ -1,4 +1,8 @@
+import re
+
+import numpy as np
 import pyqtgraph as pg
+import pyqtgraph.exporters
 
 app = pg.mkQApp()
 
@@ -68,3 +72,37 @@ def test_simple(tmpdir):
     ex = pg.exporters.SVGExporter(scene)
     tf = tmpdir.join("export.svg")
     ex.export(fileName=tf)
+
+
+def test_large_coordinate_curve_export(tmpdir):
+    w = pg.GraphicsLayoutWidget()
+    w.show()
+
+    plot = w.addPlot()
+    x = np.arange(0, 500, 10, dtype=float) + 10_000_000
+    y = np.linspace(0, 1, x.size)
+    plot.plot(x=x, y=y, pen="g")
+
+    app.processEvents()
+    app.processEvents()
+
+    ex = pg.exporters.SVGExporter(w.scene())
+    tf = tmpdir.join("export.svg")
+    ex.export(fileName=tf)
+    w.close()
+
+    text = tf.read_text("utf-8")
+    path_coords = []
+    for path in re.findall(r'<path[^>]* d="([^"]+)"', text):
+        xs = []
+        for token in path.strip().split():
+            token = token.lstrip("ML")
+            if "," not in token:
+                continue
+            xs.append(float(token.split(",", 1)[0]))
+        if xs:
+            path_coords.append(xs)
+
+    curve_xs = max(path_coords, key=len)
+    assert len(curve_xs) == x.size
+    assert np.all(np.diff(curve_xs) > 0)
