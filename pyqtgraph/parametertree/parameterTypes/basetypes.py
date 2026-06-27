@@ -1,11 +1,9 @@
 import builtins
 
 from ... import functions as fn
-from ... import icons
 from ...Qt import QtCore, QtWidgets
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem, _MenuActionHandler, build_menu_from_iterable
-
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -13,9 +11,11 @@ class WidgetParameterItem(ParameterItem):
 
       * label in second column for displaying value
       * simple widget for editing value (displayed instead of label when item is selected)
-      * button that resets value to default
+      * ctrl button (ctrl icon) that opens a menu with actions: Reset to default,
+        Set as default, Enable/Disable, Lock/Unlock, Rename, Remove
 
-    This class can be subclassed by overriding makeWidget() to provide a custom widget.
+    This class can be subclassed by overriding :meth:`makeWidget` to provide a
+    custom widget, and :meth:`populateCtrlMenu` to customise the ctrl menu.
     """
 
     def __init__(self, param, depth):
@@ -36,7 +36,9 @@ class WidgetParameterItem(ParameterItem):
             self.subItem.setFlags(QtCore.Qt.ItemFlag.NoItemFlags)
             self.addChild(self.subItem)
 
-        self.defaultBtn = self.makeDefaultButton()
+        self.ctrlBtn = self.makeCtrlButton()
+        if not param.opts.get('showCtrlButton', True):
+            self.ctrlBtn.hide()
 
         self.displayLabel = QtWidgets.QLabel()
 
@@ -47,7 +49,7 @@ class WidgetParameterItem(ParameterItem):
             layout.addWidget(w, 1)
         layout.addWidget(self.displayLabel, 1)
         layout.addStretch(0)
-        layout.addWidget(self.defaultBtn)
+        layout.addWidget(self.ctrlBtn)
         self.layoutWidget = QtWidgets.QWidget()
         self.layoutWidget.setLayout(layout)
 
@@ -65,13 +67,13 @@ class WidgetParameterItem(ParameterItem):
             ## no starting value was given; use whatever the widget has
             self.widgetValueChanged()
 
-        self.updateDefaultBtn()
+        self.updateCtrlButton()
 
         self.optsChanged(self.param, self.param.opts)
 
         # set size hints
         sw = self.widget.sizeHint()
-        sb = self.defaultBtn.sizeHint()
+        sb = self.ctrlBtn.sizeHint()
         # shrink row heights a bit for more compact look
         sw.setHeight(int(sw.height() * 0.9))
         sb.setHeight(int(sb.height() * 0.9))
@@ -115,15 +117,6 @@ class WidgetParameterItem(ParameterItem):
 
         return False
 
-    def makeDefaultButton(self):
-        defaultBtn = QtWidgets.QPushButton()
-        defaultBtn.setAutoDefault(False)
-        defaultBtn.setFixedWidth(20)
-        defaultBtn.setFixedHeight(20)
-        defaultBtn.setIcon(icons.getGraphIcon('default'))
-        defaultBtn.clicked.connect(self.defaultClicked)
-        return defaultBtn
-
     def setFocus(self):
         self.showEditor()
 
@@ -145,15 +138,7 @@ class WidgetParameterItem(ParameterItem):
                     self.widget.sigChanged.connect(self.widgetValueChanged)
                 self.param.sigValueChanged.connect(self.valueChanged)
         self.updateDisplayLabel()  ## always make sure label is updated, even if values match!
-        self.updateDefaultBtn()
-
-    def updateDefaultBtn(self):
-        self.defaultBtn.setEnabled(
-            self.param.valueModifiedSinceResetToDefault()
-            and self.param.opts['enabled']
-            and self.param.writable())
-
-        self.defaultBtn.setVisible(self.param.hasDefault() and not self.param.readonly())
+        self.updateCtrlButton()
 
     def updateDisplayLabel(self, value=None):
         """Update the display label to reflect the value of the parameter."""
@@ -198,7 +183,7 @@ class WidgetParameterItem(ParameterItem):
         ParameterItem.limitsChanged(self, param, limits)
 
     def defaultChanged(self, param, value):
-        self.updateDefaultBtn()
+        self.updateCtrlButton()
 
     def treeWidgetChanged(self):
         """Called when this item is added or removed from a tree."""
@@ -225,11 +210,11 @@ class WidgetParameterItem(ParameterItem):
         ParameterItem.optsChanged(self, param, opts)
 
         if 'enabled' in opts:
-            self.updateDefaultBtn()
+            self.updateCtrlButton()
             self.widget.setEnabled(opts['enabled'])
 
         if 'readonly' in opts:
-            self.updateDefaultBtn()
+            self.updateCtrlButton()
 
             if opts['readonly']:
                 self.displayLabel.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
@@ -240,6 +225,9 @@ class WidgetParameterItem(ParameterItem):
                 self.widget.setReadOnly(opts['readonly'])
             else:
                 self.widget.setEnabled(self.param.opts['enabled'] and not opts['readonly'])
+
+        if 'showCtrlButton' in opts:
+            self.ctrlBtn.setVisible(opts['showCtrlButton'])
 
         if 'tip' in opts:
             self.widget.setToolTip(opts['tip'])

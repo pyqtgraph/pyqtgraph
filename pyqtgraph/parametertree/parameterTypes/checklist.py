@@ -5,7 +5,7 @@ from ...Qt import QtCore, QtWidgets
 from ...SignalProxy import SignalProxy
 from ..ParameterItem import ParameterItem
 from . import BoolParameterItem, SimpleParameter
-from .basetypes import Emitter, GroupParameter, GroupParameterItem, WidgetParameterItem
+from .basetypes import Emitter, GroupParameter, GroupParameterItem
 from .list import ListParameter
 
 
@@ -33,7 +33,7 @@ class ChecklistParameterItem(GroupParameterItem):
             self.metaBtnLayout.addWidget(btn)
             btn.clicked.connect(getattr(self, f'{title.lower()}AllClicked'))
 
-        self.metaBtns['default'] = self.makeDefaultButton()
+        self.metaBtns['default'] = self.makeCtrlButton()
         self.metaBtnLayout.addWidget(self.metaBtns['default'])
 
     def treeWidgetChanged(self):
@@ -80,25 +80,15 @@ class ChecklistParameterItem(GroupParameterItem):
         self.btnGrp.setExclusive(exclusive)
         # "Limits" will force update anyway, no need to duplicate if it's present
         if 'limits' not in opts and ('enabled' in opts or 'readonly' in opts):
-            self.updateDefaultBtn()
+            self.updateCtrlButton()
 
     def expandedChangedEvent(self, expanded):
         for btn in self.metaBtns.values():
             btn.setVisible(expanded)
 
     def valueChanged(self, param, val):
-        self.updateDefaultBtn()
+        self.updateCtrlButton()
 
-    def updateDefaultBtn(self):
-        self.metaBtns["default"].setEnabled(
-            not self.param.valueIsDefault()
-            and self.param.opts["enabled"]
-            and self.param.writable()
-        )
-        return
-
-    makeDefaultButton = WidgetParameterItem.makeDefaultButton
-    defaultClicked = WidgetParameterItem.defaultClicked
 
 class RadioParameterItem(BoolParameterItem):
     """
