@@ -203,17 +203,12 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
         if opts.get('removable', False):
             self.contextMenu.addAction(translate("ParameterItem", "Remove")).triggered.connect(self.requestRemove)
         
-        # context menu
         context = opts.get('context', None)
-        if isinstance(context, list):
-            for name in context:
-                self.contextMenu.addAction(name).triggered.connect(
-                    self.contextMenuTriggered(name))
-        elif isinstance(context, dict):
-            for name, title in context.items():
-                self.contextMenu.addAction(title).triggered.connect(
-                    self.contextMenuTriggered(name))
-        
+        if context is not None:
+            if not hasattr(self, '_contextMenuHandler'):
+                self._contextMenuHandler = _MenuActionHandler(self.param.contextMenu)
+            build_menu_from_iterable(self.contextMenu, context, self._contextMenuHandler)
+
         self.contextMenu.popup(ev.globalPos())
         
     def columnChangedEvent(self, col):
@@ -281,11 +276,6 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
             self.titleChanged()
 
         self.updateFlags()
-
-    def contextMenuTriggered(self, name):
-        def trigger():
-            self.param.contextMenu(name)
-        return trigger
 
     def editName(self):
         self.treeWidget().editItem(self, 0)
