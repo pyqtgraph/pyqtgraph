@@ -155,7 +155,10 @@ class DockArea(Container, QtWidgets.QWidget):
         new.containerChanged(self)
         self.topContainer = new
         self.dockdrop.raiseOverlay()
-        
+
+    def close(self):
+        return QtWidgets.QWidget.close(self)
+
     def count(self):
         if self.topContainer is None:
             return 0

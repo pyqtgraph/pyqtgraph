@@ -6,6 +6,25 @@ import pyqtgraph.dockarea as da
 pg.mkQApp()
 
 
+def test_dockarea_close():
+    class DockArea(da.DockArea):
+        def __init__(self):
+            super().__init__()
+            self.close_event_seen = False
+
+        def closeEvent(self, event):
+            self.close_event_seen = True
+            super().closeEvent(event)
+
+    a = DockArea()
+    a.addDock(da.Dock("dock 1"))
+
+    close_succeeded = a.close()
+    assert close_succeeded
+    pg.mkQApp().processEvents()
+    assert a.close_event_seen
+
+
 def test_dockarea():
     a = da.DockArea()
     d1 = da.Dock("dock 1")
