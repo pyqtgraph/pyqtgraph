@@ -295,6 +295,46 @@ class InfiniteLine(GraphicsObject):
             self.span = (mn, mx)
             self.update()
 
+    def _visibleLineBounds(self):
+        if self.angle % 90 == 0:
+            return None
+
+        view = self.getViewBox()
+        if not isinstance(view, ViewBox):
+            return None
+
+        viewRect = view.boundingRect()
+        if viewRect.isEmpty():
+            return None
+
+        corners = (
+            viewRect.topLeft(),
+            viewRect.topRight(),
+            viewRect.bottomRight(),
+            viewRect.bottomLeft(),
+        )
+        points = [self.mapFromItem(view, point) for point in corners]
+        intersections = []
+
+        for p1, p2 in zip(points, points[1:] + points[:1]):
+            y1 = p1.y()
+            y2 = p2.y()
+
+            if y1 == 0 and y2 == 0:
+                intersections.extend([p1.x(), p2.x()])
+                continue
+
+            if (y1 <= 0 <= y2) or (y2 <= 0 <= y1):
+                if y1 == y2:
+                    continue
+                ratio = -y1 / (y2 - y1)
+                intersections.append(p1.x() + ratio * (p2.x() - p1.x()))
+
+        if len(intersections) < 2:
+            return None
+
+        return min(intersections), max(intersections)
+
     def _computeBoundingRect(self):
         #br = UIGraphicsItem.boundingRect(self)
         vr = self.viewRect()  # bounds of containing ViewBox mapped to local coords.
@@ -311,6 +351,12 @@ class InfiniteLine(GraphicsObject):
         br = QtCore.QRectF(vr)
         br.setBottom(-w)
         br.setTop(w)
+
+        bounds = self._visibleLineBounds()
+        if bounds is not None:
+            left, right = bounds
+            br.setLeft(left)
+            br.setRight(right)
 
         length = br.width()
         left = br.left() + length * self.span[0]
