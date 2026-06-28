@@ -143,6 +143,51 @@ def test_AxisItem_tickFont(monkeypatch):
     plot.close()
 
 
+def test_AxisItem_maxTickLevel_limits_explicit_tick_lines(monkeypatch):
+    def check_ticks(p, axisSpec, tickSpecs, textSpecs):
+        viewPixelSize = view.viewPixelSize()
+        assert len(tickSpecs) == 2
+        assert isclose(
+            view.mapToView(axisSpec[1]).x(), 0.25, abs_tol=viewPixelSize[0]
+        )
+        assert isclose(
+            view.mapToView(axisSpec[2]).x(), 0.75, abs_tol=viewPixelSize[0]
+        )
+        assert "minor" in {spec[2] for spec in textSpecs}
+
+    plot = pg.PlotWidget()
+    view = plot.plotItem.getViewBox()
+    plot.resize(500, 300)
+    bottom = plot.getAxis("bottom")
+    bottom.setRange(0, 1)
+    bottom.setTicks([
+        [(0.25, "major-a"), (0.75, "major-b")],
+        [(0.1, "minor")],
+    ])
+    bottom.setStyle(maxTickLevel=0, maxTextLevel=1, stopAxisAtTick=(True, True))
+    monkeypatch.setattr(bottom, "drawPicture", check_ticks)
+
+    plot.show()
+    app.processEvents()
+    plot.close()
+
+
+@pytest.mark.parametrize(
+    "orientation, dimension_getter",
+    [
+        ("top", lambda axis: (axis.minimumHeight(), axis.maximumHeight())),
+        ("left", lambda axis: (axis.minimumWidth(), axis.maximumWidth())),
+    ],
+)
+def test_AxisItem_negative_text_offset_keeps_fixed_axis_space(
+    orientation, dimension_getter
+):
+    axis = pg.AxisItem(orientation, maxTickLength=-40)
+    axis.setStyle(tickTextOffset=-40)
+
+    assert dimension_getter(axis) == (0, 0)
+
+
 @pytest.mark.parametrize('orientation,label_kwargs,labelText,labelUnits', [
     ('left', {}, '', '',),
     ('left', dict(text='Position', units='mm'), 'Position', 'mm'),
