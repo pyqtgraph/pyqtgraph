@@ -250,6 +250,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         try:
             plotItem.sigPlotChanged.disconnect(updateLabel)
         except (TypeError, RuntimeError):
+            # The signal can already be disconnected when Qt tears items down.
             pass
 
     def _addItemToLayout(self, sample, label):
