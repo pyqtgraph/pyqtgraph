@@ -135,6 +135,7 @@ class ImageView(QtWidgets.QWidget):
         self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
         self.scene = self.ui.graphicsView.scene()
+        self._autoHistogramRange = True
         self.discreteTimeLine = discreteTimeLine
         self.ui.histogram.setLevelMode(levelMode)
         self.ignoreTimeLine = False
@@ -295,6 +296,7 @@ class ImageView(QtWidgets.QWidget):
             Set the transform of the displayed image. This option overrides *pos* and *scale*.
         autoHistogramRange : bool
             If True, the histogram y-range is automatically scaled to fit the image data.
+            The value is retained for later image updates.
         levelMode : str
             If specified, this sets the user interaction mode for setting image levels. Options are 'mono',
             which provides a single level control for all image channels, and 'rgb' or 'rgba', which provide
@@ -364,7 +366,8 @@ class ImageView(QtWidgets.QWidget):
         profiler()
 
         self.currentIndex = 0
-        self.updateImage(autoHistogramRange=autoHistogramRange)
+        self.setHistogramAutoRange(autoHistogramRange)
+        self.updateImage()
         if levels is None and autoLevels:
             self.autoLevels()
         if levels is not None:  ## this does nothing since getProcessedImage sets these values again.
@@ -454,6 +457,10 @@ class ImageView(QtWidgets.QWidget):
         if text == '':
             a.showLabel(False)
         self.ui.histogram.setMinimumWidth(135)
+
+    def setHistogramAutoRange(self, enabled=True):
+        """Set whether image updates automatically scale the histogram y-range."""
+        self._autoHistogramRange = bool(enabled)
 
     def nframes(self):
         """
@@ -820,12 +827,14 @@ class ImageView(QtWidgets.QWidget):
 
         self.sigTimeChanged.emit(ind, time)
 
-    def updateImage(self, autoHistogramRange=True):
+    def updateImage(self, autoHistogramRange=None):
         ## Redraw image on screen
         if self.image is None:
             return
     
         image = self.getProcessedImage()
+        if autoHistogramRange is None:
+            autoHistogramRange = self._autoHistogramRange
         if autoHistogramRange:
             self.ui.histogram.setHistogramRange(self.levelMin, self.levelMax)
         
