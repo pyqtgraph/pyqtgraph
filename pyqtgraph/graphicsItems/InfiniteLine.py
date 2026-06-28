@@ -78,6 +78,7 @@ class InfiniteLine(GraphicsObject):
         else:
             self.maxRange = bounds
         self.moving = False
+        self.logMode = [False, False]
         self.setMovable(movable)
         self.mouseHovering = False
         self.p = [0, 0]
@@ -123,6 +124,48 @@ class InfiniteLine(GraphicsObject):
         """Set the (minimum, maximum) allowable values when dragging."""
         self.maxRange = bounds
         self.setValue(self.value())
+
+    def _getMappedViewPos(self, pos):
+        mapped = list(pos)
+        axes = self._logMapAxes()
+        with np.errstate(divide='ignore', invalid='ignore'):
+            if 0 in axes and self.logMode[0]:
+                mapped[0] = np.log10(mapped[0])
+            if 1 in axes and self.logMode[1]:
+                mapped[1] = np.log10(mapped[1])
+        return mapped
+
+    def _getDataPos(self, pos):
+        data = [pos.x(), pos.y()] if isinstance(pos, QtCore.QPointF) else list(pos)
+        axes = self._logMapAxes()
+        if 0 in axes and self.logMode[0]:
+            data[0] = 10 ** data[0]
+        if 1 in axes and self.logMode[1]:
+            data[1] = 10 ** data[1]
+        return data
+
+    def _logMapAxes(self):
+        angle = self.angle % 180
+        if angle == 0:
+            return (1,)
+        if angle == 90:
+            return (0,)
+        return (0, 1)
+
+    def setLogMode(self, xState: bool, yState: bool):
+        """
+        Enable log mapping per axis.
+
+        Log mode maps the stored data position to view coordinates for rendering while
+        preserving :meth:`value` and :meth:`getPos` in data coordinates.
+        """
+        logMode = [bool(xState), bool(yState)]
+        if self.logMode == logMode:
+            return
+        self.logMode = logMode
+        self.viewTransformChanged()
+        GraphicsObject.setPos(self, Point(self._getMappedViewPos(self.p)))
+        self.sigPositionChanged.emit(self)
         
     def bounds(self):
         """Return the (minimum, maximum) values allowed when dragging.
@@ -252,7 +295,7 @@ class InfiniteLine(GraphicsObject):
         if self.p != newPos:
             self.p = newPos
             self.viewTransformChanged()
-            GraphicsObject.setPos(self, Point(self.p))
+            GraphicsObject.setPos(self, Point(self._getMappedViewPos(self.p)))
             self.sigPositionChanged.emit(self)
 
     def getXPos(self):
@@ -395,7 +438,9 @@ class InfiniteLine(GraphicsObject):
             if not self.moving:
                 return
 
-            self.setPos(self.cursorOffset + self.mapToParent(ev.pos()))
+            self.setPos(
+                self._getDataPos(self.cursorOffset + self.mapToParent(ev.pos()))
+            )
             self.sigDragged.emit(self)
             if ev.isFinish():
                 self.moving = False
