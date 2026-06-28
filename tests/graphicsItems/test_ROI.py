@@ -469,3 +469,13 @@ def test_LineROI_coords(p1, p2):
         got = lineroi.mapSceneToParent(scenepos)
         assert math.isclose(got.x(), expected[0])
         assert math.isclose(got.y(), expected[1])
+
+
+def test_LineSegmentROI_resizable_controls_endpoint_handles():
+    locked = pg.LineSegmentROI(positions=((0, 0), (1, 1)), resizable=False)
+    locked.getHandles()[0].movePoint(pg.Point(5, 5))
+    assert locked.listPoints() == [pg.Point(0, 0), pg.Point(1, 1)]
+
+    unlocked = pg.LineSegmentROI(positions=((0, 0), (1, 1)), resizable=True)
+    unlocked.getHandles()[0].movePoint(pg.Point(5, 5))
+    assert unlocked.listPoints() == [pg.Point(5, 5), pg.Point(1, 1)]
