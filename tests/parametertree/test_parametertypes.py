@@ -38,6 +38,51 @@ def test_opts():
     assert _getWidget(param.param('bool')).isEnabled() is False
 
 
+def test_action_parameter_value_callable_activates():
+    calls = []
+
+    def callback():
+        calls.append("activated")
+
+    param = pt.Parameter.create(name='run', type='action', value=callback)
+    param.activate()
+
+    assert calls == ["activated"]
+
+
+def test_action_parameter_value_callable_replacement():
+    first_callback = MagicMock()
+    second_callback = MagicMock()
+    param = pt.Parameter.create(name='run', type='action', value=first_callback)
+
+    assert param.setValue(first_callback) is first_callback
+    param.activate()
+    first_callback.assert_called_once_with(param)
+
+    assert param.setValue(second_callback) is second_callback
+    param.activate()
+
+    first_callback.assert_called_once_with(param)
+    second_callback.assert_called_once_with(param)
+
+    assert param.setValue(None) is None
+    param.activate()
+
+    second_callback.assert_called_once_with(param)
+
+
+def test_action_parameter_value_callable_button_click():
+    callback = MagicMock()
+    param = pt.Parameter.create(name='run', type='action', value=callback)
+    tree = pt.ParameterTree()
+    tree.setParameters(param)
+
+    item = next(iter(param.items.keys()))
+    item.button.click()
+
+    callback.assert_called_once_with(param)
+
+
 def test_types():
     paramSpec = [
         dict(name='float', type='float'),
