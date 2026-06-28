@@ -719,12 +719,31 @@ class ViewBox(GraphicsWidget):
         ==============  =============================================================
         """
         if item is None:
-            bounds = self.childrenBoundingRect(items=items)
+            childRange = self.childrenBounds(items=items)
         else:
             bounds = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
+            childRange = [
+                [bounds.left(), bounds.right()],
+                [bounds.top(), bounds.bottom()],
+            ]
 
-        if bounds is not None:
-            self.setRange(bounds, padding=padding)
+        if childRange is not None:
+            targetRange = self.targetRange()
+            for ax in (0, 1):
+                if childRange[ax] is None:
+                    childRange[ax] = targetRange[ax]
+                childRange[ax] = self._clipRangeToLimits(ax, childRange[ax])
+                axisPadding = self.suggestPadding(ax) if padding is None else padding
+                axisPad = (childRange[ax][1] - childRange[ax][0]) * axisPadding
+                childRange[ax][0] -= axisPad
+                childRange[ax][1] += axisPad
+                childRange[ax] = self._clipRangeToLimits(ax, childRange[ax])
+
+            self.setRange(
+                xRange=childRange[0],
+                yRange=childRange[1],
+                padding=0.0,
+            )
 
     def suggestPadding(self, axis):
         l = self.width() if axis==0 else self.height()
@@ -737,6 +756,17 @@ class ViewBox(GraphicsWidget):
         else:
             padding = def_pad
         return padding
+
+    def _clipRangeToLimits(self, axis, range):
+        range = list(range)
+        mn, mx = self._effectiveLimits()[axis]
+        if mn is not None:
+            range[0] = max(range[0], mn)
+            range[1] = max(range[1], mn)
+        if mx is not None:
+            range[0] = min(range[0], mx)
+            range[1] = min(range[1], mx)
+        return range
 
     def setLimits(self, **kwds):
         """
@@ -783,7 +813,10 @@ class ViewBox(GraphicsWidget):
                     update = True
 
         if update:
-            self.updateViewRange()
+            if any(self.state['autoRange']):
+                self.updateAutoRange()
+            else:
+                self.updateViewRange()
 
     def scaleBy(self, s=None, center=None, x=None, y=None):
         """
@@ -967,6 +1000,7 @@ class ViewBox(GraphicsWidget):
                 ## Make corrections to range
                 xr = childRange[ax]
                 if xr is not None:
+                    xr = self._clipRangeToLimits(ax, xr)
                     if self.state['autoPan'][ax]:
                         x = sum(xr) * 0.5
                         w2 = (targetRect[ax][1]-targetRect[ax][0]) / 2.
@@ -976,6 +1010,7 @@ class ViewBox(GraphicsWidget):
                         wp = (xr[1] - xr[0]) * padding
                         childRange[ax][0] -= wp
                         childRange[ax][1] += wp
+                        childRange[ax] = self._clipRangeToLimits(ax, childRange[ax])
                     targetRect[ax] = childRange[ax]
                     args['xRange' if ax == 0 else 'yRange'] = targetRect[ax]
 

@@ -1,4 +1,5 @@
 #import PySide
+import numpy as np
 import pytest
 
 import pyqtgraph as pg
@@ -81,6 +82,23 @@ def test_ViewBox_setMenuEnabled():
     assert vb.menu is not None
     vb.setMenuEnabled(False)
     assert vb.menu is None
+
+
+def test_auto_range_intersects_limits():
+    win = pg.PlotWidget()
+    win.resize(400, 400)
+    win.show()
+    win.plot(np.linspace(-2000, 200, 10000))
+    qtest.qWaitForWindowExposed(win)
+    app.processEvents()
+
+    win.setLimits(yMin=0)
+    app.processEvents()
+
+    yRange = win.viewRange()[1]
+    assert yRange[0] == 0
+    assert 200 < yRange[1] < 300
+    win.close()
 
 
 
