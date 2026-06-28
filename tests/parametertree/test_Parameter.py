@@ -140,6 +140,41 @@ def test_unpack_parameter():
     assert result["c"] == 3.0
 
 
+def test_get_values_nested_group_without_value():
+    children = [
+        Parameter.create(name=f"Child {child}", type="float", value=0.0)
+        for child in "abc"
+    ]
+    group = Parameter.create(name="New Group", type="group", children=children)
+    upper_group = Parameter.create(
+        name="Upper Group",
+        type="group",
+        children=[group],
+    )
+
+    assert group.hasValue() is False
+    assert group.value() is None
+    assert upper_group.getValues()["New Group"] == (
+        None,
+        {
+            "Child a": (0.0, {}),
+            "Child b": (0.0, {}),
+            "Child c": (0.0, {}),
+        },
+    )
+
+
+def test_get_values_raises_for_child_without_value():
+    parent = Parameter.create(
+        name="parent",
+        type="group",
+        children=[dict(name="child", type="float")],
+    )
+
+    with pytest.raises(ValueError, match="No Value has been set"):
+        parent.getValues()
+
+
 def test_interact():
     interactor = Interactor(runOptions=RunOptions.ON_ACTION)
     value = None
