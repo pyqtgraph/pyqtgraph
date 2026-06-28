@@ -127,30 +127,26 @@ class InfiniteLine(GraphicsObject):
 
     def _getMappedViewPos(self, pos):
         mapped = list(pos)
-        axes = self._logMapAxes()
+        map_x, map_y = self._logMapAxes()
         with np.errstate(divide='ignore', invalid='ignore'):
-            if 0 in axes and self.logMode[0]:
+            if map_x and self.logMode[0]:
                 mapped[0] = np.log10(mapped[0])
-            if 1 in axes and self.logMode[1]:
+            if map_y and self.logMode[1]:
                 mapped[1] = np.log10(mapped[1])
         return mapped
 
     def _getDataPos(self, pos):
         data = [pos.x(), pos.y()] if isinstance(pos, QtCore.QPointF) else list(pos)
-        axes = self._logMapAxes()
-        if 0 in axes and self.logMode[0]:
+        map_x, map_y = self._logMapAxes()
+        if map_x and self.logMode[0]:
             data[0] = 10 ** data[0]
-        if 1 in axes and self.logMode[1]:
+        if map_y and self.logMode[1]:
             data[1] = 10 ** data[1]
         return data
 
     def _logMapAxes(self):
         angle = self.angle % 180
-        if angle == 0:
-            return (1,)
-        if angle == 90:
-            return (0,)
-        return (0, 1)
+        return angle != 0, angle != 90
 
     def setLogMode(self, xState: bool, yState: bool):
         """
