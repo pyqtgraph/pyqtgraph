@@ -71,7 +71,7 @@ FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE]
 #For period as decimal separator
 FLOAT_REGEX_PERIOD = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>\w.*))?$')
 
-INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>.*)$')
+INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
 class HueKeywordArgs(TypedDict):
     hues: int
