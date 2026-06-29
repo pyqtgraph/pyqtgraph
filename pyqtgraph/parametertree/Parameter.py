@@ -86,7 +86,11 @@ class Parameter(QtCore.QObject):
     sigDefaultChanged(self, default)     Emitted when this parameter's default value has changed
     sigNameChanged(self, name)           Emitted when this parameter's name has changed
     sigOptionsChanged(self, opts)        Emitted when any of this parameter's options have changed
-    sigContextMenu(self, name)           Emitted when a context menu was clicked
+    sigContextMenu(self, path)           Emitted when a context menu item was clicked.
+                                         *path* is a tuple of strings representing the
+                                         full path to the selected item, e.g. ``('action',)``
+                                         for a flat item or ``('submenu', 'action')`` for a
+                                         nested one.
     ===================================  =========================================================
     """
     ## name, type, limits, etc.
@@ -180,6 +184,13 @@ class Parameter(QtCore.QObject):
                                      internally using the *name* specified above. Note that
                                      this option is not compatible with renamable=True.
                                      (default=None; added in version 0.9.9)
+        context                      Specifies items for the context menu shown on
+                                     right-click. Accepts a dict, list, or tuple; nested
+                                     structures produce submenus. See
+                                     :func:`~pyqtgraph.parametertree.ParameterItem.build_menu_from_iterable`
+                                     for the accepted format. Clicking an item emits
+                                     sigContextMenu with the full path tuple to that item.
+                                     (default=None)
         =======================      =========================================================
         """
         super().__init__()
@@ -212,6 +223,15 @@ class Parameter(QtCore.QObject):
         self.treeStateChanges = []  ## cache of tree state changes to be delivered on next emit
         self.blockTreeChangeEmit = 0
         self.setName(name)
+
+        # Checks that the parameter class and the specified type match the values registered in 'PARAM_TYPES'
+        if not self.check_type():
+            raise TypeError(
+                f"The specified type '{self.type()}' does not match the class registered in 'PARAM_TYPES'."
+                f"\nExpected class: {PARAM_TYPES.get(self.type(), 'Unknown')}, but got: {self.__class__}."
+                f"\nUse the 'registerParameterType' function to register a type with its associated class in "
+                f"'PARAM_TYPES'.")
+
 
         self.addChildren(self.opts.pop('children', []))
         if 'value' in self.opts and 'default' not in self.opts:
@@ -254,9 +274,25 @@ class Parameter(QtCore.QObject):
             title = self.name()
         return title
 
-    def contextMenu(self, name):
-        """"A context menu entry was clicked"""
-        self.sigContextMenu.emit(self, name)
+    def contextMenu(self, name_or_path):
+        """A context menu entry was clicked.
+
+        *name_or_path* should be a tuple of strings representing the path to
+        the selected item (e.g. ``('action',)`` or ``('submenu', 'action')``).
+        Passing a plain string is deprecated and will be removed in a future
+        version; the string is automatically wrapped in a one-element tuple.
+        """
+        if isinstance(name_or_path, str):
+            warnings.warn(
+                "contextMenu() received a plain string; in a future version the "
+                "path will always be a tuple. Update your sigContextMenu handler "
+                "to expect a tuple, e.g. change ``name == 'foo'`` to "
+                "``name == ('foo',)`` or ``name[-1] == 'foo'``.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            name_or_path = (name_or_path,)
+        self.sigContextMenu.emit(self, name_or_path)
 
     def setName(self, name):
         """Attempt to change the name of this parameter; return the actual name. 
@@ -292,6 +328,23 @@ class Parameter(QtCore.QObject):
         if cls is None:
             raise ValueError(f"Type name '{typ}' is not registered.")
         return self.__class__ is cls
+
+    def check_type(self):
+        """
+        Checks if the specified type in the parameter options is valid for the current class.
+        This method checks that:
+
+          - the type specified (self.opts['type']) is registered in the 'PARAM_TYPES' dictionary
+          - the class associated with the type in 'PARAM_TYPES' matches the current parameter class.
+
+        Returns
+        -------
+        bool: True if the type is valid, False otherwise.
+        """
+        if self.type() and not self.__class__ == PARAM_TYPES[self.type()]:
+            return False
+        return True
+
         
     def childPath(self, child):
         """
@@ -474,7 +527,11 @@ class Parameter(QtCore.QObject):
         """Set this parameter's value to the default. Raises ValueError if no default is set."""
         with self.treeChangeBlocker():
             self.setValue(self.defaultValue())
-            self._modifiedSinceReset = False
+            self._modifiedSinceReset = not self.valueIsDefault()
+            for item in list(self.items):
+                updateDefaultBtn = getattr(item, 'updateDefaultBtn', None)
+                if updateDefaultBtn is not None:
+                    updateDefaultBtn()
 
     def hasDefault(self):
         """Returns True if this parameter has a default value."""

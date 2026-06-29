@@ -101,7 +101,7 @@ class ImageExporter(Exporter):
         targetRect = QtCore.QRect(0, 0, w, h)
         sourceRect = self.getSourceRect()
 
-        self.png = QtGui.QImage(w, h, QtGui.QImage.Format.Format_ARGB32)
+        self.png = QtGui.QImage(w, h, QtGui.QImage.Format.Format_ARGB32_Premultiplied)
         self.png.fill(self.params['background'])
         
         ## set resolution of image:

@@ -32,7 +32,7 @@ values = {
         *[sortedRandint(0, 20, 15) for _ in range(4)],
     ],
     # Convention 3 array form
-    "2D matrix": np.row_stack([sortedRandint(20, 40, 15) for _ in range(6)]),
+    "2D matrix": np.vstack([sortedRandint(20, 40, 15) for _ in range(6)]),
 }
 
 
