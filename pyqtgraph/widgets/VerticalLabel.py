@@ -31,6 +31,10 @@ class VerticalLabel(QtWidgets.QLabel):
         self.orientation = o
         self.update()
         self.updateGeometry()
+
+    def _textSize(self):
+        metrics = self.fontMetrics()
+        return QtCore.QSize(metrics.horizontalAdvance(self.text()), metrics.height())
         
     def paintEvent(self, ev):
         p = QtGui.QPainter(self)
@@ -40,43 +44,58 @@ class VerticalLabel(QtWidgets.QLabel):
         
         #p.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255)))
         
+        contents = self.contentsRect()
         if self.orientation == 'vertical':
             p.rotate(-90)
-            rgn = QtCore.QRect(-self.height(), 0, self.height(), self.width())
+            rgn = QtCore.QRect(
+                -contents.y() - contents.height(),
+                contents.x(),
+                contents.height(),
+                contents.width()
+            )
         else:
-            rgn = self.contentsRect()
+            rgn = contents
         align = self.alignment()
         #align  = QtCore.Qt.AlignmentFlag.AlignTop|QtCore.Qt.AlignmentFlag.AlignHCenter
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            self.hint = p.drawText(rgn, align, self.text())
+            p.drawText(rgn, align, self.text())
+        self.hint = self._textSize()
         p.end()
+
+        margins = self.contentsMargins()
+        textWidth = self.hint.width()
+        textHeight = self.hint.height()
+        paddedWidth = textWidth + margins.left() + margins.right()
+        paddedHeight = textHeight + margins.top() + margins.bottom()
         
         if self.orientation == 'vertical':
-            self.setMaximumWidth(self.hint.height())
+            self.setMaximumWidth(textHeight + margins.left() + margins.right())
             self.setMinimumWidth(0)
             self.setMaximumHeight(16777215)
             if self.forceWidth:
-                self.setMinimumHeight(self.hint.width())
+                self.setMinimumHeight(textWidth + margins.top() + margins.bottom())
             else:
                 self.setMinimumHeight(0)
         else:
-            self.setMaximumHeight(self.hint.height())
+            self.setMaximumHeight(paddedHeight)
             self.setMinimumHeight(0)
             self.setMaximumWidth(16777215)
             if self.forceWidth:
-                self.setMinimumWidth(self.hint.width())
+                self.setMinimumWidth(paddedWidth)
             else:
                 self.setMinimumWidth(0)
 
     def sizeHint(self):
+        margins = self.contentsMargins()
+        hint = self._textSize()
         if self.orientation == 'vertical':
-            if hasattr(self, 'hint'):
-                return QtCore.QSize(self.hint.height(), self.hint.width())
-            else:
-                return QtCore.QSize(19, 50)
+            return QtCore.QSize(
+                hint.height() + margins.left() + margins.right(),
+                hint.width() + margins.top() + margins.bottom()
+            )
         else:
-            if hasattr(self, 'hint'):
-                return QtCore.QSize(self.hint.width(), self.hint.height())
-            else:
-                return QtCore.QSize(50, 19)
+            return QtCore.QSize(
+                hint.width() + margins.left() + margins.right(),
+                hint.height() + margins.top() + margins.bottom()
+            )
