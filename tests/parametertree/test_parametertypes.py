@@ -248,3 +248,171 @@ def test_recreate_from_savestate():
     created2 = pt.Parameter.create(**state)
     assert pg.eq(state, created2.saveState())
     assert compare_parameters(created, created2)
+
+
+# ---------------------------------------------------------------------------
+# JSON serialization tests
+#
+# The fixture mirrors test_recreate_from_savestate: makeAllParamTypes() builds
+# the same parameter tree used in examples/parametertree.py, so JSON behaviour
+# is validated against the canonical example rather than ad-hoc specs.
+# Targeted tests (pen/color/limits) exercise specific encoder edge cases that
+# the full-tree test would catch but not diagnose clearly on failure.
+# ---------------------------------------------------------------------------
+
+import json as _json
+
+import pytest
+
+from pyqtgraph.parametertree.iojson import (
+    parameter_from_json,
+    parameter_from_json_file,
+    parameter_restore_from_json,
+    parameter_restore_from_json_file,
+    parameter_to_json,
+    parameter_to_json_file,
+)
+
+
+@pytest.fixture
+def example_params():
+    """Full parameter tree from examples/parametertree.py."""
+    from pyqtgraph.examples import _buildParamTypes
+    return _buildParamTypes.makeAllParamTypes()
+
+
+# --- round-trip correctness --------------------------------------------------
+
+def test_json_round_trip(example_params):
+    """Full example tree survives a JSON string round-trip unchanged."""
+    original_state = example_params.saveState()
+    restored = parameter_from_json(parameter_to_json(example_params))
+    assert pg.eq(original_state, restored.saveState())
+    assert compare_parameters(example_params, restored)
+
+
+def test_json_file_round_trip(example_params, tmp_path):
+    """Full example tree survives a JSON file round-trip unchanged."""
+    original_state = example_params.saveState()
+    dest = tmp_path / 'params.json'
+    parameter_to_json_file(example_params, dest)
+    assert dest.exists()
+    restored = parameter_from_json_file(dest)
+    assert pg.eq(original_state, restored.saveState())
+    assert compare_parameters(example_params, restored)
+
+
+# --- encoder edge cases ------------------------------------------------------
+
+def test_json_tuple_preservation():
+    """Tuples survive as tuples, not lists.
+
+    PenParameter.mkPen() checks isinstance(v, tuple) to detect its serialized
+    form, so silently converting tuples to lists breaks pen restoration.
+    """
+    pen = pt.Parameter.create(name='pen', type='pen')
+    original_state = pen.saveState()
+    assert isinstance(original_state['value'], tuple), \
+        "PenParameter.saveState() must return a tuple value"
+
+    restored = parameter_from_json(parameter_to_json(pen))
+    restored_state = restored.saveState()
+    assert isinstance(restored_state['value'], tuple), \
+        "Tuple value must be preserved through JSON round-trip"
+    assert pg.eq(original_state, restored_state)
+    assert compare_parameters(pen, restored)
+
+
+def test_json_color_parameter():
+    """Color parameter (QColor → RGBA tuple via saveState) round-trips correctly."""
+    p = pt.Parameter.create(name='c', type='color', value='#ff8800')
+    restored = parameter_from_json(parameter_to_json(p))
+    assert pg.eq(p.saveState(), restored.saveState())
+    assert compare_parameters(p, restored)
+
+
+def test_json_limits_tuple():
+    """Tuple-valued opts such as ``limits`` survive as tuples."""
+    p = pt.Parameter.create(name='root', type='group', children=[
+        dict(name='x', type='float', value=1.0, limits=(0.0, 10.0)),
+    ])
+    restored = parameter_from_json(parameter_to_json(p))
+    assert isinstance(restored.saveState()['children']['x'].get('limits'), tuple)
+    assert compare_parameters(p, restored)
+
+
+# --- filter='user' and restore path ------------------------------------------
+
+def test_json_filter_user(example_params):
+    """filter='user' produces a compact values-only file; restore updates the tree."""
+    float_child = example_params.child('Sample Float').child('widget')
+    float_child.setValue(3.14)
+
+    user_json = parameter_to_json(example_params, filter='user')
+    user_state = _json.loads(user_json)
+
+    # User-filtered state carries no 'type', 'limits', etc. — only values
+    assert 'type' not in user_state
+
+    # Restore into a fresh copy and verify the changed value came through
+    fresh = _buildParamTypes_makeAllParamTypes()
+    parameter_restore_from_json(fresh, user_json)
+    assert fresh.child('Sample Float').child('widget').value() == pytest.approx(3.14)
+
+
+def test_json_restore_preserves_signals(example_params):
+    """restoreState path fires signals but keeps existing connections alive."""
+    float_child = example_params.child('Sample Float').child('widget')
+    float_child.setValue(1.0)
+
+    received = []
+    float_child.sigValueChanged.connect(lambda p, v: received.append(v))
+
+    # Capture state at 1.0, mutate to 9.0, then restore — signal must fire
+    json_str = parameter_to_json(example_params)
+    float_child.setValue(9.0)
+    parameter_restore_from_json(example_params, json_str)
+
+    assert float_child.value() == pytest.approx(1.0)
+    assert len(received) >= 1, "sigValueChanged must fire through restoreState"
+
+
+def test_json_restore_from_file(example_params, tmp_path):
+    """parameter_restore_from_json_file updates an existing tree from a file."""
+    float_child = example_params.child('Sample Float').child('widget')
+    float_child.setValue(2.71)
+
+    parameter_to_json_file(example_params, tmp_path / 'settings', filter='user')
+
+    fresh = _buildParamTypes_makeAllParamTypes()
+    parameter_restore_from_json_file(fresh, tmp_path / 'settings.json')
+    assert fresh.child('Sample Float').child('widget').value() == pytest.approx(2.71)
+
+
+# --- overwrite guard ---------------------------------------------------------
+
+def test_json_file_no_overwrite(example_params, tmp_path):
+    """parameter_to_json_file raises FileExistsError when overwrite=False."""
+    dest = tmp_path / 'params.json'
+    parameter_to_json_file(example_params, dest)
+    with pytest.raises(FileExistsError):
+        parameter_to_json_file(example_params, dest, overwrite=False)
+
+
+# --- public API surface -------------------------------------------------------
+
+def test_json_accessible_from_package():
+    """All six functions are importable directly from pyqtgraph.parametertree."""
+    import pyqtgraph.parametertree as ptt
+    for name in (
+        'parameter_to_json', 'parameter_from_json', 'parameter_restore_from_json',
+        'parameter_to_json_file', 'parameter_from_json_file',
+        'parameter_restore_from_json_file',
+    ):
+        assert callable(getattr(ptt, name))
+
+
+# helper — avoids repeating the import in every test body
+def _buildParamTypes_makeAllParamTypes():
+    from pyqtgraph.examples import _buildParamTypes
+    return _buildParamTypes.makeAllParamTypes()
