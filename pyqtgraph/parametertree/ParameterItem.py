@@ -149,8 +149,9 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
 
     Subclasses that display a value widget may call :meth:`makeCtrlButton` to
     add a ctrl button (gear icon) with a menu that exposes built-in actions
-    (Reset to default, Set as default, Enable/Disable, Lock/Unlock, Rename,
-    Remove).  Override :meth:`populateCtrlMenu` to customise the menu.
+    (Reset to default, Set as default, Set Enabled/Set Disabled,
+    Set ReadOnly/Set ReadWrite, Rename, Remove).
+    Override :meth:`populateCtrlMenu` to customise the menu.
 
     For more ParameterItem types, see ParameterTree.parameterTypes module.
     """
@@ -368,8 +369,8 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
         if 'enabled' in ctrl:
             self._enabledAct = self.ctrlMenu.addAction(
                 icons.getGraphIcon('visibleEye') if enabled else icons.getGraphIcon('invisibleEye'),
-                translate("ParameterItem", "Disable") if enabled
-                else translate("ParameterItem", "Enable"),
+                translate("ParameterItem", "Set Disabled") if enabled
+                else translate("ParameterItem", "Set Enabled"),
             )
             self._enabledAct.setProperty("persistentMenu", True)
             self._enabledAct.triggered.connect(self._toggleEnabled)
@@ -378,8 +379,8 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
         if 'readonly' in ctrl:
             self._readonlyAct = self.ctrlMenu.addAction(
                 icons.getGraphIcon('lock') if not readonly else icons.getGraphIcon('unlock'),
-                translate("ParameterItem", "Lock") if not readonly
-                else translate("ParameterItem", "Unlock"),
+                translate("ParameterItem", "Set ReadOnly") if not readonly
+                else translate("ParameterItem", "Set ReadWrite"),
             )
             self._readonlyAct.setProperty("persistentMenu", True)
             self._readonlyAct.triggered.connect(self._toggleReadonly)
@@ -436,8 +437,8 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
                 else icons.getGraphIcon('invisibleEye')
             )
             self._enabledAct.setText(
-                translate("ParameterItem", "Disable") if new_enabled
-                else translate("ParameterItem", "Enable")
+                translate("ParameterItem", "Set Disabled") if new_enabled
+                else translate("ParameterItem", "Set Enabled")
             )
 
     def _toggleReadonly(self):
@@ -449,8 +450,8 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
                 else icons.getGraphIcon('unlock')
             )
             self._readonlyAct.setText(
-                translate("ParameterItem", "Lock") if not new_readonly
-                else translate("ParameterItem", "Unlock")
+                translate("ParameterItem", "Set ReadOnly") if not new_readonly
+                else translate("ParameterItem", "Set ReadWrite")
             )
 
     # ── Standard item methods ─────────────────────────────────────────────────
