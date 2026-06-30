@@ -17,6 +17,10 @@ from pyqtgraph.Qt import QtWidgets
 app = pg.mkQApp("Parameter Tree Example")
 import pyqtgraph.parametertree.parameterTypes as pTypes
 from pyqtgraph.parametertree import Parameter, ParameterTree, registerParameterType
+from pyqtgraph.parametertree.iojson import (
+    parameter_restore_from_json_file,
+    parameter_to_json_file,
+)
 
 
 ## test subclassing parameters
@@ -130,13 +134,23 @@ registerParameterType('scalablegroup', ScalableGroup)
 
 params = [
     all_params_types,
-    {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
-        {'name': 'Save State', 'type': 'action'},
-        {'name': 'Restore State', 'type': 'action', 'children': [
-            {'name': 'Add missing items', 'type': 'bool', 'value': True},
-            {'name': 'Remove extra items', 'type': 'bool', 'value': True},
-        ]},
-    ]},
+    {
+        "name": "Save/Restore functionality",
+        "type": "group",
+        "children": [
+            {"name": "Save State", "type": "action"},
+            {
+                "name": "Restore State",
+                "type": "action",
+                "children": [
+                    {"name": "Add missing items", "type": "bool", "value": True},
+                    {"name": "Remove extra items", "type": "bool", "value": True},
+                ],
+            },
+            {'name': 'Save to JSON', 'type': 'action'},
+            {'name': 'Restore from JSON', 'type': 'action'},            
+        ],
+    },
     {
         "name": "Custom context menu",
         "type": "group",
@@ -248,9 +262,24 @@ def restore():
     rem = p["Save/Restore functionality", "Restore State", "Remove extra items"]
     p.restoreState(state, addChildren=add, removeChildren=rem)
 
+def saveJson():
+    path, _ = QtWidgets.QFileDialog.getSaveFileName(
+        None, 'Save parameters to JSON', '', 'JSON files (*.json)'
+    )
+    if path:
+        parameter_to_json_file(p, path)
 
-p.param("Save/Restore functionality", "Save State").sigActivated.connect(save)
-p.param("Save/Restore functionality", "Restore State").sigActivated.connect(restore)
+def restoreJson():
+    path, _ = QtWidgets.QFileDialog.getOpenFileName(
+        None, 'Load parameters from JSON', '', 'JSON files (*.json)'
+    )
+    if path:
+        parameter_restore_from_json_file(p, path)
+
+p.param('Save/Restore functionality', 'Save State').sigActivated.connect(save)
+p.param('Save/Restore functionality', 'Restore State').sigActivated.connect(restore)
+p.param('Save/Restore functionality', 'Save to JSON').sigActivated.connect(saveJson)
+p.param('Save/Restore functionality', 'Restore from JSON').sigActivated.connect(restoreJson)
 
 def ctrlMenuAction(param, action):
     if action == 'log':

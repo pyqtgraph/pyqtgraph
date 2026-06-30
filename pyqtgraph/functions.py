@@ -61,13 +61,15 @@ Colors = {
 
 SI_PREFIXES = 'yzafpnµm kMGTPEZY'
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
+SI_PREFIXES_INPUT = SI_PREFIXES + 'uμ'
 SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
 SI_PREFIX_EXPONENTS['u'] = -6
+SI_PREFIX_EXPONENTS['μ'] = -6
 
 #For comma as decimal separator
-FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>\w.*))?$')
 #For period as decimal separator
-FLOAT_REGEX_PERIOD = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+FLOAT_REGEX_PERIOD = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>\w.*))?$')
 
 INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
@@ -121,8 +123,8 @@ def siScale(x, minVal=1e-25, allowUnicode=True, power:int|float=1):
     Examples
     --------
     >>> siScale(0.0001)
-    (1000000.0, 'μ')
-    # This indicates that the number 0.0001 is best represented as 0.0001 * 1e6 = 100 μUnits
+    (1000000.0, 'µ')
+    # This indicates that the number 0.0001 is best represented as 0.0001 * 1e6 = 100 µUnits
     """
     
     if isinstance(x, decimal.Decimal):
@@ -189,7 +191,7 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
     Examples
     --------
     >>> siFormat(0.0001, suffix='V')
-    '100 μV'
+    '100 µV'
     """
     
     if space is True:
@@ -219,8 +221,8 @@ def siParse(s, regex=FLOAT_REGEX_PERIOD, suffix=None):
     Example:
         siParse('100 µV')  # returns ('100', 'µ', 'V')
 
-    Note that in the above example, the µ symbol is the "micro sign" (UTF-8
-    0xC2B5), as opposed to the Greek letter mu (UTF-8 0xCEBC).
+    Both the SI micro sign (UTF-8 0xC2B5) and Greek small letter mu (UTF-8
+    0xCEBC) are accepted as the micro prefix.
 
     Parameters
     ----------
