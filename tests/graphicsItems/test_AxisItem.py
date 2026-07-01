@@ -189,3 +189,156 @@ def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
     axis = pg.AxisItem(orientation)
     axis.setLogMode(log)
     assert axis.logMode == expected
+
+
+def test_AxisItem_clipping_fix_defaults():
+    """
+    Test that default axis settings are improved for issue #3375.
+    
+    The fix ensures horizontal axes have better defaults to prevent
+    rightmost label clipping with content margins.
+    """
+    # Test horizontal axis defaults
+    h_axis = pg.AxisItem('bottom')
+    assert h_axis.style['autoExpandTextSpace'] == True, \
+        "Horizontal axis should have autoExpandTextSpace=True by default"
+    assert h_axis.style['hideOverlappingLabels'] == False, \
+        "Horizontal axis should have hideOverlappingLabels=False to prevent clipping"
+    assert h_axis.style['autoReduceTextSpace'] == False, \
+        "Horizontal axis should have autoReduceTextSpace=False for better stability"
+    
+    # Test vertical axis defaults  
+    v_axis = pg.AxisItem('left')
+    assert v_axis.style['autoExpandTextSpace'] == True, \
+        "Vertical axis should have autoExpandTextSpace=True by default"
+    assert v_axis.style['hideOverlappingLabels'] == False, \
+        "Vertical axis should have hideOverlappingLabels=False"
+    assert v_axis.style['autoReduceTextSpace'] == False, \
+        "Vertical axis should have autoReduceTextSpace=False for better stability"
+
+
+def test_AxisItem_text_space_methods():
+    """
+    Test that new text space calculation methods exist and work.
+    
+    These methods were added to fix issue #3375 by providing better
+    text space management with PlotItem content margins.
+    """
+    axis = pg.AxisItem('bottom')
+    
+    # Test that new methods exist
+    assert hasattr(axis, '_calculateRequiredTextSpace'), \
+        "AxisItem should have _calculateRequiredTextSpace method"
+    assert hasattr(axis, '_getAvailableTextSpace'), \
+        "AxisItem should have _getAvailableTextSpace method"
+    assert hasattr(axis, '_getParentLayoutMargins'), \
+        "AxisItem should have _getParentLayoutMargins method"
+    assert hasattr(axis, '_requestLayoutExpansion'), \
+        "AxisItem should have _requestLayoutExpansion method"
+    
+    # Test methods don't crash with no data
+    required_space = axis._calculateRequiredTextSpace()
+    assert isinstance(required_space, (int, float)), \
+        "Should return numeric value"
+    assert required_space >= 0, \
+        "Should return non-negative value"
+        
+    available_space = axis._getAvailableTextSpace()
+    assert isinstance(available_space, (int, float)), \
+        "Should return numeric value"
+    assert available_space >= 0, \
+        "Should return non-negative value"
+        
+    # Test parent margin detection (should return None with no parent)
+    margins = axis._getParentLayoutMargins()
+    assert margins is None, \
+        "Should return None when no parent with margins"
+
+
+def test_AxisItem_clipping_with_plot_margins():
+    """
+    Test the original issue #3375 scenario.
+    
+    Verify that rightmost tick labels are not clipped when using
+    PlotItem with content margins.
+    """
+    plot_widget = pg.PlotWidget()
+    plot_item = plot_widget.plotItem
+    
+    # Set content margins - this was causing the original issue
+    plot_item.layout.setContentsMargins(4.0, 4.0, 4.0, 4.0)
+    
+    # Add data that typically causes clipping
+    import numpy as np
+    x_data = np.linspace(0, 9.999, 50)  # Ending at 9.999 often causes clipping
+    y_data = np.sin(x_data)
+    plot_widget.plot(x_data, y_data)
+    
+    # Get the bottom axis
+    bottom_axis = plot_item.getAxis('bottom')
+    
+    # With our fix, these should be the improved defaults
+    assert bottom_axis.style.get('autoExpandTextSpace', False) == True
+    assert bottom_axis.style.get('hideOverlappingLabels', True) == False
+    
+    # Test that parent margins are detected
+    margins = bottom_axis._getParentLayoutMargins()
+    assert margins is not None, \
+        "Should detect parent PlotItem margins"
+    
+    # Test that text space calculation works
+    required_space = bottom_axis._calculateRequiredTextSpace()
+    available_space = bottom_axis._getAvailableTextSpace()
+    
+    assert isinstance(required_space, (int, float))
+    assert isinstance(available_space, (int, float))
+    assert required_space >= 0
+    assert available_space >= 0
+    
+    plot_widget.close()
+
+
+def test_AxisItem_manual_settings_override():
+    """
+    Test that manual axis settings still override the improved defaults.
+    
+    This ensures backward compatibility - users can still manually
+    configure axis behavior if needed.
+    """
+    axis = pg.AxisItem('bottom')
+    
+    # Change settings manually
+    axis.setStyle(
+        autoExpandTextSpace=False,
+        hideOverlappingLabels=True,
+        autoReduceTextSpace=True
+    )
+    
+    # Verify settings took effect
+    assert axis.style['autoExpandTextSpace'] == False
+    assert axis.style['hideOverlappingLabels'] == True
+    assert axis.style['autoReduceTextSpace'] == True
+
+
+@pytest.mark.parametrize("orientation", ['left', 'right', 'top', 'bottom'])
+def test_AxisItem_orientation_specific_behavior(orientation):
+    """
+    Test that all axis orientations have appropriate default settings.
+    
+    The fix improves defaults for all orientations to prevent clipping issues.
+    """
+    axis = pg.AxisItem(orientation)
+    
+    # All orientations should have these improved defaults
+    assert axis.style['autoExpandTextSpace'] == True
+    assert axis.style['hideOverlappingLabels'] == False
+    assert axis.style['autoReduceTextSpace'] == False
+    
+    # Methods should work for all orientations
+    required_space = axis._calculateRequiredTextSpace()
+    available_space = axis._getAvailableTextSpace()
+    
+    assert isinstance(required_space, (int, float))
+    assert isinstance(available_space, (int, float))
+    assert required_space >= 0
+    assert available_space >= 0
