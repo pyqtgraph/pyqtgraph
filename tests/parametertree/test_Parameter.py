@@ -38,6 +38,21 @@ def test_parameter_hasdefault():
     assert p.defaultValue() == 2
 
 
+def test_parameter_getValues():
+    from pyqtgraph.examples.parametertree import params
+    p = Parameter.create(name="param", type='group',
+                         children=params)
+    p.getValues()
+
+
+def test_parameter_no_value():
+    p = Parameter.create(name="param", type='group',)
+    assert p.value() is None
+
+    p = Parameter.create(name='param', type='float',)
+    assert p.value() is None
+
+
 def test_parameter_defaults_and_pristineness():
     # init with identical value and default
     p = Parameter.create(name="param", type='int', value=1, default=1)
