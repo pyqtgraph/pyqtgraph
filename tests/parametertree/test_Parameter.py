@@ -39,7 +39,14 @@ def test_parameter_hasdefault():
 
 
 def test_parameter_getValues():
-    from pyqtgraph.examples.parametertree import params
+    params = [
+        {"name": "a", "type": "int", "value": 1},
+        {"name": "b", "type": "float"},
+        {"name": "c", "type": "group", 'children': [
+            {"name": "d", "type": "bool"},
+            {"name": "e", "type": "int", "value": 2},
+        ]},
+    ]
     p = Parameter.create(name="param", type='group',
                          children=params)
     p.getValues()
