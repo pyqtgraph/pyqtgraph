@@ -400,10 +400,7 @@ class Parameter(QtCore.QObject):
         """
         Return the value of this Parameter. Raises ValueError if no value has been set.
         """
-        try:
-            return self.opts['value']
-        except KeyError:
-            raise ValueError("No Value has been set")
+        return self.opts.get('value', None)
 
     def getValues(self):
         """
