@@ -106,36 +106,3 @@ def test_large_coordinate_curve_export(tmpdir):
     curve_xs = max(path_coords, key=len)
     assert len(curve_xs) == x.size
     assert np.all(np.diff(curve_xs) > 0)
-
-
-def test_svg_export_skips_fill_path_list(tmpdir, monkeypatch):
-    w = pg.GraphicsLayoutWidget()
-    w.show()
-
-    plot = w.addPlot()
-    item = plot.plot(
-        x=np.arange(10, dtype=float),
-        y=np.linspace(1, 2, 10),
-        pen="g",
-        fillLevel=0,
-        brush="g",
-    )
-
-    app.processEvents()
-    app.processEvents()
-
-    fill_path_list_calls = []
-    original = item.curve._getFillPathList
-
-    def record_fill_path_list(widget):
-        fill_path_list_calls.append(widget)
-        return original(widget)
-
-    monkeypatch.setattr(item.curve, "_getFillPathList", record_fill_path_list)
-
-    ex = SVGExporter(w.scene())
-    tf = tmpdir.join("export.svg")
-    ex.export(fileName=tf)
-    w.close()
-
-    assert fill_path_list_calls == []

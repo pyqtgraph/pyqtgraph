@@ -1009,6 +1009,9 @@ class PlotCurveItem(GraphicsObject):
                 ):
                     paths = self._getFillPathList(widget)
                 else:
+                    # The fill path list is a painting throughput optimization.
+                    # SVG export prefers the single path while applying a
+                    # path-local coordinate offset for precision.
                     paths = [self._getFillPath()]
 
                 if path_transform is not None:
