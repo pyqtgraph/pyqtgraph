@@ -153,8 +153,8 @@ class AxisItem(GraphicsWidget):
 
         Parameters
         ----------
-        **kwargs : dict, optional
-            Here are a list of supported arguments.
+        **kwargs : style keyword arguments
+            Style options passed as keyword arguments.
 
             ===================== ======================================================
             Property              Description
@@ -339,15 +339,12 @@ class AxisItem(GraphicsWidget):
 
         Parameters
         ----------
-        *args : tuple of bool
-            If length 1, sets log mode regardless of orientation.  If length 2, the
-            first element toggles log mode for x-axis, and the second element toggles
-            log mode for the y-axis.
-        **kwargs : dict
-            Pass a dictionary with keys `x` and `y`, where the values are ``bool`` to
-            set the log mode for the respective `x` or `y` axis.  Trying to set the `y`
-            axis log mode while this axis item is horizontal (or vice versa) will be
-            ignored.
+        *args : positional bool arguments
+            Provide one or two boolean values. One value sets this axis; two values
+            set x and y respectively.
+        **kwargs : keyword bool arguments
+            Keyword arguments to set x and/or y. Setting y for a horizontal axis
+            or x for a vertical axis is ignored.
 
         See Also
         --------
@@ -684,10 +681,10 @@ class AxisItem(GraphicsWidget):
 
         Parameters
         ----------
-        *args : tuple
-            Arguments relayed to :func:`~pyqtgraph.mkPen`.
-        **kwargs : dict
-            Arguments relayed to `:func:`~pyqtgraph.mkPen`.
+        *args : positional arguments
+            Positional arguments relayed to :func:`~pyqtgraph.mkPen`.
+        **kwargs : keyword arguments
+            Keyword arguments relayed to :func:`~pyqtgraph.mkPen`.
 
         See Also
         --------
@@ -726,10 +723,10 @@ class AxisItem(GraphicsWidget):
         
         Parameters
         ----------
-        *args : tuple
-            Arguments relayed to :func:`~pyqtgraph.mkPen`.
-        **kwargs : dict
-            Arguments relayed to `:func:`~pyqtgraph.mkPen`.
+        *args : positional arguments
+            Positional arguments relayed to :func:`~pyqtgraph.mkPen`.
+        **kwargs : keyword arguments
+            Keyword arguments relayed to :func:`~pyqtgraph.mkPen`.
 
         See Also
         --------
@@ -766,10 +763,10 @@ class AxisItem(GraphicsWidget):
         
         Parameters
         ----------
-        *args : tuple
-            Arguments relayed to :func:`~pyqtgraph.mkPen`.
-        **kwargs : dict
-            Arguments relayed to `:func:`~pyqtgraph.mkPen`.
+        *args : positional arguments
+            Positional arguments relayed to :func:`~pyqtgraph.mkPen`.
+        **kwargs : keyword arguments
+            Keyword arguments relayed to :func:`~pyqtgraph.mkPen`.
 
         See Also
         --------
