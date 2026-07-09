@@ -100,7 +100,7 @@ class PlotItem(GraphicsWidget):
         `left`, `bottom`, `right` or `top` axis.  Default is None.
     enableMenu : bool
         Toggle the enabling or disabling of the right-click context menu.
-    **kwargs : dict, optional
+    **kwargs : keyword arguments, optional
         Any extra keyword arguments are passed to
         :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`.
     
@@ -591,10 +591,10 @@ class PlotItem(GraphicsWidget):
         ----------
         item : GraphicsItem
             Item to add to the ViewBox.
-        *args : tuple
+        *args : positional arguments
             Arguments relayed to :meth:`~pyqtgraph.ViewBox.addItem`.
-        **kwargs : dict
-            Keyword arguments for adding an item.  Supported arguments include.
+        **kwargs : keyword arguments
+            Keyword arguments for adding an item. Supported keyword arguments include:
 
             ============ ===============================================================
             Property     Description
@@ -744,12 +744,12 @@ class PlotItem(GraphicsWidget):
 
         Parameters
         ----------
-        *args : tuple, optional
+        *args : positional arguments, optional
             Arguments that are passed to the :class:`~pyqtgraph.PlotDataItem`
             constructor.
-        **kwargs : dict, optional
+        **kwargs : keyword arguments, optional
             Keyword arguments that are passed to the :class:`~pyqtgraph.PlotDataItem`
-            constructor.  In addition, the following keyword arguments are accepted.
+            constructor. In addition, the following keyword arguments are accepted:
 
             =========== ================================================================
             Property    Description
@@ -912,12 +912,12 @@ class PlotItem(GraphicsWidget):
 
         Parameters
         ----------
-        *args : tuple, optional
+        *args : positional arguments, optional
             Arguments that are passed to the :class:`~pyqtgraph.PlotDataItem`
             constructor.
-        **kwargs : dict, optional
+        **kwargs : keyword arguments, optional
             Keyword arguments that are passed to the :class:`~pyqtgraph.PlotDataItem`
-            constructor.  In addition, the following keyword arguments are accepted.
+            constructor. In addition, the following keyword arguments are accepted:
 
             =========== ================================================================
             Property    Description
@@ -1439,9 +1439,9 @@ class PlotItem(GraphicsWidget):
         ----------
         axis : {'left', 'bottom', 'right', 'top'}
             Specify which :class:`~pyqtgraph.AxisItem` to set the label for.
-        *args : tuple, optional
-            All extra arguments are passed to :meth:`~pyqtgraph.AxisItem.setLabel`.
-        **kwargs : dict, optional
+        *args : positional arguments, optional
+            All extra positional arguments are passed to :meth:`~pyqtgraph.AxisItem.setLabel`.
+        **kwargs : keyword arguments, optional
             Keyword arguments are passed to :meth:`~pyqtgraph.AxisItem.setLabel`.
         """
         self.getAxis(axis).setLabel(*args, **kwargs)
@@ -1453,8 +1453,8 @@ class PlotItem(GraphicsWidget):
 
         Parameters
         ----------
-        **kwargs : dict, optional
-            Keyword arguments are passed to  :meth:`~pyqtgraph.AxisItem.setLabel`.  The
+        **kwargs : keyword arguments, optional
+            Keyword arguments are passed to :meth:`~pyqtgraph.AxisItem.setLabel`. The
             special keyword ``title`` can be used to set the plot title using
             :meth:`~pyqtgraph.PlotItem.setTitle`.
         """
