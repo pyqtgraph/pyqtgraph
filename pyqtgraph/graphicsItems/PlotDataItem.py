@@ -266,7 +266,7 @@ class PlotDataItem(GraphicsObject):
 
     Parameters
     ----------
-    *args : tuple, optional
+    *args : positional arguments, optional
         Arguments representing the `x` and `y` data to be drawn. The following are
         examples for initializing data.
 
@@ -294,7 +294,7 @@ class PlotDataItem(GraphicsObject):
         When using spot-style arguments, it is always possible to give coordinate data
         separately through the `x` and `y` keyword arguments.
     
-    **kwargs : dict, optional
+    **kwargs : keyword arguments, optional
         The supported keyword arguments can be grouped into several categories:
 
         *Point Style Keyword Arguments*, see
@@ -835,11 +835,11 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple or None
+        *args : positional arguments or None
             :class:`QPen`, or parameters for a QPen constructed by 
             :func:`mkPen <pyqtgraph.mkPen>`. Use ``None`` to disable drawing of lines.
-        **kwargs : dict
-            Alternative specification of arguments directed to
+        **kwargs : keyword arguments
+            Keyword arguments passed to
             :func:`mkPen <pyqtgraph.mkPen>`.
         """
         pen = fn.mkPen(*args, **kwargs)
@@ -856,11 +856,11 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple or None
+        *args : positional arguments or None
             :class:`QPen`, or parameters for a QPen constructed by 
             :func:`mkPen <pyqtgraph.mkPen>`. Use ``None`` to disable the shadow pen.
-        **kwargs : dict
-            Alternative specification of arguments directed to
+        **kwargs : keyword arguments
+            Keyword arguments passed to
             :func:`mkPen <pyqtgraph.mkPen>`.
         """
         if args and args[0] is None:
@@ -878,12 +878,12 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple
+        *args : positional arguments
             :class:`QBrush`, or parameters for a QBrush constructed by
             :func:`mkBrush <pyqtgraph.mkBrush>`. Also accepts a color specifier
             understood by :func:`mkColor <pyqtgraph.mkColor>`.
-        **kwargs : dict
-            Alternative specification of arguments directed to
+        **kwargs : keyword arguments
+            Keyword arguments passed to
             :func:`mkBrush <pyqtgraph.mkBrush>`.
         """
         if args and args[0] is None:
@@ -901,12 +901,12 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple
+        *args : positional arguments
             :class:`QBrush`, or parameters for a QBrush constructed by
             :func:`mkBrush <pyqtgraph.mkBrush>`. Also accepts a color specifier
             understood by :func:`mkColor <pyqtgraph.mkColor>`.
-        **kwargs : dict
-            Alternative specification of arguments directed to
+        **kwargs : keyword arguments
+            Keyword arguments passed to
             :func:`mkBrush <pyqtgraph.mkBrush>`.
         """
         self.setFillBrush(*args, **kwargs)
@@ -969,11 +969,11 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple
+        *args : positional arguments
             :class:`QPen`, or parameters for a QPen constructed by 
             :func:`mkPen <pyqtgraph.mkPen>`.
-        **kwargs : dict
-            Alternative specification of arguments directed to
+        **kwargs : keyword arguments
+            Keyword arguments passed to
             :func:`mkPen <pyqtgraph.mkPen>`.
         """
         pen = fn.mkPen(*args, **kwargs)
@@ -990,12 +990,12 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple
+        *args : positional arguments
             :class:`QBrush`, or parameters for a QBrush constructed by
             :func:`mkBrush <pyqtgraph.mkBrush>`. Also accepts a color specifier
             understood by :func:`mkColor <pyqtgraph.mkColor>`.
-        **kwargs : dict
-            Alternative specification of arguments directed to
+        **kwargs : keyword arguments
+            Keyword arguments passed to
             :func:`mkBrush <pyqtgraph.mkBrush>`.
         """
         brush = fn.mkBrush(*args, **kwargs)
@@ -1158,10 +1158,10 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple
+        *args : positional arguments
             See :class:`PlotDataItem` description for supported arguments.
-        **kwargs : dict
-            See :class:`PlotDataItem` description for supported arguments.
+        **kwargs : keyword arguments
+            See :class:`PlotDataItem` description for supported keyword arguments.
 
         Raises
         ------
