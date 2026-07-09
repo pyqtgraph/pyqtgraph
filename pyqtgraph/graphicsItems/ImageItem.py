@@ -41,7 +41,7 @@ class ImageItem(GraphicsObject):
     ----------
     image : np.ndarray or None, default None
         Image data.
-    **kargs : dict, optional
+    **kargs : keyword arguments, optional
         Arguments directed to `setImage` and `setOpts`, refer to each method for
         documentation for possible arguments.
 
@@ -376,7 +376,7 @@ class ImageItem(GraphicsObject):
         update : bool, default True
             Controls if image immediately updates to reflect the new options.
 
-        **kwargs : dict, optional
+        **kwargs : keyword arguments, optional
             Extra arguments that are directed to the respective methods.  Expected
             keys include:
 
@@ -465,7 +465,7 @@ class ImageItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple
+        *args : positional arguments
             Contains one of :class:`QRectF`, :class:`QRect`, or arguments that can be
             used to construct :class:`QRectF`.
 
@@ -554,7 +554,7 @@ class ImageItem(GraphicsObject):
             maximum values, ImageItem only inspects a subset of pixels no larger than
             this number. Setting this larger than the total number of pixels considers
             all values. See `quickMinMax`.
-        **kwargs : dict, optional
+        **kwargs : keyword arguments, optional
             Extra arguments that are passed to `setOpts`.
 
         See Also
@@ -891,7 +891,7 @@ class ImageItem(GraphicsObject):
         ----------
         fileName : os.PathLike
             File path to save the image data to.
-        *args : tuple
+        *args : positional arguments
             Arguments that are passed to :meth:`QImage.save <QImage.save>`.
             
         See Also
@@ -937,8 +937,8 @@ class ImageItem(GraphicsObject):
         targetImageSize : int, default 200
             This parameter is used if ``step == 'auto'``, If so, the `step` size is
             calculated by ``step = ceil(image.shape[0] / targetImageSize)``.
-        **kwargs : dict, optional
-            Dictionary of arguments passed to :func:`numpy.histogram()`.
+        **kwargs : keyword arguments, optional
+            Keyword arguments passed to :func:`numpy.histogram()`.
         
         Returns
         -------
