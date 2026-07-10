@@ -35,6 +35,21 @@ class VerticalLabel(QtWidgets.QLabel):
     def _textSize(self):
         metrics = self.fontMetrics()
         return QtCore.QSize(metrics.horizontalAdvance(self.text()), metrics.height())
+
+    def _paddedTextSize(self, textSize=None):
+        if textSize is None:
+            textSize = self._textSize()
+
+        margins = self.contentsMargins()
+        if self.orientation == 'vertical':
+            return QtCore.QSize(
+                textSize.height() + margins.left() + margins.right(),
+                textSize.width() + margins.top() + margins.bottom()
+            )
+        return QtCore.QSize(
+            textSize.width() + margins.left() + margins.right(),
+            textSize.height() + margins.top() + margins.bottom()
+        )
         
     def paintEvent(self, ev):
         p = QtGui.QPainter(self)
@@ -63,39 +78,24 @@ class VerticalLabel(QtWidgets.QLabel):
         self.hint = self._textSize()
         p.end()
 
-        margins = self.contentsMargins()
-        textWidth = self.hint.width()
-        textHeight = self.hint.height()
-        paddedWidth = textWidth + margins.left() + margins.right()
-        paddedHeight = textHeight + margins.top() + margins.bottom()
+        paddedSize = self._paddedTextSize(self.hint)
         
         if self.orientation == 'vertical':
-            self.setMaximumWidth(textHeight + margins.left() + margins.right())
+            self.setMaximumWidth(paddedSize.width())
             self.setMinimumWidth(0)
             self.setMaximumHeight(16777215)
             if self.forceWidth:
-                self.setMinimumHeight(textWidth + margins.top() + margins.bottom())
+                self.setMinimumHeight(paddedSize.height())
             else:
                 self.setMinimumHeight(0)
         else:
-            self.setMaximumHeight(paddedHeight)
+            self.setMaximumHeight(paddedSize.height())
             self.setMinimumHeight(0)
             self.setMaximumWidth(16777215)
             if self.forceWidth:
-                self.setMinimumWidth(paddedWidth)
+                self.setMinimumWidth(paddedSize.width())
             else:
                 self.setMinimumWidth(0)
 
     def sizeHint(self):
-        margins = self.contentsMargins()
-        hint = self._textSize()
-        if self.orientation == 'vertical':
-            return QtCore.QSize(
-                hint.height() + margins.left() + margins.right(),
-                hint.width() + margins.top() + margins.bottom()
-            )
-        else:
-            return QtCore.QSize(
-                hint.width() + margins.left() + margins.right(),
-                hint.height() + margins.top() + margins.bottom()
-            )
+        return self._paddedTextSize()
