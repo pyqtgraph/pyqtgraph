@@ -9,7 +9,7 @@ from ... import debug as debug
 from ... import functions as fn
 from ... import getConfigOption
 from ...Point import Point
-from ...Qt import QtCore, QtGui, QtWidgets, isQObjectAlive, QT_LIB
+from ...Qt import QT_LIB, QtCore, QtGui, QtWidgets, isQObjectAlive
 from ..GraphicsWidget import GraphicsWidget
 from ..ItemGroup import ItemGroup
 
@@ -1712,6 +1712,9 @@ class ViewBox(GraphicsWidget):
         if vr.height() == 0 or vr.width() == 0:
             return
         scale = Point(bounds.width()/vr.width(), bounds.height()/vr.height())
+        for axis in (0, 1):
+            if not math.isfinite(scale[axis]):
+                scale[axis] = math.copysign(sys.float_info.max, scale[axis])
         if not self.state['yInverted']:
             scale = scale * Point(1, -1)
         if self.state['xInverted']:
