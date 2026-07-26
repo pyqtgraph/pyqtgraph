@@ -1,6 +1,5 @@
 import decimal
 import re
-import warnings
 from math import isinf, isnan
 
 from .. import functions as fn
@@ -610,6 +609,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         if val is False:
             return
         if val == self.val:
+            self.updateText()
             return
         self.setValue(val, delaySignal=False)  ## allow text update so that values are reformatted pretty-like
 
