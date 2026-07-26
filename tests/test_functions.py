@@ -6,7 +6,7 @@ import pytest
 from numpy.testing import assert_array_almost_equal
 
 import pyqtgraph as pg
-from pyqtgraph.functions import arrayToQPath, eq, SignalBlock
+from pyqtgraph.functions import SignalBlock, arrayToQPath, eq
 from pyqtgraph.Qt import QtCore, QtGui
 
 np.random.seed(12345)
@@ -235,6 +235,7 @@ def test_eq():
     ("4.2 nV", None, ("4.2", "n", "V")),
     ("1.2 m", "m", ("1.2", "", "m")),
     ("1.2 m", None, ("1.2", "", "m")),
+    ("451 °F", None, ("451", "", "°F")),
     ("5.0e9", None, ("5.0e9", "", "")),
     ("2 units", "units", ("2", "", "units")),
     # siPrefix with explicit empty suffix
@@ -262,6 +263,7 @@ def test_siParse(s, suffix, expected):
     ("100 μV", "V", 1, 1e-4),
     ("4.2 nV", None, 1, 4.2e-9),
     ("1.2 m", "m", 1, 1.2),
+    ("451 °F", None, 1, 451.0),
     # siPrefix with explicit empty suffix
     ("1.2 m", "", 1, 1.2e-3),
     ("5.0e-9 M", "", 1, 5.0e-3),
@@ -283,6 +285,7 @@ def test_siEval(s, suffix, power, expected):
     ("1,2 j", "", ("1,2", "", "")),
     ("1,2 j", None, ("1,2", "", "j")),
     ("1,2 μV", "V", ("1,2", "μ", "V")),
+    ("451,5 °F", None, ("451,5", "", "°F")),
     (",2 j", None, (",2", "", "j")),])
 def test_siParse_with_comma_as_decimal_separator(s, suffix, expected):
     assert pg.siParse(s, suffix=suffix, regex=pg.functions.FLOAT_REGEX_COMMA) == expected
