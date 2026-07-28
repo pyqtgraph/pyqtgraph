@@ -2165,6 +2165,9 @@ class LineSegmentROI(ROI):
     def listPoints(self):
         return [p['item'].pos() for p in self.handles]
 
+    def checkPointMove(self, handle, pos, modifiers):
+        return self.resizable
+
     def getState(self):
         state = ROI.getState(self)
         state['points'] = [Point(h.pos()) for h in self.getHandles()]
