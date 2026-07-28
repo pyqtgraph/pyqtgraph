@@ -138,4 +138,4 @@ venv.bak/
 dmypy.json
 
 #vscode
-.vscode/settings.json
+.vscode/
