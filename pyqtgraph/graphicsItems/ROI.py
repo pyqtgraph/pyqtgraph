@@ -38,6 +38,41 @@ __all__ = [
 def rectStr(r):
     return "[%f, %f] + [%f, %f]" % (r.x(), r.y(), r.width(), r.height())
 
+
+def _calculate_bounding_rect(points, state):
+    """
+    Helper function to calculate bounding rectangle after applying transformations.
+
+    Parameters
+    ----------
+    points : list of Points
+        Original points of the ROI
+    state : dict
+        State dictionary containing position and angle
+
+    Returns
+    -------
+    QRectF
+        Transformed bounding rectangle
+    """
+    tr = QtGui.QTransform()
+    tr.translate(state['pos'][0], state['pos'][1])
+    tr.rotate(state['angle'])
+
+    transformed_points = [tr.map(pt) for pt in points]
+
+    if not transformed_points:
+        return QtCore.QRectF(state['pos'][0], state['pos'][1], 0, 0)
+
+    xs = [pt.x() for pt in transformed_points]
+    ys = [pt.y() for pt in transformed_points]
+
+    min_x, max_x = min(xs), max(xs)
+    min_y, max_y = min(ys), max(ys)
+
+    return QtCore.QRectF(min_x, min_y, max_x - min_x, max_y - min_y)
+
+
 class ROI(GraphicsObject):
     """
     Generic region-of-interest widget.
@@ -1047,7 +1082,7 @@ class ROI(GraphicsObject):
     def stateRect(self, state):
         r = QtCore.QRectF(0, 0, state['size'][0], state['size'][1])
         tr = QtGui.QTransform()
-        tr.rotate(-state['angle'])
+        tr.rotate(state['angle'])  # Fixed: was -state['angle'], now state['angle']
         r = tr.mapRect(r)
         return r.adjusted(state['pos'][0], state['pos'][1], state['pos'][0], state['pos'][1])
     
@@ -1783,7 +1818,7 @@ class MultiRectROI(QtWidgets.QGraphicsObject):
             connectTo = self.lines[-1].getHandles()[1]
             
         ## create new ROI
-        newRoi = ROI((0,0), [1, 5], parent=self, pen=self.pen, **self.roiArgs)
+        newRoi = ROI((10, 10), [1, 5], parent=self, pen=self.pen, **self.roiArgs)
         self.lines.append(newRoi)
         
         ## Add first SR handle
@@ -1929,6 +1964,40 @@ class EllipseROI(ROI):
             self.path = path
         
         return self.path
+
+    def stateRect(self, state):
+        """
+        Calculate the bounding rectangle of the ellipse after rotation.
+        For an ellipse with semi-major axis a and semi-minor axis b,
+        rotated by angle theta, the bounding rectangle is calculated analytically.
+        """
+        # Get dimensions and angle
+        a = state['size'][0] / 2.0  # semi-width
+        b = state['size'][1] / 2.0  # semi-height
+        theta = state['angle'] / 180 * np.pi
+
+        # Calculate the transformation matrix components
+        # For a rotated ellipse Ax^2 + Bxy + Cy^2 + D = 0
+        A = (a * np.sin(theta)) ** 2 + (b * np.cos(theta)) ** 2
+        B = 2 * (a ** 2 - b ** 2) * np.sin(theta) * np.cos(theta)
+        C = (a * np.cos(theta)) ** 2 + (b * np.sin(theta)) ** 2
+        D = -a ** 2 * b ** 2
+
+        # Calculate the half-width and half-height of the bounding rectangle
+        half_width = np.sqrt(4 * C * D / (B ** 2 - 4 * A * C))
+        half_height = np.sqrt(4 * A * D / (B ** 2 - 4 * A * C))
+
+        # Calculate center position after rotation
+        tr = QtGui.QTransform()
+        tr.rotate(state['angle'])
+        p_center = tr.map(a, b)  # Original center point
+        p_center = (p_center[0] + state['pos'][0], p_center[1] + state['pos'][1])
+
+        # Create bounding rectangle
+        r = QtCore.QRectF(p_center[0] - abs(half_width), p_center[1] - abs(half_height),
+                         abs(half_width) * 2, abs(half_height) * 2)
+
+        return r
         
         
 
@@ -2129,6 +2198,15 @@ class PolyLineROI(ROI):
         for seg in self.segments:
             seg.setPen(*args, **kwds)
 
+    def stateRect(self, state):
+        """
+        Calculate the bounding rectangle of the polyline after applying transformations.
+        Gets the points, applies rotation, and calculates the bounding box.
+        """
+        # Get the original points (relative to ROI's coordinate system)
+        points = [Point(h.pos()) for h in self.getHandles()]
+
+        return _calculate_bounding_rect(points, state)
 
 
 class LineSegmentROI(ROI):
@@ -2181,7 +2259,17 @@ class LineSegmentROI(ROI):
         p2 = [state['points'][1][0]+state['pos'][0], state['points'][1][1]+state['pos'][1]]
         self.movePoint(self.getHandles()[0], p1, finish=False)
         self.movePoint(self.getHandles()[1], p2)
-            
+
+    def stateRect(self, state):
+        """
+        Calculate the bounding rectangle of the polyline after applying transformations.
+        Gets the points, applies rotation, and calculates the bounding box.
+        """
+        # Get the original points (relative to ROI's coordinate system)
+        points = [Point(h.pos()) for h in self.getHandles()]
+
+        return _calculate_bounding_rect(points, state)
+
     def paint(self, p, *args):
         p.setRenderHint(
             QtGui.QPainter.RenderHint.Antialiasing,
@@ -2275,7 +2363,7 @@ class CrosshairROI(ROI):
         ROI.__init__(self, pos, size, aspectLocked=True, **kargs)
         
         self.sigRegionChanged.connect(self.invalidate)
-        self.addScaleRotateHandle(Point(1, 0), Point(0, 0))
+        self.addScaleRotateHandle(Point(1, 0.5), Point(0.5, 0.5))
 
     def invalidate(self):
         self._shape = None
@@ -2288,10 +2376,10 @@ class CrosshairROI(ROI):
         if self._shape is None:
             radius = self.getState()['size'][1]
             p = QtGui.QPainterPath()
-            p.moveTo(Point(0, -radius))
-            p.lineTo(Point(0, radius))
-            p.moveTo(Point(-radius, 0))
-            p.lineTo(Point(radius, 0))
+            p.moveTo(Point(radius/2, 0))
+            p.lineTo(Point(radius/2, radius))
+            p.moveTo(Point(0, radius/2))
+            p.lineTo(Point(radius, radius/2))
             p = self.mapToDevice(p)
             stroker = QtGui.QPainterPathStroker()
             stroker.setWidth(10)
@@ -2307,8 +2395,8 @@ class CrosshairROI(ROI):
             self._antialias
         )
         p.setPen(self.currentPen)
-        p.drawLine(Point(0, -radius), Point(0, radius))
-        p.drawLine(Point(-radius, 0), Point(radius, 0))
+        p.drawLine(Point(radius/2, 0), Point(radius/2, radius))
+        p.drawLine(Point(0, radius/2), Point(radius, radius/2))
         
         
 class RulerROI(LineSegmentROI):
@@ -2354,12 +2442,12 @@ class TriangleROI(ROI):
     def __init__(self, pos, size, **args):
         ROI.__init__(self, pos, [size, size], aspectLocked=True, **args)
         angles = np.linspace(0, np.pi * 4 / 3, 3)
-        verticies = (np.array((np.sin(angles), np.cos(angles))).T + 1.0) / 2.0
+        vertices = (np.array((np.sin(angles), np.cos(angles))).T + 1.0) / 2.0
         self.poly = QtGui.QPolygonF()
-        for pt in verticies:
+        for pt in vertices:
             self.poly.append(QtCore.QPointF(*pt))
-        self.addRotateHandle(verticies[0], [0.5, 0.5])
-        self.addScaleHandle(verticies[1], [0.5, 0.5])
+        self.addRotateHandle(vertices[0], [0.5, 0.5])
+        self.addScaleHandle(vertices[1], [0.5, 0.5])
 
     def paint(self, p, *args):
         r = self.boundingRect()
@@ -2382,3 +2470,42 @@ class TriangleROI(ROI):
 
     def getArrayRegion(self, *args, **kwds):
         return self._getArrayRegionForArbitraryShape(*args, **kwds)
+
+    def stateRect(self, state):
+        """
+        Calculate the bounding rectangle of the triangle after applying transformations.
+        Gets the vertices, applies rotation, and calculates the bounding box.
+        """
+        # Get the triangle's original vertices based on the TriangleROI implementation
+        # The TriangleROI creates vertices as follows:
+        angles = np.linspace(0, np.pi * 4 / 3, 3)
+        vertices = (np.array((np.sin(angles), np.cos(angles))).T + 1.0) / 2.0
+        # Scale vertices by the size
+        size = state['size']
+        scaled_vertices = vertices * np.array(size)
+
+        # Apply the transformation (rotation and translation)
+        tr = QtGui.QTransform()
+        tr.translate(state['pos'][0], state['pos'][1])  # Apply translation
+        tr.rotate(state['angle'])  # Apply rotation
+
+        # Transform all vertices
+        transformed_vertices = []
+        for pt in scaled_vertices:
+            # Convert numpy array to QPointF for transformation
+            transformed_pt = tr.map(QtCore.QPointF(pt[0], pt[1]))
+            transformed_vertices.append(transformed_pt)
+
+        if not transformed_vertices:
+            # If no vertices, return a zero rectangle at the position
+            return QtCore.QRectF(state['pos'][0], state['pos'][1], 0, 0)
+
+        # Find min/max coordinates
+        xs = [pt.x() for pt in transformed_vertices]
+        ys = [pt.y() for pt in transformed_vertices]
+
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+
+        # Create bounding rectangle
+        return QtCore.QRectF(min_x, min_y, max_x - min_x, max_y - min_y)
