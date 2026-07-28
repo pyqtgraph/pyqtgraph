@@ -1551,6 +1551,7 @@ class PlotDataItem(GraphicsObject):
             self._adsLastValue = ds
             # downsampling is expensive; delay until after clipping.
 
+        center_step_mode = self.opts.get('stepMode') == "center"
         connect = self.opts['connect'] if isinstance(self.opts['connect'], np.ndarray) else None
         if self.opts['clipToView']:
             if view is None or view.autoRangeEnabled()[0]:
@@ -1569,13 +1570,17 @@ class PlotDataItem(GraphicsObject):
                     # x0 = np.searchsorted(x, view_range.left()) - ds
                     x0 = bisect.bisect_left(x, view_range.left()) - ds
                     # x0 = np.clip(x0, 0, len(x))
-                    x0 = fn.clip_scalar(x0, 0, len(x))  # workaround
+                    last_index = len(y) if center_step_mode else len(x)
+                    x0 = fn.clip_scalar(x0, 0, last_index)  # workaround
 
                     # x1 = np.searchsorted(x, view_range.right()) + ds
                     x1 = bisect.bisect_left(x, view_range.right()) + ds
                     # x1 = np.clip(x1, 0, len(x))
-                    x1 = fn.clip_scalar(x1, x0, len(x))
-                    x = x[x0:x1]
+                    x1 = fn.clip_scalar(x1, x0, last_index)
+                    if center_step_mode:
+                        x = x[x0:x1 + 1]
+                    else:
+                        x = x[x0:x1]
                     y = y[x0:x1]
                     if connect is not None:
                         connect = connect[x0:x1]
@@ -1583,30 +1588,69 @@ class PlotDataItem(GraphicsObject):
 
         if ds > 1:
             if self.opts['downsampleMethod'] == 'subsample':
-                x = x[::ds]
-                y = y[::ds]
+                if center_step_mode:
+                    y_count = len(y)
+                    x_index = np.arange(0, y_count, ds)
+                    y = y[::ds]
+                    if y_count == 0:
+                        x = x[:1]
+                    else:
+                        right_index = min(x_index[-1] + ds, y_count)
+                        x_index = np.append(x_index, right_index)
+                        x = x[x_index]
+                else:
+                    x = x[::ds]
+                    y = y[::ds]
                 if connect is not None:
                     connect = connect[::ds]
             elif self.opts['downsampleMethod'] == 'mean':
-                n = len(x) // ds
-                # start of x-values try to select a somewhat centered point
-                stx = ds // 2
-                x = x[stx:stx + n * ds:ds]
-                y = y[:n * ds].reshape(n, ds).mean(axis=1)
+                if center_step_mode:
+                    n = len(y) // ds
+                    x = x[:n * ds + 1:ds]
+                    if n == 0:
+                        y = y[:0]
+                    else:
+                        y = y[:n * ds].reshape(n, ds).mean(axis=1)
+                else:
+                    n = len(x) // ds
+                    # start of x-values try to select a somewhat centered point
+                    stx = ds // 2
+                    x = x[stx:stx + n * ds:ds]
+                    y = y[:n * ds].reshape(n, ds).mean(axis=1)
                 if connect is not None:
                     connect = connect[:n*ds].reshape(n,ds).all(axis=1)
             elif self.opts['downsampleMethod'] == 'peak':
-                n = len(x) // ds
-                x1 = np.empty((n, 2))
-                # start of x-values; try to select a somewhat centered point
-                stx = ds // 2
-                x1[:] = x[stx:stx + n * ds:ds, np.newaxis]
-                x = x1.reshape(n * 2)
-                y1 = np.empty((n, 2))
-                y2 = y[:n * ds].reshape((n, ds))
-                y1[:, 0] = y2.max(axis=1)
-                y1[:, 1] = y2.min(axis=1)
-                y = y1.reshape(n * 2)
+                if center_step_mode:
+                    n = len(y) // ds
+                    if n == 0:
+                        x = x[:1]
+                        y = y[:0]
+                    else:
+                        x_start = x[:n * ds:ds]
+                        x_end = x[ds:n * ds + 1:ds]
+                        x_mid = 0.5 * (x_start + x_end)
+                        x1 = np.empty(n * 2 + 1)
+                        x1[0:-1:2] = x_start
+                        x1[1::2] = x_mid
+                        x1[2::2] = x_end
+                        x = x1
+                        y1 = np.empty((n, 2))
+                        y2 = y[:n * ds].reshape((n, ds))
+                        y1[:, 0] = y2.max(axis=1)
+                        y1[:, 1] = y2.min(axis=1)
+                        y = y1.reshape(n * 2)
+                else:
+                    n = len(x) // ds
+                    x1 = np.empty((n, 2))
+                    # start of x-values; try to select a somewhat centered point
+                    stx = ds // 2
+                    x1[:] = x[stx:stx + n * ds:ds, np.newaxis]
+                    x = x1.reshape(n * 2)
+                    y1 = np.empty((n, 2))
+                    y2 = y[:n * ds].reshape((n, ds))
+                    y1[:, 0] = y2.max(axis=1)
+                    y1[:, 1] = y2.min(axis=1)
+                    y = y1.reshape(n * 2)
                 if connect is not None:
                     c = np.ones((n*2), dtype=bool)
                     c[1::2] = connect[:n*ds].reshape(n,ds).all(axis=1)
