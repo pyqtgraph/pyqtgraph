@@ -368,7 +368,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                     acceptedItem.mouseClickEvent(ev)
                 except:
                     debug.printExc("Error sending click event:")
-            if acceptedItem is None or not ev.isAccepted():
+            if not ev.isAccepted() or acceptedItem is None:
                 for item in self.itemsNearEvent(ev):
                     if not item.isVisible() or not item.isEnabled() or item is acceptedItem:
                         continue
