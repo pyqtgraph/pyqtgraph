@@ -57,6 +57,8 @@ class BarGraphItem(GraphicsObject):
         # the first call to _updateColors() will thus always be an update
 
         self._rectarray = Qt.internals.PrimitiveArray(QtCore.QRectF, 4)
+        self._rectIndices = np.array([], dtype=int)
+        self._logMode = [False, False]
         self._shape = None
         self.picture = None
         self.setOpts(**opts)
@@ -188,18 +190,56 @@ class BarGraphItem(GraphicsObject):
         if x0.size == 0 or y0.size == 0:
             self._dataBounds = (None, None), (None, None)
             self._rectarray.resize(0)
+            self._rectIndices = np.array([], dtype=int)
+            return
+
+        x0, y0, x1, y1 = np.broadcast_arrays(x0, y0, x1, y1)
+
+        if self._logMode[0]:
+            x0, x1 = self._mapLog(x0, x1)
+        if self._logMode[1]:
+            y0, y1 = self._mapLog(y0, y1)
+
+        valid = (
+            np.isfinite(x0) &
+            np.isfinite(x1) &
+            np.isfinite(y0) &
+            np.isfinite(y1)
+        )
+        if not valid.all():
+            self._rectIndices = np.nonzero(valid)[0]
+            x0 = x0[valid]
+            y0 = y0[valid]
+            x1 = x1[valid]
+            y1 = y1[valid]
+        else:
+            self._rectIndices = np.arange(x0.size)
+
+        if x0.size == 0:
+            self._dataBounds = (None, None), (None, None)
+            self._rectarray.resize(0)
             return
 
         xmn, xmx = np.min(x0), np.max(x1)
         ymn, ymx = np.min(y0), np.max(y1)
         self._dataBounds = (xmn, xmx), (ymn, ymx)
 
-        self._rectarray.resize(max(x0.size, y0.size))
+        self._rectarray.resize(x0.size)
         memory = self._rectarray.ndarray()
         memory[:, 0] = x0
         memory[:, 1] = y0
         memory[:, 2] = x1 - x0
         memory[:, 3] = y1 - y0
+
+    @staticmethod
+    def _mapLog(*coords):
+        mapped = []
+        with np.errstate(divide='ignore', invalid='ignore'):
+            for coord in coords:
+                coord = np.log10(coord)
+                coord = np.where(np.isfinite(coord), coord, np.nan)
+                mapped.append(coord)
+        return mapped
 
     def _render(self, painter):
         multi_pen = self._pens is not None
@@ -212,7 +252,7 @@ class BarGraphItem(GraphicsObject):
         rects = self._rectarray.instances()
 
         if no_pen and multi_brush:
-            for idx, rect in enumerate(rects):
+            for idx, rect in zip(self._rectIndices, rects):
                 painter.fillRect(rect, self._brushes[idx])
         else:
             if not multi_pen:
@@ -220,13 +260,20 @@ class BarGraphItem(GraphicsObject):
             if not multi_brush:
                 painter.setBrush(self._sharedBrush)
 
-            for idx, rect in enumerate(rects):
+            for idx, rect in zip(self._rectIndices, rects):
                 if multi_pen:
                     painter.setPen(self._pens[idx])
                 if multi_brush:
                     painter.setBrush(self._brushes[idx])
 
                 painter.drawRect(rect)
+
+    def setLogMode(self, xState: bool, yState: bool):
+        logMode = [bool(xState), bool(yState)]
+        if self._logMode == logMode:
+            return
+        self._logMode = logMode
+        self.setOpts()
 
     def drawPicture(self):
         self.picture = QtGui.QPicture()
