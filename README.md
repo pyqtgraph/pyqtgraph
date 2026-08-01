@@ -120,6 +120,7 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
 * [Semi-Supervised Semantic Annotator](https://gitlab.com/s3a/s3a)
 * [STDF-Viewer](https://github.com/noonchen/STDF-Viewer)
+* [strange-attractors-qt](https://github.com/aymenhafeez/strange-attractors-qt)
 * [QT-DataViewer](https://gitlab.tudelft.nl/qutech-qdlabs/qt-dataviewer)
 * [TemCompanion](https://github.com/matao1984/temcompanion)
 
