@@ -29,6 +29,15 @@ from . import plotConfigTemplate_generic as ui_template
 __all__ = ['PlotItem']
 
 
+def _ensureSubmenuWidgetMargins(widget):
+    layout = widget.layout()
+    if layout is None:
+        return
+    margins = layout.contentsMargins()
+    if margins.left() == margins.top() == margins.right() == margins.bottom() == 0:
+        layout.setContentsMargins(11, 11, 11, 11)
+
+
 class PlotItem(GraphicsWidget):
     """
     GraphicsWidget implementing a standard 2D plotting area with axes.
@@ -233,6 +242,7 @@ class PlotItem(GraphicsWidget):
         for name, grp in menuItems:
             sm = self.ctrlMenu.addMenu(name)
             act = QtWidgets.QWidgetAction(self)
+            _ensureSubmenuWidgetMargins(grp)
             act.setDefaultWidget(grp)
             sm.addAction(act)
 

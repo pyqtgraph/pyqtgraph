@@ -6,6 +6,17 @@ from . import axisCtrlTemplate_generic as ui_template
 import weakref
 
 translate = QtCore.QCoreApplication.translate
+
+
+def _ensureSubmenuWidgetMargins(widget):
+    layout = widget.layout()
+    if layout is None:
+        return
+    margins = layout.contentsMargins()
+    if margins.left() == margins.top() == margins.right() == margins.bottom() == 0:
+        layout.setContentsMargins(11, 11, 11, 11)
+
+
 class ViewBoxMenu(QtWidgets.QMenu):
     def __init__(self, view):
         QtWidgets.QMenu.__init__(self)
@@ -28,6 +39,7 @@ class ViewBoxMenu(QtWidgets.QMenu):
             ui = ui_template.Ui_Form()
             ui.setupUi(w)
             a = QtWidgets.QWidgetAction(self)
+            _ensureSubmenuWidgetMargins(w)
             a.setDefaultWidget(w)
             m.addAction(a)
             self.ctrl.append(ui)

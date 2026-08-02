@@ -141,3 +141,33 @@ def test_plotitem_menu_initialize():
     assert viewbox is not None
     assert viewbox.menu is None
     assert viewbox.menuEnabled() is False
+
+
+def test_plotitem_menu_submenu_widget_margins():
+    """Embedded Plot Options submenu widgets should not be flush to the menu edge."""
+    item = pg.PlotItem()
+    widget_actions = []
+    for menu_action in item.ctrlMenu.actions():
+        submenu = menu_action.menu()
+        assert submenu is not None
+        widget_actions.extend(
+            action for action in submenu.actions()
+            if isinstance(action, pg.Qt.QtWidgets.QWidgetAction)
+        )
+
+    assert len(widget_actions) == 6
+    for action in widget_actions:
+        widget = action.defaultWidget()
+        assert widget is not None
+        layout = widget.layout()
+        assert layout is not None
+        margins = layout.contentsMargins()
+        assert all(
+            margin > 0
+            for margin in (
+                margins.left(),
+                margins.top(),
+                margins.right(),
+                margins.bottom(),
+            )
+        )

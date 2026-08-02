@@ -83,6 +83,39 @@ def test_ViewBox_setMenuEnabled():
     assert vb.menu is None
 
 
+def test_ViewBox_menu_axis_submenu_widget_margins():
+    """Embedded axis submenu widgets should not be flush to the menu edge."""
+    viewbox = pg.ViewBox()
+    assert viewbox.menu is not None
+
+    widget_actions = []
+    for menu_action in viewbox.menu.actions():
+        submenu = menu_action.menu()
+        if submenu is None:
+            continue
+        widget_actions.extend(
+            action for action in submenu.actions()
+            if isinstance(action, pg.Qt.QtWidgets.QWidgetAction)
+        )
+
+    assert len(widget_actions) == 2
+    for action in widget_actions:
+        widget = action.defaultWidget()
+        assert widget is not None
+        layout = widget.layout()
+        assert layout is not None
+        margins = layout.contentsMargins()
+        assert all(
+            margin > 0
+            for margin in (
+                margins.left(),
+                margins.top(),
+                margins.right(),
+                margins.bottom(),
+            )
+        )
+
+
 
 skipreason = "Skipping this test until someone has time to fix it."
 @pytest.mark.skipif(True, reason=skipreason)
