@@ -180,5 +180,42 @@ except:
             pytrace=False
         )
 
+
+def testVideoSpeedTestDoesNotCreateRawGLWidgetAtStartup():
+    code = f"""
+import os
+os.chdir({path!r})
+
+import pyqtgraph.widgets.RawImageWidget as raw_image_widget
+
+class FailingRawImageGLWidget:
+    def __init__(self, *args, **kwargs):
+        raise RuntimeError("RawImageGLWidget should not be constructed at startup")
+
+raw_image_widget.RawImageGLWidget = FailingRawImageGLWidget
+
+import VideoSpeedTest
+
+VideoSpeedTest.timer.stop()
+VideoSpeedTest.win.close()
+VideoSpeedTest.app.quit()
+print("test complete")
+"""
+    env = dict(os.environ)
+    example_dir = os.path.abspath(os.path.dirname(__file__))
+    repo_dir = os.path.dirname(os.path.dirname(example_dir))
+    env['PYTHONPATH'] = f'{repo_dir}{os.pathsep}{example_dir}'
+    process = subprocess.run(
+        [sys.executable],
+        input=code,
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=10,
+        check=False,
+    )
+    assert process.returncode == 0, process.stderr
+    assert "test complete" in process.stdout
+
 if __name__ == "__main__":
     pytest.cmdline.main()

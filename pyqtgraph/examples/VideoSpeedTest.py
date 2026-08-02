@@ -54,12 +54,6 @@ parser.add_argument('--iterations', default=float('inf'), type=float,
 args = parser.parse_args(sys.argv[1:])
 iterations_counter = itertools.count()
 
-if RawImageGLWidget is not None:
-    # don't limit frame rate to vsync
-    sfmt = QtGui.QSurfaceFormat()
-    sfmt.setSwapInterval(0)
-    QtGui.QSurfaceFormat.setDefaultFormat(sfmt)
-
 app = pg.mkQApp("Video Speed Test Example")
 
 win = QtWidgets.QMainWindow()
@@ -68,13 +62,21 @@ ui = ui_template.Ui_MainWindow()
 ui.setupUi(win)
 win.show()
 
+ui.rawGLImg = None
 if RawImageGLWidget is None:
     ui.rawGLRadio.setEnabled(False)
     ui.rawGLRadio.setText(ui.rawGLRadio.text() + " (OpenGL not available)")
-else:
-    ui.rawGLImg = RawImageGLWidget()
-    ui.stack.addWidget(ui.rawGLImg)
-    win.destroyed.connect(ui.rawGLImg.cleanup)
+
+def setupRawGLImg():
+    if ui.rawGLImg is None:
+        # don't limit frame rate to vsync
+        sfmt = QtGui.QSurfaceFormat()
+        sfmt.setSwapInterval(0)
+        QtGui.QSurfaceFormat.setDefaultFormat(sfmt)
+        ui.rawGLImg = RawImageGLWidget()
+        ui.stack.addWidget(ui.rawGLImg)
+        win.destroyed.connect(ui.rawGLImg.cleanup)
+    return ui.rawGLImg
 
 # read in CLI args
 ui.cudaCheck.setChecked(args.cuda and _has_cupy)
@@ -277,7 +279,7 @@ def update():
         ui.rawImg.setImage(data[ptr%data.shape[0]], lut=useLut, levels=useScale)
         ui.stack.setCurrentIndex(1)
     elif ui.rawGLRadio.isChecked():
-        ui.rawGLImg.setImage(data[ptr%data.shape[0]], lut=useLut, levels=useScale)
+        setupRawGLImg().setImage(data[ptr%data.shape[0]], lut=useLut, levels=useScale)
         ui.stack.setCurrentIndex(2)
     else:
         img.setImage(data[ptr%data.shape[0]], autoLevels=False, levels=useScale, lut=useLut, autoDownsample=downsample)
