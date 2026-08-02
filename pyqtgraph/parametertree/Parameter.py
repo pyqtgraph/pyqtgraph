@@ -870,6 +870,9 @@ class Parameter(QtCore.QObject):
 
     def registerItem(self, item):
         self.items[item] = None
+
+    def unregisterItem(self, item):
+        self.items.pop(item, None)
         
     def hide(self):
         """Hide this parameter. It and its children will no longer be visible in any ParameterTree

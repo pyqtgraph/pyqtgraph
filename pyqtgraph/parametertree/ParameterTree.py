@@ -81,6 +81,11 @@ class ParameterTree(TreeWidget):
         """
         Remove all parameters from the tree.        
         """
+        root = self.invisibleRootItem()
+        for i in range(root.childCount()):
+            item = root.child(i)
+            if hasattr(item, 'dispose'):
+                item.dispose()
         self.invisibleRootItem().takeChildren()        
             
     def focusNext(self, item, forward=True):

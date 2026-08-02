@@ -237,6 +237,23 @@ def test_data_race():
     assert p.value() == pi.widget.value() == 1
 
 
+def test_tree_clear_unregisters_items_before_reusing_parameter():
+    p = pt.Parameter.create(name='params', type='group', children=[
+        dict(name='prop0', type='str', value='test'),
+    ])
+    child = p.child('prop0')
+    tree = pt.ParameterTree()
+
+    tree.setParameters(p, showTop=True)
+    old_item = next(iter(child.items))
+    tree.clear()
+
+    assert old_item not in child.items
+
+    tree.setParameters(p, showTop=True)
+    child.setValue('changed')
+
+
 def test_checklist_show_hide():
     p = pt.Parameter.create(name='checklist', type='checklist', limits=["a", "b", "c"])
     pi = ChecklistParameterItem(p, 0)

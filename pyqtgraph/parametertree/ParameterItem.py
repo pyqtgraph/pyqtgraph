@@ -176,6 +176,7 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
 
         ## flag used internally during name editing
         self.ignoreNameColumnChange = False
+        self._disposed = False
 
     def updateFlags(self):
         ## called when Parameter opts changed
@@ -237,7 +238,36 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
             item = self.child(i)
             if item.param is child:
                 self.takeChild(i)
+                item.dispose()
                 break
+
+    def dispose(self):
+        if self._disposed:
+            return
+        self._disposed = True
+
+        for i in reversed(range(self.childCount())):
+            item = self.child(i)
+            self.takeChild(i)
+            if hasattr(item, 'dispose'):
+                item.dispose()
+
+        for sig, slot in (
+            (self.param.sigValueChanged, self.valueChanged),
+            (self.param.sigChildAdded, self.childAdded),
+            (self.param.sigChildRemoved, self.childRemoved),
+            (self.param.sigNameChanged, self.nameChanged),
+            (self.param.sigLimitsChanged, self.limitsChanged),
+            (self.param.sigDefaultChanged, self.defaultChanged),
+            (self.param.sigOptionsChanged, self.optsChanged),
+            (self.param.sigParentChanged, self.parentChanged),
+        ):
+            try:
+                sig.disconnect(slot)
+            except (TypeError, RuntimeError):
+                pass
+
+        self.param.unregisterItem(self)
                 
     def parentChanged(self, param, parent):
         ## called when the parameter's parent has changed.
