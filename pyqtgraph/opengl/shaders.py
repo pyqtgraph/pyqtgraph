@@ -348,7 +348,7 @@ class ShaderProgram(object):
                     if es2_compat and not shader.code.lstrip().startswith("#version"):
                         sources.insert(0, "#version 100\n")
                     compiled.append(shaders.compileShader(sources, shader.shaderType))
-                self.prog = shaders.compileProgram(*compiled)  ## compile program
+                self.prog = shaders.compileProgram(*compiled, validate=False)  ## compile program
             except:
                 self.prog = -1
                 raise
