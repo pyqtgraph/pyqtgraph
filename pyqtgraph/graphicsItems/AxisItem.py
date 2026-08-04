@@ -620,6 +620,7 @@ class AxisItem(GraphicsWidget):
         else:
             h = self.fixedHeight
 
+        h = max(0, h)
         self.setMaximumHeight(h)
         self.setMinimumHeight(h)
         self.picture = None
@@ -656,6 +657,7 @@ class AxisItem(GraphicsWidget):
         else:
             w = self.fixedWidth
 
+        w = max(0, w)
         self.setMaximumWidth(w)
         self.setMinimumWidth(w)
         self.picture = None
@@ -1527,9 +1529,11 @@ class AxisItem(GraphicsWidget):
         ## compute coordinates to draw ticks
         ## draw three different intervals, long ticks first
         tickSpecs = []
+        drawnTickPositions = []
         for i in range(len(tickLevels)):
             tickPositions.append([])
             ticks = tickLevels[i][1]
+            drawLevel = i <= self.style['maxTickLevel']
 
             ## length of tick
             tickLength = self.style['tickLength'] / ((i*0.5)+1.0)
@@ -1569,20 +1573,22 @@ class AxisItem(GraphicsWidget):
                 p2[axis] = tickStop
                 if self.grid is False:
                     p2[axis] += tickLength*tickDir
-                tickSpecs.append((tickPen, Point(p1), Point(p2)))
+                if drawLevel:
+                    drawnTickPositions.append(x)
+                    tickSpecs.append((tickPen, Point(p1), Point(p2)))
         profiler('compute ticks')
 
 
-        if self.style['stopAxisAtTick'][0] is True:
-            minTickPosition = min(map(min, tickPositions))
+        if self.style['stopAxisAtTick'][0] is True and drawnTickPositions:
+            minTickPosition = min(drawnTickPositions)
             if axis == 0:
                 stop = max(span[0].y(), minTickPosition)
                 span[0].setY(stop)
             else:
                 stop = max(span[0].x(), minTickPosition)
                 span[0].setX(stop)
-        if self.style['stopAxisAtTick'][1] is True:
-            maxTickPosition = max(map(max, tickPositions))
+        if self.style['stopAxisAtTick'][1] is True and drawnTickPositions:
+            maxTickPosition = max(drawnTickPositions)
             if axis == 0:
                 stop = min(span[1].y(), maxTickPosition)
                 span[1].setY(stop)
