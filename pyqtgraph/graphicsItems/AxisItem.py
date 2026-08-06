@@ -1,5 +1,6 @@
+import sys
 import weakref
-from math import ceil, floor, frexp, isfinite, log10, sqrt
+from math import ceil, copysign, floor, frexp, isfinite, log10, sqrt
 
 import numpy as np
 
@@ -1509,12 +1510,17 @@ class AxisItem(GraphicsWidget):
         if dif == 0:
             xScale = 1
             offset = 0
-        elif axis == 0:
-            xScale = -bounds.height() / dif
-            offset = self.range[0] * xScale - bounds.height()
         else:
-            xScale = bounds.width() / dif
-            offset = self.range[0] * xScale
+            if axis == 0:
+                xScale = -bounds.height() / dif
+            else:
+                xScale = bounds.width() / dif
+            if not isfinite(xScale):
+                xScale = copysign(sys.float_info.max, xScale)
+            if axis == 0:
+                offset = self.range[0] * xScale - bounds.height()
+            else:
+                offset = self.range[0] * xScale
 
         xRange = [x * xScale - offset for x in self.range]
         xMin = min(xRange)
