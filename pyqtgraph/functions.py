@@ -11,7 +11,6 @@ import struct
 import sys
 import warnings
 from collections import OrderedDict
-
 from typing import TypeAlias, TypedDict
 
 import numpy as np
@@ -67,9 +66,9 @@ SI_PREFIX_EXPONENTS['u'] = -6
 SI_PREFIX_EXPONENTS['μ'] = -6
 
 #For comma as decimal separator
-FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>\w.*))?$')
+FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>\S.*))?$')
 #For period as decimal separator
-FLOAT_REGEX_PERIOD = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>\w.*))?$')
+FLOAT_REGEX_PERIOD = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>\S.*))?$')
 
 INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
