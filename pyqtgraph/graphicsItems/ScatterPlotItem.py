@@ -561,6 +561,8 @@ class ScatterPlotItem(GraphicsObject):
             self.setPxMode(kargs['pxMode'])
         if 'antialias' in kargs:
             self.opts['antialias'] = kargs['antialias']
+        if 'compositionMode' in kargs:
+            self.opts['compositionMode'] = kargs['compositionMode']
         if 'hoverable' in kargs:
             self.opts['hoverable'] = bool(kargs['hoverable'])
         if 'tip' in kargs:
