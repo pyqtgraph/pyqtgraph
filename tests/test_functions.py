@@ -290,6 +290,27 @@ def test_siEval(s, suffix, power, expected):
 def test_siParse_with_comma_as_decimal_separator(s, suffix, expected):
     assert pg.siParse(s, suffix=suffix, regex=pg.functions.FLOAT_REGEX_COMMA) == expected
 
+
+@pytest.mark.parametrize("s,suffix,expected", [
+    ("3,14", None, 3.14),
+    ("3,14 kB", None, 3140.0),
+    ("5,0e-9 M", "", 5e-3),
+])
+def test_siEval_with_comma_as_decimal_separator(s, suffix, expected):
+    result = pg.siEval(s, regex=pg.functions.FLOAT_REGEX_COMMA, suffix=suffix)
+    assert np.isclose(result, expected)
+
+
+@pytest.mark.parametrize("s,regex", [
+    ("3,14 kB", pg.functions.FLOAT_REGEX_PERIOD),
+    ("31,4", pg.functions.FLOAT_REGEX_PERIOD),
+    ("3.14 kB", pg.functions.FLOAT_REGEX_COMMA),
+    ("31.4", pg.functions.FLOAT_REGEX_COMMA),
+])
+def test_siParse_rejects_mismatched_decimal_separator(s, regex):
+    with pytest.raises(ValueError):
+        pg.siParse(s, regex=regex)
+
 def test_CIELab_reconversion():
     color_list = [ pg.Qt.QtGui.QColor('#100235') ] # known problematic values
     for _ in range(20):
