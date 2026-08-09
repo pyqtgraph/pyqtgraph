@@ -66,9 +66,9 @@ SI_PREFIX_EXPONENTS['u'] = -6
 SI_PREFIX_EXPONENTS['μ'] = -6
 
 #For comma as decimal separator
-FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>\S.*))?$')
+FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>[^\s\d.,].*))?$')
 #For period as decimal separator
-FLOAT_REGEX_PERIOD = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>\S.*))?$')
+FLOAT_REGEX_PERIOD = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>[^\s\d.,].*))?$')
 
 INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
@@ -277,6 +277,8 @@ def siEval(s, typ=float, regex=FLOAT_REGEX_PERIOD, suffix=None, unitPower=1):
         siEval("100 μV")  # returns 0.0001
     """
     val, siprefix, suffix = siParse(s, regex, suffix=suffix)
+    if regex is FLOAT_REGEX_COMMA:
+        val = val.replace(',', '.')
     v = typ(val)
     return siApply(v, siprefix, unitPower=unitPower)
 
