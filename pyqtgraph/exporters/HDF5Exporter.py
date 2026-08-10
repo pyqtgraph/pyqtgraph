@@ -96,14 +96,11 @@ class HDF5Exporter(Exporter):
 
         with h5py.File(fileName, "w") as fd:
             for index, item in enumerate(items, start=1):
-                if len(items) == 1:
-                    pd = fd
-                else:
-                    pd = fd.require_group(
-                        item.titleLabel.text
-                        if item.titleLabel.isVisible()
-                        else f"Plot {index}"
-                    )
+                pd = fd if len(items) == 1 else fd.require_group(
+                    item.titleLabel.text
+                    if item.titleLabel.isVisible()
+                    else f"Plot {index}"
+                )
                 if appendAllX:
                     for i, c in enumerate(item.curves):
                         d = (
@@ -115,7 +112,7 @@ class HDF5Exporter(Exporter):
                             continue
                         fdata = numpy.column_stack(d)
                         cname = c.name() or str(i)
-                        fd.require_dataset(
+                        pd.require_dataset(
                             name=cname,
                             shape=fdata.shape,
                             dtype=fdata.dtype,
@@ -142,7 +139,7 @@ class HDF5Exporter(Exporter):
                             else c.getData()
                         )
                         cname = c.name() or str(i)
-                        cg = fd.require_group(cname)
+                        cg = pd.require_group(cname)
                         if d[0] is not None:
                             cg.require_dataset(
                                 name=x_label,
