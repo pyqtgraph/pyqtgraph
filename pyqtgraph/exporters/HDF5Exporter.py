@@ -69,8 +69,11 @@ class HDF5Exporter(Exporter):
         items = []
 
         if isinstance(item, GraphicsScene):
+            # why this order???
             items = [
-                _item for _item in item.items() if isinstance(_item, PlotItem)
+                _item
+                for _item in reversed(item.items())
+                if isinstance(_item, PlotItem)
             ]
         if isinstance(item, ViewBox):
             items = [
