@@ -102,7 +102,7 @@ class HDF5Exporter(Exporter):
                     else f"Plot {index}"
                 )
                 if appendAllX:
-                    for i, c in enumerate(item.curves):
+                    for i, c in enumerate(item.curves, start=1):
                         d = (
                             c.getOriginalDataset()
                             if self.params["originalDataset"]
@@ -111,7 +111,7 @@ class HDF5Exporter(Exporter):
                         if d[0] is None or d[1] is None:
                             continue
                         fdata = numpy.column_stack(d)
-                        cname = c.name() or str(i)
+                        cname = c.name() or f"Curve {i}"
                         pd.require_dataset(
                             name=cname,
                             shape=fdata.shape,
@@ -132,13 +132,13 @@ class HDF5Exporter(Exporter):
                         else y_axis.labelText or "y"
                     )
 
-                    for i, c in enumerate(item.curves):
+                    for i, c in enumerate(item.curves, start=1):
                         d = (
                             c.getOriginalDataset()
                             if self.params["originalDataset"]
                             else c.getData()
                         )
-                        cname = c.name() or str(i)
+                        cname = c.name() or f"Curve {i}"
                         cg = pd.require_group(cname)
                         if d[0] is not None:
                             cg.require_dataset(
