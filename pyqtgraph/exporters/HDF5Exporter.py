@@ -5,7 +5,7 @@ import numpy
 from .. import PlotItem, ViewBox
 from ..parametertree import Parameter
 from ..GraphicsScene import GraphicsScene
-from ..Qt import QtCore, QtWidgets
+from ..Qt import QtCore
 from .Exporter import Exporter
 
 HAVE_HDF5 = importlib.util.find_spec("h5py") is not None
@@ -50,14 +50,6 @@ class HDF5Exporter(Exporter):
 
     def export(self, fileName=None):
         if not HAVE_HDF5:
-            QtWidgets.QMessageBox.critical(
-                self,
-                translate("Exporter", "HDF5 Export"),
-                translate(
-                    "This exporter requires the h5py package, "
-                    "but it was not importable."
-                ),
-            )
             raise RuntimeError(
                 "This exporter requires the h5py package, "
                 "but it was not importable."
