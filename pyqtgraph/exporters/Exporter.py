@@ -1,3 +1,4 @@
+import abc
 import os
 import re
 
@@ -8,7 +9,7 @@ from ..widgets.FileDialog import FileDialog
 LastExportDirectory = None
 
 
-class Exporter(object):
+class Exporter(abc.ABC):
     """
     Abstract class used for exporting graphics to file / printer / whatever.
     """    
@@ -35,10 +36,12 @@ class Exporter(object):
 
         self.exporterOpts = {}
 
+    @abc.abstractmethod
     def parameters(self):
         """Return the parameters used to configure this exporter."""
         raise Exception("Abstract method must be overridden in subclass.")
         
+    @abc.abstractmethod
     def export(self, fileName=None, toBytes=False, copy=False):
         """
         If *fileName* is None, pop-up a file dialog.
