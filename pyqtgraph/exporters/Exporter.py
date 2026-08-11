@@ -1,3 +1,4 @@
+import abc
 import os
 import re
 
@@ -8,7 +9,7 @@ from ..widgets.FileDialog import FileDialog
 LastExportDirectory = None
 
 
-class Exporter(object):
+class Exporter(abc.ABC):
     """
     Abstract class used for exporting graphics to file / printer / whatever.
     """    
@@ -29,11 +30,18 @@ class Exporter(object):
         """
         object.__init__(self)
         self.item = item
-        
+
+        self.fileDialog = FileDialog()
+        self.fileDialog.fileSelected.connect(self.fileSaveFinished)
+
+        self.exporterOpts = {}
+
+    @abc.abstractmethod
     def parameters(self):
         """Return the parameters used to configure this exporter."""
         raise Exception("Abstract method must be overridden in subclass.")
         
+    @abc.abstractmethod
     def export(self, fileName=None, toBytes=False, copy=False):
         """
         If *fileName* is None, pop-up a file dialog.
@@ -46,7 +54,6 @@ class Exporter(object):
         ## Show a file dialog, call self.export(fileName) when finished.
         if opts is None:
             opts = {}
-        self.fileDialog = FileDialog()
         self.fileDialog.setFileMode(QtWidgets.QFileDialog.FileMode.AnyFile)
         self.fileDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         if filter is not None:
@@ -54,15 +61,11 @@ class Exporter(object):
                 self.fileDialog.setNameFilter(filter)
             elif isinstance(filter, list):
                 self.fileDialog.setNameFilters(filter)
-        global LastExportDirectory
-        exportDir = LastExportDirectory
-        if exportDir is not None:
-            self.fileDialog.setDirectory(exportDir)
+        if LastExportDirectory is not None:
+            self.fileDialog.setDirectory(LastExportDirectory)
         self.fileDialog.show()
-        self.fileDialog.opts = opts
-        self.fileDialog.fileSelected.connect(self.fileSaveFinished)
-        return
-        
+        self.exporterOpts = opts
+
     def fileSaveFinished(self, fileName):
         global LastExportDirectory
         LastExportDirectory = os.path.split(fileName)[0]
@@ -73,10 +76,10 @@ class Exporter(object):
         if selectedExt is not None:
             selectedExt = selectedExt.groups()[0].lower()
             if ext != selectedExt:
-                fileName = fileName + '.' + selectedExt.lstrip('.')
-        
-        self.export(fileName=fileName, **self.fileDialog.opts)
-        
+                fileName += '.' + selectedExt.lstrip('.')
+
+        self.export(fileName=fileName, **self.exporterOpts)
+
     def getScene(self):
         if isinstance(self.item, GraphicsScene):
             return self.item
