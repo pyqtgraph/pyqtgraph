@@ -1,3 +1,5 @@
+import pytest
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, QtTest
 from tests.ui_testing import mouseDrag, mouseMove
@@ -49,6 +51,55 @@ def test_InfiniteLine():
     px = pg.Point(-0.5, -1.0 / 3**0.5)
     assert br.containsPoint(pos + 1 * px, QtCore.Qt.FillRule.OddEvenFill)
     assert not br.containsPoint(pos + 3 * px, QtCore.Qt.FillRule.OddEvenFill)
+    plt.close()
+
+
+def test_InfiniteLine_setLogMode_maps_view_position():
+    plt = pg.PlotWidget()
+    vline = plt.addLine(x=10, label="{value:g}")
+    hline = plt.addLine(y=100)
+
+    plt.setLogMode(x=True, y=True)
+
+    assert vline.value() == 10
+    assert vline.label.toPlainText() == "10"
+    assert vline.getPos() == [10, 0]
+    assert vline.pos().x() == pytest.approx(1)
+    assert vline.pos().y() == pytest.approx(0)
+    assert hline.value() == 100
+    assert hline.getPos() == [0, 100]
+    assert hline.pos().x() == pytest.approx(0)
+    assert hline.pos().y() == pytest.approx(2)
+
+    vline.setValue(1000)
+    hline.setValue(10)
+
+    assert vline.value() == 1000
+    assert vline.label.toPlainText() == "1000"
+    assert vline.pos().x() == pytest.approx(3)
+    assert hline.value() == 10
+    assert hline.pos().y() == pytest.approx(1)
+
+    plt.setLogMode(x=False, y=False)
+
+    assert vline.value() == 1000
+    assert vline.pos().x() == pytest.approx(1000)
+    assert hline.value() == 10
+    assert hline.pos().y() == pytest.approx(10)
+    plt.close()
+
+
+def test_PlotItem_addLine_uses_log_mode_for_new_lines():
+    plt = pg.PlotWidget()
+    plt.setLogMode(x=True, y=True)
+
+    vline = plt.addLine(x=100)
+    hline = plt.addLine(y=1000)
+
+    assert vline.value() == 100
+    assert vline.pos().x() == pytest.approx(2)
+    assert hline.value() == 1000
+    assert hline.pos().y() == pytest.approx(3)
     plt.close()
 
 def test_mouseInteraction():

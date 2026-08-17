@@ -404,9 +404,8 @@ class PlotItem(GraphicsWidget):
         
         Notes
         -----
-        No other items, in the scene will be affected by this; there is (currently) 
-        no generic way to redisplay a :class:`~pyqtgraph.GraphicsItem` with log
-        coordinates.
+        This updates axes and items that implement ``setLogMode``. Other scene items
+        stay in view coordinates.
         """
         if x is not None:
             self.ctrl.logXCheck.setChecked(x)
