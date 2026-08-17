@@ -1158,9 +1158,9 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple
+        *args : object
             See :class:`PlotDataItem` description for supported arguments.
-        **kwargs : dict
+        **kwargs : object
             See :class:`PlotDataItem` description for supported arguments.
 
         Raises
