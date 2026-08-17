@@ -1402,6 +1402,10 @@ class PlotDataItem(GraphicsObject):
                     # all points can be connected, and no further check is needed.
                     curveArgs['connect'] = 'all'
                     curveArgs['skipFiniteCheck'] = True
+                elif self.opts['fillLevel'] is not None:
+                    # Filled curves need one continuous outline across log(0) gaps.
+                    curveArgs['connect'] = 'all'
+                    curveArgs['skipFiniteCheck'] = False
                 else:   # True or None
                     # True: (we checked and found non-finites)
                     #   don't connect non-finites

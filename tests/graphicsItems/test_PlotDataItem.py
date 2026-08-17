@@ -121,6 +121,40 @@ def test_nonfinite():
     _assert_equal_arrays( dataset.x, x_log )
     _assert_equal_arrays( dataset.y, y_log )
 
+def test_filled_log_plot_auto_connects_across_nonfinite_values(monkeypatch):
+    rng = np.random.default_rng(seed=0)
+    values = np.hstack([rng.normal(size=500), rng.normal(size=260, loc=4)])
+    y, x = np.histogram(values, bins=np.linspace(-3, 8, 40))
+
+    pdi = pg.PlotDataItem(
+        x,
+        y,
+        stepMode="center",
+        fillLevel=0,
+        fillOutline=True,
+        brush=(0, 0, 255, 150),
+    )
+
+    pdi.setLogMode(False, True)
+
+    segment_lengths = []
+    build_fill_paths = pdi.curve._construct_finite_segment_FillPathList
+
+    def record_fill_segment(x, y, baseline, chunksize):
+        segment_lengths.append(len(x))
+        return build_fill_paths(x, y, baseline, chunksize)
+
+    monkeypatch.setattr(
+        pdi.curve,
+        "_construct_finite_segment_FillPathList",
+        record_fill_segment,
+    )
+
+    assert pdi.curve.opts["connect"] == "all"
+    assert pdi.curve.opts["skipFiniteCheck"] is False
+    pdi.curve._getFillPathList(None)
+    assert len(segment_lengths) == 1
+
 def test_opts():
     # test that curve and scatter plot properties get updated from PlotDataItem methods
     y = list(np.random.normal(size=100))
