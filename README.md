@@ -4,6 +4,7 @@ PyQtGraph
 [![PyPi](https://img.shields.io/pypi/v/pyqtgraph.svg)](https://pypi.org/project/pyqtgraph/)
 [![conda-forge](https://img.shields.io/conda/vn/conda-forge/pyqtgraph.svg)](https://anaconda.org/conda-forge/pyqtgraph)
 [![Build Status](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/actions/?query=workflow%3Amain)
+[![inspect.software](https://raw.githubusercontent.com/inspect-software/badges/main/v1/p/pyqtgraph/pyqtgraph.svg)](https://inspect.software/software/pyqtgraph/pyqtgraph)
 [![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
 
 A pure-Python graphics library for PyQt5/PyQt6/PySide6
