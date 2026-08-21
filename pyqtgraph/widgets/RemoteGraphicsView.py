@@ -141,7 +141,7 @@ class RemoteGraphicsView(QtWidgets.QWidget):
     """
     def __init__(self, parent=None, *args, **kwds):
         """
-        The keyword arguments 'useOpenGL' and 'backgound', if specified, are passed to the remote
+        The keyword arguments 'useOpenGL' and 'background', if specified, are passed to the remote
         GraphicsView.__init__(). All other keyword arguments are passed to multiprocess.QtProcess.__init__().
         """
         self._img = None

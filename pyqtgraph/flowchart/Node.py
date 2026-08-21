@@ -283,7 +283,7 @@ class Node(QtCore.QObject):
     
     def update(self, signal=True):
         """Collect all input values, attempt to process new output values, and propagate downstream.
-        Subclasses should call update() whenever thir internal state has changed
+        Subclasses should call update() whenever their internal state has changed
         (such as when the user interacts with the Node's control widget). Update
         is automatically called when the inputs to the node are changed.
         """

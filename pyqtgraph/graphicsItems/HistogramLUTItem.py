@@ -121,7 +121,7 @@ class HistogramLUTItem(GraphicsWidget):
             self.vb.setMouseEnabled(x=True, y=False)
 
         if colorMapMenu is None:
-            # None means use old behaviour
+            # None means use old behavior
             self.gradient = GradientEditorItem(orientation=self.gradientPosition)
             self.gradient.loadPreset('grey')
         else:

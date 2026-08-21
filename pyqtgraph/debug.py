@@ -1005,7 +1005,7 @@ def searchRefs(obj, *args):
             return refs
     
 def allFrameObjs():
-    """Return list of frame objects in current stack. Useful if you want to ignore these objects in refernece searches"""
+    """Return list of frame objects in current stack. Useful if you want to ignore these objects in reference searches"""
     f = sys._getframe()
     objs = []
     while f is not None:

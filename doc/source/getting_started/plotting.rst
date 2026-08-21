@@ -71,5 +71,5 @@ Create/show a plot widget, display three data curves::
     y = np.random.normal(size=(3, 1000))
     plotWidget = pg.plot(title="Three plot curves")
     for i in range(3):
-        plotWidget.plot(x, y[i], pen=(i,3))  ## setting pen=(i,3) automaticaly creates three different-colored pens
+        plotWidget.plot(x, y[i], pen=(i,3))  ## setting pen=(i,3) automatically creates three different-colored pens
     

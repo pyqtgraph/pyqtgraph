@@ -407,7 +407,7 @@ def mkBrush(*args, **kwds):
     return QtGui.QBrush(mkColor(color))
 
 
-def mkPen(*args, **kargs):
+def mkPen(*args, **kargs) -> QtGui.QPen:
     """
     Convenience function for constructing QPen. 
     
@@ -702,7 +702,7 @@ def eq(a, b):
     2. While a is b will catch the case with np.nan values, special handling is done for distinct
        float('nan') instances using math.isnan.
     3. Tests for equivalence using ==, but silently ignores some common exceptions that can occur
-       (AtrtibuteError, ValueError).
+       (AttributeError, ValueError).
     4. When comparing arrays, returns False if the array shapes are not the same.
     5. When comparing arrays of the same shape, returns True only if all elements are equal (whereas
        the == operator would return a boolean array).
@@ -752,7 +752,7 @@ def eq(a, b):
         return True
 
     # Test for equivalence. 
-    # If the test raises a recognized exception, then return Falase
+    # If the test raises a recognized exception, then return False
     try:
         try:
             # Sometimes running catch_warnings(module=np) generates AttributeError ???
@@ -819,7 +819,7 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     Take a slice of any orientation through an array. This is useful for extracting sections of multi-dimensional arrays
     such as MRI images for viewing as 1D or 2D data.
     
-    The slicing axes are aribtrary; they do not need to be orthogonal to the original data or even to each other. It is
+    The slicing axes are arbitrary; they do not need to be orthogonal to the original data or even to each other. It is
     possible to use this function to extract arbitrary linear, rectangular, or parallelepiped shapes from within larger
     datasets. The original data is interpolated onto a new array of coordinates using either interpolateArray if order<2
     or scipy.ndimage.map_coordinates otherwise.

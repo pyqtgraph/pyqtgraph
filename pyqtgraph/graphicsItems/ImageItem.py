@@ -969,7 +969,6 @@ class ImageItem(GraphicsObject):
                 RuntimeWarning,
                 stacklevel=2
             )
-
         # This method is also used when automatically computing levels.
         if self.image is None or self.image.size == 0:
             return None, None

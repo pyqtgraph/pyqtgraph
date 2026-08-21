@@ -139,3 +139,6 @@ dmypy.json
 
 #vscode
 .vscode/settings.json
+
+# dash docs
+doc/pyqtgraph.docset

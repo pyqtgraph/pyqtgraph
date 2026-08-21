@@ -303,7 +303,7 @@ class PlotItem(GraphicsWidget):
         return self.vb
     
     # Wrap a few methods from viewBox. 
-    # Important: don't use settattr(m, getattr(self.vb, m)) as we'd be leaving the
+    # Important: don't use setattr(m, getattr(self.vb, m)) as we'd be leaving the
     # viewbox alive because we had a reference to an instance method (creating wrapper
     # methods at runtime instead).
 
@@ -440,7 +440,7 @@ class PlotItem(GraphicsWidget):
         
     def close(self):
         ## Most of this crap is needed to avoid PySide trouble. 
-        ## The problem seems to be whenever scene.clear() leads to deletion of widgets (either through proxies or qgraphicswidgets)
+        ## The problem seems to be whenever scene.clear() leads to deletion of widgets (either through proxies or QGraphicsWidgets)
         ## the solution is to manually remove all widgets before scene.clear() is called
         if self.ctrlMenu is None: ## already shut down
             return

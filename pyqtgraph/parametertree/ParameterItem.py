@@ -151,7 +151,7 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
     add a ctrl button (gear icon) with a menu that exposes built-in actions
     (Reset to default, Set as default, Set Enabled/Set Disabled,
     Set ReadOnly/Set ReadWrite, Rename, Remove).
-    Override :meth:`populateCtrlMenu` to customise the menu.
+    Override :meth:`populateCtrlMenu` to customize the menu.
 
     For more ParameterItem types, see ParameterTree.parameterTypes module.
     """
@@ -261,7 +261,7 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
 
         *show_rename* and *show_remove* default to the ``renamable`` /
         ``removable`` parameter options when not provided, which is the
-        behaviour used by the standalone right-click context menu.
+        behavior used by the standalone right-click context menu.
         ``populateCtrlMenu`` passes explicit values so that ``ctrlActions``
         can also govern these entries.
         """
@@ -485,7 +485,7 @@ class ParameterItem(QtWidgets.QTreeWidgetItem):
             self.titleChanged()
 
     def titleChanged(self):
-        # called when the user-visble title has changed (either opts['title'], or name if title is None)
+        # called when the user-visible title has changed (either opts['title'], or name if title is None)
 
         title = self.param.title()
         # This makes sure that items without a title or the title 'params' remain invisible

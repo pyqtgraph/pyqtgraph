@@ -61,7 +61,7 @@ def raiseCaughtException():
 
 
 def captureStack():
-    """Inspect the curent call stack
+    """Inspect the current call stack
     """
     x = "inside captureStack()"
     global console

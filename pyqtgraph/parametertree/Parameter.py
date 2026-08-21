@@ -906,7 +906,7 @@ class Parameter(QtCore.QObject):
         self.blockTreeChangeEmit += 1
 
     def unblockTreeChangeSignal(self):
-        """Unblocks enission of sigTreeStateChanged and flushes the changes out through a single signal."""
+        """Unblocks emission of sigTreeStateChanged and flushes the changes out through a single signal."""
         self.blockTreeChangeEmit -= 1
         self.emitTreeChanges()
         

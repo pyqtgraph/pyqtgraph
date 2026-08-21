@@ -187,7 +187,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        Default depends on locale, and is either 
                        ``pyqtgraph.functions.FLOAT_REGEX_PERIOD`` or
                        ``pyqtgraph.functions.FLOAT_REGEX_COMMA``.
-        evalFunc       (callable) Fucntion that converts a numerical string to a number,
+        evalFunc       (callable) Function that converts a numerical string to a number,
                        preferrably a Decimal instance. This function handles only the numerical
                        of the text; it does not have access to the suffix or SI prefix.
         compactHeight  (bool) if True, then set the maximum height of the spinbox based on the

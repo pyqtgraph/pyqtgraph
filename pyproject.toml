@@ -1,14 +1,90 @@
+[project]
+name = "pyqtgraph"
+readme = "README.md"
+dynamic = ["version"]
+description = 'Scientific Graphics and GUI Library for Python'
+license = "MIT"
+license-files = ["LICENSE.txt"]
+requires-python = ">=3.12"
+dependencies = ["numpy>=2.2.0", "colorama"]
+classifiers = [
+  "Environment :: Other Environment",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Image Processing",
+  "Topic :: Scientific/Engineering :: Visualization",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Software Development :: User Interfaces",
+]
+authors = [{ name = "Luke Campagnola", email = 'luke.campagnola@gmail.com' }]
+maintainers = [{ name = "Ognyan Moore", email = "ognyan.moore@gmail.com" }]
+
+[project.urls]
+Homepage = "https://pyqtgraph.org"
+Documentation = "https://pyqtgraph.readthedocs.io"
+Repository = "https://github.com/pyqtgraph/pyqtgraph"
+Mastodon = 'https://fosstodon.org/@pyqtgraph'
+Changelog = 'https://github.com/pyqtgraph/pyqtgraph/blob/master/CHANGELOG'
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.dynamic]
+version = { attr = "pyqtgraph.__version__" }
+
+[tool.setuptools]
+packages = ["pyqtgraph"]
+
+[tool.setuptools.package-data]
+pyqtgraph = [
+    "colors/maps/*.csv",
+    "colors/maps/*.txt",
+    "colors/maps/*.hex",
+]
+'pyqtgraph.examples' = ['optics/*.gz', 'relativity/presets/*.cfg']
+"pyqtgraph.icons" = ["**/*.svg", "**/*.png"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+  "error",
+  # re-enable standard library warnings
+  "once::DeprecationWarning",
+  "once::PendingDeprecationWarning",
+  # comfortable skipping these runtime warnings
+  # https://stackoverflow.com/questions/40845304/runtimewarning-numpy-dtype-size-changed-may-indicate-binary-incompatibility
+  "ignore:numpy.ufunc size changed, may indicate binary incompatibility.*:RuntimeWarning",
+  # pyqtgraph specific warning we want to ignore during testing
+  "ignore:Visible window deleted. To prevent this, store a reference to the window object.",
+  # xvfb warnings on non-linux systems
+  "ignore:Unknown config option:pytest.PytestConfigWarning",
+]
+# fault handler
+faulthandler_timeout = 60
+faulthandler_exit_on_timeout = true
+# Qt logging
+qt_log_level_fail = "WARNING"
+qt_log_ignore = [
+  "XcbConnection: XCB error",
+  "Registering dynamic slot.*FigureCanvasQTAgg", # ignore PySide6 warnings in Matplotlib < 3.10.1
+]
+# xvfb
+xvfb_args = ["-ac", "+extension", "GLX", "+render"]
+xvfb_colordepth = 24                                # use this due to some issues with ndarray reshape errors on CI systems
+xvfb_width = 1920
+xvfb_height = 1080
 
 [tool.black]
 line-length = 88
 target-version = ['py312']
 include = '\.pyi?$'
 exclude = '''
-
 (
   /(
       \.eggs         # exclude a few common directories in the
@@ -37,7 +113,6 @@ omit = ["./pyqtgraph/examples/*"]
 show_missing = true
 skip_covered = false
 skip_empty = true
-
 exclude_also = [
   # allow defensive code
   "raise AssertionError",
@@ -60,11 +135,20 @@ py_version = 312
 src_paths = ["pyqtgraph", "tests"]
 skip_glob = ["**/*Template*.py"]
 skip_gitignore = true
-known_third_party = ["QtCore", "QtGui", "QtWidgets"]
+known_third_party = ["QtCore", "QtGui", "QtWidgets", "QtOpenGL"]
 
 [tool.pycln]
 all = true
 exclude = '(Template|__init__.py)'
+
+[tool.pyright]
+pythonVersion = "3.12"
+include = ["pyqtgraph"]
+reportImplicitOverride = false           # qt methods intended to be overridden
+reportMissingTypeStubs = false
+reportIncompatibleMethodOverride = false # complains when argument names don't match up
+reportUnannotatedClassAttribute = false
+reportAttributeAccessIssue = false
 
 [tool.mypy]
 packages = ["pyqtgraph"]
@@ -92,3 +176,4 @@ exclude = [ # don't report on objects that match any of these regex
 override_GL06 = [
   'Signals', # allow sections to start with "Signals"
 ]
+

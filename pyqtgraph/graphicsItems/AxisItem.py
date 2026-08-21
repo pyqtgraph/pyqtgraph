@@ -1746,7 +1746,7 @@ class AxisItem(GraphicsWidget):
         lv = self.linkedView()
         if lv is None:
             return
-        # Did the event occur inside the linked ViewBox (and not over the axis iteself)?
+        # Did the event occur inside the linked ViewBox (and not over the axis itself)?
         if lv.sceneBoundingRect().contains(event.scenePos()):
             event.ignore()
             return
