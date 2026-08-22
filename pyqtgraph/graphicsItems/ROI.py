@@ -1065,12 +1065,36 @@ class ROI(GraphicsObject):
             round(pos[1] / snap[1]) * snap[1]
         )
     
-    def boundingRect(self):
+    def dataBoundsRect(self):
         return QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
 
+    def dataBounds(self, ax, **kwds):
+        rect = self.dataBoundsRect()
+        if ax == 0:
+            return (rect.left(), rect.right())
+        else:
+            return (rect.top(), rect.bottom())
+
+    def _pixelPadding(self):
+        # note that this is deliberately not named "pixelPadding" to prevent ViewBox from finding it.
+        # test_ROI.py fails otherwise.
+
+        # pen is assumed to be cosmetic
+        pen = self.currentPen
+        no_pen = (pen is None) or (pen.style() == QtCore.Qt.PenStyle.NoPen)
+        return 0 if no_pen else (pen.widthF() or 1) * 0.5
+
+    def boundingRect(self):
+        # child classes shouldn't override this function, but should override dataBoundsRect instead.
+        px = py = self._pixelPadding()
+        # determine length of pixel in local x, y directions
+        vx, vy = self.pixelVectors()
+        px *= 0 if vx is None else vx.length()
+        py *= 0 if vy is None else vy.length()
+        return self.dataBoundsRect().adjusted(-px, -py, px, py)
+
     def paint(self, p, opt, widget):
-        # Note: don't use self.boundingRect here, because subclasses may need to redefine it.
-        r = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
+        r = self.dataBoundsRect()
         p.setRenderHint(
             QtGui.QPainter.RenderHint.Antialiasing,
             self._antialias
@@ -1108,7 +1132,7 @@ class ROI(GraphicsObject):
             tr.scale(float(dShape[0]) / img.width(), float(dShape[1]) / img.height())
         
         ## Transform ROI bounds into data bounds
-        dataBounds = tr.mapRect(self.boundingRect())
+        dataBounds = tr.mapRect(self.dataBoundsRect())
         
         ## Intersect transformed ROI bounds with data bounds
         if axisOrder == 'row-major':
@@ -1252,8 +1276,9 @@ class ROI(GraphicsObject):
         
         vectors = ((vx.x()*sx, vx.y()*sx), (vy.x()*sy, vy.y()*sy))
         if fromBoundingRect is True:
-            shape = self.boundingRect().width(), self.boundingRect().height()
-            origin = img.mapToData(self.mapToItem(img, self.boundingRect().topLeft()))
+            rect = self.dataBoundsRect()
+            shape = rect.width(), rect.height()
+            origin = img.mapToData(self.mapToItem(img, rect.topLeft()))
             origin = (origin.x(), origin.y())
         else:
             shape = self.state['size']
@@ -1854,7 +1879,7 @@ class EllipseROI(ROI):
         self.path = None
         
     def paint(self, p, opt, widget):
-        r = self.boundingRect()
+        r = self.dataBoundsRect()
 
         p.setRenderHint(
             QtGui.QPainter.RenderHint.Antialiasing,
@@ -1912,10 +1937,10 @@ class EllipseROI(ROI):
             # Note: Qt has a bug where very small ellipses (radius <0.001) do
             # not correctly intersect with mouse position (upper-left and 
             # lower-right quadrants are not clickable).
-            #path.addEllipse(self.boundingRect())
+            #path.addEllipse(self.dataBoundsRect())
             
             # Workaround: manually draw the path.
-            br = self.boundingRect()
+            br = self.dataBoundsRect()
             center = br.center()
             r1 = br.width() / 2.
             r2 = br.height() / 2.
@@ -2107,7 +2132,7 @@ class PolyLineROI(ROI):
     def paint(self, p, *args):
         pass
     
-    def boundingRect(self):
+    def dataBoundsRect(self):
         return self.shape().boundingRect()
 
     def shape(self):
@@ -2191,7 +2216,7 @@ class LineSegmentROI(ROI):
         h2 = self.endpoints[1].pos()
         p.drawLine(h1, h2)
         
-    def boundingRect(self):
+    def dataBoundsRect(self):
         return self.shape().boundingRect()
     
     def shape(self):
@@ -2280,7 +2305,7 @@ class CrosshairROI(ROI):
         self._shape = None
         self.prepareGeometryChange()
         
-    def boundingRect(self):
+    def dataBoundsRect(self):
         return self.shape().boundingRect()
     
     def shape(self):
@@ -2361,7 +2386,7 @@ class TriangleROI(ROI):
         self.addScaleHandle(vertices[1], [0.5, 0.5])
 
     def paint(self, p, *args):
-        r = self.boundingRect()
+        r = self.dataBoundsRect()
         p.setRenderHint(
             QtGui.QPainter.RenderHint.Antialiasing,
             self._antialias
@@ -2372,7 +2397,7 @@ class TriangleROI(ROI):
 
     def shape(self):
         self.path = QtGui.QPainterPath()
-        r = self.boundingRect()
+        r = self.dataBoundsRect()
         # scale the path to match whats on the screen
         t = QtGui.QTransform()
         t.scale(r.width(), r.height())
