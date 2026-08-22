@@ -38,7 +38,7 @@ class TargetItem(UIGraphicsItem):
         r"""
         Parameters
         ----------
-        pos : list, tuple, QPointF, QPoint, Optional
+        pos : list, tuple, QPointF, QPoint, optional
             Initial position of the symbol.  Default is (0, 0)
         size : int
             Size of the symbol in pixels.  Default is 10.
@@ -149,7 +149,7 @@ class TargetItem(UIGraphicsItem):
 
         Parameters
         ----------
-        args : tuple or list or QtCore.QPointF or QtCore.QPoint or Point or float
+        args : QtCore.QPointF or QtCore.QPoint or Point or float
             Two float values or a container that specifies ``(x, y)`` position where the
             TargetItem should be placed
 
@@ -358,7 +358,7 @@ class TargetLabel(TextItem):
     ----------
     target : TargetItem
         The TargetItem to which this label will be attached to.
-    text : str or callable, Optional
+    text : str or callable, optional
         Governs the text displayed, can be a fixed string or a format string
         that accepts the x, and y position of the target item; or be a callable
         method that accepts a tuple (x, y) and returns a string to be displayed.
@@ -369,7 +369,7 @@ class TargetLabel(TextItem):
     anchor : tuple or list or QPointF or QPoint
         Position to rotate the TargetLabel about, and position to set the
         offset value to see :class:`~pyqtgraph.TextItem` for more information.
-    kwargs : dict 
+    **kwargs
         kwargs contains arguments that are passed onto
         :class:`~pyqtgraph.TextItem` constructor, excluding text parameter
     """

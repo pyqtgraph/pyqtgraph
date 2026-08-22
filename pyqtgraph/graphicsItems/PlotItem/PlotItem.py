@@ -100,7 +100,7 @@ class PlotItem(GraphicsWidget):
         `left`, `bottom`, `right` or `top` axis.  Default is None.
     enableMenu : bool
         Toggle the enabling or disabling of the right-click context menu.
-    **kwargs : dict, optional
+    **kwargs
         Any extra keyword arguments are passed to
         :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`.
     
@@ -591,9 +591,9 @@ class PlotItem(GraphicsWidget):
         ----------
         item : GraphicsItem
             Item to add to the ViewBox.
-        *args : tuple
+        *args
             Arguments relayed to :meth:`~pyqtgraph.ViewBox.addItem`.
-        **kwargs : dict
+        **kwargs
             Keyword arguments for adding an item.  Supported arguments include.
 
             ============ ===============================================================
@@ -681,7 +681,7 @@ class PlotItem(GraphicsWidget):
         z : int or None
             Z value to set the line to. This is used to determine which items are on top
             of the other.  See :meth:`~QtWidgets.QGraphicsItem.setZValue`.
-        **kwargs : dict
+        **kwargs
             Keyword arguments to pass to the :class:`~pyqtgraph.InfiniteLine` instance.
         
         Returns
@@ -744,10 +744,10 @@ class PlotItem(GraphicsWidget):
 
         Parameters
         ----------
-        *args : tuple, optional
+        *args
             Arguments that are passed to the :class:`~pyqtgraph.PlotDataItem`
             constructor.
-        **kwargs : dict, optional
+        **kwargs
             Keyword arguments that are passed to the :class:`~pyqtgraph.PlotDataItem`
             constructor.  In addition, the following keyword arguments are accepted.
 
@@ -795,7 +795,7 @@ class PlotItem(GraphicsWidget):
         ----------
         offset : tuple of int, int
             The distance to offset the LegendItem, defaults to ``(30, 30)``.
-        **kwargs : dict, optional
+        **kwargs
             Keyword argument passed to the :class:`~pyqtgraph.LegendItem` constructor.
         
         Returns
@@ -819,7 +819,7 @@ class PlotItem(GraphicsWidget):
         ----------
         image : ImageItem or list of ImageItem
             See :meth:`~pyqtgraph.ColorBarItem.setImageItem` for details.
-        **kwargs : dict, optional
+        **kwargs
             Keyword arguments passed to the :class:`~pyqtgraph.ColorBarItem`
             constructor.
         
@@ -854,7 +854,7 @@ class PlotItem(GraphicsWidget):
             or y are considered lists of curve data.
         constKwargs : dict, optional
             A dict of {str: value} passed to each curve during ``plot()``.
-        **kwargs : dict, optional
+        **kwargs
             A dict of {str: iterable} where the str is the name of a kwarg and the
             iterable is a list of values, one for each plotted curve.
         
@@ -912,10 +912,10 @@ class PlotItem(GraphicsWidget):
 
         Parameters
         ----------
-        *args : tuple, optional
+        *args
             Arguments that are passed to the :class:`~pyqtgraph.PlotDataItem`
             constructor.
-        **kwargs : dict, optional
+        **kwargs
             Keyword arguments that are passed to the :class:`~pyqtgraph.PlotDataItem`
             constructor.  In addition, the following keyword arguments are accepted.
 
@@ -1439,9 +1439,9 @@ class PlotItem(GraphicsWidget):
         ----------
         axis : {'left', 'bottom', 'right', 'top'}
             Specify which :class:`~pyqtgraph.AxisItem` to set the label for.
-        *args : tuple, optional
+        *args
             All extra arguments are passed to :meth:`~pyqtgraph.AxisItem.setLabel`.
-        **kwargs : dict, optional
+        **kwargs
             Keyword arguments are passed to :meth:`~pyqtgraph.AxisItem.setLabel`.
         """
         self.getAxis(axis).setLabel(*args, **kwargs)
@@ -1453,7 +1453,7 @@ class PlotItem(GraphicsWidget):
 
         Parameters
         ----------
-        **kwargs : dict, optional
+        **kwargs
             Keyword arguments are passed to  :meth:`~pyqtgraph.AxisItem.setLabel`.  The
             special keyword ``title`` can be used to set the plot title using
             :meth:`~pyqtgraph.PlotItem.setTitle`.
@@ -1479,7 +1479,7 @@ class PlotItem(GraphicsWidget):
         """
         self.getScale(axis).showLabel(show)
 
-    def setTitle(self, title=None, **args):
+    def setTitle(self, title=None, **kwargs):
         """
         Set the title of the plot.
 
@@ -1488,7 +1488,7 @@ class PlotItem(GraphicsWidget):
         title : str, optional
             The title text. If ``None``, the title will be hidden. The default is
             ``None``.
-        **args : dict
+        **kwargs
             Additional keyword arguments are passed to
             :meth:`~pyqtgraph.LabelItem.setText`.
         """
@@ -1500,7 +1500,7 @@ class PlotItem(GraphicsWidget):
             self.titleLabel.setMaximumHeight(30)
             self.layout.setRowFixedHeight(0, 30)
             self.titleLabel.setVisible(True)
-            self.titleLabel.setText(title, **args)
+            self.titleLabel.setText(title, **kwargs)
 
     def showAxis(self, axis: str, show: bool=True):
         """
@@ -1607,14 +1607,14 @@ class PlotItem(GraphicsWidget):
         except RuntimeError:
             pass  # this can happen if the plot has been deleted.
             
-    def _plotArray(self, arr, x=None, **kargs):
+    def _plotArray(self, arr, x=None, **kwargs):
         if arr.ndim != 1:
             raise ValueError(f"Array must be 1D to plot (shape is {arr.shape})")
         if x is None:
             x = np.arange(arr.shape[0])
         if x.ndim != 1:
             raise ValueError(f"X array must be 1D to plot (shape is {x.shape})")
-        return PlotCurveItem(arr, x=x, **kargs)
+        return PlotCurveItem(arr, x=x, **kwargs)
 
     def setExportMode(self, export: bool, opts=None):
         """

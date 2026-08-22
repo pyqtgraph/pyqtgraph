@@ -169,7 +169,7 @@ class Node(QtCore.QObject):
         Warning: do not modify."""
         return self._outputs
         
-    def process(self, **kargs):
+    def process(self, **kwargs):
         """Process data through this node. This method is called any time the flowchart 
         wants the node to process data. It will be called with one keyword argument
         corresponding to each input terminal, and must return a dict mapping the name

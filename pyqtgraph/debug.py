@@ -45,13 +45,13 @@ def ftrace(func):
     """Decorator used for marking the beginning and end of function calls.
     Automatically indents nested calls.
     """
-    def w(*args, **kargs):
+    def w(*args, **kwargs):
         global __ftraceDepth
         pfx = "  " * __ftraceDepth
         print(pfx + func.__name__ + " start")
         __ftraceDepth += 1
         try:
-            rv = func(*args, **kargs)
+            rv = func(*args, **kwargs)
         finally:
             __ftraceDepth -= 1
         print(pfx + func.__name__ + " done")
@@ -112,9 +112,9 @@ class Tracer(object):
 
 def warnOnException(func):
     """Decorator that catches/ignores exceptions and prints a stack trace."""
-    def w(*args, **kwds):
+    def w(*args, **kwargs):
         try:
-            func(*args, **kwds)
+            func(*args, **kwargs)
         except:
             printExc('Ignored exception:')
     return w
@@ -516,7 +516,7 @@ class Profiler(object):
     disable = False  # set this flag to disable all or individual profilers at runtime
     
     class DisabledProfiler(object):
-        def __init__(self, *args, **kwds):
+        def __init__(self, *args, **kwargs):
             pass
         def __call__(self, *args):
             pass
@@ -725,7 +725,7 @@ class ObjTracker(object):
         #self.newRefs.clear()
         #self.newRefs.update(refs)
 
-    def diff(self, **kargs):
+    def diff(self, **kwargs):
         """
         Compute all differences between the current object set and the reference set.
         Print a set of reports for created, deleted, and persistent objects
@@ -785,11 +785,11 @@ class ObjTracker(object):
             print("  " + num + " "*(10-len(num)) + str(t))
             
         print("-----------  %d Deleted since last diff: ------------" % len(delRefs))
-        self.report(delRefs, objs, **kargs)
+        self.report(delRefs, objs, **kwargs)
         print("-----------  %d Created since last diff: ------------" % len(createRefs))
-        self.report(createRefs, objs, **kargs)
+        self.report(createRefs, objs, **kwargs)
         print("-----------  %d Created since start (persistent): ------------" % len(persistentRefs))
-        self.report(persistentRefs, objs, **kargs)
+        self.report(persistentRefs, objs, **kwargs)
         
         
     def __del__(self):
@@ -1223,7 +1223,7 @@ def threadName(threadId=None):
                 self._threadname = name
                 if not hasattr(Qt.QThread, '_names'):
                     Qt.QThread._names = {}
-                Qt.QThread.__init__(self, *args, **kwds)
+                Qt.QThread.__init__(self, *args, **kwargs)
             def run(self):
                 Qt.QThread._names[threading.current_thread().ident] = self._threadname
     """

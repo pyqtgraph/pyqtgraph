@@ -1,9 +1,3 @@
-if __name__ == '__main__':
-    import os
-    import sys
-    path = os.path.abspath(os.path.dirname(__file__))
-    sys.path.insert(0, os.path.join(path, '..', '..'))
-
 from .. import functions as fn
 from ..Qt import QtGui, QtWidgets
 from .UIGraphicsItem import UIGraphicsItem
@@ -71,7 +65,7 @@ class VTickGroup(UIGraphicsItem):
         self.yrange = vals
         self.rebuildTicks()
         
-    def dataBounds(self, *args, **kargs):
+    def dataBounds(self, *args, **kwargs):
         return None  ## item should never affect view autoscaling
             
     def yRange(self):

@@ -126,12 +126,12 @@ class GLViewMixin:
             if not item.isInitialized():
                 item.initialize()
         
-    def setBackgroundColor(self, *args, **kwds):
+    def setBackgroundColor(self, *args, **kwargs):
         """
         Set the background color of the widget. Accepts the same arguments as
         :func:`~pyqtgraph.mkColor`.
         """
-        self.opts['bgcolor'] = fn.mkColor(*args, **kwds).getRgbF()
+        self.opts['bgcolor'] = fn.mkColor(*args, **kwargs).getRgbF()
         self.update()
         
     def getViewport(self):
@@ -320,16 +320,16 @@ class GLViewMixin:
             )
         return pos
 
-    def setCameraParams(self, **kwds):
+    def setCameraParams(self, **kwargs):
         valid_keys = {'center', 'rotation', 'distance', 'fov', 'elevation', 'azimuth'}
-        if not valid_keys.issuperset(kwds):
+        if not valid_keys.issuperset(kwargs):
             raise ValueError(f'valid keywords are {valid_keys}')
 
-        self.setCameraPosition(pos=kwds.get('center'), distance=kwds.get('distance'),
-                               elevation=kwds.get('elevation'), azimuth=kwds.get('azimuth'),
-                               rotation=kwds.get('rotation'))
-        if 'fov' in kwds:
-            self.opts['fov'] = kwds['fov']
+        self.setCameraPosition(pos=kwargs.get('center'), distance=kwargs.get('distance'),
+                               elevation=kwargs.get('elevation'), azimuth=kwargs.get('azimuth'),
+                               rotation=kwargs.get('rotation'))
+        if 'fov' in kwargs:
+            self.opts['fov'] = kwargs['fov']
 
     def cameraParams(self):
         valid_keys = ['center', 'distance', 'fov']

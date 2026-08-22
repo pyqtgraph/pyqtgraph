@@ -29,10 +29,10 @@ plt.enableAutoRange(False, False)
 plt.setXRange(0, 500)
 
 class HDF5Plot(pg.PlotCurveItem):
-    def __init__(self, *args, **kwds):
+    def __init__(self, *args, **kwargs):
         self.hdf5 = None
         self.limit = 10000 # maximum number of samples to be plotted
-        pg.PlotCurveItem.__init__(self, *args, **kwds)
+        pg.PlotCurveItem.__init__(self, *args, **kwargs)
         
     def setHDF5(self, data):
         self.hdf5 = data

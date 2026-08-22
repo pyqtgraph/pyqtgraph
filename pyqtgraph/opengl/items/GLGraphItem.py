@@ -14,9 +14,9 @@ class GLGraphItem(GLGraphicsItem):
     Useful for drawing networks, trees, etc.
     """
 
-    def __init__(self, parentItem=None, **kwds):
+    def __init__(self, parentItem=None, **kwargs):
         super().__init__()
-        glopts = kwds.pop('glOptions', 'translucent')
+        glopts = kwargs.pop('glOptions', 'translucent')
 
         self.edges = None
         self.edgeColor = QtGui.QColor(QtCore.Qt.GlobalColor.white)
@@ -25,9 +25,9 @@ class GLGraphItem(GLGraphicsItem):
         self.lineplot = GLLinePlotItem(parentItem=self, glOptions=glopts, mode='lines')
         self.scatter = GLScatterPlotItem(parentItem=self, glOptions=glopts)
         self.setParentItem(parentItem)
-        self.setData(**kwds)
+        self.setData(**kwargs)
 
-    def setData(self, **kwds):
+    def setData(self, **kwargs):
         """
         Change the data displayed by the graph. 
 
@@ -54,7 +54,7 @@ class GLGraphItem(GLGraphicsItem):
         nodeSize : np.ndarray or float or int
             Either 2D numpy array of shape (N, 1) where each row represents the
             size of each node, or if a scalar, apply the same size to all nodes
-        **kwds
+        **kwargs
             All other keyword arguments are given to
             :meth:`GLScatterPlotItem.setData() <pyqtgraph.opengl.GLScatterPlotItem.setData>`
             to affect the appearance of nodes (pos, color, size, pxMode, etc.)
@@ -65,23 +65,23 @@ class GLGraphItem(GLGraphicsItem):
             When dtype of edges dtype is not unsigned or integer dtype
         """
 
-        if 'edges' in kwds:
-            self.edges = kwds.pop('edges')
+        if 'edges' in kwargs:
+            self.edges = kwargs.pop('edges')
             if self.edges.dtype.kind not in 'iu':
                 raise TypeError("edges array must have int or unsigned dtype.")
-        if 'edgeColor' in kwds:
-            edgeColor = kwds.pop('edgeColor')
+        if 'edgeColor' in kwargs:
+            edgeColor = kwargs.pop('edgeColor')
             self.edgeColor = fn.mkColor(edgeColor) if edgeColor is not None else None
-        if 'edgeWidth' in kwds:
-            self.edgeWidth = kwds.pop('edgeWidth')
-        if 'nodePositions' in kwds:
-            kwds['pos'] = kwds.pop('nodePositions')
-        if 'nodeColor' in kwds:
-            kwds['color'] = kwds.pop('nodeColor')
-        if 'nodeSize' in kwds:
-            kwds['size'] = kwds.pop('nodeSize')
+        if 'edgeWidth' in kwargs:
+            self.edgeWidth = kwargs.pop('edgeWidth')
+        if 'nodePositions' in kwargs:
+            kwargs['pos'] = kwargs.pop('nodePositions')
+        if 'nodeColor' in kwargs:
+            kwargs['color'] = kwargs.pop('nodeColor')
+        if 'nodeSize' in kwargs:
+            kwargs['size'] = kwargs.pop('nodeSize')
 
-        self.scatter.setData(**kwds)
+        self.scatter.setData(**kwargs)
 
         kwdLines = dict(width=self.edgeWidth)
         if self.scatter.pos is None or self.edges is None or self.edgeColor is None:

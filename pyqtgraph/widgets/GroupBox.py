@@ -69,9 +69,9 @@ class GroupBox(QtWidgets.QGroupBox):
         self._collapsed = c
         self.sigCollapseChanged.emit(c)
 
-    def setSizePolicy(self, *args, **kwds):
+    def setSizePolicy(self, *args, **kwargs):
         QtWidgets.QGroupBox.setSizePolicy(self, *args)
-        if kwds.pop('closing', False) is True:
+        if kwargs.pop('closing', False) is True:
             self._lastSizePolicy = self.sizePolicy()
 
     def setHorizontalPolicy(self, *args):

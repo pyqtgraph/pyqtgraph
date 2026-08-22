@@ -36,7 +36,7 @@ class TickSliderItem(GraphicsWidget):
     sigTicksChanged = QtCore.Signal(object)
     sigTicksChangeFinished = QtCore.Signal(object)
     
-    def __init__(self, orientation='bottom', allowAdd=True, allowRemove=True, **kargs):
+    def __init__(self, orientation='bottom', allowAdd=True, allowRemove=True, **kwargs):
         """
         ==============  =================================================================================
         **Arguments:**
@@ -57,8 +57,8 @@ class TickSliderItem(GraphicsWidget):
         self.maxDim = 20
         self.allowAdd = allowAdd
         self.allowRemove = allowRemove
-        if 'tickPen' in kargs:
-            self.tickPen = fn.mkPen(kargs['tickPen'])
+        if 'tickPen' in kwargs:
+            self.tickPen = fn.mkPen(kwargs['tickPen'])
         else:
             self.tickPen = fn.mkPen('w')
             
@@ -392,7 +392,7 @@ class GradientEditorItem(TickSliderItem):
     sigGradientChanged = QtCore.Signal(object)
     sigGradientChangeFinished = QtCore.Signal(object)
     
-    def __init__(self, *args, **kargs):
+    def __init__(self, *args, **kwargs):
         """
         Create a new GradientEditorItem. 
         All arguments are passed to :func:`TickSliderItem.__init__ <pyqtgraph.TickSliderItem.__init__>`
@@ -414,7 +414,7 @@ class GradientEditorItem(TickSliderItem):
         self.backgroundRect.setBrush(QtGui.QBrush(QtCore.Qt.BrushStyle.DiagCrossPattern))
         self.colorMode = 'rgb'
         
-        TickSliderItem.__init__(self, *args, **kargs)
+        TickSliderItem.__init__(self, *args, **kwargs)
         
         self.colorDialog = QtWidgets.QColorDialog()
         self.colorDialog.setOption(QtWidgets.QColorDialog.ColorDialogOption.ShowAlphaChannel, True)

@@ -79,15 +79,15 @@ class FillBetweenItem(QtWidgets.QGraphicsPathItem):
         self._fillRule = fillRule
         self.updatePath()
         
-    def setBrush(self, *args, **kwds):
+    def setBrush(self, *args, **kwargs):
         """Change the fill brush. Accepts the same arguments as :func:`~pyqtgraph.mkBrush`
         """
-        QtWidgets.QGraphicsPathItem.setBrush(self, fn.mkBrush(*args, **kwds))
+        QtWidgets.QGraphicsPathItem.setBrush(self, fn.mkBrush(*args, **kwargs))
         
-    def setPen(self, *args, **kwds):
+    def setPen(self, *args, **kwargs):
         """Change the fill pen. Accepts the same arguments as :func:`~pyqtgraph.mkColor`
         """
-        QtWidgets.QGraphicsPathItem.setPen(self, fn.mkPen(*args, **kwds))
+        QtWidgets.QGraphicsPathItem.setPen(self, fn.mkPen(*args, **kwargs))
 
     def setCurves(
         self,

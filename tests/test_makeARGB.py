@@ -15,9 +15,9 @@ except ImportError:
     pass
 
 
-def _makeARGB(*args, **kwds):
-    img, alpha = real_makeARGB(*args, **kwds)
-    if kwds.get('useRGBA'):  # endian independent
+def _makeARGB(*args, **kwargs):
+    img, alpha = real_makeARGB(*args, **kwargs)
+    if kwargs.get('useRGBA'):  # endian independent
         out = img
     elif sys.byteorder == 'little':  # little-endian ARGB32 to B,G,R,A
         out = img

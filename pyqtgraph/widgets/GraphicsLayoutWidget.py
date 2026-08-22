@@ -4,7 +4,7 @@ from .GraphicsView import GraphicsView
 
 __all__ = ['GraphicsLayoutWidget']
 class GraphicsLayoutWidget(GraphicsView):
-    """
+    r"""
     Convenience class consisting of a :class:`GraphicsView 
     <pyqtgraph.GraphicsView>` with a single :class:`GraphicsLayout
     <pyqtgraph.GraphicsLayout>` as its central item. 
@@ -27,8 +27,7 @@ class GraphicsLayoutWidget(GraphicsView):
                effect.
     title      (str or None) If specified, then set the window title for this
                widget.
-    kargs      All extra arguments are passed to
-               :meth:`GraphicsLayout.__init__
+    \**kwargs  All extra arguments are passed to :meth:`GraphicsLayout.__init__
                <pyqtgraph.GraphicsLayout.__init__>`
     =========  =================================================================
         
@@ -46,10 +45,10 @@ class GraphicsLayoutWidget(GraphicsView):
     :func:`itemIndex <pyqtgraph.GraphicsLayout.itemIndex>`
     :func:`clear <pyqtgraph.GraphicsLayout.clear>`
     """
-    def __init__(self, parent=None, show=False, size=None, title=None, **kargs):
+    def __init__(self, parent=None, show=False, size=None, title=None, **kwargs):
         mkQApp()
         GraphicsView.__init__(self, parent)
-        self.ci = GraphicsLayout(**kargs)
+        self.ci = GraphicsLayout(**kwargs)
         for n in ['nextRow', 'nextCol', 'nextColumn', 'addPlot', 'addViewBox', 'addItem', 'getItem', 'addLayout', 'addLabel', 'removeItem', 'itemIndex', 'clear']:
             setattr(self, n, getattr(self.ci, n))
         self.setCentralItem(self.ci)

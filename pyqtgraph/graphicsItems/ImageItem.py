@@ -41,7 +41,7 @@ class ImageItem(GraphicsObject):
     ----------
     image : np.ndarray or None, default None
         Image data.
-    **kargs : dict, optional
+    **kwargs
         Arguments directed to `setImage` and `setOpts`, refer to each method for
         documentation for possible arguments.
 
@@ -63,7 +63,7 @@ class ImageItem(GraphicsObject):
     sigImageChanged = QtCore.Signal()
     sigRemoveRequested = QtCore.Signal(object) 
 
-    def __init__(self, image: np.ndarray | None=None, **kargs):
+    def __init__(self, image: np.ndarray | None=None, **kwargs):
         super().__init__()
         self.menu = None
         self.image = None   ## original image data
@@ -95,9 +95,9 @@ class ImageItem(GraphicsObject):
         self.removable = False
 
         if image is not None:
-            self.setImage(image, **kargs)
+            self.setImage(image, **kwargs)
         else:
-            self.setOpts(**kargs)
+            self.setOpts(**kwargs)
 
     def setCompositionMode(self, mode: QtGui.QPainter.CompositionMode):
         """
@@ -376,7 +376,7 @@ class ImageItem(GraphicsObject):
         update : bool, default True
             Controls if image immediately updates to reflect the new options.
 
-        **kwargs : dict, optional
+        **kwargs
             Extra arguments that are directed to the respective methods.  Expected
             keys include:
 
@@ -432,8 +432,8 @@ class ImageItem(GraphicsObject):
             self.setLookupTable(kwargs['lut'], update=update)
         if 'levels' in kwargs:
             self.setLevels(kwargs['levels'], update=update)
-        #if 'clipLevel' in kargs:
-            #self.setClipLevel(kargs['clipLevel'])
+        #if 'clipLevel' in kwargs:
+            #self.setClipLevel(kwargs['clipLevel'])
         if 'opacity' in kwargs:
             self.setOpacity(kwargs['opacity'])
         if 'compositionMode' in kwargs:
@@ -465,7 +465,7 @@ class ImageItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple
+        *args : QRectF, QRect, QPointF, QSizeF, or float
             Contains one of :class:`QRectF`, :class:`QRect`, or arguments that can be
             used to construct :class:`QRectF`.
 
@@ -554,7 +554,7 @@ class ImageItem(GraphicsObject):
             maximum values, ImageItem only inspects a subset of pixels no larger than
             this number. Setting this larger than the total number of pixels considers
             all values. See `quickMinMax`.
-        **kwargs : dict, optional
+        **kwargs
             Extra arguments that are passed to `setOpts`.
 
         See Also
@@ -730,10 +730,10 @@ class ImageItem(GraphicsObject):
             data = data[::2, ::] if h > w else data[::, ::2]
         return self._xp.nanmin(data), self._xp.nanmax(data)
 
-    def updateImage(self, *args, **kargs):
+    def updateImage(self, *args, **kwargs):
         defaults = {
             'autoLevels': False,
-        } | kargs
+        } | kwargs
         return self.setImage(*args, **defaults)
 
     def render(self):
@@ -856,7 +856,7 @@ class ImageItem(GraphicsObject):
         self._renderRequired = False
         self._unrenderable = False
 
-    def paint(self, painter, *args):
+    def paint(self, painter: QtGui.QPainter, *args):
         profile = debug.Profiler()
         if self.image is None:
             return
@@ -874,13 +874,13 @@ class ImageItem(GraphicsObject):
             if self.axisOrder == 'col-major'
             else self.image.shape[:2][::-1]
         )
-        painter.drawImage(QtCore.QRectF(0,0,*shape), self.qimage)
+        painter.drawImage(QtCore.QRectF(0, 0, *shape), self.qimage)
         profile('p.drawImage')
         if self.border is not None:
             painter.setPen(self.border)
             painter.drawRect(self.boundingRect())
 
-    def save(self, fileName: str | pathlib.Path, *args) -> None:
+    def save(self, fileName: str | pathlib.Path, *args, **kwargs) -> None:
         """
         Save this image to file.
 
@@ -891,8 +891,10 @@ class ImageItem(GraphicsObject):
         ----------
         fileName : os.PathLike
             File path to save the image data to.
-        *args : tuple
+        *args
             Arguments that are passed to :meth:`QImage.save <QImage.save>`.
+        *kwargs
+            Keyword arguments that are passed to :meth:`QImage.save <QImage.save>`.
             
         See Also
         --------
@@ -937,7 +939,7 @@ class ImageItem(GraphicsObject):
         targetImageSize : int, default 200
             This parameter is used if ``step == 'auto'``, If so, the `step` size is
             calculated by ``step = ceil(image.shape[0] / targetImageSize)``.
-        **kwargs : dict, optional
+        **kwargs
             Dictionary of arguments passed to :func:`numpy.histogram()`.
         
         Returns
