@@ -330,7 +330,7 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
         return childs
         
     def setData(self, column, role, value):
-        # credit: ekhumoro
+        # credit: @ekhumoro
         #   http://stackoverflow.com/questions/13662020/how-to-implement-itemchecked-and-itemunchecked-signals-for-qtreewidget-in-pyqt4
         checkstate = self.checkState(column)
         text = self.text(column)

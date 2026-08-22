@@ -78,7 +78,7 @@ iso.setData(pg.gaussianFilter(data, (2, 2)))
 tr = QtGui.QTransform()
 img.setTransform(tr.scale(0.2, 0.2).translate(-50, 0))
 
-# zoom to fit imageo
+# zoom to fit image
 p1.autoRange()  
 
 

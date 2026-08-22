@@ -55,7 +55,7 @@ s1.sigClicked.connect(clicked)
 
 
 ## 2) Spots are transform-invariant, but not identical (top-right plot).
-## In this case, drawing is almsot as fast as 1), but there is more startup
+## In this case, drawing is almost as fast as 1), but there is more startup
 ## overhead and memory usage since each spot generates its own pre-rendered
 ## image.
 

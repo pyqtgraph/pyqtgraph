@@ -40,7 +40,7 @@ class TableWidget(QtWidgets.QTableWidget):
         **Keyword Arguments**
         editable              (bool) If True, cells in the table can be edited
                               by the user. Default is False.
-        sortable              (bool) If True, the table may be soted by
+        sortable              (bool) If True, the table may be sorted by
                               clicking on column headers. Note that this also
                               causes rows to appear initially shuffled until
                               a sort column is selected. Default is True.

@@ -14,7 +14,7 @@ class GroupBox(QtWidgets.QGroupBox):
         self._collapsed = False
         # We modify the size policy when the group box is collapsed, so 
         # keep track of the last requested policy:
-        self._lastSizePlocy = self.sizePolicy()
+        self._lastSizePolicy = self.sizePolicy()
         
         self.closePath = QtGui.QPainterPath()
         self.closePath.moveTo(0, -1)

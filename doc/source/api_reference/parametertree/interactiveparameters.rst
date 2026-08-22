@@ -150,7 +150,7 @@ Sometimes, values that should be passed to the ``interact``-ed function
 should come from a different scope (or "closure"), i.e. a variable definition that
 should be propagated from somewhere else. In these cases, wrap that
 argument in a function and pass it into ``closures`` like so. Note that
-an ``InteractiveFunction`` object is needed as descibed in a later section.
+an ``InteractiveFunction`` object is needed as described in a later section.
 
 .. code:: python
 

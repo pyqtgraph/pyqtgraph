@@ -19,7 +19,7 @@ v.setWindowTitle('pyqtgraph example: RemoteGraphicsView')
 ## v.pg is a proxy to the remote process' pyqtgraph module. All attribute 
 ## requests and function calls made with this object are forwarded to the
 ## remote process and executed there. See pyqtgraph.multiprocess.remoteproxy
-## for more inormation.
+## for more information.
 plt = v.pg.PlotItem()
 v.setCentralItem(plt)
 plt.plot([1,4,2,3,6,2,3,4,2,3], pen='g')

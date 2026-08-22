@@ -1,7 +1,7 @@
 
 import pyqtgraph as pg
 
-app = pg.mkQApp("Gradiant Editor Example")
+app = pg.mkQApp("Gradient Editor Example")
 mw = pg.GraphicsView()
 mw.resize(800,800)
 mw.show()

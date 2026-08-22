@@ -338,7 +338,7 @@ def test_recreate_from_savestate():
 # JSON serialization tests
 #
 # The fixture mirrors test_recreate_from_savestate: makeAllParamTypes() builds
-# the same parameter tree used in examples/parametertree.py, so JSON behaviour
+# the same parameter tree used in examples/parametertree.py, so JSON behavior
 # is validated against the canonical example rather than ad-hoc specs.
 # Targeted tests (pen/color/limits) exercise specific encoder edge cases that
 # the full-tree test would catch but not diagnose clearly on failure.

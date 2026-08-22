@@ -15,7 +15,7 @@ class WidgetParameterItem(ParameterItem):
         Set as default, Enable/Disable, Lock/Unlock, Rename, Remove
 
     This class can be subclassed by overriding :meth:`makeWidget` to provide a
-    custom widget, and :meth:`populateCtrlMenu` to customise the ctrl menu.
+    custom widget, and :meth:`populateCtrlMenu` to customize the ctrl menu.
     """
 
     def __init__(self, param, depth):
