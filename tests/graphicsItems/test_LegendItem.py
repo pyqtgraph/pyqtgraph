@@ -101,3 +101,28 @@ def test_legend_item_basics():
 
     legend.clear()
     assert legend.items == []
+
+
+def test_legend_label_updates_from_plot_data_item_name():
+
+    legend = pg.LegendItem()
+    first = pg.PlotDataItem([1, 2, 3], name="First")
+    second = pg.PlotDataItem([3, 2, 1], name="Second")
+
+    legend.addItem(first, name="First")
+    legend.addItem(second, name="Second")
+
+    first_label = legend.getLabel(first)
+    second_label = legend.getLabel(second)
+
+    first.setData([4, 5, 6], name="Renamed")
+
+    assert first_label.text == "Renamed"
+    assert second_label.text == "Second"
+    assert legend.items[0][1] is first_label
+    assert legend.items[1][1] is second_label
+
+    legend.removeItem(first)
+    first.setData([7, 8, 9], name="Removed")
+
+    assert first_label.text == "Renamed"
