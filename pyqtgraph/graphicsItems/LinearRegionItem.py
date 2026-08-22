@@ -162,19 +162,19 @@ class LinearRegionItem(GraphicsObject):
         self.lineMoved(1)
         self.lineMoveFinished()
 
-    def setBrush(self, *br, **kargs):
+    def setBrush(self, *br, **kwargs):
         """Set the brush that fills the region. Can have any arguments that are valid
         for :func:`mkBrush <pyqtgraph.mkBrush>`.
         """
-        self.brush = fn.mkBrush(*br, **kargs)
+        self.brush = fn.mkBrush(*br, **kwargs)
         self.currentBrush = self.brush
 
-    def setHoverBrush(self, *br, **kargs):
+    def setHoverBrush(self, *br, **kwargs):
         """Set the brush that fills the region when the mouse is hovering over.
         Can have any arguments that are valid
         for :func:`mkBrush <pyqtgraph.mkBrush>`.
         """
-        self.hoverBrush = fn.mkBrush(*br, **kargs)
+        self.hoverBrush = fn.mkBrush(*br, **kwargs)
 
     def setBounds(self, bounds):
         """Set ``(min, max)`` bounding values for the region.

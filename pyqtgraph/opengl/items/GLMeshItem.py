@@ -26,7 +26,7 @@ class GLMeshItem(GLGraphicsItem):
     
     Displays a 3D triangle mesh. 
     """
-    def __init__(self, parentItem=None, **kwds):
+    def __init__(self, parentItem=None, **kwargs):
         """
         ============== =====================================================
         **Arguments:**
@@ -63,12 +63,12 @@ class GLMeshItem(GLGraphicsItem):
         }
         
         super().__init__(parentItem=parentItem)
-        glopts = kwds.pop('glOptions', 'opaque')
+        glopts = kwargs.pop('glOptions', 'opaque')
         self.setGLOptions(glopts)
-        shader = kwds.pop('shader', None)
+        shader = kwargs.pop('shader', None)
         self.setShader(shader)
         
-        self.setMeshData(**kwds)
+        self.setMeshData(**kwargs)
         
         ## storage for data compiled from MeshData object
         self.vertexes = None
@@ -105,25 +105,25 @@ class GLMeshItem(GLGraphicsItem):
         self.opts['polygonOffset'] = enable
         self.update()
 
-    def setMeshData(self, **kwds):
+    def setMeshData(self, **kwargs):
         """
         Set mesh data for this item. This can be invoked two ways:
         
         1. Specify *meshdata* argument with a new MeshData object
         2. Specify keyword arguments to be passed to MeshData(..) to create a new instance.
         """
-        md = kwds.get('meshdata', None)
+        md = kwargs.get('meshdata', None)
         if md is None:
             opts = {}
             for k in ['vertexes', 'faces', 'edges', 'vertexColors', 'faceColors']:
                 try:
-                    opts[k] = kwds.pop(k)
+                    opts[k] = kwargs.pop(k)
                 except KeyError:
                     pass
             md = MeshData(**opts)
         
         self.opts['meshdata'] = md
-        self.opts.update(kwds)
+        self.opts.update(kwargs)
         self.meshDataChanged()
         self.update()
         

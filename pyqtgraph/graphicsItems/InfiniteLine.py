@@ -474,7 +474,7 @@ class InfLineLabel(TextItem):
     option here is to use `rotateAxis=(1, 0)`, which will cause the text to
     be automatically rotated parallel to the line.
     """
-    def __init__(self, line, text="", movable=False, position=0.5, anchors=None, **kwds):
+    def __init__(self, line, text="", movable=False, position=0.5, anchors=None, **kwargs):
         self.line = line
         self.movable = movable
         self.moving = False
@@ -484,7 +484,7 @@ class InfLineLabel(TextItem):
         self._endpoints = (None, None)
         if anchors is None:
             # automatically pick sensible anchors
-            rax = kwds.get('rotateAxis', None)
+            rax = kwargs.get('rotateAxis', None)
             if rax is not None:
                 if tuple(rax) == (1,0):
                     anchors = [(0.5, 0), (0.5, 1)]
@@ -497,7 +497,7 @@ class InfLineLabel(TextItem):
                     anchors = [(0, 0.5), (1, 0.5)]
             
         self.anchors = anchors
-        TextItem.__init__(self, **kwds)
+        TextItem.__init__(self, **kwargs)
         self.setParentItem(line)
         self.valueChanged()
 

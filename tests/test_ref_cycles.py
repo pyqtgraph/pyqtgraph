@@ -35,10 +35,10 @@ def mkrefs(*objs):
 
 
 def test_PlotWidget():
-    def mkobjs(*args, **kwds):
+    def mkobjs(*args, **kwargs):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            w = pg.PlotWidget(*args, **kwds)
+            w = pg.PlotWidget(*args, **kwargs)
         data = np.array([1,5,2,4,3])
         c = w.plot(data, name='stuff')
         w.addLegend()

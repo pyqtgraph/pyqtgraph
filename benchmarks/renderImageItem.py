@@ -134,7 +134,7 @@ class TimeSuite:
             use_levels: bool,
             dtype: npt.DTypeLike,
             channels: int,
-            lut_length: typing.Optional[npt.DTypeLike]
+            lut_length: npt.DTypeLike | None
     ):
         xp = np
         if acceleration == "numba":

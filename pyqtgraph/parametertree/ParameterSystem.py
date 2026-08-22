@@ -16,11 +16,11 @@ class ParameterSystem(GroupParameter):
     NOTE: This API is experimental and may change substantially across minor 
     version numbers. 
     """
-    def __init__(self, *args, **kwds):
-        GroupParameter.__init__(self, *args, **kwds)
+    def __init__(self, *args, **kwargs):
+        GroupParameter.__init__(self, *args, **kwargs)
         self._system = None
         self._fixParams = []  # all auto-generated 'fixed' params
-        sys = kwds.pop('system', None)
+        sys = kwargs.pop('system', None)
         if sys is not None:
             self.setSystem(sys)
         self._ignoreChange = [] # params whose changes should be ignored temporarily

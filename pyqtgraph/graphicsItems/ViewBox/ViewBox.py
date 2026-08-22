@@ -740,7 +740,7 @@ class ViewBox(GraphicsWidget):
             padding = def_pad
         return padding
 
-    def setLimits(self, **kwds):
+    def setLimits(self, **kwargs):
         """
         Set limits that constrain the possible view ranges.
 
@@ -768,20 +768,20 @@ class ViewBox(GraphicsWidget):
         """
         update = False
         allowed = ['xMin', 'xMax', 'yMin', 'yMax', 'minXRange', 'maxXRange', 'minYRange', 'maxYRange']
-        for kwd in kwds:
+        for kwd in kwargs:
             if kwd not in allowed:
                 raise ValueError("Invalid keyword argument '%s'." % kwd)
         for axis in [0,1]:
             for mnmx in [0,1]:
                 kwd = [['xMin', 'xMax'], ['yMin', 'yMax']][axis][mnmx]
                 lname = ['xLimits', 'yLimits'][axis]
-                if kwd in kwds and self.state['limits'][lname][mnmx] != kwds[kwd]:
-                    self.state['limits'][lname][mnmx] = kwds[kwd]
+                if kwd in kwargs and self.state['limits'][lname][mnmx] != kwargs[kwd]:
+                    self.state['limits'][lname][mnmx] = kwargs[kwd]
                     update = True
                 kwd = [['minXRange', 'maxXRange'], ['minYRange', 'maxYRange']][axis][mnmx]
                 lname = ['xRange', 'yRange'][axis]
-                if kwd in kwds and self.state['limits'][lname][mnmx] != kwds[kwd]:
-                    self.state['limits'][lname][mnmx] = kwds[kwd]
+                if kwd in kwargs and self.state['limits'][lname][mnmx] != kwargs[kwd]:
+                    self.state['limits'][lname][mnmx] = kwargs[kwd]
                     update = True
 
         if update:
@@ -1188,7 +1188,7 @@ class ViewBox(GraphicsWidget):
     def xInverted(self):
         return self.state['xInverted']
 
-    def setBorder(self, *args, **kwds):
+    def setBorder(self, *args, **kwargs):
         """
         Set the pen used to draw border around the view
 
@@ -1198,7 +1198,7 @@ class ViewBox(GraphicsWidget):
 
         See :func:`mkPen <pyqtgraph.mkPen>` for arguments.
         """
-        self.border = fn.mkPen(*args, **kwds)
+        self.border = fn.mkPen(*args, **kwargs)
         self.borderRect.setPen(self.border)
     
     def setDefaultPadding(self, padding=0.02):
@@ -1552,8 +1552,8 @@ class ViewBox(GraphicsWidget):
                 range[1][1] = max(range[1][1], bounds.bottom() + px*pxSize)
         return range
 
-    def childrenBoundingRect(self, *args, **kwds):
-        range = self.childrenBounds(*args, **kwds)
+    def childrenBoundingRect(self, *args, **kwargs):
+        range = self.childrenBounds(*args, **kwargs)
         tr = self.targetRange()
         if range[0] is None:
             range[0] = tr[0]

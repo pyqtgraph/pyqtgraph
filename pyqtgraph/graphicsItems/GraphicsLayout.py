@@ -35,13 +35,13 @@ class GraphicsLayout(GraphicsWidget):
         #print self.pos(), self.mapToDevice(self.rect().topLeft())
         #return ret
 
-    def setBorder(self, *args, **kwds):
+    def setBorder(self, *args, **kwargs):
         """
         Set the pen used to draw border between cells.
         
         See :func:`mkPen <pyqtgraph.mkPen>` for arguments.        
         """
-        self.border = fn.mkPen(*args, **kwds)
+        self.border = fn.mkPen(*args, **kwargs)
 
         for borderRect in self.itemBorders.values():
             borderRect.setPen(self.border)
@@ -59,31 +59,31 @@ class GraphicsLayout(GraphicsWidget):
         while self.getItem(self.currentRow, self.currentCol) is not None:
             self.currentCol += 1
         
-    def nextCol(self, *args, **kargs):
+    def nextCol(self, *args, **kwargs):
         """Alias of nextColumn"""
-        return self.nextColumn(*args, **kargs)
+        return self.nextColumn(*args, **kwargs)
         
-    def addPlot(self, row=None, col=None, rowspan=1, colspan=1, **kargs):
+    def addPlot(self, row=None, col=None, rowspan=1, colspan=1, **kwargs):
         """
         Create a PlotItem and place it in the next available cell (or in the cell specified)
         All extra keyword arguments are passed to :func:`PlotItem.__init__ <pyqtgraph.PlotItem.__init__>`
         Returns the created item.
         """
-        plot = PlotItem(**kargs)
+        plot = PlotItem(**kwargs)
         self.addItem(plot, row, col, rowspan, colspan)
         return plot
         
-    def addViewBox(self, row=None, col=None, rowspan=1, colspan=1, **kargs):
+    def addViewBox(self, row=None, col=None, rowspan=1, colspan=1, **kwargs):
         """
         Create a ViewBox and place it in the next available cell (or in the cell specified)
         All extra keyword arguments are passed to :func:`ViewBox.__init__ <pyqtgraph.ViewBox.__init__>`
         Returns the created item.
         """
-        vb = ViewBox(**kargs)
+        vb = ViewBox(**kwargs)
         self.addItem(vb, row, col, rowspan, colspan)
         return vb
         
-    def addLabel(self, text=' ', row=None, col=None, rowspan=1, colspan=1, **kargs):
+    def addLabel(self, text=' ', row=None, col=None, rowspan=1, colspan=1, **kwargs):
         """
         Create a LabelItem with *text* and place it in the next available cell (or in the cell specified)
         All extra keyword arguments are passed to :func:`LabelItem.__init__ <pyqtgraph.LabelItem.__init__>`
@@ -91,17 +91,17 @@ class GraphicsLayout(GraphicsWidget):
         
         To create a vertical label, use *angle* = -90.
         """
-        text = LabelItem(text, **kargs)
+        text = LabelItem(text, **kwargs)
         self.addItem(text, row, col, rowspan, colspan)
         return text
         
-    def addLayout(self, row=None, col=None, rowspan=1, colspan=1, **kargs):
+    def addLayout(self, row=None, col=None, rowspan=1, colspan=1, **kwargs):
         """
         Create an empty GraphicsLayout and place it in the next available cell (or in the cell specified)
         All extra keyword arguments are passed to :func:`GraphicsLayout.__init__ <pyqtgraph.GraphicsLayout.__init__>`
         Returns the created item.
         """
-        layout = GraphicsLayout(**kargs)
+        layout = GraphicsLayout(**kwargs)
         self.addItem(layout, row, col, rowspan, colspan)
         return layout
         

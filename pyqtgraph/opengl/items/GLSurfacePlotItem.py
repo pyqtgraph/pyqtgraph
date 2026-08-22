@@ -17,7 +17,7 @@ class GLSurfacePlotItem(GLMeshItem):
     mesh_keys = ('x', 'y', 'z', 'colors')
     grid_keys = ('showGrid', 'lineColor', 'lineWidth', 'lineAntialias')
 
-    def __init__(self, parentItem=None, **kwds):
+    def __init__(self, parentItem=None, **kwargs):
         """
         The x, y, z, colors, showGrid, lineColor, lineWidth and lineAntialias
         arguments are passed to setData().
@@ -34,14 +34,14 @@ class GLSurfacePlotItem(GLMeshItem):
         self._vertexes = None
         self._meshdata = MeshData()
 
-        # splitout GLSurfacePlotItem from kwds
+        # splitout GLSurfacePlotItem from kwargs
         surface_keys = self.mesh_keys + self.grid_keys
-        surface_kwds = {}
+        surface_kwargs = {}
         for arg in surface_keys:
-            if arg in kwds:
-                surface_kwds[arg] = kwds.pop(arg)
+            if arg in kwargs:
+                surface_kwargs[arg] = kwargs.pop(arg)
 
-        super().__init__(meshdata=self._meshdata, **kwds)
+        super().__init__(meshdata=self._meshdata, **kwargs)
 
         self.lineplot = GLLinePlotItem(parentItem=self, mode='lines', glOptions='translucent')
         # in GLViewWidget.drawItemTree(), at the same depth value, child items
@@ -50,9 +50,9 @@ class GLSurfacePlotItem(GLMeshItem):
         self.lineplot.setDepthValue(self.depthValue() + 1)
         self.setParentItem(parentItem)
 
-        self.setData(**surface_kwds)
+        self.setData(**surface_kwargs)
         
-    def setData(self, **kwds):
+    def setData(self, **kwargs):
         """
         Update the data in this surface plot. 
         
@@ -78,10 +78,10 @@ class GLSurfacePlotItem(GLMeshItem):
         """
 
         for arg in self.grid_keys:
-            if arg in kwds:
-                setattr(self, '_' + arg, kwds[arg])
+            if arg in kwargs:
+                setattr(self, '_' + arg, kwargs[arg])
 
-        x, y, z, colors = map(kwds.get, self.mesh_keys)
+        x, y, z, colors = map(kwargs.get, self.mesh_keys)
 
         if x is not None:
             if self._x is None or len(x) != len(self._x):

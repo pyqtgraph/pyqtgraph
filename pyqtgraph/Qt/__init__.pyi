@@ -12,7 +12,7 @@ App: QtWidgets.QApplication
 VERSION_INFO: str
 QT_LIB: str
 QtVersion: str
-QtVersionInfo: tuple
+QtVersionInfo: tuple[int, int, int]
 
 def exec_() -> QtWidgets.QApplication: ...
 def mkQApp(name: str | None = None) -> QtWidgets.QApplication: ...

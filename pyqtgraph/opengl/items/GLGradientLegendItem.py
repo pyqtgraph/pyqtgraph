@@ -10,7 +10,7 @@ class GLGradientLegendItem(GLGraphicsItem):
     Displays legend colorbar on the screen.
     """
 
-    def __init__(self, parentItem=None, **kwds):
+    def __init__(self, parentItem=None, **kwargs):
         """
         Arguments:
             pos: position of the colorbar on the screen, from the top left corner, in pixels
@@ -25,7 +25,7 @@ class GLGradientLegendItem(GLGraphicsItem):
                 legend title
         """
         super().__init__(parentItem=parentItem)
-        glopts = kwds.pop("glOptions", "additive")
+        glopts = kwargs.pop("glOptions", "additive")
         self.setGLOptions(glopts)
         self.pos = (10, 10)
         self.size = (10, 100)
@@ -35,11 +35,11 @@ class GLGradientLegendItem(GLGraphicsItem):
         self.gradient = ColorMap(pos=stops, color=(0.0, 1.0))
         self._gradient = None
         self.labels = {str(x) : x for x in stops}
-        self.setData(**kwds)
+        self.setData(**kwargs)
 
-    def setData(self, **kwds):
+    def setData(self, **kwargs):
         args = ["size", "pos", "gradient", "labels", "fontColor"]
-        for k in kwds.keys():
+        for k in kwargs.keys():
             if k not in args:
                 raise Exception(
                     "Invalid keyword argument: %s (allowed arguments are %s)"
@@ -48,8 +48,8 @@ class GLGradientLegendItem(GLGraphicsItem):
 
         self.antialias = False
 
-        for key in kwds:
-            value = kwds[key]
+        for key in kwargs:
+            value = kwargs[key]
             if key == 'fontColor':
                 value = fn.mkColor(value)
             elif key == 'gradient':

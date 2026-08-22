@@ -18,7 +18,6 @@ import numpy as np
 
 from .. import functions as fn
 
-#from numpy.linalg import norm
 from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
 from ..SRTTransform import SRTTransform
@@ -385,7 +384,7 @@ class ROI(GraphicsObject):
         newSize = self.state['size'] * s
         self.setSize(newSize, center=center, centerLocal=centerLocal, snap=snap, update=update, finish=finish)
    
-    def translate(self, *args, **kargs):
+    def translate(self, *args, **kwargs):
         """
         Move the ROI to a new position.
         Accepts either (x, y, snap) or ([x,y], snap) as arguments
@@ -412,7 +411,7 @@ class ROI(GraphicsObject):
         newState = self.stateCopy()
         newState['pos'] = newState['pos'] + pt
         
-        snap = kargs.get('snap', None)
+        snap = kwargs.get('snap', None)
         if snap is None:
             snap = self.translateSnap
         if snap is not False:
@@ -431,8 +430,8 @@ class ROI(GraphicsObject):
                 d[1] = self.maxBounds.bottom() - r.bottom()
             newState['pos'] += d
         
-        update = kargs.get('update', True)
-        finish = kargs.get('finish', True)
+        update = kwargs.get('update', True)
+        finish = kwargs.get('finish', True)
         self.setPos(newState['pos'], update=update, finish=finish)
 
     def rotate(self, angle, center=None, snap=False, update=True, finish=True):
@@ -1134,7 +1133,7 @@ class ROI(GraphicsObject):
         else:
             return bounds, tr
 
-    def getArrayRegion(self, data, img, axes=(0,1), returnMappedCoords=False, **kwds):
+    def getArrayRegion(self, data, img, axes=(0,1), returnMappedCoords=False, **kwargs):
         r"""Use the position and orientation of this ROI relative to an imageItem
         to pull a slice from an array.
 
@@ -1154,7 +1153,7 @@ class ROI(GraphicsObject):
         returnMappedCoords  (bool) If True, the array slice is returned along
                             with a corresponding array of coordinates that were
                             used to extract data from the original array.
-        \**kwds             All keyword arguments are passed to 
+        \**kwargs           All keyword arguments are passed to 
                             :func:`affineSlice <pyqtgraph.affineSlice>`.
         =================== ====================================================
         
@@ -1171,28 +1170,28 @@ class ROI(GraphicsObject):
         All extra keyword arguments are passed to :func:`affineSlice <pyqtgraph.affineSlice>`.
         """
         # this is a hidden argument for internal use
-        fromBR = kwds.pop('fromBoundingRect', False)
+        fromBR = kwargs.pop('fromBoundingRect', False)
         
         # Automatically compute missing parameters
         _shape, _vectors, _origin = self.getAffineSliceParams(data, img, axes, fromBoundingRect=fromBR)
         
         # Replace them with user defined parameters if defined
-        shape = kwds.pop('shape', _shape)
-        vectors = kwds.pop('vectors', _vectors)
-        origin = kwds.pop('origin', _origin)
+        shape = kwargs.pop('shape', _shape)
+        vectors = kwargs.pop('vectors', _vectors)
+        origin = kwargs.pop('origin', _origin)
         
         if not returnMappedCoords:
-            rgn = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
+            rgn = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwargs)
             return rgn
         else:
-            kwds['returnCoords'] = True
-            result, coords = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
+            kwargs['returnCoords'] = True
+            result, coords = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwargs)
             
             ### map coordinates and return
             mapped = fn.transformCoordinates(img.transform(), coords)
             return result, mapped
 
-    def _getArrayRegionForArbitraryShape(self, data, img, axes=(0,1), returnMappedCoords=False, **kwds):
+    def _getArrayRegionForArbitraryShape(self, data, img, axes=(0,1), returnMappedCoords=False, **kwargs):
         """
         Return the result of :meth:`~pyqtgraph.ROI.getArrayRegion`, masked by
         the shape of the ROI. Values outside the ROI shape are set to 0.
@@ -1202,10 +1201,10 @@ class ROI(GraphicsObject):
         """
         if returnMappedCoords:
             sliced, mappedCoords = ROI.getArrayRegion(
-                self, data, img, axes, returnMappedCoords, fromBoundingRect=True, **kwds)
+                self, data, img, axes, returnMappedCoords, fromBoundingRect=True, **kwargs)
         else:
             sliced = ROI.getArrayRegion(
-                self, data, img, axes, returnMappedCoords, fromBoundingRect=True, **kwds)
+                self, data, img, axes, returnMappedCoords, fromBoundingRect=True, **kwargs)
 
         if img.axisOrder == 'col-major':
             mask = self.renderShapeMask(sliced.shape[axes[0]], sliced.shape[axes[1]])
@@ -1742,7 +1741,7 @@ class MultiRectROI(QtWidgets.QGraphicsObject):
             pos.append(self.mapFromScene(l.getHandles()[1].scenePos()))
         return pos
         
-    def getArrayRegion(self, arr, img=None, axes=(0,1), **kwds):
+    def getArrayRegion(self, arr, img=None, axes=(0,1), **kwargs):
         """
         Return the result of :meth:`~pyqtgraph.ROI.getArrayRegion` for each rect
         in the chain concatenated into a single ndarray.
@@ -1754,7 +1753,7 @@ class MultiRectROI(QtWidgets.QGraphicsObject):
         """
         rgns = []
         for l in self.lines:
-            rgn = l.getArrayRegion(arr, img, axes=axes, **kwds)
+            rgn = l.getArrayRegion(arr, img, axes=axes, **kwargs)
             if rgn is None:
                 continue
             rgns.append(rgn)
@@ -1822,8 +1821,8 @@ class MultiRectROI(QtWidgets.QGraphicsObject):
         
         
 class MultiLineROI(MultiRectROI):
-    def __init__(self, *args, **kwds):
-        MultiRectROI.__init__(self, *args, **kwds)
+    def __init__(self, *args, **kwargs):
+        MultiRectROI.__init__(self, *args, **kwargs)
         print("Warning: MultiLineROI has been renamed to MultiRectROI. (and MultiLineROI may be redefined in the future)")
 
 
@@ -1866,7 +1865,7 @@ class EllipseROI(ROI):
         r = QtCore.QRectF(r.x()/r.width(), r.y()/r.height(), 1,1)
         p.drawEllipse(r)
         
-    def getArrayRegion(self, arr, img=None, axes=(0, 1), returnMappedCoords=False, **kwds):
+    def getArrayRegion(self, arr, img=None, axes=(0, 1), returnMappedCoords=False, **kwargs):
         """
         Return the result of :meth:`~pyqtgraph.ROI.getArrayRegion` masked by the
         elliptical shape of the ROI. Regions outside the ellipse are set to 0.
@@ -1880,10 +1879,10 @@ class EllipseROI(ROI):
         # implementation produces a nicer mask.
         if returnMappedCoords:
            arr, mappedCoords = ROI.getArrayRegion(self, arr, img, axes,
-                                                  returnMappedCoords, **kwds)
+                                                  returnMappedCoords, **kwargs)
         else:
            arr = ROI.getArrayRegion(self, arr, img, axes,
-                                    returnMappedCoords, **kwds)
+                                    returnMappedCoords, **kwargs)
         if arr is None or arr.shape[axes[0]] == 0 or arr.shape[axes[1]] == 0:
             if returnMappedCoords:
                 return arr, mappedCoords
@@ -2121,13 +2120,13 @@ class PolyLineROI(ROI):
         p.lineTo(self.handles[0]['item'].pos())
         return p
 
-    def getArrayRegion(self, *args, **kwds):
-        return self._getArrayRegionForArbitraryShape(*args, **kwds)
+    def getArrayRegion(self, *args, **kwargs):
+        return self._getArrayRegionForArbitraryShape(*args, **kwargs)
 
-    def setPen(self, *args, **kwds):
-        ROI.setPen(self, *args, **kwds)
+    def setPen(self, *args, **kwargs):
+        ROI.setPen(self, *args, **kwargs)
         for seg in self.segments:
-            seg.setPen(*args, **kwds)
+            seg.setPen(*args, **kwargs)
 
 
 
@@ -2217,7 +2216,7 @@ class LineSegmentROI(ROI):
       
         return p
     
-    def getArrayRegion(self, data, img, axes=(0,1), order=1, returnMappedCoords=False, **kwds):
+    def getArrayRegion(self, data, img, axes=(0,1), order=1, returnMappedCoords=False, **kwargs):
         """
         Use the position of this ROI relative to an imageItem to pull a slice 
         from an array.
@@ -2232,16 +2231,16 @@ class LineSegmentROI(ROI):
 
         d = Point(imgPts[1] - imgPts[0])
         o = Point(imgPts[0])
-        rgn = fn.affineSlice(data, shape=(int(d.length()),), vectors=[Point(d.norm())], origin=o, axes=axes, order=order, returnCoords=returnMappedCoords, **kwds)
+        rgn = fn.affineSlice(data, shape=(int(d.length()),), vectors=[Point(d.norm())], origin=o, axes=axes, order=order, returnCoords=returnMappedCoords, **kwargs)
 
         return rgn
         
 
 class _PolyLineSegment(LineSegmentROI):
     # Used internally by PolyLineROI
-    def __init__(self, *args, **kwds):
+    def __init__(self, *args, **kwargs):
         self._parentHovering = False
-        LineSegmentROI.__init__(self, *args, **kwds)
+        LineSegmentROI.__init__(self, *args, **kwargs)
         
     def setParentHover(self, hover):
         # set independently of own hover state
@@ -2266,13 +2265,13 @@ class _PolyLineSegment(LineSegmentROI):
 class CrosshairROI(ROI):
     """A crosshair ROI whose position is at the center of the crosshairs. By default, it is scalable, rotatable and translatable."""
     
-    def __init__(self, pos=None, size=None, **kargs):
+    def __init__(self, pos=None, size=None, **kwargs):
         if size is None:
             size=[1,1]
         if pos is None:
             pos = [0,0]
         self._shape = None
-        ROI.__init__(self, pos, size, aspectLocked=True, **kargs)
+        ROI.__init__(self, pos, size, aspectLocked=True, **kwargs)
         
         self.sigRegionChanged.connect(self.invalidate)
         self.addScaleRotateHandle(Point(1, 0), Point(0, 0))
@@ -2380,5 +2379,5 @@ class TriangleROI(ROI):
         self.path.addPolygon(self.poly)
         return t.map(self.path)
 
-    def getArrayRegion(self, *args, **kwds):
-        return self._getArrayRegionForArbitraryShape(*args, **kwds)
+    def getArrayRegion(self, *args, **kwargs):
+        return self._getArrayRegionForArbitraryShape(*args, **kwargs)

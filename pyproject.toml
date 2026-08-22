@@ -150,6 +150,7 @@ reportIncompatibleMethodOverride = false # complains when argument names don't m
 reportUnannotatedClassAttribute = false
 reportAttributeAccessIssue = false
 reportUnusedCallResult = false
+reportPrivateLocalImportUsage = false
 
 [tool.mypy]
 packages = ["pyqtgraph"]

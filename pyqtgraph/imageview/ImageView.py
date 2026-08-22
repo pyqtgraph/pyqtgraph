@@ -472,12 +472,12 @@ class ImageView(QtWidgets.QWidget):
         """Set the min/max intensity levels automatically to match the image data."""
         self.setLevels(rgba=self._imageLevels)
 
-    def setLevels(self, *args, **kwds):
+    def setLevels(self, *args, **kwargs):
         """Set the min/max (bright and dark) levels.
         
         See :func:`HistogramLUTItem.setLevels <pyqtgraph.HistogramLUTItem.setLevels>`.
         """
-        self.ui.histogram.setLevels(*args, **kwds)
+        self.ui.histogram.setLevels(*args, **kwargs)
 
     def autoRange(self):
         """Auto scale and pan the view around the image such that the image fills the view."""

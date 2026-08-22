@@ -1,5 +1,4 @@
 import sys
-from typing import Optional, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -166,8 +165,8 @@ LEVELS = {
 }
 
 EXPECTED_OUTPUTS: dict[
-    tuple[npt.DTypeLike, str, Optional[str], Optional[npt.DTypeLike], Optional[int], bool],
-    Union[type(Exception), np.ndarray]
+    tuple[npt.DTypeLike, str, str | None, npt.DTypeLike | None, int | None, bool],
+    type[Exception] | np.ndarray
 ] = {
     (np.uint8, "2D", None, None, None, True): np.array(
         [
@@ -4222,9 +4221,9 @@ EXPECTED_OUTPUTS: dict[
 }
 
 
-def _makeARGB(*args, **kwds):
-    img, alpha = makeARGB(*args, **kwds)
-    if kwds.get('useRGBA'):  # endian independent
+def _makeARGB(*args, **kwargs):
+    img, alpha = makeARGB(*args, **kwargs)
+    if kwargs.get('useRGBA'):  # endian independent
         out = img
     elif sys.byteorder == 'little':  # little-endian ARGB32 to B,G,R,A
         out = img
