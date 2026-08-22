@@ -290,6 +290,55 @@ def test_siEval(s, suffix, power, expected):
 def test_siParse_with_comma_as_decimal_separator(s, suffix, expected):
     assert pg.siParse(s, suffix=suffix, regex=pg.functions.FLOAT_REGEX_COMMA) == expected
 
+
+@pytest.mark.parametrize("s,suffix,expected", [
+    ("3,14", None, 3.14),
+    ("3,14 kB", None, 3140.0),
+    ("5,0e-9 M", "", 5e-3),
+])
+def test_siEval_with_comma_as_decimal_separator(s, suffix, expected):
+    result = pg.siEval(s, regex=pg.functions.FLOAT_REGEX_COMMA, suffix=suffix)
+    assert np.isclose(result, expected)
+
+
+@pytest.mark.parametrize("s,regex,expected", [
+    # period decimal separator
+    ("0", pg.functions.FLOAT_REGEX_PERIOD, ("0", "", "")),
+    ("+12", pg.functions.FLOAT_REGEX_PERIOD, ("+12", "", "")),
+    ("-0.5", pg.functions.FLOAT_REGEX_PERIOD, ("-0.5", "", "")),
+    (".5", pg.functions.FLOAT_REGEX_PERIOD, (".5", "", "")),
+    ("5.", pg.functions.FLOAT_REGEX_PERIOD, ("5.", "", "")),
+    ("1e3", pg.functions.FLOAT_REGEX_PERIOD, ("1e3", "", "")),
+    ("-2.5E-4", pg.functions.FLOAT_REGEX_PERIOD, ("-2.5E-4", "", "")),
+    ("3.14 kB", pg.functions.FLOAT_REGEX_PERIOD, ("3.14", "k", "B")),
+    ("100 µV", pg.functions.FLOAT_REGEX_PERIOD, ("100", "µ", "V")),
+    ("451.5 °F", pg.functions.FLOAT_REGEX_PERIOD, ("451.5", "", "°F")),
+    # comma decimal separator
+    ("0", pg.functions.FLOAT_REGEX_COMMA, ("0", "", "")),
+    ("+12", pg.functions.FLOAT_REGEX_COMMA, ("+12", "", "")),
+    ("-0,5", pg.functions.FLOAT_REGEX_COMMA, ("-0,5", "", "")),
+    (",5", pg.functions.FLOAT_REGEX_COMMA, (",5", "", "")),
+    ("5,", pg.functions.FLOAT_REGEX_COMMA, ("5,", "", "")),
+    ("1e3", pg.functions.FLOAT_REGEX_COMMA, ("1e3", "", "")),
+    ("-2,5E-4", pg.functions.FLOAT_REGEX_COMMA, ("-2,5E-4", "", "")),
+    ("3,14 kB", pg.functions.FLOAT_REGEX_COMMA, ("3,14", "k", "B")),
+    ("100 μV", pg.functions.FLOAT_REGEX_COMMA, ("100", "μ", "V")),
+    ("451,5 °F", pg.functions.FLOAT_REGEX_COMMA, ("451,5", "", "°F")),
+    # a decimal separator cannot be reinterpreted as a suffix
+    ("3,14 kB", pg.functions.FLOAT_REGEX_PERIOD, ValueError),
+    ("31,4", pg.functions.FLOAT_REGEX_PERIOD, ValueError),
+    ("1.2,3 V", pg.functions.FLOAT_REGEX_PERIOD, ValueError),
+    ("3.14 kB", pg.functions.FLOAT_REGEX_COMMA, ValueError),
+    ("31.4", pg.functions.FLOAT_REGEX_COMMA, ValueError),
+    ("1,2.3 V", pg.functions.FLOAT_REGEX_COMMA, ValueError),
+])
+def test_siParse_decimal_separator_matrix(s, regex, expected):
+    if isinstance(expected, tuple):
+        assert pg.siParse(s, regex=regex) == expected
+    else:
+        with pytest.raises(expected):
+            pg.siParse(s, regex=regex)
+
 def test_CIELab_reconversion():
     color_list = [ pg.Qt.QtGui.QColor('#100235') ] # known problematic values
     for _ in range(20):
