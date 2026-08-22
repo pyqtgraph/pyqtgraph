@@ -6,7 +6,7 @@ import pyqtgraph as pg
 import pyqtgraph.parametertree as pt
 from pyqtgraph.functions import eq
 from pyqtgraph.parametertree.utils import compare_parameters
-from pyqtgraph.parametertree.parameterTypes import ChecklistParameterItem
+from pyqtgraph.parametertree.parameterTypes import ChecklistParameterItem, GroupParameter
 from pyqtgraph.Qt import QtCore, QtGui
 
 import pytest
@@ -21,6 +21,42 @@ def _getWidget(param):
 def test_typeless_param():
     p = pt.Parameter.create(name='test', type=None, value=set())
     p.setValue(range(4))
+
+
+def test_direct_construction_with_registered_type():
+    # Constructing the base Parameter class directly with a `type` that maps to a
+    # registered subclass (e.g. 'group') should still work; the base class is never
+    # itself registered, so it is exempt from the type/class match check.
+    p = pt.Parameter(name='params', type='group', children=[
+        dict(name='child', type='int', value=1),
+    ])
+    assert p.type() == 'group'
+    assert p.child('child').value() == 1
+
+
+def test_subclass_of_registered_type_without_reregistration():
+    # A subclass of a registered class should be constructible directly with the
+    # parent's registered type string, without needing to register itself separately.
+    class MyGroup(GroupParameter):
+        pass
+
+    p = MyGroup(name='params', type='group')
+    assert isinstance(p, MyGroup)
+
+
+def test_mismatched_type_raises_type_error():
+    # A class registered/associated with an unrelated type hierarchy should still be
+    # rejected: GroupParameter is not a SimpleParameter (which 'color' is registered to).
+    with pytest.raises(TypeError):
+        GroupParameter(name='params', type='color')
+
+
+def test_unregistered_type_string_does_not_raise():
+    # An arbitrary, never-registered type string is just an opaque tag (as it was
+    # before check_type() was introduced) and should not raise -- in particular it
+    # must not raise a raw KeyError from the internal PARAM_TYPES lookup.
+    p = pt.Parameter(name='x', type='not_a_registered_type')
+    assert p.type() == 'not_a_registered_type'
 
 
 def test_opts():
