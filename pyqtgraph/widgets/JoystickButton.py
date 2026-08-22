@@ -12,6 +12,7 @@ class JoystickButton(QtWidgets.QPushButton):
         self.radius: int = 200
         self.setCheckable(True)
         self.state = None
+        self.pressPos = None
         self.setState(0, 0)
         self.setFixedWidth(50)
         self.setFixedHeight(50)
@@ -23,12 +24,16 @@ class JoystickButton(QtWidgets.QPushButton):
         ev.accept()
         
     def mouseMoveEvent(self, ev):
+        if self.pressPos is None:
+            ev.ignore()
+            return
         lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
         dif = lpos - self.pressPos
         self.setState(dif.x(), -dif.y())
         
     def mouseReleaseEvent(self, ev):
         self.setChecked(False)
+        self.pressPos = None
         self.setState(0,0)
         
     def wheelEvent(self, ev: QtGui.QWheelEvent):
