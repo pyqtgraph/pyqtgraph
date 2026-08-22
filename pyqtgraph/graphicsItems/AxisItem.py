@@ -95,6 +95,7 @@ class AxisItem(GraphicsWidget):
             'maxTickLevel': 2,
             'maxTextLevel': 2,
             'tickAlpha': None,  ## If not none, use this alpha for all ticks.
+            'labelOffset': 5,  ## offset in pixels between the axis label and the axis
         }
 
         self.textWidth = 30  ## Keeps track of maximum width / height of tick text
@@ -249,6 +250,13 @@ class AxisItem(GraphicsWidget):
                                   - 1: Show major ticks and one level of minor ticks
                                   - 2: Show major ticks and two levels of minor ticks
                                     (higher CPU usage)
+
+            labelOffset           ``int`` or ``float``
+                                  default: 5
+
+                                  Offset in pixels between the axis label and the axis
+                                  line. Adjust this to control how far the label sits
+                                  from the axis.
             ===================== ======================================================
 
         Raises
@@ -267,11 +275,14 @@ class AxisItem(GraphicsWidget):
                     'tickLength',
                     'tickTextOffset',
                     'tickTextWidth',
-                    'tickTextHeight'
+                    'tickTextHeight',
                 ) and 
                 not isinstance(value, int)
             ):
                 raise TypeError(f"Argument '{kwd}' must be int")
+
+            if kwd == 'labelOffset' and not isinstance(value, (int, float)):
+                raise TypeError(f"Argument 'labelOffset' must be int or float")
 
             if kwd == 'tickTextOffset':
                 if self.orientation in ('left', 'right'):
@@ -396,7 +407,7 @@ class AxisItem(GraphicsWidget):
 
     def resizeEvent(self, ev=None):
         # Set the position of the label
-        nudge = 5
+        nudge = self.style.get('labelOffset', 5)
         # self.label is set to None on close, but resize events can still occur.
         if self.label is None:
             self.picture = None
@@ -618,6 +629,7 @@ class AxisItem(GraphicsWidget):
             h += max(0, self.style['tickLength'])
             if self.label.isVisible():
                 h += self.label.boundingRect().height() * 0.8
+                h += max(0, self.style.get('labelOffset', 5) - 5)
         else:
             h = self.fixedHeight
 
@@ -654,6 +666,7 @@ class AxisItem(GraphicsWidget):
             w += max(0, self.style['tickLength'])
             if self.label.isVisible():
                 w += self.label.boundingRect().height() * 0.8  ## bounding rect is usually an overestimate
+                w += max(0, self.style.get('labelOffset', 5) - 5)
         else:
             w = self.fixedWidth
 
@@ -964,14 +977,15 @@ class AxisItem(GraphicsWidget):
         ## extend rect if ticks go in negative direction
         ## also extend to account for text that flows past the edges
         tl = self.style['tickLength']
+        labelOffset = self.style.get('labelOffset', 5)
         if self.orientation == 'left':
-            rect = rect.adjusted(0, -m, -min(0,tl), m)
+            rect = rect.adjusted(-labelOffset, -m, -min(0,tl), m)
         elif self.orientation == 'right':
-            rect = rect.adjusted(min(0,tl), -m, 0, m)
+            rect = rect.adjusted(min(0,tl), -m, labelOffset, m)
         elif self.orientation == 'top':
-            rect = rect.adjusted(-m, 0, m, -min(0,tl))
+            rect = rect.adjusted(-m, -labelOffset, m, -min(0,tl))
         elif self.orientation == 'bottom':
-            rect = rect.adjusted(-m, min(0,tl), m, 0)
+            rect = rect.adjusted(-m, min(0,tl), m, labelOffset)
         return rect
 
     def shape(self):
