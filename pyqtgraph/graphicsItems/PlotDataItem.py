@@ -214,7 +214,7 @@ class PlotDataset:
 class PlotDataItem(GraphicsObject):
     """
     PlotDataItem is PyQtGraph's primary way to plot 2D data.
-    
+
     It provides a unified interface for displaying plot curves, scatter plots, or both.
     The library's convenience functions such as :func:`pyqtgraph.plot` create
     PlotDataItem objects.
@@ -232,18 +232,18 @@ class PlotDataItem(GraphicsObject):
     is the recommended way to interact with them.
 
     PlotDataItem contains methods to transform the original data:
-      
+
     * :meth:`setDerivativeMode`
     * :meth:`setPhasemapMode`
     * :meth:`setFftMode`
     * :meth:`setLogMode`
     * :meth:`setSubtractMeanMode`
 
-    It can pre-process large data sets to accelerate plotting:
-    
+    It can handle data in special ways to accelerate plotting of large data sets:
+
     * :meth:`setDownsampling`
     * :meth:`setClipToView`
-    
+
     PlotDataItem's performance is usually sufficient for real-time interaction even for
     large numbers of points. If you do encounter performance issues, consider the
     following.
@@ -1072,7 +1072,10 @@ class PlotDataItem(GraphicsObject):
         """
         Clip the displayed data to the visible range of the x-axis.
 
-        This setting can result in significant performance improvements. 
+        This setting can result in significant performance improvements.
+
+        The X data must be sorted in ascending order. Otherwise, the behaviour
+        is erratic.
 
         Parameters
         ----------
