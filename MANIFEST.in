@@ -1,8 +1,0 @@
-recursive-include pyqtgraph *.py *.ui *.m README.* *.txt *.gz *.cfg
-recursive-include doc *.rst *.py *.svg *.png
-recursive-include doc/build/html *
-recursive-include tools *
-recursive-include tests *
-recursive-include benchmarks *.py
-include doc/Makefile doc/make.bat README.md LICENSE.txt CHANGELOG CODE_OF_CONDUCT.md CONTRIBUTING.md tox.ini
-global-exclude *.pyc

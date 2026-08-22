@@ -81,7 +81,7 @@ class ImageItem(GraphicsObject):
         self._renderRequired = True
         self._unrenderable = False
         self._xp = None  # either numpy or cupy, to match the image data
-        self._defferedLevels = None
+        self._deferredLevels = None
         self._imageHasNans = None    # None : not yet known
         self._imageNanLocations = None
         self._defaultAutoLevels = True
@@ -209,7 +209,7 @@ class ImageItem(GraphicsObject):
         """
         if self._xp is None:
             self.levels = levels
-            self._defferedLevels = levels
+            self._deferredLevels = levels
             return
         if levels is not None:
             levels = self._xp.asarray(levels)
@@ -635,9 +635,9 @@ class ImageItem(GraphicsObject):
 
         if gotNewData:
             self.sigImageChanged.emit()
-        if self._defferedLevels is not None:
-            levels = self._defferedLevels
-            self._defferedLevels = None
+        if self._deferredLevels is not None:
+            levels = self._deferredLevels
+            self._deferredLevels = None
             self.setLevels((levels))
 
     def _update_data_transforms(self, axisOrder: str='col-major'):
@@ -969,7 +969,6 @@ class ImageItem(GraphicsObject):
                 RuntimeWarning,
                 stacklevel=2
             )
-
         # This method is also used when automatically computing levels.
         if self.image is None or self.image.size == 0:
             return None, None

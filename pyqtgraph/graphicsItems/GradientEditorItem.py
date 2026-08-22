@@ -429,10 +429,10 @@ class GradientEditorItem(TickSliderItem):
         
         self.setMaxDim(self.rectSize + self.tickSize)
         
-        self.rgbAction = QtGui.QAction(translate("GradiantEditorItem", 'RGB'), self)
+        self.rgbAction = QtGui.QAction(translate("GradientEditorItem", 'RGB'), self)
         self.rgbAction.setCheckable(True)
         self.rgbAction.triggered.connect(self._setColorModeToRGB)
-        self.hsvAction = QtGui.QAction(translate("GradiantEditorItem", 'HSV'), self)
+        self.hsvAction = QtGui.QAction(translate("GradientEditorItem", 'HSV'), self)
         self.hsvAction.setCheckable(True)
         self.hsvAction.triggered.connect(self._setColorModeToHSV)
             
@@ -940,7 +940,7 @@ class TickMenu(QtWidgets.QMenu):
         #self.dataPosSpin = SpinBox(value=dataVal)
         #self.dataPosSpin.setOpts(decimals=3, siPrefix=True)
                 
-        l.addWidget(QtWidgets.QLabel(f"{translate('GradiantEditorItem', 'Position')}:"), 0,0)
+        l.addWidget(QtWidgets.QLabel(f"{translate('GradientEditorItem', 'Position')}:"), 0,0)
         l.addWidget(self.fracPosSpin, 0, 1)
         #l.addWidget(QtWidgets.QLabel("Position (data units):"), 1, 0)
         #l.addWidget(self.dataPosSpin, 1,1)

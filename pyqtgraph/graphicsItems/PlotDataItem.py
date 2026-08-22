@@ -1327,7 +1327,7 @@ class PlotDataItem(GraphicsObject):
         Update the displayed curve and scatter plot.
 
         This method is called internally to redraw the curve and scatter plot when the
-        data or graphics style has been updated. It is not usally necessary to call this
+        data or graphics style has been updated. It is not usually necessary to call this
         from user code. 
 
         Parameters

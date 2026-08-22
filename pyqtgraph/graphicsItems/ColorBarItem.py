@@ -259,7 +259,7 @@ class ColorBarItem(PlotItem):
         high: float
             Applies a new high level to color bar and assigned images
         """
-        if values is not None: # values setting takes precendence
+        if values is not None: # values setting takes precedence
             low, high = values
         lo_new, hi_new = low, high
         lo_cur, hi_cur = self.values
@@ -319,7 +319,7 @@ class ColorBarItem(PlotItem):
         bot, top = self.region.getRegion()
         bot = ( (bot -  63) / 64 ) # -1 to +1 over half-bar range
         top = ( (top - 191) / 64 ) # -1 to +1 over half-bar range
-        bot = math.copysign( bot**2, bot ) # quadratic behaviour for sensitivity to small changes
+        bot = math.copysign( bot**2, bot ) # quadratic behavior for sensitivity to small changes
         top = math.copysign( top**2, top )
         # These are the new values if adjuster is released now, rate of change depends on original separation
         span_prv = self.hi_prv - self.lo_prv # previous span of values

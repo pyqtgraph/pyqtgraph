@@ -530,7 +530,7 @@ class PlotCurveItem(GraphicsObject):
         When it is known that the plot data passed to ``PlotCurveItem`` contains only finite numerical values,
         the `skipFiniteCheck` property can help speed up plotting. If this flag is set and the data contains 
         any non-finite values (such as `NaN` or `Inf`), unpredictable behavior will occur. The data might not
-        be plotted, or there migth be significant performance impact.
+        be plotted, or there might be significant performance impact.
         """
         self.opts['skipFiniteCheck']  = bool(skipFiniteCheck)
 

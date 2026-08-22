@@ -109,7 +109,7 @@ class UIGraphicsItem(GraphicsObject):
         shape = self.shape()
         ds = self.mapToDevice(shape)
         stroker = QtGui.QPainterPathStroker()
-        stroker.setWidh(2)
+        stroker.setWidth(2)
         ds2 = stroker.createStroke(ds).united(ds)
         return self.mapFromDevice(ds2)
         

@@ -7,16 +7,15 @@ __all__ = ['JoystickButton']
 class JoystickButton(QtWidgets.QPushButton):
     sigStateChanged = QtCore.Signal(object, object)  ## self, state
     
-    def __init__(self, parent=None):
-        QtWidgets.QPushButton.__init__(self, parent)
-        self.radius = 200
+    def __init__(self, parent: QtWidgets.QWidget | None = None):
+        super().__init__(parent)
+        self.radius: int = 200
         self.setCheckable(True)
         self.state = None
         self.setState(0, 0)
         self.setFixedWidth(50)
         self.setFixedHeight(50)
-        
-        
+
     def mousePressEvent(self, ev):
         self.setChecked(True)
         lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
@@ -32,11 +31,10 @@ class JoystickButton(QtWidgets.QPushButton):
         self.setChecked(False)
         self.setState(0,0)
         
-    def wheelEvent(self, ev):
+    def wheelEvent(self, ev: QtGui.QWheelEvent):
         ev.accept()
-        
-        
-    def doubleClickEvent(self, ev):
+
+    def doubleClickEvent(self, ev: QtCore.QEvent):
         ev.accept()
         
     def getState(self):
@@ -81,6 +79,6 @@ class JoystickButton(QtWidgets.QPushButton):
         )
         p.end()
         
-    def resizeEvent(self, ev):
+    def resizeEvent(self, ev: QtGui.QResizeEvent):
         self.setState(*self.state)
         super().resizeEvent(ev)

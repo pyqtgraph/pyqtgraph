@@ -136,7 +136,7 @@ class ParameterTree(TreeWidget):
         app = mkQApp()
         # Docs say to use the following methods
         # QApplication.instance().styleHints().colorScheme() == QtCore.Qt.ColorScheme.Dark
-        # but on macOS with Qt 6.7 this is giving opposite results (says color sceme is light
+        # but on macOS with Qt 6.7 this is giving opposite results (says color scene is light
         # when it is dark and vice versa). This was not observed in the ExampleApp, but was
         # observed with the ParameterTree. We fall back to the "legacy" method of determining
         # if the color theme is dark or light from QPalette

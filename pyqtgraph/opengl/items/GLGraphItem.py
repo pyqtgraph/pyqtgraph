@@ -62,7 +62,7 @@ class GLGraphItem(GLGraphicsItem):
         Raises
         ------
         TypeError
-            When dtype of edges dtype is not unisnged or integer dtype
+            When dtype of edges dtype is not unsigned or integer dtype
         """
 
         if 'edges' in kwds:

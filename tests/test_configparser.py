@@ -51,7 +51,7 @@ def test_duplicate_keys_error(tmpdir):
         assert False, "Expected ParseError"
 
 
-def test_line_numbers_acconut_for_comments_and_blanks(tmpdir):
+def test_line_numbers_account_for_comments_and_blanks(tmpdir):
     """
     Test that line numbers in ParseError account for comments and blank lines.
     """

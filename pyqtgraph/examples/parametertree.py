@@ -188,7 +188,7 @@ params = [
         ],
     },
     {'name': 'Ctrl button actions', 'type': 'group', 'children': [
-        # The wrench (ctrl) button on each parameter opens a menu organised into
+        # The wrench (ctrl) button on each parameter opens a menu organized into
         # sections: Value (Reset/Set as default/Enable/Lock/Rename/Remove).  Use the 'ctrlActions' option to restrict
         # which built-in sections appear.
         {'name': 'Value actions', 'type': 'float', 'value': 1.0, 'default': 1.0,

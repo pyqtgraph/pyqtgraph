@@ -1110,7 +1110,7 @@ class DeferredObjectProxy(ObjectProxy):
     
     This takes a lot longer than running the equivalent code locally. To
     speed things up, we can 'defer' the two attribute lookups so they are
-    only carried out when neccessary::
+    only carried out when necessary::
     
         rsys = proc._import('sys')
         rsys._setProxyOptions(deferGetattr=True)

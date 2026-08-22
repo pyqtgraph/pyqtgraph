@@ -120,7 +120,7 @@ class BoxplotItem(GraphicsObject):
     
     def setWhiskerFunc(self, func):
         '''
-        Use a custome function to get whisker boundaries.
+        Use a custom function to get whisker boundaries.
         `func` must accept 1d arraylike (np.array, list, set, etc...) as argument,
         and returns a tuple of (lower whisker, upper whisker)
         '''

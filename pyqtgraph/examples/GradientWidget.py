@@ -7,7 +7,7 @@ Demonstrates the appearance / interactivity of GradientWidget
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
 
-app = pg.mkQApp("Gradiant Widget Example")
+app = pg.mkQApp("Gradient Widget Example")
 w = QtWidgets.QMainWindow()
 w.show()
 w.setWindowTitle('pyqtgraph example: GradientWidget')

@@ -248,7 +248,7 @@ def test_floating_and_redock_by_dragging_back_before_save_and_restore_state():
     a2.restoreState(state, missing='create')
     assert a2.saveState() == state
 
-def test_floating_dock_closed_by_restore_state_doesnt_error():
+def test_floating_dock_closed_by_restore_state_does_not_error():
     # Test that closing a floating dock by calling restoreState doesn't raise an exception.
     a = da.DockArea()
     d1 = da.Dock("dock 1")

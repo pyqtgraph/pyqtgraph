@@ -739,7 +739,7 @@ class ROI(GraphicsObject):
                 
         if hover:
             self.setMouseHover(True)
-            ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton)  ## If the ROI is hilighted, we should accept all clicks to avoid confusion.
+            ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton)  # If the ROI is highlighted, we should accept all clicks to avoid confusion.
             ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)
             ev.acceptClicks(QtCore.Qt.MouseButton.MiddleButton)
             self.sigHoverEvent.emit(self)
@@ -1173,7 +1173,7 @@ class ROI(GraphicsObject):
         # this is a hidden argument for internal use
         fromBR = kwds.pop('fromBoundingRect', False)
         
-        # Automaticaly compute missing parameters
+        # Automatically compute missing parameters
         _shape, _vectors, _origin = self.getAffineSliceParams(data, img, axes, fromBoundingRect=fromBR)
         
         # Replace them with user defined parameters if defined
@@ -2354,12 +2354,12 @@ class TriangleROI(ROI):
     def __init__(self, pos, size, **args):
         ROI.__init__(self, pos, [size, size], aspectLocked=True, **args)
         angles = np.linspace(0, np.pi * 4 / 3, 3)
-        verticies = (np.array((np.sin(angles), np.cos(angles))).T + 1.0) / 2.0
+        vertices = (np.array((np.sin(angles), np.cos(angles))).T + 1.0) / 2.0
         self.poly = QtGui.QPolygonF()
-        for pt in verticies:
+        for pt in vertices:
             self.poly.append(QtCore.QPointF(*pt))
-        self.addRotateHandle(verticies[0], [0.5, 0.5])
-        self.addScaleHandle(verticies[1], [0.5, 0.5])
+        self.addRotateHandle(vertices[0], [0.5, 0.5])
+        self.addScaleHandle(vertices[1], [0.5, 0.5])
 
     def paint(self, p, *args):
         r = self.boundingRect()
