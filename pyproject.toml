@@ -149,6 +149,7 @@ reportMissingTypeStubs = false
 reportIncompatibleMethodOverride = false # complains when argument names don't match up
 reportUnannotatedClassAttribute = false
 reportAttributeAccessIssue = false
+reportUnusedCallResult = false
 
 [tool.mypy]
 packages = ["pyqtgraph"]
