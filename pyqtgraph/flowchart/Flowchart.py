@@ -606,11 +606,11 @@ class FlowchartCtrlWidget(QtWidgets.QWidget):
         self.ui.ctrlList.setVerticalScrollMode(self.ui.ctrlList.ScrollMode.ScrollPerPixel)
         self.ui.ctrlList.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         
-        self.chartWidget = FlowchartWidget(chart, self)
-        #self.chartWidget.viewBox().autoRange()
+        self._chartWidget = FlowchartWidget(chart, self)
+        #self._chartWidget.viewBox().autoRange()
         self.cwWin = QtWidgets.QMainWindow()
         self.cwWin.setWindowTitle('Flowchart')
-        self.cwWin.setCentralWidget(self.chartWidget)
+        self.cwWin.setCentralWidget(self._chartWidget)
         self.cwWin.resize(1000,800)
         
         h = self.ui.ctrlList.header()
@@ -639,7 +639,7 @@ class FlowchartCtrlWidget(QtWidgets.QWidget):
 
     def reloadClicked(self):
         try:
-            self.chartWidget.reloadLibrary()
+            self._chartWidget.reloadLibrary()
             self.ui.reloadBtn.success("Reloaded.")
         except:
             self.ui.reloadBtn.success("Error.")
@@ -686,10 +686,10 @@ class FlowchartCtrlWidget(QtWidgets.QWidget):
         pass
     
     def scene(self):
-        return self.chartWidget.scene() ## returns the GraphicsScene object
+        return self._chartWidget.scene() ## returns the GraphicsScene object
     
     def viewBox(self):
-        return self.chartWidget.viewBox()
+        return self._chartWidget.viewBox()
 
     def nodeRenamed(self, node, oldName):
         self.items[node].setText(0, node.name())
@@ -732,14 +732,14 @@ class FlowchartCtrlWidget(QtWidgets.QWidget):
         btn.node.bypass(btn.isChecked())
             
     def chartWidget(self):
-        return self.chartWidget
+        return self._chartWidget
 
     def outputChanged(self, data):
         pass
         #self.ui.outputTree.setData(data, hideRoot=True)
 
     def clear(self):
-        self.chartWidget.clear()
+        self._chartWidget.clear()
         
     def select(self, node):
         item = self.items[node]
