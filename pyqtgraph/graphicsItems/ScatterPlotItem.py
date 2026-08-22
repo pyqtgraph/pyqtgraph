@@ -356,7 +356,7 @@ class ScatterPlotItem(GraphicsObject):
     sigHovered = QtCore.Signal(object, object, object)
     sigPlotChanged = QtCore.Signal(object)
 
-    def __init__(self, *args, **kargs):
+    def __init__(self, *args, **kwargs):
         """
         Accepts the same arguments as setData()
         """
@@ -409,7 +409,7 @@ class ScatterPlotItem(GraphicsObject):
             {'hover' + opt.title(): _DEFAULT_STYLE[opt] for opt in ['symbol', 'size', 'pen', 'brush']}
         )
         profiler()
-        self.setData(*args, **kargs)
+        self.setData(*args, **kwargs)
         profiler('setData')
 
         #self.setCacheMode(self.DeviceCoordinateCache)
@@ -418,7 +418,7 @@ class ScatterPlotItem(GraphicsObject):
         # this allows another item in the VB to set the tooltip
         self._toolTipCleared = True
 
-    def setData(self, *args, **kargs):
+    def setData(self, *args, **kwargs):
         """
         **Ordered Arguments:**
 
@@ -468,9 +468,9 @@ class ScatterPlotItem(GraphicsObject):
         """
         oldData = self.data  ## this causes cached pixmaps to be preserved while new data is registered.
         self.clear()  ## clear out all old data
-        self.addPoints(*args, **kargs)
+        self.addPoints(*args, **kwargs)
 
-    def addPoints(self, *args, **kargs):
+    def addPoints(self, *args, **kwargs):
         """
         Add new points to the scatter plot.
         Arguments are the same as setData()
@@ -478,19 +478,19 @@ class ScatterPlotItem(GraphicsObject):
 
         ## deal with non-keyword arguments
         if len(args) == 1:
-            kargs['spots'] = args[0]
+            kwargs['spots'] = args[0]
         elif len(args) == 2:
-            kargs['x'] = args[0]
-            kargs['y'] = args[1]
+            kwargs['x'] = args[0]
+            kwargs['y'] = args[1]
         elif len(args) > 2:
             raise Exception('Only accepts up to two non-keyword arguments.')
 
         ## convert 'pos' argument to 'x' and 'y'
-        if 'pos' in kargs:
-            pos = kargs['pos']
+        if 'pos' in kwargs:
+            pos = kwargs['pos']
             if isinstance(pos, np.ndarray):
-                kargs['x'] = pos[:,0]
-                kargs['y'] = pos[:,1]
+                kwargs['x'] = pos[:,0]
+                kwargs['y'] = pos[:,1]
             else:
                 x = []
                 y = []
@@ -501,17 +501,17 @@ class ScatterPlotItem(GraphicsObject):
                     else:
                         x.append(p[0])
                         y.append(p[1])
-                kargs['x'] = x
-                kargs['y'] = y
+                kwargs['x'] = x
+                kwargs['y'] = y
 
         ## determine how many spots we have
-        if 'spots' in kargs:
-            numPts = len(kargs['spots'])
-        elif 'y' in kargs and kargs['y'] is not None:
-            numPts = len(kargs['y'])
+        if 'spots' in kwargs:
+            numPts = len(kwargs['spots'])
+        elif 'y' in kwargs and kwargs['y'] is not None:
+            numPts = len(kwargs['y'])
         else:
-            kargs['x'] = []
-            kargs['y'] = []
+            kwargs['x'] = []
+            kwargs['y'] = []
             numPts = 0
 
         ## Clear current SpotItems since the data references they contain will no longer be current
@@ -530,8 +530,8 @@ class ScatterPlotItem(GraphicsObject):
         newData['size'] = -1  ## indicates to use default size
         newData['visible'] = True
 
-        if 'spots' in kargs:
-            spots = kargs['spots']
+        if 'spots' in kwargs:
+            spots = kwargs['spots']
             for i in range(len(spots)):
                 spot = spots[i]
                 for k in spot:
@@ -551,38 +551,40 @@ class ScatterPlotItem(GraphicsObject):
                         newData[i][k] = spot[k]
                     else:
                         raise Exception("Unknown spot parameter: %s" % k)
-        elif 'y' in kargs:
-            newData['x'] = kargs['x']
-            newData['y'] = kargs['y']
+        elif 'y' in kwargs:
+            newData['x'] = kwargs['x']
+            newData['y'] = kwargs['y']
 
-        if 'name' in kargs:
-            self.opts['name'] = kargs['name']
-        if 'pxMode' in kargs:
-            self.setPxMode(kargs['pxMode'])
-        if 'antialias' in kargs:
-            self.opts['antialias'] = kargs['antialias']
-        if 'hoverable' in kargs:
-            self.opts['hoverable'] = bool(kargs['hoverable'])
-        if 'tip' in kargs:
-            self.opts['tip'] = kargs['tip']
-        if 'useCache' in kargs:
-            self.opts['useCache'] = kargs['useCache']
+        if 'name' in kwargs:
+            self.opts['name'] = kwargs['name']
+        if 'pxMode' in kwargs:
+            self.setPxMode(kwargs['pxMode'])
+        if 'antialias' in kwargs:
+            self.opts['antialias'] = kwargs['antialias']
+        if 'compositionMode' in kwargs:
+            self.opts['compositionMode'] = kwargs['compositionMode']
+        if 'hoverable' in kwargs:
+            self.opts['hoverable'] = bool(kwargs['hoverable'])
+        if 'tip' in kwargs:
+            self.opts['tip'] = kwargs['tip']
+        if 'useCache' in kwargs:
+            self.opts['useCache'] = kwargs['useCache']
 
         ## Set any extra parameters provided in keyword arguments
         for k in ['pen', 'brush', 'symbol', 'size']:
-            if k in kargs:
+            if k in kwargs:
                 setMethod = getattr(self, 'set' + k[0].upper() + k[1:])
-                setMethod(kargs[k], update=False, dataSet=newData, mask=kargs.get('mask', None))
+                setMethod(kwargs[k], update=False, dataSet=newData, mask=kwargs.get('mask', None))
             kh = 'hover' + k.title()
-            if kh in kargs:
-                vh = kargs[kh]
+            if kh in kwargs:
+                vh = kwargs[kh]
                 if k == 'pen':
                     vh = _mkPen(vh)
                 elif k == 'brush':
                     vh = _mkBrush(vh)
                 self.opts[kh] = vh
-        if 'data' in kargs:
-            self.setPointData(kargs['data'], dataSet=newData)
+        if 'data' in kwargs:
+            self.setPointData(kwargs['data'], dataSet=newData)
 
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
@@ -608,45 +610,45 @@ class ScatterPlotItem(GraphicsObject):
     def name(self):
         return self.opts.get('name', None)
 
-    def setPen(self, *args, **kargs):
+    def setPen(self, *args, **kwargs):
         """Set the pen(s) used to draw the outline around each spot.
         If a list or array is provided, then the pen for each spot will be set separately.
         Otherwise, the arguments are passed to pg.mkPen and used as the default pen for
         all spots which do not have a pen explicitly set."""
-        update = kargs.pop('update', True)
-        dataSet = kargs.pop('dataSet', self.data)
+        update = kwargs.pop('update', True)
+        dataSet = kwargs.pop('dataSet', self.data)
 
         if len(args) == 1 and (isinstance(args[0], np.ndarray) or isinstance(args[0], list)):
             pens = args[0]
-            if 'mask' in kargs and kargs['mask'] is not None:
-                pens = pens[kargs['mask']]
+            if 'mask' in kwargs and kwargs['mask'] is not None:
+                pens = pens[kwargs['mask']]
             if len(pens) != len(dataSet):
                 raise Exception("Number of pens does not match number of points (%d != %d)" % (len(pens), len(dataSet)))
             dataSet['pen'] = list(map(_mkPen, pens))
         else:
-            self.opts['pen'] = _mkPen(*args, **kargs)
+            self.opts['pen'] = _mkPen(*args, **kwargs)
 
         dataSet['sourceRect'] = 0
         if update:
             self.updateSpots(dataSet)
 
-    def setBrush(self, *args, **kargs):
+    def setBrush(self, *args, **kwargs):
         """Set the brush(es) used to fill the interior of each spot.
         If a list or array is provided, then the brush for each spot will be set separately.
         Otherwise, the arguments are passed to pg.mkBrush and used as the default brush for
         all spots which do not have a brush explicitly set."""
-        update = kargs.pop('update', True)
-        dataSet = kargs.pop('dataSet', self.data)
+        update = kwargs.pop('update', True)
+        dataSet = kwargs.pop('dataSet', self.data)
 
         if len(args) == 1 and (isinstance(args[0], np.ndarray) or isinstance(args[0], list)):
             brushes = args[0]
-            if 'mask' in kargs and kargs['mask'] is not None:
-                brushes = brushes[kargs['mask']]
+            if 'mask' in kwargs and kwargs['mask'] is not None:
+                brushes = brushes[kwargs['mask']]
             if len(brushes) != len(dataSet):
                 raise Exception("Number of brushes does not match number of points (%d != %d)" % (len(brushes), len(dataSet)))
             dataSet['brush'] = list(map(_mkBrush, brushes))
         else:
-            self.opts['brush'] = _mkBrush(*args, **kargs)
+            self.opts['brush'] = _mkBrush(*args, **kwargs)
 
         dataSet['sourceRect'] = 0
         if update:
@@ -931,8 +933,8 @@ class ScatterPlotItem(GraphicsObject):
         GraphicsObject.viewTransformChanged(self)
         self.bounds = [None, None]
 
-    def setExportMode(self, *args, **kwds):
-        GraphicsObject.setExportMode(self, *args, **kwds)
+    def setExportMode(self, *args, **kwargs):
+        GraphicsObject.setExportMode(self, *args, **kwargs)
         self.invalidate()
 
     @debug.warnOnException  ## raising an exception here causes crash
@@ -1197,9 +1199,9 @@ class SpotItem(object):
             pen = self._plot.opts['pen']
         return fn.mkPen(pen)
 
-    def setPen(self, *args, **kargs):
+    def setPen(self, *args, **kwargs):
         """Set the outline pen for this spot"""
-        self._data['pen'] = _mkPen(*args, **kargs)
+        self._data['pen'] = _mkPen(*args, **kwargs)
         self.updateItem()
 
     def resetPen(self):
@@ -1213,9 +1215,9 @@ class SpotItem(object):
             brush = self._plot.opts['brush']
         return fn.mkBrush(brush)
 
-    def setBrush(self, *args, **kargs):
+    def setBrush(self, *args, **kwargs):
         """Set the fill brush for this spot"""
-        self._data['brush'] = _mkBrush(*args, **kargs)
+        self._data['brush'] = _mkBrush(*args, **kwargs)
         self.updateItem()
 
     def resetBrush(self):

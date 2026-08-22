@@ -46,8 +46,8 @@ QtGui.QSurfaceFormat.setDefaultFormat(sfmt)
 
 
 class MonkeyCurveItem(pg.PlotCurveItem):
-    def __init__(self, *args, **kwds):
-        super().__init__(*args, **kwds)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.monkey_mode = ''
 
     def setMethod(self, value):

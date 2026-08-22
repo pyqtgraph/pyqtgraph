@@ -15,7 +15,7 @@ class GraphItem(GraphicsObject):
     Useful for drawing networks, trees, etc.
     """
 
-    def __init__(self, **kwds):
+    def __init__(self, **kwargs):
         GraphicsObject.__init__(self)
         self.scatter = ScatterPlotItem()
         self.scatter.setParentItem(self)
@@ -23,9 +23,9 @@ class GraphItem(GraphicsObject):
         self.pos = None
         self.picture = None
         self.pen = 'default'
-        self.setData(**kwds)
+        self.setData(**kwargs)
         
-    def setData(self, **kwds):
+    def setData(self, **kwargs):
         """
         Change the data displayed by the graph. 
         
@@ -54,25 +54,25 @@ class GraphItem(GraphicsObject):
                         etc.)
         ==============  =======================================================================
         """
-        if 'adj' in kwds:
-            self.adjacency = kwds.pop('adj')
+        if 'adj' in kwargs:
+            self.adjacency = kwargs.pop('adj')
             if hasattr(self.adjacency, '__len__') and len(self.adjacency) == 0:
                 self.adjacency = None
             elif self.adjacency is not None and self.adjacency.dtype.kind not in 'iu':
                 raise Exception("adjacency must be None or an array of either int or unsigned type.")
             self._update()
-        if 'pos' in kwds:
-            self.pos = kwds['pos']
+        if 'pos' in kwargs:
+            self.pos = kwargs['pos']
             self._update()
-        if 'pen' in kwds:
-            self.setPen(kwds.pop('pen'))
+        if 'pen' in kwargs:
+            self.setPen(kwargs.pop('pen'))
             self._update()
             
-        if 'symbolPen' in kwds:    
-            kwds['pen'] = kwds.pop('symbolPen')
-        if 'symbolBrush' in kwds:    
-            kwds['brush'] = kwds.pop('symbolBrush')
-        self.scatter.setData(**kwds)
+        if 'symbolPen' in kwargs:    
+            kwargs['pen'] = kwargs.pop('symbolPen')
+        if 'symbolBrush' in kwargs:    
+            kwargs['brush'] = kwargs.pop('symbolBrush')
+        self.scatter.setData(**kwargs)
         self.informViewBoundsChanged()
 
     def _update(self):
@@ -138,8 +138,8 @@ class GraphItem(GraphicsObject):
     def boundingRect(self):
         return self.scatter.boundingRect()
         
-    def dataBounds(self, *args, **kwds):
-        return self.scatter.dataBounds(*args, **kwds)
+    def dataBounds(self, *args, **kwargs):
+        return self.scatter.dataBounds(*args, **kwargs)
     
     def pixelPadding(self):
         return self.scatter.pixelPadding()

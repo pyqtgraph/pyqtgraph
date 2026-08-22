@@ -17,6 +17,10 @@ from pyqtgraph.Qt import QtWidgets
 app = pg.mkQApp("Parameter Tree Example")
 import pyqtgraph.parametertree.parameterTypes as pTypes
 from pyqtgraph.parametertree import Parameter, ParameterTree, registerParameterType
+from pyqtgraph.parametertree.iojson import (
+    parameter_restore_from_json_file,
+    parameter_to_json_file,
+)
 
 
 ## test subclassing parameters
@@ -130,6 +134,7 @@ registerParameterType('scalablegroup', ScalableGroup)
 
 params = [
     all_params_types,
+
     {'name': 'Icon Examples', 'type': 'group', 'expanded':False, 'children': [
         {'name': 'Single parameter with icon', 'type': 'int', 'value': 42, 'icon': QtWidgets.QStyle.StandardPixmap.SP_ComputerIcon},
         {'name': 'Group with icon', 'type': 'group', 'icon': QtWidgets.QStyle.StandardPixmap.SP_DirOpenIcon, 'children': [
@@ -152,6 +157,8 @@ params = [
             {'name': 'Remove extra items', 'type': 'bool', 'value': True},
         ]},
     ]},
+    {'name': 'Save to JSON', 'type': 'action'},
+    {'name': 'Restore from JSON', 'type': 'action'}, 
     {
         "name": "Custom context menu",
         "type": "group",
@@ -188,15 +195,27 @@ params = [
             },
         ],
     },
-    ComplexParameter(name="Custom parameter group (reciprocal values)"),
-    ScalableGroup(
-        name="Expandable Parameter Group",
-        tip="Click to add children",
-        children=[
-            {"name": "ScalableParam 1", "type": "str", "value": "default param 1"},
-            {"name": "ScalableParam 2", "type": "str", "value": "default param 2"},
-        ],
-    ),
+    {'name': 'Ctrl button actions', 'type': 'group', 'children': [
+        # The wrench (ctrl) button on each parameter opens a menu organized into
+        # sections: Value (Reset/Set as default/Enable/Lock/Rename/Remove).  Use the 'ctrlActions' option to restrict
+        # which built-in sections appear.
+        {'name': 'Value actions', 'type': 'float', 'value': 1.0, 'default': 1.0,
+         'tip': 'Change the value, then use the ctrl button to reset or re-set the default'},
+        {'name': 'State actions only', 'type': 'int', 'value': 0,
+         'ctrlActions': {'enabled', 'readonly'},
+         'tip': 'Only Enable/Disable and Lock/Unlock are shown (no value actions)'},
+        {'name': 'Renamable + removable', 'type': 'str', 'value': 'hello',
+         'renamable': True, 'removable': True, 'ctrlActions': {},
+         'tip': 'Rename and Remove appear in the Manage section of the ctrl menu'},
+        {'name': 'Extra context actions', 'type': 'int', 'value': 0,
+         'context': {'log': 'Print value to console'},
+         'tip': 'User-defined context actions appear in the Manage section'},
+    ]},
+    ComplexParameter(name='Custom parameter group (reciprocal values)'),
+    ScalableGroup(name="Expandable Parameter Group", tip='Click to add children', children=[
+        {'name': 'ScalableParam 1', 'type': 'str', 'value': "default param 1"},
+        {'name': 'ScalableParam 2', 'type': 'str', 'value': "default param 2"},
+    ]),
 ]
 
 ## Create tree of Parameter objects
@@ -251,9 +270,29 @@ def restore():
     rem = p["Save/Restore functionality", "Restore State", "Remove extra items"]
     p.restoreState(state, addChildren=add, removeChildren=rem)
 
+def saveJson():
+    path, _ = QtWidgets.QFileDialog.getSaveFileName(
+        None, 'Save parameters to JSON', '', 'JSON files (*.json)'
+    )
+    if path:
+        parameter_to_json_file(p, path)
 
-p.param("Save/Restore functionality", "Save State").sigActivated.connect(save)
-p.param("Save/Restore functionality", "Restore State").sigActivated.connect(restore)
+def restoreJson():
+    path, _ = QtWidgets.QFileDialog.getOpenFileName(
+        None, 'Load parameters from JSON', '', 'JSON files (*.json)'
+    )
+    if path:
+        parameter_restore_from_json_file(p, path)
+
+p.param('Save/Restore functionality', 'Save State').sigActivated.connect(save)
+p.param('Save/Restore functionality', 'Restore State').sigActivated.connect(restore)
+p.param('Save/Restore functionality', 'Save to JSON').sigActivated.connect(saveJson)
+p.param('Save/Restore functionality', 'Restore from JSON').sigActivated.connect(restoreJson)
+
+def ctrlMenuAction(param, action):
+    if action == 'log':
+        print(f"Value of '{param.name()}': {param.value()}")
+p.param('Ctrl button actions', 'Extra context actions').sigContextMenu.connect(ctrlMenuAction)
 
 
 ## Create two ParameterTree widgets, both accessing the same data

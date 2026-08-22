@@ -475,10 +475,10 @@ def indent(s, pfx):
 class TransposedImageItem(ImageItem):
     # used for testing image axis order; we can test row-major and col-major using
     # the same test images
-    def __init__(self, *args, **kwds):
-        self.__transpose = kwds.pop('transpose', False)
-        ImageItem.__init__(self, *args, **kwds)
-    def setImage(self, image=None, **kwds):
+    def __init__(self, *args, **kwargs):
+        self.__transpose = kwargs.pop('transpose', False)
+        ImageItem.__init__(self, *args, **kwargs)
+    def setImage(self, image=None, **kwargs):
         if image is not None and self.__transpose is True:
             image = np.swapaxes(image, 0, 1)
-        return ImageItem.setImage(self, image, **kwds)
+        return ImageItem.setImage(self, image, **kwargs)

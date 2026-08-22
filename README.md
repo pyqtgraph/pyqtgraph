@@ -6,9 +6,9 @@ PyQtGraph
 [![Build Status](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/actions/?query=workflow%3Amain)
 [![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
 
-A pure-Python graphics library for PyQt5/PyQt6/PySide6
+A pure-python graphics library thatm uses the Qt framework.
 
-Copyright 2025 PyQtGraph developers
+Copyright 2026 PyQtGraph developers
 
 <https://www.pyqtgraph.org>
 
@@ -32,18 +32,19 @@ Currently this means:
 
 * Python 3.12+
 * Qt 5.15 or 6.8+
-* [PyQt5](https://www.riverbankcomputing.com/software/pyqt/),
+* [PyQt5](https://www.riverbankcomputing.com/software/pyqt/), or
   [PyQt6](https://www.riverbankcomputing.com/software/pyqt/), or
   [PySide6](https://wiki.qt.io/Qt_for_Python)
-* [`numpy`](https://github.com/numpy/numpy) 2.0+
+* [`numpy`](https://github.com/numpy/numpy) 2.2+
 
-### Optional added functionalities
+Optional Dependencies for Added Functionality
+---------------------------------------------
 
 Through 3rd party libraries, additional functionality may be added to PyQtGraph, see
 the table below for a summary.
 
 | Library        | Added functionality |
-|----------------|-|
+| -------------- | - |
 | [`scipy`]      | <ul><li> Image processing through [`ndimage`]</li><li> Data array filtering through [`signal`] </li><ul> |
 | [`pyopengl`]   | <ul><li> 3D graphics </li></ul> |
 | [`h5py`]       | <ul><li> Export in hdf5 format </li></ul> |
@@ -89,8 +90,34 @@ Documentation
 
 The official documentation lives at [pyqtgraph.readthedocs.io](https://pyqtgraph.readthedocs.io)
 
-The easiest way to learn PyQtGraph is to browse through the examples; run
+The easiest way to get familiar with PyQtGraph is to browse through the examples; run
 `python -m pyqtgraph.examples` to launch the examples application.
+
+Benchmarking
+------------
+
+There is support for the `asv` benchmarking library. Should a user have cuda  installed
+on their system, they should edit `asv.conf.json` file, and add the entry
+`"cupy-cuda##x": [""]` to the `matrix.req` section (where `##` is the version of cuda is
+the version of cuda installed on your machine).  It relavent section should look like
+the the following.
+
+
+```json
+...
+    "req": {
+      "pyqt6": [""],
+      "pyqt5": [""],
+      "PySide6-Essentials": [""],
+      "numba": [""],
+      "cupy-cuda##x": [""]  // add this line, replace ## with cuda version
+    }
+...
+```
+
+As a variety of different versions of python and Qt bindings are tested, running the
+full benchmark suite can take a while!
+
 
 Used By
 -------
@@ -120,6 +147,7 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
 * [Semi-Supervised Semantic Annotator](https://gitlab.com/s3a/s3a)
 * [STDF-Viewer](https://github.com/noonchen/STDF-Viewer)
+* [strange-attractors-qt](https://github.com/aymenhafeez/strange-attractors-qt)
 * [QT-DataViewer](https://gitlab.tudelft.nl/qutech-qdlabs/qt-dataviewer)
 * [TemCompanion](https://github.com/matao1984/temcompanion)
 

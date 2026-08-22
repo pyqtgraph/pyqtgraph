@@ -41,7 +41,7 @@ class PlotWidget(GraphicsView):
     sigRangeChanged = QtCore.Signal(object, object)
     sigTransformChanged = QtCore.Signal(object)
 
-    def __init__(self, parent=None, background='default', plotItem=None, **kargs):
+    def __init__(self, parent=None, background='default', plotItem=None, **kwargs):
         ## start by instantiating the plotItem attribute in order to avoid recursive 
         ## calls of PlotWidget.__getattr__ - which access self.plotItem!
         self.plotItem = None
@@ -53,7 +53,7 @@ class PlotWidget(GraphicsView):
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.enableMouse(False)
         if plotItem is None:
-            self.plotItem = PlotItem(**kargs)
+            self.plotItem = PlotItem(**kwargs)
         else:
             self.plotItem = plotItem
         self.setCentralItem(self.plotItem)

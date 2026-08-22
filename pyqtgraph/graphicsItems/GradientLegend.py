@@ -34,17 +34,17 @@ class GradientLegend(UIGraphicsItem):
         """
         self.gradient = colormap.getGradient()
         
-    def setIntColorScale(self, minVal, maxVal, *args, **kargs):
-        colors = [fn.intColor(i, maxVal-minVal, *args, **kargs) for i in range(minVal, maxVal)]
+    def setIntColorScale(self, minVal, maxVal, *args, **kwargs):
+        colors = [fn.intColor(i, maxVal-minVal, *args, **kwargs) for i in range(minVal, maxVal)]
         g = QtGui.QLinearGradient()
         for i in range(len(colors)):
             x = float(i)/len(colors)
             g.setColorAt(x, colors[i])
         self.setGradient(g)
-        if 'labels' not in kargs:
+        if 'labels' not in kwargs:
             self.setLabels({str(minVal): 0, str(maxVal): 1})
         else:
-            self.setLabels({kargs['labels'][0]:0, kargs['labels'][1]:1})
+            self.setLabels({kwargs['labels'][0]:0, kwargs['labels'][1]:1})
         
     def setLabels(self, l):
         """Defines labels to appear next to the color scale. Accepts a dict of {text: value} pairs"""

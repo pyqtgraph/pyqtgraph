@@ -169,7 +169,7 @@ class Node(QtCore.QObject):
         Warning: do not modify."""
         return self._outputs
         
-    def process(self, **kargs):
+    def process(self, **kwargs):
         """Process data through this node. This method is called any time the flowchart 
         wants the node to process data. It will be called with one keyword argument
         corresponding to each input terminal, and must return a dict mapping the name
@@ -283,7 +283,7 @@ class Node(QtCore.QObject):
     
     def update(self, signal=True):
         """Collect all input values, attempt to process new output values, and propagate downstream.
-        Subclasses should call update() whenever thir internal state has changed
+        Subclasses should call update() whenever their internal state has changed
         (such as when the user interacts with the Node's control widget). Update
         is automatically called when the inputs to the node are changed.
         """

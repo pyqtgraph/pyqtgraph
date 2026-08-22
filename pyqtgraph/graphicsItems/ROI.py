@@ -18,7 +18,6 @@ import numpy as np
 
 from .. import functions as fn
 
-#from numpy.linalg import norm
 from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
 from ..SRTTransform import SRTTransform
@@ -385,7 +384,7 @@ class ROI(GraphicsObject):
         newSize = self.state['size'] * s
         self.setSize(newSize, center=center, centerLocal=centerLocal, snap=snap, update=update, finish=finish)
    
-    def translate(self, *args, **kargs):
+    def translate(self, *args, **kwargs):
         """
         Move the ROI to a new position.
         Accepts either (x, y, snap) or ([x,y], snap) as arguments
@@ -412,7 +411,7 @@ class ROI(GraphicsObject):
         newState = self.stateCopy()
         newState['pos'] = newState['pos'] + pt
         
-        snap = kargs.get('snap', None)
+        snap = kwargs.get('snap', None)
         if snap is None:
             snap = self.translateSnap
         if snap is not False:
@@ -431,8 +430,8 @@ class ROI(GraphicsObject):
                 d[1] = self.maxBounds.bottom() - r.bottom()
             newState['pos'] += d
         
-        update = kargs.get('update', True)
-        finish = kargs.get('finish', True)
+        update = kwargs.get('update', True)
+        finish = kwargs.get('finish', True)
         self.setPos(newState['pos'], update=update, finish=finish)
 
     def rotate(self, angle, center=None, snap=False, update=True, finish=True):
@@ -739,7 +738,7 @@ class ROI(GraphicsObject):
                 
         if hover:
             self.setMouseHover(True)
-            ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton)  ## If the ROI is hilighted, we should accept all clicks to avoid confusion.
+            ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton)  # If the ROI is highlighted, we should accept all clicks to avoid confusion.
             ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)
             ev.acceptClicks(QtCore.Qt.MouseButton.MiddleButton)
             self.sigHoverEvent.emit(self)
@@ -1066,12 +1065,36 @@ class ROI(GraphicsObject):
             round(pos[1] / snap[1]) * snap[1]
         )
     
-    def boundingRect(self):
+    def dataBoundsRect(self):
         return QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
 
+    def dataBounds(self, ax, **kwds):
+        rect = self.dataBoundsRect()
+        if ax == 0:
+            return (rect.left(), rect.right())
+        else:
+            return (rect.top(), rect.bottom())
+
+    def _pixelPadding(self):
+        # note that this is deliberately not named "pixelPadding" to prevent ViewBox from finding it.
+        # test_ROI.py fails otherwise.
+
+        # pen is assumed to be cosmetic
+        pen = self.currentPen
+        no_pen = (pen is None) or (pen.style() == QtCore.Qt.PenStyle.NoPen)
+        return 0 if no_pen else (pen.widthF() or 1) * 0.5
+
+    def boundingRect(self):
+        # child classes shouldn't override this function, but should override dataBoundsRect instead.
+        px = py = self._pixelPadding()
+        # determine length of pixel in local x, y directions
+        vx, vy = self.pixelVectors()
+        px *= 0 if vx is None else vx.length()
+        py *= 0 if vy is None else vy.length()
+        return self.dataBoundsRect().adjusted(-px, -py, px, py)
+
     def paint(self, p, opt, widget):
-        # Note: don't use self.boundingRect here, because subclasses may need to redefine it.
-        r = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
+        r = self.dataBoundsRect()
         p.setRenderHint(
             QtGui.QPainter.RenderHint.Antialiasing,
             self._antialias
@@ -1109,7 +1132,7 @@ class ROI(GraphicsObject):
             tr.scale(float(dShape[0]) / img.width(), float(dShape[1]) / img.height())
         
         ## Transform ROI bounds into data bounds
-        dataBounds = tr.mapRect(self.boundingRect())
+        dataBounds = tr.mapRect(self.dataBoundsRect())
         
         ## Intersect transformed ROI bounds with data bounds
         if axisOrder == 'row-major':
@@ -1134,7 +1157,7 @@ class ROI(GraphicsObject):
         else:
             return bounds, tr
 
-    def getArrayRegion(self, data, img, axes=(0,1), returnMappedCoords=False, **kwds):
+    def getArrayRegion(self, data, img, axes=(0,1), returnMappedCoords=False, **kwargs):
         r"""Use the position and orientation of this ROI relative to an imageItem
         to pull a slice from an array.
 
@@ -1154,7 +1177,7 @@ class ROI(GraphicsObject):
         returnMappedCoords  (bool) If True, the array slice is returned along
                             with a corresponding array of coordinates that were
                             used to extract data from the original array.
-        \**kwds             All keyword arguments are passed to 
+        \**kwargs           All keyword arguments are passed to 
                             :func:`affineSlice <pyqtgraph.affineSlice>`.
         =================== ====================================================
         
@@ -1171,28 +1194,28 @@ class ROI(GraphicsObject):
         All extra keyword arguments are passed to :func:`affineSlice <pyqtgraph.affineSlice>`.
         """
         # this is a hidden argument for internal use
-        fromBR = kwds.pop('fromBoundingRect', False)
+        fromBR = kwargs.pop('fromBoundingRect', False)
         
-        # Automaticaly compute missing parameters
+        # Automatically compute missing parameters
         _shape, _vectors, _origin = self.getAffineSliceParams(data, img, axes, fromBoundingRect=fromBR)
         
         # Replace them with user defined parameters if defined
-        shape = kwds.pop('shape', _shape)
-        vectors = kwds.pop('vectors', _vectors)
-        origin = kwds.pop('origin', _origin)
+        shape = kwargs.pop('shape', _shape)
+        vectors = kwargs.pop('vectors', _vectors)
+        origin = kwargs.pop('origin', _origin)
         
         if not returnMappedCoords:
-            rgn = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
+            rgn = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwargs)
             return rgn
         else:
-            kwds['returnCoords'] = True
-            result, coords = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
+            kwargs['returnCoords'] = True
+            result, coords = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwargs)
             
             ### map coordinates and return
             mapped = fn.transformCoordinates(img.transform(), coords)
             return result, mapped
 
-    def _getArrayRegionForArbitraryShape(self, data, img, axes=(0,1), returnMappedCoords=False, **kwds):
+    def _getArrayRegionForArbitraryShape(self, data, img, axes=(0,1), returnMappedCoords=False, **kwargs):
         """
         Return the result of :meth:`~pyqtgraph.ROI.getArrayRegion`, masked by
         the shape of the ROI. Values outside the ROI shape are set to 0.
@@ -1202,10 +1225,10 @@ class ROI(GraphicsObject):
         """
         if returnMappedCoords:
             sliced, mappedCoords = ROI.getArrayRegion(
-                self, data, img, axes, returnMappedCoords, fromBoundingRect=True, **kwds)
+                self, data, img, axes, returnMappedCoords, fromBoundingRect=True, **kwargs)
         else:
             sliced = ROI.getArrayRegion(
-                self, data, img, axes, returnMappedCoords, fromBoundingRect=True, **kwds)
+                self, data, img, axes, returnMappedCoords, fromBoundingRect=True, **kwargs)
 
         if img.axisOrder == 'col-major':
             mask = self.renderShapeMask(sliced.shape[axes[0]], sliced.shape[axes[1]])
@@ -1253,8 +1276,9 @@ class ROI(GraphicsObject):
         
         vectors = ((vx.x()*sx, vx.y()*sx), (vy.x()*sy, vy.y()*sy))
         if fromBoundingRect is True:
-            shape = self.boundingRect().width(), self.boundingRect().height()
-            origin = img.mapToData(self.mapToItem(img, self.boundingRect().topLeft()))
+            rect = self.dataBoundsRect()
+            shape = rect.width(), rect.height()
+            origin = img.mapToData(self.mapToItem(img, rect.topLeft()))
             origin = (origin.x(), origin.y())
         else:
             shape = self.state['size']
@@ -1742,7 +1766,7 @@ class MultiRectROI(QtWidgets.QGraphicsObject):
             pos.append(self.mapFromScene(l.getHandles()[1].scenePos()))
         return pos
         
-    def getArrayRegion(self, arr, img=None, axes=(0,1), **kwds):
+    def getArrayRegion(self, arr, img=None, axes=(0,1), **kwargs):
         """
         Return the result of :meth:`~pyqtgraph.ROI.getArrayRegion` for each rect
         in the chain concatenated into a single ndarray.
@@ -1754,7 +1778,7 @@ class MultiRectROI(QtWidgets.QGraphicsObject):
         """
         rgns = []
         for l in self.lines:
-            rgn = l.getArrayRegion(arr, img, axes=axes, **kwds)
+            rgn = l.getArrayRegion(arr, img, axes=axes, **kwargs)
             if rgn is None:
                 continue
             rgns.append(rgn)
@@ -1822,8 +1846,8 @@ class MultiRectROI(QtWidgets.QGraphicsObject):
         
         
 class MultiLineROI(MultiRectROI):
-    def __init__(self, *args, **kwds):
-        MultiRectROI.__init__(self, *args, **kwds)
+    def __init__(self, *args, **kwargs):
+        MultiRectROI.__init__(self, *args, **kwargs)
         print("Warning: MultiLineROI has been renamed to MultiRectROI. (and MultiLineROI may be redefined in the future)")
 
 
@@ -1855,7 +1879,7 @@ class EllipseROI(ROI):
         self.path = None
         
     def paint(self, p, opt, widget):
-        r = self.boundingRect()
+        r = self.dataBoundsRect()
 
         p.setRenderHint(
             QtGui.QPainter.RenderHint.Antialiasing,
@@ -1866,7 +1890,7 @@ class EllipseROI(ROI):
         r = QtCore.QRectF(r.x()/r.width(), r.y()/r.height(), 1,1)
         p.drawEllipse(r)
         
-    def getArrayRegion(self, arr, img=None, axes=(0, 1), returnMappedCoords=False, **kwds):
+    def getArrayRegion(self, arr, img=None, axes=(0, 1), returnMappedCoords=False, **kwargs):
         """
         Return the result of :meth:`~pyqtgraph.ROI.getArrayRegion` masked by the
         elliptical shape of the ROI. Regions outside the ellipse are set to 0.
@@ -1880,10 +1904,10 @@ class EllipseROI(ROI):
         # implementation produces a nicer mask.
         if returnMappedCoords:
            arr, mappedCoords = ROI.getArrayRegion(self, arr, img, axes,
-                                                  returnMappedCoords, **kwds)
+                                                  returnMappedCoords, **kwargs)
         else:
            arr = ROI.getArrayRegion(self, arr, img, axes,
-                                    returnMappedCoords, **kwds)
+                                    returnMappedCoords, **kwargs)
         if arr is None or arr.shape[axes[0]] == 0 or arr.shape[axes[1]] == 0:
             if returnMappedCoords:
                 return arr, mappedCoords
@@ -1913,10 +1937,10 @@ class EllipseROI(ROI):
             # Note: Qt has a bug where very small ellipses (radius <0.001) do
             # not correctly intersect with mouse position (upper-left and 
             # lower-right quadrants are not clickable).
-            #path.addEllipse(self.boundingRect())
+            #path.addEllipse(self.dataBoundsRect())
             
             # Workaround: manually draw the path.
-            br = self.boundingRect()
+            br = self.dataBoundsRect()
             center = br.center()
             r1 = br.width() / 2.
             r2 = br.height() / 2.
@@ -2108,7 +2132,7 @@ class PolyLineROI(ROI):
     def paint(self, p, *args):
         pass
     
-    def boundingRect(self):
+    def dataBoundsRect(self):
         return self.shape().boundingRect()
 
     def shape(self):
@@ -2121,13 +2145,13 @@ class PolyLineROI(ROI):
         p.lineTo(self.handles[0]['item'].pos())
         return p
 
-    def getArrayRegion(self, *args, **kwds):
-        return self._getArrayRegionForArbitraryShape(*args, **kwds)
+    def getArrayRegion(self, *args, **kwargs):
+        return self._getArrayRegionForArbitraryShape(*args, **kwargs)
 
-    def setPen(self, *args, **kwds):
-        ROI.setPen(self, *args, **kwds)
+    def setPen(self, *args, **kwargs):
+        ROI.setPen(self, *args, **kwargs)
         for seg in self.segments:
-            seg.setPen(*args, **kwds)
+            seg.setPen(*args, **kwargs)
 
 
 
@@ -2192,7 +2216,7 @@ class LineSegmentROI(ROI):
         h2 = self.endpoints[1].pos()
         p.drawLine(h1, h2)
         
-    def boundingRect(self):
+    def dataBoundsRect(self):
         return self.shape().boundingRect()
     
     def shape(self):
@@ -2217,7 +2241,7 @@ class LineSegmentROI(ROI):
       
         return p
     
-    def getArrayRegion(self, data, img, axes=(0,1), order=1, returnMappedCoords=False, **kwds):
+    def getArrayRegion(self, data, img, axes=(0,1), order=1, returnMappedCoords=False, **kwargs):
         """
         Use the position of this ROI relative to an imageItem to pull a slice 
         from an array.
@@ -2232,16 +2256,16 @@ class LineSegmentROI(ROI):
 
         d = Point(imgPts[1] - imgPts[0])
         o = Point(imgPts[0])
-        rgn = fn.affineSlice(data, shape=(int(d.length()),), vectors=[Point(d.norm())], origin=o, axes=axes, order=order, returnCoords=returnMappedCoords, **kwds)
+        rgn = fn.affineSlice(data, shape=(int(d.length()),), vectors=[Point(d.norm())], origin=o, axes=axes, order=order, returnCoords=returnMappedCoords, **kwargs)
 
         return rgn
         
 
 class _PolyLineSegment(LineSegmentROI):
     # Used internally by PolyLineROI
-    def __init__(self, *args, **kwds):
+    def __init__(self, *args, **kwargs):
         self._parentHovering = False
-        LineSegmentROI.__init__(self, *args, **kwds)
+        LineSegmentROI.__init__(self, *args, **kwargs)
         
     def setParentHover(self, hover):
         # set independently of own hover state
@@ -2266,13 +2290,13 @@ class _PolyLineSegment(LineSegmentROI):
 class CrosshairROI(ROI):
     """A crosshair ROI whose position is at the center of the crosshairs. By default, it is scalable, rotatable and translatable."""
     
-    def __init__(self, pos=None, size=None, **kargs):
+    def __init__(self, pos=None, size=None, **kwargs):
         if size is None:
             size=[1,1]
         if pos is None:
             pos = [0,0]
         self._shape = None
-        ROI.__init__(self, pos, size, aspectLocked=True, **kargs)
+        ROI.__init__(self, pos, size, aspectLocked=True, **kwargs)
         
         self.sigRegionChanged.connect(self.invalidate)
         self.addScaleRotateHandle(Point(1, 0), Point(0, 0))
@@ -2281,7 +2305,7 @@ class CrosshairROI(ROI):
         self._shape = None
         self.prepareGeometryChange()
         
-    def boundingRect(self):
+    def dataBoundsRect(self):
         return self.shape().boundingRect()
     
     def shape(self):
@@ -2354,15 +2378,15 @@ class TriangleROI(ROI):
     def __init__(self, pos, size, **args):
         ROI.__init__(self, pos, [size, size], aspectLocked=True, **args)
         angles = np.linspace(0, np.pi * 4 / 3, 3)
-        verticies = (np.array((np.sin(angles), np.cos(angles))).T + 1.0) / 2.0
+        vertices = (np.array((np.sin(angles), np.cos(angles))).T + 1.0) / 2.0
         self.poly = QtGui.QPolygonF()
-        for pt in verticies:
+        for pt in vertices:
             self.poly.append(QtCore.QPointF(*pt))
-        self.addRotateHandle(verticies[0], [0.5, 0.5])
-        self.addScaleHandle(verticies[1], [0.5, 0.5])
+        self.addRotateHandle(vertices[0], [0.5, 0.5])
+        self.addScaleHandle(vertices[1], [0.5, 0.5])
 
     def paint(self, p, *args):
-        r = self.boundingRect()
+        r = self.dataBoundsRect()
         p.setRenderHint(
             QtGui.QPainter.RenderHint.Antialiasing,
             self._antialias
@@ -2373,12 +2397,12 @@ class TriangleROI(ROI):
 
     def shape(self):
         self.path = QtGui.QPainterPath()
-        r = self.boundingRect()
+        r = self.dataBoundsRect()
         # scale the path to match whats on the screen
         t = QtGui.QTransform()
         t.scale(r.width(), r.height())
         self.path.addPolygon(self.poly)
         return t.map(self.path)
 
-    def getArrayRegion(self, *args, **kwds):
-        return self._getArrayRegionForArbitraryShape(*args, **kwds)
+    def getArrayRegion(self, *args, **kwargs):
+        return self._getArrayRegionForArbitraryShape(*args, **kwargs)

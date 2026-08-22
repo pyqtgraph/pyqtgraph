@@ -9,9 +9,9 @@ from pyqtgraph.Qt import QtCore, QtGui
 SIZE = 32
 
 class GLPainterItem(GLGraphicsItem.GLGraphicsItem):
-    def __init__(self, **kwds):
+    def __init__(self, **kwargs):
         super().__init__()
-        glopts = kwds.pop('glOptions', 'additive')
+        glopts = kwargs.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
 
     def compute_projection(self):

@@ -43,7 +43,7 @@ class Parallelize(object):
     since it is automatically sent via pipe back to the parent process.
     """
 
-    def __init__(self, tasks=None, workers=None, block=True, progressDialog=None, randomReseed=True, **kwds):
+    def __init__(self, tasks=None, workers=None, block=True, progressDialog=None, randomReseed=True, **kwargs):
         """
         ===============  ===================================================================
         **Arguments:**
@@ -57,7 +57,7 @@ class Parallelize(object):
         randomReseed     If True, each forked process will reseed its random number generator
                          to ensure independent results. Works with the built-in random
                          and numpy.random.
-        kwds             objects to be shared by proxy with child processes (they will 
+        kwargs             objects to be shared by proxy with child processes (they will 
                          appear as attributes of the tasker)
         ===============  ===================================================================
         """
@@ -81,8 +81,8 @@ class Parallelize(object):
             tasks = range(workers)
         self.tasks = list(tasks)
         self.reseed = randomReseed
-        self.kwds = kwds.copy()
-        self.kwds['_taskStarted'] = self._taskStarted
+        self.kwargs = kwargs.copy()
+        self.kwargs['_taskStarted'] = self._taskStarted
         
     def __enter__(self):
         self.proc = None
@@ -115,7 +115,7 @@ class Parallelize(object):
             self.progressDlg.__enter__()
             self.progressDlg.setMaximum(len(self.tasks))
         self.progress = {os.getpid(): []}
-        return Tasker(self, None, self.tasks, self.kwds)
+        return Tasker(self, None, self.tasks, self.kwargs)
 
     
     def runParallel(self):
@@ -130,7 +130,7 @@ class Parallelize(object):
         
         ## fork and assign tasks to each worker
         for i in range(workers):
-            proc = ForkedProcess(target=None, preProxy=self.kwds, randomReseed=self.reseed)
+            proc = ForkedProcess(target=None, preProxy=self.kwargs, randomReseed=self.reseed)
             if not proc.isParent:
                 self.proc = proc
                 return Tasker(self, proc, chunks[i], proc.forkedProxies)
@@ -232,7 +232,7 @@ class Parallelize(object):
         else:
             return multiprocessing.cpu_count()
         
-    def _taskStarted(self, pid, i, **kwds):
+    def _taskStarted(self, pid, i, **kwargs):
         ## called remotely by tasker to indicate it has started working on task i
         #print pid, 'reported starting task', i
         if self.showProgress:
@@ -245,11 +245,11 @@ class Parallelize(object):
     
     
 class Tasker(object):
-    def __init__(self, parallelizer, process, tasks, kwds):
+    def __init__(self, parallelizer, process, tasks, kwargs):
         self.proc = process
         self.par = parallelizer
         self.tasks = tasks
-        for k, v in kwds.items():
+        for k, v in kwargs.items():
             setattr(self, k, v)
         
     def __iter__(self):

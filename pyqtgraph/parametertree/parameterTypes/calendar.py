@@ -51,6 +51,8 @@ class CalendarParameter(Parameter):
     def saveState(self, filter=None):
         state = super().saveState(filter)
         fmt = self._interpretFormat()
-        if state.get('value', None) is not None:
-            state['value'] = state['value'].toString(fmt)
+        for key in ('value', 'default'):
+            val = state.get(key)
+            if isinstance(val, QtCore.QDate):
+                state[key] = val.toString(fmt)
         return state

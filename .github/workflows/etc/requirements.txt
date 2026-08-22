@@ -1,24 +1,24 @@
 # numpy based on python version and SPEC-0 requirements
 
-numpy~=2.0.0; python_version == '3.12'
-numpy~=2.1.0; python_version == '3.13'
+numpy~=2.2.0; python_version == '3.12'
+numpy~=2.3.0; python_version == '3.13'
 numpy; python_version == '3.14'
 
 # image testing
-scipy==1.17.1
+scipy==1.18.1
 
 # optional high performance paths
-numba==0.62.1; python_version == '3.12'
+numba==0.67.0; python_version == '3.12'
 
 # optional 3D
 pyopengl==3.1.10
 
 # supplimental tools
-matplotlib==3.10.8
+matplotlib==3.11.1
 h5py==3.16.0
 
 # testing
-pytest==9.0.2
+pytest==9.1.1
 pytest-qt==4.5.0
 pytest-xdist==3.8.0
 pytest-xvfb==3.1.1; sys_platform == 'linux'

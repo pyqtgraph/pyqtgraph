@@ -189,6 +189,21 @@ class Parameter(QtCore.QObject):
                                      string, or a QIcon.StandardPixmap value. Pass None to
                                      remove the icon. See also :meth:`setIcon`.
                                      (default=None)
+        ctrlActions                  A set of strings controlling which built-in actions
+                                     appear in the ctrl button menu (the gear icon shown by
+                                     widget-based parameter types). Valid values:
+                                     ``'default'`` (Reset to default), ``'setDefault'``
+                                     (Set as default), ``'enabled'`` (Enable/Disable
+                                     toggle), ``'readonly'`` (Lock/Unlock toggle),
+                                     ``'rename'``, ``'remove'``. Including ``'rename'`` or
+                                     ``'remove'`` here is equivalent to setting
+                                     ``renamable=True`` / ``removable=True``.
+                                     (default: {'default', 'setDefault', 'enabled',
+                                     'readonly'})
+        showCtrlButton               If False, the ctrl button (gear icon) will be hidden
+                                     for widget-based parameter types. The button can be
+                                     shown again later via ``setOpts(showCtrlButton=True)``.
+                                     (default=True)
         context                      Specifies items for the context menu shown on
                                      right-click. Accepts a dict, list, or tuple; nested
                                      structures produce submenus. See
@@ -388,12 +403,9 @@ class Parameter(QtCore.QObject):
 
     def value(self):
         """
-        Return the value of this Parameter. Raises ValueError if no value has been set.
+        Return the value of this Parameter or None if no value has been set.
         """
-        try:
-            return self.opts['value']
-        except KeyError:
-            raise ValueError("No Value has been set")
+        return self.opts.get('value', None)
 
     def getValues(self):
         """
@@ -534,9 +546,9 @@ class Parameter(QtCore.QObject):
             self.setValue(self.defaultValue())
             self._modifiedSinceReset = not self.valueIsDefault()
             for item in list(self.items):
-                updateDefaultBtn = getattr(item, 'updateDefaultBtn', None)
-                if updateDefaultBtn is not None:
-                    updateDefaultBtn()
+                updateCtrlButton = getattr(item, 'updateCtrlButton', None)
+                if updateCtrlButton is not None:
+                    updateCtrlButton()
 
     def hasDefault(self):
         """Returns True if this parameter has a default value."""
@@ -927,7 +939,7 @@ class Parameter(QtCore.QObject):
         self.blockTreeChangeEmit += 1
 
     def unblockTreeChangeSignal(self):
-        """Unblocks enission of sigTreeStateChanged and flushes the changes out through a single signal."""
+        """Unblocks emission of sigTreeStateChanged and flushes the changes out through a single signal."""
         self.blockTreeChangeEmit -= 1
         self.emitTreeChanges()
         

@@ -1,18 +1,12 @@
 import enum
-import importlib
 
 from OpenGL import GL
 from OpenGL.GL import shaders
 import numpy as np
 
-from ...Qt import QtGui, QT_LIB, QtVersionInfo
+from ...Qt import QtGui, QtOpenGL
 from ... import functions as fn
 from ..GLGraphicsItem import GLGraphicsItem
-
-if QtVersionInfo[0] >= 6:
-    QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
-else:
-    QtOpenGL = QtGui
 
 __all__ = ['GLLinePlotItem']
 
@@ -27,10 +21,10 @@ class GLLinePlotItem(GLGraphicsItem):
 
     _shaderProgram = None
 
-    def __init__(self, parentItem=None, **kwds):
+    def __init__(self, parentItem=None, **kwargs):
         """All keyword arguments are passed to setData()"""
         super().__init__()
-        glopts = kwds.pop('glOptions', 'additive')
+        glopts = kwargs.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
         self.pos = None
         self.mode = 'line_strip'
@@ -43,9 +37,9 @@ class GLLinePlotItem(GLGraphicsItem):
         self.dirty_bits = DirtyFlag(0)
 
         self.setParentItem(parentItem)
-        self.setData(**kwds)
+        self.setData(**kwargs)
     
-    def setData(self, **kwds):
+    def setData(self, **kwargs):
         """
         Update the data displayed by this item. All arguments are optional; 
         for example it is allowed to update vertex positions while leaving 
@@ -67,15 +61,15 @@ class GLLinePlotItem(GLGraphicsItem):
         ====================  ==================================================
         """
         args = ['pos', 'color', 'width', 'mode', 'antialias']
-        for k in kwds.keys():
+        for k in kwargs.keys():
             if k not in args:
                 raise Exception('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
-        if 'pos' in kwds:
-            pos = kwds.pop('pos')
+        if 'pos' in kwargs:
+            pos = kwargs.pop('pos')
             self.pos = np.ascontiguousarray(pos, dtype=np.float32)
             self.dirty_bits |= DirtyFlag.POSITION
-        if 'color' in kwds:
-            color = kwds.pop('color')
+        if 'color' in kwargs:
+            color = kwargs.pop('color')
             if isinstance(color, np.ndarray):
                 color = np.ascontiguousarray(color, dtype=np.float32)
                 self.dirty_bits |= DirtyFlag.COLOR
@@ -84,7 +78,7 @@ class GLLinePlotItem(GLGraphicsItem):
             if isinstance(color, QtGui.QColor):
                 color = color.getRgbF()
             self.color = color
-        for k, v in kwds.items():
+        for k, v in kwargs.items():
             setattr(self, k, v)
 
         if self.mode not in ['line_strip', 'lines']:

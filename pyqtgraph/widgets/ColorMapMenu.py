@@ -77,7 +77,7 @@ def find_mpl_leftovers():
     names = [x for x in names if not x.startswith('cet_')]
     # remove the reversed colormaps
     names = [x for x in names if not x.endswith('_r')]
-    # remove entries that are already categorised
+    # remove entries that are already categorized
     known_names = set()
     for item in MATPLOTLIB_CMAPS:
         known_names.update(item[1])

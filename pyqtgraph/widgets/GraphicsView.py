@@ -137,9 +137,9 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.scene().prepareForPaint()
         return super().paintEvent(ev)
     
-    def render(self, *args, **kwds):
+    def render(self, *args, **kwargs):
         self.scene().prepareForPaint()
-        return super().render(*args, **kwds)
+        return super().render(*args, **kwargs)
         
     
     def close(self):

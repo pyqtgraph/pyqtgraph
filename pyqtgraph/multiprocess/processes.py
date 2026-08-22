@@ -389,8 +389,8 @@ class ForkedProcess(RemoteEventHandler):
 ##Special set of subclasses that implement a Qt event loop instead.
         
 class RemoteQtEventHandler(RemoteEventHandler):
-    def __init__(self, *args, **kwds):
-        RemoteEventHandler.__init__(self, *args, **kwds)
+    def __init__(self, *args, **kwargs):
+        RemoteEventHandler.__init__(self, *args, **kwargs)
         
     def startEventTimer(self):
         from ..Qt import QtCore
@@ -432,16 +432,16 @@ class QtProcess(Process):
         btn.clicked.connect(proxy(slot))   # be sure to send a proxy of the slot
     """
     
-    def __init__(self, **kwds):
-        if 'target' not in kwds:
-            kwds['target'] = startQtEventLoop
+    def __init__(self, **kwargs):
+        if 'target' not in kwargs:
+            kwargs['target'] = startQtEventLoop
         from ..Qt import (  # # avoid module-level import to keep bootstrap snappy.
             QtWidgets,
         )
-        self._processRequests = kwds.pop('processRequests', True)
+        self._processRequests = kwargs.pop('processRequests', True)
         if self._processRequests and QtWidgets.QApplication.instance() is None:
             raise Exception("Must create QApplication before starting QtProcess, or use QtProcess(processRequests=False)")
-        Process.__init__(self, **kwds)
+        Process.__init__(self, **kwargs)
         self.startEventTimer()
         
     def startEventTimer(self):

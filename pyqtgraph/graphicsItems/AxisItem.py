@@ -1,5 +1,6 @@
+import sys
 import weakref
-from math import ceil, floor, frexp, isfinite, log10, sqrt
+from math import ceil, copysign, floor, frexp, isfinite, log10, sqrt
 
 import numpy as np
 
@@ -153,7 +154,7 @@ class AxisItem(GraphicsWidget):
 
         Parameters
         ----------
-        **kwargs : dict, optional
+        **kwargs
             Here are a list of supported arguments.
 
             ===================== ======================================================
@@ -322,8 +323,8 @@ class AxisItem(GraphicsWidget):
 
     def setLogMode(
         self,
-        *args: tuple[bool] | tuple[bool, bool] | None,
-        **kwargs: dict[str, bool] | None
+        *args: bool,
+        **kwargs: bool
     ):
         """
         Set log scaling for x and / or y axes.
@@ -339,11 +340,11 @@ class AxisItem(GraphicsWidget):
 
         Parameters
         ----------
-        *args : tuple of bool
+        *args : bool
             If length 1, sets log mode regardless of orientation.  If length 2, the
             first element toggles log mode for x-axis, and the second element toggles
             log mode for the y-axis.
-        **kwargs : dict
+        **kwargs : bool
             Pass a dictionary with keys `x` and `y`, where the values are ``bool`` to
             set the log mode for the respective `x` or `y` axis.  Trying to set the `y`
             axis log mode while this axis item is horizontal (or vice versa) will be
@@ -457,7 +458,7 @@ class AxisItem(GraphicsWidget):
             prepended based on the range of data displayed.
         unitPrefix : str
             An extra prefix to prepend to the units.
-        siPrefixEnableRanges : tuple of tuple of float, float, Optional
+        siPrefixEnableRanges : tuple of tuple of float, float, optional
             The ranges in which automatic SI prefix scaling is enabled. Defaults to
             everywhere, unless units is empty, in which case it defaults to
             ``((0., 1.), (1e9, inf))``.
@@ -684,9 +685,9 @@ class AxisItem(GraphicsWidget):
 
         Parameters
         ----------
-        *args : tuple
+        *args
             Arguments relayed to :func:`~pyqtgraph.mkPen`.
-        **kwargs : dict
+        **kwargs
             Arguments relayed to `:func:`~pyqtgraph.mkPen`.
 
         See Also
@@ -726,9 +727,9 @@ class AxisItem(GraphicsWidget):
         
         Parameters
         ----------
-        *args : tuple
+        *args
             Arguments relayed to :func:`~pyqtgraph.mkPen`.
-        **kwargs : dict
+        **kwargs
             Arguments relayed to `:func:`~pyqtgraph.mkPen`.
 
         See Also
@@ -766,9 +767,9 @@ class AxisItem(GraphicsWidget):
         
         Parameters
         ----------
-        *args : tuple
+        *args
             Arguments relayed to :func:`~pyqtgraph.mkPen`.
-        **kwargs : dict
+        **kwargs
             Arguments relayed to `:func:`~pyqtgraph.mkPen`.
 
         See Also
@@ -1509,12 +1510,17 @@ class AxisItem(GraphicsWidget):
         if dif == 0:
             xScale = 1
             offset = 0
-        elif axis == 0:
-            xScale = -bounds.height() / dif
-            offset = self.range[0] * xScale - bounds.height()
         else:
-            xScale = bounds.width() / dif
-            offset = self.range[0] * xScale
+            if axis == 0:
+                xScale = -bounds.height() / dif
+            else:
+                xScale = bounds.width() / dif
+            if not isfinite(xScale):
+                xScale = copysign(sys.float_info.max, xScale)
+            if axis == 0:
+                offset = self.range[0] * xScale - bounds.height()
+            else:
+                offset = self.range[0] * xScale
 
         xRange = [x * xScale - offset for x in self.range]
         xMin = min(xRange)
@@ -1746,7 +1752,7 @@ class AxisItem(GraphicsWidget):
         lv = self.linkedView()
         if lv is None:
             return
-        # Did the event occur inside the linked ViewBox (and not over the axis iteself)?
+        # Did the event occur inside the linked ViewBox (and not over the axis itself)?
         if lv.sceneBoundingRect().contains(event.scenePos()):
             event.ignore()
             return

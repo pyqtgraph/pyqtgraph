@@ -60,12 +60,21 @@ def getGraphPixmap(name, size=(20, 20)):
 
 
 # Note: List all graph icons here ...
+# GraphIcon registers itself in _ICON_REGISTRY as a side effect of __init__,
+# so these are intentionally not bound to a name (avoids CodeQL "unused
+# global variable" warnings); 
+# Look them up via getGraphIcon(name) or getGraphPixmap
 GraphIcon("auto.png")
 GraphIcon("ctrl.png")
 GraphIcon("default.png")
+GraphIcon("delete.png")
 GraphIcon("invisibleEye.svg")
 GraphIcon("lock.png")
-
+GraphIcon("rename.png")
+GraphIcon("revert_default.png")
+GraphIcon("set_default.png")
+GraphIcon("unlock.png")
+GraphIcon("visibleEye.svg")
 
 def __getattr__(name):
     # Deprecated: icons used to be exposed as module-level GraphIcon

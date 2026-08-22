@@ -26,7 +26,7 @@ class DockArea(Container, QtWidgets.QWidget):
     def type(self):
         return "top"
         
-    def addDock(self, dock=None, position='bottom', relativeTo=None, **kwds):
+    def addDock(self, dock=None, position='bottom', relativeTo=None, **kwargs):
         """Adds a dock to this area.
         
         ============== =================================================================
@@ -44,7 +44,7 @@ class DockArea(Container, QtWidgets.QWidget):
         None.        
         """
         if dock is None:
-            dock = Dock(**kwds)
+            dock = Dock(**kwargs)
             
         # store original area that the dock will return to when un-floated
         if not self.temporary:

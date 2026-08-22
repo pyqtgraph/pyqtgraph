@@ -15,9 +15,9 @@ except ImportError:
     pass
 
 
-def _makeARGB(*args, **kwds):
-    img, alpha = real_makeARGB(*args, **kwds)
-    if kwds.get('useRGBA'):  # endian independent
+def _makeARGB(*args, **kwargs):
+    img, alpha = real_makeARGB(*args, **kwargs)
+    if kwargs.get('useRGBA'):  # endian independent
         out = img
     elif sys.byteorder == 'little':  # little-endian ARGB32 to B,G,R,A
         out = img
@@ -59,9 +59,15 @@ def test_makeARGB_against_generated_references(acceleration, dtype, in_fmt, leve
         assert exc_info.type is expectation, f"makeARGB({key!r}) was supposed to raise {expectation}"
     else:
         output, alpha = _makeARGB(data, lut=lut, levels=levels, scale=scale, useRGBA=use_rgba)
-        assert (
-            output == expectation
-        ).all(), f"Incorrect _makeARGB({key!r}) output! Expected:\n{expectation!r}\n  Got:\n{output!r}"
+        matches = output == expectation
+        if data.dtype.kind == 'f':
+            nan_mask = np.isnan(data)
+            if data.ndim == 3:
+                nan_mask = np.any(nan_mask, axis=-1)
+            # NaN-to-integer conversion varies by platform. Only the alpha
+            # value of a NaN-containing pixel is defined by makeARGB.
+            matches[nan_mask, :3] = True
+        assert matches.all(), f"Incorrect _makeARGB({key!r}) output! Expected:\n{expectation!r}\n  Got:\n{output!r}"
     setConfigOptions(useCupy=False, useNumba=False)
 
 

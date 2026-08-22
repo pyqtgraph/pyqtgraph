@@ -67,6 +67,21 @@ def test_scatterplotitem():
     plot.close()
 
 
+def test_composition_mode():
+    pg.mkQApp()
+    source_over = QtGui.QPainter.CompositionMode.CompositionMode_SourceOver
+    plus = QtGui.QPainter.CompositionMode.CompositionMode_Plus
+
+    scatter = pg.ScatterPlotItem(x=[0], y=[0], compositionMode=plus)
+    assert scatter.opts['compositionMode'] == plus
+
+    scatter.setData(x=[1], y=[1], compositionMode=source_over)
+    assert scatter.opts['compositionMode'] == source_over
+
+    scatter.setData(x=[2], y=[2])
+    assert scatter.opts['compositionMode'] == source_over
+
+
 def test_init_spots():
     app = pg.mkQApp()
     plot = pg.PlotWidget()

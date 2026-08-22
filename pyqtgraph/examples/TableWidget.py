@@ -1,6 +1,6 @@
 """
 Simple demonstration of TableWidget, which is an extension of QTableWidget
-that automatically displays a variety of tabluar data formats.
+that automatically displays a variety of tabular data formats.
 """
 
 import numpy as np

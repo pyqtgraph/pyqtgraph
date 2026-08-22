@@ -239,7 +239,7 @@ class RemoveBaseline(PlottingCtrlNode):
             arr[n:n+len(times)] = (m*(times-times[0]))+b
             n += len(times)
                 
-        return data - arr ## subract baseline from data
+        return data - arr ## subtract baseline from data
         
     def adjustXPositions(self, pts, data):
         """Return a list of Point() where the x position is set to the nearest x value in *data* for each point in *pts*."""

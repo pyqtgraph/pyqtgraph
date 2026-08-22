@@ -10,7 +10,7 @@ class Dock(QtWidgets.QWidget):
     sigStretchChanged = QtCore.Signal()
     sigClosed = QtCore.Signal(object)
 
-    def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, label=None, **kargs):
+    def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, label=None, **kwargs):
         QtWidgets.QWidget.__init__(self)
         self.dockdrop = DockDrop(self)
         self._container = None
@@ -18,7 +18,7 @@ class Dock(QtWidgets.QWidget):
         self.area = area
         self.label = label
         if self.label is None:
-            self.label = DockLabel(name, **kargs)
+            self.label = DockLabel(name, **kwargs)
         self.label.dock = self
         if self.label.isClosable():
             self.label.sigCloseClicked.connect(self.close)

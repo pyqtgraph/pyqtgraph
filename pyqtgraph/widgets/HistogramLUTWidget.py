@@ -16,13 +16,13 @@ class HistogramLUTWidget(GraphicsView):
     All parameters are passed along in creating the HistogramLUTItem.
     """
 
-    def __init__(self, parent=None, *args, **kargs):
-        background = kargs.pop('background', 'default')
+    def __init__(self, parent=None, *args, **kwargs):
+        background = kwargs.pop('background', 'default')
         GraphicsView.__init__(self, parent, useOpenGL=False, background=background)
-        self.item = HistogramLUTItem(*args, **kargs)
+        self.item = HistogramLUTItem(*args, **kwargs)
         self.setCentralItem(self.item)
 
-        self.orientation = kargs.get('orientation', 'vertical')
+        self.orientation = kwargs.get('orientation', 'vertical')
         if self.orientation == 'vertical':
             self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Expanding)
             self.setMinimumWidth(95)

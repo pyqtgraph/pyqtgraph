@@ -186,8 +186,8 @@ if QT_LIB in [PYQT5, PYQT6]:
     # users), we install a global exception hook to override this behavior.
     if sys.excepthook == sys.__excepthook__:
         sys_excepthook = sys.excepthook
-        def pyqt_qabort_override(*args, **kwds):
-            return sys_excepthook(*args, **kwds)
+        def pyqt_qabort_override(*args, **kwargs):
+            return sys_excepthook(*args, **kwargs)
         sys.excepthook = pyqt_qabort_override
     
     def isQObjectAlive(obj):
