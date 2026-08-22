@@ -51,12 +51,12 @@ def test_mismatched_type_raises_type_error():
         GroupParameter(name='params', type='color')
 
 
-def test_unregistered_type_string_does_not_raise():
-    # An arbitrary, never-registered type string is just an opaque tag (as it was
-    # before check_type() was introduced) and should not raise -- in particular it
-    # must not raise a raw KeyError from the internal PARAM_TYPES lookup.
-    p = pt.Parameter(name='x', type='not_a_registered_type')
-    assert p.type() == 'not_a_registered_type'
+def test_unregistered_type_string_raises_type_error():
+    # An arbitrary, never-registered type string must be registered first via
+    # registerParameterType(); construction should raise a friendly TypeError,
+    # not a raw KeyError from the internal PARAM_TYPES lookup.
+    with pytest.raises(TypeError):
+        pt.Parameter(name='x', type='not_a_registered_type')
 
 
 def test_opts():

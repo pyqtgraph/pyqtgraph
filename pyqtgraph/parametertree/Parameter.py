@@ -353,18 +353,22 @@ class Parameter(QtCore.QObject):
           - the current parameter class is the class registered for that type, or a subclass of it.
 
         The base ``Parameter`` class itself is never registered under any type name, so it is
-        exempt from this check: constructing a plain ``Parameter`` with e.g. ``type='group'`` is
-        allowed, relying only on ``type`` to select a display item via ``_PARAM_ITEM_TYPES``.
+        exempt from the class-matching part of this check: constructing a plain ``Parameter``
+        with e.g. ``type='group'`` is allowed, relying only on ``type`` to select a display item
+        via ``_PARAM_ITEM_TYPES``. An unregistered ``type`` string is still rejected: register it
+        with ``registerParameterType`` first.
 
         Returns
         -------
         bool: True if the type is valid, False otherwise.
         """
         typ = self.type()
-        if not typ or self.__class__ is Parameter:
+        if not typ:
             return True
         expectedCls = PARAM_TYPES.get(typ)
         if expectedCls is None:
+            return False
+        if self.__class__ is Parameter:
             return True
         return issubclass(self.__class__, expectedCls)
 
