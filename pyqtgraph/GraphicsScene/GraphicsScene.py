@@ -368,9 +368,15 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                     acceptedItem.mouseClickEvent(ev)
                 except:
                     debug.printExc("Error sending click event:")
-            else:
+            if not ev.isAccepted() or acceptedItem is None:
                 for item in self.itemsNearEvent(ev):
-                    if not item.isVisible() or not item.isEnabled():
+                    if any(
+                        (
+                            not item.isVisible(),
+                            not item.isEnabled(),
+                            item is acceptedItem
+                        )
+                    ):
                         continue
                     if hasattr(item, 'mouseClickEvent'):
                         ev.currentItem = item
@@ -417,7 +423,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         else:
             point = event.scenePos()
 
-        ## Sort by descending Z-order (don't trust scene.itms() to do this either)
+        ## Sort by descending Z-order (don't trust scene.items() to do this either)
         ## use 'absolute' z value, which is the sum of all item/parent ZValues
         def absZValue(item):
             if item is None:

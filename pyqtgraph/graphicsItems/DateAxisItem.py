@@ -301,7 +301,7 @@ class DateAxisItem(AxisItem):
 
     The display format is adjusted automatically depending on the current time
     density (seconds/point) on the axis. For more details on changing this
-    behaviour, see :func:`setZoomLevelForDensity() <pyqtgraph.DateAxisItem.setZoomLevelForDensity>`.
+    behavior, see :func:`setZoomLevelForDensity() <pyqtgraph.DateAxisItem.setZoomLevelForDensity>`.
 
     Can be added to an existing plot e.g. via
     :func:`setAxisItems({'bottom':axis}) <pyqtgraph.PlotItem.setAxisItems>`.
@@ -358,6 +358,7 @@ class DateAxisItem(AxisItem):
         return formatStrings
 
     def tickValues(self, minVal, maxVal, size):
+        minVal, maxVal = sorted((minVal, maxVal))
         density = (maxVal - minVal) / size
         self.setZoomLevelForDensity(density)
         values = self.zoomLevel.tickValues(minVal, maxVal, minSpc=self.minSpacing)
@@ -368,7 +369,7 @@ class DateAxisItem(AxisItem):
         Setting `zoomLevel` and `minSpacing` based on given density of seconds per pixel
 
         The display format is adjusted automatically depending on the current time
-        density (seconds/point) on the axis. You can customize the behaviour by
+        density (seconds/point) on the axis. You can customize the behavior by
         overriding this function or setting a different set of zoom levels
         than the default one. The `zoomLevels` variable is a dictionary with the
         maximal distance of ticks in seconds which are allowed for each zoom level

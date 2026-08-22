@@ -1,18 +1,12 @@
 import enum
-import importlib
 
 from OpenGL import GL
 import numpy as np
 
-from ...Qt import QtGui, QT_LIB, QtVersionInfo
+from ...Qt import QtGui, QtOpenGL
 from .. import shaders
 from ..GLGraphicsItem import GLGraphicsItem
 from ..MeshData import MeshData
-
-if QtVersionInfo[0] >= 6:
-    QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
-else:
-    QtOpenGL = QtGui
 
 __all__ = ['GLMeshItem']
 
@@ -32,7 +26,7 @@ class GLMeshItem(GLGraphicsItem):
     
     Displays a 3D triangle mesh. 
     """
-    def __init__(self, parentItem=None, **kwds):
+    def __init__(self, parentItem=None, **kwargs):
         """
         ============== =====================================================
         **Arguments:**
@@ -52,6 +46,8 @@ class GLMeshItem(GLGraphicsItem):
         computeNormals If False, then computation of normal vectors is 
                        disabled. This can provide a performance boost for 
                        meshes that do not make use of normals.
+        polygonOffset  If True, polygon offset is enabled, this is useful 
+                       when drawing edges on top of faces.
         ============== =====================================================
         """
         self.opts = {
@@ -63,15 +59,16 @@ class GLMeshItem(GLGraphicsItem):
             'shader': None,
             'smooth': True,
             'computeNormals': True,
+            'polygonOffset': False,
         }
         
         super().__init__(parentItem=parentItem)
-        glopts = kwds.pop('glOptions', 'opaque')
+        glopts = kwargs.pop('glOptions', 'opaque')
         self.setGLOptions(glopts)
-        shader = kwds.pop('shader', None)
+        shader = kwargs.pop('shader', None)
         self.setShader(shader)
         
-        self.setMeshData(**kwds)
+        self.setMeshData(**kwargs)
         
         ## storage for data compiled from MeshData object
         self.vertexes = None
@@ -103,25 +100,30 @@ class GLMeshItem(GLGraphicsItem):
         self.opts['color'] = c
         self.update()
         
-    def setMeshData(self, **kwds):
+    def setPolygonOffset(self, enable):
+        """Enable or disable polygon offset for this mesh item."""
+        self.opts['polygonOffset'] = enable
+        self.update()
+
+    def setMeshData(self, **kwargs):
         """
         Set mesh data for this item. This can be invoked two ways:
         
         1. Specify *meshdata* argument with a new MeshData object
         2. Specify keyword arguments to be passed to MeshData(..) to create a new instance.
         """
-        md = kwds.get('meshdata', None)
+        md = kwargs.get('meshdata', None)
         if md is None:
             opts = {}
             for k in ['vertexes', 'faces', 'edges', 'vertexColors', 'faceColors']:
                 try:
-                    opts[k] = kwds.pop(k)
+                    opts[k] = kwargs.pop(k)
                 except KeyError:
                     pass
             md = MeshData(**opts)
         
         self.opts['meshdata'] = md
-        self.opts.update(kwds)
+        self.opts.update(kwargs)
         self.meshDataChanged()
         self.update()
         
@@ -232,7 +234,11 @@ class GLMeshItem(GLGraphicsItem):
 
     def paint(self):
         self.setupGLState()
-        
+
+        if self.opts['polygonOffset']:
+            GL.glEnable(GL.GL_POLYGON_OFFSET_FILL)
+            GL.glPolygonOffset(1.0, 1.0)
+
         if (dirty_bits := self.parseMeshData()):
             self.upload_vertex_buffers(dirty_bits)
 
@@ -333,4 +339,6 @@ class GLMeshItem(GLGraphicsItem):
             for loc in enabled_locs:
                 GL.glDisableVertexAttribArray(loc)
 
-
+        if self.opts['polygonOffset']:
+            GL.glDisable(GL.GL_POLYGON_OFFSET_FILL)
+            GL.glPolygonOffset(0.0, 0.0)

@@ -12,7 +12,7 @@ class CmdInput(QtWidgets.QLineEdit):
         self.history = [""]
         self.ptr = 0
         font = QtGui.QFont("monospace")
-        font.setStyleHint(QtGui.QFont.StyleHint.TypeWriter, QtGui.QFont.StyleStrategy.PreferAntialias)
+        font.setStyleHint(QtGui.QFont.StyleHint.Monospace, QtGui.QFont.StyleStrategy.PreferAntialias)
         self.setFont(font)
         self.setMultiline(False)
     

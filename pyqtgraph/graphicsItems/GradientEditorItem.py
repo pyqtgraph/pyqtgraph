@@ -9,6 +9,7 @@ from ..Qt import QtCore, QtGui, QtWidgets
 from ..widgets.SpinBox import SpinBox
 from ..widgets.ColorMapMenu import ColorMapMenu
 from .GraphicsWidget import GraphicsWidget
+from .GraphicsObject import GraphicsObject
 from .GradientPresets import Gradients
 
 translate = QtCore.QCoreApplication.translate
@@ -35,7 +36,7 @@ class TickSliderItem(GraphicsWidget):
     sigTicksChanged = QtCore.Signal(object)
     sigTicksChangeFinished = QtCore.Signal(object)
     
-    def __init__(self, orientation='bottom', allowAdd=True, allowRemove=True, **kargs):
+    def __init__(self, orientation='bottom', allowAdd=True, allowRemove=True, **kwargs):
         """
         ==============  =================================================================================
         **Arguments:**
@@ -56,8 +57,8 @@ class TickSliderItem(GraphicsWidget):
         self.maxDim = 20
         self.allowAdd = allowAdd
         self.allowRemove = allowRemove
-        if 'tickPen' in kargs:
-            self.tickPen = fn.mkPen(kargs['tickPen'])
+        if 'tickPen' in kwargs:
+            self.tickPen = fn.mkPen(kwargs['tickPen'])
         else:
             self.tickPen = fn.mkPen('w')
             
@@ -73,18 +74,14 @@ class TickSliderItem(GraphicsWidget):
         #self.setBackgroundRole(QtGui.QPalette.ColorRole.NoRole)
         #self.setMouseTracking(True)
         
-    #def boundingRect(self):
-        #return self.mapRectFromParent(self.geometry()).normalized()
+    def boundingRect(self):
+        # overriding boundingRect() is needed as this item has set its own transform
+        return self.mapRectFromParent(self.geometry()).normalized()
         
-    #def shape(self):  ## No idea why this is necessary, but rotated items do not receive clicks otherwise.
-        #p = QtGui.QPainterPath()
-        #p.addRect(self.boundingRect())
-        #return p
-        
-    def paint(self, p, opt, widget):
-        #p.setPen(fn.mkPen('g', width=3))
-        #p.drawRect(self.boundingRect())
-        return
+    def shape(self):  ## No idea why this is necessary, but rotated items do not receive clicks otherwise.
+        p = QtGui.QPainterPath()
+        p.addRect(self.boundingRect())
+        return p
         
     def keyPressEvent(self, ev):
         ev.ignore()
@@ -395,7 +392,7 @@ class GradientEditorItem(TickSliderItem):
     sigGradientChanged = QtCore.Signal(object)
     sigGradientChangeFinished = QtCore.Signal(object)
     
-    def __init__(self, *args, **kargs):
+    def __init__(self, *args, **kwargs):
         """
         Create a new GradientEditorItem. 
         All arguments are passed to :func:`TickSliderItem.__init__ <pyqtgraph.TickSliderItem.__init__>`
@@ -417,7 +414,7 @@ class GradientEditorItem(TickSliderItem):
         self.backgroundRect.setBrush(QtGui.QBrush(QtCore.Qt.BrushStyle.DiagCrossPattern))
         self.colorMode = 'rgb'
         
-        TickSliderItem.__init__(self, *args, **kargs)
+        TickSliderItem.__init__(self, *args, **kwargs)
         
         self.colorDialog = QtWidgets.QColorDialog()
         self.colorDialog.setOption(QtWidgets.QColorDialog.ColorDialogOption.ShowAlphaChannel, True)
@@ -432,10 +429,10 @@ class GradientEditorItem(TickSliderItem):
         
         self.setMaxDim(self.rectSize + self.tickSize)
         
-        self.rgbAction = QtGui.QAction(translate("GradiantEditorItem", 'RGB'), self)
+        self.rgbAction = QtGui.QAction(translate("GradientEditorItem", 'RGB'), self)
         self.rgbAction.setCheckable(True)
         self.rgbAction.triggered.connect(self._setColorModeToRGB)
-        self.hsvAction = QtGui.QAction(translate("GradiantEditorItem", 'HSV'), self)
+        self.hsvAction = QtGui.QAction(translate("GradientEditorItem", 'HSV'), self)
         self.hsvAction.setCheckable(True)
         self.hsvAction.triggered.connect(self._setColorModeToHSV)
             
@@ -837,19 +834,16 @@ class GradientEditorItem(TickSliderItem):
                 self.sigGradientChanged.disconnect(fn)
 
 
-class Tick(QtWidgets.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsObject instead results in
-                                    ## activating this bug: https://bugreports.qt-project.org/browse/PYSIDE-86
+class Tick(GraphicsObject):
     ## private class
-
-    # When making Tick a subclass of QtWidgets.QGraphicsObject as origin,
-    # ..GraphicsScene.items(self, *args) will get Tick object as a
-    # class of QtGui.QMultimediaWidgets.QGraphicsVideoItem in python2.7-PyQt5(5.4.0)
 
     sigMoving = QtCore.Signal(object, object)
     sigMoved = QtCore.Signal(object)
     sigClicked = QtCore.Signal(object, object)
     
     def __init__(self, pos, color, movable=True, scale=10, pen='w', removeAllowed=True):
+        super().__init__()
+
         self.movable = movable
         self.moving = False
         self.scale = scale
@@ -863,7 +857,6 @@ class Tick(QtWidgets.QGraphicsWidget):  ## NOTE: Making this a subclass of Graph
         self.pg.lineTo(QtCore.QPointF(scale/3**0.5, scale))
         self.pg.closeSubpath()
         
-        QtWidgets.QGraphicsWidget.__init__(self)
         self.setPos(pos[0], pos[1])
         if self.movable:
             self.setZValue(1)
@@ -947,7 +940,7 @@ class TickMenu(QtWidgets.QMenu):
         #self.dataPosSpin = SpinBox(value=dataVal)
         #self.dataPosSpin.setOpts(decimals=3, siPrefix=True)
                 
-        l.addWidget(QtWidgets.QLabel(f"{translate('GradiantEditorItem', 'Position')}:"), 0,0)
+        l.addWidget(QtWidgets.QLabel(f"{translate('GradientEditorItem', 'Position')}:"), 0,0)
         l.addWidget(self.fracPosSpin, 0, 1)
         #l.addWidget(QtWidgets.QLabel("Position (data units):"), 1, 0)
         #l.addWidget(self.dataPosSpin, 1,1)

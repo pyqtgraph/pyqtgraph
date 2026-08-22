@@ -1,18 +1,12 @@
 import enum
 import math
-import importlib
 
 from OpenGL import GL
 from OpenGL.GL import shaders
 import numpy as np
 
-from ...Qt import QtGui, QT_LIB, QtVersionInfo
+from ...Qt import QtGui, QtOpenGL
 from ..GLGraphicsItem import GLGraphicsItem
-
-if QtVersionInfo[0] >= 6:
-    QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
-else:
-    QtOpenGL = QtGui
 
 __all__ = ['GLScatterPlotItem']
 
@@ -28,9 +22,9 @@ class GLScatterPlotItem(GLGraphicsItem):
     
     _shaderProgram = None
 
-    def __init__(self, parentItem=None, **kwds):
+    def __init__(self, parentItem=None, **kwargs):
         super().__init__()
-        glopts = kwds.pop('glOptions', 'additive')
+        glopts = kwargs.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
         self.pos = None
         self.size = 10
@@ -43,9 +37,9 @@ class GLScatterPlotItem(GLGraphicsItem):
         self.dirty_bits = DirtyFlag(0)
 
         self.setParentItem(parentItem)
-        self.setData(**kwds)
+        self.setData(**kwargs)
 
-    def setData(self, **kwds):
+    def setData(self, **kwargs):
         """
         Update the data displayed by this item. All arguments are optional; 
         for example it is allowed to update spot positions while leaving 
@@ -64,30 +58,30 @@ class GLScatterPlotItem(GLGraphicsItem):
         ====================  ==================================================
         """
         args = ['pos', 'color', 'size', 'pxMode']
-        for k in kwds.keys():
+        for k in kwargs.keys():
             if k not in args:
                 raise Exception('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
             
-        if 'pos' in kwds:
-            pos = kwds.pop('pos')
+        if 'pos' in kwargs:
+            pos = kwargs.pop('pos')
             self.pos = np.ascontiguousarray(pos, dtype=np.float32)
             self.dirty_bits |= DirtyFlag.POSITION
-        if 'color' in kwds:
-            color = kwds.pop('color')
+        if 'color' in kwargs:
+            color = kwargs.pop('color')
             if isinstance(color, np.ndarray):
                 color = np.ascontiguousarray(color, dtype=np.float32)
                 self.dirty_bits |= DirtyFlag.COLOR
             if isinstance(color, QtGui.QColor):
                 color = color.getRgbF()
             self.color = color
-        if 'size' in kwds:
-            size = kwds.pop('size')
+        if 'size' in kwargs:
+            size = kwargs.pop('size')
             if isinstance(size, np.ndarray):
                 size = np.ascontiguousarray(size, dtype=np.float32)
                 self.dirty_bits |= DirtyFlag.SIZE
             self.size = size
                 
-        self.pxMode = kwds.get('pxMode', self.pxMode)
+        self.pxMode = kwargs.get('pxMode', self.pxMode)
         self.update()
 
     def upload_vbo(self, vbo, arr):

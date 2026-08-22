@@ -139,9 +139,9 @@ class RemoteGraphicsView(QtWidgets.QWidget):
     GraphicsItems must be created by proxy to the remote process.
     
     """
-    def __init__(self, parent=None, *args, **kwds):
+    def __init__(self, parent=None, *args, **kwargs):
         """
-        The keyword arguments 'useOpenGL' and 'backgound', if specified, are passed to the remote
+        The keyword arguments 'useOpenGL' and 'background', if specified, are passed to the remote
         GraphicsView.__init__(). All other keyword arguments are passed to multiprocess.QtProcess.__init__().
         """
         self._img = None
@@ -153,10 +153,10 @@ class RemoteGraphicsView(QtWidgets.QWidget):
         # separate local keyword arguments from remote.
         remoteKwds = {}
         for kwd in ['useOpenGL', 'background']:
-            if kwd in kwds:
-                remoteKwds[kwd] = kwds.pop(kwd)
+            if kwd in kwargs:
+                remoteKwds[kwd] = kwargs.pop(kwd)
 
-        self._proc = mp.QtProcess(**kwds)
+        self._proc = mp.QtProcess(**kwargs)
         self.pg = self._proc._import('pyqtgraph')
         self.pg.setConfigOptions(**CONFIG_OPTIONS)
         rpgRemote = self._proc._import('pyqtgraph.widgets.RemoteGraphicsView')
@@ -250,7 +250,7 @@ class Renderer(GraphicsView):
     
     sceneRendered = QtCore.Signal(object)
     
-    def __init__(self, *args, **kwds):
+    def __init__(self, *args, **kwargs):
         ## Create shared memory for rendered image
         self.shmFile = tempfile.NamedTemporaryFile(prefix='pyqtgraph_shmem_')
         size = mmap.PAGESIZE
@@ -259,7 +259,7 @@ class Renderer(GraphicsView):
         self.shm = mmap.mmap(self.shmFile.fileno(), size, access=mmap.ACCESS_WRITE)
         atexit.register(self.close)
         
-        GraphicsView.__init__(self, *args, **kwds)
+        GraphicsView.__init__(self, *args, **kwargs)
         self.scene().changed.connect(self.update)
         self.img = None
         self.renderTimer = QtCore.QTimer()

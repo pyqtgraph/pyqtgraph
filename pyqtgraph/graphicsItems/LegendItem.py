@@ -1,7 +1,7 @@
 import math
 
 from .. import functions as fn
-from ..icons import invisibleEye
+from ..icons import getGraphPixmap
 from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
 from .BarGraphItem import BarGraphItem
@@ -67,7 +67,6 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         GraphicsWidget.__init__(self)
         GraphicsWidgetAnchor.__init__(self)
-        self.setFlag(self.GraphicsItemFlag.ItemIgnoresTransformations)
         self.layout = QtWidgets.QGraphicsGridLayout()
         self.layout.setVerticalSpacing(verSpacing)
         self.layout.setHorizontalSpacing(horSpacing)
@@ -135,12 +134,12 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """Get the QPen used to draw the border around the legend."""
         return self.opts['pen']
 
-    def setPen(self, *args, **kargs):
+    def setPen(self, *args, **kwargs):
         """Set the pen used to draw a border around the legend.
 
         Accepts the same arguments as :func:`~pyqtgraph.mkPen`.
         """
-        pen = fn.mkPen(*args, **kargs)
+        pen = fn.mkPen(*args, **kwargs)
         self.opts['pen'] = pen
 
         self.update()
@@ -149,12 +148,12 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """Get the QBrush used to draw the legend background."""
         return self.opts['brush']
 
-    def setBrush(self, *args, **kargs):
+    def setBrush(self, *args, **kwargs):
         """Set the brush used to draw the legend background.
 
         Accepts the same arguments as :func:`~pyqtgraph.mkBrush`.
         """
-        brush = fn.mkBrush(*args, **kargs)
+        brush = fn.mkBrush(*args, **kwargs)
         if self.opts['brush'] == brush:
             return
         self.opts['brush'] = brush
@@ -165,12 +164,12 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """Get the QColor used for the item labels."""
         return self.opts['labelTextColor']
 
-    def setLabelTextColor(self, *args, **kargs):
+    def setLabelTextColor(self, *args, **kwargs):
         """Set the color of the item labels.
 
         Accepts the same arguments as :func:`~pyqtgraph.mkColor`.
         """
-        self.opts['labelTextColor'] = fn.mkColor(*args, **kargs)
+        self.opts['labelTextColor'] = fn.mkColor(*args, **kwargs)
         for sample, label in self.items:
             label.setAttr('color', self.opts['labelTextColor'])
 
@@ -372,8 +371,7 @@ class ItemSample(GraphicsWidget):
 
         visible = self.item.isVisible()
         if not visible:
-            icon = invisibleEye.qicon
-            p.drawPixmap(QtCore.QPoint(1, 1), icon.pixmap(18, 18))
+            p.drawPixmap(QtCore.QPoint(1, 1), getGraphPixmap('invisibleEye', size=(18, 18)))
             return
 
         if not isinstance(self.item, ScatterPlotItem):

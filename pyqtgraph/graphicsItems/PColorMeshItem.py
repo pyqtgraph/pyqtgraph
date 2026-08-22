@@ -1,5 +1,4 @@
 import enum
-import importlib
 
 import numpy as np
 
@@ -8,13 +7,8 @@ from .. import functions as fn
 from ..Qt import compat
 from ..Qt import OpenGLConstants as GLC
 from ..Qt import OpenGLHelpers
-from ..Qt import QtCore, QtGui, QT_LIB, QtVersionInfo
+from ..Qt import QtCore, QtGui, QtOpenGL, QT_LIB
 from .GraphicsObject import GraphicsObject
-
-if QtVersionInfo[0] >= 6:
-    QtOpenGL = importlib.import_module(f"{QT_LIB}.QtOpenGL")
-else:
-    QtOpenGL = QtGui
 
 __all__ = ['PColorMeshItem']
 
@@ -317,7 +311,7 @@ class PColorMeshItem(GraphicsObject):
             rng = 1
         norm = fn.rescaleData(valid_z, scale / rng, lo, dtype=int, clip=(0, len(lut)-1))
 
-        if Qt.QT_LIB.startswith('PyQt'):
+        if QT_LIB.startswith('PyQt'):
             drawConvexPolygon = lambda x : painter.drawConvexPolygon(*x)
         else:
             drawConvexPolygon = painter.drawConvexPolygon

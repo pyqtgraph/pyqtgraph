@@ -99,6 +99,9 @@ cfg = {
         }
     },
 
+    'radio': {
+    },
+
     'pen': {
         'Pen Information': {
             'type': 'str',

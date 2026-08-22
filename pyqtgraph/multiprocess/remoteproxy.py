@@ -114,13 +114,13 @@ class RemoteEventHandler(object):
         with self.optsLock:
             return self.proxyOptions[opt]
         
-    def setProxyOptions(self, **kwds):
+    def setProxyOptions(self, **kwargs):
         """
         Set the default behavior options for object proxies.
         See ObjectProxy._setProxyOptions for more info.
         """
         with self.optsLock:
-            self.proxyOptions.update(kwds)
+            self.proxyOptions.update(kwargs)
     
     def processRequests(self):
         """Process all pending requests from the pipe, return
@@ -171,7 +171,7 @@ class RemoteEventHandler(object):
         result = None
         while True:
             try:
-                ## args, kwds are double-pickled to ensure this recv() call never fails                
+                ## args, kwargs are double-pickled to ensure this recv() call never fails                
                 cmd, reqId, nByteMsgs, optStr = self.conn.recv() 
                 break
             except EOFError:
@@ -231,7 +231,7 @@ class RemoteEventHandler(object):
             elif cmd == 'callObj':
                 obj = opts['obj']
                 fnargs = opts['args']
-                fnkwds = opts['kwds']
+                fnkwargs = opts['kwargs']
                 
                 ## If arrays were sent as byte messages, they must be re-inserted into the 
                 ## arguments
@@ -241,20 +241,20 @@ class RemoteEventHandler(object):
                             ind = arg[1]
                             dtype, shape = arg[2]
                             fnargs[i] = np.frombuffer(byteData[ind], dtype=dtype).reshape(shape)
-                    for k,arg in fnkwds.items():
+                    for k,arg in fnkwargs.items():
                         if isinstance(arg, tuple) and len(arg) > 0 and arg[0] == '__byte_message__':
                             ind = arg[1]
                             dtype, shape = arg[2]
-                            fnkwds[k] = np.frombuffer(byteData[ind], dtype=dtype).reshape(shape)
+                            fnkwargs[k] = np.frombuffer(byteData[ind], dtype=dtype).reshape(shape)
                 
-                if len(fnkwds) == 0:  ## need to do this because some functions do not allow keyword arguments.
+                if len(fnkwargs) == 0:  ## need to do this because some functions do not allow keyword arguments.
                     try:
                         result = obj(*fnargs)
                     except:
                         print("Failed to call object %s: %d, %s" % (obj, len(fnargs), fnargs[1:]))
                         raise
                 else:
-                    result = obj(*fnargs, **fnkwds)
+                    result = obj(*fnargs, **fnkwargs)
                     
             elif cmd == 'getObjValue':
                 result = opts['obj']  ## has already been unpickled into its local value
@@ -338,7 +338,7 @@ class RemoteEventHandler(object):
         except:
             self.send(request='error', reqId=reqId, callSync='off', opts=dict(exception=None, excString=excStr))
     
-    def send(self, request, opts=None, reqId=None, callSync='sync', timeout=10, returnType=None, byteData=None, **kwds):
+    def send(self, request, opts=None, reqId=None, callSync='sync', timeout=10, returnType=None, byteData=None, **kwargs):
         """Send a request or return packet to the remote process.
         Generally it is not necessary to call this method directly; it is for internal use.
         (The docstring has information that is nevertheless useful to the programmer
@@ -382,7 +382,7 @@ class RemoteEventHandler(object):
                                       function)
                        obj            the (reference to) object to call
                        args           tuple of arguments to pass to callable
-                       kwds           dict of keyword arguments to pass to callable
+                       kwargs           dict of keyword arguments to pass to callable
                        returnValue    bool or 'auto' indicating whether to return a proxy or
                                       the actual value. 
                        
@@ -425,8 +425,8 @@ class RemoteEventHandler(object):
             raise ClosedError()
         
         with self.sendLock:
-            #if len(kwds) > 0:
-                #print "Warning: send() ignored args:", kwds
+            #if len(kwargs) > 0:
+                #print "Warning: send() ignored args:", kwargs
                 
             if opts is None:
                 opts = {}
@@ -480,9 +480,9 @@ class RemoteEventHandler(object):
         if callSync == 'sync':
             return req.result()
         
-    def close(self, callSync='off', noCleanup=False, **kwds):
+    def close(self, callSync='off', noCleanup=False, **kwargs):
         try:
-            self.send(request='close', opts=dict(noCleanup=noCleanup), callSync=callSync, **kwds)
+            self.send(request='close', opts=dict(noCleanup=noCleanup), callSync=callSync, **kwargs)
             self.exited = True
         except ClosedError:
             pass
@@ -526,7 +526,7 @@ class RemoteEventHandler(object):
         else:
             raise Exception("Internal error.")
     
-    def _import(self, mod, **kwds):
+    def _import(self, mod, **kwargs):
         """
         Request the remote process import a module (or symbols from a module)
         and return the proxied results. Uses built-in __import__() function, but 
@@ -539,15 +539,15 @@ class RemoteEventHandler(object):
                                              (this also differs from behavior of __import__)
             
         """
-        return self.send(request='import', callSync='sync', opts=dict(module=mod), **kwds)
+        return self.send(request='import', callSync='sync', opts=dict(module=mod), **kwargs)
         
-    def getObjAttr(self, obj, attr, **kwds):
-        return self.send(request='getObjAttr', opts=dict(obj=obj, attr=attr), **kwds)
+    def getObjAttr(self, obj, attr, **kwargs):
+        return self.send(request='getObjAttr', opts=dict(obj=obj, attr=attr), **kwargs)
         
-    def getObjValue(self, obj, **kwds):
-        return self.send(request='getObjValue', opts=dict(obj=obj), **kwds)
+    def getObjValue(self, obj, **kwargs):
+        return self.send(request='getObjValue', opts=dict(obj=obj), **kwargs)
         
-    def callObj(self, obj, args, kwds, **opts):
+    def callObj(self, obj, args, kwargs, **opts):
         opts = opts.copy()
         args = list(args)
         
@@ -561,7 +561,7 @@ class RemoteEventHandler(object):
         
         if autoProxy is True:
             args = [self.autoProxy(v, noProxyTypes) for v in args]
-            for k, v in kwds.items():
+            for k, v in kwargs.items():
                 opts[k] = self.autoProxy(v, noProxyTypes)
         
         byteMsgs = []
@@ -572,12 +572,12 @@ class RemoteEventHandler(object):
             if arg.__class__ == np.ndarray:
                 args[i] = ("__byte_message__", len(byteMsgs), (arg.dtype, arg.shape))
                 byteMsgs.append(arg)
-        for k,v in kwds.items():
+        for k,v in kwargs.items():
             if v.__class__ == np.ndarray:
-                kwds[k] = ("__byte_message__", len(byteMsgs), (v.dtype, v.shape))
+                kwargs[k] = ("__byte_message__", len(byteMsgs), (v.dtype, v.shape))
                 byteMsgs.append(v)
         
-        return self.send(request='callObj', opts=dict(obj=obj, args=args, kwds=kwds), byteData=byteMsgs, **opts)
+        return self.send(request='callObj', opts=dict(obj=obj, args=args, kwargs=kwargs), byteData=byteMsgs, **opts)
 
     def registerProxy(self, proxy):
         with self.proxyLock:
@@ -597,16 +597,16 @@ class RemoteEventHandler(object):
         except ClosedError:  ## if remote process has closed down, there is no need to send delete requests anymore
             pass
 
-    def transfer(self, obj, **kwds):
+    def transfer(self, obj, **kwargs):
         """
         Transfer an object by value to the remote host (the object must be picklable) 
         and return a proxy for the new remote object.
         """
         if obj.__class__ is np.ndarray:
             opts = {'dtype': obj.dtype, 'shape': obj.shape}
-            return self.send(request='transferArray', opts=opts, byteData=[obj], **kwds)            
+            return self.send(request='transferArray', opts=opts, byteData=[obj], **kwargs)            
         else:
-            return self.send(request='transfer', opts=dict(obj=obj), **kwds)
+            return self.send(request='transfer', opts=dict(obj=obj), **kwargs)
         
     def autoProxy(self, obj, noProxyTypes):
         ## Return object wrapped in LocalObjectProxy _unless_ its type is in noProxyTypes.
@@ -814,7 +814,7 @@ class ObjectProxy(object):
         self.__dict__['_handler'] = RemoteEventHandler.getHandler(processId)
         self.__dict__['_handler'].registerProxy(self)  ## handler will watch proxy; inform remote process when the proxy is deleted.
     
-    def _setProxyOptions(self, **kwds):
+    def _setProxyOptions(self, **kwargs):
         """
         Change the behavior of this proxy. For all options, a value of None
         will cause the proxy to instead use the default behavior defined
@@ -862,10 +862,10 @@ class ObjectProxy(object):
                        sent to the remote process.
         =============  =============================================================
         """
-        for k in kwds:
+        for k in kwargs:
             if k not in self._proxyOptions:
                 raise KeyError("Unrecognized proxy option '%s'" % k)
-        self._proxyOptions.update(kwds)
+        self._proxyOptions.update(kwargs)
     
     def _getValue(self):
         """
@@ -891,7 +891,7 @@ class ObjectProxy(object):
         return "<ObjectProxy for process %d, object 0x%x: %s >" % (self._processId, self._proxyId, self._typeStr)
         
         
-    def __getattr__(self, attr, **kwds):
+    def __getattr__(self, attr, **kwargs):
         """
         Calls __getattr__ on the remote object and returns the attribute
         by value or by proxy depending on the options set (see
@@ -905,8 +905,8 @@ class ObjectProxy(object):
         """
         opts = self._getProxyOptions()
         for k in opts:
-            if '_'+k in kwds:
-                opts[k] = kwds.pop('_'+k)
+            if '_'+k in kwargs:
+                opts[k] = kwargs.pop('_'+k)
         if opts['deferGetattr'] is True:
             return self._deferredAttr(attr)
         else:
@@ -916,7 +916,7 @@ class ObjectProxy(object):
     def _deferredAttr(self, attr):
         return DeferredObjectProxy(self, attr)
     
-    def __call__(self, *args, **kwds):
+    def __call__(self, *args, **kwargs):
         """
         Attempts to call the proxied object from the remote process.
         Accepts extra keyword arguments:
@@ -930,9 +930,9 @@ class ObjectProxy(object):
         """
         opts = self._getProxyOptions()
         for k in opts:
-            if '_'+k in kwds:
-                opts[k] = kwds.pop('_'+k)
-        return self._handler.callObj(obj=self, args=args, kwds=kwds, **opts)
+            if '_'+k in kwargs:
+                opts[k] = kwargs.pop('_'+k)
+        return self._handler.callObj(obj=self, args=args, kwargs=kwargs, **opts)
     
     
     ## Explicitly proxy special methods. Is there a better way to do this??
@@ -1110,7 +1110,7 @@ class DeferredObjectProxy(ObjectProxy):
     
     This takes a lot longer than running the equivalent code locally. To
     speed things up, we can 'defer' the two attribute lookups so they are
-    only carried out when neccessary::
+    only carried out when necessary::
     
         rsys = proc._import('sys')
         rsys._setProxyOptions(deferGetattr=True)

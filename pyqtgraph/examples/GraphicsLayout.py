@@ -8,7 +8,7 @@ import numpy as np
 
 import pyqtgraph as pg
 
-app = pg.mkQApp("Gradiant Layout Example")
+app = pg.mkQApp("Gradient Layout Example")
 view = pg.GraphicsView()
 l = pg.GraphicsLayout(border=(100,100,100))
 view.setCentralItem(l)
@@ -20,7 +20,7 @@ view.resize(800,600)
 text = """
 This example demonstrates the use of GraphicsLayout to arrange items in a grid.<br>
 The items added to the layout must be subclasses of QGraphicsWidget (this includes <br>
-PlotItem, ViewBox, LabelItem, and GrphicsLayout itself).
+PlotItem, ViewBox, LabelItem, and GraphicsLayout itself).
 """
 l.addLabel(text, col=1, colspan=4)
 l.nextRow()

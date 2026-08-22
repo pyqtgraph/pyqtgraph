@@ -23,9 +23,9 @@ class Graph(pg.GraphItem):
         pg.GraphItem.__init__(self)
         self.scatter.sigClicked.connect(self.clicked)
         
-    def setData(self, **kwds):
-        self.text = kwds.pop('text', [])
-        self.data = kwds
+    def setData(self, **kwargs):
+        self.text = kwargs.pop('text', [])
+        self.data = kwargs
         if 'pos' in self.data:
             npts = self.data['pos'].shape[0]
             self.data['data'] = np.empty(npts, dtype=[('index', int)])

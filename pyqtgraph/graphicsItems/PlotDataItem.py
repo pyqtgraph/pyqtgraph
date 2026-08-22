@@ -266,7 +266,7 @@ class PlotDataItem(GraphicsObject):
 
     Parameters
     ----------
-    *args : tuple, optional
+    *args
         Arguments representing the `x` and `y` data to be drawn. The following are
         examples for initializing data.
 
@@ -294,7 +294,7 @@ class PlotDataItem(GraphicsObject):
         When using spot-style arguments, it is always possible to give coordinate data
         separately through the `x` and `y` keyword arguments.
     
-    **kwargs : dict, optional
+    **kwargs
         The supported keyword arguments can be grouped into several categories:
 
         *Point Style Keyword Arguments*, see
@@ -835,10 +835,10 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple or None
+        *args
             :class:`QPen`, or parameters for a QPen constructed by 
             :func:`mkPen <pyqtgraph.mkPen>`. Use ``None`` to disable drawing of lines.
-        **kwargs : dict
+        **kwargs
             Alternative specification of arguments directed to
             :func:`mkPen <pyqtgraph.mkPen>`.
         """
@@ -856,10 +856,10 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple or None
+        *args
             :class:`QPen`, or parameters for a QPen constructed by 
             :func:`mkPen <pyqtgraph.mkPen>`. Use ``None`` to disable the shadow pen.
-        **kwargs : dict
+        **kwargs
             Alternative specification of arguments directed to
             :func:`mkPen <pyqtgraph.mkPen>`.
         """
@@ -878,11 +878,11 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple
+        *args
             :class:`QBrush`, or parameters for a QBrush constructed by
             :func:`mkBrush <pyqtgraph.mkBrush>`. Also accepts a color specifier
             understood by :func:`mkColor <pyqtgraph.mkColor>`.
-        **kwargs : dict
+        **kwargs
             Alternative specification of arguments directed to
             :func:`mkBrush <pyqtgraph.mkBrush>`.
         """
@@ -901,11 +901,11 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple
+        *args
             :class:`QBrush`, or parameters for a QBrush constructed by
             :func:`mkBrush <pyqtgraph.mkBrush>`. Also accepts a color specifier
             understood by :func:`mkColor <pyqtgraph.mkColor>`.
-        **kwargs : dict
+        **kwargs
             Alternative specification of arguments directed to
             :func:`mkBrush <pyqtgraph.mkBrush>`.
         """
@@ -969,10 +969,10 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple
+        *args
             :class:`QPen`, or parameters for a QPen constructed by 
             :func:`mkPen <pyqtgraph.mkPen>`.
-        **kwargs : dict
+        **kwargs
             Alternative specification of arguments directed to
             :func:`mkPen <pyqtgraph.mkPen>`.
         """
@@ -990,11 +990,11 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple
+        *args
             :class:`QBrush`, or parameters for a QBrush constructed by
             :func:`mkBrush <pyqtgraph.mkBrush>`. Also accepts a color specifier
             understood by :func:`mkColor <pyqtgraph.mkColor>`.
-        **kwargs : dict
+        **kwargs
             Alternative specification of arguments directed to
             :func:`mkBrush <pyqtgraph.mkBrush>`.
         """
@@ -1158,9 +1158,9 @@ class PlotDataItem(GraphicsObject):
 
         Parameters
         ----------
-        *args : tuple
+        *args
             See :class:`PlotDataItem` description for supported arguments.
-        **kwargs : dict
+        **kwargs
             See :class:`PlotDataItem` description for supported arguments.
 
         Raises
@@ -1327,7 +1327,7 @@ class PlotDataItem(GraphicsObject):
         Update the displayed curve and scatter plot.
 
         This method is called internally to redraw the curve and scatter plot when the
-        data or graphics style has been updated. It is not usally necessary to call this
+        data or graphics style has been updated. It is not usually necessary to call this
         from user code. 
 
         Parameters

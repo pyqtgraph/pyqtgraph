@@ -85,7 +85,8 @@ examples_ = OrderedDict([
         ('Text', 'GLTextItem.py'),
         ('BarGraph', 'GLBarGraphItem.py'),
         ('Painter', 'GLPainterItem.py'),
-        ('Gradient Legend', 'GLGradientLegendItem.py')
+        ('Gradient Legend', 'GLGradientLegendItem.py'),
+        ('Grid Axis', 'GLGridAxisItem.py'),
     ])),
     ('Widgets', OrderedDict([
         ('PlotWidget', 'PlotWidget.py'),

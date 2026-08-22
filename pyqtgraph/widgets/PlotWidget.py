@@ -10,19 +10,14 @@ from .GraphicsView import GraphicsView
 
 __all__ = ['PlotWidget']
 class PlotWidget(GraphicsView):
-    
-    # signals wrapped from PlotItem / ViewBox
-    sigRangeChanged = QtCore.Signal(object, object)
-    sigTransformChanged = QtCore.Signal(object)
-    
     """
-    :class:`GraphicsView <pyqtgraph.GraphicsView>` widget with a single 
+    :class:`GraphicsView <pyqtgraph.GraphicsView>` widget with a single
     :class:`PlotItem <pyqtgraph.PlotItem>` inside.
-    
-    The following methods are wrapped directly from PlotItem: 
-    :func:`addItem <pyqtgraph.PlotItem.addItem>`, 
-    :func:`removeItem <pyqtgraph.PlotItem.removeItem>`, 
-    :func:`clear <pyqtgraph.PlotItem.clear>`, 
+
+    The following methods are wrapped directly from PlotItem:
+    :func:`addItem <pyqtgraph.PlotItem.addItem>`,
+    :func:`removeItem <pyqtgraph.PlotItem.removeItem>`,
+    :func:`clear <pyqtgraph.PlotItem.clear>`,
     :func:`setAxisItems <pyqtgraph.PlotItem.setAxisItems>`,
     :func:`setXRange <pyqtgraph.ViewBox.setXRange>`,
     :func:`setYRange <pyqtgraph.ViewBox.setYRange>`,
@@ -38,12 +33,15 @@ class PlotWidget(GraphicsView):
     :func:`setLimits <pyqtgraph.ViewBox.setLimits>`,
     :func:`register <pyqtgraph.ViewBox.register>`,
     :func:`unregister <pyqtgraph.ViewBox.unregister>`
-    
-    
-    For all 
-    other methods, use :func:`getPlotItem <pyqtgraph.PlotWidget.getPlotItem>`.
+
+    For all other methods, use :func:`getPlotItem <pyqtgraph.PlotWidget.getPlotItem>`.
     """
-    def __init__(self, parent=None, background='default', plotItem=None, **kargs):
+
+    # signals wrapped from PlotItem / ViewBox
+    sigRangeChanged = QtCore.Signal(object, object)
+    sigTransformChanged = QtCore.Signal(object)
+
+    def __init__(self, parent=None, background='default', plotItem=None, **kwargs):
         ## start by instantiating the plotItem attribute in order to avoid recursive 
         ## calls of PlotWidget.__getattr__ - which access self.plotItem!
         self.plotItem = None
@@ -55,7 +53,7 @@ class PlotWidget(GraphicsView):
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.enableMouse(False)
         if plotItem is None:
-            self.plotItem = PlotItem(**kargs)
+            self.plotItem = PlotItem(**kwargs)
         else:
             self.plotItem = plotItem
         self.setCentralItem(self.plotItem)

@@ -56,14 +56,14 @@ class NonUniformImage(GraphicsObject):
         self.setLookupTable(cmap.getLookupTable(nPts=256), update=True)
         self.cmap = cmap
 
-    def getHistogram(self, **kwds):
+    def getHistogram(self, **kwargs):
         """Returns x and y arrays containing the histogram values for the current image.
         For an explanation of the return format, see numpy.histogram().
         """
 
         z = self.data[2]
         z = z[np.isfinite(z)]
-        hist = np.histogram(z, **kwds)
+        hist = np.histogram(z, **kwargs)
 
         return hist[1][:-1], hist[0]
 

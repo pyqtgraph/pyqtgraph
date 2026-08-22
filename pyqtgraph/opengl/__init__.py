@@ -13,6 +13,7 @@ from .items.GLScatterPlotItem import *
 from .items.GLSurfacePlotItem import *
 from .items.GLTextItem import *
 from .items.GLVolumeItem import *
+from .items.GLGridAxisItem import GLGridAxisItem
 from .MeshData import MeshData
 
 ## dynamic imports cause too many problems.

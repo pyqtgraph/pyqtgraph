@@ -9,7 +9,7 @@ from ... import debug as debug
 from ... import functions as fn
 from ... import getConfigOption
 from ...Point import Point
-from ...Qt import QtCore, QtGui, QtWidgets, isQObjectAlive, QT_LIB
+from ...Qt import QT_LIB, QtCore, QtGui, QtWidgets, isQObjectAlive
 from ..GraphicsWidget import GraphicsWidget
 from ..ItemGroup import ItemGroup
 
@@ -116,7 +116,7 @@ class ViewBox(GraphicsWidget):
         *border*           (QPen) Do draw a border around the view, give any
                            single argument accepted by :func:`mkPen <pyqtgraph.mkPen>`
         *lockAspect*       (False or float) The aspect ratio to lock the view
-                           coorinates to. (or False to allow the ratio to change)
+                           coordinates to. (or False to allow the ratio to change)
         *enableMouse*      (bool) Whether mouse can be used to scale/pan the view
         *invertY*          (bool) See :func:`invertY <pyqtgraph.ViewBox.invertY>`
         *invertX*          (bool) See :func:`invertX <pyqtgraph.ViewBox.invertX>`
@@ -168,7 +168,7 @@ class ViewBox(GraphicsWidget):
             'logMode': [False, False],
 
             # Limits
-            # maximum value of double float is 1.7E+308, but internal caluclations exceed this limit before the range reaches it.
+            # maximum value of double float is 1.7E+308, but internal calculations exceed this limit before the range reaches it.
             'limits': { 
                 'xLimits': [-1E307, +1E307],   # Maximum and minimum visible X values
                 'yLimits': [-1E307, +1E307],   # Maximum and minimum visible Y values
@@ -512,6 +512,8 @@ class ViewBox(GraphicsWidget):
             raise
 
     def _resetTarget(self):
+        """
+        """
         # Reset target range to exactly match current view range.
         # This is used during mouse interaction to prevent unpredictable
         # behavior (because the user is unaware of targetRange).
@@ -552,7 +554,7 @@ class ViewBox(GraphicsWidget):
                            and 0.1 depending on the size of the ViewBox.
         *update*           (bool) If True, update the range of the ViewBox immediately.
                            Otherwise, the update is deferred until before the next render.
-        *disableAutoRange* (bool) If True, auto-ranging is diabled. Otherwise, it is left
+        *disableAutoRange* (bool) If True, auto-ranging is disabled. Otherwise, it is left
                            unchanged.
         ================== =====================================================================
 
@@ -738,7 +740,7 @@ class ViewBox(GraphicsWidget):
             padding = def_pad
         return padding
 
-    def setLimits(self, **kwds):
+    def setLimits(self, **kwargs):
         """
         Set limits that constrain the possible view ranges.
 
@@ -766,20 +768,20 @@ class ViewBox(GraphicsWidget):
         """
         update = False
         allowed = ['xMin', 'xMax', 'yMin', 'yMax', 'minXRange', 'maxXRange', 'minYRange', 'maxYRange']
-        for kwd in kwds:
+        for kwd in kwargs:
             if kwd not in allowed:
                 raise ValueError("Invalid keyword argument '%s'." % kwd)
         for axis in [0,1]:
             for mnmx in [0,1]:
                 kwd = [['xMin', 'xMax'], ['yMin', 'yMax']][axis][mnmx]
                 lname = ['xLimits', 'yLimits'][axis]
-                if kwd in kwds and self.state['limits'][lname][mnmx] != kwds[kwd]:
-                    self.state['limits'][lname][mnmx] = kwds[kwd]
+                if kwd in kwargs and self.state['limits'][lname][mnmx] != kwargs[kwd]:
+                    self.state['limits'][lname][mnmx] = kwargs[kwd]
                     update = True
                 kwd = [['minXRange', 'maxXRange'], ['minYRange', 'maxYRange']][axis][mnmx]
                 lname = ['xRange', 'yRange'][axis]
-                if kwd in kwds and self.state['limits'][lname][mnmx] != kwds[kwd]:
-                    self.state['limits'][lname][mnmx] = kwds[kwd]
+                if kwd in kwargs and self.state['limits'][lname][mnmx] != kwargs[kwd]:
+                    self.state['limits'][lname][mnmx] = kwargs[kwd]
                     update = True
 
         if update:
@@ -1186,7 +1188,7 @@ class ViewBox(GraphicsWidget):
     def xInverted(self):
         return self.state['xInverted']
 
-    def setBorder(self, *args, **kwds):
+    def setBorder(self, *args, **kwargs):
         """
         Set the pen used to draw border around the view
 
@@ -1196,7 +1198,7 @@ class ViewBox(GraphicsWidget):
 
         See :func:`mkPen <pyqtgraph.mkPen>` for arguments.
         """
-        self.border = fn.mkPen(*args, **kwds)
+        self.border = fn.mkPen(*args, **kwargs)
         self.borderRect.setPen(self.border)
     
     def setDefaultPadding(self, padding=0.02):
@@ -1550,8 +1552,8 @@ class ViewBox(GraphicsWidget):
                 range[1][1] = max(range[1][1], bounds.bottom() + px*pxSize)
         return range
 
-    def childrenBoundingRect(self, *args, **kwds):
-        range = self.childrenBounds(*args, **kwds)
+    def childrenBoundingRect(self, *args, **kwargs):
+        range = self.childrenBounds(*args, **kwargs)
         tr = self.targetRange()
         if range[0] is None:
             range[0] = tr[0]
@@ -1562,7 +1564,7 @@ class ViewBox(GraphicsWidget):
         return bounds
 
     # Including a prepareForPaint call is part of the Qt strategy to
-    # defer expensive redraw opertions until requested by a 'sigPrepareForPaint' signal
+    # defer expensive redraw operations until requested by a 'sigPrepareForPaint' signal
     # 
     # However, as currently implemented, a call to prepareForPaint as part of the regular 
     # 'update' call results in an undesired reset of pan/zoom:
@@ -1616,7 +1618,7 @@ class ViewBox(GraphicsWidget):
             rangeY = [self.state['targetRange'][1][0] - dy, self.state['targetRange'][1][1] + dy]
             rangeX = [self.state['targetRange'][0][0] - dx, self.state['targetRange'][0][1] + dx]
 
-            canidateRange = [rangeX, rangeY]
+            candidateRange = [rangeX, rangeY]
 
             # Decide which range to try to keep unchanged
             #print self.name, "aspect:", aspect, "changed:", changed, "auto:", self.state['autoRange']
@@ -1631,11 +1633,11 @@ class ViewBox(GraphicsWidget):
                 target = 0 if ax == 1 else 1
                 # See if this choice would cause out-of-range issues
                 if maxRng is not None or minRng is not None:
-                    diff = canidateRange[target][1] - canidateRange[target][0]
+                    diff = candidateRange[target][1] - candidateRange[target][0]
                     if maxRng[target] is not None and diff > maxRng[target] or \
                        minRng[target] is not None and diff < minRng[target]:
                         # tweak the target range down so we can still pan properly
-                        viewRange[ax] = canidateRange[ax]
+                        viewRange[ax] = candidateRange[ax]
                         self.state['viewRange'][ax] = viewRange[ax]
                         self._resetTarget()
                         ax = target  # Switch the "fixed" axes
@@ -1712,6 +1714,9 @@ class ViewBox(GraphicsWidget):
         if vr.height() == 0 or vr.width() == 0:
             return
         scale = Point(bounds.width()/vr.width(), bounds.height()/vr.height())
+        for axis in (0, 1):
+            if not math.isfinite(scale[axis]):
+                scale[axis] = math.copysign(sys.float_info.max, scale[axis])
         if not self.state['yInverted']:
             scale = scale * Point(1, -1)
         if self.state['xInverted']:

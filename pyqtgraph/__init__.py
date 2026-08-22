@@ -5,7 +5,7 @@ www.pyqtgraph.org
 
 __version__ = '0.15.0.dev0'
 
-### import all the goodies and add some helper functions for easy CLI use
+# pyright: reportMissingImports=false, reportUnusedImport=false
 
 import importlib
 import os
@@ -60,8 +60,8 @@ def setConfigOptions(**opts):
 
     Each keyword argument sets one global option.
     """
-    for k,v in opts.items():
-        setConfigOption(k, v)
+    for key, value in opts.items():
+        setConfigOption(key, value)
 
 def getConfigOption(opt):
     """Return the value of a single global configuration option.
@@ -297,7 +297,7 @@ plots = []
 images = []
 QAPP = None
 
-def plot(*args, **kargs):
+def plot(*args, **kwargs):
     """
     Create and return a :class:`PlotWidget <pyqtgraph.PlotWidget>`
     Accepts a *title* argument to set the title of the window.
@@ -307,11 +307,11 @@ def plot(*args, **kargs):
     pwArgList = ['title', 'labels', 'name', 'left', 'right', 'top', 'bottom', 'background']
     pwArgs = {}
     dataArgs = {}
-    for k in kargs:
+    for k in kwargs:
         if k in pwArgList:
-            pwArgs[k] = kargs[k]
+            pwArgs[k] = kwargs[k]
         else:
-            dataArgs[k] = kargs[k]
+            dataArgs[k] = kwargs[k]
     windowTitle = pwArgs.pop("title", "PlotWidget")
     w = PlotWidget(**pwArgs)
     w.setWindowTitle(windowTitle)
@@ -321,7 +321,7 @@ def plot(*args, **kargs):
     w.show()
     return w
 
-def image(*args, **kargs):
+def image(*args, **kwargs):
     """
     Create and return an :class:`ImageView <pyqtgraph.ImageView>`
     Will show 2D or 3D image data.
@@ -330,16 +330,16 @@ def image(*args, **kargs):
     """
     mkQApp()
     w = ImageView()
-    windowTitle = kargs.pop("title", "ImageView")
+    windowTitle = kwargs.pop("title", "ImageView")
     w.setWindowTitle(windowTitle)
-    w.setImage(*args, **kargs)
+    w.setImage(*args, **kwargs)
     images.append(w)
     w.show()
     return w
 show = image  ## for backward compatibility
 
 
-def dbg(*args, **kwds):
+def dbg(*args, **kwargs):
     """
     Create a console window and begin watching for exceptions.
 
@@ -347,7 +347,7 @@ def dbg(*args, **kwds):
     """
     mkQApp()
     from . import console
-    c = console.ConsoleWidget(*args, **kwds)
+    c = console.ConsoleWidget(*args, **kwargs)
     c.catchAllExceptions()
     c.show()
     global consoles
@@ -358,7 +358,7 @@ def dbg(*args, **kwds):
     return c
 
 
-def stack(*args, **kwds):
+def stack(*args, **kwargs):
     """
     Create a console window and show the current stack trace.
 
@@ -366,7 +366,7 @@ def stack(*args, **kwds):
     """
     mkQApp()
     from . import console
-    c = console.ConsoleWidget(*args, **kwds)
+    c = console.ConsoleWidget(*args, **kwargs)
     c.setStack()
     c.show()
     global consoles
@@ -377,7 +377,7 @@ def stack(*args, **kwds):
     return c
 
 
-def setPalette(app, style):
+def setPalette(app: QtWidgets.QApplication, style: QtGui.QPalette | str):
     if isinstance(style, str):
         style = style.lower()
         if style == 'qdarkstylelight':

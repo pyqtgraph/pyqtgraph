@@ -12,10 +12,10 @@ class ReplWidget(QtWidgets.QWidget):
     sigCommandEntered = QtCore.Signal(object, object)  # self, command
     sigCommandRaisedException = QtCore.Signal(object, object)  # self, exc
 
-    def __init__(self, globals, locals, parent=None, allowNonGuiExecution=False):
+    def __init__(self, globals, locals, parent: QtWidgets.QWidget | None=None, allowNonGuiExecution=False):
         self._lastCommandRow = None
 
-        QtWidgets.QWidget.__init__(self, parent=parent)
+        super().__init__(parent)
 
         self._allowNonGuiExecution = allowNonGuiExecution
         self._thread = ReplThread(self, globals, locals, parent=self)
@@ -24,6 +24,11 @@ class ReplWidget(QtWidgets.QWidget):
         self._thread.sigCommandExecuted.connect(self.handleCommandExecuted)
         if allowNonGuiExecution:
             self._thread.start()
+            # stop the repl thread before it can be destroyed while still running
+            app = QtWidgets.QApplication.instance()
+            if app is not None:
+                app.aboutToQuit.connect(self.stopReplThread)
+            self.destroyed.connect(self.stopReplThread)
 
         self._setupUi()
 
@@ -49,14 +54,25 @@ class ReplWidget(QtWidgets.QWidget):
         self.input.ps1 = self._thread.ps1
         self.input.ps2 = self._thread.ps2
 
+    def stopReplThread(self):
+        thread = self._thread
+        if thread.isRunning():
+            thread.requestInterruption()
+            thread.quit()
+            _ = thread.wait(5_000)
+
     def _setupUi(self):
-        self.layout = QtWidgets.QVBoxLayout(self)
+        self.layout = QtWidgets.QVBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
         self.setLayout(self.layout)
 
         self.output = QtWidgets.QTextEdit(self)
         font = QtGui.QFont("monospace")
+        font.setStyleHint(
+            QtGui.QFont.StyleHint.Monospace,
+            QtGui.QFont.StyleStrategy.PreferAntialias
+        )
         self.output.setFont(font)
         self.output.setReadOnly(True)
         self.layout.addWidget(self.output)
@@ -177,9 +193,12 @@ class ReplThread(QtCore.QThread):
         self._commands.put(cmd)
 
     def run(self):
-        # todo handle external interruptions
-        while True:
-            cmd = self._commands.get()
+        # process queued commands until the thread is interrupted
+        while not self.isInterruptionRequested():
+            try:
+                cmd = self._commands.get(timeout=0.1)
+            except queue.Empty:
+                continue
             self.runCmd(cmd)
 
     def runCmd(self, cmd):

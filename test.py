@@ -2,6 +2,7 @@
 Script for invoking pytest with options to select Qt library
 """
 
+# pyright: reportMissingImports=false, reportUnusedImport=false
 import sys
 import pytest
 
@@ -18,4 +19,4 @@ elif '--pyqt6' in args:
 
 import pyqtgraph as pg
 pg.systemInfo()
-pytest.main(args)
+_ = pytest.main(args)

@@ -67,7 +67,7 @@ verts[:,2] = np.vstack([4*np.cos(theta-0.2), 4*np.sin(theta-0.2), [1]*36]).T
 ## Colors are specified per-vertex
 colors = np.random.random(size=(verts.shape[0], 3, 4))
 m2 = gl.GLMeshItem(vertexes=verts, vertexColors=colors, smooth=False, shader='balloon', 
-                   drawEdges=True, edgeColor=(1, 1, 0, 1))
+                   drawEdges=True, edgeColor=(1, 1, 0, 1), polygonOffset=True)
 m2.translate(-5, 5, 0)
 w.addItem(m2)
 
@@ -106,7 +106,7 @@ colors = np.ones((len(md.vertexes()), 4), dtype=np.float32)
 colors[::2,0] = 0
 colors[:,1] = np.linspace(0, 1, colors.shape[0])
 md.setVertexColors(colors)
-m5 = gl.GLMeshItem(meshdata=md, smooth=True, drawEdges=True, edgeColor=(1,0,0,1))
+m5 = gl.GLMeshItem(meshdata=md, smooth=True, drawEdges=True, edgeColor=(1,0,0,1), polygonOffset=True)
 colors = np.ones((len(md2.vertexes()), 4), dtype=np.float32)
 colors[::2,0] = 0
 colors[:,1] = np.linspace(0, 1, colors.shape[0])

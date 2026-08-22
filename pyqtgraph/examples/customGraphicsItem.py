@@ -38,7 +38,7 @@ class CandlestickItem(pg.GraphicsObject):
     def boundingRect(self):
         ## boundingRect _must_ indicate the entire area that will be drawn on
         ## or else we will get artifacts and possibly crashing.
-        ## (in this case, QPicture does all the work of computing the bouning rect for us)
+        ## (in this case, QPicture does all the work of computing the bounding rect for us)
         return QtCore.QRectF(self.picture.boundingRect())
 
 data = [  ## fields are (time, open, close, min, max).

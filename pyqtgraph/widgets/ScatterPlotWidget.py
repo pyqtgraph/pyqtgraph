@@ -192,15 +192,6 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
                 return
             
             xy = [data[sel[0]], data[sel[1]]]
-            #xydata = []
-            #for ax in [0,1]:
-                #d = data[sel[ax]]
-                ### scatter catecorical values just a bit so they show up better in the scatter plot.
-                ##if sel[ax] in ['MorphologyBSMean', 'MorphologyTDMean', 'FIType']:
-                    ##d += np.random.normal(size=len(cells), scale=0.1)
-                    
-                #xydata.append(d)
-            #x,y = xydata
 
         ## convert enum-type fields to float, set axis labels
         enum = [False, False]

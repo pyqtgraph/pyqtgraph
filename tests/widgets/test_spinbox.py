@@ -90,6 +90,21 @@ def test_evalFunc():
     assert sb.value() == 100
 
 
+def test_SpinBox_reformats_unchanged_integer_value():
+    sb = pg.SpinBox(int=True)
+    sb.setValue(10)
+
+    sb.lineEdit().setText('2.5')
+    sb.editingFinishedEvent()
+    assert sb.value() == 2
+    assert sb.text() == '2'
+
+    sb.lineEdit().setText('2.1')
+    sb.editingFinishedEvent()
+    assert sb.value() == 2
+    assert sb.text() == '2'
+
+
 def spinBox_gui_set_value_test(expected, valueText, suffix, locale):
     sb = pg.SpinBox(suffix=suffix, locale=locale)
 
