@@ -1,5 +1,4 @@
 from OpenGL import GL
-from OpenGL.GL import shaders
 import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
@@ -102,12 +101,15 @@ class GLImageItem(GLGraphicsItem):
                 glsl_version = ""
                 sources = SHADER_LEGACY
 
-        compiled = [shaders.compileShader([glsl_version, v], k) for k, v in sources.items()]
-        program = shaders.compileProgram(*compiled)
+        program = QtOpenGL.QOpenGLShaderProgram()
+        for shader_type, src in sources.items():
+            if not program.addShaderFromSourceCode(shader_type, glsl_version + src):
+                raise RuntimeError(program.log())
 
-        GL.glBindAttribLocation(program, 0, "a_position")
-        GL.glBindAttribLocation(program, 1, "a_texcoord")
-        GL.glLinkProgram(program)
+        program.bindAttributeLocation("a_position", 0)
+        program.bindAttributeLocation("a_texcoord", 1)
+        if not program.link():
+            raise RuntimeError(program.log())
 
         klass._shaderProgram = program
         return program
@@ -120,35 +122,35 @@ class GLImageItem(GLGraphicsItem):
         self.setupGLState()
 
         mat_mvp = self.mvpMatrix()
-        mat_mvp = np.array(mat_mvp.data(), dtype=np.float32)
 
         program = self.getShaderProgram()
         loc_pos, loc_tex = 0, 1
         self.m_vbo_position.bind()
-        GL.glVertexAttribPointer(loc_pos, 2, GL.GL_FLOAT, False, 4*4, None)
-        GL.glVertexAttribPointer(loc_tex, 2, GL.GL_FLOAT, False, 4*4, GL.GLvoidp(2*4))
+        program.setAttributeBuffer(loc_pos, GL.GL_FLOAT, 0*4, 2, 4*4)
+        program.setAttributeBuffer(loc_tex, GL.GL_FLOAT, 2*4, 2, 4*4)
         self.m_vbo_position.release()
         enabled_locs = [loc_pos, loc_tex]
 
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture)
 
         for loc in enabled_locs:
-            GL.glEnableVertexAttribArray(loc)
+            program.enableAttributeArray(loc)
 
-        with program:
-            loc = GL.glGetUniformLocation(program, "u_mvp")
-            GL.glUniformMatrix4fv(loc, 1, False, mat_mvp)
+        program.bind()
+        program.setUniformValue("u_mvp", mat_mvp)
 
-            GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
+        GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
+
+        program.release()
 
         for loc in enabled_locs:
-            GL.glDisableVertexAttribArray(loc)
+            program.disableAttributeArray(loc)
 
         GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
 
 
 SHADER_LEGACY = {
-    GL.GL_VERTEX_SHADER : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : """
         uniform mat4 u_mvp;
         attribute vec4 a_position;
         attribute vec2 a_texcoord;
@@ -158,7 +160,7 @@ SHADER_LEGACY = {
             v_texcoord = a_texcoord;
         }
     """,
-    GL.GL_FRAGMENT_SHADER : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : """
         #ifdef GL_ES
         precision mediump float;
         #endif
@@ -172,7 +174,7 @@ SHADER_LEGACY = {
 }
 
 SHADER_CORE = {
-    GL.GL_VERTEX_SHADER : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : """
         uniform mat4 u_mvp;
         in vec4 a_position;
         in vec2 a_texcoord;
@@ -182,7 +184,7 @@ SHADER_CORE = {
             v_texcoord = a_texcoord;
         }
     """,
-    GL.GL_FRAGMENT_SHADER : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : """
         #ifdef GL_ES
         precision mediump float;
         #endif

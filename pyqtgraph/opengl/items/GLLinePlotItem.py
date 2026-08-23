@@ -1,7 +1,6 @@
 import enum
 
 from OpenGL import GL
-from OpenGL.GL import shaders
 import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
@@ -124,14 +123,17 @@ class GLLinePlotItem(GLGraphicsItem):
                 glsl_version = ""
                 sources = SHADER_LEGACY
 
-        compiled = [shaders.compileShader([glsl_version, v], k) for k, v in sources.items()]
-        program = shaders.compileProgram(*compiled)
+        program = QtOpenGL.QOpenGLShaderProgram()
+        for shader_type, src in sources.items():
+            if not program.addShaderFromSourceCode(shader_type, glsl_version + src):
+                raise RuntimeError(program.log())
 
-        # bind generic vertex attrib 0 to "a_position" so that
-        # vertex attrib 0 definitely gets enabled later.
-        GL.glBindAttribLocation(program, 0, "a_position")
-        GL.glBindAttribLocation(program, 1, "a_color")
-        GL.glLinkProgram(program)
+        # bind generic vertex attribs 0 and 1 to "a_position" and "a_color"
+        # so that they definitely get enabled later.
+        program.bindAttributeLocation("a_position", 0)
+        program.bindAttributeLocation("a_color", 1)
+        if not program.link():
+            raise RuntimeError(program.log())
 
         klass._shaderProgram = program
         return program
@@ -142,7 +144,6 @@ class GLLinePlotItem(GLGraphicsItem):
         self.setupGLState()
 
         mat_mvp = self.mvpMatrix()
-        mat_mvp = np.array(mat_mvp.data(), dtype=np.float32)
 
         context = QtGui.QOpenGLContext.currentContext()
 
@@ -158,18 +159,18 @@ class GLLinePlotItem(GLGraphicsItem):
 
         loc = 0
         self.m_vbo_position.bind()
-        GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
+        program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 3)
         self.m_vbo_position.release()
         enabled_locs.append(loc)
 
         loc = 1
         if isinstance(self.color, np.ndarray):
             self.m_vbo_color.bind()
-            GL.glVertexAttribPointer(loc, 4, GL.GL_FLOAT, False, 0, None)
+            program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 4)
             self.m_vbo_color.release()
             enabled_locs.append(loc)
         else:
-            GL.glVertexAttrib4f(loc, *self.color)
+            program.setAttributeValue(loc, QtGui.QColor.fromRgbF(*self.color))
 
         enable_aa = self.antialias and not context.isOpenGLES()
 
@@ -191,19 +192,20 @@ class GLLinePlotItem(GLGraphicsItem):
             GL.glLineWidth(self.width)
 
         for loc in enabled_locs:
-            GL.glEnableVertexAttribArray(loc)
+            program.enableAttributeArray(loc)
 
-        with program:
-            loc = GL.glGetUniformLocation(program, "u_mvp")
-            GL.glUniformMatrix4fv(loc, 1, False, mat_mvp)
+        program.bind()
+        program.setUniformValue("u_mvp", mat_mvp)
 
-            if self.mode == 'line_strip':
-                GL.glDrawArrays(GL.GL_LINE_STRIP, 0, len(self.pos))
-            elif self.mode == 'lines':
-                GL.glDrawArrays(GL.GL_LINES, 0, len(self.pos))
+        if self.mode == 'line_strip':
+            GL.glDrawArrays(GL.GL_LINE_STRIP, 0, len(self.pos))
+        elif self.mode == 'lines':
+            GL.glDrawArrays(GL.GL_LINES, 0, len(self.pos))
+
+        program.release()
 
         for loc in enabled_locs:
-            GL.glDisableVertexAttribArray(loc)
+            program.disableAttributeArray(loc)
 
         if enable_aa:
             GL.glDisable(GL.GL_LINE_SMOOTH)
@@ -213,7 +215,7 @@ class GLLinePlotItem(GLGraphicsItem):
 
 
 SHADER_LEGACY = {
-    GL.GL_VERTEX_SHADER : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : """
         uniform mat4 u_mvp;
         attribute vec4 a_position;
         attribute vec4 a_color;
@@ -223,7 +225,7 @@ SHADER_LEGACY = {
             gl_Position = u_mvp * a_position;
         }
     """,
-    GL.GL_FRAGMENT_SHADER : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : """
         #ifdef GL_ES
         precision mediump float;
         #endif
@@ -235,7 +237,7 @@ SHADER_LEGACY = {
 }
 
 SHADER_CORE = {
-    GL.GL_VERTEX_SHADER : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : """
         uniform mat4 u_mvp;
         in vec4 a_position;
         in vec4 a_color;
@@ -245,7 +247,7 @@ SHADER_CORE = {
             gl_Position = u_mvp * a_position;
         }
     """,
-    GL.GL_FRAGMENT_SHADER : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : """
         #ifdef GL_ES
         precision mediump float;
         #endif
