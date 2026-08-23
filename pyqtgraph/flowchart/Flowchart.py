@@ -76,7 +76,7 @@ class Flowchart(Node):
       
     def setLibrary(self, lib):
         self.library = lib
-        self.widget().chartWidget.buildMenu()
+        self.widget().chartWidget().buildMenu()
       
     def setInput(self, **args):
         """Set the input values of the flowchart. This will automatically propagate
