@@ -411,9 +411,6 @@ class ScatterPlotItem(GraphicsObject):
         profiler()
         self.setData(*args, **kwargs)
         profiler('setData')
-
-        #self.setCacheMode(self.DeviceCoordinateCache)
-
         # track when the tooltip is cleared so we only clear it once
         # this allows another item in the VB to set the tooltip
         self._toolTipCleared = True

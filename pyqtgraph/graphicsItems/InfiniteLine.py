@@ -279,16 +279,6 @@ class InfiniteLine(GraphicsObject):
         a single value. Otherwise, a 2D coordinate must be specified (list, tuple and
         QPointF are all acceptable)."""
         self.setPos(v)
-
-    ## broken in 4.7
-    #def itemChange(self, change, val):
-        #if change in [self.GraphicsItemChange.ItemScenePositionHasChanged, self.GraphicsItemChange.ItemSceneHasChanged]:
-            #self.updateLine()
-            #print "update", change
-            #print self.getBoundingParents()
-        #else:
-            #print "ignore", change
-        #return GraphicsObject.itemChange(self, change, val)
     
     def setSpan(self, mn, mx):
         if self.span != (mn, mx):
