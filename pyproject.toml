@@ -39,8 +39,8 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.dynamic]
 version = { attr = "pyqtgraph.__version__" }
 
-[tool.setuptools]
-packages = ["pyqtgraph"]
+[tool.setuptools.packages.find]
+include = ["pyqtgraph", "pyqtgraph.*"]
 
 [tool.setuptools.package-data]
 pyqtgraph = [
