@@ -100,9 +100,13 @@ class ArrowItem(QtWidgets.QGraphicsPathItem):
         self.setBrush(fn.mkBrush(self.opts['brush']))
         
         if self.opts['pxMode']:
-            self.setFlags(self.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
+            self.setFlags(
+                self.flags() | QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations
+            )
         else:
-            self.setFlags(self.flags() & ~self.GraphicsItemFlag.ItemIgnoresTransformations)
+            self.setFlags(
+                self.flags() & ~QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations
+            )
 
     def paint(self, p, *args):
         p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)

@@ -3,6 +3,7 @@ GraphicsWidget displaying an image histogram along with gradient editor. Can be 
 adjust the appearance of images.
 """
 
+__all__ = ['HistogramLUTItem']
 
 import weakref
 
@@ -21,8 +22,6 @@ from .GraphicsWidget import GraphicsWidget
 from .LinearRegionItem import LinearRegionItem
 from .PlotCurveItem import PlotCurveItem
 from .ViewBox import ViewBox
-
-__all__ = ['HistogramLUTItem']
 
 
 class HistogramLUTItem(GraphicsWidget):
@@ -167,8 +166,8 @@ class HistogramLUTItem(GraphicsWidget):
             self.layout.addItem(self.vb, avg[1], 0)
             self.layout.addItem(self.gradient, avg[2], 0)
 
-        self.gradient.setFlag(self.gradient.GraphicsItemFlag.ItemStacksBehindParent)
-        self.vb.setFlag(self.gradient.GraphicsItemFlag.ItemStacksBehindParent)
+        self.gradient.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemStacksBehindParent)
+        self.vb.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemStacksBehindParent)
 
         self.gradient.sigGradientChanged.connect(self.gradientChanged)
         self.vb.sigRangeChanged.connect(self.viewRangeChanged)

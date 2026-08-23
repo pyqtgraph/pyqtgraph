@@ -149,7 +149,11 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             ## set focus on the topmost focusable item under this click
             items = self.items(ev.scenePos())
             for i in items:
-                if i.isEnabled() and i.isVisible() and (i.flags() & i.GraphicsItemFlag.ItemIsFocusable):
+                if (
+                    i.isEnabled() and 
+                    i.isVisible() and 
+                    (i.flags() & QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsFocusable)
+                ):
                     i.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)
                     break
 
@@ -335,7 +339,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                         if event.isAccepted():
                             #print "   --> accepted"
                             self.dragItem = item
-                            if item.flags() & item.GraphicsItemFlag.ItemIsFocusable:
+                            if item.flags() & QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsFocusable:
                                 item.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)
                             break
         elif self.dragItem is not None:
@@ -386,7 +390,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                             debug.printExc("Error sending click event:")
                             
                         if ev.isAccepted():
-                            if item.flags() & item.GraphicsItemFlag.ItemIsFocusable:
+                            if item.flags() & QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsFocusable:
                                 item.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)
                             break
         self.sigMouseClicked.emit(ev)

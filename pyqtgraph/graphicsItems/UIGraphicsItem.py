@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['UIGraphicsItem']
@@ -26,7 +26,7 @@ class UIGraphicsItem(GraphicsObject):
         ============== =============================================================================
         """
         GraphicsObject.__init__(self, parent)
-        self.setFlag(self.GraphicsItemFlag.ItemSendsScenePositionChanges)
+        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemSendsScenePositionChanges)
             
         if bounds is None:
             self._bounds = QtCore.QRectF(0, 0, 1, 1)
@@ -44,35 +44,9 @@ class UIGraphicsItem(GraphicsObject):
     def itemChange(self, change, value):
         ret = GraphicsObject.itemChange(self, change, value)
             
-        if change == self.GraphicsItemChange.ItemScenePositionHasChanged:
+        if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemScenePositionHasChanged:
             self.setNewBounds()
         return ret
-    
-    #def updateView(self):
-        ### called to see whether this item has a new view to connect to
-        
-        ### check for this item's current viewbox or view widget
-        #view = self.getViewBox()
-        #if view is None:
-            ##print "  no view"
-            #return
-            
-        #if self._connectedView is not None and view is self._connectedView():
-            ##print "  already have view", view
-            #return
-            
-        ### disconnect from previous view
-        #if self._connectedView is not None:
-            #cv = self._connectedView()
-            #if cv is not None:
-                ##print "disconnect:", self
-                #cv.sigRangeChanged.disconnect(self.viewRangeChanged)
-            
-        ### connect to new view
-        ##print "connect:", self
-        #view.sigRangeChanged.connect(self.viewRangeChanged)
-        #self._connectedView = weakref.ref(view)
-        #self.setNewBounds()
 
     def boundingRect(self):
         if self._boundingRect is None:
@@ -99,7 +73,6 @@ class UIGraphicsItem(GraphicsObject):
         self._boundingRect = None  ## invalidate bounding rect, regenerate later if needed.
         self.prepareGeometryChange()
 
-
     def setPos(self, *args):
         GraphicsObject.setPos(self, *args)
         self.setNewBounds()
@@ -112,6 +85,3 @@ class UIGraphicsItem(GraphicsObject):
         stroker.setWidth(2)
         ds2 = stroker.createStroke(ds).united(ds)
         return self.mapFromDevice(ds2)
-        
-        
-        
