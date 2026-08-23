@@ -10,20 +10,29 @@ class Dock(QtWidgets.QWidget):
     sigStretchChanged = QtCore.Signal()
     sigClosed = QtCore.Signal(object)
 
-    def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, label=None, **kwargs):
-        QtWidgets.QWidget.__init__(self)
+    def __init__(
+        self,
+        name,
+        area=None,
+        size=(10, 10),
+        widget=None,
+        hideTitle=False,
+        autoOrientation=True,
+        label=None,
+        **kwargs
+    ):
+        super().__init__()
         self.dockdrop = DockDrop(self)
         self._container = None
         self._name = name
         self.area = area
-        self.label = label
-        if self.label is None:
-            self.label = DockLabel(name, **kwargs)
+        self.label = DockLabel(name, **kwargs) if label is None else label
         self.label.dock = self
         if self.label.isClosable():
             self.label.sigCloseClicked.connect(self.close)
         self.labelHidden = False
-        self.moveLabel = True  ## If false, the dock is no longer allowed to move the label.
+        # If false, the dock is no longer allowed to move the label.
+        self.moveLabel = True
         self.autoOrient = autoOrientation
         self.orientation = 'horizontal'
         #self.label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
@@ -38,7 +47,10 @@ class Dock(QtWidgets.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
         self.widgetArea.setLayout(self.layout)
-        self.widgetArea.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+        self.widgetArea.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Expanding
+        )
         self.widgets = []
         self.currentRow = 0
         #self.titlePos = 'top'
@@ -231,7 +243,11 @@ class Dock(QtWidgets.QWidget):
     def close(self):
         """Remove this dock from the DockArea it lives inside."""
         if self._container is None:
-            warnings.warn(f"Cannot close dock {self} because it is not open.", RuntimeWarning, stacklevel=2)
+            warnings.warn(
+                f"Cannot close dock {self} because it is not open.",
+                RuntimeWarning,
+                stacklevel=2
+            )
             return
 
         self.setParent(None)
@@ -266,8 +282,10 @@ class DockLabel(VerticalLabel):
         self.dim = False
         self.fixedWidth = False
         self.fontSize = fontSize
-        VerticalLabel.__init__(self, text, orientation='horizontal', forceWidth=False)
-        self.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop|QtCore.Qt.AlignmentFlag.AlignHCenter)
+        super().__init__(text, orientation='horizontal', forceWidth=False)
+        self.setAlignment(
+            QtCore.Qt.AlignmentFlag.AlignTop | QtCore.Qt.AlignmentFlag.AlignHCenter
+        )
         self.dock = None
         self.updateStyle()
         self.setAutoFillBackground(False)
@@ -278,7 +296,11 @@ class DockLabel(VerticalLabel):
         if closable:
             self.closeButton = QtWidgets.QToolButton(self)
             self.closeButton.clicked.connect(self.sigCloseClicked)
-            self.closeButton.setIcon(QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_TitleBarCloseButton))
+            self.closeButton.setIcon(
+                QtWidgets.QApplication.style().standardIcon(
+                    QtWidgets.QStyle.StandardPixmap.SP_TitleBarCloseButton
+                )
+            )
 
     def updateStyle(self):
         r = '3px'
@@ -343,7 +365,10 @@ class DockLabel(VerticalLabel):
     def mouseMoveEvent(self, ev):
         if not self.mouseMoved:
             lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
-            self.mouseMoved = (lpos - self.pressPos).manhattanLength() > QtWidgets.QApplication.startDragDistance()
+            self.mouseMoved = (
+                (lpos - self.pressPos).manhattanLength() > 
+                QtWidgets.QApplication.startDragDistance()
+            )
 
         if self.mouseMoved and ev.buttons() == QtCore.Qt.MouseButton.LeftButton:
             self.dock.startDrag()

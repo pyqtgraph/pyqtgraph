@@ -48,7 +48,6 @@ class Container(object):
                 index += 1
                 
         for n in new:
-            #print "insert", n, " -> ", self, index
             self._insertItem(n, index)
             #print "change container", n, " -> ", self
             n.containerChanged(self)
@@ -64,17 +63,23 @@ class Container(object):
         c = self.count()
         if c > 1:
             return
-        if c == 1:  ## if there is one item, give it to the parent container (unless this is the top)
+        # if there is one item, give it to the parent container (unless this is the top)
+        if c == 1:
             ch = self.widget(0)
-            if (self.area is not None and self is self.area.topContainer and not isinstance(ch, Container)) or self.container() is None:
+            if (
+                (
+                    self.area is not None and
+                    self is self.area.topContainer and
+                    not isinstance(ch, Container)
+                ) or self.container() is None
+            ):
                 return
             self.container().insert(ch, 'before', self)
-        #print "apoptose:", self
-        self.close()
+        self.close_()
         if propagate and cont is not None:
             cont.apoptose()
 
-    def close(self):
+    def close_(self):
         self.setParent(None)
         if self.area is not None and self.area.topContainer is self:
             self.area.topContainer = None
@@ -87,7 +92,6 @@ class Container(object):
         #       Container and QSplitter.
         ch = ev.child()
         if ev.removed() and hasattr(ch, 'sigStretchChanged'):
-            #print "Child", ev.child(), "removed, updating", self
             try:
                 ch.sigStretchChanged.disconnect(self.childStretchChanged)
             except:
@@ -96,11 +100,9 @@ class Container(object):
         
     @QtCore.Slot()
     def childStretchChanged(self):
-        #print "child", QtCore.QObject.sender(self), "changed shape, updating", self
         self.updateStretch()
         
     def setStretch(self, x=None, y=None):
-        #print "setStretch", self, x, y
         self._stretch = (x, y)
         self.sigStretchChanged.emit()
 
@@ -161,7 +163,6 @@ class HContainer(SplitContainer):
         
     def updateStretch(self):
         ##Set the stretch values for this container to reflect its contents
-        #print "updateStretch", self
         x = 0
         y = 0
         sizes = []
@@ -170,9 +171,7 @@ class HContainer(SplitContainer):
             x += wx
             y = max(y, wy)
             sizes.append(wx)
-            #print "  child", self.widget(i), wx, wy
         self.setStretch(x, y)
-        #print sizes
         
         tot = float(sum(sizes))
         if tot == 0:
@@ -192,7 +191,6 @@ class VContainer(SplitContainer):
 
     def updateStretch(self):
         ##Set the stretch values for this container to reflect its contents
-        #print "updateStretch", self
         x = 0
         y = 0
         sizes = []
@@ -201,10 +199,8 @@ class VContainer(SplitContainer):
             y += wy
             x = max(x, wx)
             sizes.append(wy)
-            #print "  child", self.widget(i), wx, wy
         self.setStretch(x, y)
 
-        #print sizes
         tot = float(sum(sizes))
         if tot == 0:
             scale = 1.0
