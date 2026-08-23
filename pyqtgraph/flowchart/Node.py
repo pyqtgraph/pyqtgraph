@@ -409,7 +409,8 @@ class Node(QtCore.QObject):
         self.terminals = OrderedDict()
         self._inputs = OrderedDict()
         self._outputs = OrderedDict()
-        
+
+    @QtCore.Slot()
     def close(self):
         """Cleans up after the node--removes terminals, graphicsItem, widget"""
         self.disconnectAll()
@@ -454,7 +455,6 @@ class TextItem(QtWidgets.QGraphicsTextItem):
             self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.NoTextInteraction)
 
 
-#class NodeGraphicsItem(QtWidgets.QGraphicsItem):
 class NodeGraphicsItem(GraphicsObject):
     def __init__(self, node):
         #QtWidgets.QGraphicsItem.__init__(self)
@@ -676,10 +676,12 @@ class NodeGraphicsItem(GraphicsObject):
         a = self.menu.addAction(translate("Context Menu", "Remove node"), self.node.close)
         if not self.node._allowRemove:
             a.setEnabled(False)
-        
+
+    @QtCore.Slot()
     def addInputFromMenu(self):  ## called when add input is clicked in context menu
         self.node.addInput(renamable=True, removable=True, multiable=True)
-        
+
+    @QtCore.Slot()
     def addOutputFromMenu(self):  ## called when add output is clicked in context menu
         self.node.addOutput(renamable=True, removable=True, multiable=False)
         
