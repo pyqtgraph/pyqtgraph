@@ -243,9 +243,7 @@ class GLMeshItem(GLGraphicsItem):
             self.upload_vertex_buffers(dirty_bits)
 
         mat_mvp = self.mvpMatrix()
-        mat_mvp = np.array(mat_mvp.data(), dtype=np.float32)
         mat_normal = self.modelViewMatrix().normalMatrix()
-        mat_normal = np.array(mat_normal.data(), dtype=np.float32)
 
         context = QtGui.QOpenGLContext.currentContext()
         es2_compat = context.hasExtension(b'GL_ARB_ES2_compatibility')
@@ -256,45 +254,44 @@ class GLMeshItem(GLGraphicsItem):
 
             enabled_locs = []
 
-            if (loc := GL.glGetAttribLocation(program, "a_position")) != -1:
+            if (loc := program.attributeLocation("a_position")) != -1:
                 self.m_vbo_position.bind()
-                GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
+                program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 3)
                 self.m_vbo_position.release()
                 enabled_locs.append(loc)
 
-            if (loc := GL.glGetAttribLocation(program, "a_normal")) != -1:
+            if (loc := program.attributeLocation("a_normal")) != -1:
                 if self.normals is None:
                     # the shader needs a normal but the user set computeNormals=False...
-                    GL.glVertexAttrib3f(loc, 0, 0, 1)
+                    program.setAttributeValue(loc, QtGui.QVector3D(0, 0, 1))
                 else:
                     self.m_vbo_normal.bind()
-                    GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
+                    program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 3)
                     self.m_vbo_normal.release()
                     enabled_locs.append(loc)
 
-            if (loc := GL.glGetAttribLocation(program, "a_color")) != -1:
+            if (loc := program.attributeLocation("a_color")) != -1:
                 if self.colors is None:
                     color = self.opts['color']
-                    if isinstance(color, QtGui.QColor):
-                        color = color.getRgbF()
-                    GL.glVertexAttrib4f(loc, *color)
+                    if not isinstance(color, QtGui.QColor):
+                        color = QtGui.QColor.fromRgbF(*color)
+                    program.setAttributeValue(loc, color)
                 else:
                     self.m_vbo_color.bind()
                     if self.colors.dtype == np.uint8:
-                        GL.glVertexAttribPointer(loc, 4, GL.GL_UNSIGNED_BYTE, True, 0, None)
+                        program.setAttributeBuffer(loc, GL.GL_UNSIGNED_BYTE, 0, 4)
                     else:
-                        GL.glVertexAttribPointer(loc, 4, GL.GL_FLOAT, False, 0, None)
+                        program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 4)
                     self.m_vbo_color.release()
                     enabled_locs.append(loc)
 
             for loc in enabled_locs:
-                GL.glEnableVertexAttribArray(loc)
+                program.enableAttributeArray(loc)
 
             with shader:    # "with shader" will load extra uniforms
-                loc = GL.glGetUniformLocation(program, "u_mvp")
-                GL.glUniformMatrix4fv(loc, 1, False, mat_mvp)
-                if (uloc_normal := GL.glGetUniformLocation(program, "u_normal")) != -1:
-                    GL.glUniformMatrix3fv(uloc_normal, 1, False, mat_normal)
+                program.setUniformValue("u_mvp", mat_mvp)
+                if (loc := program.uniformLocation("u_normal")) != -1:
+                    program.setUniformValue(loc, mat_normal)
 
                 if (faces := self.faces) is None:
                     GL.glDrawArrays(GL.GL_TRIANGLES, 0, np.prod(self.vertexes.shape[:-1]))
@@ -304,7 +301,7 @@ class GLMeshItem(GLGraphicsItem):
                     self.m_ibo_faces.release()
 
             for loc in enabled_locs:
-                GL.glDisableVertexAttribArray(loc)
+                program.disableAttributeArray(loc)
 
         if self.opts['drawEdges']:
             shader = shaders.getShaderProgram(None)
@@ -312,32 +309,33 @@ class GLMeshItem(GLGraphicsItem):
 
             enabled_locs = []
 
-            if (loc := GL.glGetAttribLocation(program, "a_position")) != -1:
+            if (loc := program.attributeLocation("a_position")) != -1:
                 self.m_vbo_edgeVerts.bind()
-                GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
+                program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 3)
                 self.m_vbo_edgeVerts.release()
                 enabled_locs.append(loc)
 
             # edge colors are always just one single color
-            if (loc := GL.glGetAttribLocation(program, "a_color")) != -1:
+            if (loc := program.attributeLocation("a_color")) != -1:
                 color = self.opts['edgeColor']
-                if isinstance(color, QtGui.QColor):
-                    color = color.getRgbF()
-                GL.glVertexAttrib4f(loc, *color)
+                if not isinstance(color, QtGui.QColor):
+                    color = QtGui.QColor.fromRgbF(*color)
+                program.setAttributeValue(loc, color)
 
             for loc in enabled_locs:
-                GL.glEnableVertexAttribArray(loc)
+                program.enableAttributeArray(loc)
 
-            with program:
-                loc = GL.glGetUniformLocation(program, "u_mvp")
-                GL.glUniformMatrix4fv(loc, 1, False, mat_mvp)
+            program.bind()
+            program.setUniformValue("u_mvp", mat_mvp)
 
-                self.m_ibo_edges.bind()
-                GL.glDrawElements(GL.GL_LINES, self.edges.size, GL.GL_UNSIGNED_INT, None)
-                self.m_ibo_edges.release()
+            self.m_ibo_edges.bind()
+            GL.glDrawElements(GL.GL_LINES, self.edges.size, GL.GL_UNSIGNED_INT, None)
+            self.m_ibo_edges.release()
+
+            program.release()
 
             for loc in enabled_locs:
-                GL.glDisableVertexAttribArray(loc)
+                program.disableAttributeArray(loc)
 
         if self.opts['polygonOffset']:
             GL.glDisable(GL.GL_POLYGON_OFFSET_FILL)
