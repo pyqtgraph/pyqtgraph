@@ -59,7 +59,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
         
         self.closed = False
         
-        QtWidgets.QGraphicsView.__init__(self, parent)
+        super().__init__(parent)
         
         # This connects a cleanup function to QApplication.aboutToQuit. It is
         # called from here because we have no good way to react when the
@@ -72,10 +72,7 @@ class GraphicsView(QtWidgets.QGraphicsView):
             useOpenGL = getConfigOption('useOpenGL')
         
         self.useOpenGL(useOpenGL)
-        self.setCacheMode(self.CacheModeFlag.CacheBackground)
-        
-        ## This might help, but it's probably dangerous in the general case..
-        #self.setOptimizationFlag(self.DontSavePainterState, True)
+        self.setCacheMode(QtWidgets.QGraphicsView.CacheModeFlag.CacheBackground)
         
         self.setBackgroundRole(QtGui.QPalette.ColorRole.NoRole)
         self.setBackground(background)
@@ -137,9 +134,9 @@ class GraphicsView(QtWidgets.QGraphicsView):
         self.scene().prepareForPaint()
         return super().paintEvent(ev)
     
-    def render(self, *args, **kwds):
+    def render(self, *args, **kwargs):
         self.scene().prepareForPaint()
-        return super().render(*args, **kwds)
+        return super().render(*args, **kwargs)
         
     
     def close(self):

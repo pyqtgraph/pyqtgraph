@@ -6,7 +6,6 @@ import sys
 from argparse import Namespace
 from collections import OrderedDict
 from functools import lru_cache
-from typing import Optional
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QT_LIB, QtCore, QtGui, QtWidgets
@@ -92,7 +91,7 @@ class ExampleLoader(QtWidgets.QMainWindow):
         self.codeBtn.clicked.connect(self.runEditedCode)
         self.updateCodeViewTabWidth(self.ui.codeView.font())
 
-    def event(self, event: Optional[QtCore.QEvent]):
+    def event(self, event: QtCore.QEvent | None):
         if event is None:
             return super().event(None)
         if event.type() in [
@@ -333,10 +332,10 @@ class ExampleLoader(QtWidgets.QMainWindow):
         event.accept()
 
 def main():
-    app = pg.mkQApp()
+    _ = pg.mkQApp()
     loader = ExampleLoader()
     loader.ui.exampleTree.setCurrentIndex(
-        loader.ui.exampleTree.model().index(0,0)
+        loader.ui.exampleTree.model().index(0, 0)
     )
     pg.exec()
 

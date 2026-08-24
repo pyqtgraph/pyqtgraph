@@ -9,10 +9,10 @@ __all__ = ['GLTextItem']
 class GLTextItem(GLGraphicsItem):
     """Draws text in 3D."""
 
-    def __init__(self, parentItem=None, **kwds):
+    def __init__(self, parentItem=None, **kwargs):
         """All keyword arguments are passed to setData()"""
         super().__init__(parentItem=parentItem)
-        glopts = kwds.pop('glOptions', 'additive')
+        glopts = kwargs.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
 
         self.items = []
@@ -22,9 +22,9 @@ class GLTextItem(GLGraphicsItem):
         self.font = QtGui.QFont('Helvetica', 16)
         self.alignment = QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignBottom
 
-        self.setData(**kwds)
+        self.setData(**kwargs)
 
-    def setData(self, **kwds):
+    def setData(self, **kwargs):
         """
         Update the data displayed by this item. All arguments are optional;
         for example it is allowed to update text while leaving colors unchanged, etc.
@@ -43,12 +43,12 @@ class GLTextItem(GLGraphicsItem):
         ====================  ==================================================
         """
         args = ['pos', 'text', 'color', 'font', 'alignment', 'items']
-        for k in kwds.keys():
+        for k in kwargs.keys():
             if k not in args:
                 raise ValueError('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
         for arg in args:
-            if arg in kwds:
-                value = kwds[arg]
+            if arg in kwargs:
+                value = kwargs[arg]
                 if arg == 'pos':
                     if isinstance(value, np.ndarray):
                         if value.shape != (3,):

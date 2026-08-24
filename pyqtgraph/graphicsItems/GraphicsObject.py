@@ -1,7 +1,9 @@
+__all__ = ['GraphicsObject']
+
 from ..Qt import QtWidgets
 from .GraphicsItem import GraphicsItem
 
-__all__ = ['GraphicsObject']
+
 class GraphicsObject(GraphicsItem, QtWidgets.QGraphicsObject):
     """
     **Bases:** :class:`GraphicsItem <pyqtgraph.GraphicsItem>`, :class:`QtWidgets.QGraphicsObject`
@@ -11,12 +13,15 @@ class GraphicsObject(GraphicsItem, QtWidgets.QGraphicsObject):
     def __init__(self, *args):
         self.__inform_view_on_changes = True
         QtWidgets.QGraphicsObject.__init__(self, *args)
-        self.setFlag(self.GraphicsItemFlag.ItemSendsGeometryChanges)
+        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
         GraphicsItem.__init__(self)
         
     def itemChange(self, change, value):
         ret = super().itemChange(change, value)
-        if change in [self.GraphicsItemChange.ItemParentHasChanged, self.GraphicsItemChange.ItemSceneHasChanged]:
+        if change in [
+            QtWidgets.QGraphicsItem.GraphicsItemChange.ItemParentHasChanged,
+            QtWidgets.QGraphicsItem.GraphicsItemChange.ItemSceneHasChanged
+        ]:
             self.changeParent()
         try:
             inform_view_on_change = self.__inform_view_on_changes
@@ -25,7 +30,9 @@ class GraphicsObject(GraphicsItem, QtWidgets.QGraphicsObject):
             # (if it was triggered during the gc of the object).
             pass
         else:
-            if inform_view_on_change and change in [self.GraphicsItemChange.ItemPositionHasChanged, self.GraphicsItemChange.ItemTransformHasChanged]:
+            if inform_view_on_change and change in [
+                QtWidgets.QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged,
+                QtWidgets.QGraphicsItem.GraphicsItemChange.ItemTransformHasChanged
+            ]:
                 self.informViewBoundsChanged()
-            
         return ret

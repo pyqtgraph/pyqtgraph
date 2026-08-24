@@ -226,7 +226,7 @@ class PlotCurveItem(GraphicsObject):
     sigPlotChanged = QtCore.Signal(object)
     sigClicked = QtCore.Signal(object, object)
 
-    def __init__(self, *args, **kargs):
+    def __init__(self, *args, **kwargs):
         """
         Forwards all arguments to :func:`setData <pyqtgraph.PlotCurveItem.setData>`.
 
@@ -239,7 +239,7 @@ class PlotCurveItem(GraphicsObject):
                         clicked on. Defaults to `False`.
         ==============  =======================================================
         """
-        GraphicsObject.__init__(self, kargs.get('parent', None))
+        GraphicsObject.__init__(self, kwargs.get('parent', None))
         self.clear()
 
         ## this is disastrous for performance.
@@ -260,10 +260,10 @@ class PlotCurveItem(GraphicsObject):
             'skipFiniteCheck': False,
             'segmentedLineMode': getConfigOption('segmentedLineMode'),
         }
-        if 'pen' not in kargs:
+        if 'pen' not in kwargs:
             self.opts['pen'] = fn.mkPen('w')
-        self.setClickable(kargs.get('clickable', False))
-        self.setData(*args, **kargs)
+        self.setClickable(kwargs.get('clickable', False))
+        self.setData(*args, **kwargs)
         self.glstate = None
 
     def implements(self, interface=None):
@@ -345,7 +345,10 @@ class PlotCurveItem(GraphicsObject):
         if orthoRange is not None:
             mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
             if self.opts.get("stepMode", None) == "center":
-                mask = mask[:-1]  # len(y) == len(x) - 1 when stepMode is center
+                if ax == 1:
+                    mask = mask[:-1]  # len(y) == len(x) - 1 when stepMode is center
+                else:
+                    mask = np.concatenate([mask, [0]])
             d = d[mask]
             #d2 = d2[mask]
 
@@ -482,16 +485,16 @@ class PlotCurveItem(GraphicsObject):
         self._boundingRect = None
         self._boundsCache = [None, None]
 
-    def setPen(self, *args, **kargs):
+    def setPen(self, *args, **kwargs):
         """Set the pen used to draw the curve."""
         if args and args[0] is None:
             self.opts['pen'] = None
         else:
-            self.opts['pen'] = fn.mkPen(*args, **kargs)
+            self.opts['pen'] = fn.mkPen(*args, **kwargs)
         self.invalidateBounds()
         self.update()
 
-    def setShadowPen(self, *args, **kargs):
+    def setShadowPen(self, *args, **kwargs):
         """
         Set the shadow pen used to draw behind the primary pen.
         This pen must have a larger width than the primary
@@ -501,11 +504,11 @@ class PlotCurveItem(GraphicsObject):
         if args and args[0] is None:
             self.opts['shadowPen'] = None
         else:
-            self.opts['shadowPen'] = fn.mkPen(*args, **kargs)
+            self.opts['shadowPen'] = fn.mkPen(*args, **kwargs)
         self.invalidateBounds()
         self.update()
 
-    def setBrush(self, *args, **kargs):
+    def setBrush(self, *args, **kwargs):
         """
         Sets the brush used when filling the area under the curve. All 
         arguments are passed to :func:`mkBrush <pyqtgraph.mkBrush>`.
@@ -513,7 +516,7 @@ class PlotCurveItem(GraphicsObject):
         if args and args[0] is None:
             self.opts['brush'] = None
         else:
-            self.opts['brush'] = fn.mkBrush(*args, **kargs)
+            self.opts['brush'] = fn.mkBrush(*args, **kwargs)
         self.invalidateBounds()
         self.update()
 
@@ -534,7 +537,7 @@ class PlotCurveItem(GraphicsObject):
         """
         self.opts['skipFiniteCheck']  = bool(skipFiniteCheck)
 
-    def setData(self, *args, **kargs):
+    def setData(self, *args, **kwargs):
         """
         =============== =================================================================
         **Arguments:**
@@ -589,30 +592,30 @@ class PlotCurveItem(GraphicsObject):
         Line widths greater than 1 pixel affect the performance as discussed in 
         the documentation of :class:`PlotDataItem <pyqtgraph.PlotDataItem>`.
         """
-        self.updateData(*args, **kargs)
+        self.updateData(*args, **kwargs)
 
-    def updateData(self, *args, **kargs):
+    def updateData(self, *args, **kwargs):
         profiler = debug.Profiler()
 
-        if 'compositionMode' in kargs:
-            self.setCompositionMode(kargs['compositionMode'])
+        if 'compositionMode' in kwargs:
+            self.setCompositionMode(kwargs['compositionMode'])
 
         if len(args) == 1:
-            kargs['y'] = args[0]
+            kwargs['y'] = args[0]
         elif len(args) == 2:
-            kargs['x'] = args[0]
-            kargs['y'] = args[1]
+            kwargs['x'] = args[0]
+            kwargs['y'] = args[1]
 
-        if 'y' not in kargs or kargs['y'] is None:
-            kargs['y'] = np.array([])
-        if 'x' not in kargs or kargs['x'] is None:
-            kargs['x'] = np.arange(len(kargs['y']))
+        if 'y' not in kwargs or kwargs['y'] is None:
+            kwargs['y'] = np.array([])
+        if 'x' not in kwargs or kwargs['x'] is None:
+            kwargs['x'] = np.arange(len(kwargs['y']))
 
         for k in ['x', 'y']:
-            data = kargs[k]
+            data = kwargs[k]
             if isinstance(data, list):
                 data = np.array(data)
-                kargs[k] = data
+                kwargs[k] = data
             if not isinstance(data, np.ndarray) or data.ndim > 1:
                 raise Exception("Plot data must be 1D ndarray.")
             if data.dtype.kind == 'c':
@@ -621,10 +624,8 @@ class PlotCurveItem(GraphicsObject):
 
         profiler("data checks")
 
-        #self.setCacheMode(QtWidgets.QGraphicsItem.CacheMode.NoCache)  ## Disabling and re-enabling the cache works around a bug in Qt 4.6 causing the cached results to display incorrectly
-                                                        ##    Test this bug with test_PlotWidget and zoom in on the animated plot
-        self.yData = kargs['y'].view(np.ndarray)
-        self.xData = kargs['x'].view(np.ndarray)
+        self.yData = kwargs['y'].view(np.ndarray)
+        self.xData = kwargs['x'].view(np.ndarray)
         
         self.invalidateBounds()
         self.prepareGeometryChange()
@@ -632,8 +633,8 @@ class PlotCurveItem(GraphicsObject):
 
         profiler('copy')
 
-        if 'stepMode' in kargs:
-            self.opts['stepMode'] = kargs['stepMode']
+        if 'stepMode' in kwargs:
+            self.opts['stepMode'] = kwargs['stepMode']
 
         if self.opts['stepMode'] == "center":
             if len(self.xData) != len(self.yData)+1:  ## allow difference of 1 for step mode plots
@@ -648,24 +649,24 @@ class PlotCurveItem(GraphicsObject):
         self._mouseShape = None
         self._lineSegmentsRendered = False
 
-        if 'name' in kargs:
-            self.opts['name'] = kargs['name']
-        if 'connect' in kargs:
-            self.opts['connect'] = kargs['connect']
-        if 'pen' in kargs:
-            self.setPen(kargs['pen'])
-        if 'shadowPen' in kargs:
-            self.setShadowPen(kargs['shadowPen'])
-        if 'fillLevel' in kargs:
-            self.setFillLevel(kargs['fillLevel'])
-        if 'fillOutline' in kargs:
-            self.opts['fillOutline'] = kargs['fillOutline']
-        if 'brush' in kargs:
-            self.setBrush(kargs['brush'])
-        if 'antialias' in kargs:
-            self.opts['antialias'] = kargs['antialias']
-        if 'skipFiniteCheck' in kargs:
-            self.opts['skipFiniteCheck'] = kargs['skipFiniteCheck']
+        if 'name' in kwargs:
+            self.opts['name'] = kwargs['name']
+        if 'connect' in kwargs:
+            self.opts['connect'] = kwargs['connect']
+        if 'pen' in kwargs:
+            self.setPen(kwargs['pen'])
+        if 'shadowPen' in kwargs:
+            self.setShadowPen(kwargs['shadowPen'])
+        if 'fillLevel' in kwargs:
+            self.setFillLevel(kwargs['fillLevel'])
+        if 'fillOutline' in kwargs:
+            self.opts['fillOutline'] = kwargs['fillOutline']
+        if 'brush' in kwargs:
+            self.setBrush(kwargs['brush'])
+        if 'antialias' in kwargs:
+            self.opts['antialias'] = kwargs['antialias']
+        if 'skipFiniteCheck' in kwargs:
+            self.opts['skipFiniteCheck'] = kwargs['skipFiniteCheck']
 
         profiler('set')
         self.update()
@@ -981,32 +982,65 @@ class PlotCurveItem(GraphicsObject):
         )
         do_fill_outline = do_fill and self.opts['fillOutline']
 
-        if do_fill:
-            if self._shouldUseFillPathList(brush):
-                paths = self._getFillPathList(widget)
-            else:
-                paths = [self._getFillPath()]
+        path_transform = None
+        if (
+            self._exportOpts is not False
+            and self._exportOpts.get('svgCoordinatesOffset', False)
+        ):
+            center = self.boundingRect().center()
+            if np.isfinite(center.x()) and np.isfinite(center.y()):
+                path_transform = QtGui.QTransform.fromTranslate(
+                    -center.x(), -center.y()
+                )
+                p.save()
+                p.translate(center)
 
-            profiler('generate fill path')
-            for path in paths:
-                p.fillPath(path, brush)
-            profiler('draw fill path')
-
-        for pen_kind in ['shadowPen', 'pen']:
-            pen = self.opts[pen_kind]
-            if pen is None or pen.style() == QtCore.Qt.PenStyle.NoPen:
-                continue
-            p.setPen(pen)
-
-            if self._shouldUseDrawLineSegments(pen):
-                p.drawLines(*self._getLineSegments())
-                if do_fill_outline:
-                    p.drawLines(self._getClosingSegments())
-            else:
-                if do_fill_outline:
-                    p.drawPath(self._getFillPath())
+        try:
+            if do_fill:
+                if (
+                    path_transform is None
+                    and self._shouldUseFillPathList(brush)
+                ):
+                    paths = self._getFillPathList(widget)
                 else:
-                    p.drawPath(self.getPath())
+                    # The fill path list is a painting throughput optimization.
+                    # SVG export prefers the single path while applying a
+                    # path-local coordinate offset for precision.
+                    paths = [self._getFillPath()]
+
+                if path_transform is not None:
+                    paths = [path_transform.map(path) for path in paths]
+
+                profiler('generate fill path')
+                for path in paths:
+                    p.fillPath(path, brush)
+                profiler('draw fill path')
+
+            for pen_kind in ['shadowPen', 'pen']:
+                pen = self.opts[pen_kind]
+                if pen is None or pen.style() == QtCore.Qt.PenStyle.NoPen:
+                    continue
+                p.setPen(pen)
+
+                if (
+                    path_transform is None
+                    and self._shouldUseDrawLineSegments(pen)
+                ):
+                    p.drawLines(*self._getLineSegments())
+                    if do_fill_outline:
+                        p.drawLines(self._getClosingSegments())
+                else:
+                    if do_fill_outline:
+                        path = self._getFillPath()
+                    else:
+                        path = self.getPath()
+
+                    if path_transform is not None:
+                        path = path_transform.map(path)
+                    p.drawPath(path)
+        finally:
+            if path_transform is not None:
+                p.restore()
 
         profiler('drawPath')
 

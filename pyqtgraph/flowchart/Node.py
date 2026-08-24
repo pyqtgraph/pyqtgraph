@@ -169,7 +169,7 @@ class Node(QtCore.QObject):
         Warning: do not modify."""
         return self._outputs
         
-    def process(self, **kargs):
+    def process(self, **kwargs):
         """Process data through this node. This method is called any time the flowchart 
         wants the node to process data. It will be called with one keyword argument
         corresponding to each input terminal, and must return a dict mapping the name
@@ -409,7 +409,8 @@ class Node(QtCore.QObject):
         self.terminals = OrderedDict()
         self._inputs = OrderedDict()
         self._outputs = OrderedDict()
-        
+
+    @QtCore.Slot()
     def close(self):
         """Cleans up after the node--removes terminals, graphicsItem, widget"""
         self.disconnectAll()
@@ -454,7 +455,6 @@ class TextItem(QtWidgets.QGraphicsTextItem):
             self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.NoTextInteraction)
 
 
-#class NodeGraphicsItem(QtWidgets.QGraphicsItem):
 class NodeGraphicsItem(GraphicsObject):
     def __init__(self, node):
         #QtWidgets.QGraphicsItem.__init__(self)
@@ -474,8 +474,12 @@ class NodeGraphicsItem(GraphicsObject):
         self.hovered = False
         
         self.node = node
-        flags = self.GraphicsItemFlag.ItemIsMovable | self.GraphicsItemFlag.ItemIsSelectable | self.GraphicsItemFlag.ItemIsFocusable | self.GraphicsItemFlag.ItemSendsGeometryChanges
-        #flags =  self.ItemIsFocusable |self.ItemSendsGeometryChanges
+        flags = (
+            QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsMovable | 
+            QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable |
+            QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsFocusable |
+            QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges
+        )
 
         self.setFlags(flags)
         self.bounds = QtCore.QRectF(0, 0, 100, 100)
@@ -647,7 +651,7 @@ class NodeGraphicsItem(GraphicsObject):
             ev.ignore()
 
     def itemChange(self, change, val):
-        if change == self.GraphicsItemChange.ItemPositionHasChanged:
+        if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
             for k, t in self.terminals.items():
                 t[1].nodeMoved()
         return GraphicsObject.itemChange(self, change, val)
@@ -672,10 +676,12 @@ class NodeGraphicsItem(GraphicsObject):
         a = self.menu.addAction(translate("Context Menu", "Remove node"), self.node.close)
         if not self.node._allowRemove:
             a.setEnabled(False)
-        
+
+    @QtCore.Slot()
     def addInputFromMenu(self):  ## called when add input is clicked in context menu
         self.node.addInput(renamable=True, removable=True, multiable=True)
-        
+
+    @QtCore.Slot()
     def addOutputFromMenu(self):  ## called when add output is clicked in context menu
         self.node.addOutput(renamable=True, removable=True, multiable=False)
         

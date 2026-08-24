@@ -50,7 +50,7 @@ ANSI[RESET] = "\033[0m"
 WIN[RESET] =  {'reset': True}
 
 
-def cprint(stream, *args, **kwds):
+def cprint(stream, *args, **kwargs):
     """
     Print with color. Examples::
 
@@ -69,19 +69,19 @@ def cprint(stream, *args, **kwds):
 
     """
     if isinstance(stream, str):
-        stream = kwds.get('stream', 'stdout')
+        stream = kwargs.get('stream', 'stdout')
         err = stream == 'stderr'
         stream = getattr(sys, stream)
     else:
-        err = kwds.get('stderr', False)
+        err = kwargs.get('stderr', False)
 
     if hasattr(stream, 'isatty') and stream.isatty():
         for arg in args:
             if isinstance(arg, str):
                 stream.write(arg)
             elif _WIN:
-                kwds = WIN[arg]
-                winset(stderr=err, **kwds)
+                kwargs = WIN[arg]
+                winset(stderr=err, **kwargs)
             else:
                 stream.write(ANSI[arg])
     else:

@@ -12,7 +12,7 @@ from .. import dockarea as dockarea
 from .. import functions as fn
 from ..debug import printExc
 from ..graphicsItems.GraphicsObject import GraphicsObject
-from ..Qt import QtCore, QtWidgets
+from ..Qt import QtCore, QtGui, QtWidgets
 from . import FlowchartCtrlTemplate_generic as FlowchartCtrlTemplate
 from . import FlowchartGraphicsView
 from .library import LIBRARY
@@ -76,7 +76,7 @@ class Flowchart(Node):
       
     def setLibrary(self, lib):
         self.library = lib
-        self.widget().chartWidget.buildMenu()
+        self.widget().chartWidget().buildMenu()
       
     def setInput(self, **args):
         """Set the input values of the flowchart. This will automatically propagate
@@ -87,7 +87,8 @@ class Flowchart(Node):
         #print "  ....."
         self.inputWasSet = True
         self.inputNode.setOutput(**args)
-        
+
+    @QtCore.Slot()
     def outputChanged(self):
         ## called when output of internal node has changed
         vals = self.outputNode.inputValues()
@@ -131,17 +132,20 @@ class Flowchart(Node):
         inTerm = self.internalTerminal(term)
         Node.removeTerminal(self, name)
         inTerm.node().removeTerminal(inTerm.name())
-        
+
+    @QtCore.Slot(object, object)
     def internalTerminalRenamed(self, term, oldName):
         self[oldName].rename(term.name())
-        
+
+    @QtCore.Slot(object, object)
     def internalTerminalAdded(self, node, term):
         if term._io == 'in':
             io = 'out'
         else:
             io = 'in'
         Node.addTerminal(self, term.name(), io=io, renamable=term.isRenamable(), removable=term.isRemovable(), multiable=term.isMultiable())
-        
+
+    @QtCore.Slot(object, object)
     def internalTerminalRemoved(self, node, term):
         try:
             Node.removeTerminal(self, term.name())
@@ -200,6 +204,7 @@ class Flowchart(Node):
         """
         node.close()
         
+    @QtCore.Slot(object)
     def nodeClosed(self, node):
         del self._nodes[node.name()]
         self.widget().removeNode(node)
@@ -211,7 +216,8 @@ class Flowchart(Node):
             except (TypeError, RuntimeError):
                 pass
         self.sigChartChanged.emit(self, 'remove', node)
-        
+
+    @QtCore.Slot(object, object)
     def nodeRenamed(self, node, oldName):
         del self._nodes[oldName]
         self._nodes[node.name()] = node
@@ -358,8 +364,8 @@ class Flowchart(Node):
         for i, t in dels:
             ops.insert(i, ('d', t))
         return ops
-        
-        
+
+    @QtCore.Slot(object)
     def nodeOutputChanged(self, startNode):
         """Triggered when a node's output values have changed. (NOT called during process())
         Propagates new data forward through network."""
@@ -606,17 +612,17 @@ class FlowchartCtrlWidget(QtWidgets.QWidget):
         self.ui.ctrlList.setVerticalScrollMode(self.ui.ctrlList.ScrollMode.ScrollPerPixel)
         self.ui.ctrlList.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         
-        self.chartWidget = FlowchartWidget(chart, self)
-        #self.chartWidget.viewBox().autoRange()
+        self._chartWidget = FlowchartWidget(chart, self)
+        #self._chartWidget.viewBox().autoRange()
         self.cwWin = QtWidgets.QMainWindow()
         self.cwWin.setWindowTitle('Flowchart')
-        self.cwWin.setCentralWidget(self.chartWidget)
+        self.cwWin.setCentralWidget(self._chartWidget)
         self.cwWin.resize(1000,800)
         
         h = self.ui.ctrlList.header()
         h.setSectionResizeMode(0, h.ResizeMode.Stretch)
         
-        self.ui.ctrlList.itemChanged.connect(self.itemChanged)
+        # self.ui.ctrlList.itemChanged.connect(self.itemChanged)
         self.ui.loadBtn.clicked.connect(self.loadClicked)
         self.ui.saveBtn.clicked.connect(self.saveClicked)
         self.ui.saveAsBtn.clicked.connect(self.saveAsClicked)
@@ -624,35 +630,33 @@ class FlowchartCtrlWidget(QtWidgets.QWidget):
         self.chart.sigFileLoaded.connect(self.setCurrentFile)
         self.ui.reloadBtn.clicked.connect(self.reloadClicked)
         self.chart.sigFileSaved.connect(self.fileSaved)
-        
-    
-        
-    #def resizeEvent(self, ev):
-        #QtWidgets.QWidget.resizeEvent(self, ev)
-        #self.ui.ctrlList.setColumnWidth(0, self.ui.ctrlList.viewport().width()-20)
-        
+
+    @QtCore.Slot(bool)
     def chartToggled(self, b):
         if b:
             self.cwWin.show()
         else:
             self.cwWin.hide()
 
+    @QtCore.Slot()
     def reloadClicked(self):
         try:
-            self.chartWidget.reloadLibrary()
+            self._chartWidget.reloadLibrary()
             self.ui.reloadBtn.success("Reloaded.")
         except:
             self.ui.reloadBtn.success("Error.")
             raise
-            
-            
+
+    @QtCore.Slot()
     def loadClicked(self):
         self.chart.loadFile()
-        
+    
+    @QtCore.Slot(object)
     def fileSaved(self, fileName):
         self.setCurrentFile(fileName)
         self.ui.saveBtn.success("Saved.")
         
+    @QtCore.Slot()
     def saveClicked(self):
         if self.currentFileName is None:
             self.saveAsClicked()
@@ -663,7 +667,8 @@ class FlowchartCtrlWidget(QtWidgets.QWidget):
             except:
                 self.ui.saveBtn.failure("Error")
                 raise
-        
+
+    @QtCore.Slot()
     def saveAsClicked(self):
         try:
             if self.currentFileName is None:
@@ -673,7 +678,8 @@ class FlowchartCtrlWidget(QtWidgets.QWidget):
         except:
             self.ui.saveBtn.failure("Error")
             raise
-            
+
+    @QtCore.Slot(object)
     def setCurrentFile(self, fileName):
         self.currentFileName = fileName
         if fileName is None:
@@ -682,14 +688,11 @@ class FlowchartCtrlWidget(QtWidgets.QWidget):
             self.ui.fileNameLabel.setText("<b>%s</b>" % os.path.split(self.currentFileName)[1])
         self.resizeEvent(None)
 
-    def itemChanged(self, *args):
-        pass
-    
     def scene(self):
-        return self.chartWidget.scene() ## returns the GraphicsScene object
+        return self._chartWidget.scene() ## returns the GraphicsScene object
     
     def viewBox(self):
-        return self.chartWidget.viewBox()
+        return self._chartWidget.viewBox()
 
     def nodeRenamed(self, node, oldName):
         self.items[node].setText(0, node.name())
@@ -732,14 +735,14 @@ class FlowchartCtrlWidget(QtWidgets.QWidget):
         btn.node.bypass(btn.isChecked())
             
     def chartWidget(self):
-        return self.chartWidget
+        return self._chartWidget
 
     def outputChanged(self, data):
         pass
         #self.ui.outputTree.setData(data, hideRoot=True)
 
     def clear(self):
-        self.chartWidget.clear()
+        self._chartWidget.clear()
         
     def select(self, node):
         item = self.items[node]
@@ -806,7 +809,6 @@ class FlowchartWidget(dockarea.DockArea):
         
         
     def reloadLibrary(self):
-        #QtCore.QObject.disconnect(self.nodeMenu, QtCore.SIGNAL('triggered(QAction*)'), self.nodeMenuTriggered)
         self.nodeMenu.triggered.disconnect(self.nodeMenuTriggered)
         self.nodeMenu = None
         self.subMenus = []
@@ -851,6 +853,7 @@ class FlowchartWidget(dockarea.DockArea):
     def viewBox(self):
         return self._viewBox ## the viewBox that items should be added to
 
+    @QtCore.Slot(QtGui.QAction)
     def nodeMenuTriggered(self, action):
         nodeType = action.nodeType
         if action.pos is not None:
@@ -861,7 +864,7 @@ class FlowchartWidget(dockarea.DockArea):
 
         self.chart.createNode(nodeType, pos=pos)
 
-
+    @QtCore.Slot()
     def selectionChanged(self):
         #print "FlowchartWidget.selectionChanged called."
         items = self._scene.selectedItems()
@@ -888,6 +891,7 @@ class FlowchartWidget(dockarea.DockArea):
                 data = None
         self.selectedTree.setData(data, hideRoot=True)
 
+    @QtCore.Slot(object)
     def hoverOver(self, items):
         #print "FlowchartWidget.hoverOver called."
         term = None

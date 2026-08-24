@@ -124,7 +124,6 @@ class AxisItem(GraphicsWidget):
         self.setLabel(**args)
         self.showLabel(False)
 
-
         if pen is None:
             self.setPen()
         else:
@@ -146,7 +145,6 @@ class AxisItem(GraphicsWidget):
 
         self.grid = False
 
-        #self.setCacheMode(self.DeviceCoordinateCache)
 
     def setStyle(self, **kwargs):
         """
@@ -154,7 +152,7 @@ class AxisItem(GraphicsWidget):
 
         Parameters
         ----------
-        **kwargs : dict, optional
+        **kwargs
             Here are a list of supported arguments.
 
             ===================== ======================================================
@@ -323,8 +321,8 @@ class AxisItem(GraphicsWidget):
 
     def setLogMode(
         self,
-        *args: tuple[bool] | tuple[bool, bool] | None,
-        **kwargs: dict[str, bool] | None
+        *args: bool,
+        **kwargs: bool
     ):
         """
         Set log scaling for x and / or y axes.
@@ -340,11 +338,11 @@ class AxisItem(GraphicsWidget):
 
         Parameters
         ----------
-        *args : tuple of bool
+        *args : bool
             If length 1, sets log mode regardless of orientation.  If length 2, the
             first element toggles log mode for x-axis, and the second element toggles
             log mode for the y-axis.
-        **kwargs : dict
+        **kwargs : bool
             Pass a dictionary with keys `x` and `y`, where the values are ``bool`` to
             set the log mode for the respective `x` or `y` axis.  Trying to set the `y`
             axis log mode while this axis item is horizontal (or vice versa) will be
@@ -458,7 +456,7 @@ class AxisItem(GraphicsWidget):
             prepended based on the range of data displayed.
         unitPrefix : str
             An extra prefix to prepend to the units.
-        siPrefixEnableRanges : tuple of tuple of float, float, Optional
+        siPrefixEnableRanges : tuple of tuple of float, float, optional
             The ranges in which automatic SI prefix scaling is enabled. Defaults to
             everywhere, unless units is empty, in which case it defaults to
             ``((0., 1.), (1e9, inf))``.
@@ -685,9 +683,9 @@ class AxisItem(GraphicsWidget):
 
         Parameters
         ----------
-        *args : tuple
+        *args
             Arguments relayed to :func:`~pyqtgraph.mkPen`.
-        **kwargs : dict
+        **kwargs
             Arguments relayed to `:func:`~pyqtgraph.mkPen`.
 
         See Also
@@ -727,9 +725,9 @@ class AxisItem(GraphicsWidget):
         
         Parameters
         ----------
-        *args : tuple
+        *args
             Arguments relayed to :func:`~pyqtgraph.mkPen`.
-        **kwargs : dict
+        **kwargs
             Arguments relayed to `:func:`~pyqtgraph.mkPen`.
 
         See Also
@@ -767,9 +765,9 @@ class AxisItem(GraphicsWidget):
         
         Parameters
         ----------
-        *args : tuple
+        *args
             Arguments relayed to :func:`~pyqtgraph.mkPen`.
-        **kwargs : dict
+        **kwargs
             Arguments relayed to `:func:`~pyqtgraph.mkPen`.
 
         See Also

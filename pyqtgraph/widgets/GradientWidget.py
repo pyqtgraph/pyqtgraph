@@ -14,7 +14,7 @@ class GradientWidget(GraphicsView):
     sigGradientChanged = QtCore.Signal(object)
     sigGradientChangeFinished = QtCore.Signal(object)
     
-    def __init__(self, parent=None, orientation='bottom',  *args, **kargs):
+    def __init__(self, parent=None, orientation='bottom',  *args, **kwargs):
         """
         The *orientation* argument may be 'bottom', 'top', 'left', or 'right' 
         indicating whether the gradient is displayed horizontally (top, bottom)
@@ -27,15 +27,15 @@ class GradientWidget(GraphicsView):
         Note: For convenience, this class wraps methods from 
         :class:`GradientEditorItem <pyqtgraph.GradientEditorItem>`.
         """
-        GraphicsView.__init__(self, parent, useOpenGL=False, background=None)
+        super().__init__(parent, useOpenGL=False, background=None)
         self.maxDim = 31
-        kargs['tickPen'] = 'k'
-        self.item = GradientEditorItem(*args, **kargs)
+        kwargs['tickPen'] = 'k'
+        self.item = GradientEditorItem(*args, **kwargs)
         self.item.sigGradientChanged.connect(self.sigGradientChanged)
         self.item.sigGradientChangeFinished.connect(self.sigGradientChangeFinished)
         self.setCentralItem(self.item)
         self.setOrientation(orientation)
-        self.setCacheMode(self.CacheModeFlag.CacheNone)
+        self.setCacheMode(QtWidgets.QGraphicsView.CacheModeFlag.CacheNone)
         self.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
         frame_style = QtWidgets.QFrame.Shape.NoFrame | QtWidgets.QFrame.Shadow.Plain
 

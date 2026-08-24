@@ -66,9 +66,9 @@ SI_PREFIX_EXPONENTS['u'] = -6
 SI_PREFIX_EXPONENTS['μ'] = -6
 
 #For comma as decimal separator
-FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>\S.*))?$')
+FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>[^\s\d.,].*))?$')
 #For period as decimal separator
-FLOAT_REGEX_PERIOD = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>\S.*))?$')
+FLOAT_REGEX_PERIOD = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>[^\s\d.,].*))?$')
 
 INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
@@ -277,6 +277,8 @@ def siEval(s, typ=float, regex=FLOAT_REGEX_PERIOD, suffix=None, unitPower=1):
         siEval("100 μV")  # returns 0.0001
     """
     val, siprefix, suffix = siParse(s, regex, suffix=suffix)
+    if regex is FLOAT_REGEX_COMMA:
+        val = val.replace(',', '.')
     v = typ(val)
     return siApply(v, siprefix, unitPower=unitPower)
 
@@ -385,14 +387,14 @@ def mkColor(*args) -> QtGui.QColor:
     return QtGui.QColor(*args)
 
 
-def mkBrush(*args, **kwds):
+def mkBrush(*args, **kwargs):
     """
     | Convenience function for constructing Brush.
     | This function always constructs a solid brush and accepts the same arguments as :func:`mkColor() <pyqtgraph.mkColor>`
     | Calling mkBrush(None) returns an invisible brush.
     """
-    if 'color' in kwds:
-        color = kwds['color']
+    if 'color' in kwargs:
+        color = kwargs['color']
     elif len(args) == 1:
         arg = args[0]
         if arg is None:
@@ -406,7 +408,7 @@ def mkBrush(*args, **kwds):
     return QtGui.QBrush(mkColor(color))
 
 
-def mkPen(*args, **kargs) -> QtGui.QPen:
+def mkPen(*args, **kwargs) -> QtGui.QPen:
     """
     Convenience function for constructing QPen. 
     
@@ -419,12 +421,12 @@ def mkPen(*args, **kargs) -> QtGui.QPen:
         mkPen(None)   # (no pen)
     
     In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`    """
-    color = kargs.get('color', None)
-    width = kargs.get('width', 1)
-    style = kargs.get('style', None)
-    dash = kargs.get('dash', None)
-    cosmetic = kargs.get('cosmetic', True)
-    hsv = kargs.get('hsv', None)
+    color = kwargs.get('color', None)
+    width = kwargs.get('width', 1)
+    style = kwargs.get('style', None)
+    dash = kwargs.get('dash', None)
+    cosmetic = kwargs.get('cosmetic', True)
+    hsv = kwargs.get('hsv', None)
     
     if len(args) == 1:
         arg = args[0]
@@ -655,12 +657,12 @@ def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, mi
     return QtGui.QColor.fromHsv(h, sat, v, alpha)
 
 
-def glColor(*args, **kargs):
+def glColor(*args, **kwargs):
     """
     Convert a color to OpenGL color format (r,g,b,a) floats 0.0-1.0
     Accepts same arguments as :func:`mkColor <pyqtgraph.mkColor>`.
     """
-    c = mkColor(*args, **kargs)
+    c = mkColor(*args, **kwargs)
     return c.getRgbF()
 
     
@@ -813,7 +815,7 @@ def affineSliceCoords(shape, origin, vectors, axes):
     return x
 
     
-def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False, **kargs):
+def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False, **kwargs):
     """
     Take a slice of any orientation through an array. This is useful for extracting sections of multi-dimensional arrays
     such as MRI images for viewing as 1D or 2D data.
@@ -882,7 +884,7 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
         output = np.empty(tuple(shape) + extraShape, dtype=data.dtype)
         for inds in np.ndindex(*extraShape):
             ind = (Ellipsis,) + inds
-            output[ind] = scipy.ndimage.map_coordinates(data[ind], x, order=order, **kargs)
+            output[ind] = scipy.ndimage.map_coordinates(data[ind], x, order=order, **kwargs)
     else:
         # map_coordinates expects the indexes as the first axis, whereas
         # interpolateArray expects indexes at the last axis. 
@@ -1024,7 +1026,7 @@ def interpolateArray(data, x, default=0.0, order=1):
         indexes = np.concatenate([xmin[np.newaxis, ...], xmax[np.newaxis, ...]])
         fieldInds = []
         for ax in range(md):
-            mask = (xmin[...,ax] >= 0) & (x[...,ax] <= data.shape[ax]-1) 
+            mask = (xmin[...,ax] >= 0) & (x[...,ax] <= max(data.shape[ax] - 1, 1))
             # keep track of points that need to be set to default
             totalMask &= mask
             
@@ -1357,10 +1359,10 @@ def applyLookupTable(data, lut):
         return np.take(lut, data, axis=0, mode='clip')
     
 
-def makeRGBA(*args, **kwds):
+def makeRGBA(*args, **kwargs):
     """Equivalent to makeARGB(..., useRGBA=True)"""
-    kwds['useRGBA'] = True
-    return makeARGB(*args, **kwds)
+    kwargs['useRGBA'] = True
+    return makeARGB(*args, **kwargs)
 
 
 def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, maskNans=True, output=None):

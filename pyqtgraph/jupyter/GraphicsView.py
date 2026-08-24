@@ -54,8 +54,8 @@ class GraphicsView(jupyter_rfb.RemoteFrameBuffer):
     :class:`GraphicsLayoutWidget <pyqtgraph.jupyter.GraphicsLayoutWidget>` and
     :class:`PlotWidget <pyqtgraph.jupyter.PlotWidget>` should be used instead."""
 
-    def __init__(self, **kwds):
-        super().__init__(**kwds)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.gfxView = widgets.GraphicsView.GraphicsView()
         self.logical_size = int(self.css_width[:-2]), int(self.css_height[:-2])
         self.pixel_ratio = 1.0
@@ -128,8 +128,8 @@ class GraphicsLayoutWidget(GraphicsView):
     """jupyter_rfb analogue of
     :class:`GraphicsLayoutWidget <pyqtgraph.GraphicsLayoutWidget>`."""
 
-    def __init__(self, **kwds):
-        super().__init__(**kwds)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
         self.gfxLayout = graphicsItems.GraphicsLayout.GraphicsLayout()
         for n in [
@@ -139,15 +139,15 @@ class GraphicsLayoutWidget(GraphicsView):
             setattr(self, n, getattr(self.gfxLayout, n))
         self.gfxView.setCentralItem(self.gfxLayout)
 
-    def addPlot(self, *args, **kwds):
-        kwds["enableMenu"] = False
-        plotItem = self.gfxLayout.addPlot(*args, **kwds)
+    def addPlot(self, *args, **kwargs):
+        kwargs["enableMenu"] = False
+        plotItem = self.gfxLayout.addPlot(*args, **kwargs)
         connect_viewbox_redraw(plotItem.getViewBox(), self.request_draw)
         return plotItem
 
-    def addViewBox(self, *args, **kwds):
-        kwds["enableMenu"] = False
-        vb = self.gfxLayout.addViewBox(*args, **kwds)
+    def addViewBox(self, *args, **kwargs):
+        kwargs["enableMenu"] = False
+        vb = self.gfxLayout.addViewBox(*args, **kwargs)
         connect_viewbox_redraw(vb, self.request_draw)
         return vb
 
@@ -156,8 +156,8 @@ class PlotWidget(GraphicsView):
     """jupyter_rfb analogue of
     :class:`PlotWidget <pyqtgraph.PlotWidget>`."""
 
-    def __init__(self, **kwds):
-        super().__init__(**kwds)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         plotItem = graphicsItems.PlotItem.PlotItem(enableMenu=False)
         self.gfxView.setCentralItem(plotItem)
         connect_viewbox_redraw(plotItem.getViewBox(), self.request_draw)

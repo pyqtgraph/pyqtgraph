@@ -26,7 +26,7 @@ class DockArea(Container, QtWidgets.QWidget):
     def type(self):
         return "top"
         
-    def addDock(self, dock=None, position='bottom', relativeTo=None, **kwds):
+    def addDock(self, dock=None, position='bottom', relativeTo=None, **kwargs):
         """Adds a dock to this area.
         
         ============== =================================================================
@@ -44,7 +44,7 @@ class DockArea(Container, QtWidgets.QWidget):
         None.        
         """
         if dock is None:
-            dock = Dock(**kwds)
+            dock = Dock(**kwargs)
             
         # store original area that the dock will return to when un-floated
         if not self.temporary:
@@ -65,7 +65,10 @@ class DockArea(Container, QtWidgets.QWidget):
                 relativeTo = self.docks[relativeTo]
             container = self.getContainer(relativeTo)
             if container is None:
-                raise TypeError("Dock %s is not contained in a DockArea; cannot add another dock relative to it." % relativeTo)
+                raise TypeError(
+                    f"Dock {relativeTo} is not contained in a DockArea; cannot add \n",
+                    "another dock relative to it."
+                )
             neighbor = relativeTo
         
         ## what container type do we need?
@@ -100,7 +103,6 @@ class DockArea(Container, QtWidgets.QWidget):
             'above': 'before',
             'below': 'after'
         }[position]
-        #print "request insert", dock, insertPos, neighbor
         old = dock.container()
         container.insert(dock, insertPos, neighbor)
         self.docks[dock.name()] = dock
@@ -114,7 +116,12 @@ class DockArea(Container, QtWidgets.QWidget):
         Move an existing Dock to a new location. 
         """
         ## Moving to the edge of a tabbed dock causes a drop outside the tab box
-        if position in ['left', 'right', 'top', 'bottom'] and neighbor is not None and neighbor.container() is not None and neighbor.container().type() == 'tab':
+        if (
+            position in ['left', 'right', 'top', 'bottom'] and
+            neighbor is not None and
+            neighbor.container() is not None and
+            neighbor.container().type() == 'tab'
+        ):
             neighbor = neighbor.container()
         self.addDock(dock, position, neighbor)
         
@@ -140,7 +147,6 @@ class DockArea(Container, QtWidgets.QWidget):
         
         container = self.getContainer(obj)
         container.insert(new, 'before', obj)
-        #print "Add container:", new, " -> ", container
         if obj is not None:
             new.insert(obj)
         self.dockdrop.raiseOverlay()
@@ -156,7 +162,7 @@ class DockArea(Container, QtWidgets.QWidget):
         self.topContainer = new
         self.dockdrop.raiseOverlay()
         
-    def count(self):
+    def count(self) -> int:
         if self.topContainer is None:
             return 0
         return 1
@@ -173,7 +179,6 @@ class DockArea(Container, QtWidgets.QWidget):
             win.show()
         else:
             area = self.home.addTempArea()
-        #print "added temp area", area, area.window()
         return area
         
     def floatDock(self, dock):
@@ -184,7 +189,6 @@ class DockArea(Container, QtWidgets.QWidget):
         
     def removeTempArea(self, area):
         self.tempAreas.remove(area)
-        #print "close window", area.window()
         area.window().close()
         
     def saveState(self):
@@ -232,7 +236,6 @@ class DockArea(Container, QtWidgets.QWidget):
         ## 1) make dict of all docks and list of existing containers
         containers, docks = self.findAll()
         oldTemps = self.tempAreas[:]
-        #print "found docks:", docks
         
         ## 2) create container structure, move docks into new containers
         if state['main'] is not None:
@@ -253,7 +256,6 @@ class DockArea(Container, QtWidgets.QWidget):
             else:
                 self.moveDock(d, extra, None)
         
-        #print "\nKill old containers:"
         ## 5) kill old containers
         for c in containers:
             c.close()
@@ -268,28 +270,41 @@ class DockArea(Container, QtWidgets.QWidget):
                 del docks[contents]
             except KeyError:
                 if missing == 'error':
-                    raise Exception('Cannot restore dock state; no dock with name "%s"' % contents)
+                    raise KeyError(
+                        f'Cannot restore dock state; no dock with name {contents}'
+                    )
                 elif missing == 'create':
                     obj = Dock(name=contents)
                 elif missing == 'ignore':
                     return
                 else:
-                    raise ValueError('"missing" argument must be one of "error", "create", or "ignore".')
-
+                    raise ValueError(
+                        '"missing" argument must be one of "error", "create", or \n',
+                        '"ignore".'
+                    )
         else:
             obj = self.makeContainer(typ)
-            
+
         root.insert(obj, 'after')
-        
+
         if typ != 'dock':
             for o in contents:
                 self.buildFromState(o, docks, obj, depth+1, missing=missing)
-            # remove this container if possible. (there are valid situations when a restore will
-            # generate empty containers, such as when using missing='ignore')
+            # remove this container if possible. (there are valid situations when a
+            # restore will generate empty containers, such as when using
+            # missing='ignore')
             # There are 2 cases where this container should be removed:
-            #   1. There are no child items which might happen in missing is set to 'ignore'
-            #   2. To remove a superfluous container (Another container as the sole children of this container)
-            if obj.count() == 0 or (obj.count() == 1 and isinstance(obj.widget(0), Container)):
+            #   1. There are no child items which might happen in missing is set to
+            #      'ignore'
+            #   2. To remove a superfluous container (Another container as the sole
+            #      children of this container)
+            if (
+                obj.count() == 0 or 
+                (
+                    obj.count() == 1 and 
+                    isinstance(obj.widget(0), Container)
+                )
+            ):
                 obj.apoptose(propagate=False)
             obj.restoreState(state)  ## this has to be done later?     
 
@@ -319,18 +334,18 @@ class DockArea(Container, QtWidgets.QWidget):
 
     def apoptose(self, propagate=True):
         # remove top container if possible, close this area if it is temporary.
-        #print "apoptose area:", self.temporary, self.topContainer, self.topContainer.count()
         if self.topContainer is None or self.topContainer.count() == 0:
             self.topContainer = None
             if self.temporary and self.home is not None:
                 originDockArea = self.home
-                self.home = None  # apoptose might be called again by dock, if temporary floating window is closed by
-                                  # calling restoreState, see the call to apoptose() in TempAreaWindow.closeEvent().
-                # This would lead to a ValueError because this temp area was already removed
-                # Since we are in the process of closing this temporary dock area
-                # prevent calling removeTempArea by removing the reference to the original dock area.
+                self.home = None  
+                # apoptose might be called again by dock, if temporary floating window
+                # is closed by calling restoreState, see the call to apoptose() in
+                # TempAreaWindow.closeEvent(). This would lead to a ValueError because
+                # this temp area was already removed Since we are in the process of
+                # closing this temporary dock area prevent calling removeTempArea by
+                # removing the reference to the original dock area.
                 originDockArea.removeTempArea(self)
-                #self.close()
                 
     def clear(self):
         docks = self.findAll()[1]
@@ -371,7 +386,6 @@ class DockArea(Container, QtWidgets.QWidget):
                 self._printAreaState(ch, indent+1)
 
 
-
 class TempAreaWindow(QtWidgets.QWidget):
     def __init__(self, area, **kwargs):
         QtWidgets.QWidget.__init__(self, **kwargs)
@@ -389,8 +403,10 @@ class TempAreaWindow(QtWidgets.QWidget):
                 dock.orig_area.addDock(dock, )
         # clear dock area, and close remaining docks
         self.dockarea.clear()
-        self.dockarea.apoptose() # This call is needed to remove the temporary dock area when a dock is undocked into a
-        # temporary window and either the temporary window is closed or the dock dragged back into the main window.
-        # Otherwise, calling saveState and then restoreState fails with a TypeError trying to restore half-present
-        # floating windows. See GH issue #3125
+        self.dockarea.apoptose()
+        # This call is needed to remove the temporary dock area when a dock undocks into
+        # a temporary window and either the temporary window is closed or the dock
+        # dragged back into the main window. Otherwise, calling saveState and then
+        # restoreState fails with a TypeError trying to restore half-present floating
+        # windows. See GH issue #3125
         super().closeEvent(*args)

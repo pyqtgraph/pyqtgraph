@@ -1,7 +1,9 @@
-from ..Qt import QtCore
+__all__ = ['ItemGroup']
+
+from ..Qt import QtCore, QtWidgets
 from .GraphicsObject import GraphicsObject
 
-__all__ = ['ItemGroup']
+
 class ItemGroup(GraphicsObject):
     """
     Replacement for QGraphicsItemGroup
@@ -9,7 +11,7 @@ class ItemGroup(GraphicsObject):
     
     def __init__(self, *args):
         GraphicsObject.__init__(self, *args)
-        self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
+        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemHasNoContents)
     
     def boundingRect(self):
         return QtCore.QRectF()

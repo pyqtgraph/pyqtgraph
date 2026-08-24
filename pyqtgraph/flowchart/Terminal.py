@@ -462,8 +462,8 @@ class ConnectionItem(GraphicsObject):
     def __init__(self, source, target=None):
         GraphicsObject.__init__(self)
         self.setFlags(
-            self.GraphicsItemFlag.ItemIsSelectable | 
-            self.GraphicsItemFlag.ItemIsFocusable
+            QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable | 
+            QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsFocusable
         )
         self.source = source
         self.target = target
@@ -492,9 +492,9 @@ class ConnectionItem(GraphicsObject):
         self.target = target
         self.updateLine()
     
-    def setStyle(self, **kwds):
-        self.style.update(kwds)
-        if 'shape' in kwds:
+    def setStyle(self, **kwargs):
+        self.style.update(kwargs)
+        if 'shape' in kwargs:
             self.updateLine()
         else:
             self.update()

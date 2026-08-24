@@ -56,8 +56,8 @@ class ChildGroup(ItemGroup):
     def itemChange(self, change, value):
         ret = ItemGroup.itemChange(self, change, value)
         if change in [
-            self.GraphicsItemChange.ItemChildAddedChange,
-            self.GraphicsItemChange.ItemChildRemovedChange,
+            QtWidgets.QGraphicsItem.GraphicsItemChange.ItemChildAddedChange,
+            QtWidgets.QGraphicsItem.GraphicsItemChange.ItemChildRemovedChange,
         ]:
             try:
                 itemsChangedListeners = self.itemsChangedListeners
@@ -182,8 +182,8 @@ class ViewBox(GraphicsWidget):
 
         self.locateGroup = None  ## items displayed when using ViewBox.locate(item)
 
-        self.setFlag(self.GraphicsItemFlag.ItemClipsChildrenToShape)
-        self.setFlag(self.GraphicsItemFlag.ItemIsFocusable, True)  ## so we can receive key presses
+        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemClipsChildrenToShape)
+        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsFocusable, True)  ## so we can receive key presses
 
         ## childGroup is required so that ViewBox has local coordinates similar to device coordinates.
         ## this is a workaround for a Qt + OpenGL bug that causes improper clipping
@@ -304,11 +304,11 @@ class ViewBox(GraphicsWidget):
 
     def itemChange(self, change, value):
         ret = super().itemChange(change, value)
-        if change == self.GraphicsItemChange.ItemSceneChange:
+        if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemSceneChange:
             scene = self.scene()
             if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
                 scene.sigPrepareForPaint.disconnect(self.prepareForPaint)
-        elif change == self.GraphicsItemChange.ItemSceneHasChanged:
+        elif change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemSceneHasChanged:
             scene = self.scene()
             if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
                 scene.sigPrepareForPaint.connect(self.prepareForPaint)
@@ -740,7 +740,7 @@ class ViewBox(GraphicsWidget):
             padding = def_pad
         return padding
 
-    def setLimits(self, **kwds):
+    def setLimits(self, **kwargs):
         """
         Set limits that constrain the possible view ranges.
 
@@ -768,20 +768,20 @@ class ViewBox(GraphicsWidget):
         """
         update = False
         allowed = ['xMin', 'xMax', 'yMin', 'yMax', 'minXRange', 'maxXRange', 'minYRange', 'maxYRange']
-        for kwd in kwds:
+        for kwd in kwargs:
             if kwd not in allowed:
                 raise ValueError("Invalid keyword argument '%s'." % kwd)
         for axis in [0,1]:
             for mnmx in [0,1]:
                 kwd = [['xMin', 'xMax'], ['yMin', 'yMax']][axis][mnmx]
                 lname = ['xLimits', 'yLimits'][axis]
-                if kwd in kwds and self.state['limits'][lname][mnmx] != kwds[kwd]:
-                    self.state['limits'][lname][mnmx] = kwds[kwd]
+                if kwd in kwargs and self.state['limits'][lname][mnmx] != kwargs[kwd]:
+                    self.state['limits'][lname][mnmx] = kwargs[kwd]
                     update = True
                 kwd = [['minXRange', 'maxXRange'], ['minYRange', 'maxYRange']][axis][mnmx]
                 lname = ['xRange', 'yRange'][axis]
-                if kwd in kwds and self.state['limits'][lname][mnmx] != kwds[kwd]:
-                    self.state['limits'][lname][mnmx] = kwds[kwd]
+                if kwd in kwargs and self.state['limits'][lname][mnmx] != kwargs[kwd]:
+                    self.state['limits'][lname][mnmx] = kwargs[kwd]
                     update = True
 
         if update:
@@ -1188,7 +1188,7 @@ class ViewBox(GraphicsWidget):
     def xInverted(self):
         return self.state['xInverted']
 
-    def setBorder(self, *args, **kwds):
+    def setBorder(self, *args, **kwargs):
         """
         Set the pen used to draw border around the view
 
@@ -1198,7 +1198,7 @@ class ViewBox(GraphicsWidget):
 
         See :func:`mkPen <pyqtgraph.mkPen>` for arguments.
         """
-        self.border = fn.mkPen(*args, **kwds)
+        self.border = fn.mkPen(*args, **kwargs)
         self.borderRect.setPen(self.border)
     
     def setDefaultPadding(self, padding=0.02):
@@ -1511,7 +1511,7 @@ class ViewBox(GraphicsWidget):
 
                 itemBounds.append((bounds, useX, useY, pxPad))
             else:
-                if item.flags() & item.GraphicsItemFlag.ItemHasNoContents:
+                if item.flags() & QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemHasNoContents:
                     continue
                 bounds = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
                 itemBounds.append((bounds, True, True, 0))
@@ -1552,8 +1552,8 @@ class ViewBox(GraphicsWidget):
                 range[1][1] = max(range[1][1], bounds.bottom() + px*pxSize)
         return range
 
-    def childrenBoundingRect(self, *args, **kwds):
-        range = self.childrenBounds(*args, **kwds)
+    def childrenBoundingRect(self, *args, **kwargs):
+        range = self.childrenBounds(*args, **kwargs)
         tr = self.targetRange()
         if range[0] is None:
             range[0] = tr[0]

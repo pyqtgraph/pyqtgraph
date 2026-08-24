@@ -3042,9 +3042,9 @@ isocurve
 isosurface
 itemCls
 itertools
-kargs
 kwargs
-kwds
+kwargs
+kwargs
 leftovers
 length
 level

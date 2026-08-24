@@ -152,8 +152,8 @@ control panel. A minimal Node subclass looks like::
                 'outputTerminalName': {'io': 'out'},
                 })
                 
-        def process(self, **kwds):
-            # kwds will have one keyword argument per input terminal.
+        def process(self, **kwargs):
+            # kwargs will have one keyword argument per input terminal.
             
             return {'outputTerminalName': result}
         

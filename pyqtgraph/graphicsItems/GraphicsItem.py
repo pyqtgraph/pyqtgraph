@@ -5,11 +5,9 @@ import weakref
 from collections import OrderedDict
 from functools import reduce
 from math import hypot
-from typing import Optional
 from xml.etree.ElementTree import Element
 
 from .. import functions as fn
-from ..GraphicsScene import GraphicsScene
 from ..Point import Point
 from ..Qt import QtCore, QtWidgets, isQObjectAlive
 
@@ -19,9 +17,9 @@ from ..Qt import QtCore, QtWidgets, isQObjectAlive
 class LRU(OrderedDict):
     'Limit size, evicting the least recently looked-up key when full'
 
-    def __init__(self, maxsize=128, *args, **kwds):
+    def __init__(self, maxsize=128, *args, **kwargs):
         self.maxsize = maxsize
-        super().__init__(*args, **kwds)
+        super().__init__(*args, **kwargs)
 
     def __getitem__(self, key):
         value = super().__getitem__(key)
@@ -37,7 +35,7 @@ class LRU(OrderedDict):
             del self[oldest]
 
 
-class GraphicsItem(object):
+class GraphicsItem:
     """
     **Bases:** :class:`object`
 
@@ -148,7 +146,7 @@ class GraphicsItem(object):
             p = p.parentItem()
             if p is None:
                 break
-            if p.flags() & self.GraphicsItemFlag.ItemClipsChildrenToShape:
+            if p.flags() & QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemClipsChildrenToShape:
                 parents.append(p)
         return parents
     
@@ -533,7 +531,7 @@ class GraphicsItem(object):
     def generateSvg(
             self,
             nodes: dict[str, Element]
-    ) -> Optional[tuple[Element, list[Element]]]:
+    ) -> tuple[Element, list[Element]] | None:
         """Method to override to manually specify the SVG writer mechanism.
 
         Parameters

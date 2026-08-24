@@ -2,7 +2,6 @@ import enum
 import math
 
 from OpenGL import GL
-from OpenGL.GL import shaders
 import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
@@ -22,9 +21,9 @@ class GLScatterPlotItem(GLGraphicsItem):
     
     _shaderProgram = None
 
-    def __init__(self, parentItem=None, **kwds):
+    def __init__(self, parentItem=None, **kwargs):
         super().__init__()
-        glopts = kwds.pop('glOptions', 'additive')
+        glopts = kwargs.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
         self.pos = None
         self.size = 10
@@ -37,9 +36,9 @@ class GLScatterPlotItem(GLGraphicsItem):
         self.dirty_bits = DirtyFlag(0)
 
         self.setParentItem(parentItem)
-        self.setData(**kwds)
+        self.setData(**kwargs)
 
-    def setData(self, **kwds):
+    def setData(self, **kwargs):
         """
         Update the data displayed by this item. All arguments are optional; 
         for example it is allowed to update spot positions while leaving 
@@ -58,30 +57,30 @@ class GLScatterPlotItem(GLGraphicsItem):
         ====================  ==================================================
         """
         args = ['pos', 'color', 'size', 'pxMode']
-        for k in kwds.keys():
+        for k in kwargs.keys():
             if k not in args:
                 raise Exception('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
             
-        if 'pos' in kwds:
-            pos = kwds.pop('pos')
+        if 'pos' in kwargs:
+            pos = kwargs.pop('pos')
             self.pos = np.ascontiguousarray(pos, dtype=np.float32)
             self.dirty_bits |= DirtyFlag.POSITION
-        if 'color' in kwds:
-            color = kwds.pop('color')
+        if 'color' in kwargs:
+            color = kwargs.pop('color')
             if isinstance(color, np.ndarray):
                 color = np.ascontiguousarray(color, dtype=np.float32)
                 self.dirty_bits |= DirtyFlag.COLOR
             if isinstance(color, QtGui.QColor):
                 color = color.getRgbF()
             self.color = color
-        if 'size' in kwds:
-            size = kwds.pop('size')
+        if 'size' in kwargs:
+            size = kwargs.pop('size')
             if isinstance(size, np.ndarray):
                 size = np.ascontiguousarray(size, dtype=np.float32)
                 self.dirty_bits |= DirtyFlag.SIZE
             self.size = size
                 
-        self.pxMode = kwds.get('pxMode', self.pxMode)
+        self.pxMode = kwargs.get('pxMode', self.pxMode)
         self.update()
 
     def upload_vbo(self, vbo, arr):
@@ -122,15 +121,18 @@ class GLScatterPlotItem(GLGraphicsItem):
                 glsl_version = "#version 120\n"
                 sources = SHADER_LEGACY
 
-        compiled = [shaders.compileShader([glsl_version, v], k) for k, v in sources.items()]
-        program = shaders.compileProgram(*compiled)
+        program = QtOpenGL.QOpenGLShaderProgram()
+        for shader_type, src in sources.items():
+            if not program.addShaderFromSourceCode(shader_type, glsl_version + src):
+                raise RuntimeError(program.log())
 
-        # bind generic vertex attrib 0 to "a_position" so that
-        # vertex attrib 0 definitely gets enabled later.
-        GL.glBindAttribLocation(program, 0, "a_position")
-        GL.glBindAttribLocation(program, 1, "a_color")
-        GL.glBindAttribLocation(program, 2, "a_size")
-        GL.glLinkProgram(program)
+        # bind generic vertex attribs 0, 1 and 2 to "a_position", "a_color"
+        # and "a_size" so that they definitely get enabled later.
+        program.bindAttributeLocation("a_position", 0)
+        program.bindAttributeLocation("a_color", 1)
+        program.bindAttributeLocation("a_size", 2)
+        if not program.link():
+            raise RuntimeError(program.log())
 
         klass._shaderProgram = program
         return program
@@ -142,16 +144,10 @@ class GLScatterPlotItem(GLGraphicsItem):
         self.setupGLState()
 
         mat_mvp = self.mvpMatrix()
-        mat_mvp = np.array(mat_mvp.data(), dtype=np.float32)
-
         mat_modelview = self.modelViewMatrix()
-        mat_modelview = np.array(mat_modelview.data(), dtype=np.float32)
 
         view = self.view()
-        if self.pxMode:
-            scale = 0
-        else:
-            scale = 2.0 * math.tan(math.radians(0.5 * view.opts["fov"])) / view.width()
+        tan_half_fov = math.tan(math.radians(0.5 * view.opts["fov"]))
 
         context = QtGui.QOpenGLContext.currentContext()
 
@@ -175,44 +171,43 @@ class GLScatterPlotItem(GLGraphicsItem):
 
         loc = 0
         self.m_vbo_position.bind()
-        GL.glVertexAttribPointer(loc, 3, GL.GL_FLOAT, False, 0, None)
+        program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 3)
         self.m_vbo_position.release()
         enabled_locs.append(loc)
 
         loc = 1
         if isinstance(self.color, np.ndarray):
             self.m_vbo_color.bind()
-            GL.glVertexAttribPointer(loc, 4, GL.GL_FLOAT, False, 0, None)
+            program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 4)
             self.m_vbo_color.release()
             enabled_locs.append(loc)
         else:
-            GL.glVertexAttrib4f(loc, *self.color)
+            program.setAttributeValue(loc, QtGui.QColor.fromRgbF(*self.color))
 
         loc = 2
         if isinstance(self.size, np.ndarray):
             self.m_vbo_size.bind()
-            GL.glVertexAttribPointer(loc, 1, GL.GL_FLOAT, False, 0, None)
+            program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 1)
             self.m_vbo_size.release()
             enabled_locs.append(loc)
         else:
-            GL.glVertexAttrib1f(loc, self.size)
+            # PySide6 errors on setAttributeValue() with a single float attribute
+            program.setAttributeValue(loc, QtGui.QVector3D(self.size, 0.0, 0.0))
 
         for loc in enabled_locs:
-            GL.glEnableVertexAttribArray(loc)
+            program.enableAttributeArray(loc)
 
-        with program:
-            loc = GL.glGetUniformLocation(program, "u_mvp")
-            GL.glUniformMatrix4fv(loc, 1, False, mat_mvp)
+        program.bind()
+        program.setUniformValue("u_scale", 0.0 if self.pxMode else tan_half_fov, view.width())
+        program.setUniformValue("u_mvp", mat_mvp)
+        program.setUniformValue("u_modelview", mat_modelview)
 
-            loc = GL.glGetUniformLocation(program, "u_modelview")
-            GL.glUniformMatrix4fv(loc, 1, False, mat_modelview)
-            loc = GL.glGetUniformLocation(program, "u_scale")
-            GL.glUniform1f(loc, scale)
+        GL.glDrawArrays(GL.GL_POINTS, 0, len(self.pos))
 
-            GL.glDrawArrays(GL.GL_POINTS, 0, len(self.pos))
+        program.release()
 
         for loc in enabled_locs:
-            GL.glDisableVertexAttribArray(loc)
+            program.disableAttributeArray(loc)
 
 
 def _is_compatibility_profile(context):
@@ -251,8 +246,8 @@ def _is_compatibility_profile(context):
 ##
 
 SHADER_LEGACY = {
-    GL.GL_VERTEX_SHADER : """
-        uniform float u_scale;
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : """
+        uniform vec2 u_scale;
 
         uniform mat4 u_modelview;
         uniform mat4 u_mvp;
@@ -266,25 +261,20 @@ SHADER_LEGACY = {
             v_color = a_color;
             gl_PointSize = a_size;
 
-            if (u_scale != 0.0) {
+            if (u_scale.x != 0.0) {
                 // pxMode=False
                 // the modelview matrix transforms the vertex to
                 // camera space, where the camera is at (0, 0, 0).
                 vec4 cpos = u_modelview * a_position;
                 float dist = length(cpos.xyz);
-                // equations:
-                //   xDist = dist * 2.0 * tan(0.5 * fov)
-                //   pxSize = xDist / view_width
-                // let:
-                //   u_scale = 2.0 * tan(0.5 * fov) / view_width
-                // then:
-                //   pxSize = dist * u_scale
-                float pxSize = dist * u_scale;
+                float tan_half_fov = u_scale.x;
+                float view_width = u_scale.y;
+                float pxSize = dist * 2.0 * tan_half_fov / view_width;
                 gl_PointSize /= pxSize;
             }
         }
     """,
-    GL.GL_FRAGMENT_SHADER : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : """
         #ifdef GL_ES
         precision mediump float;
         #endif
@@ -300,8 +290,8 @@ SHADER_LEGACY = {
 }
 
 SHADER_CORE = {
-    GL.GL_VERTEX_SHADER : """
-        uniform float u_scale;
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : """
+        uniform vec2 u_scale;
 
         uniform mat4 u_modelview;
         uniform mat4 u_mvp;
@@ -315,25 +305,20 @@ SHADER_CORE = {
             v_color = a_color;
             gl_PointSize = a_size;
 
-            if (u_scale != 0.0) {
+            if (u_scale.x != 0.0) {
                 // pxMode=False
                 // the modelview matrix transforms the vertex to
                 // camera space, where the camera is at (0, 0, 0).
                 vec4 cpos = u_modelview * a_position;
                 float dist = length(cpos.xyz);
-                // equations:
-                //   xDist = dist * 2.0 * tan(0.5 * fov)
-                //   pxSize = xDist / view_width
-                // let:
-                //   u_scale = 2.0 * tan(0.5 * fov) / view_width
-                // then:
-                //   pxSize = dist * u_scale
-                float pxSize = dist * u_scale;
+                float tan_half_fov = u_scale.x;
+                float view_width = u_scale.y;
+                float pxSize = dist * 2.0 * tan_half_fov / view_width;
                 gl_PointSize /= pxSize;
             }
         }
     """,
-    GL.GL_FRAGMENT_SHADER : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : """
         #ifdef GL_ES
         precision mediump float;
         #endif

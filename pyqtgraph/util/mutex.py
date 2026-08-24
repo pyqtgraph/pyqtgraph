@@ -12,13 +12,13 @@ class Mutex(QtCore.QMutex):
     
     Also provides __enter__ and __exit__ methods for use in "with" statements.
     """    
-    def __init__(self, *args, **kargs):
-        if kargs.get('recursive', False):
+    def __init__(self, *args, **kwargs):
+        if kwargs.get('recursive', False):
             args = (QtCore.QMutex.Recursive,)
         QtCore.QMutex.__init__(self, *args)
         self.l = QtCore.QMutex()  ## for serializing access to self.tb
         self.tb = []
-        self.debug = kargs.pop('debug', False) ## True to enable debugging functions
+        self.debug = kwargs.pop('debug', False) ## True to enable debugging functions
 
     def tryLock(self, timeout=None, id=None):
         if timeout is None:
@@ -108,6 +108,6 @@ class Mutex(QtCore.QMutex):
 class RecursiveMutex(Mutex):
     """Mimics threading.RLock class.
     """
-    def __init__(self, **kwds):
-        kwds['recursive'] = True
-        Mutex.__init__(self, **kwds)
+    def __init__(self, **kwargs):
+        kwargs['recursive'] = True
+        Mutex.__init__(self, **kwargs)
