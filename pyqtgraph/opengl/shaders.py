@@ -1,11 +1,7 @@
 from OpenGL import GL
-from OpenGL.GL import shaders  # noqa
-try:
-    from OpenGL import NullFunctionError
-except ImportError:
-    from OpenGL.error import NullFunctionError
 import numpy as np
-import re
+
+from ..Qt import QtOpenGL
 
 ## For centralizing and managing vertex/fragment shader programs.
 
@@ -234,187 +230,111 @@ def initShaders():
     ]
 
 
-CompiledShaderPrograms = {}
-    
 def getShaderProgram(name):
     return ShaderProgram.names[name]
 
-class Shader(object):
-    def __init__(self, shaderType, code):
-        self.shaderType = shaderType
-        self.code = code
-        self.compiled = None
-        
-    def shader(self):
-        if self.compiled is None:
-            try:
-                self.compiled = shaders.compileShader(self.code, self.shaderType)
-            except NullFunctionError:
-                raise Exception("This OpenGL implementation does not support shader programs; many OpenGL features in pyqtgraph will not work.")
-            except RuntimeError as exc:
-                ## Format compile errors a bit more nicely
-                if len(exc.args) == 3:
-                    err, code, typ = exc.args
-                    if not err.startswith('Shader compile failure'):
-                        raise
-                    code = code[0].decode('utf_8').split('\n')
-                    err, c, msgs = err.partition(':')
-                    err = err + '\n'
-                    msgs = re.sub('b\'','',msgs)
-                    msgs = re.sub('\'$','',msgs)
-                    msgs = re.sub('\\\\n','\n',msgs)
-                    msgs = msgs.split('\n')
-                    errNums = [()] * len(code)
-                    for i, msg in enumerate(msgs):
-                        msg = msg.strip()
-                        if msg == '':
-                            continue
-                        m = re.match(r'(\d+\:)?\d+\((\d+)\)', msg)
-                        if m is not None:
-                            line = int(m.groups()[1])
-                            errNums[line-1] = errNums[line-1] + (str(i+1),)
-                            #code[line-1] = '%d\t%s' % (i+1, code[line-1])
-                        err = err + "%d %s\n" % (i+1, msg)
-                    errNums = [','.join(n) for n in errNums]
-                    maxlen = max(map(len, errNums))
-                    code = [errNums[i] + " "*(maxlen-len(errNums[i])) + line for i, line in enumerate(code)]
-                    err = err + '\n'.join(code)
-                    raise Exception(err)
-                else:
-                    raise
-        return self.compiled
+class Shader:
+    def __init__(self, shaderType: QtOpenGL.QOpenGLShader.ShaderTypeBit, sourceCode: str):
+        self._shaderType : QtOpenGL.QOpenGLShader.ShaderTypeBit = shaderType
+        self._sourceCode : str = sourceCode
+
+    def shaderType(self) -> QtOpenGL.QOpenGLShader.ShaderTypeBit:
+        return self._shaderType
+
+    def sourceCode(self, *, es2_compat=False) -> str:
+        """Return the source code for this shader, optionally modified for ES2 compatibility."""
+        source = self._sourceCode
+        if es2_compat and not source.lstrip().startswith("#version"):
+            # we know that macOS OpenGL 4.1 Core has ARB_ES2_compatibility,
+            # so we can get it to run legacy shaders by marking the
+            # shaders as ES2.
+            # The explicit #undefs counteract QOpenGLShader::compileSourceCode,
+            # which predefines lowp/mediump/highp as empty macros when compiling
+            # for desktop OpenGL; that would mangle the precision statements
+            # inside "#ifdef GL_ES" blocks activated by "#version 100".
+            source = (
+                "#version 100\n"
+                "#undef lowp\n#undef mediump\n#undef highp\n"
+                + source
+            )
+        return source
 
 class VertexShader(Shader):
-    def __init__(self, code):
-        Shader.__init__(self, GL.GL_VERTEX_SHADER, code)
-        
-class FragmentShader(Shader):
-    def __init__(self, code):
-        Shader.__init__(self, GL.GL_FRAGMENT_SHADER, code)
-        
-        
-        
+    def __init__(self, sourceCode):
+        super().__init__(QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex, sourceCode)
 
-class ShaderProgram(object):
+class FragmentShader(Shader):
+    def __init__(self, sourceCode):
+        super().__init__(QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment, sourceCode)
+
+class ShaderProgram:
     names = {}
-    
+
     def __init__(self, name, shaders, uniforms=None):
         self.name = name
         ShaderProgram.names[name] = self
         self.shaders = shaders
-        self.prog = None
-        self.blockData = {}
+        self.prog : QtOpenGL.QOpenGLShaderProgram | None = None
         self.uniformData = {}
-        
+
         ## parse extra options from the shader definition
         if uniforms is not None:
             for k,v in uniforms.items():
                 self[k] = v
-        
-    def setBlockData(self, blockName, data):
-        if data is None:
-            del self.blockData[blockName]
-        else:
-            self.blockData[blockName] = data
 
     def setUniformData(self, uniformName, data):
         if data is None:
             del self.uniformData[uniformName]
         else:
             self.uniformData[uniformName] = data
-            
+
     def __setitem__(self, item, val):
         self.setUniformData(item, val)
-        
+
     def __delitem__(self, item):
         self.setUniformData(item, None)
 
-    def program(self, *, es2_compat=False):
-        # for reasons that may vary across drivers, having vertex attribute
-        # array generic location 0 enabled (glEnableVertexAttribArray(0)) is
-        # required for rendering to take place.
-        # this only becomes an issue if we are using glVertexAttrib{1,4}f
-        # because that's when we *don't* call glEnableVertexAttribArray.
-        # since we always need vertex coordinates to come from arrays, it is
-        # sufficient for us to bind "a_position" explicitly to 0.
+    def program(self, *, es2_compat=False) -> QtOpenGL.QOpenGLShaderProgram:
         if self.prog is None:
-            try:
-                # we know that macOS OpenGL 4.1 Core has ARB_ES2_compatibility,
-                # so we can get it to run legacy shaders by marking the shaders
-                # as ES2
-                compiled = []
-                for shader in self.shaders:
-                    sources = [shader.code]
-                    if es2_compat and not shader.code.lstrip().startswith("#version"):
-                        sources.insert(0, "#version 100\n")
-                    compiled.append(shaders.compileShader(sources, shader.shaderType))
-                self.prog = shaders.compileProgram(*compiled)  ## compile program
-            except:
-                self.prog = -1
-                raise
-            # bind generic vertex attrib 0 to "a_position" and relink
-            GL.glBindAttribLocation(self.prog, 0, "a_position")
-            GL.glLinkProgram(self.prog)
+            program = QtOpenGL.QOpenGLShaderProgram()
+            for shader in self.shaders:
+                if not program.addShaderFromSourceCode(shader.shaderType(), shader.sourceCode(es2_compat=es2_compat)):
+                    raise RuntimeError("Shader compile failure:\n%s" % program.log())
+
+            # for reasons that may vary across drivers, having vertex attribute
+            # array generic location 0 enabled (glEnableVertexAttribArray(0)) is
+            # required for rendering to take place.
+            # this only becomes an issue if we are using glVertexAttrib{1,4}f
+            # because that's when we *don't* call glEnableVertexAttribArray.
+            # since we always need vertex coordinates to come from arrays, it is
+            # sufficient for us to bind "a_position" explicitly to 0.
+            program.bindAttributeLocation("a_position", 0)
+            if not program.link():
+                raise RuntimeError("Program link failure:\n%s" % program.log())
+            self.prog = program
         return self.prog
-        
+
     def __enter__(self):
-        if len(self.shaders) > 0 and self.program() != -1:
-            GL.glUseProgram(self.program())
-            
+        if (program := self.program()) is not None:
+            program.bind()
+
             try:
                 ## load uniform values into program
                 for uniformName, data in self.uniformData.items():
-                    loc = self.uniform(uniformName)
-                    if loc == -1:
-                        raise Exception('Could not find uniform variable "%s"' % uniformName)
+                    if (loc := program.uniformLocation(uniformName)) == -1:
+                        raise RuntimeError(f'Could not find uniform variable "{uniformName}"')
                     GL.glUniform1fv(loc, len(data), np.array(data, dtype=np.float32))
-                    
-                ### bind buffer data to program blocks
-                #if len(self.blockData) > 0:
-                    #bindPoint = 1
-                    #for blockName, data in self.blockData.items():
-                        ### Program should have a uniform block declared:
-                        ### 
-                        ### layout (std140) uniform blockName {
-                        ###     vec4 diffuse;
-                        ### };
-                        
-                        ### pick any-old binding point. (there are a limited number of these per-program
-                        #bindPoint = 1
-                        
-                        ### get the block index for a uniform variable in the shader
-                        #blockIndex = glGetUniformBlockIndex(self.program(), blockName)
-                        
-                        ### give the shader block a binding point
-                        #glUniformBlockBinding(self.program(), blockIndex, bindPoint)
-                        
-                        ### create a buffer
-                        #buf = glGenBuffers(1)
-                        #glBindBuffer(GL_UNIFORM_BUFFER, buf)
-                        #glBufferData(GL_UNIFORM_BUFFER, size, data, GL_DYNAMIC_DRAW)
-                        ### also possible to use glBufferSubData to fill parts of the buffer
-                        
-                        ### bind buffer to the same binding point
-                        #glBindBufferBase(GL_UNIFORM_BUFFER, bindPoint, buf)
+
             except:
-                GL.glUseProgram(0)
+                program.release()
                 raise
-                    
-            
-        
+
     def __exit__(self, *args):
-        if len(self.shaders) > 0:
-            GL.glUseProgram(0)
-        
+        if self.prog is not None:
+            self.prog.release()
+
     def uniform(self, name):
         """Return the location integer for a uniform variable in this program"""
-        return GL.glGetUniformLocation(self.program(), name.encode('utf_8'))
-
-    #def uniformBlockInfo(self, blockName):
-        #blockIndex = glGetUniformBlockIndex(self.program(), blockName)
-        #count = glGetActiveUniformBlockiv(self.program(), blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS)
-        #indices = []
-        #for i in range(count):
-            #indices.append(glGetActiveUniformBlockiv(self.program(), blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES))
+        return self.program().uniformLocation(name)
 
 initShaders()
