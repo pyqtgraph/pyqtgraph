@@ -191,7 +191,12 @@ class GLViewMixin:
     def itemsAt(self, region=None):
         """
         Return a list of the items displayed in the region (x, y, w, h)
-        relative to the widget.        
+        relative to the widget.
+
+        .. warning::
+            This method uses OpenGL 1.x API, and only works with a limited GPU drivers.
+            Consider avoiding the use of this method if possible.  It will be
+            deprecated at some future version of pyqtgraph.   
         """
         warnings.warn(
             "itemsAt is deprecated and will be removed in a future version of pyqtgraph",
