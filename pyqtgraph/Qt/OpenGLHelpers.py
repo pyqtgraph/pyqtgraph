@@ -1,7 +1,8 @@
 import ctypes
 import importlib
+import sys
 
-from . import QT_LIB, QtGui, QtWidgets, QtVersionInfo
+from . import QT_LIB, QtCore, QtGui, QtWidgets, QtVersionInfo
 from . import OpenGLConstants as GLC
 
 if QtVersionInfo[0] >= 6:
@@ -107,3 +108,26 @@ def get_gl_uniform_1fv():
     context = QtGui.QOpenGLContext.currentContext()
     func_ptr = context.getProcAddress(b"glUniform1fv")
     return GLUNIFORM1FV_TYPE(int(func_ptr))
+
+
+_handler_installed = False
+_prev_handler = None
+
+def message_handler(msg_type, context, message):
+    if msg_type == QtCore.QtMsgType.QtWarningMsg:
+        if "QOpenGLTexture" in message and "has not been destroyed" in message:
+            return
+
+    if _prev_handler is not None:
+        _prev_handler(msg_type, context, message)
+    else:
+        sys.stderr.write(f"{message}\n")
+
+
+def suppress_texture_warning():
+    global _handler_installed, _prev_handler
+    if _handler_installed:
+        return
+
+    _prev_handler = QtCore.qInstallMessageHandler(message_handler)
+    _handler_installed = True
