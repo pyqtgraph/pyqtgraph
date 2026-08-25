@@ -1,9 +1,9 @@
 import enum
 
-from OpenGL import GL
 import numpy as np
 
-from ...Qt import QtGui, QtOpenGL
+from ...Qt import QtGui, QtOpenGL, QT_LIB, compat
+from ...Qt import OpenGLConstants as GLC
 from .. import shaders
 from ..GLGraphicsItem import GLGraphicsItem
 from ..MeshData import MeshData
@@ -235,18 +235,20 @@ class GLMeshItem(GLGraphicsItem):
     def paint(self):
         self.setupGLState()
 
+        context = QtGui.QOpenGLContext.currentContext()
+        glfn = self.glFunctions()
+        es2_compat = context.hasExtension(b'GL_ARB_ES2_compatibility')
+        NULL = compat.voidptr(0) if QT_LIB.startswith('PySide') else None
+
         if self.opts['polygonOffset']:
-            GL.glEnable(GL.GL_POLYGON_OFFSET_FILL)
-            GL.glPolygonOffset(1.0, 1.0)
+            glfn.glEnable(GLC.GL_POLYGON_OFFSET_FILL)
+            glfn.glPolygonOffset(1.0, 1.0)
 
         if (dirty_bits := self.parseMeshData()):
             self.upload_vertex_buffers(dirty_bits)
 
         mat_mvp = self.mvpMatrix()
         mat_normal = self.modelViewMatrix().normalMatrix()
-
-        context = QtGui.QOpenGLContext.currentContext()
-        es2_compat = context.hasExtension(b'GL_ARB_ES2_compatibility')
 
         if self.opts['drawFaces'] and self.vertexes is not None:
             shader = self.shader()
@@ -256,7 +258,7 @@ class GLMeshItem(GLGraphicsItem):
 
             if (loc := program.attributeLocation("a_position")) != -1:
                 self.m_vbo_position.bind()
-                program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 3)
+                program.setAttributeBuffer(loc, GLC.GL_FLOAT, 0, 3)
                 self.m_vbo_position.release()
                 enabled_locs.append(loc)
 
@@ -266,7 +268,7 @@ class GLMeshItem(GLGraphicsItem):
                     program.setAttributeValue(loc, QtGui.QVector3D(0, 0, 1))
                 else:
                     self.m_vbo_normal.bind()
-                    program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 3)
+                    program.setAttributeBuffer(loc, GLC.GL_FLOAT, 0, 3)
                     self.m_vbo_normal.release()
                     enabled_locs.append(loc)
 
@@ -279,9 +281,9 @@ class GLMeshItem(GLGraphicsItem):
                 else:
                     self.m_vbo_color.bind()
                     if self.colors.dtype == np.uint8:
-                        program.setAttributeBuffer(loc, GL.GL_UNSIGNED_BYTE, 0, 4)
+                        program.setAttributeBuffer(loc, GLC.GL_UNSIGNED_BYTE, 0, 4)
                     else:
-                        program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 4)
+                        program.setAttributeBuffer(loc, GLC.GL_FLOAT, 0, 4)
                     self.m_vbo_color.release()
                     enabled_locs.append(loc)
 
@@ -294,10 +296,10 @@ class GLMeshItem(GLGraphicsItem):
                     program.setUniformValue(loc, mat_normal)
 
                 if (faces := self.faces) is None:
-                    GL.glDrawArrays(GL.GL_TRIANGLES, 0, np.prod(self.vertexes.shape[:-1]))
+                    glfn.glDrawArrays(GLC.GL_TRIANGLES, 0, np.prod(self.vertexes.shape[:-1]))
                 else:
                     self.m_ibo_faces.bind()
-                    GL.glDrawElements(GL.GL_TRIANGLES, faces.size, GL.GL_UNSIGNED_INT, None)
+                    glfn.glDrawElements(GLC.GL_TRIANGLES, faces.size, GLC.GL_UNSIGNED_INT, NULL)
                     self.m_ibo_faces.release()
 
             for loc in enabled_locs:
@@ -311,7 +313,7 @@ class GLMeshItem(GLGraphicsItem):
 
             if (loc := program.attributeLocation("a_position")) != -1:
                 self.m_vbo_edgeVerts.bind()
-                program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 3)
+                program.setAttributeBuffer(loc, GLC.GL_FLOAT, 0, 3)
                 self.m_vbo_edgeVerts.release()
                 enabled_locs.append(loc)
 
@@ -329,7 +331,7 @@ class GLMeshItem(GLGraphicsItem):
             program.setUniformValue("u_mvp", mat_mvp)
 
             self.m_ibo_edges.bind()
-            GL.glDrawElements(GL.GL_LINES, self.edges.size, GL.GL_UNSIGNED_INT, None)
+            glfn.glDrawElements(GLC.GL_LINES, self.edges.size, GLC.GL_UNSIGNED_INT, NULL)
             self.m_ibo_edges.release()
 
             program.release()
@@ -338,5 +340,5 @@ class GLMeshItem(GLGraphicsItem):
                 program.disableAttributeArray(loc)
 
         if self.opts['polygonOffset']:
-            GL.glDisable(GL.GL_POLYGON_OFFSET_FILL)
-            GL.glPolygonOffset(0.0, 0.0)
+            glfn.glDisable(GLC.GL_POLYGON_OFFSET_FILL)
+            glfn.glPolygonOffset(0.0, 0.0)

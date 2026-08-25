@@ -1,10 +1,10 @@
 import enum
 import math
 
-from OpenGL import GL
 import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
+from ...Qt import OpenGLConstants as GLC
 from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLScatterPlotItem']
@@ -150,6 +150,7 @@ class GLScatterPlotItem(GLGraphicsItem):
         tan_half_fov = math.tan(math.radians(0.5 * view.opts["fov"]))
 
         context = QtGui.QOpenGLContext.currentContext()
+        glfn = self.glFunctions()
 
         if DirtyFlag.POSITION in self.dirty_bits:
             self.upload_vbo(self.m_vbo_position, self.pos)
@@ -161,9 +162,9 @@ class GLScatterPlotItem(GLGraphicsItem):
 
         if not context.isOpenGLES():
             if _is_compatibility_profile(context):
-                GL.glEnable(GL.GL_POINT_SPRITE)
+                glfn.glEnable(GLC.GL_POINT_SPRITE)
 
-            GL.glEnable(GL.GL_PROGRAM_POINT_SIZE)
+            glfn.glEnable(GLC.GL_PROGRAM_POINT_SIZE)
 
         program = self.getShaderProgram()
 
@@ -171,14 +172,14 @@ class GLScatterPlotItem(GLGraphicsItem):
 
         loc = 0
         self.m_vbo_position.bind()
-        program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 3)
+        program.setAttributeBuffer(loc, GLC.GL_FLOAT, 0, 3)
         self.m_vbo_position.release()
         enabled_locs.append(loc)
 
         loc = 1
         if isinstance(self.color, np.ndarray):
             self.m_vbo_color.bind()
-            program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 4)
+            program.setAttributeBuffer(loc, GLC.GL_FLOAT, 0, 4)
             self.m_vbo_color.release()
             enabled_locs.append(loc)
         else:
@@ -187,7 +188,7 @@ class GLScatterPlotItem(GLGraphicsItem):
         loc = 2
         if isinstance(self.size, np.ndarray):
             self.m_vbo_size.bind()
-            program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 1)
+            program.setAttributeBuffer(loc, GLC.GL_FLOAT, 0, 1)
             self.m_vbo_size.release()
             enabled_locs.append(loc)
         else:
@@ -202,7 +203,7 @@ class GLScatterPlotItem(GLGraphicsItem):
         program.setUniformValue("u_mvp", mat_mvp)
         program.setUniformValue("u_modelview", mat_modelview)
 
-        GL.glDrawArrays(GL.GL_POINTS, 0, len(self.pos))
+        glfn.glDrawArrays(GLC.GL_POINTS, 0, len(self.pos))
 
         program.release()
 

@@ -1,7 +1,7 @@
-from OpenGL import GL
 import numpy as np
 
 from ..Qt import QtOpenGL
+from ..Qt import OpenGLHelpers
 
 ## For centralizing and managing vertex/fragment shader programs.
 
@@ -276,6 +276,7 @@ class ShaderProgram:
         self.shaders = shaders
         self.prog : QtOpenGL.QOpenGLShaderProgram | None = None
         self.uniformData = {}
+        self.glUniform1fv = None
 
         ## parse extra options from the shader definition
         if uniforms is not None:
@@ -323,7 +324,18 @@ class ShaderProgram:
                 for uniformName, data in self.uniformData.items():
                     if (loc := program.uniformLocation(uniformName)) == -1:
                         raise RuntimeError(f'Could not find uniform variable "{uniformName}"')
-                    GL.glUniform1fv(loc, len(data), np.array(data, dtype=np.float32))
+
+                    # we would like to use program.setUniformValueArray(), but:
+                    # - PyQt has a buggy binding of setUniformValueArray for array of float.
+                    #   this is still true as of PyQt6 6.11
+                    # - PySide6 had a bug PYSIDE-3005 which got fixed since PySide6 >= 6.9.
+                    # - In conda forge's build of PySide6, setUniformValueArray does not
+                    #   accept ndarrays. Use either Python list or ctypes array
+
+                    data = np.ascontiguousarray(data, dtype=np.float32)
+                    if self.glUniform1fv is None:
+                        self.glUniform1fv = OpenGLHelpers.get_gl_uniform_1fv()
+                    self.glUniform1fv(loc, data.size, data.ctypes.data)
 
             except:
                 program.release()

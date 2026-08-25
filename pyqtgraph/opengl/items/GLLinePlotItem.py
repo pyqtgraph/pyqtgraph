@@ -1,9 +1,9 @@
 import enum
 
-from OpenGL import GL
 import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
+from ...Qt import OpenGLConstants as GLC
 from ... import functions as fn
 from ..GLGraphicsItem import GLGraphicsItem
 
@@ -146,6 +146,7 @@ class GLLinePlotItem(GLGraphicsItem):
         mat_mvp = self.mvpMatrix()
 
         context = QtGui.QOpenGLContext.currentContext()
+        glfn = self.glFunctions()
 
         if DirtyFlag.POSITION in self.dirty_bits:
             self.upload_vbo(self.m_vbo_position, self.pos)
@@ -159,14 +160,14 @@ class GLLinePlotItem(GLGraphicsItem):
 
         loc = 0
         self.m_vbo_position.bind()
-        program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 3)
+        program.setAttributeBuffer(loc, GLC.GL_FLOAT, 0, 3)
         self.m_vbo_position.release()
         enabled_locs.append(loc)
 
         loc = 1
         if isinstance(self.color, np.ndarray):
             self.m_vbo_color.bind()
-            program.setAttributeBuffer(loc, GL.GL_FLOAT, 0, 4)
+            program.setAttributeBuffer(loc, GLC.GL_FLOAT, 0, 4)
             self.m_vbo_color.release()
             enabled_locs.append(loc)
         else:
@@ -175,11 +176,11 @@ class GLLinePlotItem(GLGraphicsItem):
         enable_aa = self.antialias and not context.isOpenGLES()
 
         if enable_aa:
-            GL.glEnable(GL.GL_LINE_SMOOTH)
-            GL.glEnable(GL.GL_BLEND)
-            GL.glBlendFuncSeparate(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA,
-                                   GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA)
-            GL.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST)
+            glfn.glEnable(GLC.GL_LINE_SMOOTH)
+            glfn.glEnable(GLC.GL_BLEND)
+            glfn.glBlendFuncSeparate(GLC.GL_SRC_ALPHA, GLC.GL_ONE_MINUS_SRC_ALPHA,
+                                   GLC.GL_ONE, GLC.GL_ONE_MINUS_SRC_ALPHA)
+            glfn.glHint(GLC.GL_LINE_SMOOTH_HINT, GLC.GL_NICEST)
 
         sfmt = context.format()
         core_forward_compatible = (
@@ -189,7 +190,7 @@ class GLLinePlotItem(GLGraphicsItem):
         if not core_forward_compatible:
             # Core Forward Compatible profiles will return error for
             # any width that is not 1.0
-            GL.glLineWidth(self.width)
+            glfn.glLineWidth(self.width)
 
         for loc in enabled_locs:
             program.enableAttributeArray(loc)
@@ -198,9 +199,9 @@ class GLLinePlotItem(GLGraphicsItem):
         program.setUniformValue("u_mvp", mat_mvp)
 
         if self.mode == 'line_strip':
-            GL.glDrawArrays(GL.GL_LINE_STRIP, 0, len(self.pos))
+            glfn.glDrawArrays(GLC.GL_LINE_STRIP, 0, len(self.pos))
         elif self.mode == 'lines':
-            GL.glDrawArrays(GL.GL_LINES, 0, len(self.pos))
+            glfn.glDrawArrays(GLC.GL_LINES, 0, len(self.pos))
 
         program.release()
 
@@ -208,10 +209,10 @@ class GLLinePlotItem(GLGraphicsItem):
             program.disableAttributeArray(loc)
 
         if enable_aa:
-            GL.glDisable(GL.GL_LINE_SMOOTH)
-            GL.glDisable(GL.GL_BLEND)
+            glfn.glDisable(GLC.GL_LINE_SMOOTH)
+            glfn.glDisable(GLC.GL_BLEND)
         
-        GL.glLineWidth(1.0)
+        glfn.glLineWidth(1.0)
 
 
 SHADER_LEGACY = {
