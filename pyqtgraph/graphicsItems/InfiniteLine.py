@@ -326,6 +326,32 @@ class InfiniteLine(GraphicsObject):
             self._boundingRect = self._computeBoundingRect()
         return self._boundingRect
 
+    def _getVisibleEndpoints(self):
+        left, right = self._endPoints
+        pt1 = Point(left, 0)
+        pt2 = Point(right, 0)
+
+        if self.angle % 90 != 0:
+            view = self.getViewBox()
+            if not isinstance(view, ViewBox):
+                return pt1, pt2
+
+            line = QtGui.QPainterPath()
+            line.moveTo(pt1)
+            line.lineTo(pt2)
+            line = self.itemTransform(view)[0].map(line)
+
+            bounds = QtGui.QPainterPath()
+            bounds.addRect(view.boundingRect())
+
+            paths = bounds.intersected(line).toSubpathPolygons(QtGui.QTransform())
+            if len(paths) > 0:
+                pts = list(paths[0])
+                pt1 = self.mapFromItem(view, pts[0])
+                pt2 = self.mapFromItem(view, pts[1])
+
+        return pt1, pt2
+
     def paint(self, p, *args):
         if self.angle % 180 not in (0, 90):
             p.setRenderHint(p.RenderHint.Antialiasing)
@@ -344,9 +370,10 @@ class InfiniteLine(GraphicsObject):
         tr = p.transform()
         p.resetTransform()
         
-        start = tr.map(Point(left, 0))
-        end = tr.map(Point(right, 0))
-        up = tr.map(Point(left, 1))
+        pt1, pt2 = self._getVisibleEndpoints()
+        start = tr.map(pt1)
+        end = tr.map(pt2)
+        up = tr.map(pt1 + Point(0, 1))
         dif = end - start
         length = Point(dif).length()
         angle = degrees(atan2(dif.y(), dif.x()))
