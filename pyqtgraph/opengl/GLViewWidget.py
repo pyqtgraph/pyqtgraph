@@ -2,13 +2,14 @@ from math import cos, radians, sin, tan
 import importlib
 import warnings
 
-from OpenGL import GL
 import numpy as np
 
 from .. import Vector
 from .. import functions as fn
 from .. import getConfigOption
 from ..Qt import QtCore, QtGui, QtWidgets, QtOpenGL, QT_LIB, QtVersionInfo
+from ..Qt import OpenGLConstants as GLC
+from ..Qt import OpenGLHelpers
 
 if QtVersionInfo[0] >= 6:
     QtOpenGLWidgets = importlib.import_module(f"{QT_LIB}.QtOpenGLWidgets")
@@ -45,6 +46,7 @@ class GLViewMixin:
         self._modelViewStack = []
         self._projectionStack = []
         self.default_vao = QtOpenGL.QOpenGLVertexArrayObject(self)
+        self.glfn = None
 
     def deviceWidth(self):
         dpr = self.devicePixelRatioF()
@@ -102,6 +104,7 @@ class GLViewMixin:
         Initialize items that were not initialized during addItem().
         """
         ctx = self.context()
+        self.glfn = OpenGLHelpers.getFunctions(ctx)
         fmt = ctx.format()
         if ctx.isOpenGLES():
             warnings.warn(
@@ -111,9 +114,8 @@ class GLViewMixin:
                 stacklevel=2
             )
         elif fmt.version() < (2, 1):
-            verString = GL.glGetString(GL.GL_VERSION)
             raise RuntimeError(
-                "pyqtgraph.opengl: Requires >= OpenGL 2.1; Found %s" % verString
+                f"pyqtgraph.opengl: Requires >= OpenGL 2.1; Found {fmt.version()}"
             )
 
         # Core profile requires a non-default VAO
@@ -191,6 +193,7 @@ class GLViewMixin:
         Return a list of the items displayed in the region (x, y, w, h)
         relative to the widget.        
         """
+        from OpenGL import GL
         region = (region[0], self.height()-(region[1]+region[3]), region[2], region[3])
         viewport = self.getViewport()
         
@@ -212,7 +215,7 @@ class GLViewMixin:
     
     def paintGL(self):
         # Qt may have triggered some OpenGL errors, drain those errors away.
-        while GL.glGetError() != GL.GL_NO_ERROR:
+        while self.glfn.glGetError() != GLC.GL_NO_ERROR:
             pass
 
         # when called by Qt, glViewport has already been called
@@ -228,8 +231,8 @@ class GLViewMixin:
         self.setProjection(region, viewport)
         self.setModelview()
         bgcolor = self.opts['bgcolor']
-        GL.glClearColor(*bgcolor)
-        GL.glClear( GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT )
+        self.glfn.glClearColor(*bgcolor)
+        self.glfn.glClear( GLC.GL_DEPTH_BUFFER_BIT | GLC.GL_COLOR_BUFFER_BIT )
         self.drawItemTree(useItemNames=useItemNames)
         
     def drawItemTree(self, item=None, useItemNames=False):
@@ -245,6 +248,7 @@ class GLViewMixin:
             if i is item:
                 try:
                     if useItemNames:
+                        from OpenGL import GL
                         GL.glLoadName(i._id)
                         self._itemNames[i._id] = i
 
@@ -513,7 +517,7 @@ class GLViewMixin:
         """
         return self.grabFramebuffer()
         
-    def renderToArray(self, size, format=GL.GL_BGRA, type=GL.GL_UNSIGNED_BYTE, textureSize=1024, padding=256):
+    def renderToArray(self, size, format=GLC.GL_BGRA, type=GLC.GL_UNSIGNED_BYTE, textureSize=1024, padding=256):
         w,h = map(int, size)
         
         self.makeCurrent()
@@ -522,7 +526,7 @@ class GLViewMixin:
 
         fbo = QtOpenGL.QOpenGLFramebufferObject(texwidth, texwidth,
                     QtOpenGL.QOpenGLFramebufferObject.Attachment.CombinedDepthStencil,
-                    GL.GL_TEXTURE_2D)
+                    GLC.GL_TEXTURE_2D)
 
         output = np.empty((h, w, 4), dtype=np.ubyte)
         data = np.empty((texwidth, texwidth, 4), dtype=np.ubyte)
@@ -537,11 +541,11 @@ class GLViewMixin:
                     h2 = y2-y
                     
                     fbo.bind()
-                    GL.glViewport(0, 0, w2, h2)
+                    self.glfn.glViewport(0, 0, w2, h2)
                     self.paint(region=(x, h-y-h2, w2, h2), viewport=(0, 0, w, h))  # only render sub-region
                     
                     fbo.bind()
-                    GL.glReadPixels(0, 0, texwidth, texwidth, format, type, data)
+                    self.glfn.glReadPixels(0, 0, texwidth, texwidth, format, type, data)
                     data_yflip = data[::-1, ...]
                     output[y+padding:y2-padding, x+padding:x2-padding] = data_yflip[-(h2-padding):-padding, padding:w2-padding]
                     

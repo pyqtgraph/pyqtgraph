@@ -1,4 +1,10 @@
-from OpenGL import GL
+from ...Qt import FailedImport
+
+try:
+    from OpenGL import GL
+except ImportError as err:
+    GL = FailedImport(err)
+
 import numpy as np
 
 from ...Qt import QtGui, QtOpenGL

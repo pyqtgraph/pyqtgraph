@@ -1,6 +1,7 @@
+import ctypes
 import importlib
 
-from . import QT_LIB, QtWidgets, QtVersionInfo
+from . import QT_LIB, QtGui, QtWidgets, QtVersionInfo
 from . import OpenGLConstants as GLC
 
 if QtVersionInfo[0] >= 6:
@@ -93,3 +94,16 @@ class GraphicsViewGLWidget(QtOpenGLWidgets.QOpenGLWidget):
         glfn.glScissor(*[round(v * dpr) for v in [x, y, w, h]])
         glfn.glEnable(GLC.GL_SCISSOR_TEST)
         # the test will be disabled by QPainter.endNativePainting().
+
+
+GLUNIFORM1FV_TYPE = ctypes.CFUNCTYPE(
+    None,             # Return type (void)
+    ctypes.c_int,     # location
+    ctypes.c_int,     # count
+    ctypes.c_void_p
+)
+
+def get_gl_uniform_1fv():
+    context = QtGui.QOpenGLContext.currentContext()
+    func_ptr = context.getProcAddress(b"glUniform1fv")
+    return GLUNIFORM1FV_TYPE(int(func_ptr))

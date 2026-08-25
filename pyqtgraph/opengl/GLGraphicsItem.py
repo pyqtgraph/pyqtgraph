@@ -1,26 +1,26 @@
-from OpenGL import GL
-
 from .. import Transform3D
 from ..Qt import QtCore, QtGui
+from ..Qt import OpenGLConstants as GLC
+from ..Qt import OpenGLHelpers
 
 GLOptions = {
     'opaque': {
-        GL.GL_DEPTH_TEST: True,
-        GL.GL_BLEND: False,
-        GL.GL_CULL_FACE: False,
+        GLC.GL_DEPTH_TEST: True,
+        GLC.GL_BLEND: False,
+        GLC.GL_CULL_FACE: False,
     },
     'translucent': {
-        GL.GL_DEPTH_TEST: True,
-        GL.GL_BLEND: True,
-        GL.GL_CULL_FACE: False,
-        'glBlendFuncSeparate': (GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA,
-                                GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA),
+        GLC.GL_DEPTH_TEST: True,
+        GLC.GL_BLEND: True,
+        GLC.GL_CULL_FACE: False,
+        'glBlendFuncSeparate': (GLC.GL_SRC_ALPHA, GLC.GL_ONE_MINUS_SRC_ALPHA,
+                                GLC.GL_ONE, GLC.GL_ONE_MINUS_SRC_ALPHA),
     },
     'additive': {
-        GL.GL_DEPTH_TEST: False,
-        GL.GL_BLEND: True,
-        GL.GL_CULL_FACE: False,
-        'glBlendFunc': (GL.GL_SRC_ALPHA, GL.GL_ONE),
+        GLC.GL_DEPTH_TEST: False,
+        GLC.GL_BLEND: True,
+        GLC.GL_CULL_FACE: False,
+        'glBlendFunc': (GLC.GL_SRC_ALPHA, GLC.GL_ONE),
     },
 }    
 
@@ -256,18 +256,20 @@ class GLGraphicsItem(QtCore.QObject):
         This method is responsible for preparing the GL state options needed to render 
         this item (blending, depth testing, etc). The method is called immediately before painting the item.
         """
+        glfn = self.glFunctions()
+
         for k,v in self.__glOpts.items():
             if v is None:
                 continue
             if isinstance(k, str):
-                func = getattr(GL, k)
+                func = getattr(glfn, k)
                 func(*v)
             else:
                 if v is True:
-                    GL.glEnable(k)
+                    glfn.glEnable(k)
                 else:
-                    GL.glDisable(k)
-    
+                    glfn.glDisable(k)
+
     def paint(self):
         """
         Called by the GLViewWidget to draw this item.
@@ -324,3 +326,8 @@ class GLGraphicsItem(QtCore.QObject):
         if (view := self.view()) is None:
             return QtGui.QMatrix4x4()
         return view.currentProjection() * view.currentModelView()
+
+    def glFunctions(self):
+        if (view := self.view()) is None:
+            return None
+        return OpenGLHelpers.getFunctions(view.context())
