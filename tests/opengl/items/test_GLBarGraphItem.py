@@ -1,6 +1,3 @@
-import pytest
-pytest.importorskip('OpenGL')
-
 import numpy as np
 
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
