@@ -8,5 +8,4 @@ sphinx-autodoc-typehints
 sphinx-qt-documentation
 sphinxext-rediraffe
 numpy
-pyopengl
 colorama
