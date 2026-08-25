@@ -193,6 +193,11 @@ class GLViewMixin:
         Return a list of the items displayed in the region (x, y, w, h)
         relative to the widget.        
         """
+        warnings.warn(
+            "itemsAt is deprecated and will be removed in a future version of pyqtgraph",
+            DeprecationWarning, stacklevel=2
+        )
+
         from OpenGL import GL
         region = (region[0], self.height()-(region[1]+region[3]), region[2], region[3])
         viewport = self.getViewport()
