@@ -52,7 +52,13 @@ class GLImageItem(GLGraphicsItem):
             tex.destroy()
 
         if not tex.isCreated():
-            tex.setFormat(QtOpenGL.QOpenGLTexture.TextureFormat.RGBA8_UNorm)
+            context = QtGui.QOpenGLContext.currentContext()
+            if context.isOpenGLES() and context.format().version() <= (2, 0):
+                # PyQt5 on Windows with QT_OPENGL=angle emulates OpenGL ES 2.0
+                texfmt = QtOpenGL.QOpenGLTexture.TextureFormat.RGBAFormat
+            else:
+                texfmt = QtOpenGL.QOpenGLTexture.TextureFormat.RGBA8_UNorm
+            tex.setFormat(texfmt)
             tex.setSize(w, h)
             tex.allocateStorage()
             if not tex.isStorageAllocated():
@@ -128,8 +134,7 @@ class GLImageItem(GLGraphicsItem):
 
         mat_mvp = self.mvpMatrix()
 
-        context = QtGui.QOpenGLContext.currentContext()
-        glfn = OpenGLHelpers.getFunctions(context)
+        glfn = self.glFunctions()
 
         program = self.getShaderProgram()
         loc_pos, loc_tex = 0, 1
