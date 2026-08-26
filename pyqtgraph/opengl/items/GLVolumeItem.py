@@ -1,13 +1,8 @@
-from ...Qt import FailedImport
-
-try:
-    from OpenGL import GL
-except ImportError as err:
-    GL = FailedImport(err)
-
 import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
+from ...Qt import OpenGLConstants as GLC
+from ...Qt import OpenGLHelpers
 from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLVolumeItem']
@@ -32,12 +27,13 @@ class GLVolumeItem(GLGraphicsItem):
         """
         
         super().__init__()
+        OpenGLHelpers.suppress_texture_warning()
         self.setGLOptions(glOptions)
         self.sliceDensity = sliceDensity
         self.smooth = smooth
         self.data = None
         self._needUpload = False
-        self.texture = None
+        self.m_texture = QtOpenGL.QOpenGLTexture(QtOpenGL.QOpenGLTexture.Target.Target3D)
         self.m_vbo_position = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
         self.setParentItem(parentItem)
         self.setData(data)
@@ -46,29 +42,31 @@ class GLVolumeItem(GLGraphicsItem):
         self.data = data
         self._needUpload = True
         self.update()
-        
-    def _uploadData(self):
-        if self.texture is None:
-            self.texture = GL.glGenTextures(1)
-        GL.glBindTexture(GL.GL_TEXTURE_3D, self.texture)
-        filt = GL.GL_LINEAR if self.smooth else GL.GL_NEAREST
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_MIN_FILTER, filt)
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_MAG_FILTER, filt)
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_BORDER)
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_BORDER)
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_R, GL.GL_CLAMP_TO_BORDER)
-        shape = self.data.shape
 
-        context = QtGui.QOpenGLContext.currentContext()
-        if not context.isOpenGLES():
-            ## Test texture dimensions first
-            GL.glTexImage3D(GL.GL_PROXY_TEXTURE_3D, 0, GL.GL_RGBA, shape[0], shape[1], shape[2], 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, None)
-            if GL.glGetTexLevelParameteriv(GL.GL_PROXY_TEXTURE_3D, 0, GL.GL_TEXTURE_WIDTH) == 0:
-                raise Exception("OpenGL failed to create 3D texture (%dx%dx%d); too large for this hardware." % shape[:3])
-        
+    def _uploadData(self):
+        tex = self.m_texture
+
         data = np.ascontiguousarray(self.data.transpose((2,1,0,3)))
-        GL.glTexImage3D(GL.GL_TEXTURE_3D, 0, GL.GL_RGBA, shape[0], shape[1], shape[2], 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, data)
-        GL.glBindTexture(GL.GL_TEXTURE_3D, 0)
+        d, h, w = data.shape[:3]
+
+        if tex.isCreated() and (w != tex.width() or h != tex.height() or d != tex.depth()):
+            tex.destroy()
+
+        if not tex.isCreated():
+            tex.setFormat(QtOpenGL.QOpenGLTexture.TextureFormat.RGBA8_UNorm)
+            tex.setSize(w, h, d)
+            tex.allocateStorage()
+            if not tex.isStorageAllocated():
+                raise RuntimeError("OpenGL failed to create 3D texture (%dx%dx%d); too large for this hardware." % (w, h, d))
+
+        filt = QtOpenGL.QOpenGLTexture.Filter.Linear if self.smooth else QtOpenGL.QOpenGLTexture.Filter.Nearest
+        tex.setMinMagFilters(filt, filt)
+        tex.setWrapMode(QtOpenGL.QOpenGLTexture.WrapMode.ClampToBorder)
+
+        tex.setData(
+            QtOpenGL.QOpenGLTexture.PixelFormat.RGBA,
+            QtOpenGL.QOpenGLTexture.PixelType.UInt8,
+            data)
         
         all_vertices = []
 
@@ -151,16 +149,19 @@ class GLVolumeItem(GLGraphicsItem):
         d = 1 if cam[ax] > 0 else -1
         offset, num_vertices = self.lists[(ax,d)]
 
+        context = QtGui.QOpenGLContext.currentContext()
+        glfn = OpenGLHelpers.getFunctions(context)
+
         program = self.getShaderProgram()
 
         loc_pos, loc_tex = 0, 1
         self.m_vbo_position.bind()
-        program.setAttributeBuffer(loc_pos, GL.GL_FLOAT, 0*4, 3, 6*4)
-        program.setAttributeBuffer(loc_tex, GL.GL_FLOAT, 3*4, 3, 6*4)
+        program.setAttributeBuffer(loc_pos, GLC.GL_FLOAT, 0*4, 3, 6*4)
+        program.setAttributeBuffer(loc_tex, GLC.GL_FLOAT, 3*4, 3, 6*4)
         self.m_vbo_position.release()
         enabled_locs = [loc_pos, loc_tex]
 
-        GL.glBindTexture(GL.GL_TEXTURE_3D, self.texture)
+        self.m_texture.bind()
 
         for loc in enabled_locs:
             program.enableAttributeArray(loc)
@@ -168,14 +169,14 @@ class GLVolumeItem(GLGraphicsItem):
         program.bind()
         program.setUniformValue("u_mvp", mat_mvp)
 
-        GL.glDrawArrays(GL.GL_TRIANGLES, offset, num_vertices)
+        glfn.glDrawArrays(GLC.GL_TRIANGLES, offset, num_vertices)
 
         program.release()
 
         for loc in enabled_locs:
             program.disableAttributeArray(loc)
 
-        GL.glBindTexture(GL.GL_TEXTURE_3D, 0)
+        self.m_texture.release()
 
     def drawVolume(self, ax, d):
         imax = [0,1,2]
