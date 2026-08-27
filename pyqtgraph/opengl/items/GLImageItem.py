@@ -18,12 +18,11 @@ class GLImageItem(GLGraphicsItem):
     
     def __init__(self, data, smooth=False, glOptions='translucent', parentItem=None):
         """
-        
         ==============  =======================================================================================
         **Arguments:**
-        data            Volume data to be rendered. *Must* be 3D numpy array (x, y, RGBA) with dtype=ubyte.
+        data            Image data to be rendered. *Must* be 3D numpy array (x, y, RGBA) with dtype=ubyte.
                         (See functions.makeRGBA)
-        smooth          (bool) If True, the volume slices are rendered with linear interpolation 
+        smooth          (bool) If True, the image is rendered with linear interpolation
         ==============  =======================================================================================
         """
         
