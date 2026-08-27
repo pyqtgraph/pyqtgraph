@@ -186,6 +186,9 @@ class ROI(GraphicsObject):
         
         self.handleSize = 5
         self.invertible = invertible
+
+        if maxBounds is not None:
+            maxBounds = QtCore.QRectF(maxBounds)
         self.maxBounds = maxBounds
         
         self.snapSize = snapSize
