@@ -11,8 +11,8 @@ import inspect
 import weakref
 
 from .Qt import QtCore, QtWidgets
-
 __all__ = ['WidgetGroup']
+
 
 def splitterState(w):
     s = w.saveState().toPercentEncoding().data().decode()

@@ -18,10 +18,10 @@ import numpy as np
 from . import Qt, debug, getConfigOption, reload
 from .Qt import QT_LIB, QtCore, QtGui
 from .util.cupy_helper import getCupy
+__all__ = [
 
 # in order of appearance in this file.
 # add new functions to this list only if they are to reside in pg namespace.
-__all__ = [
     'siScale', 'siFormat', 'siParse', 'siEval', 'siApply',
     'Color', 'mkColor', 'mkBrush', 'mkPen', 'hsvColor',
     'CIELabColor', 'colorCIELab', 'colorDistance',

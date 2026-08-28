@@ -2,9 +2,9 @@ import numpy as np
 
 from ..Qt import QtCore, QtGui, QtWidgets
 
-translate = QtCore.QCoreApplication.translate
-
 __all__ = ['TableWidget']
+
+translate = QtCore.QCoreApplication.translate
 
 
 def _defersort(fn):

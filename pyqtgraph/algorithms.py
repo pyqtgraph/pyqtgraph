@@ -1,7 +1,7 @@
 import numpy as np
 from .Qt import QtGui
-
 __all__ = ['isocurve', 'isosurface', 'pseudoScatter', 'toposort']
+
 
 # isocurve is used by:
 # - IsocurveItem
