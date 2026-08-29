@@ -52,13 +52,13 @@ class ActionParameterItem(ParameterItem):
     def __init__(self, param, depth):
         ParameterItem.__init__(self, param, depth)
         self.layoutWidget = QtWidgets.QWidget()
-        self.layout = QtWidgets.QHBoxLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layoutWidget.setLayout(self.layout)
+        self.layout_ = QtWidgets.QHBoxLayout()
+        self.layout_.setContentsMargins(0, 0, 0, 0)
         self.button = ParameterControlledButton(param, self.layoutWidget)
         #self.layout.addSpacing(100)
-        self.layout.addWidget(self.button)
-        self.layout.addStretch()
+        self.layout_.addWidget(self.button)
+        self.layout_.addStretch()
+        self.layoutWidget.setLayout(self.layout_)
         self.titleChanged()
 
     def treeWidgetChanged(self):

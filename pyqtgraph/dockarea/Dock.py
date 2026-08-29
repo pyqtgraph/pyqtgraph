@@ -43,10 +43,10 @@ class Dock(QtWidgets.QWidget):
         self.topLayout.addWidget(self.label, 0, 1)
         self.widgetArea = QtWidgets.QWidget()
         self.topLayout.addWidget(self.widgetArea, 1, 1)
-        self.layout = QtWidgets.QGridLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setSpacing(0)
-        self.widgetArea.setLayout(self.layout)
+        self.layout_ = QtWidgets.QGridLayout()
+        self.layout_.setContentsMargins(0, 0, 0, 0)
+        self.layout_.setSpacing(0)
+        self.widgetArea.setLayout(self.layout_)
         self.widgetArea.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
             QtWidgets.QSizePolicy.Policy.Expanding
@@ -201,7 +201,7 @@ class Dock(QtWidgets.QWidget):
             row = self.currentRow
         self.currentRow = max(row+1, self.currentRow)
         self.widgets.append(widget)
-        self.layout.addWidget(widget, row, col, rowspan, colspan)
+        self.layout_.addWidget(widget, row, col, rowspan, colspan)
         self.dockdrop.raiseOverlay()
         
     def startDrag(self):
@@ -238,7 +238,9 @@ class Dock(QtWidgets.QWidget):
 
     def raiseDock(self):
         """If this Dock is stacked underneath others, raise it to the top."""
-        self.container().raiseDock(self)
+        container = self.container()
+        if container is not None:
+            container.raiseDock(self)
 
     def close(self):
         """Remove this dock from the DockArea it lives inside."""

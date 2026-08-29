@@ -247,15 +247,14 @@ class ProgressWidget(QtWidgets.QWidget):
     to be hidden without changing size.
     """
     def __init__(self, label, bar):
-        QtWidgets.QWidget.__init__(self)
+        super().__init__()
         self.hidden = False
-        self.layout = QtWidgets.QVBoxLayout()
-        self.setLayout(self.layout)
-        
+        self.layout_ = QtWidgets.QVBoxLayout()
         self.label = label
         self.bar = bar
-        self.layout.addWidget(label)
-        self.layout.addWidget(bar)
+        self.layout_.addWidget(label)
+        self.layout_.addWidget(bar)
+        self.setLayout(self.layout_)
         
     def eventFilter(self, obj, ev):
         return ev.type() == QtCore.QEvent.Type.Paint

@@ -89,10 +89,16 @@ class HistogramLUTItem(GraphicsWidget):
     sigLevelsChanged = QtCore.Signal(object)
     sigLevelChangeFinished = QtCore.Signal(object)
 
-    def __init__(self, image=None, fillHistogram=True, levelMode='mono',
-                 gradientPosition='right', orientation='vertical',
-                 colorMapMenu=None):
-        GraphicsWidget.__init__(self)
+    def __init__(
+        self,
+        image=None,
+        fillHistogram=True,
+        levelMode='mono',
+        gradientPosition='right',
+        orientation='vertical',
+        colorMapMenu=None
+    ):
+        super().__init__()
         self.lut = None
         self.imageItem = lambda: None  # fake a dead weakref
         self.levelMode = levelMode
@@ -104,10 +110,10 @@ class HistogramLUTItem(GraphicsWidget):
         elif orientation == 'horizontal' and gradientPosition not in {'top', 'bottom'}:
             self.gradientPosition = 'bottom'
 
-        self.layout = QtWidgets.QGraphicsGridLayout()
-        self.setLayout(self.layout)
-        self.layout.setContentsMargins(1, 1, 1, 1)
-        self.layout.setSpacing(0)
+        self.layout_ = QtWidgets.QGraphicsGridLayout()
+        self.layout_.setContentsMargins(1, 1, 1, 1)
+        self.layout_.setSpacing(0)
+        self.setLayout(self.layout_)
 
         self.vb = ViewBox(parent=self)
         if self.orientation == 'vertical':
@@ -158,13 +164,13 @@ class HistogramLUTItem(GraphicsWidget):
         # axis / viewbox / gradient order in the grid
         avg = (0, 1, 2) if self.gradientPosition in {'right', 'bottom'} else (2, 1, 0)
         if self.orientation == 'vertical':
-            self.layout.addItem(self.axis, 0, avg[0])
-            self.layout.addItem(self.vb, 0, avg[1])
-            self.layout.addItem(self.gradient, 0, avg[2])
+            self.layout_.addItem(self.axis, 0, avg[0])
+            self.layout_.addItem(self.vb, 0, avg[1])
+            self.layout_.addItem(self.gradient, 0, avg[2])
         else:
-            self.layout.addItem(self.axis, avg[0], 0)
-            self.layout.addItem(self.vb, avg[1], 0)
-            self.layout.addItem(self.gradient, avg[2], 0)
+            self.layout_.addItem(self.axis, avg[0], 0)
+            self.layout_.addItem(self.vb, avg[1], 0)
+            self.layout_.addItem(self.gradient, avg[2], 0)
 
         self.gradient.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemStacksBehindParent)
         self.vb.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemStacksBehindParent)

@@ -9,8 +9,8 @@ class LayoutWidget(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
         QtWidgets.QWidget.__init__(self, parent)
-        self.layout = QtWidgets.QGridLayout()
-        self.setLayout(self.layout)
+        self.layout_ = QtWidgets.QGridLayout()
+        self.setLayout(self.layout_)
         self.items = {}
         self.rows = {}
         self.currentRow = 0
@@ -71,7 +71,7 @@ class LayoutWidget(QtWidgets.QWidget):
         self.rows[row][col] = item
         self.items[item] = (row, col)
         
-        self.layout.addWidget(item, row, col, rowspan, colspan)
+        self.layout_.addWidget(item, row, col, rowspan, colspan)
 
     def getWidget(self, row, col):
         """Return the widget in (*row*, *col*)"""

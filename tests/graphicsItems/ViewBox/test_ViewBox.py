@@ -21,7 +21,7 @@ def init_viewbox():
     global win, vb
     
     win = pg.GraphicsLayoutWidget()
-    win.ci.layout.setContentsMargins(0,0,0,0)
+    win.ci.layout().setContentsMargins(0,0,0,0)
     win.resize(200, 200)
     win.show()
     vb = win.addViewBox()

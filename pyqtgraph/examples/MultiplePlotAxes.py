@@ -27,7 +27,7 @@ p1.getAxis('right').setLabel('axis2', color='#0000ff')
 ## this time we need to create a new axis as well.
 p3 = pg.ViewBox()
 ax3 = pg.AxisItem('right')
-p1.layout.addItem(ax3, 2, 3)
+p1.layout().addItem(ax3, 2, 3)
 p1.scene().addItem(p3)
 ax3.linkToView(p3)
 p3.setXLink(p1)

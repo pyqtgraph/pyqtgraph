@@ -224,23 +224,22 @@ class TContainer(Container, QtWidgets.QWidget):
     def __init__(self, area):
         QtWidgets.QWidget.__init__(self)
         Container.__init__(self, area)
-        self.layout = QtWidgets.QGridLayout()
-        self.layout.setSpacing(0)
-        self.layout.setContentsMargins(0,0,0,0)
-        self.setLayout(self.layout)
+        self.layout_ = QtWidgets.QGridLayout()
+        self.layout_.setSpacing(0)
+        self.layout_.setContentsMargins(0,0,0,0)
         
         self.hTabLayout = QtWidgets.QHBoxLayout()
         self.hTabBox = QtWidgets.QWidget()
         self.hTabBox.setLayout(self.hTabLayout)
         self.hTabLayout.setSpacing(2)
         self.hTabLayout.setContentsMargins(0,0,0,0)
-        self.layout.addWidget(self.hTabBox, 0, 1)
+        self.layout_.addWidget(self.hTabBox, 0, 1)
 
         self.stack = StackedWidget(container=self)
-        self.layout.addWidget(self.stack, 1, 1)
+        self.layout_.addWidget(self.stack, 1, 1)
+        self.setLayout(self.layout_)
 
 
-        self.setLayout(self.layout)
         for n in ['count', 'widget', 'indexOf']:
             setattr(self, n, getattr(self.stack, n))
 

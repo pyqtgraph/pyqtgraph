@@ -1,9 +1,9 @@
+__all__ = ['GraphicsWidget']
+
 from ..Qt import QtWidgets
 from .GraphicsItem import GraphicsItem
 from ..GraphicsScene.GraphicsScene import GraphicsScene
 from typing import TYPE_CHECKING
-
-__all__ = ['GraphicsWidget']
 
 
 class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
