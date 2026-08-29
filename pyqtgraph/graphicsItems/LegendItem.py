@@ -73,6 +73,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
 
         self.setLayout(self.layout)
         self.items = []
+        self._labelUpdateSlots = {}
         self.size = size
         self.offset = offset
         self.frame = frame
@@ -224,8 +225,33 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         sample.sigClicked.connect(self.sigSampleClicked)
 
         self.items.append((sample, label))
+        self._connectLabelToPlotItem(sample.item, label)
         self._addItemToLayout(sample, label)
         self.updateSize()
+
+    def _connectLabelToPlotItem(self, plotItem, label):
+        item_name = getattr(plotItem, 'name', None)
+        if not hasattr(plotItem, 'sigPlotChanged') or not callable(item_name):
+            return
+
+        def updateLabel(*_):
+            label.setText(item_name())
+            self.updateSize()
+
+        plotItem.sigPlotChanged.connect(updateLabel)
+        self._labelUpdateSlots[label] = (plotItem, updateLabel)
+
+    def _disconnectLabelFromPlotItem(self, label):
+        label_update = self._labelUpdateSlots.pop(label, None)
+        if label_update is None:
+            return
+
+        plotItem, updateLabel = label_update
+        try:
+            plotItem.sigPlotChanged.disconnect(updateLabel)
+        except (TypeError, RuntimeError):
+            # The signal can already be disconnected when Qt tears items down.
+            pass
 
     def _addItemToLayout(self, sample, label):
         col = self.layout.columnCount()
@@ -296,6 +322,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         for sample, label in self.items:
             if sample.item is item or label.text == item:
                 self.items.remove((sample, label))  # remove from itemlist
+                self._disconnectLabelFromPlotItem(label)
                 self._removeItemFromLayout(sample, label)
                 self.updateSize()  # redraw box
                 return  # return after first match
@@ -303,6 +330,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     def clear(self):
         """Remove all items from the legend."""
         for sample, label in self.items:
+            self._disconnectLabelFromPlotItem(label)
             self._removeItemFromLayout(sample, label)
 
         self.items = []
@@ -408,4 +436,3 @@ class ItemSample(GraphicsWidget):
         event.accept()
         self.update()
         self.sigClicked.emit(self.item)
-
