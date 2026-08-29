@@ -223,9 +223,26 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
 
         sample.sigClicked.connect(self.sigSampleClicked)
 
+        if hasattr(item, 'sigPlotChanged'):
+            try:
+                item.sigPlotChanged.connect(self.itemStyleChanged)
+            except TypeError:
+                pass
+
         self.items.append((sample, label))
         self._addItemToLayout(sample, label)
         self.updateSize()
+
+    def itemStyleChanged(self, item):
+        for sample, label in self.items:
+            if sample.item is item:
+                if hasattr(item, 'name') and callable(item.name):
+                    new_name = item.name()
+                    if new_name is not None:
+                        label.setText(new_name)
+                sample.update()
+                self.updateSize()
+                break
 
     def _addItemToLayout(self, sample, label):
         col = self.layout.columnCount()
@@ -295,6 +312,11 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         for sample, label in self.items:
             if sample.item is item or label.text == item:
+                if hasattr(sample.item, 'sigPlotChanged'):
+                    try:
+                        sample.item.sigPlotChanged.disconnect(self.itemStyleChanged)
+                    except (TypeError, RuntimeError):
+                        pass
                 self.items.remove((sample, label))  # remove from itemlist
                 self._removeItemFromLayout(sample, label)
                 self.updateSize()  # redraw box
@@ -303,6 +325,11 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     def clear(self):
         """Remove all items from the legend."""
         for sample, label in self.items:
+            if hasattr(sample.item, 'sigPlotChanged'):
+                try:
+                    sample.item.sigPlotChanged.disconnect(self.itemStyleChanged)
+                except (TypeError, RuntimeError):
+                    pass
             self._removeItemFromLayout(sample, label)
 
         self.items = []
