@@ -181,7 +181,8 @@ class ImageView(QtWidgets.QWidget):
             self.imageItem = ImageItem()
         else:
             self.imageItem = imageItem
-            self.setImage(imageItem.image, autoRange=False, autoLevels=False, transform=imageItem.transform())
+            if imageItem.image is not None:
+                self.setImage(imageItem.image, autoRange=False, autoLevels=False, transform=imageItem.transform())
         self.view.addItem(self.imageItem)
         self.currentIndex = 0
         
