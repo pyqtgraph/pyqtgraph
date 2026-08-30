@@ -79,7 +79,7 @@ pw.plot(x=dates, y=[1,6,2,4,3,5,6,8], symbol='o')
 # Using allowAdd and allowRemove to limit user interaction
 tickViewer = CustomTickSliderItem(allowAdd=False, allowRemove=False)
 vb.sigXRangeChanged.connect(tickViewer.updateRange)
-pw.plotItem.layout.addItem(tickViewer, 4, 1)
+pw.plotItem.layout().addItem(tickViewer, 4, 1)
 
 tickViewer.setTicks( [dates[0], dates[2], dates[-1]] )
 

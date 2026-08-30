@@ -62,10 +62,10 @@ class ReplWidget(QtWidgets.QWidget):
             _ = thread.wait(5_000)
 
     def _setupUi(self):
-        self.layout = QtWidgets.QVBoxLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setSpacing(0)
-        self.setLayout(self.layout)
+        self.layout_ = QtWidgets.QVBoxLayout()
+        self.layout_.setContentsMargins(0, 0, 0, 0)
+        self.layout_.setSpacing(0)
+        self.setLayout(self.layout_)
 
         self.output = QtWidgets.QTextEdit(self)
         font = QtGui.QFont("monospace")
@@ -75,11 +75,11 @@ class ReplWidget(QtWidgets.QWidget):
         )
         self.output.setFont(font)
         self.output.setReadOnly(True)
-        self.layout.addWidget(self.output)
+        self.layout_.addWidget(self.output)
         
-        # put input box in a horizontal layout so we can easily place buttons at the end
+        # put input box in a horizontal layout_ so we can easily place buttons at the end
         self.inputWidget = QtWidgets.QWidget(self)
-        self.layout.addWidget(self.inputWidget)
+        self.layout_.addWidget(self.inputWidget)
         self.inputLayout = QtWidgets.QHBoxLayout()
         self.inputWidget.setLayout(self.inputLayout)
         self.inputLayout.setContentsMargins(0, 0, 0, 0)

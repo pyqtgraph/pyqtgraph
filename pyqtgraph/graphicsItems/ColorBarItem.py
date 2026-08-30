@@ -115,10 +115,10 @@ class ColorBarItem(PlotItem):
 
         if self.horizontal:
             self.setRange( xRange=(0,256), yRange=(0,1), padding=0 )
-            self.layout.setRowFixedHeight(2, width)
+            self.layout().setRowFixedHeight(2, width)
         else:
             self.setRange( xRange=(0,1), yRange=(0,256), padding=0 )
-            self.layout.setColumnFixedWidth(1, width) # width of color bar
+            self.layout().setColumnFixedWidth(1, width) # width of color bar
 
         for key in ['left','right','top','bottom']:
             self.showAxis(key)
@@ -219,11 +219,11 @@ class ColorBarItem(PlotItem):
 
         if insert_in is not None:
             if self.horizontal:
-                insert_in.layout.addItem( self, 5, 1 ) # insert in layout below bottom axis
-                insert_in.layout.setRowFixedHeight(4, 10) # enforce some space to axis above
+                insert_in.layout().addItem( self, 5, 1 ) # insert in layout below bottom axis
+                insert_in.layout().setRowFixedHeight(4, 10) # enforce some space to axis above
             else:
-                insert_in.layout.addItem( self, 2, 5 ) # insert in layout after right-hand axis
-                insert_in.layout.setColumnFixedWidth(4, 5) # enforce some space to axis on the left
+                insert_in.layout().addItem( self, 2, 5 ) # insert in layout after right-hand axis
+                insert_in.layout().setColumnFixedWidth(4, 5) # enforce some space to axis on the left
         self._update_items( update_cmap = True )
 
     def setColorMap(self, colorMap):

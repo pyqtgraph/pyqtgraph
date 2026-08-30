@@ -13,12 +13,12 @@ class DiffTreeWidget(QtWidgets.QWidget):
     (eg, nested dicts, lists, and arrays)
     """
     def __init__(self, parent=None, a=None, b=None):
-        QtWidgets.QWidget.__init__(self, parent)
-        self.layout = QtWidgets.QHBoxLayout()
-        self.setLayout(self.layout)
+        super().__init__(parent)
+        self.layout_ = QtWidgets.QHBoxLayout()
+        self.setLayout(self.layout_)
         self.trees = [DataTreeWidget(self), DataTreeWidget(self)]
         for t in self.trees:
-            self.layout.addWidget(t)
+            self.layout_.addWidget(t)
         if a is not None:
             self.setData(a, b)
     

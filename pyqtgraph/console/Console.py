@@ -74,13 +74,13 @@ class ConsoleWidget(QtWidgets.QWidget):
         self.currentTraceback = None
 
     def _setupUi(self):
-        self.layout = QtWidgets.QGridLayout(self)
-        self.setLayout(self.layout)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setSpacing(0)
+        self.layout_ = QtWidgets.QGridLayout()
+        self.setLayout(self.layout_)
+        self.layout_.setContentsMargins(0, 0, 0, 0)
+        self.layout_.setSpacing(0)
 
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical, self)
-        self.layout.addWidget(self.splitter, 0, 0)
+        self.layout_.addWidget(self.splitter, 0, 0)
 
         self.repl = ReplWidget(self.globals, self.locals, self, allowNonGuiExecution=self._allowNonGuiExecution)
         self.splitter.addWidget(self.repl)

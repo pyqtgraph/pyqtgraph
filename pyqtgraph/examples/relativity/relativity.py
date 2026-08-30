@@ -51,17 +51,15 @@ class RelativityGUI(QtWidgets.QWidget):
         if os.path.exists(presetDir):
             presets = [os.path.splitext(p)[0] for p in os.listdir(presetDir)]
             self.params.param('Load Preset..').setLimits(['']+presets)
-        
-        
-        
-        
+
     def setupGUI(self):
-        self.layout = QtWidgets.QVBoxLayout()
-        self.layout.setContentsMargins(0,0,0,0)
-        self.setLayout(self.layout)
+        self.layout_ = QtWidgets.QVBoxLayout()
+        self.layout_.setContentsMargins(0,0,0,0)
+        
         self.splitter = QtWidgets.QSplitter()
         self.splitter.setOrientation(QtCore.Qt.Orientation.Horizontal)
-        self.layout.addWidget(self.splitter)
+        self.layout_.addWidget(self.splitter)
+        self.setLayout(self.layout_)
         
         self.tree = ParameterTree(showHeader=False)
         self.splitter.addWidget(self.tree)

@@ -67,11 +67,11 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         GraphicsWidget.__init__(self)
         GraphicsWidgetAnchor.__init__(self)
-        self.layout = QtWidgets.QGraphicsGridLayout()
-        self.layout.setVerticalSpacing(verSpacing)
-        self.layout.setHorizontalSpacing(horSpacing)
+        self.layout_ = QtWidgets.QGraphicsGridLayout()
+        self.layout_.setVerticalSpacing(verSpacing)
+        self.layout_.setHorizontalSpacing(horSpacing)
 
-        self.setLayout(self.layout)
+        self.setLayout(self.layout_)
         self.items = []
         self.size = size
         self.offset = offset
@@ -228,8 +228,8 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         self.updateSize()
 
     def _addItemToLayout(self, sample, label):
-        col = self.layout.columnCount()
-        row = self.layout.rowCount()
+        col = self.layout_.columnCount()
+        row = self.layout_.rowCount()
         if row:
             row -= 1
         nCol = self.columnCount * 2
@@ -237,15 +237,15 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         if col == nCol:
             for col in range(0, nCol, 2):
                 # FIND RIGHT COLUMN
-                if not self.layout.itemAt(row, col):
+                if not self.layout_.itemAt(row, col):
                     break
             else:
                 if col + 2 == nCol:
                     # MAKE NEW ROW
                     col = 0
                     row += 1
-        self.layout.addItem(sample, row, col, alignment=QtCore.Qt.AlignmentFlag.AlignVCenter)
-        self.layout.addItem(label, row, col + 1)
+        self.layout_.addItem(sample, row, col, alignment=QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.layout_.addItem(label, row, col + 1)
         # Keep rowCount in sync with the number of rows if items are added
         self.rowCount = max(self.rowCount, row + 1)
 
@@ -256,8 +256,8 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             self.columnCount = columnCount
 
             self.rowCount = math.ceil(len(self.items) / columnCount)
-            for i in range(self.layout.count() - 1, -1, -1):
-                self.layout.removeAt(i)  # clear layout
+            for i in range(self.layout_.count() - 1, -1, -1):
+                self.layout_.removeAt(i)  # clear layout
             for sample, label in self.items:
                 self._addItemToLayout(sample, label)
             self.updateSize()
@@ -275,7 +275,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
 
     def _removeItemFromLayout(self, *args):
         for item in args:
-            self.layout.removeItem(item)
+            self.layout_.removeItem(item)
             item.close()
             # Normally, the item is automatically removed from
             # its scene when it gets destroyed.
@@ -313,11 +313,11 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             return
         height = 0
         width = 0
-        for row in range(self.layout.rowCount()):
+        for row in range(self.layout_.rowCount()):
             row_height = 0
             col_width = 0
-            for col in range(self.layout.columnCount()):
-                item = self.layout.itemAt(row, col)
+            for col in range(self.layout_.columnCount()):
+                item = self.layout_.itemAt(row, col)
                 if item:
                     col_width += item.width() + 3
                     row_height = max(row_height, item.height())

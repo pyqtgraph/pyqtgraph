@@ -12,10 +12,10 @@ class DockArea(Container, QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, parent=parent)
         self.dockdrop = DockDrop(self)
         self.dockdrop.removeAllowedArea('center')
-        self.layout = QtWidgets.QVBoxLayout()
-        self.layout.setContentsMargins(0,0,0,0)
-        self.layout.setSpacing(0)
-        self.setLayout(self.layout)
+        self.layout_ = QtWidgets.QVBoxLayout()
+        self.layout_.setContentsMargins(0,0,0,0)
+        self.layout_.setSpacing(0)
+        self.setLayout(self.layout_)
         self.docks = weakref.WeakValueDictionary()
         self.topContainer = None
         self.dockdrop.raiseOverlay()
@@ -157,7 +157,7 @@ class DockArea(Container, QtWidgets.QWidget):
             # Adding new top-level container; addContainer() should
             # take care of giving the old top container a new home.
             self.topContainer.containerChanged(None)
-        self.layout.addWidget(new)
+        self.layout_.addWidget(new)
         new.containerChanged(self)
         self.topContainer = new
         self.dockdrop.raiseOverlay()
@@ -387,13 +387,14 @@ class DockArea(Container, QtWidgets.QWidget):
 
 
 class TempAreaWindow(QtWidgets.QWidget):
+    
     def __init__(self, area, **kwargs):
         QtWidgets.QWidget.__init__(self, **kwargs)
-        self.layout = QtWidgets.QGridLayout()
-        self.setLayout(self.layout)
-        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout_ = QtWidgets.QGridLayout()
+        self.layout_.setContentsMargins(0, 0, 0, 0)
+        self.layout_.addWidget(area)
+        self.setLayout(self.layout_)
         self.dockarea = area
-        self.layout.addWidget(area)
 
     def closeEvent(self, *args):
         # restore docks to their original area
