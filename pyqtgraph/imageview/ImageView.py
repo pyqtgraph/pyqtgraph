@@ -132,6 +132,7 @@ class ImageView(QtWidgets.QWidget):
         self.image = None
         self.axes = {}
         self.imageDisp = None
+        self._autoHistogramRange = True
         self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
         self.scene = self.ui.graphicsView.scene()
@@ -252,6 +253,10 @@ class ImageView(QtWidgets.QWidget):
         
         self.roiClicked() ## initialize roi plot to correct shape / visibility
 
+    def setHistogramAutoRange(self, enabled):
+        """Set whether image updates automatically adjust the histogram range."""
+        self._autoHistogramRange = bool(enabled)
+
     def setImage(
             self,
             img,
@@ -294,7 +299,8 @@ class ImageView(QtWidgets.QWidget):
         transform
             Set the transform of the displayed image. This option overrides *pos* and *scale*.
         autoHistogramRange : bool
-            If True, the histogram y-range is automatically scaled to fit the image data.
+            If True, the histogram y-range is automatically scaled to fit the image data
+            on this and subsequent image updates.
         levelMode : str
             If specified, this sets the user interaction mode for setting image levels. Options are 'mono',
             which provides a single level control for all image channels, and 'rgb' or 'rgba', which provide
@@ -364,7 +370,8 @@ class ImageView(QtWidgets.QWidget):
         profiler()
 
         self.currentIndex = 0
-        self.updateImage(autoHistogramRange=autoHistogramRange)
+        self.setHistogramAutoRange(autoHistogramRange)
+        self.updateImage()
         if levels is None and autoLevels:
             self.autoLevels()
         if levels is not None:  ## this does nothing since getProcessedImage sets these values again.
@@ -820,10 +827,13 @@ class ImageView(QtWidgets.QWidget):
 
         self.sigTimeChanged.emit(ind, time)
 
-    def updateImage(self, autoHistogramRange=True):
+    def updateImage(self, autoHistogramRange=None):
         ## Redraw image on screen
         if self.image is None:
             return
+
+        if autoHistogramRange is None:
+            autoHistogramRange = self._autoHistogramRange
     
         image = self.getProcessedImage()
         if autoHistogramRange:
