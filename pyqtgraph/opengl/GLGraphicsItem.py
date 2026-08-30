@@ -39,6 +39,8 @@ class GLGraphicsItem(QtCore.QObject):
         self.__transform = Transform3D()
         self.__visible = True
         self.__initialized = False
+        self.__glctx: QtGui.QOpenGLContext | None = None
+        self.__glfns = None
         self.setParentItem(parentItem)
         self.setDepthValue(0)
         self.__glOpts = {}
@@ -330,4 +332,8 @@ class GLGraphicsItem(QtCore.QObject):
     def glFunctions(self):
         if (view := self.view()) is None:
             return None
-        return OpenGLHelpers.getFunctions(view.context())
+        glctx = view.context()
+        if self.__glfns is None or self.__glctx is not glctx:
+            self.__glctx = glctx
+            self.__glfns = OpenGLHelpers.getFunctions(glctx)
+        return self.__glfns
