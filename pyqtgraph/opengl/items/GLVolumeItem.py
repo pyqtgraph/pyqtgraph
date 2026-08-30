@@ -149,8 +149,7 @@ class GLVolumeItem(GLGraphicsItem):
         d = 1 if cam[ax] > 0 else -1
         offset, num_vertices = self.lists[(ax,d)]
 
-        context = QtGui.QOpenGLContext.currentContext()
-        glfn = OpenGLHelpers.getFunctions(context)
+        glfn = self.glFunctions()
 
         program = self.getShaderProgram()
 
