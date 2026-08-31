@@ -101,3 +101,24 @@ def test_legend_item_basics():
 
     legend.clear()
     assert legend.items == []
+
+
+def test_legend_item_updates_on_setdata():
+    # https://github.com/pyqtgraph/pyqtgraph/issues/1000
+    # Legend entries should reflect name/style changes made via setData()
+    # on an item that is already in the legend.
+    legend = pg.LegendItem()
+
+    curve = pg.PlotDataItem([0, 1, 2], [0, 1, 4], name="Original Name")
+    legend.addItem(curve, name="Original Name")
+
+    label = legend.getLabel(curve)
+    assert label.text == "Original Name"
+
+    curve.setData([0, 1, 2], [1, 2, 3], name="New Name")
+    assert label.text == "New Name"
+
+    # Removing the item from the legend should disconnect the update
+    # handler so later setData() calls do not raise or leak connections.
+    legend.removeItem(curve)
+    curve.setData([0, 1], [5, 6], name="Should Not Raise")

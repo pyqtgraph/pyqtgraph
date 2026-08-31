@@ -222,10 +222,24 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             sample = self.sampleType(item)
 
         sample.sigClicked.connect(self.sigSampleClicked)
+        if hasattr(item, 'sigPlotChanged'):
+            item.sigPlotChanged.connect(self._plotChanged)
 
         self.items.append((sample, label))
         self._addItemToLayout(sample, label)
         self.updateSize()
+
+    def _plotChanged(self, item):
+        # Keep a legend entry in sync with its plot item after setData()
+        # changes the name, pen, symbol or brush of an already-added item.
+        for sample, label in self.items:
+            if sample.item is item:
+                name = item.opts.get('name')
+                if name is not None and label.text != name:
+                    label.setText(name)
+                    self.updateSize()
+                sample.update()
+                return
 
     def _addItemToLayout(self, sample, label):
         col = self.layout_.columnCount()
@@ -295,14 +309,23 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         for sample, label in self.items:
             if sample.item is item or label.text == item:
+                self._disconnectPlotChanged(sample.item)
                 self.items.remove((sample, label))  # remove from itemlist
                 self._removeItemFromLayout(sample, label)
                 self.updateSize()  # redraw box
                 return  # return after first match
 
+    def _disconnectPlotChanged(self, item):
+        if hasattr(item, 'sigPlotChanged'):
+            try:
+                item.sigPlotChanged.disconnect(self._plotChanged)
+            except (TypeError, RuntimeError):
+                pass  # already disconnected
+
     def clear(self):
         """Remove all items from the legend."""
         for sample, label in self.items:
+            self._disconnectPlotChanged(sample.item)
             self._removeItemFromLayout(sample, label)
 
         self.items = []
@@ -408,4 +431,3 @@ class ItemSample(GraphicsWidget):
         event.accept()
         self.update()
         self.sigClicked.emit(self.item)
-
