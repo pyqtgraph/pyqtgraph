@@ -159,13 +159,11 @@ class ConsoleWidget(QtWidgets.QWidget):
             return self.localNamespace
 
     def cmdSelected(self, item):
-        index = -(self.historyList.row(item)+1)
-        self.input.setHistory(index)
+        self.input.setText(item.text())
         self.input.setFocus()
         
     def cmdDblClicked(self, item):
-        index = -(self.historyList.row(item)+1)
-        self.input.setHistory(index)
+        self.input.setText(item.text())
         self.input.execCmd()
         
     def _stackItemDblClicked(self, handler, item):
