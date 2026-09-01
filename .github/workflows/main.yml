@@ -157,6 +157,14 @@ jobs:
           - python-version: "3.14"
             qt-lib: "pyside"
             qt-version: "PySide6-Essentials"
+          - os: windows-11-arm
+            python-version: "3.14"
+            qt-lib: "pyqt"
+            qt-version: "PyQt6"
+          - os: windows-11-arm
+            python-version: "3.14"
+            qt-lib: "pyside"
+            qt-version: "PySide6-Essentials"
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -166,11 +174,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - name: "Install Windows-Mesa OpenGL DLL"
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && matrix.os != 'windows-11-arm'
         run: |
           curl -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/24.3.4/mesa3d-24.3.4-release-msvc.7z
           7z x mesa.7z -o*
           powershell.exe mesa\systemwidedeploy.cmd 1
+      - name: Verify Native ARM64
+        if: matrix.os == 'windows-11-arm'
+        run: |
+          python -c "import platform; assert platform.machine().lower() in {'arm64', 'aarch64'}, platform.machine()"
       - name: Install Dependencies
         run: |
           python -m pip install -r .github/workflows/etc/requirements.txt ${{ matrix.qt-version }} . "coverage[toml]"
