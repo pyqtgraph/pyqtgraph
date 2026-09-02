@@ -78,12 +78,7 @@ class GLVolumeItem(GLGraphicsItem):
                 all_vertices.extend(vertices)
 
         pos = np.array(all_vertices, dtype=np.float32)
-        vbo = self.m_vbo_position
-        if not vbo.isCreated():
-            vbo.create()
-        vbo.bind()
-        vbo.allocate(pos, pos.nbytes)
-        vbo.release()
+        OpenGLHelpers.upload_vbo(self.m_vbo_position, pos)
         
         self._needUpload = False
 

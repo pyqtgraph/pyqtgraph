@@ -1,5 +1,5 @@
 from .. import Transform3D
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtOpenGL
 from ..Qt import OpenGLConstants as GLC
 from ..Qt import OpenGLHelpers
 
@@ -329,7 +329,7 @@ class GLGraphicsItem(QtCore.QObject):
             return QtGui.QMatrix4x4()
         return view.currentProjection() * view.currentModelView()
 
-    def glFunctions(self):
+    def glFunctions(self) -> QtOpenGL.QAbstractOpenGLFunctions:
         if (view := self.view()) is None:
             return None
         glctx = view.context()

@@ -4,6 +4,7 @@ import numpy as np
 
 from ...Qt import QtGui, QtOpenGL, QT_LIB, compat
 from ...Qt import OpenGLConstants as GLC
+from ...Qt.OpenGLHelpers import upload_vbo
 from .. import shaders
 from ..GLGraphicsItem import GLGraphicsItem
 from ..MeshData import MeshData
@@ -144,20 +145,6 @@ class GLMeshItem(GLGraphicsItem):
         self.update()
 
     def upload_vertex_buffers(self, dirty_bits):
-
-        def upload_vbo(vbo, arr):
-            if arr is None:
-                vbo.destroy()
-                return
-            if not vbo.isCreated():
-                vbo.create()
-            vbo.bind()
-            if vbo.size() != arr.nbytes:
-                vbo.allocate(arr, arr.nbytes)
-            else:
-                vbo.write(0, arr, arr.nbytes)
-            vbo.release()
-
         if DirtyFlag.POSITION in dirty_bits:
             upload_vbo(self.m_vbo_position, self.vertexes)
         if DirtyFlag.NORMAL in dirty_bits:

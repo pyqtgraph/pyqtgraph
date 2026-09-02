@@ -79,12 +79,7 @@ class GLImageItem(GLGraphicsItem):
             [0, y, 0, 1],
             [x, y, 1, 1],
         ], dtype=np.float32)
-        vbo = self.m_vbo_position
-        if not vbo.isCreated():
-            vbo.create()
-        vbo.bind()
-        vbo.allocate(pos, pos.nbytes)
-        vbo.release()
+        OpenGLHelpers.upload_vbo(self.m_vbo_position, pos)
 
     @staticmethod
     def getShaderProgram():

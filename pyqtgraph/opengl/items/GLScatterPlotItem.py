@@ -5,6 +5,7 @@ import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
 from ...Qt import OpenGLConstants as GLC
+from ...Qt.OpenGLHelpers import upload_vbo
 from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLScatterPlotItem']
@@ -83,19 +84,6 @@ class GLScatterPlotItem(GLGraphicsItem):
         self.pxMode = kwargs.get('pxMode', self.pxMode)
         self.update()
 
-    def upload_vbo(self, vbo, arr):
-        if arr is None:
-            vbo.destroy()
-            return
-        if not vbo.isCreated():
-            vbo.create()
-        vbo.bind()
-        if vbo.size() != arr.nbytes:
-            vbo.allocate(arr, arr.nbytes)
-        else:
-            vbo.write(0, arr, arr.nbytes)
-        vbo.release()
-
     @staticmethod
     def getShaderProgram():
         klass = GLScatterPlotItem
@@ -153,11 +141,11 @@ class GLScatterPlotItem(GLGraphicsItem):
         glfn = self.glFunctions()
 
         if DirtyFlag.POSITION in self.dirty_bits:
-            self.upload_vbo(self.m_vbo_position, self.pos)
+            upload_vbo(self.m_vbo_position, self.pos)
         if DirtyFlag.COLOR in self.dirty_bits:
-            self.upload_vbo(self.m_vbo_color, self.color)
+            upload_vbo(self.m_vbo_color, self.color)
         if DirtyFlag.SIZE in self.dirty_bits:
-            self.upload_vbo(self.m_vbo_size, self.size)
+            upload_vbo(self.m_vbo_size, self.size)
         self.dirty_bits = DirtyFlag(0)
 
         if not context.isOpenGLES():
