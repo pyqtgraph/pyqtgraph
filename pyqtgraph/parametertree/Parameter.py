@@ -350,15 +350,27 @@ class Parameter(QtCore.QObject):
         This method checks that:
 
           - the type specified (self.opts['type']) is registered in the 'PARAM_TYPES' dictionary
-          - the class associated with the type in 'PARAM_TYPES' matches the current parameter class.
+          - the current parameter class is the class registered for that type, or a subclass of it.
+
+        The base ``Parameter`` class itself is never registered under any type name, so it is
+        exempt from the class-matching part of this check: constructing a plain ``Parameter``
+        with e.g. ``type='group'`` is allowed, relying only on ``type`` to select a display item
+        via ``_PARAM_ITEM_TYPES``. An unregistered ``type`` string is still rejected: register it
+        with ``registerParameterType`` first.
 
         Returns
         -------
         bool: True if the type is valid, False otherwise.
         """
-        if self.type() and not self.__class__ == PARAM_TYPES[self.type()]:
+        typ = self.type()
+        if not typ:
+            return True
+        expectedCls = PARAM_TYPES.get(typ)
+        if expectedCls is None:
             return False
-        return True
+        if self.__class__ is Parameter:
+            return True
+        return issubclass(self.__class__, expectedCls)
 
         
     def childPath(self, child):
