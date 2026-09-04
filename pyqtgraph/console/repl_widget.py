@@ -1,4 +1,5 @@
 import code
+import pydoc
 import queue
 import sys
 import traceback
@@ -232,6 +233,12 @@ class ReplThread(QtCore.QThread):
                 return
 
             self._commandBuffer = []
+
+            if fullcmd.strip() == "help()":
+                with self._stdoutInterceptor:
+                    pydoc.Helper(output=sys.stdout).intro()
+                    self.sigCommandExecuted.emit()
+                return
 
             # run command
             try:
