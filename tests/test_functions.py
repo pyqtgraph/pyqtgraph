@@ -305,6 +305,27 @@ def test_siEval(s, suffix, power, expected, sep):
     assert np.isclose(result, expected)
 
 
+@pytest.mark.parametrize("locale_name,expected", [
+    # period as decimal separator
+    ("en_US", pg.functions.FLOAT_REGEX_PERIOD),
+    ("en_GB", pg.functions.FLOAT_REGEX_PERIOD),
+    ("ja_JP", pg.functions.FLOAT_REGEX_PERIOD),
+    # comma as decimal separator
+    ("de_DE", pg.functions.FLOAT_REGEX_COMMA),
+    ("fr_FR", pg.functions.FLOAT_REGEX_COMMA),
+    ("pt_BR", pg.functions.FLOAT_REGEX_COMMA),
+    # neither: ar_EG uses U+066B, so it falls through to the period pattern
+    ("ar_EG", pg.functions.FLOAT_REGEX_PERIOD),
+])
+def test_float_regex_for_locale(locale_name, expected):
+    locale = QtCore.QLocale(locale_name)
+    assert pg.functions.float_regex_for_locale(locale) is expected
+
+
+def test_float_regex_for_locale_c_locale():
+    assert pg.functions.float_regex_for_locale(QtCore.QLocale.c()) is pg.functions.FLOAT_REGEX_PERIOD
+
+
 def test_CIELab_reconversion():
     color_list = [ pg.Qt.QtGui.QColor('#100235') ] # known problematic values
     for _ in range(20):
