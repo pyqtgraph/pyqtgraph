@@ -4,6 +4,7 @@ import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
 from ...Qt import OpenGLConstants as GLC
+from ...Qt.OpenGLHelpers import upload_vbo
 from ... import functions as fn
 from ..GLGraphicsItem import GLGraphicsItem
 
@@ -85,19 +86,6 @@ class GLLinePlotItem(GLGraphicsItem):
 
         self.update()
 
-    def upload_vbo(self, vbo, arr):
-        if arr is None:
-            vbo.destroy()
-            return
-        if not vbo.isCreated():
-            vbo.create()
-        vbo.bind()
-        if vbo.size() != arr.nbytes:
-            vbo.allocate(arr, arr.nbytes)
-        else:
-            vbo.write(0, arr, arr.nbytes)
-        vbo.release()
-
     @staticmethod
     def getShaderProgram():
         klass = GLLinePlotItem
@@ -149,9 +137,9 @@ class GLLinePlotItem(GLGraphicsItem):
         glfn = self.glFunctions()
 
         if DirtyFlag.POSITION in self.dirty_bits:
-            self.upload_vbo(self.m_vbo_position, self.pos)
+            upload_vbo(self.m_vbo_position, self.pos)
         if DirtyFlag.COLOR in self.dirty_bits:
-            self.upload_vbo(self.m_vbo_color, self.color)
+            upload_vbo(self.m_vbo_color, self.color)
         self.dirty_bits = DirtyFlag(0)
 
         program = self.getShaderProgram()

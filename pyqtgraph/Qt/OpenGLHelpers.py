@@ -2,7 +2,7 @@ import ctypes
 import importlib
 import sys
 
-from . import QT_LIB, QtCore, QtGui, QtWidgets, QtVersionInfo
+from . import QT_LIB, QtCore, QtGui, QtWidgets, QtOpenGL, QtVersionInfo
 from . import OpenGLConstants as GLC
 
 if QtVersionInfo[0] >= 6:
@@ -12,7 +12,7 @@ else:
 
 __all__ = ["getFunctions", "GraphicsViewGLWidget"]
 
-def getFunctions(context):
+def getFunctions(context) -> QtOpenGL.QAbstractOpenGLFunctions:
     glfn = None
     format = context.format()
 
@@ -131,3 +131,17 @@ def suppress_texture_warning():
 
     _prev_handler = QtCore.qInstallMessageHandler(message_handler)
     _handler_installed = True
+
+
+def upload_vbo(vbo: QtOpenGL.QOpenGLBuffer, arr) -> None:
+    if arr is None:
+        vbo.destroy()
+        return
+    if not vbo.isCreated():
+        vbo.create()
+    vbo.bind()
+    if vbo.size() != arr.nbytes:
+        vbo.allocate(arr, arr.nbytes)
+    else:
+        vbo.write(0, arr, arr.nbytes)
+    vbo.release()
