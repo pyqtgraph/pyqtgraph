@@ -1,3 +1,5 @@
+import enum
+
 import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
@@ -6,6 +8,12 @@ from ...Qt import OpenGLHelpers
 from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLVolumeItem']
+
+
+class DirtyFlag(enum.Flag):
+    POSITION = enum.auto()
+    TEXTURE = enum.auto()
+
 
 class GLVolumeItem(GLGraphicsItem):
     """
@@ -32,15 +40,19 @@ class GLVolumeItem(GLGraphicsItem):
         self.sliceDensity = sliceDensity
         self.smooth = smooth
         self.data = None
-        self._needUpload = False
         self.m_texture = QtOpenGL.QOpenGLTexture(QtOpenGL.QOpenGLTexture.Target.Target3D)
         self.m_vbo_position = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
+        self.dirty_bits = DirtyFlag(0)
         self.setParentItem(parentItem)
         self.setData(data)
 
     def setData(self, data):
+        if self.data is None or data is None or self.data.shape != data.shape:
+            # it becomes dirty when sliceDensity changes too,
+            # but we will just treat sliceDensity as immutable once instantiated
+            self.dirty_bits |= DirtyFlag.POSITION
+        self.dirty_bits |= DirtyFlag.TEXTURE
         self.data = data
-        self._needUpload = True
         self.update()
 
     def _uploadData(self):
@@ -67,20 +79,18 @@ class GLVolumeItem(GLGraphicsItem):
             QtOpenGL.QOpenGLTexture.PixelFormat.RGBA,
             QtOpenGL.QOpenGLTexture.PixelType.UInt8,
             data)
-        
+
+    def computeVertices(self):
         all_vertices = []
 
-        self.lists = {}
+        offsets = {}
         for ax in [0,1,2]:
             for d in [-1, 1]:
-                vertices = self.drawVolume(ax, d)
-                self.lists[(ax,d)] = (len(all_vertices), len(vertices))
+                vertices = drawVolume(self.data.shape, ax, d, self.sliceDensity)
+                offsets[(ax,d)] = (len(all_vertices), len(vertices))
                 all_vertices.extend(vertices)
 
-        pos = np.array(all_vertices, dtype=np.float32)
-        OpenGLHelpers.upload_vbo(self.m_vbo_position, pos)
-        
-        self._needUpload = False
+        return all_vertices, offsets
 
     @staticmethod
     def getShaderProgram():
@@ -124,10 +134,15 @@ class GLVolumeItem(GLGraphicsItem):
         if self.data is None:
             return
         
-        if self._needUpload:
-            self._uploadData()
-        
         self.setupGLState()
+
+        if DirtyFlag.POSITION in self.dirty_bits:
+            vertices, self.lists = self.computeVertices()
+            pos = np.array(vertices, dtype=np.float32)
+            OpenGLHelpers.upload_vbo(self.m_vbo_position, pos)
+        if DirtyFlag.TEXTURE in self.dirty_bits:
+            self._uploadData()
+        self.dirty_bits = DirtyFlag(0)
 
         mat_mvp = self.mvpMatrix()
 
@@ -172,59 +187,59 @@ class GLVolumeItem(GLGraphicsItem):
 
         self.m_texture.release()
 
-    def drawVolume(self, ax, d):
-        imax = [0,1,2]
-        imax.remove(ax)
-        
-        tp = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
-        vp = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
-        nudge = [0.5/x for x in self.data.shape]
-        tp[0][imax[0]] = 0+nudge[imax[0]]
-        tp[0][imax[1]] = 0+nudge[imax[1]]
-        tp[1][imax[0]] = 1-nudge[imax[0]]
-        tp[1][imax[1]] = 0+nudge[imax[1]]
-        tp[2][imax[0]] = 1-nudge[imax[0]]
-        tp[2][imax[1]] = 1-nudge[imax[1]]
-        tp[3][imax[0]] = 0+nudge[imax[0]]
-        tp[3][imax[1]] = 1-nudge[imax[1]]
-        
-        vp[0][imax[0]] = 0
-        vp[0][imax[1]] = 0
-        vp[1][imax[0]] = self.data.shape[imax[0]]
-        vp[1][imax[1]] = 0
-        vp[2][imax[0]] = self.data.shape[imax[0]]
-        vp[2][imax[1]] = self.data.shape[imax[1]]
-        vp[3][imax[0]] = 0
-        vp[3][imax[1]] = self.data.shape[imax[1]]
-        slices = self.data.shape[ax] * self.sliceDensity
-        r = list(range(slices))
-        if d == -1:
-            r = r[::-1]
+def drawVolume(shape, ax, d, sliceDensity):
+    imax = [0,1,2]
+    imax.remove(ax)
 
-        vertices = []
+    tp = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
+    vp = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
+    nudge = [0.5/x for x in shape]
+    tp[0][imax[0]] = 0+nudge[imax[0]]
+    tp[0][imax[1]] = 0+nudge[imax[1]]
+    tp[1][imax[0]] = 1-nudge[imax[0]]
+    tp[1][imax[1]] = 0+nudge[imax[1]]
+    tp[2][imax[0]] = 1-nudge[imax[0]]
+    tp[2][imax[1]] = 1-nudge[imax[1]]
+    tp[3][imax[0]] = 0+nudge[imax[0]]
+    tp[3][imax[1]] = 1-nudge[imax[1]]
 
-        tzVals = np.linspace(nudge[ax], 1.0-nudge[ax], slices)
-        vzVals = np.linspace(0, self.data.shape[ax], slices)
-        for i in r:
-            z = tzVals[i]
-            w = vzVals[i]
-            
-            tp[0][ax] = z
-            tp[1][ax] = z
-            tp[2][ax] = z
-            tp[3][ax] = z
-            
-            vp[0][ax] = w
-            vp[1][ax] = w
-            vp[2][ax] = w
-            vp[3][ax] = w
-            
-            # assuming 0-1-2-3 are the BL, BR, TR, TL vertices of a quad
-            for idx in [0, 1, 3, 1, 2, 3]:  # 2 triangles per quad
-                vtx = tuple(vp[idx]) + tuple(tp[idx])
-                vertices.append(vtx)
+    vp[0][imax[0]] = 0
+    vp[0][imax[1]] = 0
+    vp[1][imax[0]] = shape[imax[0]]
+    vp[1][imax[1]] = 0
+    vp[2][imax[0]] = shape[imax[0]]
+    vp[2][imax[1]] = shape[imax[1]]
+    vp[3][imax[0]] = 0
+    vp[3][imax[1]] = shape[imax[1]]
+    slices = shape[ax] * sliceDensity
+    r = list(range(slices))
+    if d == -1:
+        r = r[::-1]
 
-        return vertices
+    vertices = []
+
+    tzVals = np.linspace(nudge[ax], 1.0-nudge[ax], slices)
+    vzVals = np.linspace(0, shape[ax], slices)
+    for i in r:
+        z = tzVals[i]
+        w = vzVals[i]
+
+        tp[0][ax] = z
+        tp[1][ax] = z
+        tp[2][ax] = z
+        tp[3][ax] = z
+
+        vp[0][ax] = w
+        vp[1][ax] = w
+        vp[2][ax] = w
+        vp[3][ax] = w
+
+        # assuming 0-1-2-3 are the BL, BR, TR, TL vertices of a quad
+        for idx in [0, 1, 3, 1, 2, 3]:  # 2 triangles per quad
+            vtx = vp[idx] + tp[idx]
+            vertices.append(vtx)
+
+    return vertices
 
 
 SHADER_LEGACY = {
