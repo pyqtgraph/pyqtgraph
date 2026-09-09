@@ -61,6 +61,8 @@ class GLGradientLegendItem(GLGraphicsItem):
         self.update()
 
     def paint(self):
+        if (view := self.view()) is None:
+            return
         self.setupGLState()
 
         if self._gradient is None:
@@ -70,7 +72,7 @@ class GLGradientLegendItem(GLGraphicsItem):
         self._gradient.setStart(barRect.bottomLeft())
         self._gradient.setFinalStop(barRect.topLeft())
 
-        painter = QtGui.QPainter(self.view())
+        painter = QtGui.QPainter(view)
         painter.fillRect(barRect, self._gradient)
         painter.setPen(self.fontColor)
         for labelText, labelPosition in self.labels.items():

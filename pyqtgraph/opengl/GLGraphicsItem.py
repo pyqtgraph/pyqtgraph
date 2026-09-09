@@ -38,9 +38,6 @@ class GLGraphicsItem(QtCore.QObject):
         self.__children: list[GLGraphicsItem] = list()
         self.__transform = Transform3D()
         self.__visible = True
-        self.__initialized = False
-        self.__glctx: QtGui.QOpenGLContext | None = None
-        self.__glfns = None
         self.setParentItem(parentItem)
         self.setDepthValue(0)
         self.__glOpts = {}
@@ -119,12 +116,10 @@ class GLGraphicsItem(QtCore.QObject):
         self.__view = v
         
     def view(self):
-        if self.__parent is None:
-            # top level object
-            return self.__view
-        else:
-            # recurse
-            return self.__parent.view()
+        item = self
+        while item.__parent is not None:
+            item = item.__parent
+        return item.__view
         
     def setDepthValue(self, value):
         """
@@ -238,18 +233,19 @@ class GLGraphicsItem(QtCore.QObject):
         view, as it may be obscured or outside of the current view area."""
         return self.__visible
     
-    def initialize(self):
-        self.initializeGL()
-        self.__initialized = True
-
-    def isInitialized(self):
-        return self.__initialized
-    
     def initializeGL(self):
         """
-        Called after an item is added to a GLViewWidget. 
-        The widget's GL context is made current before this method is called.
-        (So this would be an appropriate time to generate lists, upload textures, etc.)
+        Called when the item may instantiate its OpenGL objects.
+        Note that this method may be called more than once during the life-cycle
+        of the item.
+        It is recommended to perform initialization of OpenGL objects lazily
+        rather than in this method.
+        """
+        pass
+
+    def cleanupGL(self):
+        """
+        Called when the item should perform cleanup on its OpenGL objects.
         """
         pass
     
@@ -258,7 +254,9 @@ class GLGraphicsItem(QtCore.QObject):
         This method is responsible for preparing the GL state options needed to render 
         this item (blending, depth testing, etc). The method is called immediately before painting the item.
         """
-        glfn = self.glFunctions()
+        if (view := self.view()) is None:
+            return
+        glfn = self.glFunctions(view=view)
 
         for k,v in self.__glOpts.items():
             if v is None:
@@ -314,26 +312,25 @@ class GLGraphicsItem(QtCore.QObject):
             return point
         return tr.inverted()[0].map(point)
 
-    def modelViewMatrix(self) -> QtGui.QMatrix4x4:
-        if (view := self.view()) is None:
+    def modelViewMatrix(self, *, view=None) -> QtGui.QMatrix4x4:
+        if view is None and (view := self.view()) is None:
             return QtGui.QMatrix4x4()
         return view.currentModelView()
 
-    def projectionMatrix(self) -> QtGui.QMatrix4x4:
-        if (view := self.view()) is None:
+    def projectionMatrix(self, *, view=None) -> QtGui.QMatrix4x4:
+        if view is None and (view := self.view()) is None:
             return QtGui.QMatrix4x4()
         return view.currentProjection()
 
-    def mvpMatrix(self) -> QtGui.QMatrix4x4:
-        if (view := self.view()) is None:
+    def mvpMatrix(self, *, view=None) -> QtGui.QMatrix4x4:
+        if view is None and (view := self.view()) is None:
             return QtGui.QMatrix4x4()
         return view.currentProjection() * view.currentModelView()
 
-    def glFunctions(self) -> QtOpenGL.QAbstractOpenGLFunctions:
-        if (view := self.view()) is None:
-            return None
-        glctx = view.context()
-        if self.__glfns is None or self.__glctx is not glctx:
-            self.__glctx = glctx
-            self.__glfns = OpenGLHelpers.getFunctions(glctx)
-        return self.__glfns
+    def glFunctions(self, *, view) -> QtOpenGL.QAbstractOpenGLFunctions:
+        # for new functions, "view" is mandatory
+        return view.glfn
+
+    def shadersCache(self, *, view) -> dict:
+        # for new functions, "view" is mandatory
+        return view._shadersCache
