@@ -20,8 +20,6 @@ class DirtyFlag(enum.Flag):
 class GLLinePlotItem(GLGraphicsItem):
     """Draws line plots in 3D."""
 
-    _shaderProgram = None
-
     def __init__(self, parentItem=None, **kwargs):
         """All keyword arguments are passed to setData()"""
         super().__init__()
@@ -39,6 +37,11 @@ class GLLinePlotItem(GLGraphicsItem):
 
         self.setParentItem(parentItem)
         self.setData(**kwargs)
+
+    def cleanupGL(self):
+        self.m_vbo_position.destroy()
+        self.m_vbo_color.destroy()
+        self.dirty_bits = DirtyFlag.POSITION | DirtyFlag.COLOR
     
     def setData(self, **kwargs):
         """
@@ -87,12 +90,11 @@ class GLLinePlotItem(GLGraphicsItem):
 
         self.update()
 
-    @staticmethod
-    def getShaderProgram():
-        klass = GLLinePlotItem
-
-        if klass._shaderProgram is not None:
-            return klass._shaderProgram
+    def shaderProgram(self, *, shaders_cache):
+        klass = self.__class__
+        cache_key = f'{klass.__module__}.{klass.__qualname__}'
+        if (program := shaders_cache.get(cache_key)) is not None:
+            return program
 
         ctx = QtGui.QOpenGLContext.currentContext()
         fmt = ctx.format()
@@ -124,26 +126,31 @@ class GLLinePlotItem(GLGraphicsItem):
         if not program.link():
             raise RuntimeError(program.log())
 
-        klass._shaderProgram = program
+        shaders_cache[cache_key] = program
         return program
 
     def paint(self):
         if self.pos is None:
             return
-        self.setupGLState()
 
-        mat_mvp = self.mvpMatrix()
+        if (view := self.view()) is None:
+            return
+        context = view.context()
+        glfn = self.glFunctions(context)
 
-        context = QtGui.QOpenGLContext.currentContext()
-        glfn = self.glFunctions()
+        self.setupGLState(context=context)
+
+        mat_mvp = self.mvpMatrix(view=view)
 
         if DirtyFlag.POSITION in self.dirty_bits:
             upload_vbo(self.m_vbo_position, self.pos)
         if DirtyFlag.COLOR in self.dirty_bits:
-            upload_vbo(self.m_vbo_color, self.color)
+            if isinstance(self.color, np.ndarray):
+                upload_vbo(self.m_vbo_color, self.color)
         self.dirty_bits = DirtyFlag(0)
 
-        program = self.getShaderProgram()
+        shaders_cache = self.shadersCache(view=view)
+        program = self.shaderProgram(shaders_cache=shaders_cache)
 
         enabled_locs = []
 

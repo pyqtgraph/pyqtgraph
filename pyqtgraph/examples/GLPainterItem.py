@@ -14,43 +14,46 @@ class GLPainterItem(GLGraphicsItem.GLGraphicsItem):
         glopts = kwargs.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
 
-    def compute_projection(self):
+    def compute_projection(self, view):
         # note that QRectF.bottom() != QRect.bottom()
-        rect = QtCore.QRectF(self.view().rect())
+        rect = QtCore.QRectF(view.rect())
         ndc_to_viewport = QtGui.QMatrix4x4()
         ndc_to_viewport.viewport(rect.left(), rect.bottom(), rect.width(), -rect.height())
-        return ndc_to_viewport * self.mvpMatrix()
+        return ndc_to_viewport * self.mvpMatrix(view=view)
 
     def paint(self):
-        self.setupGLState()
+        if (view := self.view()) is None:
+            return
+        context = view.context()
+        self.setupGLState(context=context)
 
-        painter = QtGui.QPainter(self.view())
-        self.draw(painter)
+        painter = QtGui.QPainter(view)
+        self.draw(painter, view)
         painter.end()
 
-    def draw(self, painter):
+    def draw(self, painter, view):
         painter.setPen(QtCore.Qt.GlobalColor.white)
         painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
 
-        rect = self.view().rect()
+        rect = view.rect()
         af = QtCore.Qt.AlignmentFlag
 
         painter.drawText(rect, af.AlignTop | af.AlignRight, 'TR')
         painter.drawText(rect, af.AlignBottom | af.AlignLeft, 'BL')
         painter.drawText(rect, af.AlignBottom | af.AlignRight, 'BR')
 
-        opts = self.view().cameraParams()
+        opts = view.cameraParams()
         lines = []
         center = opts['center']
         lines.append(f"center : ({center.x():.1f}, {center.y():.1f}, {center.z():.1f})")
         for key in ['distance', 'fov', 'elevation', 'azimuth']:
             lines.append(f"{key} : {opts[key]:.1f}")
-        xyz = self.view().cameraPosition()
+        xyz = view.cameraPosition()
         lines.append(f"xyz : ({xyz.x():.1f}, {xyz.y():.1f}, {xyz.z():.1f})")
         info = "\n".join(lines)
         painter.drawText(rect, af.AlignTop | af.AlignLeft, info)
 
-        project = self.compute_projection()
+        project = self.compute_projection(view)
 
         hsize = SIZE // 2
         for xi in range(-hsize, hsize+1):
