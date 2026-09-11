@@ -374,17 +374,63 @@ class Parameter(QtCore.QObject):
                 return None
         return path
 
-    def setValue(self, value, blockSignal=None):
+    def setValue(self, value, blockSignal=None, blockSlots=None):
         """
         Set the value of this Parameter; return the actual value that was set.
         (this may be different from the value that was requested)
+
+        Parameters
+        ----------
+        value
+            The new value to set.
+        blockSignal : bool
+            If True, ``sigValueChanged`` will not be emitted at all.
+
+            .. deprecated:: 0.15.0
+                Passing a callable here to block a single slot is deprecated;
+                use ``blockSlots`` instead. Support for this will be removed
+                in a future release.
+        blockSlots : callable or list/tuple of callables, optional
+            One or more slots to temporarily disconnect from ``sigValueChanged``
+            before emitting it, then reconnect afterward. Use this to avoid
+            recursion when a slot connected to this parameter is itself
+            responsible for the value change.
         """
+        if callable(blockSignal):
+            warnings.warn(
+                "Passing a callable as `blockSignal` to Parameter.setValue() is "
+                "deprecated and will be removed in a future release. "
+                "Use `blockSlots` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            blockSlots = blockSignal
+            blockSignal = False
+
         value = self._interpretValue(value)
         if fn.eq(self.opts.get('value', None), value):
             return value
         self._modifiedSinceReset = True
         self.opts['value'] = value
-        if not blockSignal:
+
+        if blockSignal:
+            pass  # whole signal is suppressed; no need to disconnect individual slots
+        elif blockSlots:
+            slots = blockSlots if isinstance(blockSlots, (list, tuple)) else [blockSlots]
+            for slot in slots:
+                if not callable(slot):
+                    raise TypeError(
+                        f"blockSlots must be a callable or a list/tuple of "
+                        f"callables, got {slot!r}"
+                    )
+            for slot in slots:
+                self.sigValueChanged.disconnect(slot)
+            try:
+                self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
+            finally:
+                for slot in slots:
+                    self.sigValueChanged.connect(slot)
+        else:
             self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
 
         return self.opts['value']
