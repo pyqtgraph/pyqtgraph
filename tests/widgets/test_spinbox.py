@@ -414,3 +414,160 @@ def test_SpinBox_custom_regex_sees_text_as_entered():
 def expect_failure_on_buggy_qt():
     if (6, 0) <= pg.Qt.QtVersionInfo < (6, 9):
         pytest.xfail("A known bug in Qt 6.0.0 - 6.8.x causes scientific notation with 'g' format to use capital 'E' for the exponent.")
+
+
+# Locale changes other than setLocale. Each trigger moves a SpinBox that was
+# created under the default locale *old* to the locale *new*, and returns the
+# objects that must stay alive until the test ends.
+
+def _englishAndGermanOrSkip():
+    english, german = pg.QtCore.QLocale('en_US'), pg.QtCore.QLocale('de_DE')
+    if english.decimalPoint() != '.' or german.decimalPoint() != ',':
+        pytest.skip("en_US or de_DE decimal separator differs in this Qt build")
+    return english, german
+
+
+def _moveToParent(default_locale, sb, old, new):
+    parent = pg.QtWidgets.QWidget()
+    parent.setLocale(new)
+    sb.setParent(parent)
+    return [parent]
+
+
+def _addToLayout(default_locale, sb, old, new):
+    parent = pg.QtWidgets.QWidget()
+    parent.setLocale(new)
+    layout = pg.QtWidgets.QHBoxLayout(parent)
+    layout.addWidget(sb)
+    return [parent, layout]
+
+
+def _changeParentLocale(default_locale, sb, old, new):
+    parent = pg.QtWidgets.QWidget()
+    parent.setLocale(old)
+    sb.setParent(parent)
+    parent.setLocale(new)
+    return [parent]
+
+
+def _changeApplicationLocale(default_locale, sb, old, new):
+    default_locale(new, applicationWide=True)
+    return []
+
+
+def _unsetOwnLocale(default_locale, sb, old, new):
+    sb.setLocale(old)
+    parent = pg.QtWidgets.QWidget()
+    parent.setLocale(new)
+    sb.setParent(parent)
+    sb.unsetLocale()
+    return [parent]
+
+
+@pytest.mark.parametrize("trigger, fromGerman", [
+    # Comma-decimal locale inherited after creation
+    pytest.param(_moveToParent, False, id='comma-inherited-setParent'),
+    pytest.param(_addToLayout, False, id='comma-inherited-layout'),
+    # Period-decimal locale inherited after creation
+    pytest.param(_moveToParent, True, id='period-inherited-setParent'),
+    # Parent locale changed after the SpinBox was added
+    pytest.param(_changeParentLocale, False, id='parent-locale-changed'),
+    # Application-wide locale change
+    pytest.param(_changeApplicationLocale, False, id='application-wide'),
+    # Locale unset on the SpinBox
+    pytest.param(_unsetOwnLocale, True, id='unsetLocale'),
+])
+def test_SpinBox_input_follows_locale_change(default_locale, trigger, fromGerman):
+    english, german = _englishAndGermanOrSkip()
+    old, new = (german, english) if fromGerman else (english, german)
+    default_locale(old)
+    sb = pg.SpinBox()
+    keepAlive = trigger(default_locale, sb, old, new)
+
+    assert _enterText(sb, '3' + new.decimalPoint() + '5') == 3.5
+    sb.setValue(0)
+    _assertRejected(sb, '3' + old.decimalPoint() + '5')
+
+
+@pytest.mark.parametrize("regex", [
+    # Custom regex kept when the locale changes
+    pytest.param(pg.functions.FLOAT_REGEX_PERIOD.pattern, id='pattern-string'),
+    pytest.param(pg.functions.FLOAT_REGEX_PERIOD, id='compiled-pattern'),
+])
+def test_SpinBox_keeps_custom_regex_when_locale_changes(default_locale, regex):
+    english, german = _englishAndGermanOrSkip()
+    default_locale(english)
+    sb = pg.SpinBox(regex=regex)
+    keepAlive = _moveToParent(default_locale, sb, english, german)
+
+    assert _enterText(sb, '3.5') == 3.5
+
+
+@pytest.mark.parametrize("trigger", [
+    # Locale set on the SpinBox is kept
+    pytest.param(_changeParentLocale, id='parent-locale-changed'),
+    pytest.param(_changeApplicationLocale, id='application-wide'),
+])
+def test_SpinBox_keeps_locale_set_on_it(default_locale, trigger):
+    english, german = _englishAndGermanOrSkip()
+    default_locale(english)
+    sb = pg.SpinBox(value=2.5)
+    sb.setLocale(english)
+    before = sb.text()
+    keepAlive = trigger(default_locale, sb, english, german)
+
+    assert sb.text() == before
+    sb.setValue(0)
+    assert _enterText(sb, '3.5') == 3.5
+    sb.setValue(0)
+    _assertRejected(sb, '3,5')
+
+
+REDISPLAY_TRIGGERS = [
+    pytest.param(_moveToParent, id='setParent'),
+    pytest.param(_addToLayout, id='layout'),
+    pytest.param(_changeParentLocale, id='parent-locale-changed'),
+    pytest.param(_changeApplicationLocale, id='application-wide'),
+    pytest.param(_unsetOwnLocale, id='unsetLocale'),
+]
+
+
+# Redisplay after a locale change
+@pytest.mark.parametrize("trigger", REDISPLAY_TRIGGERS)
+def test_SpinBox_redisplays_after_locale_change(default_locale, trigger):
+    english, german = _englishAndGermanOrSkip()
+    default_locale(english)
+    sb = pg.SpinBox(value=2.5)
+    emitted = []
+    sb.valueChanged.connect(lambda *args: emitted.append('valueChanged'))
+    sb.sigValueChanged.connect(lambda *args: emitted.append('sigValueChanged'))
+    sb.sigValueChanging.connect(lambda *args: emitted.append('sigValueChanging'))
+    keepAlive = trigger(default_locale, sb, english, german)
+
+    assert sb.text() == pg.SpinBox(value=2.5, locale=german).text()
+    assert sb.value() == 2.5
+    assert emitted == []
+
+
+# Redisplayed text can be edited
+@pytest.mark.parametrize("trigger", REDISPLAY_TRIGGERS)
+def test_SpinBox_redisplayed_text_can_be_edited(default_locale, trigger):
+    english, german = _englishAndGermanOrSkip()
+    default_locale(english)
+    sb = pg.SpinBox(value=2.5)
+    keepAlive = trigger(default_locale, sb, english, german)
+
+    assert _enterText(sb, pg.SpinBox(value=3.5, locale=german).text()) == 3.5
+
+
+# Finishing an unchanged edit keeps the unrounded value
+@pytest.mark.parametrize("trigger", REDISPLAY_TRIGGERS)
+def test_SpinBox_unchanged_edit_keeps_unrounded_value(default_locale, trigger):
+    english, german = _englishAndGermanOrSkip()
+    default_locale(english)
+    sb = pg.SpinBox(value=1.23456789)
+    keepAlive = trigger(default_locale, sb, english, german)
+    assert sb.text() == pg.SpinBox(value=1.23456789, locale=german).text()
+
+    sb.editingFinishedEvent()
+    assert sb.value() == 1.23456789

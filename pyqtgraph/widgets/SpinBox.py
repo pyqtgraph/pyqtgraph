@@ -341,6 +341,14 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         super(SpinBox, self).focusInEvent(ev)
         self.selectNumber()
 
+    def changeEvent(self, ev):
+        super().changeEvent(ev)
+        if ev.type() == QtCore.QEvent.Type.LocaleChange:
+            # follow a locale inherited from a parent or the application
+            if not self._customRegex:
+                self.opts['regex'] = fn.float_regex_for_locale(self.locale())
+            self.updateText()
+
     def value(self):
         """
         Return the value of this SpinBox.
