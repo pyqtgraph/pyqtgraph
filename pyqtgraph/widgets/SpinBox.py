@@ -60,6 +60,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         self.textValid = True  ## If false, we draw a red border
         self.setMinimumWidth(0)
         self._lastFontHeight = None
+        self._customRegex = False  ## True once a regex option has been passed to setOpts
         
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
         self.errorBox = ErrorBox(self.lineEdit())
@@ -211,8 +212,9 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                 pass   ## don't set value until bounds have been set
             elif k == 'format':
                 self.opts[k] = str(v)
-            elif k == 'regex' and isinstance(v, str):
-                self.opts[k] = re.compile(v)
+            elif k == 'regex':
+                self.opts[k] = re.compile(v) if isinstance(v, str) else v
+                self._customRegex = True
             elif k == 'locale':
                 self.setLocale(v)
             elif k in self.opts:
@@ -258,6 +260,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         super().setLocale(locale)
         # Update regex to match new locale decimal point
         self.opts['regex'] = fn.float_regex_for_locale(locale)
+        self._customRegex = False
         self.updateText()
 
     def setMaximum(self, m, update=True):
@@ -559,6 +562,40 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         self.updateText()
         return self.lineEdit().text()
 
+    def _asciiNumberText(self, text):
+        """Replace the number symbols of this SpinBox's locale in *text* with ASCII ones.
+
+        Parameters
+        ----------
+        text : str
+            Text written with the number symbols of ``self.locale()``.
+
+        Returns
+        -------
+        str
+            *text* with the locale's exponent symbol (in any letter case), minus
+            and plus signs, digits and decimal separator replaced by ``e``,
+            ``-``, ``+``, ASCII digits and ``.``. Symbols that are already ASCII,
+            including ``.`` and ``,``, are left for the regex to interpret.
+        """
+        locale = self.locale()
+        # the exponent goes first because some locales write it with their own digits
+        exponent = locale.exponential()
+        for form in (exponent, exponent.lower(), exponent.upper()):
+            if not form.isascii():
+                text = text.replace(form, 'e')
+        for sign, asciiSign in ((locale.negativeSign(), '-'), (locale.positiveSign(), '+')):
+            if not sign.isascii():
+                text = text.replace(sign, asciiSign)
+        zero = locale.zeroDigit()
+        if not zero.isascii():
+            for digit in range(10):
+                text = text.replace(chr(ord(zero) + digit), str(digit))
+        point = locale.decimalPoint()
+        if not point.isascii():
+            text = text.replace(point, '.')
+        return text
+
     def interpret(self):
         """Return value of text or False if text is invalid."""
         strn = self.lineEdit().text()
@@ -568,6 +605,15 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         except AttributeError:
             strn = strn[len(self.opts['prefix']):]
         
+        if not self._customRegex:
+            # read the locale's number symbols as ASCII, keeping a trailing suffix as typed
+            configuredSuffix = self.opts['suffix']
+            stripped = strn.strip()
+            if configuredSuffix and stripped.endswith(configuredSuffix):
+                strn = self._asciiNumberText(stripped[:-len(configuredSuffix)]) + configuredSuffix
+            else:
+                strn = self._asciiNumberText(strn)
+
         # tokenize into numerical value, si prefix, and suffix
         try:
             val, siprefix, suffix = fn.siParse(strn, self.opts['regex'], suffix=self.opts['suffix'])
@@ -579,7 +625,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             return False
            
         # generate value
-        val = self.opts['evalFunc'](val.replace(',', '.')) #Ensure decimal point is '.'
+        val = self.opts['evalFunc'](self._asciiNumberText(val).replace(',', '.')) #Ensure decimal point is '.'
 
         if (self.opts['int'] or self.opts['finite']) and (isinf(val) or isnan(val)):
             return False
