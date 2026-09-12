@@ -184,17 +184,29 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        * *siPrefix* - matches the SI prefix string
                        * *suffix* - matches the suffix string
                        
-                       Default depends on locale, and is either 
-                       ``pyqtgraph.functions.FLOAT_REGEX_PERIOD`` or
-                       ``pyqtgraph.functions.FLOAT_REGEX_COMMA``.
+                       The default follows the SpinBox's current locale, including after
+                       ``unsetLocale()``, reparenting, or a change of the parent's or the
+                       application's locale: ``pyqtgraph.functions.FLOAT_REGEX_COMMA`` when
+                       the decimal separator is a comma, otherwise
+                       ``pyqtgraph.functions.FLOAT_REGEX_PERIOD``. With the default regex, text
+                       written with the locale's own digits, decimal separator, signs and
+                       exponent symbol is accepted as displayed. A regex passed here is used as
+                       given: the text is not translated before matching, and the regex is kept
+                       after ``unsetLocale()``, reparenting, or a parent or application locale
+                       change.
         evalFunc       (callable) Function that converts a numerical string to a number,
                        preferrably a Decimal instance. This function handles only the numerical
                        of the text; it does not have access to the suffix or SI prefix.
+                       It receives the number as ASCII text, also with a custom regex: the
+                       locale's digits, decimal separator, signs and exponent symbol are
+                       replaced by ASCII digits, ``.``, ``-``, ``+`` and ``e``, and ``,`` by ``.``.
         compactHeight  (bool) if True, then set the maximum height of the spinbox based on the
                        height of its font. This allows more compact packing on platforms with
                        excessive widget decoration. Default is True.
         locale         (QtCore.QLocale) Sets the locale used for formatting and parsing numbers.
-                       Affects the decimal point behavior. Default is system locale.
+                       With the default regex, text written with the locale's number symbols
+                       is accepted. Default is the locale the widget inherits: its parent's,
+                       or the application default.
         ============== ========================================================================
         """
         #print opts
