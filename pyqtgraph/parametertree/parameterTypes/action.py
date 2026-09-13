@@ -94,12 +94,12 @@ class ActionParameter(Parameter):
     itemClass = ActionParameterItem
     sigActivated = QtCore.Signal(object)
 
-    def setValue(self, value, blockSignal=None):
+    def setValue(self, value, blockSignal=None, blockSlots=None):
         old_value = self.opts.get('value', None)
         if callable(old_value):
             fn.disconnect(self.sigActivated, old_value)
 
-        value = super().setValue(value, blockSignal=blockSignal)
+        value = super().setValue(value, blockSignal=blockSignal, blockSlots=blockSlots)
 
         new_value = self.opts.get('value', None)
         if callable(new_value):
