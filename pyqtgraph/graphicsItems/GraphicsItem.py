@@ -6,13 +6,14 @@ from collections import OrderedDict
 from functools import reduce
 from math import hypot
 from typing import TYPE_CHECKING, Any, overload
-from xml.etree.ElementTree import Element
 
 from .. import functions as fn
 from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets, isQObjectAlive
 
 if TYPE_CHECKING:
+    from xml.etree.ElementTree import Element
+
     from ..widgets.GraphicsView import GraphicsView
     from .ViewBox.ViewBox import ViewBox
 
