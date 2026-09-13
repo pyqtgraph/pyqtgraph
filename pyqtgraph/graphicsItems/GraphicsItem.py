@@ -5,7 +5,7 @@ import weakref
 from collections import OrderedDict
 from functools import reduce
 from math import hypot
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, overload
 from xml.etree.ElementTree import Element
 
 from .. import functions as fn
@@ -17,6 +17,16 @@ if TYPE_CHECKING:
     from .ViewBox.ViewBox import ViewBox
 
 type PixelVectorInputs = tuple[float, float, float, float, float, float]
+type Transformable = (
+    QtCore.QLine
+    | QtCore.QLineF
+    | QtGui.QPainterPath
+    | QtCore.QPoint
+    | QtCore.QPointF
+    | QtGui.QPolygon
+    | QtGui.QPolygonF
+    | QtGui.QRegion
+)
 
 
 # Recipe from https://docs.python.org/3.8/library/collections.html#collections.OrderedDict
@@ -320,9 +330,8 @@ class GraphicsItem:
         vt = fn.invertQTransform(vt)
         return vt.map(QtCore.QLineF(0, 0, 0, 1)).length()
         #return Point(vt.map(QtCore.QPointF(0, 1))-vt.map(QtCore.QPointF(0, 0))).length()
-        
-        
-    def mapToDevice(self, obj):
+
+    def mapToDevice[T: Transformable](self, obj: T) -> T | None:
         """
         Return *obj* mapped from local coordinates to device coordinates (pixels).
         If there is no device mapping available, return None.
@@ -330,8 +339,22 @@ class GraphicsItem:
         if (vt := self.deviceTransform_()) is None:
             return None
         return vt.map(obj)
-        
-    def mapFromDevice(self, obj):
+
+    @overload
+    def mapFromDevice(self, obj: QtCore.QLine) -> QtCore.QLine: ...
+    @overload
+    def mapFromDevice(self, obj: QtCore.QLineF) -> QtCore.QLineF: ...
+    @overload
+    def mapFromDevice(self, obj: QtCore.QPoint | QtCore.QPointF) -> QtCore.QPointF: ...
+    @overload
+    def mapFromDevice(self, obj: QtGui.QPainterPath) -> QtGui.QPainterPath: ...
+    @overload
+    def mapFromDevice(self, obj: QtGui.QPolygon) -> QtGui.QPolygon: ...
+    @overload
+    def mapFromDevice(self, obj: QtGui.QPolygonF) -> QtGui.QPolygonF: ...
+    @overload
+    def mapFromDevice(self, obj: QtGui.QRegion) -> QtGui.QRegion: ...
+    def mapFromDevice(self, obj: Transformable) -> Transformable | None:
         """
         Return *obj* mapped from device coordinates (pixels) to local coordinates.
         If there is no device mapping available, return None.
@@ -343,7 +366,11 @@ class GraphicsItem:
         vt = fn.invertQTransform(vt)
         return vt.map(obj)
 
-    def mapRectToDevice(self, rect):
+    @overload
+    def mapRectToDevice(self, rect: QtCore.QRect) -> QtCore.QRect | None: ...
+    @overload
+    def mapRectToDevice(self, rect: QtCore.QRectF) -> QtCore.QRectF | None: ...
+    def mapRectToDevice(self, rect: Any) -> QtCore.QRect | QtCore.QRectF | None:
         """
         Return *rect* mapped from local coordinates to device coordinates (pixels).
         If there is no device mapping available, return None.
@@ -352,7 +379,11 @@ class GraphicsItem:
             return None
         return vt.mapRect(rect)
 
-    def mapRectFromDevice(self, rect):
+    @overload
+    def mapRectFromDevice(self, rect: QtCore.QRect) -> QtCore.QRect | None: ...
+    @overload
+    def mapRectFromDevice(self, rect: QtCore.QRectF) -> QtCore.QRectF | None: ...
+    def mapRectFromDevice(self, rect: Any) -> QtCore.QRect | QtCore.QRectF | None:
         """
         Return *rect* mapped from device coordinates (pixels) to local coordinates.
         If there is no device mapping available, return None.
@@ -361,27 +392,35 @@ class GraphicsItem:
             return None
         vt = fn.invertQTransform(vt)
         return vt.mapRect(rect)
-    
-    def mapToView(self, obj):
+
+    def mapToView[T: Transformable](self, obj: T) -> T | None:
         vt = self.viewTransform()
         if vt is None:
             return None
         return vt.map(obj)
-        
-    def mapRectToView(self, obj):
+
+    @overload
+    def mapRectToView(self, obj: QtCore.QRect) -> QtCore.QRect | None: ...
+    @overload
+    def mapRectToView(self, obj: QtCore.QRectF) -> QtCore.QRectF | None: ...
+    def mapRectToView(self, obj: Any) -> QtCore.QRect | QtCore.QRectF | None:
         vt = self.viewTransform()
         if vt is None:
             return None
         return vt.mapRect(obj)
-        
-    def mapFromView(self, obj):
+
+    def mapFromView[T: Transformable](self, obj: T) -> T | None:
         vt = self.viewTransform()
         if vt is None:
             return None
         vt = fn.invertQTransform(vt)
         return vt.map(obj)
 
-    def mapRectFromView(self, obj):
+    @overload
+    def mapRectFromView(self, obj: QtCore.QRect) -> QtCore.QRect | None: ...
+    @overload
+    def mapRectFromView(self, obj: QtCore.QRectF) -> QtCore.QRectF | None: ...
+    def mapRectFromView(self, obj: Any) -> QtCore.QRect | QtCore.QRectF | None:
         vt = self.viewTransform()
         if vt is None:
             return None
