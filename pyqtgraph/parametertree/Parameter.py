@@ -2,6 +2,7 @@ import re
 import warnings
 import weakref
 from collections import OrderedDict
+from collections.abc import Iterable
 
 from .. import functions as fn
 from ..Qt import QtCore
@@ -390,11 +391,12 @@ class Parameter(QtCore.QObject):
                 Passing a callable here to block a single slot is deprecated;
                 use ``blockSlots`` instead. Support for this will be removed
                 in a future release.
-        blockSlots : callable or list/tuple of callables, optional
+        blockSlots : callable or iterable of callables, optional
             One or more slots to temporarily disconnect from ``sigValueChanged``
             before emitting it, then reconnect afterward. Use this to avoid
             recursion when a slot connected to this parameter is itself
-            responsible for the value change.
+            responsible for the value change. Slots that are not currently
+            connected are silently ignored (and are not reconnected).
         """
         if callable(blockSignal):
             warnings.warn(
@@ -416,11 +418,11 @@ class Parameter(QtCore.QObject):
         if blockSignal:
             pass  # whole signal is suppressed; no need to disconnect individual slots
         elif blockSlots:
-            slots = blockSlots if isinstance(blockSlots, (list, tuple)) else [blockSlots]
+            slots = blockSlots if isinstance(blockSlots, Iterable) else [blockSlots]
             for slot in slots:
                 if not callable(slot):
                     raise TypeError(
-                        f"blockSlots must be a callable or a list/tuple of "
+                        f"blockSlots must be a callable or an iterable of "
                         f"callables, got {slot!r}"
                     )
             for slot in slots:
