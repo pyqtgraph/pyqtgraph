@@ -156,9 +156,9 @@ params = [
             {'name': 'Add missing items', 'type': 'bool', 'value': True},
             {'name': 'Remove extra items', 'type': 'bool', 'value': True},
         ]},
+        {'name': 'Save to JSON', 'type': 'action'},
+        {'name': 'Restore from JSON', 'type': 'action'},
     ]},
-    {'name': 'Save to JSON', 'type': 'action'},
-    {'name': 'Restore from JSON', 'type': 'action'}, 
     {
         "name": "Custom context menu",
         "type": "group",
