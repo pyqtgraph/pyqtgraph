@@ -5,11 +5,18 @@ import weakref
 from collections import OrderedDict
 from functools import reduce
 from math import hypot
+from typing import TYPE_CHECKING, Any
 from xml.etree.ElementTree import Element
 
 from .. import functions as fn
 from ..Point import Point
-from ..Qt import QtCore, QtWidgets, isQObjectAlive
+from ..Qt import QtCore, QtGui, QtWidgets, isQObjectAlive
+
+if TYPE_CHECKING:
+    from ..widgets.GraphicsView import GraphicsView
+    from .ViewBox.ViewBox import ViewBox
+
+type PixelVectorInputs = tuple[float, float, float, float, float, float]
 
 
 # Recipe from https://docs.python.org/3.8/library/collections.html#collections.OrderedDict
@@ -46,9 +53,9 @@ class GraphicsItem:
 
     The GraphicsView system places a lot of emphasis on the notion that the graphics within the scene should be device independent--you should be able to take the same graphics and display them on screens of different resolutions, printers, export to SVG, etc. This is nice in principle, but causes me a lot of headache in practice. It means that I have to circumvent all the device-independent expectations any time I want to operate in pixel coordinates rather than arbitrary scene coordinates. A lot of the code in GraphicsItem is devoted to this task--keeping track of view widgets and device transforms, computing the size and shape of a pixel in local item coordinates, etc. Note that in item coordinates, a pixel does not have to be square or even rectangular, so just asking how to increase a bounding rect by 2px can be a rather complex task.
     """
-    _pixelVectorGlobalCache = LRU(100)
+    _pixelVectorGlobalCache = LRU[PixelVectorInputs, tuple[Point, Point]](100)
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._pixelVectorCache = [None, None]
         self._viewWidget = None
         self._viewBox = None
@@ -56,8 +63,19 @@ class GraphicsItem:
         self._exportOpts = False   ## If False, not currently exporting. Otherwise, contains dict of export options.
         self._cachedView = None
 
+    # This is an abstract class that is meant to be a mixin for QGraphicsItem.
+    # We rely on the following methods from QGraphicsItem, being present on the class.
+    if TYPE_CHECKING:
+        childItems      = QtWidgets.QGraphicsItem.childItems
+        deviceTransform = QtWidgets.QGraphicsItem.deviceTransform
+        itemTransform   = QtWidgets.QGraphicsItem.itemTransform
+        mapFromItem     = QtWidgets.QGraphicsItem.mapFromItem
+        parentItem      = QtWidgets.QGraphicsItem.parentItem
+        pos             = QtWidgets.QGraphicsItem.pos
+        scene           = QtWidgets.QGraphicsItem.scene
+        sceneTransform  = QtWidgets.QGraphicsItem.sceneTransform
 
-    def getViewWidget(self):
+    def getViewWidget(self) -> QtWidgets.QGraphicsView | None:
         """
         Return the view widget for this item. 
         
@@ -79,11 +97,11 @@ class GraphicsItem:
             return None
             
         return v
-    
-    def forgetViewWidget(self):
+
+    def forgetViewWidget(self) -> None:
         self._viewWidget = None
-    
-    def getViewBox(self):
+
+    def getViewBox(self) -> ViewBox | GraphicsView | None:
         """
         Return the first ViewBox or GraphicsView which bounds this item's visible space.
         If this item is not contained within a ViewBox, then the GraphicsView is returned.
@@ -109,10 +127,10 @@ class GraphicsItem:
                     break
         return self._viewBox()  ## If we made it this far, _viewBox is definitely not None
 
-    def forgetViewBox(self):
+    def forgetViewBox(self) -> None:
         self._viewBox = None
-        
-    def deviceTransform_(self):
+
+    def deviceTransform_(self) -> QtGui.QTransform | None:
         """
         Return the transform that converts local item coordinates to device coordinates (usually pixels).
         """
@@ -125,8 +143,8 @@ class GraphicsItem:
             return None
         else:
             return dt
-        
-    def viewTransform(self):
+
+    def viewTransform(self) -> QtGui.QTransform | None:
         """Return the transform that maps from local coordinates to the item's ViewBox coordinates
         If there is no ViewBox, return the scene transform.
         Returns None if the item does not have a view."""
@@ -138,7 +156,7 @@ class GraphicsItem:
         else:
             return self.sceneTransform()
 
-    def getBoundingParents(self):
+    def getBoundingParents(self) -> list[QtWidgets.QGraphicsItem]:
         """Return a list of parents to this item that have child clipping enabled."""
         p = self
         parents = []
@@ -149,8 +167,8 @@ class GraphicsItem:
             if p.flags() & QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemClipsChildrenToShape:
                 parents.append(p)
         return parents
-    
-    def viewRect(self):
+
+    def viewRect(self) -> QtCore.QRectF | None:
         """Return the visible bounds of this item's ViewBox or GraphicsWidget,
         in the local coordinate system of the item."""
         if self._cachedView is not None:
@@ -173,10 +191,10 @@ class GraphicsItem:
             #bounds &= self.mapRectFromScene(p.sceneBoundingRect())
 
         return bounds
-        
-        
-        
-    def pixelVectors(self, direction=None):
+
+    def pixelVectors(
+        self, direction: QtCore.QPointF | None = None
+    ) -> tuple[None, None] | tuple[Point, Point]:
         """Return vectors in local coordinates representing the width and height of a view pixel.
         If direction is specified, then return vectors parallel and orthogonal to it.
         
@@ -265,9 +283,10 @@ class GraphicsItem:
         self._pixelVectorCache[0] = key
         self._pixelVectorGlobalCache[key] = pv
         return self._pixelVectorCache[1]
-    
-        
-    def pixelLength(self, direction, ortho=False):
+
+    def pixelLength(
+        self, direction: QtCore.QPointF, ortho: bool = False
+    ) -> float | None:
         """Return the length of one pixel in the direction indicated (in local coordinates)
         If ortho=True, then return the length of one pixel orthogonal to the direction indicated.
         
@@ -279,23 +298,22 @@ class GraphicsItem:
         if ortho:
             return orthoV.length()
         return normV.length()
-        
 
-    def pixelSize(self):
+    def pixelSize(self) -> tuple[float, float] | tuple[None, None]:
         ## deprecated
         v = self.pixelVectors()
         if v == (None, None):
             return None, None
         return (hypot(v[0].x(), v[0].y()), hypot(v[1].x(), v[1].y()))  # lengths
 
-    def pixelWidth(self):
+    def pixelWidth(self) -> float:
         ## deprecated
         if (vt := self.deviceTransform_()) is None:
             return 0
         vt = fn.invertQTransform(vt)
         return vt.map(QtCore.QLineF(0, 0, 1, 0)).length()
-        
-    def pixelHeight(self):
+
+    def pixelHeight(self) -> float:
         ## deprecated
         if (vt := self.deviceTransform_()) is None:
             return 0
@@ -370,10 +388,12 @@ class GraphicsItem:
         vt = fn.invertQTransform(vt)
         return vt.mapRect(obj)
 
-    def viewPos(self):
+    def viewPos(self) -> QtCore.QPointF | None:
         return self.mapToView(self.mapFromParent(self.pos()))
-    
-    def transformAngle(self, relativeItem=None):
+
+    def transformAngle(
+        self, relativeItem: QtWidgets.QGraphicsItem | None = None
+    ) -> float:
         """Return the rotation produced by this item's transform (this assumes there is no shear in the transform)
         If relativeItem is given, then the angle is determined relative to that item.
         """
@@ -383,15 +403,15 @@ class GraphicsItem:
         tr = self.itemTransform(relativeItem)[0]
         vec = tr.map(QtCore.QLineF(0,0,1,0))
         return vec.angleTo(QtCore.QLineF(vec.p1(), vec.p1()+QtCore.QPointF(1,0)))
-        
-    def changeParent(self):
+
+    def changeParent(self) -> None:
         """Called when the item's parent has changed. 
         This method handles connecting / disconnecting from ViewBox signals
         to make sure viewRangeChanged works properly. It should generally be 
         extended, not overridden."""
         self._updateView()
 
-    def _updateView(self):
+    def _updateView(self) -> None:
         ## called to see whether this item has a new view to connect to
         ## NOTE: This is called from GraphicsObject.itemChange or GraphicsWidget.itemChange.
 
@@ -450,12 +470,16 @@ class GraphicsItem:
         self._replaceView(oldView)
         
         self.viewChanged(view, oldView)
-        
-    def viewChanged(self, view, oldView):
+
+    def viewChanged(
+        self,
+        view: ViewBox | GraphicsView | None,
+        oldView: ViewBox | GraphicsView | None,
+    ) -> None:
         """Called when this item's view has changed
         (ie, the item has been added to or removed from a ViewBox)"""
-        
-    def _replaceView(self, oldView, item=None):
+
+    def _replaceView(self, oldView: ViewBox | GraphicsView | None, item=None) -> None:
         if item is None:
             item = self
         for child in item.childItems():
@@ -469,23 +493,23 @@ class GraphicsItem:
         
 
     @QtCore.Slot()
-    def viewRangeChanged(self):
+    def viewRangeChanged(self) -> None:
         """
         Called whenever the view coordinates of the ViewBox containing this item have changed.
         """
         # when this is called, _cachedView is not invalidated.
         # this means that for functions overriding viewRangeChanged, viewRect() may be stale.
-    
+
     @QtCore.Slot()
-    def viewTransformChanged(self):
+    def viewTransformChanged(self) -> None:
         """
         Called whenever the transformation matrix of the view has changed.
         For example, when the view range has changed or the view was resized.
         Invalidates the viewRect cache.
         """
         self._cachedView = None
-    
-    def informViewBoundsChanged(self):
+
+    def informViewBoundsChanged(self) -> None:
         """
         Inform this item's container ViewBox that the bounds of this item have changed.
         This is used by ViewBox to react if auto-range is enabled.
@@ -493,13 +517,15 @@ class GraphicsItem:
         view = self.getViewBox()
         if view is not None and hasattr(view, 'implements') and view.implements('ViewBox'):
             view.itemBoundsChanged(self)  ## inform view so it can update its range if it wants
-    
-    def childrenShape(self):
+
+    def childrenShape(self) -> QtGui.QPainterPath:
         """Return the union of the shapes of all descendants of this item in local coordinates."""
         shapes = [self.mapFromItem(c, c.shape()) for c in self.allChildItems()]
         return reduce(operator.add, shapes)
-    
-    def allChildItems(self, root=None):
+
+    def allChildItems(
+        self, root: QtWidgets.QGraphicsItem | None = None
+    ) -> list[QtWidgets.QGraphicsItem]:
         """Return list of the entire item tree descending from this item."""
         if root is None:
             root = self
@@ -508,9 +534,8 @@ class GraphicsItem:
             tree.append(ch)
             tree.extend(self.allChildItems(ch))
         return tree
-    
-    
-    def setExportMode(self, export, opts=None):
+
+    def setExportMode(self, export: bool, opts: dict[str, Any] | None = None) -> None:
         """
         This method is called by exporters to inform items that they are being drawn for export
         with a specific set of options. Items access these via self._exportOptions.
@@ -524,13 +549,12 @@ class GraphicsItem:
                 #self._exportOpts['antialias'] = True
         else:
             self._exportOpts = False
-    
-    def getContextMenus(self, event):
+
+    def getContextMenus(self, event) -> list[QtWidgets.QMenu | None]:
         return [self.getMenu()] if hasattr(self, "getMenu") else []
 
     def generateSvg(
-            self,
-            nodes: dict[str, Element]
+        self, nodes: dict[str, Element]
     ) -> tuple[Element, list[Element]] | None:
         """Method to override to manually specify the SVG writer mechanism.
 
