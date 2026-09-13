@@ -526,20 +526,23 @@ class RemoteEventHandler(object):
         else:
             raise Exception("Internal error.")
     
-    def _import(self, mod, **kwargs):
+    def _import(self, mod, fromlist=None, **kwargs):
         """
         Request the remote process import a module (or symbols from a module)
-        and return the proxied results. Uses built-in __import__() function, but 
+        and return the proxied results. Uses built-in __import__() function, but
         adds a bit more processing:
-        
+
             _import('module')  =>  returns module
-            _import('module.submodule')  =>  returns submodule 
+            _import('module.submodule')  =>  returns submodule
                                              (note this differs from behavior of __import__)
             _import('module', fromlist=[name1, name2, ...])  =>  returns [module.name1, module.name2, ...]
                                              (this also differs from behavior of __import__)
-            
+
         """
-        return self.send(request='import', callSync='sync', opts=dict(module=mod), **kwargs)
+        opts = dict(module=mod)
+        if fromlist is not None:
+            opts['fromlist'] = fromlist
+        return self.send(request='import', callSync='sync', opts=opts, **kwargs)
         
     def getObjAttr(self, obj, attr, **kwargs):
         return self.send(request='getObjAttr', opts=dict(obj=obj, attr=attr), **kwargs)
