@@ -1083,7 +1083,7 @@ class ObjectProxy(object):
         return self._getSpecialAttr('__ror__')(*args)
         
     def __rxor__(self, *args):
-        return self._getSpecialAttr('__ror__')(*args)
+        return self._getSpecialAttr('__rxor__')(*args)
         
     def __rmod__(self, *args):
         return self._getSpecialAttr('__rmod__')(*args)
