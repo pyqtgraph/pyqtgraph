@@ -462,8 +462,8 @@ class ConnectionItem(GraphicsObject):
     def __init__(self, source, target=None):
         GraphicsObject.__init__(self)
         self.setFlags(
-            self.GraphicsItemFlag.ItemIsSelectable | 
-            self.GraphicsItemFlag.ItemIsFocusable
+            QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable | 
+            QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsFocusable
         )
         self.source = source
         self.target = target

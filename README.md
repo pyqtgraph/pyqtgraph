@@ -46,7 +46,6 @@ the table below for a summary.
 | Library        | Added functionality |
 | -------------- | - |
 | [`scipy`]      | <ul><li> Image processing through [`ndimage`]</li><li> Data array filtering through [`signal`] </li><ul> |
-| [`pyopengl`]   | <ul><li> 3D graphics </li></ul> |
 | [`h5py`]       | <ul><li> Export in hdf5 format </li></ul> |
 | [`colorcet`]   | <ul><li> Add a collection of perceptually uniform colormaps </li></ul> |
 | [`matplotlib`] | <ul><li> Export of PlotItem in matplotlib figure </li><li> Add matplotlib collection of colormaps </li></ul> |
@@ -57,7 +56,6 @@ the table below for a summary.
 [`scipy`]: https://github.com/scipy/scipy
 [`ndimage`]: https://docs.scipy.org/doc/scipy/reference/ndimage.html
 [`signal`]: https://docs.scipy.org/doc/scipy/reference/signal.html
-[`pyopengl`]: https://github.com/mcfletch/pyopengl
 [`h5py`]: https://github.com/h5py/h5py
 [`colorcet`]: https://github.com/holoviz/colorcet
 [`matplotlib`]: https://github.com/matplotlib/matplotlib

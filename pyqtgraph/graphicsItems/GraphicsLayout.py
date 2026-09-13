@@ -1,3 +1,7 @@
+__all__ = ['GraphicsLayout']
+
+import warnings
+
 from .. import functions as fn
 from ..Qt import QtCore, QtWidgets
 from .GraphicsWidget import GraphicsWidget
@@ -7,33 +11,52 @@ from .PlotItem import PlotItem
 ## Must be imported at the end to avoid cyclic-dependency hell:
 from .ViewBox import ViewBox
 
-__all__ = ['GraphicsLayout']
 class GraphicsLayout(GraphicsWidget):
     """
     Used for laying out GraphicsWidgets in a grid.
     This is usually created automatically as part of a :class:`GraphicsLayoutWidget <pyqtgraph.GraphicsLayoutWidget>`.
     """
 
-    def __init__(self, parent=None, border=None):
-        GraphicsWidget.__init__(self, parent)
+    def __init__(
+        self,
+        parent: QtWidgets.QGraphicsItem | None=None,
+        border: tuple[int, int, int] | bool | None=None
+    ):
+        super().__init__(parent)
         if border is True:
-            border = (100,100,100)
+            border = (100, 100, 100)
         elif border is False:
             border = None  
-        self.border = border
-        self.layout = QtWidgets.QGraphicsGridLayout()
-        self.setLayout(self.layout)
+        self.border: tuple[int, int, int] | None = border
+        self.layout_ = QtWidgets.QGraphicsGridLayout(self)
         self.items = {}  ## item: [(row, col), (row, col), ...]  lists all cells occupied by the item
         self.rows = {}   ## row: {col1: item1, col2: item2, ...}    maps cell location to item
         self.itemBorders = {}  ## {item1: QtWidgets.QGraphicsRectItem, ...} border rects
         self.currentRow = 0
         self.currentCol = 0
-        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding))
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy(
+                QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding
+            )
+        )
     
     #def resizeEvent(self, ev):
         #ret = GraphicsWidget.resizeEvent(self, ev)
         #print self.pos(), self.mapToDevice(self.rect().topLeft())
         #return ret
+
+    @property
+    def layout(self):
+        warnings.warn(
+            """GraphicsLayout.layout access is deprecated and will be removed soon.  For
+            continuous access, access the layout via GraphicsLayout.layout_.  In future
+            versions of pyqtgraph, the layout will be accessed via
+            GraphicsLayout.layout(), matching the Qt API.
+            """,
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self.layout_
 
     def setBorder(self, *args, **kwargs):
         """
@@ -135,8 +158,8 @@ class GraphicsLayout(GraphicsWidget):
 
         item.geometryChanged.connect(self._updateItemBorder)
 
-        self.layout.addItem(item, row, col, rowspan, colspan)
-        self.layout.activate() # Update layout, recalculating bounds.
+        self.layout_.addItem(item, row, col, rowspan, colspan)
+        self.layout_.activate() # Update layout, recalculating bounds.
                                # Allows some PyQtGraph features to also work without Qt event loop.
         
         self.nextColumn()
@@ -166,8 +189,8 @@ class GraphicsLayout(GraphicsWidget):
         ValueError
             Raised if item could not be found inside the GraphicsLayout instance.
         """
-        for i in range(self.layout.count()):
-            if self.layout.itemAt(i).graphicsItem() is item:
+        for i in range(self.layout_.count()):
+            if self.layout_.itemAt(i).graphicsItem() is item:
                 return i
         raise ValueError(f"Could not determine index of item {item}")
     
@@ -176,7 +199,7 @@ class GraphicsLayout(GraphicsWidget):
         ind = self.itemIndex(item)
         
         # Remove the item from the layout and scene
-        self.layout.removeAt(ind)
+        self.layout_.removeAt(ind)
         self.scene().removeItem(item)
         
         # Clear the row and column where the item was
@@ -192,7 +215,7 @@ class GraphicsLayout(GraphicsWidget):
         self.scene().removeItem(itemBorder)
         
         # Recalculate the layout to reclaim the space
-        self.layout.updateGeometry()
+        self.layout_.updateGeometry()
         self.update()
 
     
@@ -208,10 +231,10 @@ class GraphicsLayout(GraphicsWidget):
         # Wrap calls to layout. This should happen automatically, but there
         # seems to be a Qt bug:
         # http://stackoverflow.com/questions/27092164/margins-in-pyqtgraphs-graphicslayout
-        self.layout.setContentsMargins(*args)
+        self.layout_.setContentsMargins(*args)
 
     def setSpacing(self, *args):
-        self.layout.setSpacing(*args)
+        self.layout_.setSpacing(*args)
 
     @QtCore.Slot()
     def _updateItemBorder(self):

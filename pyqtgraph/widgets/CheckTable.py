@@ -1,24 +1,24 @@
+__all__ = ['CheckTable']
+
 from ..Qt import QtCore, QtWidgets
 from . import VerticalLabel
-
-__all__ = ['CheckTable']
 
 class CheckTable(QtWidgets.QWidget):
     
     sigStateChanged = QtCore.Signal(object, object, object) # (row, col, state)
     
     def __init__(self, columns):
-        QtWidgets.QWidget.__init__(self)
-        self.layout = QtWidgets.QGridLayout()
-        self.layout.setSpacing(0)
-        self.setLayout(self.layout)
+        super().__init__()
+        self.layout_ = QtWidgets.QGridLayout()
+        self.layout_.setSpacing(0)
+        self.setLayout(self.layout_)
         self.headers = []
         self.columns = columns
         col = 1
         for c in columns:
             label = VerticalLabel.VerticalLabel(c, orientation='vertical')
             self.headers.append(label)
-            self.layout.addWidget(label, 0, col)
+            self.layout_.addWidget(label, 0, col)
             col += 1
         
         self.rowNames = []
@@ -37,14 +37,14 @@ class CheckTable(QtWidgets.QWidget):
     def addRow(self, name):
         label = QtWidgets.QLabel(name)
         row = len(self.rowNames)+1
-        self.layout.addWidget(label, row, 0)
+        self.layout_.addWidget(label, row, 0)
         checks = []
         col = 1
         for c in self.columns:
             check = QtWidgets.QCheckBox('')
             check.col = c
             check.row = name
-            self.layout.addWidget(check, row, col)
+            self.layout_.addWidget(check, row, col)
             checks.append(check)
             if name in self.oldRows:
                 check.setChecked(self.oldRows[name][col])
@@ -68,7 +68,7 @@ class CheckTable(QtWidgets.QWidget):
             widgets = self.rowWidgets[i]
             for j in range(len(widgets)):
                 widgets[j].setParent(None)
-                self.layout.addWidget(widgets[j], i+1, j)
+                self.layout_.addWidget(widgets[j], i+1, j)
 
     def checkChanged(self, state):
         check = QtCore.QObject.sender(self)

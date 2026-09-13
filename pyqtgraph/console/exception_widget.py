@@ -17,48 +17,50 @@ class ExceptionHandlerWidget(QtWidgets.QGroupBox):
         self.filterString = ''
         self._inSystrace = False
 
+
         # send exceptions raised in non-gui threads back to the main thread by signal.
         self._threadException.connect(self._threadExceptionHandler)
 
     def _setupUi(self):
         self.setTitle("Exception Handling")
 
-        self.layout = QtWidgets.QGridLayout(self)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setHorizontalSpacing(2)
-        self.layout.setVerticalSpacing(0)
+        self.layout_ = QtWidgets.QGridLayout()
+        self.setLayout(self.layout_)
+        self.layout_.setContentsMargins(0, 0, 0, 0)
+        self.layout_.setHorizontalSpacing(2)
+        self.layout_.setVerticalSpacing(0)
 
         self.clearExceptionBtn = QtWidgets.QPushButton("Clear Stack", self)
         self.clearExceptionBtn.setEnabled(False)
-        self.layout.addWidget(self.clearExceptionBtn, 0, 6, 1, 1)
+        self.layout_.addWidget(self.clearExceptionBtn, 0, 6, 1, 1)
 
         self.catchAllExceptionsBtn = QtWidgets.QPushButton("Show All Exceptions", self)
         self.catchAllExceptionsBtn.setCheckable(True)
-        self.layout.addWidget(self.catchAllExceptionsBtn, 0, 1, 1, 1)
+        self.layout_.addWidget(self.catchAllExceptionsBtn, 0, 1, 1, 1)
 
         self.catchNextExceptionBtn = QtWidgets.QPushButton("Show Next Exception", self)
         self.catchNextExceptionBtn.setCheckable(True)
-        self.layout.addWidget(self.catchNextExceptionBtn, 0, 0, 1, 1)
+        self.layout_.addWidget(self.catchNextExceptionBtn, 0, 0, 1, 1)
 
         self.onlyUncaughtCheck = QtWidgets.QCheckBox("Only Uncaught Exceptions", self)
         self.onlyUncaughtCheck.setChecked(True)
-        self.layout.addWidget(self.onlyUncaughtCheck, 0, 4, 1, 1)
+        self.layout_.addWidget(self.onlyUncaughtCheck, 0, 4, 1, 1)
 
         self.stackTree = StackWidget(self)
-        self.layout.addWidget(self.stackTree, 2, 0, 1, 7)
+        self.layout_.addWidget(self.stackTree, 2, 0, 1, 7)
 
         self.runSelectedFrameCheck = QtWidgets.QCheckBox("Run commands in selected stack frame", self)
         self.runSelectedFrameCheck.setChecked(True)
-        self.layout.addWidget(self.runSelectedFrameCheck, 3, 0, 1, 7)
+        self.layout_.addWidget(self.runSelectedFrameCheck, 3, 0, 1, 7)
 
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
-        self.layout.addItem(spacerItem, 0, 5, 1, 1)
+        self.layout_.addItem(spacerItem, 0, 5, 1, 1)
 
         self.filterLabel = QtWidgets.QLabel("Filter (regex):", self)
-        self.layout.addWidget(self.filterLabel, 0, 2, 1, 1)
+        self.layout_.addWidget(self.filterLabel, 0, 2, 1, 1)
 
         self.filterText = QtWidgets.QLineEdit(self)
-        self.layout.addWidget(self.filterText, 0, 3, 1, 1)
+        self.layout_.addWidget(self.filterText, 0, 3, 1, 1)
 
         self.catchAllExceptionsBtn.toggled.connect(self.catchAllExceptions)
         self.catchNextExceptionBtn.toggled.connect(self.catchNextException)

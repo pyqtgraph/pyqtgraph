@@ -9,7 +9,7 @@ from xml.etree.ElementTree import Element
 
 from .. import functions as fn
 from ..Point import Point
-from ..Qt import QtCore, isQObjectAlive
+from ..Qt import QtCore, QtWidgets, isQObjectAlive
 
 
 # Recipe from https://docs.python.org/3.8/library/collections.html#collections.OrderedDict
@@ -146,7 +146,7 @@ class GraphicsItem:
             p = p.parentItem()
             if p is None:
                 break
-            if p.flags() & self.GraphicsItemFlag.ItemClipsChildrenToShape:
+            if p.flags() & QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemClipsChildrenToShape:
                 parents.append(p)
         return parents
     

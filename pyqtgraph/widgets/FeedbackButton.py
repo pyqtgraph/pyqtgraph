@@ -1,6 +1,7 @@
+__all__ = ['FeedbackButton']
+
 from ..Qt import QtCore, QtWidgets
 
-__all__ = ['FeedbackButton']
 
 class FeedbackButton(QtWidgets.QPushButton):
     """
@@ -41,6 +42,7 @@ class FeedbackButton(QtWidgets.QPushButton):
         else:
             self.failure(message, tip, limitedTime=limitedTime)
     
+    @QtCore.Slot(object, object, object)
     def success(self, message=None, tip="", limitedTime=True):
         """Displays specified message on button and flashes button green to let user know action was successful. If you want the success to be displayed until the user takes an action, set limitedTime to False. Then call self.reset() after the desired action. Threadsafe."""
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
@@ -50,7 +52,8 @@ class FeedbackButton(QtWidgets.QPushButton):
             self.startBlink("#0F0", message, tip, limitedTime=limitedTime)
         else:
             self.sigCallSuccess.emit(message, tip, limitedTime)
-            
+    
+    @QtCore.Slot(object, object, object)
     def failure(self, message=None, tip="", limitedTime=True):
         """Displays specified message on button and flashes button red to let user know there was an error. If you want the error to be displayed until the user takes an action, set limitedTime to False. Then call self.reset() after the desired action. Threadsafe. """
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
@@ -61,6 +64,7 @@ class FeedbackButton(QtWidgets.QPushButton):
         else:
             self.sigCallFailure.emit(message, tip, limitedTime)
 
+    @QtCore.Slot(object, object, object)
     def processing(self, message="Processing..", tip="", processEvents=True):
         """Displays specified message on button to let user know the action is in progress. Threadsafe. """
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
@@ -72,8 +76,8 @@ class FeedbackButton(QtWidgets.QPushButton):
                 QtWidgets.QApplication.processEvents()
         else:
             self.sigCallProcess.emit(message, tip, processEvents)
-           
-                
+    
+    @QtCore.Slot()
     def reset(self):
         """Resets the button to its original text and style. Threadsafe."""
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()

@@ -1,11 +1,20 @@
-from OpenGL import GL
-from OpenGL.GL import shaders
+import enum
+import textwrap
+
 import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
+from ...Qt import OpenGLConstants as GLC
+from ...Qt import OpenGLHelpers
 from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLImageItem']
+
+
+class DirtyFlag(enum.Flag):
+    POSITION = enum.auto()
+    TEXTURE = enum.auto()
+
 
 class GLImageItem(GLGraphicsItem):
     """
@@ -18,64 +27,60 @@ class GLImageItem(GLGraphicsItem):
     
     def __init__(self, data, smooth=False, glOptions='translucent', parentItem=None):
         """
-        
         ==============  =======================================================================================
         **Arguments:**
-        data            Volume data to be rendered. *Must* be 3D numpy array (x, y, RGBA) with dtype=ubyte.
+        data            Image data to be rendered. *Must* be 3D numpy array (x, y, RGBA) with dtype=ubyte.
                         (See functions.makeRGBA)
-        smooth          (bool) If True, the volume slices are rendered with linear interpolation 
+        smooth          (bool) If True, the image is rendered with linear interpolation
         ==============  =======================================================================================
         """
         
         super().__init__()
+        OpenGLHelpers.suppress_texture_warning()
         self.setGLOptions(glOptions)
         self.smooth = smooth
-        self._needUpdate = False
-        self.texture = None
+        self.m_texture = QtOpenGL.QOpenGLTexture(QtOpenGL.QOpenGLTexture.Target.Target2D)
         self.m_vbo_position = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
+        self.dirty_bits = DirtyFlag(0)
+        self.dirty_bits |= DirtyFlag.POSITION
         self.setParentItem(parentItem)
         self.setData(data)
 
     def setData(self, data):
         self.data = data
-        self._needUpdate = True
+        self.dirty_bits |= DirtyFlag.TEXTURE
         self.update()
-        
-    def _updateTexture(self):
-        if self.texture is None:
-            self.texture = GL.glGenTextures(1)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture)
-        filt = GL.GL_LINEAR if self.smooth else GL.GL_NEAREST
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, filt)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, filt)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_BORDER)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_BORDER)
-        shape = self.data.shape
-        
-        context = QtGui.QOpenGLContext.currentContext()
-        if not context.isOpenGLES():
-            ## Test texture dimensions first
-            GL.glTexImage2D(GL.GL_PROXY_TEXTURE_2D, 0, GL.GL_RGBA, shape[0], shape[1], 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, None)
-            if GL.glGetTexLevelParameteriv(GL.GL_PROXY_TEXTURE_2D, 0, GL.GL_TEXTURE_WIDTH) == 0:
-                raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
-        
-        data = np.ascontiguousarray(self.data.transpose((1,0,2)))
-        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, shape[0], shape[1], 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, data)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
 
-        x, y = shape[:2]
-        pos = np.array([
-            [0, 0, 0, 0],
-            [x, 0, 1, 0],
-            [0, y, 0, 1],
-            [x, y, 1, 1],
-        ], dtype=np.float32)
-        vbo = self.m_vbo_position
-        if not vbo.isCreated():
-            vbo.create()
-        vbo.bind()
-        vbo.allocate(pos, pos.nbytes)
-        vbo.release()
+    def _updateTexture(self):
+        tex = self.m_texture
+
+        data = np.ascontiguousarray(self.data.transpose((1,0,2)))
+        h, w = data.shape[:2]
+
+        if tex.isCreated() and (w != tex.width() or h != tex.height()):
+            tex.destroy()
+
+        if not tex.isCreated():
+            context = QtGui.QOpenGLContext.currentContext()
+            if context.isOpenGLES() and context.format().version() <= (2, 0):
+                # PyQt5 on Windows with QT_OPENGL=angle emulates OpenGL ES 2.0
+                texfmt = QtOpenGL.QOpenGLTexture.TextureFormat.RGBAFormat
+            else:
+                texfmt = QtOpenGL.QOpenGLTexture.TextureFormat.RGBA8_UNorm
+            tex.setFormat(texfmt)
+            tex.setSize(w, h)
+            tex.allocateStorage()
+            if not tex.isStorageAllocated():
+                raise RuntimeError("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % (w, h))
+
+        filt = QtOpenGL.QOpenGLTexture.Filter.Linear if self.smooth else QtOpenGL.QOpenGLTexture.Filter.Nearest
+        tex.setMinMagFilters(filt, filt)
+        tex.setWrapMode(QtOpenGL.QOpenGLTexture.WrapMode.ClampToBorder)
+
+        tex.setData(
+            QtOpenGL.QOpenGLTexture.PixelFormat.RGBA,
+            QtOpenGL.QOpenGLTexture.PixelType.UInt8,
+            data)
 
     @staticmethod
     def getShaderProgram():
@@ -102,53 +107,68 @@ class GLImageItem(GLGraphicsItem):
                 glsl_version = ""
                 sources = SHADER_LEGACY
 
-        compiled = [shaders.compileShader([glsl_version, v], k) for k, v in sources.items()]
-        program = shaders.compileProgram(*compiled)
+        program = QtOpenGL.QOpenGLShaderProgram()
+        for shader_type, src in sources.items():
+            if not program.addShaderFromSourceCode(shader_type, glsl_version + src):
+                raise RuntimeError(program.log())
 
-        GL.glBindAttribLocation(program, 0, "a_position")
-        GL.glBindAttribLocation(program, 1, "a_texcoord")
-        GL.glLinkProgram(program)
+        program.bindAttributeLocation("a_position", 0)
+        program.bindAttributeLocation("a_texcoord", 1)
+        if not program.link():
+            raise RuntimeError(program.log())
 
         klass._shaderProgram = program
         return program
 
     def paint(self):
-        if self._needUpdate:
-            self._updateTexture()
-            self._needUpdate = False
-        
         self.setupGLState()
 
         mat_mvp = self.mvpMatrix()
-        mat_mvp = np.array(mat_mvp.data(), dtype=np.float32)
+        x, y = self.data.shape[:2]
+        mat_mvp.scale(x, y)
+
+        glfn = self.glFunctions()
+
+        if DirtyFlag.POSITION in self.dirty_bits:
+            pos = np.array([
+                [0, 0, 0, 0],
+                [1, 0, 1, 0],
+                [0, 1, 0, 1],
+                [1, 1, 1, 1],
+            ], dtype=np.uint8) * 255
+            OpenGLHelpers.upload_vbo(self.m_vbo_position, pos)
+        if DirtyFlag.TEXTURE in self.dirty_bits:
+            self._updateTexture()
+        self.dirty_bits = DirtyFlag(0)
 
         program = self.getShaderProgram()
         loc_pos, loc_tex = 0, 1
         self.m_vbo_position.bind()
-        GL.glVertexAttribPointer(loc_pos, 2, GL.GL_FLOAT, False, 4*4, None)
-        GL.glVertexAttribPointer(loc_tex, 2, GL.GL_FLOAT, False, 4*4, GL.GLvoidp(2*4))
+        program.setAttributeBuffer(loc_pos, GLC.GL_UNSIGNED_BYTE, 0*1, 2, 4*1)
+        program.setAttributeBuffer(loc_tex, GLC.GL_UNSIGNED_BYTE, 2*1, 2, 4*1)
         self.m_vbo_position.release()
         enabled_locs = [loc_pos, loc_tex]
 
-        GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture)
+        self.m_texture.bind()
 
         for loc in enabled_locs:
-            GL.glEnableVertexAttribArray(loc)
+            program.enableAttributeArray(loc)
 
-        with program:
-            loc = GL.glGetUniformLocation(program, "u_mvp")
-            GL.glUniformMatrix4fv(loc, 1, False, mat_mvp)
+        program.bind()
+        program.setUniformValue("u_mvp", mat_mvp)
 
-            GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
+        glfn.glDrawArrays(GLC.GL_TRIANGLE_STRIP, 0, 4)
+
+        program.release()
 
         for loc in enabled_locs:
-            GL.glDisableVertexAttribArray(loc)
+            program.disableAttributeArray(loc)
 
-        GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
+        self.m_texture.release()
 
 
 SHADER_LEGACY = {
-    GL.GL_VERTEX_SHADER : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : textwrap.dedent("""
         uniform mat4 u_mvp;
         attribute vec4 a_position;
         attribute vec2 a_texcoord;
@@ -157,8 +177,8 @@ SHADER_LEGACY = {
             gl_Position = u_mvp * a_position;
             v_texcoord = a_texcoord;
         }
-    """,
-    GL.GL_FRAGMENT_SHADER : """
+    """),
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : textwrap.dedent("""
         #ifdef GL_ES
         precision mediump float;
         #endif
@@ -168,11 +188,11 @@ SHADER_LEGACY = {
         {
             gl_FragColor = texture2D(u_texture, v_texcoord);
         }
-    """,
+    """),
 }
 
 SHADER_CORE = {
-    GL.GL_VERTEX_SHADER : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : textwrap.dedent("""
         uniform mat4 u_mvp;
         in vec4 a_position;
         in vec2 a_texcoord;
@@ -181,8 +201,8 @@ SHADER_CORE = {
             gl_Position = u_mvp * a_position;
             v_texcoord = a_texcoord;
         }
-    """,
-    GL.GL_FRAGMENT_SHADER : """
+    """),
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : textwrap.dedent("""
         #ifdef GL_ES
         precision mediump float;
         #endif
@@ -193,5 +213,5 @@ SHADER_CORE = {
         {
             fragColor = texture(u_texture, v_texcoord);
         }
-    """,
+    """),
 }

@@ -124,7 +124,6 @@ class AxisItem(GraphicsWidget):
         self.setLabel(**args)
         self.showLabel(False)
 
-
         if pen is None:
             self.setPen()
         else:
@@ -146,7 +145,6 @@ class AxisItem(GraphicsWidget):
 
         self.grid = False
 
-        #self.setCacheMode(self.DeviceCoordinateCache)
 
     def setStyle(self, **kwargs):
         """

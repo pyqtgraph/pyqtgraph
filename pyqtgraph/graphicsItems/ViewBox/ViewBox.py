@@ -56,8 +56,8 @@ class ChildGroup(ItemGroup):
     def itemChange(self, change, value):
         ret = ItemGroup.itemChange(self, change, value)
         if change in [
-            self.GraphicsItemChange.ItemChildAddedChange,
-            self.GraphicsItemChange.ItemChildRemovedChange,
+            QtWidgets.QGraphicsItem.GraphicsItemChange.ItemChildAddedChange,
+            QtWidgets.QGraphicsItem.GraphicsItemChange.ItemChildRemovedChange,
         ]:
             try:
                 itemsChangedListeners = self.itemsChangedListeners
@@ -182,8 +182,8 @@ class ViewBox(GraphicsWidget):
 
         self.locateGroup = None  ## items displayed when using ViewBox.locate(item)
 
-        self.setFlag(self.GraphicsItemFlag.ItemClipsChildrenToShape)
-        self.setFlag(self.GraphicsItemFlag.ItemIsFocusable, True)  ## so we can receive key presses
+        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemClipsChildrenToShape)
+        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsFocusable, True)  ## so we can receive key presses
 
         ## childGroup is required so that ViewBox has local coordinates similar to device coordinates.
         ## this is a workaround for a Qt + OpenGL bug that causes improper clipping
@@ -304,11 +304,11 @@ class ViewBox(GraphicsWidget):
 
     def itemChange(self, change, value):
         ret = super().itemChange(change, value)
-        if change == self.GraphicsItemChange.ItemSceneChange:
+        if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemSceneChange:
             scene = self.scene()
             if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
                 scene.sigPrepareForPaint.disconnect(self.prepareForPaint)
-        elif change == self.GraphicsItemChange.ItemSceneHasChanged:
+        elif change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemSceneHasChanged:
             scene = self.scene()
             if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
                 scene.sigPrepareForPaint.connect(self.prepareForPaint)
@@ -1511,7 +1511,7 @@ class ViewBox(GraphicsWidget):
 
                 itemBounds.append((bounds, useX, useY, pxPad))
             else:
-                if item.flags() & item.GraphicsItemFlag.ItemHasNoContents:
+                if item.flags() & QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemHasNoContents:
                     continue
                 bounds = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
                 itemBounds.append((bounds, True, True, 0))

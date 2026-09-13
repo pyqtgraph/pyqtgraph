@@ -152,11 +152,12 @@ class PlotItem(GraphicsWidget):
         self.buttonsHidden = False  # has the user has requested buttons to be hidden?
         self.mouseHovering = False
 
-        self.layout = QtWidgets.QGraphicsGridLayout()
-        self.layout.setContentsMargins(1,1,1,1)
-        self.setLayout(self.layout)
-        self.layout.setHorizontalSpacing(0)
-        self.layout.setVerticalSpacing(0)
+        self.layout_ = QtWidgets.QGraphicsGridLayout()
+        self.layout_.setContentsMargins(1,1,1,1)
+        self.layout_.setHorizontalSpacing(0)
+        self.layout_.setVerticalSpacing(0)
+        self.setLayout(self.layout_)
+
 
         if viewBox is None:
             viewBox = ViewBox(parent=self, enableMenu=enableMenu)
@@ -173,7 +174,7 @@ class PlotItem(GraphicsWidget):
         self.vb.sigYRangeChanged.connect(self.sigYRangeChanged)
         self.vb.sigRangeChangedManually.connect(self.sigRangeChangedManually)
 
-        self.layout.addItem(self.vb, 2, 1)
+        self.layout_.addItem(self.vb, 2, 1)
         self.alpha = 1.0
         self.autoAlpha = True
         self.spectrumMode = False
@@ -185,22 +186,22 @@ class PlotItem(GraphicsWidget):
         self.setAxisItems(axisItems)
 
         self.titleLabel = LabelItem('', size='11pt', parent=self)
-        self.layout.addItem(self.titleLabel, 0, 1)
+        self.layout_.addItem(self.titleLabel, 0, 1)
         self.setTitle(None)  ## hide
 
         for i in range(4):
-            self.layout.setRowPreferredHeight(i, 0)
-            self.layout.setRowMinimumHeight(i, 0)
-            self.layout.setRowSpacing(i, 0)
-            self.layout.setRowStretchFactor(i, 1)
+            self.layout_.setRowPreferredHeight(i, 0)
+            self.layout_.setRowMinimumHeight(i, 0)
+            self.layout_.setRowSpacing(i, 0)
+            self.layout_.setRowStretchFactor(i, 1)
 
         for i in range(3):
-            self.layout.setColumnPreferredWidth(i, 0)
-            self.layout.setColumnMinimumWidth(i, 0)
-            self.layout.setColumnSpacing(i, 0)
-            self.layout.setColumnStretchFactor(i, 1)
-        self.layout.setRowStretchFactor(2, 100)
-        self.layout.setColumnStretchFactor(1, 100)
+            self.layout_.setColumnPreferredWidth(i, 0)
+            self.layout_.setColumnMinimumWidth(i, 0)
+            self.layout_.setColumnSpacing(i, 0)
+            self.layout_.setColumnStretchFactor(i, 1)
+        self.layout_.setRowStretchFactor(2, 100)
+        self.layout_.setColumnStretchFactor(1, 100)
 
 
         self.items = []
@@ -355,7 +356,7 @@ class PlotItem(GraphicsWidget):
                 
                 # Remove old axis
                 oldAxis = self.axes[k]['item']
-                self.layout.removeItem(oldAxis)
+                self.layout_.removeItem(oldAxis)
                 if oldAxis.scene() is not None:
                     oldAxis.scene().removeItem(oldAxis)
                 oldAxis.unlinkFromView()
@@ -378,7 +379,7 @@ class PlotItem(GraphicsWidget):
             # Set up new axis
             axis.linkToView(self.vb)
             self.axes[k] = {'item': axis, 'pos': pos}
-            self.layout.addItem(axis, *pos)
+            self.layout_.addItem(axis, *pos)
             # place axis above images at z=0, items that want to draw over the axes 
             # should be placed at z>=1
             axis.setZValue(0.5) 
@@ -1494,11 +1495,11 @@ class PlotItem(GraphicsWidget):
         """
         if title is None:
             self.titleLabel.setVisible(False)
-            self.layout.setRowFixedHeight(0, 0)
+            self.layout_.setRowFixedHeight(0, 0)
             self.titleLabel.setMaximumHeight(0)
         else:
             self.titleLabel.setMaximumHeight(30)
-            self.layout.setRowFixedHeight(0, 30)
+            self.layout_.setRowFixedHeight(0, 30)
             self.titleLabel.setVisible(True)
             self.titleLabel.setText(title, **kwargs)
 

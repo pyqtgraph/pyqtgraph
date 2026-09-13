@@ -39,8 +39,8 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.dynamic]
 version = { attr = "pyqtgraph.__version__" }
 
-[tool.setuptools]
-packages = ["pyqtgraph"]
+[tool.setuptools.packages.find]
+include = ["pyqtgraph", "pyqtgraph.*"]
 
 [tool.setuptools.package-data]
 pyqtgraph = [
@@ -144,6 +144,11 @@ exclude = '(Template|__init__.py)'
 [tool.pyright]
 pythonVersion = "3.12"
 include = ["pyqtgraph"]
+strictListInference = true
+strictDictionaryInference = true
+strictSetInference = true
+useLibraryCodeForTypes = true
+enableExperimentalFeatures = true
 reportImplicitOverride = false           # qt methods intended to be overridden
 reportMissingTypeStubs = false
 reportIncompatibleMethodOverride = false # complains when argument names don't match up

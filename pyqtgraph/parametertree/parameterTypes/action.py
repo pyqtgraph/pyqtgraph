@@ -69,13 +69,13 @@ class ActionParameterItem(ParameterItem):
         # For action parameters, icons are displayed in the button, not the tree item
         # Clear any icon that was set by the parent __init__
         self.layoutWidget = QtWidgets.QWidget()
-        self.layout = QtWidgets.QHBoxLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layoutWidget.setLayout(self.layout)
+        self.layout_ = QtWidgets.QHBoxLayout()
+        self.layout_.setContentsMargins(0, 0, 0, 0)
         self.button = ParameterControlledButton(param, self.layoutWidget)
         #self.layout.addSpacing(100)
-        self.layout.addWidget(self.button)
-        self.layout.addStretch()
+        self.layout_.addWidget(self.button)
+        self.layout_.addStretch()
+        self.layoutWidget.setLayout(self.layout_)
         self.titleChanged()
 
     def treeWidgetChanged(self):

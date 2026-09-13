@@ -76,26 +76,26 @@ def test_legend_item_basics():
     legend.addItem(scrabble, name="Scrabble")
     assert len(legend.items) == 4
 
-    assert legend.layout.rowCount() == 4
+    assert legend.layout().rowCount() == 4
     assert legend.rowCount == 4
     legend.setColumnCount(2)
     assert legend.columnCount == 2
     assert legend.rowCount == 2
 
-    assert legend.layout.rowCount() == 2
+    assert legend.layout().rowCount() == 2
 
     # Remove items
     # ----------------------------------------------------
 
     legend.removeItem(scrabble)
     assert legend.rowCount == 2
-    assert legend.layout.rowCount() == 2
+    assert legend.layout().rowCount() == 2
     assert scrabble not in legend.items
     assert len(legend.items) == 3
 
     legend.removeItem(curve)
     assert legend.rowCount == 2 # rowCount will never decrease when removing
-    assert legend.layout.rowCount() == 1
+    assert legend.layout().rowCount() == 1
     assert curve not in legend.items
     assert len(legend.items) == 2
 

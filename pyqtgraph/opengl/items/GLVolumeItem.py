@@ -1,11 +1,20 @@
-from OpenGL import GL
-from OpenGL.GL import shaders
+import enum
+import textwrap
+
 import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
+from ...Qt import OpenGLConstants as GLC
+from ...Qt import OpenGLHelpers
 from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLVolumeItem']
+
+
+class DirtyFlag(enum.Flag):
+    POSITION = enum.auto()
+    TEXTURE = enum.auto()
+
 
 class GLVolumeItem(GLGraphicsItem):
     """
@@ -27,62 +36,62 @@ class GLVolumeItem(GLGraphicsItem):
         """
         
         super().__init__()
+        OpenGLHelpers.suppress_texture_warning()
         self.setGLOptions(glOptions)
         self.sliceDensity = sliceDensity
         self.smooth = smooth
         self.data = None
-        self._needUpload = False
-        self.texture = None
+        self.m_texture = QtOpenGL.QOpenGLTexture(QtOpenGL.QOpenGLTexture.Target.Target3D)
         self.m_vbo_position = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
+        self.dirty_bits = DirtyFlag(0)
         self.setParentItem(parentItem)
         self.setData(data)
 
     def setData(self, data):
+        if self.data is None or data is None or self.data.shape != data.shape:
+            # it becomes dirty when sliceDensity changes too,
+            # but we will just treat sliceDensity as immutable once instantiated
+            self.dirty_bits |= DirtyFlag.POSITION
+        self.dirty_bits |= DirtyFlag.TEXTURE
         self.data = data
-        self._needUpload = True
         self.update()
-        
-    def _uploadData(self):
-        if self.texture is None:
-            self.texture = GL.glGenTextures(1)
-        GL.glBindTexture(GL.GL_TEXTURE_3D, self.texture)
-        filt = GL.GL_LINEAR if self.smooth else GL.GL_NEAREST
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_MIN_FILTER, filt)
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_MAG_FILTER, filt)
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_BORDER)
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_BORDER)
-        GL.glTexParameteri(GL.GL_TEXTURE_3D, GL.GL_TEXTURE_WRAP_R, GL.GL_CLAMP_TO_BORDER)
-        shape = self.data.shape
 
-        context = QtGui.QOpenGLContext.currentContext()
-        if not context.isOpenGLES():
-            ## Test texture dimensions first
-            GL.glTexImage3D(GL.GL_PROXY_TEXTURE_3D, 0, GL.GL_RGBA, shape[0], shape[1], shape[2], 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, None)
-            if GL.glGetTexLevelParameteriv(GL.GL_PROXY_TEXTURE_3D, 0, GL.GL_TEXTURE_WIDTH) == 0:
-                raise Exception("OpenGL failed to create 3D texture (%dx%dx%d); too large for this hardware." % shape[:3])
-        
+    def _uploadData(self):
+        tex = self.m_texture
+
         data = np.ascontiguousarray(self.data.transpose((2,1,0,3)))
-        GL.glTexImage3D(GL.GL_TEXTURE_3D, 0, GL.GL_RGBA, shape[0], shape[1], shape[2], 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, data)
-        GL.glBindTexture(GL.GL_TEXTURE_3D, 0)
-        
+        d, h, w = data.shape[:3]
+
+        if tex.isCreated() and (w != tex.width() or h != tex.height() or d != tex.depth()):
+            tex.destroy()
+
+        if not tex.isCreated():
+            tex.setFormat(QtOpenGL.QOpenGLTexture.TextureFormat.RGBA8_UNorm)
+            tex.setSize(w, h, d)
+            tex.allocateStorage()
+            if not tex.isStorageAllocated():
+                raise RuntimeError("OpenGL failed to create 3D texture (%dx%dx%d); too large for this hardware." % (w, h, d))
+
+        filt = QtOpenGL.QOpenGLTexture.Filter.Linear if self.smooth else QtOpenGL.QOpenGLTexture.Filter.Nearest
+        tex.setMinMagFilters(filt, filt)
+        tex.setWrapMode(QtOpenGL.QOpenGLTexture.WrapMode.ClampToBorder)
+
+        tex.setData(
+            QtOpenGL.QOpenGLTexture.PixelFormat.RGBA,
+            QtOpenGL.QOpenGLTexture.PixelType.UInt8,
+            data)
+
+    def computeVertices(self):
         all_vertices = []
 
-        self.lists = {}
+        offsets = {}
         for ax in [0,1,2]:
             for d in [-1, 1]:
-                vertices = self.drawVolume(ax, d)
-                self.lists[(ax,d)] = (len(all_vertices), len(vertices))
+                vertices = drawVolume(self.data.shape, ax, d, self.sliceDensity)
+                offsets[(ax,d)] = (len(all_vertices), len(vertices))
                 all_vertices.extend(vertices)
 
-        pos = np.array(all_vertices, dtype=np.float32)
-        vbo = self.m_vbo_position
-        if not vbo.isCreated():
-            vbo.create()
-        vbo.bind()
-        vbo.allocate(pos, pos.nbytes)
-        vbo.release()
-        
-        self._needUpload = False
+        return all_vertices, offsets
 
     @staticmethod
     def getShaderProgram():
@@ -109,12 +118,15 @@ class GLVolumeItem(GLGraphicsItem):
                 glsl_version = ""
                 sources = SHADER_LEGACY
 
-        compiled = [shaders.compileShader([glsl_version, v], k) for k, v in sources.items()]
-        program = shaders.compileProgram(*compiled)
+        program = QtOpenGL.QOpenGLShaderProgram()
+        for shader_type, src in sources.items():
+            if not program.addShaderFromSourceCode(shader_type, glsl_version + src):
+                raise RuntimeError(program.log())
 
-        GL.glBindAttribLocation(program, 0, "a_position")
-        GL.glBindAttribLocation(program, 1, "a_texcoord")
-        GL.glLinkProgram(program)
+        program.bindAttributeLocation("a_position", 0)
+        program.bindAttributeLocation("a_texcoord", 1)
+        if not program.link():
+            raise RuntimeError(program.log())
 
         klass._shaderProgram = program
         return program
@@ -123,13 +135,17 @@ class GLVolumeItem(GLGraphicsItem):
         if self.data is None:
             return
         
-        if self._needUpload:
-            self._uploadData()
-        
         self.setupGLState()
 
+        if DirtyFlag.POSITION in self.dirty_bits:
+            vertices, self.lists = self.computeVertices()
+            pos = np.array(vertices, dtype=np.float32)
+            OpenGLHelpers.upload_vbo(self.m_vbo_position, pos)
+        if DirtyFlag.TEXTURE in self.dirty_bits:
+            self._uploadData()
+        self.dirty_bits = DirtyFlag(0)
+
         mat_mvp = self.mvpMatrix()
-        mat_mvp = np.array(mat_mvp.data(), dtype=np.float32)
 
         # calculate camera coordinates in this model's local space.
         # (in eye space, the camera is at the origin)
@@ -144,88 +160,91 @@ class GLVolumeItem(GLGraphicsItem):
         d = 1 if cam[ax] > 0 else -1
         offset, num_vertices = self.lists[(ax,d)]
 
+        glfn = self.glFunctions()
+
         program = self.getShaderProgram()
 
         loc_pos, loc_tex = 0, 1
         self.m_vbo_position.bind()
-        GL.glVertexAttribPointer(loc_pos, 3, GL.GL_FLOAT, False, 6*4, None)
-        GL.glVertexAttribPointer(loc_tex, 3, GL.GL_FLOAT, False, 6*4, GL.GLvoidp(3*4))
+        program.setAttributeBuffer(loc_pos, GLC.GL_FLOAT, 0*4, 3, 6*4)
+        program.setAttributeBuffer(loc_tex, GLC.GL_FLOAT, 3*4, 3, 6*4)
         self.m_vbo_position.release()
         enabled_locs = [loc_pos, loc_tex]
 
-        GL.glBindTexture(GL.GL_TEXTURE_3D, self.texture)
+        self.m_texture.bind()
 
         for loc in enabled_locs:
-            GL.glEnableVertexAttribArray(loc)
+            program.enableAttributeArray(loc)
 
-        with program:
-            loc = GL.glGetUniformLocation(program, "u_mvp")
-            GL.glUniformMatrix4fv(loc, 1, False, mat_mvp)
+        program.bind()
+        program.setUniformValue("u_mvp", mat_mvp)
 
-            GL.glDrawArrays(GL.GL_TRIANGLES, offset, num_vertices)
+        glfn.glDrawArrays(GLC.GL_TRIANGLES, offset, num_vertices)
+
+        program.release()
 
         for loc in enabled_locs:
-            GL.glDisableVertexAttribArray(loc)
+            program.disableAttributeArray(loc)
 
-        GL.glBindTexture(GL.GL_TEXTURE_3D, 0)
+        self.m_texture.release()
 
-    def drawVolume(self, ax, d):
-        imax = [0,1,2]
-        imax.remove(ax)
-        
-        tp = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
-        vp = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
-        nudge = [0.5/x for x in self.data.shape]
-        tp[0][imax[0]] = 0+nudge[imax[0]]
-        tp[0][imax[1]] = 0+nudge[imax[1]]
-        tp[1][imax[0]] = 1-nudge[imax[0]]
-        tp[1][imax[1]] = 0+nudge[imax[1]]
-        tp[2][imax[0]] = 1-nudge[imax[0]]
-        tp[2][imax[1]] = 1-nudge[imax[1]]
-        tp[3][imax[0]] = 0+nudge[imax[0]]
-        tp[3][imax[1]] = 1-nudge[imax[1]]
-        
-        vp[0][imax[0]] = 0
-        vp[0][imax[1]] = 0
-        vp[1][imax[0]] = self.data.shape[imax[0]]
-        vp[1][imax[1]] = 0
-        vp[2][imax[0]] = self.data.shape[imax[0]]
-        vp[2][imax[1]] = self.data.shape[imax[1]]
-        vp[3][imax[0]] = 0
-        vp[3][imax[1]] = self.data.shape[imax[1]]
-        slices = self.data.shape[ax] * self.sliceDensity
-        r = list(range(slices))
-        if d == -1:
-            r = r[::-1]
+def drawVolume(shape, ax, d, sliceDensity):
+    imax = [0,1,2]
+    imax.remove(ax)
 
-        vertices = []
+    tp = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
+    vp = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
+    nudge = [0.5/x for x in shape]
+    tp[0][imax[0]] = 0+nudge[imax[0]]
+    tp[0][imax[1]] = 0+nudge[imax[1]]
+    tp[1][imax[0]] = 1-nudge[imax[0]]
+    tp[1][imax[1]] = 0+nudge[imax[1]]
+    tp[2][imax[0]] = 1-nudge[imax[0]]
+    tp[2][imax[1]] = 1-nudge[imax[1]]
+    tp[3][imax[0]] = 0+nudge[imax[0]]
+    tp[3][imax[1]] = 1-nudge[imax[1]]
 
-        tzVals = np.linspace(nudge[ax], 1.0-nudge[ax], slices)
-        vzVals = np.linspace(0, self.data.shape[ax], slices)
-        for i in r:
-            z = tzVals[i]
-            w = vzVals[i]
-            
-            tp[0][ax] = z
-            tp[1][ax] = z
-            tp[2][ax] = z
-            tp[3][ax] = z
-            
-            vp[0][ax] = w
-            vp[1][ax] = w
-            vp[2][ax] = w
-            vp[3][ax] = w
-            
-            # assuming 0-1-2-3 are the BL, BR, TR, TL vertices of a quad
-            for idx in [0, 1, 3, 1, 2, 3]:  # 2 triangles per quad
-                vtx = tuple(vp[idx]) + tuple(tp[idx])
-                vertices.append(vtx)
+    vp[0][imax[0]] = 0
+    vp[0][imax[1]] = 0
+    vp[1][imax[0]] = shape[imax[0]]
+    vp[1][imax[1]] = 0
+    vp[2][imax[0]] = shape[imax[0]]
+    vp[2][imax[1]] = shape[imax[1]]
+    vp[3][imax[0]] = 0
+    vp[3][imax[1]] = shape[imax[1]]
+    slices = shape[ax] * sliceDensity
+    r = list(range(slices))
+    if d == -1:
+        r = r[::-1]
 
-        return vertices
+    vertices = []
+
+    tzVals = np.linspace(nudge[ax], 1.0-nudge[ax], slices)
+    vzVals = np.linspace(0, shape[ax], slices)
+    for i in r:
+        z = tzVals[i]
+        w = vzVals[i]
+
+        tp[0][ax] = z
+        tp[1][ax] = z
+        tp[2][ax] = z
+        tp[3][ax] = z
+
+        vp[0][ax] = w
+        vp[1][ax] = w
+        vp[2][ax] = w
+        vp[3][ax] = w
+
+        # assuming 0-1-2-3 are the BL, BR, TR, TL vertices of a quad
+        for idx in [0, 1, 3, 1, 2, 3]:  # 2 triangles per quad
+            vtx = vp[idx] + tp[idx]
+            vertices.append(vtx)
+
+    return vertices
 
 
 SHADER_LEGACY = {
-    GL.GL_VERTEX_SHADER : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : textwrap.dedent("""
         uniform mat4 u_mvp;
         attribute vec4 a_position;
         attribute vec3 a_texcoord;
@@ -234,19 +253,19 @@ SHADER_LEGACY = {
             gl_Position = u_mvp * a_position;
             v_texcoord = a_texcoord;
         }
-    """,
-    GL.GL_FRAGMENT_SHADER : """
+    """),
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : textwrap.dedent("""
         uniform sampler3D u_texture;
         varying vec3 v_texcoord;
         void main()
         {
             gl_FragColor = texture3D(u_texture, v_texcoord);
         }
-    """,
+    """),
 }
 
 SHADER_CORE = {
-    GL.GL_VERTEX_SHADER : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : textwrap.dedent("""
         uniform mat4 u_mvp;
         in vec4 a_position;
         in vec3 a_texcoord;
@@ -255,8 +274,8 @@ SHADER_CORE = {
             gl_Position = u_mvp * a_position;
             v_texcoord = a_texcoord;
         }
-    """,
-    GL.GL_FRAGMENT_SHADER : """
+    """),
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : textwrap.dedent("""
         #ifdef GL_ES
         precision mediump float;
         precision lowp sampler3D;
@@ -268,5 +287,5 @@ SHADER_CORE = {
         {
             fragColor = texture(u_texture, v_texcoord);
         }
-    """,
+    """),
 }

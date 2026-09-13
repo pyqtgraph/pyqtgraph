@@ -3,7 +3,6 @@ import numpy as np
 from ..MeshData import MeshData
 from .GLMeshItem import GLMeshItem
 from .GLLinePlotItem import GLLinePlotItem
-from OpenGL import GL as ogl
 
 __all__ = ['GLSurfacePlotItem']
 

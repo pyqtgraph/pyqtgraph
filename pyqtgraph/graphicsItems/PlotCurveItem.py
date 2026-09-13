@@ -624,8 +624,6 @@ class PlotCurveItem(GraphicsObject):
 
         profiler("data checks")
 
-        #self.setCacheMode(QtWidgets.QGraphicsItem.CacheMode.NoCache)  ## Disabling and re-enabling the cache works around a bug in Qt 4.6 causing the cached results to display incorrectly
-                                                        ##    Test this bug with test_PlotWidget and zoom in on the animated plot
         self.yData = kwargs['y'].view(np.ndarray)
         self.xData = kwargs['x'].view(np.ndarray)
         

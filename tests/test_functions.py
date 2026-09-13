@@ -102,6 +102,20 @@ def check_interpolateArray(order):
     assert_array_almost_equal(r1, r2)
 
 
+@pytest.mark.parametrize("order", [0, 1])
+def test_interpolateArray_flat(order: int):
+    # Inputing an array with a dimension of length 1 should still
+    # produce a non-zero result
+    data = np.ones((3, 1, 5))
+    x = np.asarray([
+        [[0.,  0.5], [0.,  1.5], [0.,  2.5]],
+        [[1.,  0.5], [1.,  1.5],[1.,  2.5]],
+        [[2.,  0.5],[2.,  1.5],[2.,  2.5]],
+    ])
+    result = pg.interpolateArray(data, x, order=order)
+    assert np.any(result)
+
+
 def test_subArray():
     a = np.array([0, 0, 111, 112, 113, 0, 121, 122, 123, 0, 0, 0, 211, 212, 213, 0, 221, 222, 223, 0, 0, 0, 0])
     b = pg.subArray(a, offset=2, shape=(2,2,3), stride=(10,4,1))
@@ -227,68 +241,69 @@ def test_eq():
     assert not eq(set(range(10)), set(range(9)))
 
 
-@pytest.mark.parametrize("s,suffix,expected", [
+@pytest.mark.parametrize("s,suffix,expected,sep", [
     # usual cases
-    ("100 uV", "V", ("100", "u", "V")),
-    ("100 µV", "V", ("100", "µ", "V")),
-    ("100 μV", "V", ("100", "μ", "V")),
-    ("4.2 nV", None, ("4.2", "n", "V")),
-    ("1.2 m", "m", ("1.2", "", "m")),
-    ("1.2 m", None, ("1.2", "", "m")),
-    ("451 °F", None, ("451", "", "°F")),
-    ("5.0e9", None, ("5.0e9", "", "")),
-    ("2 units", "units", ("2", "", "units")),
+    ("100 uV", "V", ("100", "u", "V"), pg.functions.FLOAT_REGEX_PERIOD),
+    ("100 µV", "V", ("100", "µ", "V"), pg.functions.FLOAT_REGEX_PERIOD),
+    ("100 μV", "V", ("100", "μ", "V"), pg.functions.FLOAT_REGEX_PERIOD),
+    ("4.2 nV", None, ("4.2", "n", "V"), pg.functions.FLOAT_REGEX_PERIOD),
+    ("1.2 m", "m", ("1.2", "", "m"), pg.functions.FLOAT_REGEX_PERIOD),
+    ("1.2 m", None, ("1.2", "", "m"), pg.functions.FLOAT_REGEX_PERIOD),
+    ("451 °F", None, ("451", "", "°F"), pg.functions.FLOAT_REGEX_PERIOD),
+    ("5.0e9", None, ("5.0e9", "", ""), pg.functions.FLOAT_REGEX_PERIOD),
+    ("2 units", "units", ("2", "", "units"), pg.functions.FLOAT_REGEX_PERIOD),
     # siPrefix with explicit empty suffix
-    ("1.2 m", "", ("1.2", "m", "")),
-    ("5.0e-9 M", "", ("5.0e-9", "M", "")),
+    ("1.2 m", "", ("1.2", "m", ""), pg.functions.FLOAT_REGEX_PERIOD),
+    ("5.0e-9 M", "", ("5.0e-9", "M", ""), pg.functions.FLOAT_REGEX_PERIOD),
     # weirder cases that should return the reasonable thing
-    ("4.2 nV", "nV", ("4.2", "", "nV")),
-    ("4.2 nV", "", ("4.2", "n", "")),
-    ("1.2 j", "", ("1.2", "", "")),
-    ("1.2 j", None, ("1.2", "", "j")),
+    ("4.2 nV", "nV", ("4.2", "", "nV"), pg.functions.FLOAT_REGEX_PERIOD),
+    ("4.2 nV", "", ("4.2", "n", ""), pg.functions.FLOAT_REGEX_PERIOD),
+    ("1.2 j", "", ("1.2", "", ""), pg.functions.FLOAT_REGEX_PERIOD),
+    ("1.2 j", None, ("1.2", "", "j"), pg.functions.FLOAT_REGEX_PERIOD),
     # expected error cases
-    ("100 uV", "v", ValueError),
-])
-def test_siParse(s, suffix, expected):
+    ("100 uV", "v", ValueError, pg.functions.FLOAT_REGEX_PERIOD),
+    ("1,2 j", "", ("1,2", "", ""), pg.functions.FLOAT_REGEX_COMMA),
+    ("1,2 j", None, ("1,2", "", "j"), pg.functions.FLOAT_REGEX_COMMA),
+    ("1,2 μV", "V", ("1,2", "μ", "V"), pg.functions.FLOAT_REGEX_COMMA),
+    ("451,5 °F", None, ("451,5", "", "°F"), pg.functions.FLOAT_REGEX_COMMA),
+    (",2 j", None, (",2", "", "j"), pg.functions.FLOAT_REGEX_COMMA),
+    ])
+def test_siParse(s, suffix, expected, sep):
     if isinstance(expected, tuple):
-        assert pg.siParse(s, suffix=suffix) == expected
+        assert pg.siParse(s, suffix=suffix, regex=sep) == expected
     else:
         with pytest.raises(expected):
-            pg.siParse(s, suffix=suffix)
+            pg.siParse(s, suffix=suffix, regex=sep)
 
-@pytest.mark.parametrize("s,suffix,power,expected", [
+
+@pytest.mark.parametrize("s,suffix,power,expected,sep", [
     # usual cases
-    ("100 uV", "V", 1, 1e-4),
-    ("100 µV", "V", 1, 1e-4),
-    ("100 μV", "V", 1, 1e-4),
-    ("4.2 nV", None, 1, 4.2e-9),
-    ("1.2 m", "m", 1, 1.2),
-    ("451 °F", None, 1, 451.0),
+    ("100 uV", "V", 1, 1e-4, pg.functions.FLOAT_REGEX_PERIOD),
+    ("100 µV", "V", 1, 1e-4, pg.functions.FLOAT_REGEX_PERIOD),
+    ("100 μV", "V", 1, 1e-4, pg.functions.FLOAT_REGEX_PERIOD),
+    ("4.2 nV", None, 1, 4.2e-9, pg.functions.FLOAT_REGEX_PERIOD),
+    ("1.2 m", "m", 1, 1.2, pg.functions.FLOAT_REGEX_PERIOD),
+    ("451 °F", None, 1, 451.0, pg.functions.FLOAT_REGEX_PERIOD),
     # siPrefix with explicit empty suffix
-    ("1.2 m", "", 1, 1.2e-3),
-    ("5.0e-9 M", "", 1, 5.0e-3),
+    ("1.2 m", "", 1, 1.2e-3, pg.functions.FLOAT_REGEX_PERIOD),
+    ("5.0e-9 M", "", 1, 5.0e-3, pg.functions.FLOAT_REGEX_PERIOD),
     # weirder cases that should return the reasonable thing    
-    ("4.2 nV", "", 1, 4.2e-9),
-    ("1.2 j", "", 1, 1.2),
-    ("1.2 j", None, 1, 1.2),
+    ("4.2 nV", "", 1, 4.2e-9, pg.functions.FLOAT_REGEX_PERIOD),
+    ("1.2 j", "", 1, 1.2, pg.functions.FLOAT_REGEX_PERIOD),
+    ("1.2 j", None, 1, 1.2, pg.functions.FLOAT_REGEX_PERIOD),
     # cases with power != 1
-    ("100 uV^2", "V^2", 2, 1e-10),
-    ("4.2 nV^2", None, 3, 4.2e-27),
-    ("100.2 um^(1/2)", "m^(1/2)", 0.5, 0.1002),
-    ("100 km^2", "m^2", 2, 1e+8),
+    ("100 uV^2", "V^2", 2, 1e-10, pg.functions.FLOAT_REGEX_PERIOD),
+    ("4.2 nV^2", None, 3, 4.2e-27, pg.functions.FLOAT_REGEX_PERIOD),
+    ("100.2 um^(1/2)", "m^(1/2)", 0.5, 0.1002, pg.functions.FLOAT_REGEX_PERIOD),
+    ("100 km^2", "m^2", 2, 1e+8, pg.functions.FLOAT_REGEX_PERIOD),
+    ("3,14", None, 1, 3.14, pg.functions.FLOAT_REGEX_COMMA),
+    ("3,14 kB", None, 1, 3140.0, pg.functions.FLOAT_REGEX_COMMA),
+    ("5,0e-9 M", "", 1, 5e-3, pg.functions.FLOAT_REGEX_COMMA),
 ])
-def test_siEval(s, suffix, power, expected):
-    result = pg.siEval(s, suffix=suffix, unitPower=power)
+def test_siEval(s, suffix, power, expected, sep):
+    result = pg.siEval(s, suffix=suffix, unitPower=power, regex=sep)
     assert np.isclose(result, expected)
 
-@pytest.mark.parametrize("s,suffix,expected", [
-    ("1,2 j", "", ("1,2", "", "")),
-    ("1,2 j", None, ("1,2", "", "j")),
-    ("1,2 μV", "V", ("1,2", "μ", "V")),
-    ("451,5 °F", None, ("451,5", "", "°F")),
-    (",2 j", None, (",2", "", "j")),])
-def test_siParse_with_comma_as_decimal_separator(s, suffix, expected):
-    assert pg.siParse(s, suffix=suffix, regex=pg.functions.FLOAT_REGEX_COMMA) == expected
 
 def test_CIELab_reconversion():
     color_list = [ pg.Qt.QtGui.QColor('#100235') ] # known problematic values

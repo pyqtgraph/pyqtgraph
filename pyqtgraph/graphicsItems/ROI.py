@@ -186,6 +186,9 @@ class ROI(GraphicsObject):
         
         self.handleSize = 5
         self.invertible = invertible
+
+        if maxBounds is not None:
+            maxBounds = QtCore.QRectF(maxBounds)
         self.maxBounds = maxBounds
         
         self.snapSize = snapSize
@@ -2188,6 +2191,9 @@ class LineSegmentROI(ROI):
         
     def listPoints(self):
         return [p['item'].pos() for p in self.handles]
+
+    def checkPointMove(self, handle, pos, modifiers):
+        return self.resizable
 
     def getState(self):
         state = ROI.getState(self)

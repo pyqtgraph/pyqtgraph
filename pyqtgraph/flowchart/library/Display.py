@@ -180,8 +180,6 @@ class PlotCurve(CtrlNode):
         
         self.item.setData(x, y, pen=self.ctrls['color'].color())
         return {'plot': self.item}
-        
-        
 
 
 class ScatterPlot(CtrlNode):
@@ -200,21 +198,12 @@ class ScatterPlot(CtrlNode):
     ]
     
     def __init__(self, name):
-        CtrlNode.__init__(self, name, terminals={
+        super().__init__(name, terminals={
             'input': {'io': 'in'},
             'plot': {'io': 'out'}
         })
         self.item = ScatterPlotItem()
         self.keys = []
-        
-        #self.ui = QtWidgets.QWidget()
-        #self.layout = QtWidgets.QGridLayout()
-        #self.ui.setLayout(self.layout)
-        
-        #self.xCombo = QtWidgets.QComboBox()
-        #self.yCombo = QtWidgets.QComboBox()
-        
-        
     
     def process(self, input, display=True):
         #print "scatterplot process"
