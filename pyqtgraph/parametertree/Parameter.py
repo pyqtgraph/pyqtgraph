@@ -4,7 +4,7 @@ import weakref
 from collections import OrderedDict
 
 from .. import functions as fn
-from ..Qt import QtCore
+from ..Qt import QtCore, QtGui, QtWidgets
 from .ParameterItem import ParameterItem
 
 PARAM_TYPES = {}
@@ -570,7 +570,7 @@ class Parameter(QtCore.QObject):
         self.sigLimitsChanged.emit(self, limits)
         return limits
 
-    def setIcon(self, icon):
+    def setIcon(self, icon: QtGui.QIcon | QtWidgets.QStyle.StandardPixmap | str | None) -> QtGui.QIcon | QtWidgets.QStyle.StandardPixmap | str | None:
         """Set an icon to be displayed next to this parameter's title.
 
         The icon will appear to the left of the parameter name/title in the ParameterTree.
@@ -595,7 +595,7 @@ class Parameter(QtCore.QObject):
         self.sigOptionsChanged.emit(self, {'icon': icon})
         return icon
 
-    def icon(self):
+    def icon(self) -> QtGui.QIcon | QtWidgets.QStyle.StandardPixmap | str | None:
         """Return the icon for this parameter, or None if no icon is set."""
         return self.opts.get('icon', None)
 
