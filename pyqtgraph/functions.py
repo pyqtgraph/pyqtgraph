@@ -45,18 +45,18 @@ __all__ = [
 
 
 Colors = {
-    'b': QtGui.QColor(0,0,255,255),
-    'g': QtGui.QColor(0,255,0,255),
-    'r': QtGui.QColor(255,0,0,255),
-    'c': QtGui.QColor(0,255,255,255),
-    'm': QtGui.QColor(255,0,255,255),
-    'y': QtGui.QColor(255,255,0,255),
-    'k': QtGui.QColor(0,0,0,255),
-    'w': QtGui.QColor(255,255,255,255),
-    'd': QtGui.QColor(150,150,150,255),
-    'l': QtGui.QColor(200,200,200,255),
-    's': QtGui.QColor(100,100,150,255),
-}  
+    'b': QtGui.QColor("#0000ff"),  # blue        QColor(0,0,255,255)
+    'g': QtGui.QColor("#00ff00"),  # green       QColor(0,255,0,255)
+    'r': QtGui.QColor("#ff0000"),  # red         QColor(255,0,0,255)
+    'c': QtGui.QColor("#00ffff"),  # cyan        QColor(0,255,255,255)
+    'm': QtGui.QColor("#ff00ff"),  # magenta     QColor(255,0,255,255)
+    'y': QtGui.QColor("#ffff00"),  # yellow      QColor(255,255,0,255)
+    'k': QtGui.QColor("#000000"),  # black       QColor(0,0,0,255)
+    'w': QtGui.QColor("#ffffff"),  # white       QColor(255,255,255,255)
+    'd': QtGui.QColor("#969696"),  # dark gray   QColor(150,150,150,255)
+    'l': QtGui.QColor("#c8c8c8"),  # light gray  QColor(200,200,200,255)
+    's': QtGui.QColor("#646496"),  # slate       QColor(100,100,150,255)
+}
 
 SI_PREFIXES = 'yzafpnµm kMGTPEZY'
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
