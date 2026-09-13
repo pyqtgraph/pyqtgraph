@@ -38,7 +38,7 @@ class ParameterControlledButton(QtWidgets.QPushButton):
         if "icon" in opts and "action_icon" not in opts:
             warnings.warn(
                 "The 'icon' option on ActionParameter sets the tree-item icon as of "
-                "pyqtgraph 0.14. Use 'action_icon' to set the button icon instead.",
+                "pyqtgraph 0.15. Use 'action_icon' to set the button icon instead.",
                 DeprecationWarning,
                 stacklevel=4,
             )
