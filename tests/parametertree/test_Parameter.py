@@ -696,6 +696,41 @@ def test_setValue_blockSlots_list_blocks_multiple_slots():
     assert received_c == [1.0, 2.0]
 
 
+def test_setValue_blockSlots_ignores_unconnected_slot():
+    """
+    A callable passed to blockSlots that is not (yet) connected to
+    sigValueChanged must be silently ignored instead of raising, and must
+    not be connected afterward as a side effect.
+    """
+    p = Parameter.create(name="param", type="float", value=0.0)
+
+    received = []
+    unconnected_received = []
+
+    def slot(param, value):
+        received.append(value)
+
+    def unconnected_slot(param, value):
+        unconnected_received.append(value)
+
+    p.sigValueChanged.connect(slot)
+
+    # unconnected_slot was never connected; passing it must not raise
+    p.setValue(1.0, blockSlots=[slot, unconnected_slot])
+
+    assert received == [], "slot must be blocked as requested"
+    assert unconnected_received == [], (
+        "unconnected_slot was never connected, so it must not receive the signal"
+    )
+
+    # slot must be reconnected; unconnected_slot must remain unconnected
+    p.setValue(2.0)
+    assert received == [2.0]
+    assert unconnected_received == [], (
+        "unconnected_slot must not be connected as a side effect of setValue"
+    )
+
+
 def test_setValue_blockSignal_true_suppresses_signal_entirely():
     """
     blockSignal=True must prevent sigValueChanged from being emitted at all,
