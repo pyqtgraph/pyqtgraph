@@ -101,7 +101,7 @@ class RemoteEventHandler:
     def getHandler(cls, pid):
         try:
             return cls.handlers[pid]
-        except:
+        except Exception:
             print(pid, cls.handlers)
             raise
     
@@ -143,7 +143,7 @@ class RemoteEventHandler:
                     self.debugMsg('processRequests: got ClosedError from handleRequest; setting exited=True.')
                     self.exited = True
                     raise
-                except:
+                except Exception:
                     print("Error in process %s" % self.name)
                     sys.excepthook(*sys.exc_info())
                     
@@ -235,7 +235,7 @@ class RemoteEventHandler:
                 if len(fnkwargs) == 0:  ## need to do this because some functions do not allow keyword arguments.
                     try:
                         result = obj(*fnargs)
-                    except:
+                    except Exception:
                         print("Failed to call object %s: %d, %s" % (obj, len(fnargs), fnargs[1:]))
                         raise
                 else:
@@ -273,7 +273,7 @@ class RemoteEventHandler:
                     returnType = 'value'
                     
             exc = None
-        except:
+        except Exception:
             exc = sys.exc_info()
 
             
@@ -290,7 +290,7 @@ class RemoteEventHandler:
                 
                 try:
                     self.replyResult(reqId, result)
-                except:
+                except Exception:
                     sys.excepthook(*sys.exc_info())
                     self.replyError(reqId, *sys.exc_info())
             else:
@@ -317,7 +317,7 @@ class RemoteEventHandler:
         excStr = traceback.format_exception(*exc)
         try:
             self.send(request='error', reqId=reqId, callSync='off', opts=dict(exception=exc[1], excString=excStr))
-        except:
+        except Exception:
             self.send(request='error', reqId=reqId, callSync='off', opts=dict(exception=None, excString=excStr))
     
     def send(self, request, opts=None, reqId=None, callSync='sync', timeout=10, returnType=None, byteData=None, **kwargs):
@@ -425,7 +425,7 @@ class RemoteEventHandler:
             ## double-pickle args to ensure that at least status and request ID get through
             try:
                 optStr = pickle.dumps(opts)
-            except:
+            except Exception:
                 print("====  Error pickling this object:  ====")
                 print(opts)
                 print("=======================================")
