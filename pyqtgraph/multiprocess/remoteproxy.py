@@ -277,7 +277,7 @@ class RemoteEventHandler(object):
                     for part in parts[1:]:
                         result = getattr(result, part)
                 else:
-                    result = map(mod.__getattr__, fromlist)
+                    result = [getattr(mod, name) for name in fromlist]
                 
             elif cmd == 'del':
                 LocalObjectProxy.releaseProxyId(opts['proxyId'])
