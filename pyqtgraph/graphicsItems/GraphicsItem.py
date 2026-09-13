@@ -14,19 +14,19 @@ from ..Qt import QtCore, QtWidgets, isQObjectAlive
 
 # Recipe from https://docs.python.org/3.8/library/collections.html#collections.OrderedDict
 # slightly adapted for Python 3.7 compatibility
-class LRU(OrderedDict):
+class LRU[KT, VT](OrderedDict[KT, VT]):
     'Limit size, evicting the least recently looked-up key when full'
 
-    def __init__(self, maxsize=128, *args, **kwargs):
+    def __init__(self, maxsize: int = 128, *args, **kwargs: VT) -> None:
         self.maxsize = maxsize
         super().__init__(*args, **kwargs)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: KT) -> VT:
         value = super().__getitem__(key)
         self.move_to_end(key)
         return value
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: KT, value: VT) -> None:
         if key in self:
             self.move_to_end(key)
         super().__setitem__(key, value)
