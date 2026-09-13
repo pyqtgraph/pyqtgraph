@@ -425,12 +425,18 @@ class Parameter(QtCore.QObject):
                         f"blockSlots must be a callable or an iterable of "
                         f"callables, got {slot!r}"
                     )
+            disconnected = []
             for slot in slots:
-                self.sigValueChanged.disconnect(slot)
+                try:
+                    self.sigValueChanged.disconnect(slot)
+                except TypeError:
+                    # slot was not connected; nothing to disconnect or reconnect
+                    continue
+                disconnected.append(slot)
             try:
                 self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
             finally:
-                for slot in slots:
+                for slot in disconnected:
                     self.sigValueChanged.connect(slot)
         else:
             self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
