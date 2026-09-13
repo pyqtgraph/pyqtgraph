@@ -28,7 +28,7 @@ class RemoteExceptionWarning(UserWarning):
     """Emitted when a request to a remote object results in an Exception """
     pass
     
-class RemoteEventHandler(object):
+class RemoteEventHandler:
     """
     This class handles communication between two processes. One instance is present on 
     each process and listens for communication from the other process. This enables
@@ -136,14 +136,6 @@ class RemoteEventHandler(object):
             numProcessed = 0
             
             while self.conn.poll():
-                #try:
-                    #poll = self.conn.poll()
-                    #if not poll:
-                        #break
-                #except IOError:  # this can happen if the remote process dies.
-                                ## might it also happen in other circumstances?
-                    #raise ClosedError()
-                        
                 try:
                     self.handleRequest()
                     numProcessed += 1
@@ -151,12 +143,6 @@ class RemoteEventHandler(object):
                     self.debugMsg('processRequests: got ClosedError from handleRequest; setting exited=True.')
                     self.exited = True
                     raise
-                #except IOError as err:  ## let handleRequest take care of this.
-                    #self.debugMsg('  got IOError from handleRequest; try again.')
-                    #if err.errno == 4:  ## interrupted system call; try again
-                        #continue
-                    #else:
-                        #raise
                 except:
                     print("Error in process %s" % self.name)
                     sys.excepthook(*sys.exc_info())
@@ -217,7 +203,6 @@ class RemoteEventHandler(object):
             
             opts = pickle.loads(optStr)
             self.debugMsg("    handleRequest: id=%s opts=%s", reqId, opts)
-            #print os.getpid(), "received request:", cmd, reqId, opts
             returnType = opts.get('returnType', 'auto')
             
             if cmd == 'result':
@@ -281,8 +266,7 @@ class RemoteEventHandler(object):
                 
             elif cmd == 'del':
                 LocalObjectProxy.releaseProxyId(opts['proxyId'])
-                #del self.proxiedObjects[opts['objId']]
-                
+
             elif cmd == 'close':
                 if reqId is not None:
                     result = True
@@ -296,8 +280,7 @@ class RemoteEventHandler(object):
             
         if reqId is not None:
             if exc is None:
-                self.debugMsg("    handleRequest: sending return value for %d: %s", reqId, result) 
-                #print "returnValue:", returnValue, result
+                self.debugMsg("    handleRequest: sending return value for %d: %s", reqId, result)
                 if returnType == 'auto':
                     with self.optsLock:
                         noProxyTypes = self.proxyOptions['noProxyTypes']
@@ -331,7 +314,6 @@ class RemoteEventHandler(object):
         self.send(request='result', reqId=reqId, callSync='off', opts=dict(result=result))
     
     def replyError(self, reqId, *exc):
-        # print("error: %s %s %s" % (self.name, str(reqId), str(exc[1])))
         excStr = traceback.format_exception(*exc)
         try:
             self.send(request='error', reqId=reqId, callSync='off', opts=dict(exception=exc[1], excString=excStr))
@@ -425,9 +407,6 @@ class RemoteEventHandler(object):
             raise ClosedError()
         
         with self.sendLock:
-            #if len(kwargs) > 0:
-                #print "Warning: send() ignored args:", kwargs
-                
             if opts is None:
                 opts = {}
             
@@ -442,9 +421,7 @@ class RemoteEventHandler(object):
             
             if returnType is not None:
                 opts['returnType'] = returnType
-                
-            #print os.getpid(), "send request:", request, reqId, opts
-            
+
             ## double-pickle args to ensure that at least status and request ID get through
             try:
                 optStr = pickle.dumps(opts)
@@ -489,7 +466,6 @@ class RemoteEventHandler(object):
     
     def getResult(self, reqId):
         ## raises NoResultError if the result is not available yet
-        #print self.results.keys(), os.getpid()
         with self.resultLock:
             haveResult = reqId in self.results
         
@@ -508,7 +484,6 @@ class RemoteEventHandler(object):
         if status == 'result': 
             return result
         elif status == 'error':
-            #print ''.join(result)
             exc, excStr = result
             if exc is not None:
                 # PySide6 6.1.0 does an attribute lookup for feature testing
@@ -619,7 +594,7 @@ class RemoteEventHandler(object):
         return LocalObjectProxy(obj)
         
         
-class Request(object):
+class Request:
     """
     Request objects are returned when calling an ObjectProxy in asynchronous mode
     or if a synchronous call has timed out. Use hasResult() to ask whether
@@ -677,7 +652,7 @@ class Request(object):
         
         return self.gotResult
 
-class LocalObjectProxy(object):
+class LocalObjectProxy:
     """
     Used for wrapping local objects to ensure that they are send by proxy to a remote host.
     Note that 'proxy' is just a shorter alias for LocalObjectProxy.
@@ -700,29 +675,25 @@ class LocalObjectProxy(object):
         pid = cls.nextProxyId
         cls.nextProxyId += 1
         cls.proxiedObjects[pid] = obj
-        #print "register:", cls.proxiedObjects
         return pid
-    
+
     @classmethod
     def lookupProxyId(cls, pid):
         return cls.proxiedObjects[pid]
-    
+
     @classmethod
     def releaseProxyId(cls, pid):
         del cls.proxiedObjects[pid]
-        #print "release:", cls.proxiedObjects 
-    
+
     def __init__(self, obj, **opts):
         """
         Create a 'local' proxy object that, when sent to a remote host,
-        will appear as a normal ObjectProxy to *obj*. 
+        will appear as a normal ObjectProxy to *obj*.
         Any extra keyword arguments are passed to proxy._setProxyOptions()
         on the remote side.
         """
         self.processId = os.getpid()
-        #self.objectId = id(obj)
         self.typeStr = repr(obj)
-        #self.handler = handler
         self.obj = obj
         self.opts = opts
         
@@ -749,7 +720,7 @@ def unpickleObjectProxy(processId, proxyId, typeStr, attributes=None, opts=None)
             proxy._setProxyOptions(**opts)
         return proxy
     
-class ObjectProxy(object):
+class ObjectProxy:
     """
     Proxy to an object stored by the remote process. Proxies are created
     by calling Process._import(), Process.transfer(), or by requesting/calling
@@ -890,7 +861,6 @@ class ObjectProxy(object):
         return (unpickleObjectProxy, (self._processId, self._proxyId, self._typeStr, self._attributes))
     
     def __repr__(self):
-        #objRepr = self.__getattr__('__repr__')(callSync='value')
         return "<ObjectProxy for process %d, object 0x%x: %s >" % (self._processId, self._proxyId, self._typeStr)
         
         
@@ -913,7 +883,6 @@ class ObjectProxy(object):
         if opts['deferGetattr'] is True:
             return self._deferredAttr(attr)
         else:
-            #opts = self._getProxyOptions()
             return self._handler.getObjAttr(self, attr, **opts)
     
     def _deferredAttr(self, attr):
