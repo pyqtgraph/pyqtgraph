@@ -4,6 +4,7 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 
+from collections.abc import Sequence
 import decimal
 import math
 import re
@@ -11,7 +12,7 @@ import struct
 import sys
 import warnings
 from collections import OrderedDict
-from typing import TypeAlias, TypedDict
+from typing import Any, Literal, TypedDict, Unpack, overload
 
 import numpy as np
 
@@ -71,28 +72,6 @@ FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE]
 FLOAT_REGEX_PERIOD = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>[^\s\d.,].*))?$')
 
 INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
-
-class HueKeywordArgs(TypedDict):
-    hues: int
-    values: int
-    maxValue: int
-    minValue: int
-    maxHue: int
-    minHue: int
-    sat: int
-    alpha: int
-
-color_like: TypeAlias = (
-    QtGui.QColor 
-    | str 
-    | float
-    | int
-    | tuple[int, int, int]
-    | tuple[int, int, int, int]
-    | tuple[float, float, float]
-    | tuple[float, float, float, float]
-    | tuple[int, HueKeywordArgs]
-)
 
 
 def siScale(x, minVal=1e-25, allowUnicode=True, power:int|float=1):
@@ -304,19 +283,54 @@ def float_regex_for_locale(locale = QtCore.QLocale()) -> re.Pattern:
     else:
         return FLOAT_REGEX_PERIOD
 
+
+class HueKeywordArgs(TypedDict):
+    """Parameters, accepted by :func:`intColor() <pyqtgraph.intColor>`"""
+
+    hues: int
+    values: int
+    maxValue: int
+    minValue: int
+    maxHue: int
+    minHue: int
+    sat: int
+    alpha: int
+
+
+type ColorSpec = (
+    Literal["r", "g", "b", "c", "m", "y", "k", "w"]
+    | str  # '#RGB', '#RGBA', '#RRGGBB', '#RRGGBBAA' or any SVG color name
+    | float  # grey scale, 0.0-1.0
+    | int  # color index (see :func:`intColor() <pyqtgraph.intColor>`)
+    | tuple[int, HueKeywordArgs]  # see :func:`intColor() <pyqtgraph.intColor>`
+    | tuple[int, int, int]  # R, G, B, 0-255
+    | tuple[int, int, int, int]  # R, G, B, A, 0-255
+    | QtGui.QColor
+)
+"""Parameters, accepted by :func:`mkColor() <pyqtgraph.mkColor>`"""
+
+
 class Color(QtGui.QColor):
-    def __init__(self, *args):
+    @overload
+    def __init__(self, c: ColorSpec, /) -> None: ...
+    @overload
+    def __init__(self, r: int, g: int, b: int, a: int = ..., /) -> None: ...
+    def __init__(self, *args: Any) -> None:
         QtGui.QColor.__init__(self, mkColor(*args))
-        
-    def glColor(self):
+
+    def glColor(self) -> tuple[float, float, float, float]:
         """Return (r,g,b,a) normalized for use in opengl"""
         return self.getRgbF()
-        
-    def __getitem__(self, ind):
+
+    def __getitem__(self, ind: int) -> int:
         return (self.red, self.green, self.blue, self.alpha)[ind]()
 
 
-def mkColor(*args) -> QtGui.QColor:
+@overload
+def mkColor(c: ColorSpec, /) -> QtGui.QColor: ...
+@overload
+def mkColor(r: int, g: int, b: int, a: int = ..., /) -> QtGui.QColor: ...
+def mkColor(*args: Any) -> QtGui.QColor:
     """
     Convenience function for constructing QColor from a variety of argument 
     types. Accepted arguments are:
@@ -387,7 +401,13 @@ def mkColor(*args) -> QtGui.QColor:
     return QtGui.QColor(*args)
 
 
-def mkBrush(*args, **kwargs):
+@overload
+def mkBrush(color: ColorSpec) -> QtGui.QBrush: ...
+@overload
+def mkBrush(brush: QtGui.QBrush | None, /) -> QtGui.QBrush: ...
+@overload
+def mkBrush(r: int, g: int, b: int, a: int = ..., /) -> QtGui.QBrush: ...
+def mkBrush(*args: Any, **kwargs: Any) -> QtGui.QBrush:
     """
     | Convenience function for constructing Brush.
     | This function always constructs a solid brush and accepts the same arguments as :func:`mkColor() <pyqtgraph.mkColor>`
@@ -408,6 +428,25 @@ def mkBrush(*args, **kwargs):
     return QtGui.QBrush(mkColor(color))
 
 
+class PenKeywordArgs(TypedDict, total=False):
+    """Keyword parameters, accepted by :func:`mkPen() <pyqtgraph.mkPen>`"""
+
+    color: ColorSpec
+    width: float
+    cosmetic: bool
+    style: QtCore.Qt.PenStyle
+    dash: Sequence[float]
+    hsv: tuple[float, float, float] | tuple[float, float, float, float]
+
+
+@overload
+def mkPen(pen: QtGui.QPen | PenKeywordArgs | None, /) -> QtGui.QPen: ...
+@overload
+def mkPen(c: ColorSpec = ..., /, **kwargs: Unpack[PenKeywordArgs]) -> QtGui.QPen: ...
+@overload
+def mkPen(
+    r: int, g: int, b: int, a: int = ..., /, **kwargs: Unpack[PenKeywordArgs]
+) -> QtGui.QPen: ...
 def mkPen(*args, **kwargs) -> QtGui.QPen:
     """
     Convenience function for constructing QPen. 
@@ -466,7 +505,9 @@ def mkPen(*args, **kwargs) -> QtGui.QPen:
     return pen
 
 
-def hsvColor(hue, sat=1.0, val=1.0, alpha=1.0):
+def hsvColor(
+    hue: float, sat: float = 1.0, val: float = 1.0, alpha: float = 1.0
+) -> QtGui.QColor:
     """Generate a QColor from HSVa values. (all arguments are float 0.0-1.0)"""
     return QtGui.QColor.fromHsvF(hue, sat, val, alpha)
     
@@ -635,7 +676,17 @@ def colorStr(c):
     return ('%02x'*4) % colorTuple(c)
 
 
-def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, minHue=0, sat=255, alpha=255):
+def intColor(
+    index: int,
+    hues: int = 9,
+    values: int = 1,
+    maxValue: int = 255,
+    minValue: int = 150,
+    maxHue: int = 360,
+    minHue: int = 0,
+    sat: int = 255,
+    alpha: int = 255,
+) -> QtGui.QColor:
     """
     Creates a QColor from a single index. Useful for stepping through a predefined list of colors.
     
