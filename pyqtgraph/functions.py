@@ -2286,7 +2286,7 @@ def _pinv_fallback(tr):
     return QtGui.QTransform(*pinv.ravel().tolist())
 
 
-def invertQTransform(tr):
+def invertQTransform(tr: QtGui.QTransform) -> QtGui.QTransform:
     """Return a QTransform that is the inverse of *tr*.
     A pseudo-inverse is returned if tr is not invertible.
     
