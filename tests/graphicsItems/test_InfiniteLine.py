@@ -51,6 +51,34 @@ def test_InfiniteLine():
     assert not br.containsPoint(pos + 3 * px, QtCore.Qt.FillRule.OddEvenFill)
     plt.close()
 
+
+def test_oblique_infinite_line_clips_to_viewbox():
+    plt = pg.PlotWidget()
+    plt.resize(800, 600)
+    plt.show()
+
+    plot = plt.getPlotItem()
+    plot.plot(x=[0, 1], y=[0, 1e8], pen="r")
+    line = pg.InfiniteLine(
+        pos=pg.Point(0, 0),
+        angle=45,
+        pen=pg.mkPen("r", width=2, style=QtCore.Qt.PenStyle.DashLine),
+    )
+    plot.addItem(line)
+
+    QtTest.QTest.qWaitForWindowExposed(plt)
+    QtTest.QTest.qWait(100)
+
+    line.boundingRect()
+    left, right = line._endPoints
+    viewbox = plot.vb
+    viewRect = viewbox.boundingRect().adjusted(-1, -1, 1, 1)
+
+    assert viewRect.contains(line.mapToItem(viewbox, pg.Point(left, 0)))
+    assert viewRect.contains(line.mapToItem(viewbox, pg.Point(right, 0)))
+    plt.close()
+
+
 def test_mouseInteraction():
     # disable delay of mouse move events because events is called immediately in test
     pg.setConfigOption('mouseRateLimit', -1)
