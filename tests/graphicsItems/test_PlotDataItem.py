@@ -238,3 +238,27 @@ def test_downsampling_with_connect():
         assert len(xs) == len(cs)
 
     w.close()
+
+def test_center_step_mode_keeps_extra_x_after_reduction():
+    x = np.arange(1001)
+    y = np.arange(1000)
+
+    for method in ["subsample", "mean", "peak"]:
+        c = pg.PlotDataItem(x, y, stepMode="center")
+        c.setDownsampling(5, method=method)
+        xDisp, yDisp = c.getData()
+        assert len(xDisp) == len(yDisp) + 1
+
+    w = pg.PlotWidget()
+    c = pg.PlotDataItem(x, y, stepMode="center")
+    w.addItem(c)
+    c.setClipToView(True)
+    w.setXRange(100, 200, padding=0)
+    xDisp, yDisp = c.getData()
+    assert len(xDisp) == len(yDisp) + 1
+
+    c.setDownsampling(5, method="peak")
+    xDisp, yDisp = c.getData()
+    assert len(xDisp) == len(yDisp) + 1
+
+    w.close()
