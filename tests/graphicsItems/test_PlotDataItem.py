@@ -45,6 +45,36 @@ def test_fft():
     x, y = pd.getData()
     assert abs(x[np.argmax(y)] - np.log10(f)) < 0.01
 
+def test_fft_auto_downsample_autorange_with_implicit_x():
+    t = np.arange(1000.0)
+    y = np.zeros_like(t)
+    for f in (0.1, 0.2, 0.3, 0.4):
+        y += np.sin(2 * np.pi * f * t)
+
+    w = pg.PlotWidget(autoRange=True)
+    w.resize(640, 480)
+    w.show()
+    plotitem = w.getPlotItem()
+    plotitem.setDownsampling(auto=True)
+    curve = plotitem.plot(y)
+
+    app = pg.mkQApp()
+    app.processEvents()
+    plotitem.vb.updateAutoRange()
+    app.processEvents()
+
+    curve.setFftMode(True)
+    app.processEvents()
+    plotitem.vb.updateAutoRange()
+    app.processEvents()
+
+    x_range, _ = plotitem.vb.viewRange()
+    assert x_range[0] < 0
+    assert x_range[1] > 0.5
+    assert x_range[1] - x_range[0] < 2
+
+    w.close()
+
 def test_setData():
     pdi = pg.PlotDataItem()
 
