@@ -45,3 +45,35 @@ def test_init_with_mode_and_imageitem():
     imgitem = pg.ImageItem(data)
     pg.ImageView(imageItem=imgitem, levelMode="rgba")
     assert(pg.image is not None)
+
+
+def test_set_image_disables_histogram_auto_range_across_frames():
+    data = np.stack((np.arange(100).reshape(10, 10),
+                     np.arange(1000, 1100).reshape(10, 10)))
+    iv = pg.ImageView()
+    iv.setImage(data, autoHistogramRange=False)
+    iv.setHistogramRange(-10, 10, padding=0)
+
+    iv.setCurrentIndex(1)
+
+    assert iv.ui.histogram.getHistogramRange() == [-10, 10]
+    iv.close()
+
+
+def test_set_histogram_auto_range_controls_updates_across_frames():
+    data = np.stack((np.arange(100).reshape(10, 10),
+                     np.arange(1000, 1100).reshape(10, 10)))
+    iv = pg.ImageView()
+    iv.setImage(data)
+    iv.setHistogramRange(-10, 10, padding=0)
+
+    iv.setCurrentIndex(1)
+
+    assert iv.ui.histogram.getHistogramRange() != [-10, 10]
+
+    iv.setHistogramAutoRange(False)
+    iv.setHistogramRange(-10, 10, padding=0)
+    iv.setCurrentIndex(0)
+
+    assert iv.ui.histogram.getHistogramRange() == [-10, 10]
+    iv.close()
