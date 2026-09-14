@@ -223,6 +223,9 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
 
         sample.sigClicked.connect(self.sigSampleClicked)
 
+        if hasattr(item, 'sigPlotChanged'):
+            item.sigPlotChanged.connect(self._itemChanged)
+
         self.items.append((sample, label))
         self._addItemToLayout(sample, label)
         self.updateSize()
@@ -295,6 +298,11 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         for sample, label in self.items:
             if sample.item is item or label.text == item:
+                if hasattr(sample.item, 'sigPlotChanged'):
+                    try:
+                        sample.item.sigPlotChanged.disconnect(self._itemChanged)
+                    except (TypeError, RuntimeError):
+                        pass
                 self.items.remove((sample, label))  # remove from itemlist
                 self._removeItemFromLayout(sample, label)
                 self.updateSize()  # redraw box
@@ -303,6 +311,11 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     def clear(self):
         """Remove all items from the legend."""
         for sample, label in self.items:
+            if hasattr(sample.item, 'sigPlotChanged'):
+                try:
+                    sample.item.sigPlotChanged.disconnect(self._itemChanged)
+                except (TypeError, RuntimeError):
+                    pass
             self._removeItemFromLayout(sample, label)
 
         self.items = []
@@ -343,6 +356,17 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             ev.accept()
             dpos = ev.pos() - ev.lastPos()
             self.autoAnchor(self.pos() + dpos)
+
+
+    def _itemChanged(self, item):
+        for sample, label in self.items:
+            if getattr(sample, 'item', None) is item:
+                sample.update()
+                newName = getattr(item, 'opts', {}).get('name')
+                if newName is not None and label.text != newName:
+                    label.setText(newName)
+                self.updateSize()
+                break
 
     def mouseDoubleClickEvent(self, ev):
         self.sigDoubleClicked.emit(self, ev)
