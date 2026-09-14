@@ -47,7 +47,21 @@ class GraphicsWidgetAnchor(object):
         self.__parentAnchor = parentPos
         self.__offset = offset
         self.__geometryChanged()
-    
+
+    def anchorToOffsetCorner(self, offset):
+        """
+        Anchor the item to its parent at an absolute pixel offset, using
+        whichever corner of the item and parent the offset points toward
+        (e.g. a negative x offset anchors to the right edge). Equivalent to
+        calling :meth:`anchor` with the same itemPos and parentPos, chosen
+        automatically from the sign of ``offset``.
+        """
+        offset = Point(offset)
+        anchorx = 1 if offset[0] <= 0 else 0
+        anchory = 1 if offset[1] <= 0 else 0
+        anchor = (anchorx, anchory)
+        self.anchor(itemPos=anchor, parentPos=anchor, offset=offset)
+
 
     def autoAnchor(self, pos, relative=True):
         """
