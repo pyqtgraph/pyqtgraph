@@ -45,18 +45,18 @@ __all__ = [
 
 
 Colors = {
-    'b': QtGui.QColor(0,0,255,255),
-    'g': QtGui.QColor(0,255,0,255),
-    'r': QtGui.QColor(255,0,0,255),
-    'c': QtGui.QColor(0,255,255,255),
-    'm': QtGui.QColor(255,0,255,255),
-    'y': QtGui.QColor(255,255,0,255),
-    'k': QtGui.QColor(0,0,0,255),
-    'w': QtGui.QColor(255,255,255,255),
-    'd': QtGui.QColor(150,150,150,255),
-    'l': QtGui.QColor(200,200,200,255),
-    's': QtGui.QColor(100,100,150,255),
-}  
+    'b': QtGui.QColor("#0000ff"),  # blue        QColor(0,0,255,255)
+    'g': QtGui.QColor("#00ff00"),  # green       QColor(0,255,0,255)
+    'r': QtGui.QColor("#ff0000"),  # red         QColor(255,0,0,255)
+    'c': QtGui.QColor("#00ffff"),  # cyan        QColor(0,255,255,255)
+    'm': QtGui.QColor("#ff00ff"),  # magenta     QColor(255,0,255,255)
+    'y': QtGui.QColor("#ffff00"),  # yellow      QColor(255,255,0,255)
+    'k': QtGui.QColor("#000000"),  # black       QColor(0,0,0,255)
+    'w': QtGui.QColor("#ffffff"),  # white       QColor(255,255,255,255)
+    'd': QtGui.QColor("#969696"),  # dark gray   QColor(150,150,150,255)
+    'l': QtGui.QColor("#c8c8c8"),  # light gray  QColor(200,200,200,255)
+    's': QtGui.QColor("#646496"),  # slate       QColor(100,100,150,255)
+}
 
 SI_PREFIXES = 'yzafpnµm kMGTPEZY'
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
@@ -387,47 +387,110 @@ def mkColor(*args) -> QtGui.QColor:
     return QtGui.QColor(*args)
 
 
+def _resolveColorArg(args, kwargs, key='color', hsvKey='hsv'):
+    """
+    Resolve a color-like argument the same way for mkPen/mkBrush (and any
+    similar function). Exactly one of the following is used — whichever is
+    highest in this list and was actually given; the rest are ignored
+    entirely, even if also given:
+
+      1. A positional argument — one value, or several forming an
+         (R, G, B, [A]) tuple.
+      2. The `hsvKey` keyword (e.g. ``hsv=(hue, sat, val, [alpha])``),
+         converted via :func:`hsvColor`.
+      3. The `key` keyword (e.g. ``color=``).
+
+    Returns a value ready to pass to :func:`mkColor` (already an actual
+    QColor if it came from `hsvKey`), or None if none of the three were given.
+
+    Warns if more than one of the three was actually given — the lower-
+    priority ones are silently ignored otherwise, which is an easy mistake
+    to miss (e.g. passing both `hsv=` and `color=`, or a positional color
+    alongside `color=`).
+    """
+    hasPositional = len(args) >= 1
+    hsv = kwargs.get(hsvKey, None)
+    color = kwargs.get(key, None)
+    given = [
+        label for label, present in (
+            ('a positional argument', hasPositional),
+            (f'{hsvKey}=', hsv is not None),
+            (f'{key}=', color is not None),
+        ) if present
+    ]
+    if len(given) > 1:
+        warnings.warn(
+            f"Multiple color sources given ({', '.join(given)}); only the "
+            f"highest-priority one (positional > {hsvKey}= > {key}=) is "
+            f"used, the rest are ignored.",
+            UserWarning, stacklevel=3,
+        )
+
+    if len(args) == 1:
+        return args[0]
+    if len(args) > 1:
+        return args
+    if hsv is not None:
+        return hsvColor(*hsv)
+    return color
+
+
 def mkBrush(*args, **kwargs):
     """
-    | Convenience function for constructing Brush.
-    | This function always constructs a solid brush and accepts the same arguments as :func:`mkColor() <pyqtgraph.mkColor>`
-    | Calling mkBrush(None) returns an invisible brush.
+    Convenience function for constructing QBrush.
+
+    Examples::
+
+        mkBrush(color)
+        mkBrush(color, style=QtCore.Qt.BrushStyle.Dense1Pattern)
+        mkBrush(hsv=(0.5, 1, 1))
+        mkBrush({'color': "#FF0", 'style': ...})
+        mkBrush(None)   # invisible (NoBrush)
+
+    In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`.
+    See :func:`_resolveColorArg` for how a positional color, `hsv=`, and `color=` are prioritized against each other.
+    Calling mkBrush() with no usable color argument returns a default brush (mirrors mkPen()).
     """
-    if 'color' in kwargs:
-        color = kwargs['color']
-    elif len(args) == 1:
+    style = kwargs.get('style', None)
+
+    if len(args) == 1:
         arg = args[0]
+        if isinstance(arg, dict):
+            return mkBrush(**arg)
         if arg is None:
             return QtGui.QBrush(QtCore.Qt.BrushStyle.NoBrush)
         elif isinstance(arg, QtGui.QBrush):
-            return QtGui.QBrush(arg)
-        else:
-            color = arg
-    elif len(args) > 1:
-        color = args
-    return QtGui.QBrush(mkColor(color))
+            return QtGui.QBrush(arg)  ## return a copy of this brush
+
+    color = _resolveColorArg(args, kwargs)
+    color = mkColor('l' if color is None else color)
+    brush = QtGui.QBrush(color)
+    if style is not None:
+        brush.setStyle(style)
+    return brush
 
 
 def mkPen(*args, **kwargs) -> QtGui.QPen:
     """
-    Convenience function for constructing QPen. 
-    
+    Convenience function for constructing QPen.
+
     Examples::
-    
+
         mkPen(color)
         mkPen(color, width=2)
         mkPen(cosmetic=False, width=4.5, color='r')
         mkPen({'color': "#FF0", width: 2})
         mkPen(None)   # (no pen)
-    
-    In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`    """
-    color = kwargs.get('color', None)
+        mkPen(hsv=(0.5, 1, 1))
+
+    In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`.
+    See :func:`_resolveColorArg` for how a positional color, `hsv=`, and `color=` are prioritized against each other.
+    """
     width = kwargs.get('width', 1)
     style = kwargs.get('style', None)
     dash = kwargs.get('dash', None)
     cosmetic = kwargs.get('cosmetic', True)
-    hsv = kwargs.get('hsv', None)
-    
+
     if len(args) == 1:
         arg = args[0]
         if isinstance(arg, dict):
@@ -436,18 +499,10 @@ def mkPen(*args, **kwargs) -> QtGui.QPen:
             return QtGui.QPen(arg)  ## return a copy of this pen
         elif arg is None:
             style = QtCore.Qt.PenStyle.NoPen
-        else:
-            color = arg
-    if len(args) > 1:
-        color = args
-        
-    if color is None:
-        color = mkColor('l')
-    if hsv is not None:
-        color = hsvColor(*hsv)
-    else:
-        color = mkColor(color)
-        
+
+    color = _resolveColorArg(args, kwargs)
+    color = mkColor('l' if color is None else color)
+
     pen = QtGui.QPen(QtGui.QBrush(color), width)
     pen.setCosmetic(cosmetic)
     if style is not None:

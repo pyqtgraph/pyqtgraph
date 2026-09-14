@@ -289,6 +289,27 @@ def test_pen_settings():
     assert p.pen.width() == 10
 
 
+def test_brush_settings():
+    # Option from constructor
+    p = pt.Parameter.create(
+        name='test', type='brush', style=QtCore.Qt.BrushStyle.Dense1Pattern, additionalname='test'
+    )
+    assert p.brush.style() == QtCore.Qt.BrushStyle.Dense1Pattern
+    # Opts from dynamic update
+    p.setOpts(style=QtCore.Qt.BrushStyle.SolidPattern)
+    assert p.brush.style() == QtCore.Qt.BrushStyle.SolidPattern
+    # Opts from changing child
+    p["style"] = "Dense1Pattern"
+    assert p.brush.style() == QtCore.Qt.BrushStyle.Dense1Pattern
+    # Color, same three paths
+    p2 = pt.Parameter.create(name='test2', type='brush', color='#ff0000')
+    assert p2.brush.color().name() == '#ff0000'
+    p2.setOpts(color='#00ff00')
+    assert p2.brush.color().name() == '#00ff00'
+    p2["color"] = '#0000ff'
+    assert p2.brush.color().name() == '#0000ff'
+
+
 def test_recreate_from_savestate():
     from pyqtgraph.examples import _buildParamTypes
     created = _buildParamTypes.makeAllParamTypes()

@@ -512,6 +512,46 @@ def test_mkColor(test_input, expected):
     qcol: QtGui.QColor = pg.functions.mkColor(*test_input)
     assert list(qcol.getRgb()) == expected
 
+
+@pytest.mark.parametrize("ctor", [pg.mkPen, pg.mkBrush])
+def test_mkpen_mkbrush_color_arg_priority_single_source(ctor):
+    """mkPen/mkBrush resolve a lone color source (no conflict) identically."""
+    assert ctor('red').color().name() == '#ff0000'
+    assert ctor(color='blue').color().name() == '#0000ff'
+    assert ctor(hsv=(0.0, 1.0, 1.0)).color().name() == '#ff0000'
+
+
+@pytest.mark.parametrize("ctor", [pg.mkPen, pg.mkBrush])
+@pytest.mark.parametrize("kwargs", [
+    dict(color='blue'),
+    dict(hsv=(2 / 3, 1.0, 1.0)),
+])
+def test_mkpen_mkbrush_color_arg_positional_conflict_warns(ctor, kwargs):
+    """A positional color always wins over color=/hsv= given in the same
+    call, but such a call warns since the keyword is silently dropped."""
+    with pytest.warns(UserWarning, match="Multiple color sources"):
+        result = ctor('red', **kwargs)
+    assert result.color().name() == '#ff0000'
+
+
+@pytest.mark.parametrize("ctor", [pg.mkPen, pg.mkBrush])
+def test_mkpen_mkbrush_color_arg_hsv_color_conflict_warns(ctor):
+    """hsv= wins over color= when there's no positional argument, but such
+    a call warns since color= is silently dropped."""
+    with pytest.warns(UserWarning, match="Multiple color sources"):
+        result = ctor(hsv=(0.0, 1.0, 1.0), color='blue')
+    assert result.color().name() == '#ff0000'
+
+
+@pytest.mark.parametrize("ctor", [pg.mkPen, pg.mkBrush])
+def test_mkpen_mkbrush_color_arg_no_conflict_no_warning(ctor, recwarn):
+    """A single color source never triggers the conflict warning."""
+    ctor('red')
+    ctor(color='blue')
+    ctor(hsv=(0.0, 1.0, 1.0))
+    assert len(recwarn) == 0
+
+
 def test_signal_block_unconnected():
     """Test that SignalBlock does not end up connecting an unconnected slot"""
     class Sender(QtCore.QObject):
