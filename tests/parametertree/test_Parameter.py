@@ -592,3 +592,216 @@ def test_interact_existing_parent():
     assert outParam in parent.names.values()
     outParam.activate()
     assert lastValue == 5
+
+
+# ---------------------------------------------------------------------------
+# Tests for Parameter.setValue() blockSignal / blockSlots behaviour
+# (regression for #3305, alternative to #3489)
+# ---------------------------------------------------------------------------
+
+def test_setValue_blockSlots_single_callable_blocks_only_that_slot():
+    """
+    blockSlots=<callable> must temporarily disconnect *only* that slot while
+    still emitting sigValueChanged to every other connected listener.
+    """
+    p = Parameter.create(name="param", type="float", value=0.0)
+
+    blocked_received = []
+    other_received = []
+
+    def blocked_slot(param, value):
+        blocked_received.append(value)
+
+    def other_slot(param, value):
+        other_received.append(value)
+
+    p.sigValueChanged.connect(blocked_slot)
+    p.sigValueChanged.connect(other_slot)
+
+    p.setValue(1.0, blockSlots=blocked_slot)
+
+    assert blocked_received == [], (
+        "Blocked slot must not receive the signal when passed as blockSlots"
+    )
+    assert other_received == [1.0], (
+        "Other connected slots must still receive sigValueChanged"
+    )
+
+    # After the call the slot must be reconnected; next plain setValue fires both
+    p.setValue(2.0)
+    assert blocked_received == [2.0], (
+        "Blocked slot must be reconnected after the setValue call"
+    )
+    assert other_received == [1.0, 2.0]
+
+
+def test_setValue_blockSlots_non_callable_raises_typeerror():
+    """
+    Passing a non-callable (or a list containing one) as blockSlots must
+    raise a clear TypeError instead of failing deep inside Qt's disconnect(),
+    and must not disconnect any of the other, valid slots in the list.
+    """
+    p = Parameter.create(name="param", type="float", value=0.0)
+
+    with pytest.raises(TypeError):
+        p.setValue(1.0, blockSlots="not callable")
+
+    received = []
+
+    def real_slot(param, value):
+        received.append(value)
+
+    p.sigValueChanged.connect(real_slot)
+
+    with pytest.raises(TypeError):
+        p.setValue(2.0, blockSlots=[real_slot, "not callable"])
+
+    # real_slot must still be connected: validation must fail before any
+    # slot in the list gets disconnected
+    p.setValue(3.0)
+    assert received == [3.0]
+
+
+def test_setValue_blockSlots_list_blocks_multiple_slots():
+    """
+    blockSlots accepts a list/tuple of callables, all of which should be
+    disconnected during emission and reconnected afterward.
+    """
+    p = Parameter.create(name="param", type="float", value=0.0)
+
+    received_a, received_b, received_c = [], [], []
+
+    def slot_a(param, value):
+        received_a.append(value)
+
+    def slot_b(param, value):
+        received_b.append(value)
+
+    def slot_c(param, value):
+        received_c.append(value)
+
+    p.sigValueChanged.connect(slot_a)
+    p.sigValueChanged.connect(slot_b)
+    p.sigValueChanged.connect(slot_c)
+
+    p.setValue(1.0, blockSlots=[slot_a, slot_b])
+
+    assert received_a == []
+    assert received_b == []
+    assert received_c == [1.0]
+
+    p.setValue(2.0)
+    assert received_a == [2.0]
+    assert received_b == [2.0]
+    assert received_c == [1.0, 2.0]
+
+
+def test_setValue_blockSlots_ignores_unconnected_slot():
+    """
+    A callable passed to blockSlots that is not (yet) connected to
+    sigValueChanged must be silently ignored instead of raising, and must
+    not be connected afterward as a side effect.
+    """
+    p = Parameter.create(name="param", type="float", value=0.0)
+
+    received = []
+    unconnected_received = []
+
+    def slot(param, value):
+        received.append(value)
+
+    def unconnected_slot(param, value):
+        unconnected_received.append(value)
+
+    p.sigValueChanged.connect(slot)
+
+    # unconnected_slot was never connected; passing it must not raise
+    p.setValue(1.0, blockSlots=[slot, unconnected_slot])
+
+    assert received == [], "slot must be blocked as requested"
+    assert unconnected_received == [], (
+        "unconnected_slot was never connected, so it must not receive the signal"
+    )
+
+    # slot must be reconnected; unconnected_slot must remain unconnected
+    p.setValue(2.0)
+    assert received == [2.0]
+    assert unconnected_received == [], (
+        "unconnected_slot must not be connected as a side effect of setValue"
+    )
+
+
+def test_setValue_blockSignal_true_suppresses_signal_entirely():
+    """
+    blockSignal=True must prevent sigValueChanged from being emitted at all,
+    even when blockSlots is also given.
+    """
+    p = Parameter.create(name="param", type="float", value=0.0)
+
+    received = []
+
+    def slot(param, value):
+        received.append(value)
+
+    p.sigValueChanged.connect(slot)
+
+    p.setValue(99.0, blockSignal=True)
+
+    assert received == [], (
+        "sigValueChanged must not be emitted when blockSignal=True"
+    )
+    # Value must still be stored despite the signal being blocked
+    assert p.value() == 99.0
+
+
+def test_setValue_blockSignal_none_emits_normally():
+    """
+    The default blockSignal=None (falsy) must emit sigValueChanged as usual.
+    """
+    p = Parameter.create(name="param", type="float", value=0.0)
+
+    received = []
+
+    def slot(param, value):
+        received.append(value)
+
+    p.sigValueChanged.connect(slot)
+
+    p.setValue(42.0)          # blockSignal defaults to None
+    p.setValue(43.0, blockSignal=None)
+    p.setValue(44.0, blockSignal=False)
+
+    assert received == [42.0, 43.0, 44.0], (
+        "sigValueChanged must fire for all falsy blockSignal values"
+    )
+
+
+def test_setValue_blockSignal_callable_is_deprecated_but_still_works():
+    """
+    Passing a callable as blockSignal (the old, pre-#3489 usage pattern) must
+    still work for backward compatibility, but must raise a DeprecationWarning
+    and behave the same as passing it via blockSlots.
+    """
+    p = Parameter.create(name="param", type="float", value=0.0)
+
+    blocked_received = []
+    other_received = []
+
+    def blocked_slot(param, value):
+        blocked_received.append(value)
+
+    def other_slot(param, value):
+        other_received.append(value)
+
+    p.sigValueChanged.connect(blocked_slot)
+    p.sigValueChanged.connect(other_slot)
+
+    with pytest.deprecated_call():
+        p.setValue(1.0, blockSignal=blocked_slot)
+
+    assert blocked_received == []
+    assert other_received == [1.0]
+
+    p.setValue(2.0)
+    assert blocked_received == [2.0]
+    assert other_received == [1.0, 2.0]
