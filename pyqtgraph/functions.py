@@ -92,6 +92,7 @@ color_like: TypeAlias = (
     | tuple[int, int, int, int]   # R, G, B, A; 0-255
     | tuple[int, HueKeywordArgs]  # see :func:`intColor() <pyqtgraph.intColor>`
 )
+"""Parameters, accepted by :func:`mkColor() <pyqtgraph.mkColor>`"""
 
 
 def siScale(x, minVal=1e-25, allowUnicode=True, power:int|float=1):
