@@ -6,6 +6,7 @@ import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
 from ...Qt import OpenGLConstants as GLC
+from ...Qt import OpenGLHelpers
 from ...Qt.OpenGLHelpers import upload_vbo
 from ..GLGraphicsItem import GLGraphicsItem
 
@@ -89,44 +90,21 @@ class GLScatterPlotItem(GLGraphicsItem):
         self.pxMode = kwargs.get('pxMode', self.pxMode)
         self.update()
 
-    def shaderProgram(self, *, shaders_cache):
+    def shaderProgram(self, view):
         klass = self.__class__
         cache_key = f'{klass.__module__}.{klass.__qualname__}'
-        if (program := shaders_cache.get(cache_key)) is not None:
-            return program
 
-        ctx = QtGui.QOpenGLContext.currentContext()
-        fmt = ctx.format()
+        shaders_cache = self.shadersCache(view=view)
 
-        if ctx.isOpenGLES():
-            if fmt.version() >= (3, 0):
-                glsl_version = "#version 300 es\n"
-                sources = SHADER_CORE
-            else:
-                glsl_version = "#version 100\n"
-                sources = SHADER_LEGACY
-        else:
-            if fmt.version() >= (3, 1):
-                glsl_version = "#version 140\n"
-                sources = SHADER_CORE
-            else:
-                glsl_version = "#version 120\n"
-                sources = SHADER_LEGACY
+        if (program := shaders_cache.get(cache_key)) is None:
+            program = OpenGLHelpers.compile_and_link(
+                view.context(),
+                sources_core=SHADER_CORE,
+                sources_legacy=SHADER_LEGACY,
+                attributes=dict(a_position=0, a_color=1, a_size=2),
+            )
+            shaders_cache[cache_key] = program
 
-        program = QtOpenGL.QOpenGLShaderProgram()
-        for shader_type, src in sources.items():
-            if not program.addShaderFromSourceCode(shader_type, glsl_version + src):
-                raise RuntimeError(program.log())
-
-        # bind generic vertex attribs 0, 1 and 2 to "a_position", "a_color"
-        # and "a_size" so that they definitely get enabled later.
-        program.bindAttributeLocation("a_position", 0)
-        program.bindAttributeLocation("a_color", 1)
-        program.bindAttributeLocation("a_size", 2)
-        if not program.link():
-            raise RuntimeError(program.log())
-
-        shaders_cache[cache_key] = program
         return program
 
     def paint(self):
@@ -162,8 +140,7 @@ class GLScatterPlotItem(GLGraphicsItem):
 
             glfn.glEnable(GLC.GL_PROGRAM_POINT_SIZE)
 
-        shaders_cache = self.shadersCache(view=view)
-        program = self.shaderProgram(shaders_cache=shaders_cache)
+        program = self.shaderProgram(view)
 
         enabled_locs = []
 

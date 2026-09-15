@@ -240,23 +240,8 @@ class Shader:
     def shaderType(self) -> QtOpenGL.QOpenGLShader.ShaderTypeBit:
         return self._shaderType
 
-    def sourceCode(self, *, es2_compat=False) -> str:
-        """Return the source code for this shader, optionally modified for ES2 compatibility."""
-        source = self._sourceCode
-        if es2_compat and not source.lstrip().startswith("#version"):
-            # we know that macOS OpenGL 4.1 Core has ARB_ES2_compatibility,
-            # so we can get it to run legacy shaders by marking the
-            # shaders as ES2.
-            # The explicit #undefs counteract QOpenGLShader::compileSourceCode,
-            # which predefines lowp/mediump/highp as empty macros when compiling
-            # for desktop OpenGL; that would mangle the precision statements
-            # inside "#ifdef GL_ES" blocks activated by "#version 100".
-            source = (
-                "#version 100\n"
-                "#undef lowp\n#undef mediump\n#undef highp\n"
-                + source
-            )
-        return source
+    def sourceCode(self) -> str:
+        return self._sourceCode
 
 class VertexShader(Shader):
     def __init__(self, sourceCode):
@@ -290,23 +275,5 @@ class ShaderProgram:
 
     def __delitem__(self, item):
         self.setUniformData(item, None)
-
-    def compile_and_link(self, *, es2_compat=False) -> QtOpenGL.QOpenGLShaderProgram:
-        program = QtOpenGL.QOpenGLShaderProgram()
-        for shader in self.shaders:
-            if not program.addShaderFromSourceCode(shader.shaderType(), shader.sourceCode(es2_compat=es2_compat)):
-                raise RuntimeError("Shader compile failure:\n%s" % program.log())
-
-        # for reasons that may vary across drivers, having vertex attribute
-        # array generic location 0 enabled (glEnableVertexAttribArray(0)) is
-        # required for rendering to take place.
-        # this only becomes an issue if we are using glVertexAttrib{1,4}f
-        # because that's when we *don't* call glEnableVertexAttribArray.
-        # since we always need vertex coordinates to come from arrays, it is
-        # sufficient for us to bind "a_position" explicitly to 0.
-        program.bindAttributeLocation("a_position", 0)
-        if not program.link():
-            raise RuntimeError("Program link failure:\n%s" % program.log())
-        return program
 
 initShaders()

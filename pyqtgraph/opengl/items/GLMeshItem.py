@@ -120,19 +120,26 @@ class GLMeshItem(GLGraphicsItem):
     def shader(self):
         return self._shaderProgram
 
-    def shaderProgram(self, shader_program, *, shaders_cache, es2_compat):
+    def shaderProgram(self, view, shader_program):
         name = shader_program.name
         klass = self.__class__
         cache_key = f'{klass.__module__}.{klass.__qualname__}.{name}'
 
-        # try to get from GLViewWidget cache if possible
-        if (program := shaders_cache.get(cache_key)) is not None:
-            return program
+        sources = { sp.shaderType() : sp.sourceCode() for sp in shader_program.shaders }
 
-        program = shader_program.compile_and_link(es2_compat=es2_compat)
-        shaders_cache[cache_key] = program
+        shaders_cache = self.shadersCache(view=view)
+
+        if (program := shaders_cache.get(cache_key)) is None:
+            program = OpenGLHelpers.compile_and_link(
+                view.context(),
+                sources_core=None,
+                sources_legacy=sources,
+                attributes=dict(a_position=0),
+            )
+            shaders_cache[cache_key] = program
+
         return program
-        
+
     def setColor(self, c):
         """Set the default color to use when no vertex or face colors are specified."""
         self.opts['color'] = c
@@ -263,7 +270,6 @@ class GLMeshItem(GLGraphicsItem):
 
         self.setupGLState(context=context)
 
-        es2_compat = context.hasExtension(b'GL_ARB_ES2_compatibility')
         NULL = compat.voidptr(0) if QT_LIB.startswith('PySide') else None
 
         if self.opts['polygonOffset']:
@@ -275,11 +281,10 @@ class GLMeshItem(GLGraphicsItem):
 
         mat_mvp = self.mvpMatrix(view=view)
         mat_normal = self.modelViewMatrix(view=view).normalMatrix()
-        shaders_cache = self.shadersCache(view=view)
 
         if self.opts['drawFaces'] and self.vertexes is not None:
             shader_program = self.shader()
-            program = self.shaderProgram(shader_program, shaders_cache=shaders_cache, es2_compat=es2_compat)
+            program = self.shaderProgram(view, shader_program)
 
             enabled_locs = []
 
@@ -355,7 +360,7 @@ class GLMeshItem(GLGraphicsItem):
 
         if self.opts['drawEdges']:
             shader_program = shaders.getShaderProgram("default")
-            program = self.shaderProgram(shader_program, shaders_cache=shaders_cache, es2_compat=es2_compat)
+            program = self.shaderProgram(view, shader_program)
 
             enabled_locs = []
 
