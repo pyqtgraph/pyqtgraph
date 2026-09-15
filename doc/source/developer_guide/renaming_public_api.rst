@@ -2,7 +2,7 @@ Renaming a public class or function
 ====================================
 
 PyQtGraph is gradually cleaning up inconsistent naming across its public
-API (see `issue #3628 <https://github.com/pyqtgraph/pyqtgraph/issues/3628>`_).
+API.
 Renaming something that users may already import means the old name has to
 keep working - with a ``DeprecationWarning`` - until it's removed in a
 future release.
