@@ -83,15 +83,13 @@ class HueKeywordArgs(TypedDict):
     alpha: int
 
 color_like: TypeAlias = (
-    QtGui.QColor 
-    | str 
-    | float
-    | int
-    | tuple[int, int, int]
-    | tuple[int, int, int, int]
-    | tuple[float, float, float]
-    | tuple[float, float, float, float]
-    | tuple[int, HueKeywordArgs]
+    QtGui.QColor
+    | str    # '#RGB', '#RGBA', '#RRGGBB', '#RRGGBBAA' or any SVG color name
+    | float  # grey scale; 0.0-1.0
+    | int    # color index; see :func:`intColor() <pyqtgraph.intColor>`
+    | tuple[int, int, int]        # R, G, B; 0-255
+    | tuple[int, int, int, int]   # R, G, B, A; 0-255
+    | tuple[int, HueKeywordArgs]  # see :func:`intColor() <pyqtgraph.intColor>`
 )
 
 
