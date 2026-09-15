@@ -11,7 +11,7 @@ from .LabelItem import LabelItem
 from .PlotDataItem import PlotDataItem
 from .ScatterPlotItem import ScatterPlotItem, drawSymbol
 
-__all__ = ['LegendItem', 'ItemSample']
+__all__ = ['LegendItem', 'SampleItem']
 
 
 class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
@@ -87,7 +87,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
                                    "are allowed as `sampleType`")
             self.sampleType = sampleType
         else:
-            self.sampleType = ItemSample
+            self.sampleType = SampleItem
 
         self.opts = {
             'pen': fn.mkPen(pen),
@@ -209,7 +209,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         **Arguments:**
         item            A :class:`~pyqtgraph.PlotDataItem` from which the line
                         and point style of the item will be determined or an
-                        instance of ItemSample (or a subclass), allowing the
+                        instance of SampleItem (or a subclass), allowing the
                         item display to be customized.
         title           The title to display for this item. Simple HTML allowed.
         ==============  ========================================================
@@ -349,7 +349,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         ev.accept()
 
 
-class ItemSample(GraphicsWidget):
+class SampleItem(GraphicsWidget):
     """Class responsible for drawing a single item in a LegendItem (sans label)
     """
 
@@ -408,4 +408,10 @@ class ItemSample(GraphicsWidget):
         event.accept()
         self.update()
         self.sigClicked.emit(self.item)
+
+
+from .._deprecated_names import RENAMED_SYMBOLS
+from .._deprecation import renamed_attr_getattr
+
+__getattr__ = renamed_attr_getattr(__name__, RENAMED_SYMBOLS)
 
