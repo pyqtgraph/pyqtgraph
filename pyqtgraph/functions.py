@@ -11,7 +11,7 @@ import struct
 import sys
 import warnings
 from collections import OrderedDict
-from typing import Literal, TypeAlias, TypedDict
+from typing import Literal, TypedDict
 
 import numpy as np
 
@@ -82,7 +82,7 @@ class HueKeywordArgs(TypedDict):
     sat: int
     alpha: int
 
-color_like: TypeAlias = (
+type color_like = (
     QtGui.QColor
     | Literal["r", "g", "b", "c", "m", "y", "k", "w", "d", "l", "s"]  # see `Colors`
     | str    # '#RGB', '#RGBA', '#RRGGBB', '#RRGGBBAA' or any SVG color name
