@@ -11,7 +11,7 @@ import struct
 import sys
 import warnings
 from collections import OrderedDict
-from typing import TypeAlias, TypedDict
+from typing import Literal, TypedDict
 
 import numpy as np
 
@@ -82,17 +82,17 @@ class HueKeywordArgs(TypedDict):
     sat: int
     alpha: int
 
-color_like: TypeAlias = (
-    QtGui.QColor 
-    | str 
-    | float
-    | int
-    | tuple[int, int, int]
-    | tuple[int, int, int, int]
-    | tuple[float, float, float]
-    | tuple[float, float, float, float]
-    | tuple[int, HueKeywordArgs]
+type color_like = (
+    QtGui.QColor
+    | Literal["r", "g", "b", "c", "m", "y", "k", "w", "d", "l", "s"]  # see `Colors`
+    | str    # '#RGB', '#RGBA', '#RRGGBB', '#RRGGBBAA' or any SVG color name
+    | float  # grey scale; 0.0-1.0
+    | int    # color index; see :func:`intColor() <pyqtgraph.intColor>`
+    | tuple[int, int, int]        # R, G, B; 0-255
+    | tuple[int, int, int, int]   # R, G, B, A; 0-255
+    | tuple[int, HueKeywordArgs]  # see :func:`intColor() <pyqtgraph.intColor>`
 )
+"""Parameters, accepted by :func:`mkColor() <pyqtgraph.mkColor>`"""
 
 
 def siScale(x, minVal=1e-25, allowUnicode=True, power:int|float=1):
