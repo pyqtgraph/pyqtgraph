@@ -87,6 +87,7 @@ class GLMeshItem(GLGraphicsItem):
         self.m_ibo_faces = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.IndexBuffer)
         self.m_vbo_edgeVerts = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
         self.m_ibo_edges = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.IndexBuffer)
+        self.dirty_bits = DirtyFlag(0)
 
         self._glUniform1fv = None
 
@@ -98,9 +99,16 @@ class GLMeshItem(GLGraphicsItem):
         self.m_vbo_edgeVerts.destroy()
         self.m_ibo_edges.destroy()
 
-        self._glUniform1fv = None
+        self.dirty_bits = (
+            DirtyFlag.POSITION   |
+            DirtyFlag.NORMAL     |
+            DirtyFlag.COLOR      |
+            DirtyFlag.FACES      |
+            DirtyFlag.EDGE_VERTS |
+            DirtyFlag.EDGES
+        )
 
-        self.meshDataChanged()
+        self._glUniform1fv = None
 
     def setShader(self, shader):
         """Set the shader used when rendering faces in the mesh. (see the GL shaders example)"""
@@ -276,8 +284,9 @@ class GLMeshItem(GLGraphicsItem):
             glfn.glEnable(GLC.GL_POLYGON_OFFSET_FILL)
             glfn.glPolygonOffset(1.0, 1.0)
 
-        if (dirty_bits := self.parseMeshData()):
-            self.upload_vertex_buffers(dirty_bits)
+        self.dirty_bits |= self.parseMeshData()
+        self.upload_vertex_buffers(self.dirty_bits)
+        self.dirty_bits = DirtyFlag(0)
 
         mat_mvp = self.mvpMatrix(view=view)
         mat_normal = self.modelViewMatrix(view=view).normalMatrix()
