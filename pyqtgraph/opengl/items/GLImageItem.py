@@ -22,9 +22,7 @@ class GLImageItem(GLGraphicsItem):
     
     Displays image data as a textured quad.
     """
-    
-    _shaderProgram = None
-    
+
     def __init__(self, data, smooth=False, glOptions='translucent', parentItem=None):
         """
         ==============  =======================================================================================
@@ -36,15 +34,20 @@ class GLImageItem(GLGraphicsItem):
         """
         
         super().__init__()
-        OpenGLHelpers.suppress_texture_warning()
         self.setGLOptions(glOptions)
         self.smooth = smooth
+        self.data = None
         self.m_texture = QtOpenGL.QOpenGLTexture(QtOpenGL.QOpenGLTexture.Target.Target2D)
         self.m_vbo_position = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
         self.dirty_bits = DirtyFlag(0)
         self.dirty_bits |= DirtyFlag.POSITION
         self.setParentItem(parentItem)
         self.setData(data)
+
+    def cleanupGL(self):
+        self.m_texture.destroy()
+        self.m_vbo_position.destroy()
+        self.dirty_bits = DirtyFlag.POSITION | DirtyFlag.TEXTURE
 
     def setData(self, data):
         self.data = data
@@ -82,52 +85,38 @@ class GLImageItem(GLGraphicsItem):
             QtOpenGL.QOpenGLTexture.PixelType.UInt8,
             data)
 
-    @staticmethod
-    def getShaderProgram():
-        klass = GLImageItem
+    def shaderProgram(self, view):
+        klass = self.__class__
+        cache_key = f'{klass.__module__}.{klass.__qualname__}'
 
-        if klass._shaderProgram is not None:
-            return klass._shaderProgram
+        shaders_cache = self.shadersCache(view=view)
 
-        ctx = QtGui.QOpenGLContext.currentContext()
-        fmt = ctx.format()
+        if (program := shaders_cache.get(cache_key)) is None:
+            program = OpenGLHelpers.compile_and_link(
+                view.context(),
+                sources_core=SHADER_CORE,
+                sources_legacy=SHADER_LEGACY,
+                attributes=dict(a_position=0, a_texcoord=1),
+            )
+            shaders_cache[cache_key] = program
 
-        if ctx.isOpenGLES():
-            if fmt.version() >= (3, 0):
-                glsl_version = "#version 300 es\n"
-                sources = SHADER_CORE
-            else:
-                glsl_version = ""
-                sources = SHADER_LEGACY
-        else:
-            if fmt.version() >= (3, 1):
-                glsl_version = "#version 140\n"
-                sources = SHADER_CORE
-            else:
-                glsl_version = ""
-                sources = SHADER_LEGACY
-
-        program = QtOpenGL.QOpenGLShaderProgram()
-        for shader_type, src in sources.items():
-            if not program.addShaderFromSourceCode(shader_type, glsl_version + src):
-                raise RuntimeError(program.log())
-
-        program.bindAttributeLocation("a_position", 0)
-        program.bindAttributeLocation("a_texcoord", 1)
-        if not program.link():
-            raise RuntimeError(program.log())
-
-        klass._shaderProgram = program
         return program
 
     def paint(self):
-        self.setupGLState()
+        if self.data is None:
+            return
 
-        mat_mvp = self.mvpMatrix()
+        if (view := self.view()) is None:
+            return
+        context = view.context()
+        glfn = self.glFunctions(context)
+
+        self.setupGLState(context=context)
+
+        mat_mvp = self.mvpMatrix(view=view)
         x, y = self.data.shape[:2]
         mat_mvp.scale(x, y)
 
-        glfn = self.glFunctions()
 
         if DirtyFlag.POSITION in self.dirty_bits:
             pos = np.array([
@@ -141,7 +130,7 @@ class GLImageItem(GLGraphicsItem):
             self._updateTexture()
         self.dirty_bits = DirtyFlag(0)
 
-        program = self.getShaderProgram()
+        program = self.shaderProgram(view)
         loc_pos, loc_tex = 0, 1
         self.m_vbo_position.bind()
         program.setAttributeBuffer(loc_pos, GLC.GL_UNSIGNED_BYTE, 0*1, 2, 4*1)
