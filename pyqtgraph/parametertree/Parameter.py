@@ -1,8 +1,11 @@
+from contextlib import contextmanager
 import re
+from typing import Any
 import warnings
 import weakref
 from collections import OrderedDict
 
+from .enums import ParameterChangeType
 from .. import functions as fn
 from ..Qt import QtCore
 from .ParameterItem import ParameterItem
@@ -878,7 +881,6 @@ class Parameter(QtCore.QObject):
         self.opts['visible'] = s
         self.sigOptionsChanged.emit(self, {'visible': s})
 
-
     def treeChangeBlocker(self):
         """
         Return an object that can be used to temporarily block and accumulate
@@ -932,6 +934,87 @@ class Parameter(QtCore.QObject):
             self.treeStateChanges = []
             if len(changes) > 0:
                 self.sigTreeStateChanged.emit(self, changes)
+
+    @contextmanager
+    def atomic_change(self,
+                      change_type: ParameterChangeType | str = None,
+                      value: Any = None,
+                      emitter: 'Parameter' = None):
+        """
+        Context manager to perform multiple structural or value updates on a parameter
+        (or its children) while completely suppressing intermediate cascading signals.
+
+        Upon exiting the context, a single unified change signal is manually
+        emitted using the designated emitter Parameter object.
+
+        Parameters
+        ----------
+        change_type : ParameterChangeType or str, optional
+            The change type string to put in the emitted event tuple.
+            If None, it automatically detects 'value' or 'limits' changes.
+        value : any, optional
+            The value payload to emit. If None and change_type is 'value',
+            self.value() will be used automatically.
+        emitter : Parameter, optional
+            The specific Parameter instance to emit the signal from.
+            If None, it defaults to the absolute root parameter of the tree.
+
+        Example
+        -------
+            with param.atomic_change(ParameterChangeType.VALUE):
+                param.setLimits(['New A', 'New B'])
+                param.setValue('New A')
+        """
+        # 1. Walk up to the root parameter using parent()
+        root = self
+        while root.parent() is not None:
+            root = root.parent()
+
+        # Set default emitter target to root if not explicitly provided
+        if emitter is None:
+            emitter = root
+
+        # Store the initial state to allow automatic detection at the end
+        old_value = self.value()
+        old_limits = self.opts.get('limits', None)
+
+        # 2. Globally block tree-wide signals at the root level
+        root.blockTreeChangeSignal()
+
+        try:
+            yield
+
+            # 3. Clear the queue of transient/garbage events accumulated by Qt widgets
+            root.treeStateChanges = []
+        finally:
+            # 4. Always guarantee unblocking the tree even if an exception occurs
+            root.unblockTreeChangeSignal()
+
+        # 5. Smart automatic detection if no custom change type was requested
+        if change_type is None:
+            new_limits = self.opts.get('limits', None)
+
+            if old_value != self.value():
+                resolved_type = "value"
+                resolved_value = self.value() if value is None else value
+            elif old_limits != new_limits:
+                resolved_type = "limits"
+                resolved_value = new_limits if value is None else value
+            else:
+                resolved_type = "value"
+                resolved_value = self.value() if value is None else value
+        else:
+            # Accept both ParameterChangeType Enum or a raw string for custom events
+            resolved_type = change_type.value if hasattr(change_type, 'value') else str(change_type)
+
+            if value is None and resolved_type == "value":
+                resolved_value = self.value()
+            else:
+                resolved_value = value
+
+        # 6. Manually dispatch exactly one stabilized signal from the designated emitter
+        if hasattr(emitter, 'sigTreeStateChanged'):
+            emitter.sigTreeStateChanged.emit(emitter, [(self, resolved_type, resolved_value)])
 
 
 class SignalBlocker(object):
