@@ -592,3 +592,168 @@ def test_interact_existing_parent():
     assert outParam in parent.names.values()
     outParam.activate()
     assert lastValue == 5
+
+
+class TestChangeTransaction:
+    def setup_method(self):  # fixture kind method, called before each test method
+        """
+        Builds a multi-level testing fixture hierarchy imitating complex tree profiles.
+        Structure: Root -> Sub-Group -> list_param
+        """
+        self.params_config = [
+            {
+                'name': 'Sub-Group',
+                'type': 'group',
+                'children': [
+                    {
+                        'name': 'list_param',
+                        'type': 'list',
+                        'limits': ['item_1', 'item_2'],
+                        'value': 'item_1'
+                    }
+                ]
+            }
+        ]
+
+        # Instantiate a clean parameter tree for each test execution path
+        self.root = Parameter.create(name='Root', type='group', children=self.params_config)
+        self.sub_group = self.root.child('Sub-Group')
+        self.list_param = self.sub_group.child('list_param')
+
+        # Isolated tracking history containers
+        self.root_history = []
+        self.sub_group_history = []
+
+        # Connect independent callbacks to test routing separation
+        self.root.sigTreeStateChanged.connect(self._track_root_signals)
+        self.sub_group.sigTreeStateChanged.connect(self._track_sub_group_signals)
+
+    def _track_root_signals(self, _, changes):
+        """Private tracker helper for root events."""
+        self.root_history.append(changes)
+
+    def _track_sub_group_signals(self, _, changes):
+        """Private tracker helper for local sub-group events."""
+        self.sub_group_history.append(changes)
+
+    def test_native_cascading_baseline(self):
+        """Verify that sequential raw parameter modifications always trigger multiple separate signals."""
+        self.list_param.setLimits(['item_x', 'item_y'])
+        self.list_param.setValue('item_y')
+
+        # Unmanaged updating creates exactly three separate signal logs on both listeners
+        # (one for limit, one for x value (changed upon limits changed) and one for y value)
+        #
+        assert len(self.root_history) == 3
+        assert len(self.sub_group_history) == 3
+
+    def test_transaction_single_emission(self):
+        """Verify that multiple updates inside a change_transaction emit exactly one clean signal block."""
+        with self.list_param.change_transaction():
+            self.list_param.setLimits(['final_1', 'final_2', 'final_3'])
+            self.list_param.setValue('final_2')
+
+        # The default transaction block delivers exactly one commit event package to the root
+        assert len(self.root_history) == 1
+        fired_changes = self.root_history[0]
+
+        # Extract and check single change content integrity
+        assert len(fired_changes) == 1
+        param, change_type, value = fired_changes[0]
+        assert param == self.list_param
+        assert change_type == "value"
+        assert value == "final_2"
+
+    def test_transaction_silent_mode_root_only(self):
+        """Verify that opening the block with emit_signal=False completely prevents all notification alerts."""
+        with self.list_param.change_transaction(emit_signal=False):
+            self.list_param.setLimits(['silent_a', 'silent_b'])
+            self.list_param.setValue('silent_b')
+
+        # History log containers must remain completely empty throughout the silent process
+        assert len(self.root_history) == 0
+        assert len(self.sub_group_history) == 3
+        assert self.list_param.value() == 'silent_b'
+
+    def test_transaction_silent_mode_root_and_emitter(self):
+        """Verify that opening the block with emit_signal=False completely prevents all notification alerts."""
+        with self.list_param.change_transaction(emit_signal=False,
+                                                emitter=self.sub_group):
+            self.list_param.setLimits(['silent_a', 'silent_b'])
+            self.list_param.setValue('silent_b')
+
+        # History log containers must remain completely empty throughout the silent process
+        assert len(self.root_history) == 0
+        assert len(self.sub_group_history) == 0
+        assert self.list_param.value() == 'silent_b'
+
+    def test_transaction_custom_emitter_routing(self):
+        """
+        Verify that explicitly designating a specific sub-group as the emitter
+        correctly routes the single final notification up the tree, keeping the
+        root tree isolated from intermediate transient garbage.
+        """
+        # We explicitly target the local sub_group instead of letting it default to root
+        with self.list_param.change_transaction(emitter=self.sub_group):
+            self.list_param.setLimits(['route_1', 'route_2'])
+            self.list_param.setValue('route_2')
+
+        # Due to native parameter tree bubbling, the root safely catches exactly ONE final signal
+        assert len(self.root_history) == 1
+        root_fired_changes = self.root_history[0]
+        assert len(root_fired_changes) == 1
+
+        # Verify the root content is the clean final value
+        r_param, r_change, r_value = root_fired_changes[0]
+        assert r_param == self.list_param
+        assert r_change == "value"
+        assert r_value == "route_2"
+
+        # The local sub_group listener must also capture exactly ONE signal
+        assert len(self.sub_group_history) == 1
+        sub_fired_changes = self.sub_group_history[0]
+        assert len(sub_fired_changes) == 1
+
+        # Verify the sub_group content matches perfectly
+        param, change_type, value = sub_fired_changes[0]
+        assert param == self.list_param
+        assert change_type == "value"
+        assert value == "route_2"
+
+    def test_transaction_child_added(self):
+        """Verify that adding a child parameter inside a transaction block can dispatch a clean custom signal."""
+        new_child = Parameter.create(name='dynamic_int', type='int', value=0)
+
+        with self.sub_group.change_transaction(change_type='childAdded', value=new_child):
+            self.sub_group.addChild(new_child)
+
+        assert len(self.root_history) == 1
+        param, change_type, value = self.root_history[0][0]
+        assert param == self.sub_group
+        assert change_type == "childAdded"
+        assert value == new_child
+
+    def test_transaction_name_changed(self):
+        """Verify that forcing a name change update inside a transaction works with a custom change string."""
+        with self.list_param.change_transaction(change_type='name', value='renamed_list_param'):
+            self.list_param.setName('renamed_list_param')
+            self.list_param.setValue('another value not catched')
+
+        assert len(self.root_history) == 1
+        param, change_type, value = self.root_history[0][0]
+        assert param == self.list_param
+        assert change_type == "name"
+        assert value == "renamed_list_param"
+
+    def test_transaction_options_changed(self):
+        """Verify that grouping multiple setOpts modifications can be tracked cleanly under a custom options transaction."""
+        custom_opts = {'visible': False, 'readonly': True}
+
+        with self.list_param.change_transaction(change_type='options', value=custom_opts):
+            self.list_param.setOpts(visible=False, readonly=True)
+
+        assert len(self.root_history) == 1
+        param, change_type, value = self.root_history[0][0]
+        assert param == self.list_param
+        assert change_type == "options"
+        assert value == custom_opts

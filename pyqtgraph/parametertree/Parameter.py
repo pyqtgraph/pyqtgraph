@@ -936,16 +936,18 @@ class Parameter(QtCore.QObject):
                 self.sigTreeStateChanged.emit(self, changes)
 
     @contextmanager
-    def atomic_change(self,
-                      change_type: ParameterChangeType | str = None,
-                      value: Any = None,
-                      emitter: 'Parameter' = None):
+    def change_transaction(self,
+                           change_type: ParameterChangeType | str = None,
+                           value: Any = None,
+                           emitter: Any = None,
+                           emit_signal: bool = True):
         """
-        Context manager to perform multiple structural or value updates on a parameter
+        Context manager to isolate multiple structural or value updates on a parameter
         (or its children) while completely suppressing intermediate cascading signals.
 
-        Upon exiting the context, a single unified change signal is manually
-        emitted using the designated emitter Parameter object.
+        Upon exiting the transaction, a single unified change signal is manually
+        committed using the designated emitter Parameter object, unless emit_signal
+        is explicitly set to False.
 
         Parameters
         ----------
@@ -958,12 +960,9 @@ class Parameter(QtCore.QObject):
         emitter : Parameter, optional
             The specific Parameter instance to emit the signal from.
             If None, it defaults to the absolute root parameter of the tree.
-
-        Example
-        -------
-            with param.atomic_change(ParameterChangeType.VALUE):
-                param.setLimits(['New A', 'New B'])
-                param.setValue('New A')
+        emit_signal : bool, default True
+            If True, dispatches a single unified signal upon exiting the context.
+            If False, suppresses all notifications completely (silent transaction).
         """
         # 1. Walk up to the root parameter using parent()
         root = self
@@ -980,17 +979,26 @@ class Parameter(QtCore.QObject):
 
         # 2. Globally block tree-wide signals at the root level
         root.blockTreeChangeSignal()
-
+        if emitter is not root:
+            emitter.blockTreeChangeSignal()
         try:
             yield
 
             # 3. Clear the queue of transient/garbage events accumulated by Qt widgets
             root.treeStateChanges = []
+            if emitter is not root:
+                emitter.treeStateChanges = []
         finally:
             # 4. Always guarantee unblocking the tree even if an exception occurs
+            if emitter is not root:
+                emitter.unblockTreeChangeSignal()
             root.unblockTreeChangeSignal()
 
-        # 5. Smart automatic detection if no custom change type was requested
+        # 5. Skip signal generation completely if silent mode is requested
+        if not emit_signal:
+            return
+
+        # 6. Smart automatic detection if no custom change type was requested
         if change_type is None:
             new_limits = self.opts.get('limits', None)
 
@@ -1012,9 +1020,8 @@ class Parameter(QtCore.QObject):
             else:
                 resolved_value = value
 
-        # 6. Manually dispatch exactly one stabilized signal from the designated emitter
-        if hasattr(emitter, 'sigTreeStateChanged'):
-            emitter.sigTreeStateChanged.emit(emitter, [(self, resolved_type, resolved_value)])
+        # 7. Manually dispatch exactly one stabilized signal from the designated emitter
+        emitter.sigTreeStateChanged.emit(emitter, [(self, resolved_type, resolved_value)])
 
 
 class SignalBlocker(object):
