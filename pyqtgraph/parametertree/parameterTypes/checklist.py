@@ -227,7 +227,7 @@ class ChecklistParameter(GroupParameter):
         if 'delay' in opts:
             self.valChangingProxy.setDelay(opts['delay'])
 
-    def setValue(self, value, blockSignal=None):
+    def setValue(self, value, blockSignal=None, blockSlots=None):
         self.targetValue = value
         if not isinstance(value, list):
             value = [value]
@@ -249,8 +249,8 @@ class ChecklistParameter(GroupParameter):
         for chParam in self:
             checked = chParam.name() in names
             # Will emit at the end, so no problem discarding existing changes
-            chParam.setValue(checked, self._onChildChanging)
-        super().setValue(valueToSet, blockSignal)
+            chParam.setValue(checked, blockSlots=self._onChildChanging)
+        super().setValue(valueToSet, blockSignal, blockSlots)
 
     def _intersectionWithLimits(self, values: list):
         """
