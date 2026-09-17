@@ -73,8 +73,6 @@ class GLMeshItem(GLGraphicsItem):
         shader = kwargs.pop('shader', None)
         self.setShader(shader)
         
-        self.setMeshData(**kwargs)
-        
         ## storage for data compiled from MeshData object
         self.vertexes = None
         self.normals = None
@@ -87,9 +85,11 @@ class GLMeshItem(GLGraphicsItem):
         self.m_ibo_faces = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.IndexBuffer)
         self.m_vbo_edgeVerts = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
         self.m_ibo_edges = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.IndexBuffer)
-        self.dirty_bits = DirtyFlag(0)
 
         self._glUniform1fv = None
+
+        self.dirty_bits = DirtyFlag(0)
+        self.setMeshData(**kwargs)
 
     def cleanupGL(self):
         self.m_vbo_position.destroy()
@@ -193,6 +193,10 @@ class GLMeshItem(GLGraphicsItem):
         self.colors = None
         self.edges = None
         self.edgeVerts = None
+
+        if self.opts['meshdata']:
+            self.dirty_bits |= self.parseMeshData()
+
         self.update()
 
     def upload_vertex_buffers(self, dirty_bits):
@@ -215,11 +219,6 @@ class GLMeshItem(GLGraphicsItem):
         
         dirty_bits = DirtyFlag(0)
 
-        # self.vertexes acts as a flag to determine whether mesh data
-        # has been parsed
-        if self.vertexes is not None:
-            return dirty_bits
-
         if self.opts['meshdata'] is not None:
             md = self.opts['meshdata']
             if self.opts['smooth'] and not md.hasFaceIndexedData():
@@ -228,7 +227,7 @@ class GLMeshItem(GLGraphicsItem):
                 if self.opts['computeNormals']:
                     self.normals = md.vertexNormals()
                     dirty_bits |= DirtyFlag.NORMAL
-                self.faces = md.faces().astype(np.uint32)
+                self.faces = np.asarray(md.faces(), dtype=np.uint32)
                 dirty_bits |= DirtyFlag.FACES
                 if md.hasVertexColor():
                     self.colors = md.vertexColors()
@@ -255,11 +254,10 @@ class GLMeshItem(GLGraphicsItem):
 
             if self.opts['drawEdges']:
                 if not md.hasFaceIndexedData():
-                    self.edges = md.edges().astype(np.uint32)
                     self.edgeVerts = md.vertexes()
                 else:
-                    self.edges = md.edges().astype(np.uint32)
                     self.edgeVerts = md.vertexes(indexed='faces')
+                self.edges = np.asarray(md.edges(), dtype=np.uint32)
                 dirty_bits |= DirtyFlag.EDGE_VERTS
                 dirty_bits |= DirtyFlag.EDGES
 
@@ -271,6 +269,9 @@ class GLMeshItem(GLGraphicsItem):
         return dirty_bits
 
     def paint(self):
+        if self.opts['meshdata'] is None or not self.opts['meshdata']:
+            return
+
         if (view := self.view()) is None:
             return
         self.setupGLState()
@@ -282,9 +283,9 @@ class GLMeshItem(GLGraphicsItem):
             glfn.glEnable(GLC.GL_POLYGON_OFFSET_FILL)
             glfn.glPolygonOffset(1.0, 1.0)
 
-        self.dirty_bits |= self.parseMeshData()
-        self.upload_vertex_buffers(self.dirty_bits)
-        self.dirty_bits = DirtyFlag(0)
+        if self.dirty_bits:
+            self.upload_vertex_buffers(self.dirty_bits)
+            self.dirty_bits = DirtyFlag(0)
 
         mat_mvp = self.mvpMatrix(view=view)
         mat_normal = self.modelViewMatrix(view=view).normalMatrix()
