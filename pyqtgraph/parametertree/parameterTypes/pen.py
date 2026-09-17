@@ -108,11 +108,11 @@ class PenParameter(GroupParameter):
     def _interpretValue(self, v):
         return self.mkPen(v)
 
-    def setValue(self, value, blockSignal=None):
+    def setValue(self, value, blockSignal=None, blockSlots=None):
         if not fn.eq(value, self.pen):
             value = self.mkPen(value)
             self.updateFromPen(self, value)
-        return super().setValue(self.pen, blockSignal)
+        return super().setValue(self.pen, blockSignal, blockSlots)
 
     def applyOptsToPen(self, **opts):
         # Transform opts into a value for the current pen
