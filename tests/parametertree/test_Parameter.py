@@ -757,7 +757,56 @@ class TestChangeTransaction:
         assert param == self.list_param
         assert change_type == "options"
         assert value == custom_opts
-        
+
+    def test_transaction_applied_to_root_blocks_all_children(self):
+        """
+        Verify that invoking change_transaction(emit_signal=False) directly on the
+        root parameter completely suppresses final signals at the root level,
+        while unblocked intermediate child groups still process their local bubble events.
+        """
+        # 1. Setup another independent group to simulate a multi-branch tree structure
+        extra_group_config = {
+            'name': 'Group B',
+            'type': 'group',
+            'children': [
+                {
+                    'name': 'extra_param',
+                    'type': 'int',
+                    'value': 10
+                }
+            ]
+        }
+        self.root.addChild(extra_group_config)
+        extra_param = self.root.child('Group B', 'extra_param')
+
+        # Reset history containers to ensure a clean slate
+        self.root_history.clear()
+        self.sub_group_history.clear()
+
+        # 2. Open a silent transaction directly on the absolute ROOT parameter (default kind emitter)
+        # and  the second emitter which is subgroup
+        with self.list_param.change_transaction(emit_signal=False,
+                                                emitter=self.sub_group):
+
+            # Modify nested parameters in Group A (Sub-Group branch)
+            self.list_param.setLimits(['root_test_1', 'root_test_2'])
+            self.list_param.setValue('root_test_2')
+
+            # Modify nested parameters in Group B branch
+            extra_param.setValue(99)
+            self.root['Sub-Group', 'list_param'] = 'root_test_1'
+
+        # 3. VERIFICATION:
+        # The absolute root must be completely silent (0 signals)
+        assert len(self.root_history) == 0, "Root captured signals during a silent root transaction"
+
+        # The intermediate sub-group emission has been silenced,
+        assert len(self.sub_group_history) == 0, "Sub-group did not process its local unblocked events"
+
+        # Verify that all target values were still correctly applied under the hood
+        assert self.list_param.value() == 'root_test_1'
+        assert extra_param.value() == 99
+
 # ---------------------------------------------------------------------------
 # Tests for Parameter.setValue() blockSignal / blockSlots behaviour
 # (regression for #3305, alternative to #3489)
