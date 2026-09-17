@@ -84,7 +84,10 @@ class MeshData(object):
                     self.setVertexColors(vertexColors)
                 if faceColors is not None:
                     self.setFaceColors(faceColors)
-            
+
+    def __bool__(self):
+        return self._vertexes is not None or self._vertexesIndexedByFaces is not None
+
     def faces(self):
         """Return an array (Nf, 3) of vertex indexes, three per triangular face in the mesh.
         
