@@ -643,7 +643,7 @@ class TestTreeChangeBlocker:
         assert len(self.events) == 1
         assert self.events[0] == [(self.param, "value", "b"), (self.param, "value", "c")]
 
-    def test_treeChangeBlocker_keep_filters_change_types(self):
+    def test_treeChangeBlocker_keep_filters_change_types_value(self):
 
         with self.root.treeChangeBlocker(keep={'value'}):
             self.root.child('group', 'p').setLimits(["a", "b", "c", "d"])
@@ -652,7 +652,7 @@ class TestTreeChangeBlocker:
         assert len(self.events) == 1
         assert self.events[0] == [(self.param, "value", "b")]
 
-    def test_treeChangeBlocker_keep_filters_change_types(self):
+    def test_treeChangeBlocker_keep_filters_change_types_limits(self):
 
         with self.root.treeChangeBlocker(keep={'limits'}):
             self.root.child('group', 'p').setLimits(["a", "b", "c", "d"])
