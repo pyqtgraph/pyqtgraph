@@ -1,10 +1,4 @@
-try:
-    from enum import StrEnum
-except ImportError:
-    # Fallback for Python < 3.11 to maintain strict compatibility without dependencies
-    from enum import Enum
-    class StrEnum(str, Enum):
-        pass
+from enum import StrEnum
 
 class ParameterChangeType(StrEnum):
     """Enumeration of native change types emitted by PyQtGraph Parameters."""
