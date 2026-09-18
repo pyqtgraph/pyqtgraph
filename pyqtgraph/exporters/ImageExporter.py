@@ -61,12 +61,12 @@ class ImageExporter(Exporter):
     def widthChanged(self):
         sr = self.getSourceRect()
         ar = float(sr.height()) / sr.width()
-        self.params.param('height').setValue(int(self.params['width'] * ar), blockSignal=self.heightChanged)
+        self.params.param('height').setValue(int(self.params['width'] * ar), blockSlots=self.heightChanged)
         
     def heightChanged(self):
         sr = self.getSourceRect()
         ar = float(sr.width()) / sr.height()
-        self.params.param('width').setValue(int(self.params['height'] * ar), blockSignal=self.widthChanged)
+        self.params.param('width').setValue(int(self.params['height'] * ar), blockSlots=self.widthChanged)
         
     def parameters(self):
         return self.params
