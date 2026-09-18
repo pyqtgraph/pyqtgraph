@@ -6,6 +6,7 @@ from collections import OrderedDict
 from .. import functions as fn
 from ..Qt import QtCore
 from .ParameterItem import ParameterItem
+from .enums import ParameterChangeType
 
 PARAM_TYPES = {}
 PARAM_NAMES = {}
@@ -879,7 +880,10 @@ class Parameter(QtCore.QObject):
         self.sigOptionsChanged.emit(self, {'visible': s})
 
 
-    def treeChangeBlocker(self, keep=None, dedupe=False, emitter=None):
+    def treeChangeBlocker(self,
+                          keep: set[ParameterChangeType | str] = None,
+                          dedupe=False,
+                          emitter: 'Parameter'=None):
         """
         Return an object that can be used to temporarily block and accumulate
         sigTreeStateChanged signals. This is meant to be used when numerous changes are 
@@ -897,7 +901,7 @@ class Parameter(QtCore.QObject):
         through :func:`coalesceTreeChanges` before being emitted:
 
         * `keep` restricts the emitted changes to the given set of change-type
-          strings (e.g. ``{'value'}``).
+          ParameterChangeType enum or strings (e.g. ``{'value'}``).
         * `dedupe` collapses repeated changes to the same (param, changeType) pair
           down to only the most recent one -- useful for high-frequency updates
           such as a slider drag::
@@ -977,12 +981,12 @@ class SignalBlocker(object):
         self.exitFn()
 
 
-def coalesceTreeChanges(changes, keep=None, dedupe=False):
+def coalesceTreeChanges(changes, keep: set[ParameterChangeType | str] = None, dedupe=False):
     """
     Reduce a list of (param, changeType, data) tuples as delivered by
     sigTreeStateChanged / accumulated in Parameter.treeStateChanges.
 
-    keep    : optional set of changeType strings to retain (e.g. {'value', 'limits'}).
+    keep    : optional set of changeType enums( or strings) to retain (e.g. {'value', 'limits'}).
               None keeps every change type.
     dedupe  : if True, only the last entry for each (param, changeType) pair is kept,
               in the position it last occurred. Dict-shaped payloads (e.g. 'options'
