@@ -115,6 +115,8 @@ class PenStyleKeywordArgs(TypedDict, total=False):
     cosmetic: bool
     style: QtCore.Qt.PenStyle
     dash: Sequence[float]
+    capStyle: QtCore.Qt.PenCapStyle
+    joinStyle: QtCore.Qt.PenJoinStyle
 
 
 class PenKeywordArgs(PenStyleKeywordArgs, total=False):
@@ -530,6 +532,7 @@ def mkPen(*args: Any, **kwargs: Any) -> QtGui.QPen:
         mkPen(None)   # (no pen)
         mkPen(hsv=(0.5, 1, 1))
         mkPen(brush=mkBrush('r', style=QtCore.Qt.BrushStyle.Dense1Pattern))
+        mkPen('r', width=4, capStyle=QtCore.Qt.PenCapStyle.RoundCap, joinStyle=QtCore.Qt.PenJoinStyle.RoundJoin)
 
     In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`.
     The color may be given as a positional argument, as `hsv=`, or as `color=`, but not more than one of these.
@@ -542,6 +545,8 @@ def mkPen(*args: Any, **kwargs: Any) -> QtGui.QPen:
     dash = kwargs.get('dash', None)
     cosmetic = kwargs.get('cosmetic', True)
     brush = kwargs.get('brush', None)
+    capStyle = kwargs.get('capStyle', None)
+    joinStyle = kwargs.get('joinStyle', None)
 
     if len(args) == 1:
         arg = args[0]
@@ -562,13 +567,17 @@ def mkPen(*args: Any, **kwargs: Any) -> QtGui.QPen:
         pen.setStyle(style)
     if dash is not None:
         pen.setDashPattern(dash)
+    if joinStyle is not None:
+        pen.setJoinStyle(joinStyle)
 
-    # for width > 1.0, we are drawing many short segments to emulate a
-    # single polyline. the default SquareCap style causes artifacts.
-    # these artifacts can be avoided by using RoundCap.
-    # this does have a performance penalty, so enable it only
-    # for thicker line widths where the artifacts are visible.
-    if width > 4.0:
+    if capStyle is not None:
+        pen.setCapStyle(capStyle)
+    elif width > 4.0:
+        # for width > 1.0, we are drawing many short segments to emulate a
+        # single polyline. the default SquareCap style causes artifacts.
+        # these artifacts can be avoided by using RoundCap.
+        # this does have a performance penalty, so enable it only
+        # for thicker line widths where the artifacts are visible.
         pen.setCapStyle(QtCore.Qt.PenCapStyle.RoundCap)
 
     return pen
