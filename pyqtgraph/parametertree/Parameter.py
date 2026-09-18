@@ -7,7 +7,6 @@ from collections.abc import Iterable
 from .. import functions as fn
 from ..Qt import QtCore
 from .ParameterItem import ParameterItem
-from .enums import ParameterChangeType
 
 PARAM_TYPES = {}
 PARAM_NAMES = {}
@@ -930,7 +929,7 @@ class Parameter(QtCore.QObject):
 
 
     def treeChangeBlocker(self,
-                          keep: set[ParameterChangeType | str] = None,
+                          keep: set[str] = None,
                           dedupe=False,
                           emitter: 'Parameter'=None):
         """
@@ -950,7 +949,7 @@ class Parameter(QtCore.QObject):
         through :func:`coalesceTreeChanges` before being emitted:
 
         * `keep` restricts the emitted changes to the given set of change-type
-          ParameterChangeType enum or strings (e.g. ``{'value'}``).
+          strings (e.g. ``{'value'}``).
         * `dedupe` collapses repeated changes to the same (param, changeType) pair
           down to only the most recent one -- useful for high-frequency updates
           such as a slider drag::
@@ -1030,7 +1029,7 @@ class SignalBlocker(object):
         self.exitFn()
 
 
-def coalesceTreeChanges(changes, keep: set[ParameterChangeType | str] = None, dedupe=False):
+def coalesceTreeChanges(changes, keep: set[str] = None, dedupe=False):
     """
     Reduce a list of (param, changeType, data) tuples as delivered by
     sigTreeStateChanged / accumulated in Parameter.treeStateChanges.

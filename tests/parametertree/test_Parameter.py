@@ -13,7 +13,6 @@ from pyqtgraph.parametertree import (
     interact, ParameterTree,
 )
 from pyqtgraph.parametertree.Parameter import PARAM_TYPES, coalesceTreeChanges
-from pyqtgraph.parametertree.enums import ParameterChangeType
 from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
 from pyqtgraph.Qt import QtGui
 
@@ -646,7 +645,7 @@ class TestTreeChangeBlocker:
 
     def test_treeChangeBlocker_keep_filters_change_types(self):
 
-        with self.root.treeChangeBlocker(keep={ParameterChangeType.VALUE}):
+        with self.root.treeChangeBlocker(keep={'value'}):
             self.root.child('group', 'p').setLimits(["a", "b", "c", "d"])
             self.root.child('group', 'p').setValue("b")
 
@@ -655,12 +654,12 @@ class TestTreeChangeBlocker:
 
     def test_treeChangeBlocker_keep_filters_change_types(self):
 
-        with self.root.treeChangeBlocker(keep={ParameterChangeType.LIMITS}):
+        with self.root.treeChangeBlocker(keep={'limits'}):
             self.root.child('group', 'p').setLimits(["a", "b", "c", "d"])
             self.root.child('group', 'p').setValue("b")
 
         assert len(self.events) == 1
-        assert self.events[0] == [(self.param, ParameterChangeType.LIMITS, ["a", "b", "c", "d"])]
+        assert self.events[0] == [(self.param, 'limits', ["a", "b", "c", "d"])]
 
     def test_treeChangeBlocker_keep_empty_is_silent(self):
 
