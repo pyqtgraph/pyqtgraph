@@ -10,7 +10,7 @@ from pyqtgraph.parametertree import (
     Interactor,
     Parameter,
     RunOptions,
-    interact,
+    interact, ParameterTree,
 )
 from pyqtgraph.parametertree.Parameter import PARAM_TYPES, coalesceTreeChanges
 from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
@@ -594,144 +594,144 @@ def test_interact_existing_parent():
     assert lastValue == 5
 
 
-def _makeNestedTree():
-    root = Parameter.create(name="root", type="group", children=[
-        dict(name="group", type="group", children=[
-            dict(name="p", type="list", limits=["a", "b", "c"], value="a"),
-        ]),
-    ])
-    group = root.child("group")
-    p = group.child("p")
-    return root, group, p
+class TestTreeChangeBlocker:
+
+    def _makeNestedTree(self):
+        self.root = Parameter.create(name="root", type="group", children=[
+            dict(name="group", type="group", children=[
+                dict(name="p", type="list", limits=["a", "b", "c"], value="a"),
+            ]),
+        ])
+        self.group = self.root.child("group")
+        self.param = self.group.child("p")
+
+    def _recordChanges(self, param):
+        events = []
+        param.sigTreeStateChanged.connect(lambda emitter, changes: events.append(changes))
+        self.events = events
+        return events
+
+    def _create_tree(self):
+        self.tree = ParameterTree()
+        self.tree.setParameters(self.root)
+
+    @pytest.fixture(autouse=True)
+    def setup_tree(self, qtbot):
+        """
+        Runs before every test.
+         'autouse=True' means you don't have to explicitly pass it to tests.
+        """
+        self._makeNestedTree()
+        self._recordChanges(self.root)
+        self._create_tree()
+        qtbot.addWidget(self.tree)
+
+        self.tree.show()
+
+        yield
+
+        self.tree.close()
+
+    def test_treeChangeBlocker_default_behavior_unchanged(self):
+        # with no keep/dedupe/emitter, treeChangeBlocker should behave exactly as before:
+        # one signal from self carrying every real change, uncoalesced.
+
+        with self.root.treeChangeBlocker():
+            self.param.setValue("b")
+            self.param.setValue("c")
+
+        assert len(self.events) == 1
+        assert self.events[0] == [(self.param, "value", "b"), (self.param, "value", "c")]
+
+    def test_treeChangeBlocker_keep_filters_change_types(self):
+
+        with self.root.treeChangeBlocker(keep={"value"}):
+            self.root.child('group', 'p').setLimits(["a", "b", "c", "d"])
+            self.root.child('group', 'p').setValue("b")
+
+        assert len(self.events) == 1
+        assert self.events[0] == [(self.param, "value", "b")]
+
+    def test_treeChangeBlocker_keep_empty_is_silent(self):
+
+        with self.root.treeChangeBlocker(keep=set()):
+            self.param.setValue("b")
+        assert self.events == []
+
+    def test_treeChangeBlocker_dedupe_collapses_repeated_changes(self):
+        with self.param.treeChangeBlocker(dedupe=True):
+            self.param.setValue("b")
+            self.param.setValue("c")
+            self.param.setValue("a")
+
+        assert len(self.events) == 1
+        assert self.events[0] == [(self.param, "value", "a")]
+
+    def test_treeChangeBlocker_dedupe_keeps_distinct_change_types(self):
+        p = self.param
+        with p.treeChangeBlocker(dedupe=True):
+            p.setValue("b")
+            p.setValue("c")
+            p.setLimits(["a", "b", "c", "d"])
+
+        assert len(self.events) == 1
+        changes = dict((changeType, data) for (_, changeType, data) in self.events[0])
+        assert changes == {"value": "c", "limits": ["a", "b", "c", "d"]}
+
+    def test_treeChangeBlocker_dedupe_merges_options_payloads(self):
+        p = self.param
+        with p.treeChangeBlocker(dedupe=True):
+            p.setOpts(readonly=True)
+            p.show(False)
+
+        assert len(self.events) == 1
+        assert self.events[0] == [(p, "options", {"readonly": True, "visible": False})]
 
 
-def _recordChanges(param):
-    events = []
-    param.sigTreeStateChanged.connect(lambda emitter, changes: events.append(changes))
-    return events
+    def test_treeChangeBlocker_dedupe_same_option_key_keeps_last_value(self):
+        p = self.param
+        with p.treeChangeBlocker(dedupe=True):
+            p.setOpts(readonly=True)
+            p.setOpts(readonly=False)
+
+        assert len(self.events) == 1
+        assert self.events[0] == [(p, "options", {"readonly": False})]
+
+    def test_treeChangeBlocker_emitter_routes_signal(self):
+        self.root.sigTreeStateChanged.disconnect()
+
+        rootEvents = self._recordChanges(self.root)
+        groupEvents = self._recordChanges(self.group)
+        pEvents = self._recordChanges(self.param)
+
+        with self.param.treeChangeBlocker(dedupe=True, emitter=self.root):
+            self.param.setValue("b")
+            self.param.setValue("c")
+
+        # the signal is raised on `root`, and nothing at all reaches `group` or `p`'s
+        # own listeners -- the cascade is stopped at the source, not just masked at root.
+        assert groupEvents == []
+        assert pEvents == []
+        assert len(rootEvents) == 1
+        assert rootEvents[0] == [(self.param, "value", "c")]
 
 
-def test_treeChangeBlocker_default_behavior_unchanged():
-    # with no keep/dedupe/emitter, treeChangeBlocker should behave exactly as before:
-    # one signal from self carrying every real change, uncoalesced.
-    root, group, p = _makeNestedTree()
-    events = _recordChanges(root)
-
-    with p.treeChangeBlocker():
-        p.setValue("b")
-        p.setValue("c")
-
-    assert len(events) == 1
-    assert events[0] == [(p, "value", "b"), (p, "value", "c")]
+    def test_coalesceTreeChanges_keep_filters_by_type(self):
+        p = object()
+        changes = [(p, "value", 1), (p, "limits", [1, 2])]
+        result = coalesceTreeChanges(changes, keep={"value"})
+        assert result == [(p, "value", 1)]
 
 
-def test_treeChangeBlocker_keep_filters_change_types():
-    root, group, p = _makeNestedTree()
-    events = _recordChanges(root)
-
-    with p.treeChangeBlocker(keep={"value"}):
-        p.setLimits(["a", "b", "c", "d"])
-        p.setValue("b")
-
-    assert len(events) == 1
-    assert events[0] == [(p, "value", "b")]
+    def test_coalesceTreeChanges_dedupe_keeps_last_scalar(self):
+        p = object()
+        changes = [(p, "value", 1), (p, "value", 2), (p, "value", 3)]
+        result = coalesceTreeChanges(changes, dedupe=True)
+        assert result == [(p, "value", 3)]
 
 
-def test_treeChangeBlocker_keep_empty_is_silent():
-    root, group, p = _makeNestedTree()
-    events = _recordChanges(root)
-
-    with p.treeChangeBlocker(keep=set()):
-        p.setValue("b")
-
-    assert events == []
-
-
-def test_treeChangeBlocker_dedupe_collapses_repeated_changes():
-    root, group, p = _makeNestedTree()
-    events = _recordChanges(root)
-
-    with p.treeChangeBlocker(dedupe=True):
-        p.setValue("b")
-        p.setValue("c")
-        p.setValue("a")
-
-    assert len(events) == 1
-    assert events[0] == [(p, "value", "a")]
-
-
-def test_treeChangeBlocker_dedupe_keeps_distinct_change_types():
-    root, group, p = _makeNestedTree()
-    events = _recordChanges(root)
-
-    with p.treeChangeBlocker(dedupe=True):
-        p.setValue("b")
-        p.setValue("c")
-        p.setLimits(["a", "b", "c", "d"])
-
-    assert len(events) == 1
-    changes = dict((changeType, data) for (_, changeType, data) in events[0])
-    assert changes == {"value": "c", "limits": ["a", "b", "c", "d"]}
-
-
-def test_treeChangeBlocker_dedupe_merges_options_payloads():
-    root, group, p = _makeNestedTree()
-    events = _recordChanges(root)
-
-    with p.treeChangeBlocker(dedupe=True):
-        p.setOpts(readonly=True)
-        p.show(False)
-
-    assert len(events) == 1
-    assert events[0] == [(p, "options", {"readonly": True, "visible": False})]
-
-
-def test_treeChangeBlocker_dedupe_same_option_key_keeps_last_value():
-    root, group, p = _makeNestedTree()
-    events = _recordChanges(root)
-
-    with p.treeChangeBlocker(dedupe=True):
-        p.setOpts(readonly=True)
-        p.setOpts(readonly=False)
-
-    assert len(events) == 1
-    assert events[0] == [(p, "options", {"readonly": False})]
-
-
-def test_treeChangeBlocker_emitter_routes_signal():
-    root, group, p = _makeNestedTree()
-    rootEvents = _recordChanges(root)
-    groupEvents = _recordChanges(group)
-    pEvents = _recordChanges(p)
-
-    with p.treeChangeBlocker(dedupe=True, emitter=root):
-        p.setValue("b")
-        p.setValue("c")
-
-    # the signal is raised on `root`, and nothing at all reaches `group` or `p`'s
-    # own listeners -- the cascade is stopped at the source, not just masked at root.
-    assert groupEvents == []
-    assert pEvents == []
-    assert len(rootEvents) == 1
-    assert rootEvents[0] == [(p, "value", "c")]
-
-
-def test_coalesceTreeChanges_keep_filters_by_type():
-    p = object()
-    changes = [(p, "value", 1), (p, "limits", [1, 2])]
-    result = coalesceTreeChanges(changes, keep={"value"})
-    assert result == [(p, "value", 1)]
-
-
-def test_coalesceTreeChanges_dedupe_keeps_last_scalar():
-    p = object()
-    changes = [(p, "value", 1), (p, "value", 2), (p, "value", 3)]
-    result = coalesceTreeChanges(changes, dedupe=True)
-    assert result == [(p, "value", 3)]
-
-
-def test_coalesceTreeChanges_dedupe_merges_dict_payloads():
-    p = object()
-    changes = [(p, "options", {"readonly": True}), (p, "options", {"visible": False})]
-    result = coalesceTreeChanges(changes, dedupe=True)
-    assert result == [(p, "options", {"readonly": True, "visible": False})]
+    def test_coalesceTreeChanges_dedupe_merges_dict_payloads(self):
+        p = object()
+        changes = [(p, "options", {"readonly": True}), (p, "options", {"visible": False})]
+        result = coalesceTreeChanges(changes, dedupe=True)
+        assert result == [(p, "options", {"readonly": True, "visible": False})]
