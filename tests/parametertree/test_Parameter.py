@@ -10,9 +10,9 @@ from pyqtgraph.parametertree import (
     Interactor,
     Parameter,
     RunOptions,
-    interact,
+    interact, ParameterTree,
 )
-from pyqtgraph.parametertree.Parameter import PARAM_TYPES
+from pyqtgraph.parametertree.Parameter import PARAM_TYPES, coalesceTreeChanges
 from pyqtgraph.parametertree.parameterTypes import GroupParameter as GP
 from pyqtgraph.Qt import QtGui
 
@@ -594,6 +594,158 @@ def test_interact_existing_parent():
     assert lastValue == 5
 
 
+class TestTreeChangeBlocker:
+
+    def _makeNestedTree(self):
+        self.root = Parameter.create(name="root", type="group", children=[
+            dict(name="group", type="group", children=[
+                dict(name="p", type="list", limits=["a", "b", "c"], value="a"),
+            ]),
+        ])
+        self.group = self.root.child("group")
+        self.param = self.group.child("p")
+
+    def _recordChanges(self, param):
+        events = []
+        param.sigTreeStateChanged.connect(lambda emitter, changes: events.append(changes))
+        self.events = events
+        return events
+
+    def _create_tree(self):
+        self.tree = ParameterTree()
+        self.tree.setParameters(self.root)
+
+    @pytest.fixture(autouse=True)
+    def setup_tree(self, qtbot):
+        """
+        Runs before every test.
+         'autouse=True' means you don't have to explicitly pass it to tests.
+        """
+        self._makeNestedTree()
+        self._recordChanges(self.root)
+        self._create_tree()
+        qtbot.addWidget(self.tree)
+
+        self.tree.show()
+
+        yield
+
+        self.tree.close()
+
+    def test_treeChangeBlocker_default_behavior_unchanged(self):
+        # with no keep/dedupe/emitter, treeChangeBlocker should behave exactly as before:
+        # one signal from self carrying every real change, uncoalesced.
+
+        with self.root.treeChangeBlocker():
+            self.param.setValue("b")
+            self.param.setValue("c")
+
+        assert len(self.events) == 1
+        assert self.events[0] == [(self.param, "value", "b"), (self.param, "value", "c")]
+
+    def test_treeChangeBlocker_keep_filters_change_types_value(self):
+
+        with self.root.treeChangeBlocker(keep={'value'}):
+            self.root.child('group', 'p').setLimits(["a", "b", "c", "d"])
+            self.root.child('group', 'p').setValue("b")
+
+        assert len(self.events) == 1
+        assert self.events[0] == [(self.param, "value", "b")]
+
+    def test_treeChangeBlocker_keep_filters_change_types_limits(self):
+
+        with self.root.treeChangeBlocker(keep={'limits'}):
+            self.root.child('group', 'p').setLimits(["a", "b", "c", "d"])
+            self.root.child('group', 'p').setValue("b")
+
+        assert len(self.events) == 1
+        assert self.events[0] == [(self.param, 'limits', ["a", "b", "c", "d"])]
+
+    def test_treeChangeBlocker_keep_empty_is_silent(self):
+
+        with self.root.treeChangeBlocker(keep=set()):
+            self.param.setValue("b")
+        assert self.events == []
+
+    def test_treeChangeBlocker_dedupe_collapses_repeated_changes(self):
+        with self.param.treeChangeBlocker(dedupe=True):
+            self.param.setValue("b")
+            self.param.setValue("c")
+            self.param.setValue("a")
+
+        assert len(self.events) == 1
+        assert self.events[0] == [(self.param, "value", "a")]
+
+    def test_treeChangeBlocker_dedupe_keeps_distinct_change_types(self):
+        p = self.param
+        with p.treeChangeBlocker(dedupe=True):
+            p.setValue("b")
+            p.setValue("c")
+            p.setLimits(["a", "b", "c", "d"])
+
+        assert len(self.events) == 1
+        changes = dict((changeType, data) for (_, changeType, data) in self.events[0])
+        assert changes == {"value": "c", "limits": ["a", "b", "c", "d"]}
+
+    def test_treeChangeBlocker_dedupe_merges_options_payloads(self):
+        p = self.param
+        with p.treeChangeBlocker(dedupe=True):
+            p.setOpts(readonly=True)
+            p.show(False)
+
+        assert len(self.events) == 1
+        assert self.events[0] == [(p, "options", {"readonly": True, "visible": False})]
+
+
+    def test_treeChangeBlocker_dedupe_same_option_key_keeps_last_value(self):
+        p = self.param
+        with p.treeChangeBlocker(dedupe=True):
+            p.setOpts(readonly=True)
+            p.setOpts(readonly=False)
+
+        assert len(self.events) == 1
+        assert self.events[0] == [(p, "options", {"readonly": False})]
+
+    def test_treeChangeBlocker_emitter_routes_signal(self):
+        self.root.sigTreeStateChanged.disconnect()
+
+        rootEvents = self._recordChanges(self.root)
+        groupEvents = self._recordChanges(self.group)
+        pEvents = self._recordChanges(self.param)
+
+        with self.param.treeChangeBlocker(dedupe=True, emitter=self.root):
+            self.param.setValue("b")
+            self.param.setValue("c")
+
+        # the signal is raised on `root`, and nothing at all reaches `group` or `p`'s
+        # own listeners -- the cascade is stopped at the source, not just masked at root.
+        assert groupEvents == []
+        assert pEvents == []
+        assert len(rootEvents) == 1
+        assert rootEvents[0] == [(self.param, "value", "c")]
+
+
+    def test_coalesceTreeChanges_keep_filters_by_type(self):
+        p = object()
+        changes = [(p, "value", 1), (p, "limits", [1, 2])]
+        result = coalesceTreeChanges(changes, keep={"value"})
+        assert result == [(p, "value", 1)]
+
+
+    def test_coalesceTreeChanges_dedupe_keeps_last_scalar(self):
+        p = object()
+        changes = [(p, "value", 1), (p, "value", 2), (p, "value", 3)]
+        result = coalesceTreeChanges(changes, dedupe=True)
+        assert result == [(p, "value", 3)]
+
+
+    def test_coalesceTreeChanges_dedupe_merges_dict_payloads(self):
+        p = object()
+        changes = [(p, "options", {"readonly": True}), (p, "options", {"visible": False})]
+        result = coalesceTreeChanges(changes, dedupe=True)
+        assert result == [(p, "options", {"readonly": True, "visible": False})]
+        
+        
 # ---------------------------------------------------------------------------
 # Tests for Parameter.setValue() blockSignal / blockSlots behaviour
 # (regression for #3305, alternative to #3489)
