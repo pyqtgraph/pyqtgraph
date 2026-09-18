@@ -19,14 +19,26 @@ def getFunctions(context) -> QtOpenGL.QAbstractOpenGLFunctions:
     if QT_LIB.startswith("PySide"):
         glfn = context.extraFunctions()
 
-    elif QT_LIB in ["PyQt5", "PyQt6"]:
+    elif not context.isOpenGLES() and QT_LIB.startswith("PyQt") and QtVersionInfo >= (6, 0):
+        # VersionFunctionsFactory doesn't support ES
+        vp = QtOpenGL.QOpenGLVersionProfile()
+        if format.version() >= (4, 1):
+            vp.setVersion(4, 1)
+            vp.setProfile(QtGui.QSurfaceFormat.OpenGLContextProfile.CoreProfile)
+        else:
+            vp.setVersion(2, 1)
+        glfn = QtOpenGL.QOpenGLVersionFunctionsFactory.get(vp, context)
+
+    else:
         # PyQt5 has context.versionFunctions().
         #    however, when there are multiple GraphicsItems, the following bug occurs:
         #    all except one of the C++ objects of the returned versionFunctions() get
         #    deleted. i.e. in PyQt5, we are not able to cache the return value.
-        # Qt6 has QOpenGLVersionFunctionsFactory().
-        #    however with OpenGL ES: "versionFunctions: Not supported on OpenGL ES."
         # To overcome the above listed issues, we load the modules directly.
+
+        # Note: The GraphicsItems now all share the same context held in
+        #       GraphicsViewGLWidget, so technically we aren't affected by the not
+        #       being able to cache issue.
 
         # PyQt{5,6} only provides 2.0, 2.1, 4.1_Core, ES2.
         # ES2 module is present only if PyQt was compiled for GLES.
