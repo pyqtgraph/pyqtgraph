@@ -362,22 +362,22 @@ def mkColor(
     Convenience function for constructing QColor from a variety of argument
     types. Accepted arguments are:
 
-    ================ ================================================
-     'c'             one of: r, g, b, c, m, y, k, w or an SVG color keyword
-     R, G, B, [A]    integers 0-255
-     (R, G, B, [A])  tuple of integers 0-255
-     float           greyscale, 0.0-1.0
-     int             see :func:`intColor() <pyqtgraph.intColor>`
-     (int, hues)     see :func:`intColor() <pyqtgraph.intColor>`
+    ==================== ================================================
+     'c'                  one of: r, g, b, c, m, y, k, w or an SVG color keyword
+     R, G, B, [A]         integers 0-255
+     (R, G, B, [A])       tuple of integers 0-255
+     float                greyscale, 0.0-1.0
+     int                  see :func:`intColor() <pyqtgraph.intColor>`
+     (int, hues)          see :func:`intColor() <pyqtgraph.intColor>`
      "#RGB"
      "#RGBA"
      "#RRGGBB"
      "#RRGGBBAA"
-     QColor          QColor instance; makes a copy.
-     hsv=(H, S, V, [A])  floats 0.0-1.0, via :func:`hsvColor() <pyqtgraph.hsvColor>`
-    ================ ================================================
+     QColor               QColor instance; makes a copy.
+     hsv=(H, S, V, [A])   floats 0.0-1.0, via :func:`hsvColor() <pyqtgraph.hsvColor>`
+    ==================== ================================================
 
-    If `hsv=` is given, it takes priority and *args is ignored.
+    If `hsv=` is given, it takes priority and ``*args`` is ignored.
     """
     if hsv is not None:
         return hsvColor(*hsv)
