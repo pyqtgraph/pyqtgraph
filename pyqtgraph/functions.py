@@ -121,7 +121,6 @@ class PenKeywordArgs(PenStyleKeywordArgs, total=False):
     """Keyword arguments accepted by :func:`mkPen() <pyqtgraph.mkPen>` alongside a positional/`color=` color"""
 
     color: color_like
-    hsv: tuple[float, float, float] | tuple[float, float, float, float]
 
 
 def siScale(x, minVal=1e-25, allowUnicode=True, power:int|float=1):
@@ -445,29 +444,9 @@ def _resolveColorArg(args, kwargs):
       3. The `color=` keyword.
 
     Returns a resolved QColor, or None if none of the three were given.
-
-    Warns if more than one of the three was actually given — the lower-
-    priority ones are silently ignored otherwise, which is an easy mistake
-    to miss (e.g. passing both `hsv=` and `color=`, or a positional color
-    alongside `color=`).
     """
-    hasPositional = len(args) >= 1
     hsv = kwargs.get('hsv', None)
     color = kwargs.get('color', None)
-    given = [
-        label for label, present in (
-            ('a positional argument', hasPositional),
-            ('hsv=', hsv is not None),
-            ('color=', color is not None),
-        ) if present
-    ]
-    if len(given) > 1:
-        warnings.warn(
-            f"Multiple color sources given ({', '.join(given)}); only the "
-            f"highest-priority one (positional > hsv= > color=) is "
-            f"used, the rest are ignored.",
-            UserWarning, stacklevel=3,
-        )
 
     if len(args) == 1:
         # a lone `None` means "no pen"/"no brush" (handled by the caller,
@@ -505,7 +484,7 @@ def mkBrush(*args: Any, **kwargs: Any) -> QtGui.QBrush:
         mkBrush(None)   # invisible (NoBrush)
 
     In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`.
-    See :func:`_resolveColorArg` for how a positional color, `hsv=`, and `color=` are prioritized against each other.
+    The color may be given as a positional argument, as `hsv=`, or as `color=`, but not more than one of these.
     Calling mkBrush() with no usable color argument returns a default brush (mirrors mkPen()).
     """
     style = kwargs.get('style', None)
@@ -553,7 +532,7 @@ def mkPen(*args: Any, **kwargs: Any) -> QtGui.QPen:
         mkPen(brush=mkBrush('r', style=QtCore.Qt.BrushStyle.Dense1Pattern))
 
     In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`.
-    See :func:`_resolveColorArg` for how a positional color, `hsv=`, and `color=` are prioritized against each other.
+    The color may be given as a positional argument, as `hsv=`, or as `color=`, but not more than one of these.
 
     `brush=` takes an arbitrary :func:`QBrush() <pyqtgraph.mkBrush>` to stroke with (a pattern, gradient, or
     texture, not just a solid color) and takes priority over any color source when given.
