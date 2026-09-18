@@ -96,12 +96,16 @@ type color_like = (
 """Parameters, accepted by :func:`mkColor() <pyqtgraph.mkColor>`"""
 
 
-class BrushKeywordArgs(TypedDict, total=False):
-    """Keyword arguments accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`"""
+class BrushStyleKeywordArgs(TypedDict, total=False):
+    """Keyword arguments of :func:`mkBrush() <pyqtgraph.mkBrush>` that apply regardless of how its color is specified"""
+
+    style: QtCore.Qt.BrushStyle
+
+
+class BrushKeywordArgs(BrushStyleKeywordArgs, total=False):
+    """Keyword arguments accepted by :func:`mkBrush() <pyqtgraph.mkBrush>` alongside a positional/`color=` color"""
 
     color: color_like
-    style: QtCore.Qt.BrushStyle
-    hsv: tuple[float, float, float] | tuple[float, float, float, float]
 
 
 class PenStyleKeywordArgs(TypedDict, total=False):
@@ -114,7 +118,7 @@ class PenStyleKeywordArgs(TypedDict, total=False):
 
 
 class PenKeywordArgs(PenStyleKeywordArgs, total=False):
-    """Keyword arguments accepted by :func:`mkPen() <pyqtgraph.mkPen>`"""
+    """Keyword arguments accepted by :func:`mkPen() <pyqtgraph.mkPen>` alongside a positional/`color=` color"""
 
     color: color_like
     hsv: tuple[float, float, float] | tuple[float, float, float, float]
@@ -486,6 +490,8 @@ def mkBrush(c: color_like = ..., /, **kwargs: Unpack[BrushKeywordArgs]) -> QtGui
 def mkBrush(
     r: int, g: int, b: int, a: int = ..., /, **kwargs: Unpack[BrushKeywordArgs]
 ) -> QtGui.QBrush: ...
+@overload
+def mkBrush(*, hsv: tuple[float, float, float] | tuple[float, float, float, float], **kwargs: Unpack[BrushStyleKeywordArgs]) -> QtGui.QBrush: ...
 def mkBrush(*args: Any, **kwargs: Any) -> QtGui.QBrush:
     """
     Convenience function for constructing QBrush.
@@ -528,6 +534,8 @@ def mkPen(c: color_like = ..., /, **kwargs: Unpack[PenKeywordArgs]) -> QtGui.QPe
 def mkPen(
     r: int, g: int, b: int, a: int = ..., /, **kwargs: Unpack[PenKeywordArgs]
 ) -> QtGui.QPen: ...
+@overload
+def mkPen(*, hsv: tuple[float, float, float] | tuple[float, float, float, float], **kwargs: Unpack[PenStyleKeywordArgs]) -> QtGui.QPen: ...
 @overload
 def mkPen(*, brush: QtGui.QBrush, **kwargs: Unpack[PenStyleKeywordArgs]) -> QtGui.QPen: ...
 def mkPen(*args: Any, **kwargs: Any) -> QtGui.QPen:
