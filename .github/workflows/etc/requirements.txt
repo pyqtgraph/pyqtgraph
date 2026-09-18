@@ -11,7 +11,7 @@ scipy==1.18.1
 numba==0.67.0; python_version == '3.12'
 
 # supplimental tools
-matplotlib==3.11.1
+matplotlib==3.11.2
 h5py==3.16.0
 
 # testing
