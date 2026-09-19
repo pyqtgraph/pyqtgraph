@@ -72,11 +72,13 @@ class GLTextItem(GLGraphicsItem):
         if len(items) == 0:
             return
 
+        if (view := self.view()) is None:
+            return
         self.setupGLState()
 
-        device = self.view()
+        device = view
         rect = QtCore.QRectF(0, 0, device.width(), device.height())
-        project = self.compute_projection(rect)
+        project = self.compute_projection(rect, view)
         painter = QtGui.QPainter(device)
         painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
 
@@ -102,11 +104,11 @@ class GLTextItem(GLGraphicsItem):
 
         painter.end()
 
-    def compute_projection(self, rect : QtCore.QRectF):
+    def compute_projection(self, rect : QtCore.QRectF, view):
         # note that QRectF.bottom() != QRect.bottom()
         ndc_to_viewport = QtGui.QMatrix4x4()
         ndc_to_viewport.viewport(rect.left(), rect.bottom(), rect.width(), -rect.height())
-        return ndc_to_viewport * self.mvpMatrix()
+        return ndc_to_viewport * self.mvpMatrix(view=view)
 
     def align_text(self, pos, text, font, alignment):
         """

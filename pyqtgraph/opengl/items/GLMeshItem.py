@@ -1,9 +1,12 @@
+import copy
 import enum
+import warnings
 
 import numpy as np
 
-from ...Qt import QtGui, QtOpenGL, QT_LIB, compat
+from ...Qt import QtGui, QtOpenGL, QT_LIB, QtVersionInfo, compat
 from ...Qt import OpenGLConstants as GLC
+from ...Qt import OpenGLHelpers
 from ...Qt.OpenGLHelpers import upload_vbo
 from .. import shaders
 from ..GLGraphicsItem import GLGraphicsItem
@@ -66,10 +69,9 @@ class GLMeshItem(GLGraphicsItem):
         super().__init__(parentItem=parentItem)
         glopts = kwargs.pop('glOptions', 'opaque')
         self.setGLOptions(glopts)
+        self._shaderProgram : shaders.ShaderProgram | None = None
         shader = kwargs.pop('shader', None)
         self.setShader(shader)
-        
-        self.setMeshData(**kwargs)
         
         ## storage for data compiled from MeshData object
         self.vertexes = None
@@ -84,18 +86,68 @@ class GLMeshItem(GLGraphicsItem):
         self.m_vbo_edgeVerts = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
         self.m_ibo_edges = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.IndexBuffer)
 
+        self._glUniform1fv = None
+
+        self.dirty_bits = DirtyFlag(0)
+        self.setMeshData(**kwargs)
+
+    def cleanupGL(self):
+        self.m_vbo_position.destroy()
+        self.m_vbo_normal.destroy()
+        self.m_vbo_color.destroy()
+        self.m_ibo_faces.destroy()
+        self.m_vbo_edgeVerts.destroy()
+        self.m_ibo_edges.destroy()
+
+        self.dirty_bits = (
+            DirtyFlag.POSITION   |
+            DirtyFlag.NORMAL     |
+            DirtyFlag.COLOR      |
+            DirtyFlag.FACES      |
+            DirtyFlag.EDGE_VERTS |
+            DirtyFlag.EDGES
+        )
+
+        self._glUniform1fv = None
+
     def setShader(self, shader):
         """Set the shader used when rendering faces in the mesh. (see the GL shaders example)"""
         self.opts['shader'] = shader
+
+        if shader is None:
+            shader = 'default'
+
+        if isinstance(shader, str):
+            # load from internal shaders
+            shader = shaders.getShaderProgram(shader)
+
+        self._shaderProgram = copy.deepcopy(shader)
+
         self.update()
         
     def shader(self):
-        shader = self.opts['shader']
-        if isinstance(shader, shaders.ShaderProgram):
-            return shader
-        else:
-            return shaders.getShaderProgram(shader)
-        
+        return self._shaderProgram
+
+    def shaderProgram(self, view, shader_program):
+        name = shader_program.name
+        klass = self.__class__
+        cache_key = f'{klass.__module__}.{klass.__qualname__}.{name}'
+
+        sources = { sp.shaderType() : sp.sourceCode() for sp in shader_program.shaders }
+
+        shaders_cache = self.shadersCache(view=view)
+
+        if (program := shaders_cache.get(cache_key)) is None:
+            program = OpenGLHelpers.compile_and_link(
+                view.context(),
+                sources_core=None,
+                sources_legacy=sources,
+                attributes=dict(a_position=0),
+            )
+            shaders_cache[cache_key] = program
+
+        return program
+
     def setColor(self, c):
         """Set the default color to use when no vertex or face colors are specified."""
         self.opts['color'] = c
@@ -141,7 +193,10 @@ class GLMeshItem(GLGraphicsItem):
         self.colors = None
         self.edges = None
         self.edgeVerts = None
-        self.edgeColors = None
+
+        if self.opts['meshdata']:
+            self.dirty_bits |= self.parseMeshData()
+
         self.update()
 
     def upload_vertex_buffers(self, dirty_bits):
@@ -164,11 +219,6 @@ class GLMeshItem(GLGraphicsItem):
         
         dirty_bits = DirtyFlag(0)
 
-        # self.vertexes acts as a flag to determine whether mesh data
-        # has been parsed
-        if self.vertexes is not None:
-            return dirty_bits
-
         if self.opts['meshdata'] is not None:
             md = self.opts['meshdata']
             if self.opts['smooth'] and not md.hasFaceIndexedData():
@@ -177,7 +227,7 @@ class GLMeshItem(GLGraphicsItem):
                 if self.opts['computeNormals']:
                     self.normals = md.vertexNormals()
                     dirty_bits |= DirtyFlag.NORMAL
-                self.faces = md.faces().astype(np.uint32)
+                self.faces = np.asarray(md.faces(), dtype=np.uint32)
                 dirty_bits |= DirtyFlag.FACES
                 if md.hasVertexColor():
                     self.colors = md.vertexColors()
@@ -204,11 +254,10 @@ class GLMeshItem(GLGraphicsItem):
 
             if self.opts['drawEdges']:
                 if not md.hasFaceIndexedData():
-                    self.edges = md.edges().astype(np.uint32)
                     self.edgeVerts = md.vertexes()
                 else:
-                    self.edges = md.edges().astype(np.uint32)
                     self.edgeVerts = md.vertexes(indexed='faces')
+                self.edges = np.asarray(md.edges(), dtype=np.uint32)
                 dirty_bits |= DirtyFlag.EDGE_VERTS
                 dirty_bits |= DirtyFlag.EDGES
 
@@ -220,26 +269,30 @@ class GLMeshItem(GLGraphicsItem):
         return dirty_bits
 
     def paint(self):
-        self.setupGLState()
+        if self.opts['meshdata'] is None or not self.opts['meshdata']:
+            return
 
-        context = QtGui.QOpenGLContext.currentContext()
-        glfn = self.glFunctions()
-        es2_compat = context.hasExtension(b'GL_ARB_ES2_compatibility')
+        if (view := self.view()) is None:
+            return
+        self.setupGLState()
+        glfn = self.glFunctions(view=view)
+
         NULL = compat.voidptr(0) if QT_LIB.startswith('PySide') else None
 
         if self.opts['polygonOffset']:
             glfn.glEnable(GLC.GL_POLYGON_OFFSET_FILL)
             glfn.glPolygonOffset(1.0, 1.0)
 
-        if (dirty_bits := self.parseMeshData()):
-            self.upload_vertex_buffers(dirty_bits)
+        if self.dirty_bits:
+            self.upload_vertex_buffers(self.dirty_bits)
+            self.dirty_bits = DirtyFlag(0)
 
-        mat_mvp = self.mvpMatrix()
-        mat_normal = self.modelViewMatrix().normalMatrix()
+        mat_mvp = self.mvpMatrix(view=view)
+        mat_normal = self.modelViewMatrix(view=view).normalMatrix()
 
         if self.opts['drawFaces'] and self.vertexes is not None:
-            shader = self.shader()
-            program = shader.program(es2_compat=es2_compat)
+            shader_program = self.shader()
+            program = self.shaderProgram(view, shader_program)
 
             enabled_locs = []
 
@@ -277,24 +330,45 @@ class GLMeshItem(GLGraphicsItem):
             for loc in enabled_locs:
                 program.enableAttributeArray(loc)
 
-            with shader:    # "with shader" will load extra uniforms
-                program.setUniformValue("u_mvp", mat_mvp)
-                if (loc := program.uniformLocation("u_normal")) != -1:
-                    program.setUniformValue(loc, mat_normal)
+            program.bind()
 
-                if (faces := self.faces) is None:
-                    glfn.glDrawArrays(GLC.GL_TRIANGLES, 0, np.prod(self.vertexes.shape[:-1]))
+            program.setUniformValue("u_mvp", mat_mvp)
+            if (loc := program.uniformLocation("u_normal")) != -1:
+                program.setUniformValue(loc, mat_normal)
+
+            # load uniforms defined by the shader
+            for name, data in self._shaderProgram.uniformData.items():
+                if (loc := program.uniformLocation(name)) == -1:
+                    warnings.warn(f'Could not find uniform variable "{name}"')
+                    continue
+
+                data = np.ascontiguousarray(data, dtype=np.float32)
+
+                if QT_LIB.startswith('PySide') and QtVersionInfo < (6, 9):
+                    # PYSIDE-3005
+                    if self._glUniform1fv is None:
+                        self._glUniform1fv = OpenGLHelpers.get_gl_uniform_1fv(view.context())
+                    self._glUniform1fv(loc, data.size, data.ctypes.data)
                 else:
-                    self.m_ibo_faces.bind()
-                    glfn.glDrawElements(GLC.GL_TRIANGLES, faces.size, GLC.GL_UNSIGNED_INT, NULL)
-                    self.m_ibo_faces.release()
+                    # PySide6 and PyQt6 accept ndarray and list
+                    # but PyQt5 accepts only list
+                    glfn.glUniform1fv(loc, len(data), data.tolist())
+
+            if (faces := self.faces) is None:
+                glfn.glDrawArrays(GLC.GL_TRIANGLES, 0, np.prod(self.vertexes.shape[:-1]))
+            else:
+                self.m_ibo_faces.bind()
+                glfn.glDrawElements(GLC.GL_TRIANGLES, faces.size, GLC.GL_UNSIGNED_INT, NULL)
+                self.m_ibo_faces.release()
+
+            program.release()
 
             for loc in enabled_locs:
                 program.disableAttributeArray(loc)
 
         if self.opts['drawEdges']:
-            shader = shaders.getShaderProgram(None)
-            program = shader.program(es2_compat=es2_compat)
+            shader_program = shaders.getShaderProgram("default")
+            program = self.shaderProgram(view, shader_program)
 
             enabled_locs = []
 

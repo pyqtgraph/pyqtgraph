@@ -57,7 +57,7 @@ class GLGridPlaneItem(GLGraphicsItem):
         self.elevation_range: tuple | None = None
 
         self._mesh = GLMeshItem(
-            parentItem=self, computeNormals=False, polygonOffset=True
+            parentItem=self, smooth=False, computeNormals=False, polygonOffset=True
         )
 
         self._lineplot = GLLinePlotItem(
@@ -420,11 +420,9 @@ class GLGridAxisItem(GLGraphicsItem):
         camera_distance = (bounding_box_diagonal / 2.0) / np.tan(fov_rad / 2.0) * distance_factor
         return {'pos': new_pos, 'distance': camera_distance}
 
-    def view_angle(self):
+    def view_angle(self, view):
         """Get the current view angle."""
-        if not self.view():
-            return 0.0, 0.0
-        camera_params = self.view().cameraParams()
+        camera_params = view.cameraParams()
         azimuth, elevation = camera_params['azimuth'], camera_params['elevation']
         azimuth = np.mod(azimuth, 360.0)
         return azimuth, elevation
@@ -432,7 +430,10 @@ class GLGridAxisItem(GLGraphicsItem):
     def paint(self):
         super().paint()
 
-        azimuth, elevation = self.view_angle()
+        if (view := self.view()) is None:
+            return
+
+        azimuth, elevation = self.view_angle(view)
         if self._last_view == [azimuth, elevation]:
             return
         self._last_view = [azimuth, elevation]
