@@ -385,19 +385,18 @@ class MeshData(object):
         if not self.hasFaceIndexedData():
             ## generate self._edges from self._faces
             nf = len(self._faces)
-            edges = np.empty(nf*3, dtype=[('i', np.uint32, 2)])
-            edges['i'][0:nf] = self._faces[:,:2]
-            edges['i'][nf:2*nf] = self._faces[:,1:3]
-            edges['i'][-nf:,0] = self._faces[:,2]
-            edges['i'][-nf:,1] = self._faces[:,0]
+            edges = np.empty((nf*3, 2), dtype=np.uint32)
+            edges[0:nf] = self._faces[:,:2]
+            edges[nf:2*nf] = self._faces[:,1:3]
+            edges[-nf:,0] = self._faces[:,2]
+            edges[-nf:,1] = self._faces[:,0]
             
             # sort per-edge
-            mask = edges['i'][:,0] > edges['i'][:,1]
-            edges['i'][mask] = edges['i'][mask][:,::-1]
+            mask = edges[:,0] > edges[:,1]
+            edges[mask] = edges[mask][:,::-1]
             
             # remove duplicate entries
-            self._edges = np.unique(edges)['i']
-            #print self._edges
+            self._edges = np.unique(edges, axis=0)
         elif self._vertexesIndexedByFaces is not None:
             verts = self._vertexesIndexedByFaces
             edges = np.empty((verts.shape[0], 3, 2), dtype=np.uint32)
