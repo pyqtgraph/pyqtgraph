@@ -343,7 +343,8 @@ class GLViewMixin:
                     eu.setZ(-azimuth-90)
                 if elevation is not None:
                     eu.setX(elevation-90)
-                self.opts['rotation'] = QtGui.QQuaternion.fromEulerAngles(eu)
+                # PySide6 (as of 6.11.2) does not support fromEulerAngles() taking Vector3D
+                self.opts['rotation'] = QtGui.QQuaternion.fromEulerAngles(eu.x(), eu.y(), eu.z())
             if rotation is not None:
                 self.opts['rotation'] = rotation
         else:
