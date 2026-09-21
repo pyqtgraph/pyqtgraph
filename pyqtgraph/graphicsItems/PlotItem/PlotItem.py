@@ -24,7 +24,7 @@ from ..ViewBox import ViewBox
 
 translate = QtCore.QCoreApplication.translate
 
-from . import plotConfigTemplate_generic as ui_template
+from . import plotConfigTemplate as ui_template
 
 __all__ = ['PlotItem']
 
