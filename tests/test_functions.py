@@ -406,17 +406,40 @@ def _handle_underflow(dtype, *elements):
                 (LineToElement, 4.0, -4.0)
             )
         ),
+        # A leading point that connects to nothing is dropped: it would draw nothing
+        # but make Qt's cosmetic stroker read before the start of the point array
         *(
             (
                 np.arange(5, dtype=dtype), np.arange(0, -5, step=-1).astype(dtype), np.array([0, 1, 0, 1, 0]),
                 _handle_underflow(dtype,
-                                  (MoveToElement, 0.0, 0.0),
                                   (MoveToElement, 1.0, -1.0),
                                   (LineToElement, 2.0, -2.0),
                                   (MoveToElement, 3.0, -3.0),
                                   (LineToElement, 4.0, -4.0)
                                   )
             ) for dtype in _dtypes
+        ),
+        (
+            np.arange(5), np.array([np.nan, -1, -2, np.nan, -4]), 'finite', (
+                (MoveToElement, 1.0, -1.0),
+                (LineToElement, 2.0, -2.0),
+                (LineToElement, 2.0, -2.0),
+                (MoveToElement, 4.0, -4.0),
+            )
+        ),
+        (
+            np.arange(6), np.array([np.nan, -1, -2, -3, -4, -5]), 'pairs', (
+                (MoveToElement, 2.0, -2.0),
+                (LineToElement, 3.0, -3.0),
+                (MoveToElement, 4.0, -4.0),
+                (LineToElement, 5.0, -5.0),
+            )
+        ),
+        (
+            np.arange(3), np.full(3, np.nan), 'finite', ()
+        ),
+        (
+            np.arange(3), np.arange(3), np.array([0, 0, 0]), ()
         ),
         # Empty path with all types of connection
         *(
@@ -428,6 +451,10 @@ def _handle_underflow(dtype, *elements):
 )
 def test_arrayToQPath(xs, ys, connect, expected):
     path = arrayToQPath(xs, ys, connect=connect)
+    assert path.elementCount() == len(expected)
+    if path.elementCount() > 1:
+        # never a lone leading MoveTo (see the comment in arrayToQPath)
+        assert path.elementAt(1).type != MoveToElement
     element = None
     for i in range(path.elementCount()):
         # nan elements add two line-segments, for simplicity of test config

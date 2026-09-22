@@ -2121,6 +2121,43 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     if connect == 'all':
         return _arrayToQPath_all(x, y, finiteCheck)
 
+    if finiteCheck and isfinite is None:
+        isfinite = np.isfinite(x) & np.isfinite(y)
+        all_isfinite = np.all(isfinite)
+
+    # decide which points are connected by lines
+    c = np.zeros(n, dtype=np.int32)
+    if connect == 'pairs':
+        mask = 1                # by default connect every 2nd point to every 1st one
+        if finiteCheck and not all_isfinite:
+            mask = isfinite[:len(x)//2 * 2]             # ensure even number of points
+            mask = mask[0::2] & mask[1::2]              # don't connect non-finite pairs
+        c[1::2] = mask
+    elif connect == 'array':
+        # Let's call a point with either x or y being nan is an invalid point.
+        # A point will anyway not connect to an invalid point regardless of the
+        # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
+        # the next point of an invalid point.
+        c[1:] = connect_array[:-1]  # the first vertex has no previous vertex to connect
+    else:
+        raise ValueError('connect argument must be "all", "pairs", "finite", or array')
+
+    # Drop leading vertices that would each form a subpath of a single MoveTo (e.g.
+    # leading non-finite points): they draw nothing, and Qt's cosmetic stroker (all
+    # Qt 5/6 versions) treats such a subpath as closed and reads the two points before
+    # it -- for the first element of the path, before the start of the array, which
+    # is an out-of-bounds read that sporadically crashes (SIGBUS on macOS).
+    connected = np.flatnonzero(c)
+    start = connected[0] - 1 if len(connected) else n
+    if start > 0:
+        x, y, c = x[start:], y[start:], c[start:]
+        n -= start
+        if finiteCheck and not all_isfinite:
+            isfinite = isfinite[start:]
+            all_isfinite = np.all(isfinite)
+    if n == 0:
+        return QtGui.QPainterPath()
+
     path = QtGui.QPainterPath()
     path.reserve(n)
 
@@ -2144,12 +2181,8 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
             count=n, offset=4)
 
     backfill_idx = None
-    if finiteCheck:
-        if isfinite is None:
-            isfinite = np.isfinite(x) & np.isfinite(y)
-            all_isfinite = np.all(isfinite)
-        if not all_isfinite:
-            backfill_idx = _compute_backfill_indices(isfinite)
+    if finiteCheck and not all_isfinite:
+        backfill_idx = _compute_backfill_indices(isfinite)
 
     if backfill_idx is None:
         arr['x'] = x
@@ -2157,24 +2190,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     else:
         arr['x'] = x[backfill_idx]
         arr['y'] = y[backfill_idx]
-
-    # decide which points are connected by lines
-    if connect == 'pairs':
-        mask = 1                # by default connect every 2nd point to every 1st one
-        if finiteCheck and not all_isfinite:
-            mask = isfinite[:len(x)//2 * 2]             # ensure even number of points
-            mask = mask[0::2] & mask[1::2]              # don't connect non-finite pairs
-        arr['c'][0::2] = 0
-        arr['c'][1::2] = mask
-    elif connect == 'array':
-        # Let's call a point with either x or y being nan is an invalid point.
-        # A point will anyway not connect to an invalid point regardless of the
-        # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
-        # the next point of an invalid point.
-        arr['c'][:1] = 0  # the first vertex has no previous vertex to connect
-        arr['c'][1:] = connect_array[:-1]
-    else:
-        raise ValueError('connect argument must be "all", "pairs", "finite", or array')
+    arr['c'] = c
 
     if isinstance(backstore, QtCore.QByteArray):
         ds = QtCore.QDataStream(backstore)
