@@ -1,3 +1,6 @@
+import glob
+import os
+
 import pyqtgraph as pg
 from pyqtgraph.examples.syntax import PythonHighlighter
 from pyqtgraph.Qt import QtGui
@@ -231,3 +234,44 @@ def test_braces_are_highlighted():
     document = highlight(text)
 
     assertSpanColor(document, text.index('('), len(text), 'brace')
+
+
+# -- residual known limitations, guarded against the shipped corpus ----------
+
+def test_no_shipped_example_has_a_trailing_comment_that_is_cut_short():
+    """Every trailing comment must render as comment color through to end
+    of line (the spec's Trailing comment scenario). This is also the
+    observable shape of a documented residual limitation: a `'''` or
+    `\"\"\"` inside a *trailing* (non-full-line) comment opens a spurious
+    multi-line string via `match_multiline`, which overwrites everything
+    from the delimiter onward with string color instead of comment color --
+    so the comment run ends before end of line rather than containing the
+    delimiter literally. No shipped example hits this today, and the
+    design's regression claim (rendering is byte-identical to master apart
+    from this one exempted case) depends on that staying true. This scans
+    the corpus so a future example that introduces the pattern fails here
+    instead of silently mis-rendering in the example browser.
+    """
+    examplesDir = os.path.join(os.path.dirname(pg.__file__), 'examples')
+    paths = sorted(glob.glob(os.path.join(examplesDir, '**', '*.py'), recursive=True))
+    assert paths, 'expected to find shipped example scripts'
+
+    commentColor = styleColor('comment')
+    offenders = []
+    for path in paths:
+        with open(path, encoding='utf-8') as f:
+            text = f.read()
+        document = highlight(text)
+        block = document.begin()
+        while block.isValid():
+            blockText = block.text()
+            if blockText and not blockText.lstrip().startswith('#'):
+                commentPositions = [
+                    i for i in range(len(blockText))
+                    if colorAt(document, block.position() + i) == commentColor
+                ]
+                if commentPositions and commentPositions[-1] != len(blockText) - 1:
+                    offenders.append(f'{path}: {blockText!r}')
+            block = block.next()
+
+    assert offenders == []
