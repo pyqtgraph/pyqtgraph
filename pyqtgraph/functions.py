@@ -2142,19 +2142,25 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     else:
         raise ValueError('connect argument must be "all", "pairs", "finite", or array')
 
-    # Drop leading vertices that would each form a subpath of a single MoveTo (e.g.
-    # leading non-finite points): they draw nothing, and Qt's cosmetic stroker (all
-    # Qt 5/6 versions) treats such a subpath as closed and reads the two points before
-    # it -- for the first element of the path, before the start of the array, which
-    # is an out-of-bounds read that sporadically crashes (SIGBUS on macOS).
-    connected = np.flatnonzero(c)
-    start = connected[0] - 1 if len(connected) else n
-    if start > 0:
-        x, y, c = x[start:], y[start:], c[start:]
-        n -= start
-        if finiteCheck and not all_isfinite:
-            isfinite = isfinite[start:]
-            all_isfinite = np.all(isfinite)
+    # Omit vertices that connect to nothing (e.g. runs of non-finite points): they
+    # would each become a subpath of a single MoveTo, i.e. consecutive MoveTo
+    # elements, which Qt considers an invalid QPainterPath (QPainterPath.moveTo()
+    # folds them away; the QDataStream reader used here does not) and which crash
+    # Qt's cosmetic stroker with an out-of-bounds read when such a subpath starts
+    # the path. They draw nothing, so the rendering is unchanged.
+    if finiteCheck and not all_isfinite:
+        if not isfinite.any():
+            return QtGui.QPainterPath()  # nothing to draw
+        # Non-finite points take the coordinates of the preceding finite one (must
+        # happen before any vertices are omitted below, so that the result is the
+        # same as when they were still present)
+        backfill_idx = _compute_backfill_indices(isfinite)
+        x, y = x[backfill_idx], y[backfill_idx]
+    keep = c.astype(bool)
+    keep[:-1] |= keep[1:]  # connected to the previous point, or the next one to it
+    if not keep.all():
+        x, y, c = x[keep], y[keep], c[keep]
+        n = len(x)
     if n == 0:
         return QtGui.QPainterPath()
 
@@ -2180,16 +2186,8 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
             count=n, offset=4)
 
-    backfill_idx = None
-    if finiteCheck and not all_isfinite:
-        backfill_idx = _compute_backfill_indices(isfinite)
-
-    if backfill_idx is None:
-        arr['x'] = x
-        arr['y'] = y
-    else:
-        arr['x'] = x[backfill_idx]
-        arr['y'] = y[backfill_idx]
+    arr['x'] = x
+    arr['y'] = y
     arr['c'] = c
 
     if isinstance(backstore, QtCore.QByteArray):

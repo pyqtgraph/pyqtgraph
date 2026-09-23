@@ -375,6 +375,7 @@ def _handle_underflow(dtype, *elements):
                                   )
             ) for dtype in _dtypes
         ),
+        # The unpaired last point connects to nothing and is omitted
         *(
             (
                 np.arange(5, dtype=dtype), np.arange(0, -5, step=-1).astype(dtype), 'pairs',
@@ -383,7 +384,6 @@ def _handle_underflow(dtype, *elements):
                                   (LineToElement, 1.0, -1.0),
                                   (MoveToElement, 2.0, -2.0),
                                   (LineToElement, 3.0, -3.0),
-                                  (MoveToElement, 4.0, -4.0)
                                   )
             ) for dtype in _dtypes
         ),
@@ -406,8 +406,9 @@ def _handle_underflow(dtype, *elements):
                 (LineToElement, 4.0, -4.0)
             )
         ),
-        # A leading point that connects to nothing is dropped: it would draw nothing
-        # but make Qt's cosmetic stroker read before the start of the point array
+        # A point that connects to nothing is omitted: it would draw nothing, but
+        # would produce consecutive MoveTo elements, which Qt considers an invalid path
+        # (and which crash its cosmetic stroker when they start the path)
         *(
             (
                 np.arange(5, dtype=dtype), np.arange(0, -5, step=-1).astype(dtype), np.array([0, 1, 0, 1, 0]),
@@ -424,7 +425,16 @@ def _handle_underflow(dtype, *elements):
                 (MoveToElement, 1.0, -1.0),
                 (LineToElement, 2.0, -2.0),
                 (LineToElement, 2.0, -2.0),
+            )
+        ),
+        # An interior run of non-finite points used to become consecutive MoveTos
+        (
+            np.arange(6), np.array([0, -1, np.nan, np.nan, -4, -5]), 'finite', (
+                (MoveToElement, 0.0, 0.0),
+                (LineToElement, 1.0, -1.0),
+                (LineToElement, 1.0, -1.0),
                 (MoveToElement, 4.0, -4.0),
+                (LineToElement, 5.0, -5.0),
             )
         ),
         (
@@ -452,9 +462,11 @@ def _handle_underflow(dtype, *elements):
 def test_arrayToQPath(xs, ys, connect, expected):
     path = arrayToQPath(xs, ys, connect=connect)
     assert path.elementCount() == len(expected)
-    if path.elementCount() > 1:
-        # never a lone leading MoveTo (see the comment in arrayToQPath)
-        assert path.elementAt(1).type != MoveToElement
+    # never consecutive MoveTos, nor a trailing one (see the comment in arrayToQPath)
+    types = [path.elementAt(i).type for i in range(path.elementCount())]
+    for i, t in enumerate(types):
+        if t == MoveToElement:
+            assert i + 1 < len(types) and types[i + 1] != MoveToElement
     element = None
     for i in range(path.elementCount()):
         # nan elements add two line-segments, for simplicity of test config
