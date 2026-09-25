@@ -7,7 +7,6 @@ Distributed under MIT/X11 license. See license.txt for more information.
 import decimal
 import math
 import re
-import struct
 import sys
 import warnings
 from collections import OrderedDict
@@ -15,7 +14,7 @@ from typing import Literal, TypedDict
 
 import numpy as np
 
-from . import Qt, debug, getConfigOption, reload
+from . import Qt, debug, reload
 from .Qt import QT_LIB, QtCore, QtGui
 from .util.cupy_helper import getCupy
 
@@ -1924,8 +1923,8 @@ def _arrayToQPath_all(x, y, finiteCheck):
 
     if numchunks < minchunks:
         # too few chunks, batching would be a pessimization
-        poly = create_qpolygonf(n)
-        arr = ndarray_from_qpolygonf(poly)
+        polybuf = Qt.internals.QPolygonBuffer(n)
+        arr = polybuf.ndarray()
 
         if finite_idx is None:
             arr[:, 0] = x
@@ -1934,26 +1933,18 @@ def _arrayToQPath_all(x, y, finiteCheck):
             arr[:, 0] = x[finite_idx]
             arr[:, 1] = y[finite_idx]
 
-        path = QtGui.QPainterPath()
-        path.reserve(n)
-        path.addPolygon(poly)
-        return path
+        return polybuf.to_qpainterpath()
 
     # at this point, we have numchunks >= minchunks
 
     path = QtGui.QPainterPath()
     path.reserve(n)
-    subpoly = QtGui.QPolygonF()
-    subpath = QtGui.QPainterPath()
+    polybuf = Qt.internals.QPolygonBuffer(chunksize)
     for idx in range(numchunks):
         sl = slice(idx*chunksize, min((idx+1)*chunksize, n))
         currsize = sl.stop - sl.start
-        if currsize != subpoly.size():
-            if hasattr(subpoly, 'resize'):
-                subpoly.resize(currsize)
-            else:
-                subpoly.fill(QtCore.QPointF(), currsize)
-        subarr = ndarray_from_qpolygonf(subpoly)
+        polybuf.resize(currsize)
+        subarr = polybuf.ndarray()
         if finite_idx is None:
             subarr[:, 0] = x[sl]
             subarr[:, 1] = y[sl]
@@ -1961,13 +1952,11 @@ def _arrayToQPath_all(x, y, finiteCheck):
             fiv = finite_idx[sl]  # view
             subarr[:, 0] = x[fiv]
             subarr[:, 1] = y[fiv]
-        subpath.clear()
-        subpath.addPolygon(subpoly)
-        path.connectPath(subpath)
+        path.connectPath(polybuf.to_qpainterpath())
     return path
 
 
-def _arrayToQPath_finite(x, y, isfinite=None):
+def _arrayToQPath_finite(x, y, isfinite=None, *, method=None):
     n = x.shape[0]
     if n == 0:
         return QtGui.QPainterPath()
@@ -1975,58 +1964,83 @@ def _arrayToQPath_finite(x, y, isfinite=None):
     if isfinite is None:
         isfinite = np.isfinite(x) & np.isfinite(y)
 
-    path = QtGui.QPainterPath()
-    path.reserve(n)
+    nonfinite_locs = np.nonzero(~isfinite)[0]
+    # pretend that there's a nonfinite before and after the array
+    nonfinite_locs = np.concatenate(([-1], nonfinite_locs, [n]))
+    sidx = nonfinite_locs[:-1] + 1      # start index of segment
+    slen = np.diff(nonfinite_locs) - 1  # length of segment
+    mask = slen >= 2
+    sidx = sidx[mask]
+    slen = slen[mask]
 
-    sidx = np.nonzero(~isfinite)[0] + 1
-    # note: the chunks are views
-    xchunks = np.split(x, sidx)
-    ychunks = np.split(y, sidx)
-    chunks = list(zip(xchunks, ychunks))
+    num_points = slen.sum()
+    if num_points == 0:
+        return QtGui.QPainterPath()
 
-    # create a single polygon able to hold the largest chunk
-    maxlen = max(len(chunk) for chunk in xchunks)
-    subpoly = create_qpolygonf(maxlen)
-    subarr = ndarray_from_qpolygonf(subpoly)
+    if method is None or method not in ['qpolygonf', 'qpainterpath']:
+        if num_points >= 15 * len(slen):
+            method = 'qpolygonf'
+        else:
+            method = 'qpainterpath'
 
-    # resize and fill do not change the capacity
-    if hasattr(subpoly, 'resize'):
-        subpoly_resize = subpoly.resize
+    if method == 'qpolygonf':
+        path = QtGui.QPainterPath()
+        path.reserve(num_points)
+
+        # create a single polygon able to hold the largest chunk
+        polybuf = Qt.internals.QPolygonBuffer(max(slen))
+
+        for i, l in zip(sidx, slen):
+            polybuf.resize(l)
+            subarr = polybuf.ndarray()
+            subarr[:, 0] = x[i:i+l]
+            subarr[:, 1] = y[i:i+l]
+            path.addPolygon(polybuf.qpolygon())
+
+        return path
     else:
-        # PyQt will be less efficient
-        subpoly_resize = lambda n, v=QtCore.QPointF() : subpoly.fill(v, n)
+        # move_draw = np.concatenate([np.r_[False, np.ones(l - 1, dtype=bool)] for l in slen])
+        move_ind = np.cumsum(slen) - slen
+        # data_ind = np.concatenate([np.arange(i, i + l) for i, l in zip(sidx, slen)])
+        data_ind = np.arange(num_points) + np.repeat(sidx - move_ind, slen)
 
-    # notes:
-    # - we backfill the non-finite in order to get the same image as the
-    #   old codepath on the CI. somehow P1--P2 gets rendered differently
-    #   from P1--P2--P2
-    # - we do not generate MoveTo(s) that are not followed by a LineTo,
-    #   thus the QPainterPath can be different from the old codepath's
+        qpath_buffer = Qt.internals.QPainterPathBuffer(num_points)
+        arr = qpath_buffer.ndarray()
 
-    # all chunks except the last chunk have a trailing non-finite
-    for xchunk, ychunk in chunks[:-1]:
-        lc = len(xchunk)
-        if lc <= 1:
-            # len 1 means we have a string of non-finite
-            continue
-        subpoly_resize(lc)
-        subarr[:lc, 0] = xchunk
-        subarr[:lc, 1] = ychunk
-        subarr[lc-1] = subarr[lc-2] # fill non-finite with its neighbour
-        path.addPolygon(subpoly)
+        arr['c'] = 1
+        arr['c'][move_ind] = 0
+        arr['x'] = x[data_ind]
+        arr['y'] = y[data_ind]
 
-    # handle last chunk, which is either all-finite or empty
-    for xchunk, ychunk in chunks[-1:]:
-        lc = len(xchunk)
-        if lc <= 1:
-            # can't draw a line with just 1 point
-            continue
-        subpoly_resize(lc)
-        subarr[:lc, 0] = xchunk
-        subarr[:lc, 1] = ychunk
-        path.addPolygon(subpoly)
+        return qpath_buffer.to_qpainterpath()
 
-    return path
+
+def _arrayToQPath_pairs(x, y, finiteCheck):
+    # ensure that we have an even number of elements
+    n = len(x) // 2 * 2
+    x = x[:n]
+    y = y[:n]
+
+    if finiteCheck:
+        isfinite = np.isfinite(x) & np.isfinite(y)
+        if not np.all(isfinite):
+            mask = isfinite
+            # remove pair if at least one point within pair is non-finite
+            mask.reshape((-1, 2))[:] = (mask[0::2] & mask[1::2])[:, np.newaxis]
+            x = x[mask]
+            y = y[mask]
+            n = len(x)
+
+    if n == 0:
+        return QtGui.QPainterPath()
+
+    qpath_buffer = Qt.internals.QPainterPathBuffer(n)
+    arr = qpath_buffer.ndarray()
+    arr['c'][0::2] = 0
+    arr['c'][1::2] = 1
+    arr['x'] = x
+    arr['y'] = y
+    return qpath_buffer.to_qpainterpath()
 
 
 def arrayToQPath(x, y, connect='all', finiteCheck=True):
@@ -2094,96 +2108,42 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         # make connect argument contain only str type
         connect_array, connect = connect, 'array'
 
-    isfinite = None
-
-    if connect == 'finite':
-        if not finiteCheck:
-            # if user specified to skip finite check, then we skip the heuristic
-            return _arrayToQPath_finite(x, y)
-
-        # otherwise use a heuristic
-        # if non-finite aren't that many, then use_qpolyponf
-        isfinite = np.isfinite(x) & np.isfinite(y)
-        nonfinite_cnt = n - np.sum(isfinite)
-        all_isfinite = nonfinite_cnt == 0
-        if all_isfinite:
-            # delegate to connect='all'
-            connect = 'all'
-            finiteCheck = False
-        elif nonfinite_cnt / n < 2 / 100:
-            return _arrayToQPath_finite(x, y, isfinite)
-        else:
-            # delegate to connect=ndarray
-            # finiteCheck=True, all_isfinite=False
-            connect = 'array'
-            connect_array = isfinite
-
     if connect == 'all':
         return _arrayToQPath_all(x, y, finiteCheck)
 
-    path = QtGui.QPainterPath()
-    path.reserve(n)
-
-    if getConfigOption('enableExperimental'):
-        backstore = None
-        arr = Qt.internals.get_qpainterpath_element_array(path, n)
-    else:
-        if Qt.internals.qbytearray_leaks():
-            backstore = bytearray(4 + n*20 + 8) # initialized to zero
-            struct.pack_into('>i', backstore, 0, n)
-            # cStart, fillRule (Qt.FillRule.OddEvenFill)
-            struct.pack_into('>ii', backstore, 4+n*20, 0, 0)
+    elif connect == 'finite':
+        isfinite = np.isfinite(x) & np.isfinite(y)
+        if np.all(isfinite):
+            return _arrayToQPath_all(x, y, finiteCheck=False)
         else:
-            backstore = QtCore.QByteArray()
-            backstore.resize(4 + n*20 + 8)      # contents uninitialized
-            backstore.replace(0, 4, struct.pack('>i', n))
-            # cStart, fillRule (Qt.FillRule.OddEvenFill)
-            backstore.replace(4+n*20, 8, struct.pack('>ii', 0, 0))
+            return _arrayToQPath_finite(x, y, isfinite)
 
-        arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
-            count=n, offset=4)
+    elif connect == 'pairs':
+        return _arrayToQPath_pairs(x, y, finiteCheck)
 
-    backfill_idx = None
-    if finiteCheck:
-        if isfinite is None:
+    elif connect == 'array':
+        if finiteCheck:
             isfinite = np.isfinite(x) & np.isfinite(y)
-            all_isfinite = np.all(isfinite)
-        if not all_isfinite:
-            backfill_idx = _compute_backfill_indices(isfinite)
+            if not np.all(isfinite):
+                backfill_idx = _compute_backfill_indices(isfinite)
+                x = x[backfill_idx]
+                y = y[backfill_idx]
 
-    if backfill_idx is None:
+        qpath_buffer = Qt.internals.QPainterPathBuffer(n)
+        arr = qpath_buffer.ndarray()
         arr['x'] = x
         arr['y'] = y
-    else:
-        arr['x'] = x[backfill_idx]
-        arr['y'] = y[backfill_idx]
 
-    # decide which points are connected by lines
-    if connect == 'pairs':
-        mask = 1                # by default connect every 2nd point to every 1st one
-        if finiteCheck and not all_isfinite:
-            mask = isfinite[:len(x)//2 * 2]             # ensure even number of points
-            mask = mask[0::2] & mask[1::2]              # don't connect non-finite pairs
-        arr['c'][0::2] = 0
-        arr['c'][1::2] = mask
-    elif connect == 'array':
         # Let's call a point with either x or y being nan is an invalid point.
         # A point will anyway not connect to an invalid point regardless of the
         # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
         # the next point of an invalid point.
         arr['c'][:1] = 0  # the first vertex has no previous vertex to connect
         arr['c'][1:] = connect_array[:-1]
+
+        return qpath_buffer.to_qpainterpath()
     else:
         raise ValueError('connect argument must be "all", "pairs", "finite", or array')
-
-    if isinstance(backstore, QtCore.QByteArray):
-        ds = QtCore.QDataStream(backstore)
-        ds >> path
-    elif isinstance(backstore, bytearray):
-        qba = QtCore.QByteArray(backstore)  # a copy is made here
-        ds = QtCore.QDataStream(qba)
-        ds >> path
-    return path
 
 def ndarray_from_qpolygonf(polyline):
     # polyline.data() will be None if the pointer was null.
@@ -2192,13 +2152,7 @@ def ndarray_from_qpolygonf(polyline):
     return np.frombuffer(vp, dtype=np.float64).reshape((-1, 2))
 
 def create_qpolygonf(size):
-    polyline = QtGui.QPolygonF()
-    if hasattr(polyline, 'resize'):
-        # (PySide) and (PyQt6 >= 6.3.1)
-        polyline.resize(size)
-    else:
-        polyline.fill(QtCore.QPointF(), size)
-    return polyline
+    return Qt.internals.QPolygonBuffer(size).qpolygon()
 
 def arrayToQPolygonF(x, y):
     """

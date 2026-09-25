@@ -1,5 +1,6 @@
 import ctypes
 import itertools
+import struct
 import sys
 
 import numpy as np
@@ -246,3 +247,79 @@ def qbytearray_leaks() -> bool:
             _qbytearray_leaks = False
 
     return _qbytearray_leaks
+
+class QPainterPathBuffer:
+    def __init__(self, nelems):
+        self.nelems = nelems
+        self.path = QtGui.QPainterPath()
+        self.path.reserve(self.nelems)
+        self.backstore = None
+
+    def ndarray(self):
+        from .. import getConfigOption   # circular import
+
+        n = self.nelems
+        if getConfigOption('enableExperimental'):
+            backstore = None
+            arr = get_qpainterpath_element_array(self.path, n)
+        else:
+            if qbytearray_leaks():
+                backstore = bytearray(4 + n*20 + 8) # initialized to zero
+                struct.pack_into('>i', backstore, 0, n)
+                # cStart, fillRule (Qt.FillRule.OddEvenFill)
+                struct.pack_into('>ii', backstore, 4+n*20, 0, 0)
+            else:
+                backstore = QtCore.QByteArray()
+                backstore.resize(4 + n*20 + 8)      # contents uninitialized
+                backstore.replace(0, 4, struct.pack('>i', n))
+                # cStart, fillRule (Qt.FillRule.OddEvenFill)
+                backstore.replace(4+n*20, 8, struct.pack('>ii', 0, 0))
+
+            arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
+                count=n, offset=4)
+
+        self.backstore = backstore
+        return arr
+
+    def to_qpainterpath(self):
+        if isinstance(self.backstore, QtCore.QByteArray):
+            ds = QtCore.QDataStream(self.backstore)
+            ds >> self.path
+        elif isinstance(self.backstore, bytearray):
+            qba = QtCore.QByteArray(self.backstore)  # a copy is made here
+            ds = QtCore.QDataStream(qba)
+            ds >> self.path
+        return self.path
+
+class QPolygonBuffer:
+    def __init__(self, size):
+        self.polyline = QtGui.QPolygonF()
+        self.path = None
+        self.resize(size)
+
+    def resize(self, size):
+        # resize and fill do not reduce the capacity
+        if hasattr(self.polyline, 'resize'):
+            # (PySide) and (PyQt6 >= 6.3.1)
+            self.polyline.resize(size)
+        else:
+            self.polyline.fill(QtCore.QPointF(), size)
+
+    def ndarray(self):
+        # polyline.data() will be None if the pointer was null.
+        # voidptr(None) is the same as voidptr(0).
+        vp = compat.voidptr(self.polyline.data(), self.polyline.size()*2*8, True)
+        return np.frombuffer(vp, dtype=np.float64).reshape((-1, 2))
+
+    def qpolygon(self):
+        return self.polyline
+
+    def to_qpainterpath(self):
+        # note that the QPainterPath is reused on subsequent calls
+        if self.path is None:
+            self.path = QtGui.QPainterPath()
+        else:
+            self.path.clear()
+        self.path.reserve(self.polyline.size())
+        self.path.addPolygon(self.polyline)
+        return self.path
