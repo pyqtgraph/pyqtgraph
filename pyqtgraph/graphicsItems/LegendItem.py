@@ -222,9 +222,21 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             sample = self.sampleType(item)
 
         sample.sigClicked.connect(self.sigSampleClicked)
+        if hasattr(item, 'sigPlotChanged'):
+            item.sigPlotChanged.connect(
+                lambda _: self._updateItem(item, sample, label)
+            )
 
         self.items.append((sample, label))
         self._addItemToLayout(sample, label)
+        self.updateSize()
+
+    def _updateItem(self, item, sample, label):
+        """Update a legend entry after its plotted item changes."""
+        name = item.name()
+        if name is not None:
+            label.setText(name)
+        sample.update()
         self.updateSize()
 
     def _addItemToLayout(self, sample, label):
