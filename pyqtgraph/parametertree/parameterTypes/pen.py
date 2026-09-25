@@ -6,7 +6,7 @@ from ...Qt import QtCore, QtWidgets
 from ...SignalProxy import SignalProxy
 from ...widgets.PenPreviewLabel import PenPreviewLabel
 from . import GroupParameterItem
-from .basetypes import GroupParameter, Parameter, ParameterItem
+from .basetypes import GroupParameter, Parameter
 from .qtenum import QtEnumParameter
 
 
@@ -28,12 +28,8 @@ class PenParameterItem(GroupParameterItem):
         if "enabled" in opts or "readonly" in opts:
             self.updateCtrlButton()
 
-    def treeWidgetChanged(self):
-        ParameterItem.treeWidgetChanged(self)
-        tw = self.treeWidget()
-        if tw is None:
-            return
-        tw.setItemWidget(self, 1, self.itemWidget)
+    def valueColumnWidget(self):
+        return self.itemWidget
 
     def valueChanged(self, param, val):
         self.updateCtrlButton()
