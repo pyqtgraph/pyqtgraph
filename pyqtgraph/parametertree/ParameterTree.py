@@ -1,4 +1,4 @@
-from .parameterTypes import GroupParameterItem
+from .parameterTypes import GroupParameterItem, NumericParameterItem
 from ..Qt import QtCore, QtWidgets, QtGui, mkQApp
 from ..widgets.TreeWidget import TreeWidget
 from .ParameterItem import ParameterItem
@@ -173,6 +173,10 @@ class ParameterTree(TreeWidget):
             for item in self.listAllItems():
                 if isinstance(item, GroupParameterItem):
                     item.updateDepth(item.depth)
+        elif event.type() == QtCore.QEvent.Type.LocaleChange:
+            for item in self.listAllItems():
+                if isinstance(item, NumericParameterItem):
+                    item.updateDisplayLabel()
         elif event.type() == QtCore.QEvent.Type.ApplicationPaletteChange:
             app = mkQApp()
             self._updatePalette(app.palette())
