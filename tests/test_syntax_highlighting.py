@@ -31,12 +31,16 @@ def highlight(text):
 
 
 def formatAt(document, position):
-    """Return the QTextCharFormat applied at a character position, or None."""
+    """Return the QTextCharFormat applied at a character position, or None.
+
+    The format is copied because PySide6 ties `fmtRange.format` to the
+    temporary FormatRange, which is freed once `formats()`'s list goes away.
+    """
     block = document.findBlock(position)
     offset = position - block.position()
     for fmtRange in block.layout().formats():
         if fmtRange.start <= offset < fmtRange.start + fmtRange.length:
-            return fmtRange.format
+            return QtGui.QTextCharFormat(fmtRange.format)
     return None
 
 
