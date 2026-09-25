@@ -1737,7 +1737,7 @@ class PlotDataItem(GraphicsObject):
                 min(
                     (i for i in [bounds2[0], bounds[0]] if i is not None), default=None
                 ),
-                min(
+                max(
                     (i for i in [bounds2[1], bounds[1]] if i is not None), default=None
                 )
             )
