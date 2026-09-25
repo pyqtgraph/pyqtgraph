@@ -224,3 +224,53 @@ def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
     axis = pg.AxisItem(orientation)
     axis.setLogMode(log)
     assert axis.logMode == expected
+
+
+def test_AxisItem_labelOffset_default():
+    """Test that labelOffset defaults to 5."""
+    axis = pg.AxisItem('bottom')
+    assert axis.style['labelOffset'] == 5
+
+
+def test_AxisItem_labelOffset_setStyle():
+    """Test that labelOffset can be set via setStyle()."""
+    axis = pg.AxisItem('bottom')
+    axis.setStyle(labelOffset=10)
+    assert axis.style['labelOffset'] == 10
+
+    axis.setStyle(labelOffset=0)
+    assert axis.style['labelOffset'] == 0
+
+    axis.setStyle(labelOffset=3.5)
+    assert axis.style['labelOffset'] == 3.5
+
+
+def test_AxisItem_labelOffset_invalid_type():
+    """Test that setStyle raises TypeError for non-numeric labelOffset."""
+    axis = pg.AxisItem('bottom')
+    with pytest.raises(TypeError):
+        axis.setStyle(labelOffset="big")
+
+
+def test_AxisItem_labelOffset_boundingRect():
+    """Test that boundingRect accounts for labelOffset."""
+    plot = pg.PlotWidget()
+    plot.show()
+    app.processEvents()
+
+    axis = plot.getAxis('bottom')
+    axis.showLabel(True)
+    axis.setLabel(text='Test Label')
+
+    axis.setStyle(labelOffset=5)
+    app.processEvents()
+    br_small = axis.boundingRect()
+
+    axis.setStyle(labelOffset=20)
+    app.processEvents()
+    br_large = axis.boundingRect()
+
+    # larger labelOffset should produce a larger (or equal) bounding rect
+    assert br_large.height() >= br_small.height()
+
+    plot.close()
