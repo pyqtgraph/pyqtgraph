@@ -5,7 +5,7 @@ import warnings
 
 import numpy as np
 
-from .. import Qt, debug
+from .. import arraytoline, debug
 from .. import functions as fn
 from .. import getConfigOption
 from ..Qt import OpenGLConstants as GLC
@@ -116,93 +116,6 @@ class OpenGLState(QtCore.QObject):
 
     def verticesChanged(self, curve):
         self.render_cache = None
-
-def arrayToLineSegments(x, y, connect, finiteCheck, out=None):
-    if out is None:
-        out = Qt.internals.PrimitiveArray(QtCore.QLineF, 4)
-
-    # analogue of arrayToQPath taking the same parameters
-    if len(x) < 2:
-        out.resize(0)
-        return out
-
-    connect_array = None
-    if isinstance(connect, np.ndarray):
-        # the last element is not used
-        connect_array, connect = np.asarray(connect[:-1], dtype=bool), 'array'
-
-    all_finite = True
-    if finiteCheck or connect == 'finite':
-        mask = np.isfinite(x) & np.isfinite(y)
-        all_finite = np.all(mask)
-
-    if connect == 'all':
-        if not all_finite:
-            # remove non-finite points, if any
-            x = x[mask]
-            y = y[mask]
-
-    elif connect == 'finite':
-        if all_finite:
-            connect = 'all'
-        else:
-            # each non-finite point affects the segment before and after
-            connect_array = mask[:-1] & mask[1:]
-
-    elif connect == 'pairs':
-        if not all_finite:
-            # ensure that we have an even number of elements
-            npairs = len(x) // 2
-            mask = mask[:npairs*2]
-            # remove pair if at least one point within pair is non-finite
-            mask.reshape((-1, 2))[:] = (mask[0::2] & mask[1::2])[:, np.newaxis]
-            x = x[:npairs*2][mask]
-            y = y[:npairs*2][mask]
-
-    elif connect == 'array':
-        if not all_finite:
-            # replicate the behavior of arrayToQPath
-            backfill_idx = fn._compute_backfill_indices(mask)
-            x = x[backfill_idx]
-            y = y[backfill_idx]
-
-    if connect == 'all':
-        nsegs = len(x) - 1
-        out.resize(nsegs)
-        if nsegs:
-            memory = out.ndarray()
-            memory[:, 0] = x[:-1]
-            memory[:, 2] = x[1:]
-            memory[:, 1] = y[:-1]
-            memory[:, 3] = y[1:]
-
-    elif connect == 'pairs':
-        nsegs = len(x) // 2
-        out.resize(nsegs)
-        if nsegs:
-            memory = out.ndarray()
-            memory = memory.reshape((-1, 2))
-            memory[:, 0] = x[:nsegs * 2]
-            memory[:, 1] = y[:nsegs * 2]
-
-    elif connect_array is not None:
-        # the following are handled here
-        # - 'array'
-        # - 'finite' with non-finite elements
-        nsegs = np.count_nonzero(connect_array)
-        out.resize(nsegs)
-        if nsegs:
-            memory = out.ndarray()
-            memory[:, 0] = x[:-1][connect_array]
-            memory[:, 2] = x[1:][connect_array]
-            memory[:, 1] = y[:-1][connect_array]
-            memory[:, 3] = y[1:][connect_array]
-
-    else:
-        nsegs = 0
-        out.resize(nsegs)
-
-    return out
 
 class PlotCurveItem(GraphicsObject):
     """
@@ -787,7 +700,7 @@ class PlotCurveItem(GraphicsObject):
                     baseline=self.opts['fillLevel']
                 )
 
-            self._lineSegments = arrayToLineSegments(
+            self._lineSegments = arraytoline.arrayToLineSegments(
                 x,
                 y,
                 connect=self.opts['connect'],
@@ -884,21 +797,17 @@ class PlotCurveItem(GraphicsObject):
         slen = []
 
         if connect_kind == "all":
-            mask = np.isfinite(x) & np.isfinite(y)
-            if not mask.all():
+            finite_mask = arraytoline._compute_finite_mask(x, y)
+            if not finite_mask.all():
                 # remove non-finite values
-                x = x[mask]
-                y = y[mask]
+                x = x[finite_mask]
+                y = y[finite_mask]
             sidx = [0]
             slen = [len(x)]
 
         elif connect_kind == "finite":
-            isfinite = np.isfinite(x) & np.isfinite(y)
-            nonfinite_locs = np.nonzero(~isfinite)[0]
-            # pretend that there's a nonfinite before and after the array
-            nonfinite_locs = np.concatenate(([-1], nonfinite_locs, [len(x)]))
-            sidx = nonfinite_locs[:-1] + 1      # start index of segment
-            slen = np.diff(nonfinite_locs) - 1  # length of segment
+            finite_mask = arraytoline._compute_finite_mask(x, y)
+            sidx, slen = arraytoline._compute_finite_segments(finite_mask)
 
         for s, l in zip(sidx, slen):
             if l < 2:
@@ -926,7 +835,7 @@ class PlotCurveItem(GraphicsObject):
             xyview[-3:, 1] = [baseline, baseline, suby[0]]
             offset += size - 1  # last point is re-used for next chunk
             # data was either declared to be all-finite OR was sanitized
-            path = fn._arrayToQPath_all(xyview[:, 0], xyview[:, 1], finiteCheck=False)
+            path = fn.arrayToQPath(xyview[:, 0], xyview[:, 1], connect='all', finiteCheck=False)
             paths.append(path)
 
         return paths
@@ -1119,10 +1028,8 @@ class PlotCurveItem(GraphicsObject):
 
             elif connect_kind == "all":
                 if not self.opts["skipFiniteCheck"]:
-                    isfinite = np.isfinite(y)
-                    if x.dtype.kind == 'f':
-                        isfinite &= np.isfinite(x)
-                    valid_pts = np.sum(isfinite)
+                    finite_mask = arraytoline._compute_finite_mask(x, y)
+                    valid_pts = np.count_nonzero(finite_mask)
                 glstate.render_cache = (xc, yc, valid_pts,)
 
                 fill_pts = 0 if fillLevel is None else 2 * valid_pts
@@ -1132,8 +1039,8 @@ class PlotCurveItem(GraphicsObject):
                     pos[:, 0] = x - xc
                     pos[:, 1] = y - yc
                 else:
-                    pos[:, 0] = x[isfinite] - xc
-                    pos[:, 1] = y[isfinite] - yc
+                    pos[:, 0] = x[finite_mask] - xc
+                    pos[:, 1] = y[finite_mask] - yc
 
                 if fill_pts:
                     fillpos = buf[valid_pts:, :]
@@ -1143,18 +1050,9 @@ class PlotCurveItem(GraphicsObject):
                     fillpos[1::2, 1] = fillLevel - yc
 
             elif connect_kind == "finite":
-                isfinite = np.isfinite(y)
-                if x.dtype.kind == 'f':
-                    isfinite &= np.isfinite(x)
-                nonfinite_locs = np.nonzero(~isfinite)[0]
-                # pretend that there's a nonfinite before and after the array
-                nonfinite_locs = np.concatenate(([-1], nonfinite_locs, [num_pts]))
-                sidx = nonfinite_locs[:-1] + 1      # start index of segment
-                slen = np.diff(nonfinite_locs) - 1  # length of segment
-                mask = slen >= 2
-                sidx = sidx[mask].tolist()
-                slen = slen[mask].tolist()
-                glstate.render_cache = (xc, yc, valid_pts, sidx, slen)
+                finite_mask = arraytoline._compute_finite_mask(x, y)
+                sidx, slen = arraytoline._compute_finite_segments(finite_mask)
+                glstate.render_cache = (xc, yc, valid_pts, sidx.tolist(), slen.tolist())
 
                 fill_pts = 0 if fillLevel is None else 2 * valid_pts
                 buf = np.empty((valid_pts + fill_pts, 2), dtype=np.float32)
@@ -1171,7 +1069,7 @@ class PlotCurveItem(GraphicsObject):
 
             elif connect_kind == "array":
                 mask = np.asarray(self.opts["connect"], dtype=bool)[:num_pts-1]
-                valid_pts = 2 * np.sum(mask)
+                valid_pts = 2 * np.count_nonzero(mask)
                 glstate.render_cache = (xc, yc, valid_pts,)
 
                 buf = np.empty((valid_pts, 2), dtype=np.float32)

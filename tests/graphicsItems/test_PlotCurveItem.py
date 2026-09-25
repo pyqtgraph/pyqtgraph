@@ -1,7 +1,8 @@
 import numpy as np
 
 import pyqtgraph as pg
-from pyqtgraph.graphicsItems.PlotCurveItem import arrayToLineSegments
+from pyqtgraph.Qt import QtGui
+from pyqtgraph.arraytoline import arrayToLineSegments
 from tests.image_testing import assertImageApproved
 
 
@@ -25,14 +26,37 @@ def test_PlotCurveItem():
     
     c.setData(data, connect='pairs')
     assertImageApproved(p, 'plotcurveitem/connectpairs', "Plot curve with pairs connected.")
-    
-    c.setData(data, connect='finite')
-    assertImageApproved(p, 'plotcurveitem/connectfinite', "Plot curve with finite points connected.")
 
-    c.setData(data, connect='finite', skipFiniteCheck=True)
-    assertImageApproved(p, 'plotcurveitem/connectfinite', "Plot curve with finite points connected using QPolygonF.")
-    c.setSkipFiniteCheck(False)
-    
+    MoveTo = QtGui.QPainterPath.ElementType.MoveToElement
+    LineTo = QtGui.QPainterPath.ElementType.LineToElement
+
+    c.setData(data, connect='finite')
+    path = c.getPath()
+
+    expected_segments = [
+        [(0.0, 1.0), (1.0, 4.0), (2.0, 2.0), (3.0, 3.0)],
+        [(5.0, 5.0), (6.0, 7.0), (7.0, 6.0)],
+        [(9.0, 8.0), (10.0, 10.0), (11.0, 9.0)],
+        [(13.0, -1.0), (14.0, -2.0), (15.0, 0.0)],
+    ]
+
+    expected_elements = []
+    for segment in expected_segments:
+        for idx, coords in enumerate(segment):
+            command = MoveTo if idx == 0 else LineTo
+            expected_elements.append((command,) + coords)
+
+    assert path.elementCount() == len(expected_elements)
+    for idx, item in enumerate(expected_elements):
+        element = path.elementAt(idx)
+        assert item == (element.type, element.x, element.y)
+
+    qpath_finite = pg.arraytoline._arraytoqpath_finite
+    xcoords = np.arange(len(data))
+    path1 = qpath_finite(xcoords, data, method='per_segment')
+    path2 = qpath_finite(xcoords, data, method='bulk')
+    assert path1 == path2
+
     c.setData(data, connect=np.array([1,1,1,0,1,1,0,0,1,0,0,0,1,1,0,0]))
     assertImageApproved(p, 'plotcurveitem/connectarray', "Plot curve with connection array.")
 
