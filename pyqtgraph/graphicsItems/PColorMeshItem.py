@@ -411,10 +411,23 @@ class PColorMeshItem(GraphicsObject):
                 painter.setPen(self.edgecolors)
                 if self.antialiasing:
                     painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+
+                # create a single polygon able to hold the longest row/column
+                polybuf = Qt.internals.QPolygonBuffer(max(self.x.shape))
+
+                polybuf.resize(self.x.shape[1])
+                arr = polybuf.ndarray()
                 for idx in range(self.x.shape[0]):
-                    painter.drawPolyline(fn.arrayToQPolygonF(self.x[idx, :], self.y[idx, :]))
+                    arr[:, 0] = self.x[idx, :]
+                    arr[:, 1] = self.y[idx, :]
+                    painter.drawPolyline(polybuf.qpolygon())
+
+                polybuf.resize(self.x.shape[0])
+                arr = polybuf.ndarray()
                 for idx in range(self.x.shape[1]):
-                    painter.drawPolyline(fn.arrayToQPolygonF(self.x[:, idx], self.y[:, idx]))
+                    arr[:, 0] = self.x[:, idx]
+                    arr[:, 1] = self.y[:, idx]
+                    painter.drawPolyline(polybuf.qpolygon())
 
             return
 
