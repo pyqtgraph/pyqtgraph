@@ -899,6 +899,9 @@ class PlotCurveItem(GraphicsObject):
             nonfinite_locs = np.concatenate(([-1], nonfinite_locs, [len(x)]))
             sidx = nonfinite_locs[:-1] + 1      # start index of segment
             slen = np.diff(nonfinite_locs) - 1  # length of segment
+            mask = slen >= 2
+            sidx = sidx[mask]
+            slen = slen[mask]
 
         for s, l in zip(sidx, slen):
             if l < 2:
