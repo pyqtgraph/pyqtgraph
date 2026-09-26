@@ -13,6 +13,7 @@ from collections import OrderedDict
 from typing import Literal, TypedDict
 
 import numpy as np
+import numpy.typing as npt
 
 from . import Qt, debug, reload
 from .Qt import QT_LIB, QtCore, QtGui
@@ -1901,6 +1902,20 @@ def _compute_backfill_indices(isfinite):
     else:
         return None
 
+def _compute_finite_segments(finite_mask) -> tuple[npt.NDArray[np.intp], ...]:
+    # from a boolean mask of finite positions, generate two ndarrays.
+    # first array contains the starting indices of the finite segments.
+    # second array contains the length of the finite segments.
+    # a "run" consists of at least 2 elements.
+    nonfinite_locs = np.nonzero(~finite_mask)[0]
+    # pretend that there's a nonfinite before and after the array
+    nonfinite_locs = np.concatenate(([-1], nonfinite_locs, [len(finite_mask)]))
+    sidx = nonfinite_locs[:-1] + 1      # start index of segment
+    slen = np.diff(nonfinite_locs) - 1  # length of segment
+    mask = slen >= 2
+    sidx = sidx[mask]
+    slen = slen[mask]
+    return sidx, slen
 
 def _arrayToQPath_all(x, y, finiteCheck):
     n = x.shape[0]
@@ -1964,14 +1979,7 @@ def _arrayToQPath_finite(x, y, isfinite=None, *, method=None):
     if isfinite is None:
         isfinite = np.isfinite(x) & np.isfinite(y)
 
-    nonfinite_locs = np.nonzero(~isfinite)[0]
-    # pretend that there's a nonfinite before and after the array
-    nonfinite_locs = np.concatenate(([-1], nonfinite_locs, [n]))
-    sidx = nonfinite_locs[:-1] + 1      # start index of segment
-    slen = np.diff(nonfinite_locs) - 1  # length of segment
-    mask = slen >= 2
-    sidx = sidx[mask]
-    slen = slen[mask]
+    sidx, slen = _compute_finite_segments(isfinite)
 
     num_points = slen.sum()
     if num_points == 0:

@@ -894,14 +894,7 @@ class PlotCurveItem(GraphicsObject):
 
         elif connect_kind == "finite":
             isfinite = np.isfinite(x) & np.isfinite(y)
-            nonfinite_locs = np.nonzero(~isfinite)[0]
-            # pretend that there's a nonfinite before and after the array
-            nonfinite_locs = np.concatenate(([-1], nonfinite_locs, [len(x)]))
-            sidx = nonfinite_locs[:-1] + 1      # start index of segment
-            slen = np.diff(nonfinite_locs) - 1  # length of segment
-            mask = slen >= 2
-            sidx = sidx[mask]
-            slen = slen[mask]
+            sidx, slen = fn._compute_finite_segments(isfinite)
 
         for s, l in zip(sidx, slen):
             if l < 2:
@@ -1149,15 +1142,8 @@ class PlotCurveItem(GraphicsObject):
                 isfinite = np.isfinite(y)
                 if x.dtype.kind == 'f':
                     isfinite &= np.isfinite(x)
-                nonfinite_locs = np.nonzero(~isfinite)[0]
-                # pretend that there's a nonfinite before and after the array
-                nonfinite_locs = np.concatenate(([-1], nonfinite_locs, [num_pts]))
-                sidx = nonfinite_locs[:-1] + 1      # start index of segment
-                slen = np.diff(nonfinite_locs) - 1  # length of segment
-                mask = slen >= 2
-                sidx = sidx[mask].tolist()
-                slen = slen[mask].tolist()
-                glstate.render_cache = (xc, yc, valid_pts, sidx, slen)
+                sidx, slen = fn._compute_finite_segments(isfinite)
+                glstate.render_cache = (xc, yc, valid_pts, sidx.tolist(), slen.tolist())
 
                 fill_pts = 0 if fillLevel is None else 2 * valid_pts
                 buf = np.empty((valid_pts + fill_pts, 2), dtype=np.float32)
