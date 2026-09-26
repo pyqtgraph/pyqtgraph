@@ -54,8 +54,8 @@ def test_PlotCurveItem():
         element = path.elementAt(idx)
         assert expected[idx] == (element.type, element.x, element.y)
 
-    path1 = pg.functions._arrayToQPath_finite(np.arange(len(data)), data, method='qpolygonf')
-    path2 = pg.functions._arrayToQPath_finite(np.arange(len(data)), data, method='qpainterpath')
+    path1 = pg.arraytoqpath._arrayToQPath_finite(np.arange(len(data)), data, method='qpolygonf')
+    path2 = pg.arraytoqpath._arrayToQPath_finite(np.arange(len(data)), data, method='qpainterpath')
     assert path1 == path2
 
     c.setData(data, connect=np.array([1,1,1,0,1,1,0,0,1,0,0,0,1,1,0,0]))
