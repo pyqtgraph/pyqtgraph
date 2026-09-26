@@ -2,11 +2,18 @@
 Demonstrates selecting plot curves by mouse click
 """
 
+import argparse
+
 import numpy as np
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
-pg.setConfigOptions(useOpenGL=True)
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--opengl', action=argparse.BooleanOptionalAction, default=True)
+args = parser.parse_args()
+
+pg.setConfigOptions(useOpenGL=args.opengl)
 
 app = pg.mkQApp("MouseSelection Example")
 plt = pg.PlotWidget()

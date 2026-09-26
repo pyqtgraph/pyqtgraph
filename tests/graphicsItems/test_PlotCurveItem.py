@@ -1,6 +1,7 @@
 import numpy as np
 
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 from pyqtgraph.graphicsItems.PlotCurveItem import arrayToLineSegments
 from tests.image_testing import assertImageApproved
 
@@ -25,14 +26,38 @@ def test_PlotCurveItem():
     
     c.setData(data, connect='pairs')
     assertImageApproved(p, 'plotcurveitem/connectpairs', "Plot curve with pairs connected.")
-    
-    c.setData(data, connect='finite')
-    assertImageApproved(p, 'plotcurveitem/connectfinite', "Plot curve with finite points connected.")
 
-    c.setData(data, connect='finite', skipFiniteCheck=True)
-    assertImageApproved(p, 'plotcurveitem/connectfinite', "Plot curve with finite points connected using QPolygonF.")
-    c.setSkipFiniteCheck(False)
-    
+    MoveTo = QtGui.QPainterPath.ElementType.MoveToElement
+    LineTo = QtGui.QPainterPath.ElementType.LineToElement
+
+    c.setData(data, connect='finite')
+    path = c.getPath()
+
+    expected = [
+        (MoveTo, 0.0, 1.0),
+        (LineTo, 1.0, 4.0),
+        (LineTo, 2.0, 2.0),
+        (LineTo, 3.0, 3.0),
+        (MoveTo, 5.0, 5.0),
+        (LineTo, 6.0, 7.0),
+        (LineTo, 7.0, 6.0),
+        (MoveTo, 9.0, 8.0),
+        (LineTo, 10.0, 10.0),
+        (LineTo, 11.0, 9.0),
+        (MoveTo, 13.0, -1.0),
+        (LineTo, 14.0, -2.0),
+        (LineTo, 15.0, 0.0),
+    ]
+
+    assert path.elementCount() == len(expected)
+    for idx, expect in enumerate(expected):
+        element = path.elementAt(idx)
+        assert expected[idx] == (element.type, element.x, element.y)
+
+    path1 = pg.arraytoqpath._arrayToQPath_finite(np.arange(len(data)), data, method='qpolygonf')
+    path2 = pg.arraytoqpath._arrayToQPath_finite(np.arange(len(data)), data, method='qpainterpath')
+    assert path1 == path2
+
     c.setData(data, connect=np.array([1,1,1,0,1,1,0,0,1,0,0,0,1,1,0,0]))
     assertImageApproved(p, 'plotcurveitem/connectarray', "Plot curve with connection array.")
 
