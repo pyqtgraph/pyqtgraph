@@ -68,13 +68,30 @@ ui = ui_template.Ui_MainWindow()
 ui.setupUi(win)
 win.show()
 
+raw_gl_available = False
+raw_gl_reason = None
+raw_gl_label = ui.rawGLRadio.text()
+
 if RawImageGLWidget is None:
-    ui.rawGLRadio.setEnabled(False)
-    ui.rawGLRadio.setText(ui.rawGLRadio.text() + " (OpenGL not available)")
+    raw_gl_reason = "OpenGL support not available"
 else:
-    ui.rawGLImg = RawImageGLWidget()
-    ui.stack.addWidget(ui.rawGLImg)
-    win.destroyed.connect(ui.rawGLImg.cleanup)
+    if RawImageGLWidget.canUseOpenGL():
+        try:
+            ui.rawGLImg = RawImageGLWidget()
+        except Exception as exc:
+            raw_gl_reason = "failed to initialize OpenGL context"
+            sys.stderr.write(f"Disabling RawImageGLWidget: failed to create OpenGL context ({exc}).\n")
+        else:
+            raw_gl_available = True
+            ui.stack.addWidget(ui.rawGLImg)
+            win.destroyed.connect(ui.rawGLImg.cleanup)
+    else:
+        raw_gl_reason = "OpenGL context unavailable"
+
+if not raw_gl_available:
+    ui.rawGLRadio.setEnabled(False)
+    if raw_gl_reason is not None:
+        ui.rawGLRadio.setText(f"{raw_gl_label} ({raw_gl_reason})")
 
 # read in CLI args
 ui.cudaCheck.setChecked(args.cuda and _has_cupy)
