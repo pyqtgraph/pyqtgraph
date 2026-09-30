@@ -787,58 +787,10 @@ class PlotCurveItem(GraphicsObject):
         # Values were found using 'PlotSpeedTest.py' example, see #2257.
         chunksize = 150 if not isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget) else 5000
 
-        connect_kind = self.opts['connect']
-        if isinstance(connect_kind, np.ndarray):
-            connect_kind = "array"
-
-        fillLevel = self.opts['fillLevel']
-        self._fillPathList = []
-        sidx = []
-        slen = []
-
-        if connect_kind == "all":
-            finite_mask = arraytoline._compute_finite_mask(x, y)
-            if not finite_mask.all():
-                # remove non-finite values
-                x = x[finite_mask]
-                y = y[finite_mask]
-            sidx = [0]
-            slen = [len(x)]
-
-        elif connect_kind == "finite":
-            finite_mask = arraytoline._compute_finite_mask(x, y)
-            sidx, slen = arraytoline._compute_finite_segments(finite_mask)
-
-        for s, l in zip(sidx, slen):
-            if l < 2:
-                continue
-            xchunk = x[s:s+l]
-            ychunk = y[s:s+l]
-            pathlist = self._construct_finite_segment_FillPathList(xchunk, ychunk, fillLevel, chunksize)
-            self._fillPathList.extend(pathlist)
-
+        self._fillPathList = arraytoline.arrayToFillPaths(
+            x, y, self.opts['connect'], self.opts['fillLevel'], chunksize
+        )
         return self._fillPathList
-
-    def _construct_finite_segment_FillPathList(self, x, y, baseline, chunksize):
-        paths = []
-        offset = 0
-        xybuf = np.empty((chunksize+3, 2))
-
-        while offset < len(x) - 1:
-            subx = x[offset:offset + chunksize]
-            suby = y[offset:offset + chunksize]
-            size = len(subx)
-            xyview = xybuf[:size+3]
-            xyview[:-3, 0] = subx
-            xyview[:-3, 1] = suby
-            xyview[-3:, 0] = subx[[-1, 0, 0]]
-            xyview[-3:, 1] = [baseline, baseline, suby[0]]
-            offset += size - 1  # last point is re-used for next chunk
-            # data was either declared to be all-finite OR was sanitized
-            path = fn.arrayToQPath(xyview[:, 0], xyview[:, 1], connect='all', finiteCheck=False)
-            paths.append(path)
-
-        return paths
 
     @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, opt, widget):

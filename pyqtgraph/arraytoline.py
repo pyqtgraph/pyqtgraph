@@ -429,3 +429,57 @@ def arrayToLineSegments(x, y, connect, finiteCheck, out=None):
         out.resize(nsegs)
 
     return out
+
+def _construct_finite_segment_fillpaths(x, y, baseline, chunksize):
+    paths = []
+    offset = 0
+    polybuf = Qt.internals.QPolygonBuffer(chunksize + 3)
+
+    while offset < len(x) - 1:
+        subx = x[offset:offset + chunksize]
+        suby = y[offset:offset + chunksize]
+        size = len(subx)
+        polybuf.resize(size + 3)
+        xyview = polybuf.ndarray()
+        xyview[:-3, 0] = subx
+        xyview[:-3, 1] = suby
+        xyview[-3:, 0] = subx[[-1, 0, 0]]
+        xyview[-3:, 1] = [baseline, baseline, suby[0]]
+        offset += size - 1  # last point is re-used for next chunk
+        path = QtGui.QPainterPath()
+        path.reserve(size + 3)
+        path.addPolygon(polybuf.qpolygon())
+        paths.append(path)
+
+    return paths
+
+def arrayToFillPaths(x, y, connect, fillLevel, chunksize):
+    # only "all" and "finite" can be filled
+    if not isinstance(connect, str) or connect not in ["all", "finite"]:
+        return []
+
+    sidx = []
+    slen = []
+    fillPathList = []
+
+    if connect == "all":
+        finite_mask = _compute_finite_mask(x, y)
+        if not finite_mask.all():
+            # remove non-finite values
+            x = x[finite_mask]
+            y = y[finite_mask]
+        if len(x) >= 2:
+            sidx = [0]
+            slen = [len(x)]
+
+    elif connect == "finite":
+        finite_mask = _compute_finite_mask(x, y)
+        sidx, slen = _compute_finite_segments(finite_mask)
+        sidx = sidx.tolist()
+        slen = slen.tolist()
+
+    for s, l in zip(sidx, slen):
+        pathlist = _construct_finite_segment_fillpaths(x[s:s+l], y[s:s+l], fillLevel, chunksize)
+        fillPathList.extend(pathlist)
+
+    return fillPathList
