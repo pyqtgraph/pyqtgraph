@@ -798,21 +798,24 @@ class PlotCurveItem(GraphicsObject):
         if self.xData is None or len(self.xData) == 0:
             return
 
+        brush = self.opts['brush']
+        do_fill = (
+            self.opts['fillLevel'] is not None
+            and not (brush is None or brush.style() == QtCore.Qt.BrushStyle.NoBrush)
+        )
+        do_fill_outline = do_fill and self.opts['fillOutline']
+
         # opengl fill mode supports filling to a fillLevel
         # for connect="all" and connect="finite" only.
         opengl_supported_fill = (
-            self.opts['fillLevel'] is None  # not filling is always supported
-            or (
-                isinstance(self.opts['fillLevel'], (int, float))
-                and isinstance(self.opts['connect'], str)
-                and self.opts['connect'] in ['all', 'finite']
-                and not self.opts['fillOutline']
-            )
+            isinstance(self.opts['fillLevel'], (int, float))
+            and isinstance(self.opts['connect'], str)
+            and self.opts['connect'] in ['all', 'finite']
         )
 
         if (
             isinstance(widget, OpenGLHelpers.GraphicsViewGLWidget)
-            and opengl_supported_fill
+            and (not do_fill or opengl_supported_fill)
             and not self.opts['stepMode']
         ):
             if self.glstate is None:
@@ -823,6 +826,15 @@ class PlotCurveItem(GraphicsObject):
                 self.paintGL(widget)
             finally:
                 p.endNativePainting()
+
+            if do_fill_outline:
+                for pen_kind in ['shadowPen', 'pen']:
+                    pen = self.opts[pen_kind]
+                    if pen is None or pen.style() == QtCore.Qt.PenStyle.NoPen:
+                        continue
+                    p.setPen(pen)
+                    p.drawLines(self._getClosingSegments())
+
             return
 
         if self._exportOpts is not False:
@@ -835,13 +847,6 @@ class PlotCurveItem(GraphicsObject):
         cmode = self.opts['compositionMode']
         if cmode is not None:
             p.setCompositionMode(cmode)
-
-        brush = self.opts['brush']
-        do_fill = (
-            self.opts['fillLevel'] is not None
-            and not (brush is None or brush.style() == QtCore.Qt.BrushStyle.NoBrush)
-        )
-        do_fill_outline = do_fill and self.opts['fillOutline']
 
         path_transform = None
         if (
