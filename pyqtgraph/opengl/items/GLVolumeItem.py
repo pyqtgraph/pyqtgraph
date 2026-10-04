@@ -22,9 +22,7 @@ class GLVolumeItem(GLGraphicsItem):
     
     Displays volumetric data. 
     """
-    
-    _shaderProgram = None
-    
+
     def __init__(self, data, sliceDensity=1, smooth=True, glOptions='translucent', parentItem=None):
         """
         ==============  =======================================================================================
@@ -36,7 +34,6 @@ class GLVolumeItem(GLGraphicsItem):
         """
         
         super().__init__()
-        OpenGLHelpers.suppress_texture_warning()
         self.setGLOptions(glOptions)
         self.sliceDensity = sliceDensity
         self.smooth = smooth
@@ -46,6 +43,11 @@ class GLVolumeItem(GLGraphicsItem):
         self.dirty_bits = DirtyFlag(0)
         self.setParentItem(parentItem)
         self.setData(data)
+
+    def cleanupGL(self):
+        self.m_texture.destroy()
+        self.m_vbo_position.destroy()
+        self.dirty_bits = DirtyFlag.POSITION | DirtyFlag.TEXTURE
 
     def setData(self, data):
         if self.data is None or data is None or self.data.shape != data.shape:
@@ -93,49 +95,31 @@ class GLVolumeItem(GLGraphicsItem):
 
         return all_vertices, offsets
 
-    @staticmethod
-    def getShaderProgram():
-        klass = GLVolumeItem
+    def shaderProgram(self, view):
+        klass = self.__class__
+        cache_key = f'{klass.__module__}.{klass.__qualname__}'
 
-        if klass._shaderProgram is not None:
-            return klass._shaderProgram
+        shaders_cache = self.shadersCache(view=view)
 
-        ctx = QtGui.QOpenGLContext.currentContext()
-        fmt = ctx.format()
+        if (program := shaders_cache.get(cache_key)) is None:
+            program = OpenGLHelpers.compile_and_link(
+                view.context(),
+                sources_core=SHADER_CORE,
+                sources_legacy=SHADER_LEGACY,
+                attributes=dict(a_position=0, a_texcoord=1),
+            )
+            shaders_cache[cache_key] = program
 
-        if ctx.isOpenGLES():
-            if fmt.version() >= (3, 0):
-                glsl_version = "#version 300 es\n"
-                sources = SHADER_CORE
-            else:
-                glsl_version = ""
-                sources = SHADER_LEGACY
-        else:
-            if fmt.version() >= (3, 1):
-                glsl_version = "#version 140\n"
-                sources = SHADER_CORE
-            else:
-                glsl_version = ""
-                sources = SHADER_LEGACY
-
-        program = QtOpenGL.QOpenGLShaderProgram()
-        for shader_type, src in sources.items():
-            if not program.addShaderFromSourceCode(shader_type, glsl_version + src):
-                raise RuntimeError(program.log())
-
-        program.bindAttributeLocation("a_position", 0)
-        program.bindAttributeLocation("a_texcoord", 1)
-        if not program.link():
-            raise RuntimeError(program.log())
-
-        klass._shaderProgram = program
         return program
         
     def paint(self):
         if self.data is None:
             return
-        
+
+        if (view := self.view()) is None:
+            return
         self.setupGLState()
+        glfn = self.glFunctions(view=view)
 
         if DirtyFlag.POSITION in self.dirty_bits:
             vertices, self.lists = self.computeVertices()
@@ -160,9 +144,7 @@ class GLVolumeItem(GLGraphicsItem):
         d = 1 if cam[ax] > 0 else -1
         offset, num_vertices = self.lists[(ax,d)]
 
-        glfn = self.glFunctions()
-
-        program = self.getShaderProgram()
+        program = self.shaderProgram(view)
 
         loc_pos, loc_tex = 0, 1
         self.m_vbo_position.bind()

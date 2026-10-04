@@ -2,14 +2,13 @@
 Demonstrates use of GLScatterPlotItem with rapidly-updating plots.
 """
 import sys
+import time
 
 import numpy as np
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 import pyqtgraph.opengl as gl
-from pyqtgraph import functions as fn
-from pyqtgraph.Qt import QtCore
 
 if 'darwin' in sys.platform:
     fmt = QtGui.QSurfaceFormat()
@@ -27,6 +26,7 @@ w.setCameraPosition(distance=20)
 g = gl.GLGridItem()
 w.addItem(g)
 
+rng = np.random.default_rng()
 
 ##
 ##  First example is a set of points with pxMode=False
@@ -58,14 +58,12 @@ w.addItem(sp1)
 ##  and pxMode=True
 ##
 
-pos = np.random.random(size=(100000,3))
+pos = rng.random(size=(100000,3), dtype=np.float32)
 pos *= [10,-10,10]
 pos[0] = (0,0,0)
-color = np.ones((pos.shape[0], 4))
 d2 = (pos**2).sum(axis=1)**0.5
-size = np.random.random(size=pos.shape[0])*10
+size = rng.random(size=pos.shape[0], dtype=np.float32) * 10
 sp2 = gl.GLScatterPlotItem(pos=pos, color=(1,1,1,1), size=size)
-phase = 0.
 
 w.addItem(sp2)
 
@@ -75,27 +73,30 @@ w.addItem(sp2)
 ##  and pxMode = False
 ##
 
-pos3 = np.zeros((100,100,3))
+pos3 = np.zeros((100,100,3), dtype=np.float32)
 pos3[:,:,:2] = np.mgrid[:100, :100].transpose(1,2,0) * [-0.1,0.1]
-pos3 = pos3.reshape(10000,3)
+pos3 = pos3.reshape((-1, 3))
 d3 = (pos3**2).sum(axis=1)**0.5
 
 sp3 = gl.GLScatterPlotItem(pos=pos3, color=(1,1,1,.3), size=0.1, pxMode=False)
 
 w.addItem(sp3)
 
-
+time_start = time.perf_counter()
 def update():
+    elapsed = time.perf_counter() - time_start
+    phase = 2*np.pi * (1.0 - (elapsed % 2.0) / 2.0)
+
     ## update volume colors
-    global phase, sp2, d2
+    global sp2, d2
     s = -np.cos(d2*2+phase)
     color = np.empty((len(d2),4), dtype=np.float32)
-    color[:,3] = fn.clip_array(s * 0.1, 0., 1.)
-    color[:,0] = fn.clip_array(s * 3.0, 0., 1.)
-    color[:,1] = fn.clip_array(s * 1.0, 0., 1.)
-    color[:,2] = fn.clip_array(s ** 3, 0., 1.)
+    color[:,3] = s * 0.1
+    color[:,0] = s * 3.0
+    color[:,1] = s * 1.0
+    color[:,2] = s ** 3
+    np.clip(color, 0, 1, out=color)
     sp2.setData(color=color)
-    phase -= 0.1
     
     ## update surface positions and colors
     global sp3, d3, pos3
@@ -103,14 +104,13 @@ def update():
     pos3[:,2] = z
     color = np.empty((len(d3),4), dtype=np.float32)
     color[:,3] = 0.3
-    color[:,0] = np.clip(z * 3.0, 0, 1)
-    color[:,1] = np.clip(z * 1.0, 0, 1)
-    color[:,2] = np.clip(z ** 3, 0, 1)
+    color[:,0] = z * 3.0
+    color[:,1] = z * 1.0
+    color[:,2] = z ** 3
+    np.clip(color, 0, 1, out=color)
     sp3.setData(pos=pos3, color=color)
     
-t = QtCore.QTimer()
-t.timeout.connect(update)
-t.start(50)
+w.frameSwapped.connect(update)
 
 if __name__ == '__main__':
     pg.exec()

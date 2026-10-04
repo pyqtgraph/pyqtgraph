@@ -8,7 +8,6 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 import pyqtgraph.opengl as gl
-from pyqtgraph import functions as fn
 
 if 'darwin' in sys.platform:
     fmt = QtGui.QSurfaceFormat()
@@ -18,10 +17,9 @@ if 'darwin' in sys.platform:
     QtGui.QSurfaceFormat.setDefaultFormat(fmt)
 
 app = pg.mkQApp("GLVolumeItem Example")
-w = gl.GLViewWidget()
-w.show()
+w = gl.GLViewWidget(rotationMethod='quaternion')
 w.setWindowTitle('pyqtgraph example: GLVolumeItem')
-w.setCameraPosition(distance=200)
+w.setCameraPosition(distance=200, elevation=30, azimuth=45)
 
 g = gl.GLGridItem()
 g.scale(10, 10, 1)
@@ -47,8 +45,8 @@ def psi(i, j, k, offset=(50,50,100)):
 
 data = np.fromfunction(psi, (100,100,200))
 with np.errstate(divide = 'ignore'):
-    positive = np.log(fn.clip_array(data, 0, data.max())**2)
-    negative = np.log(fn.clip_array(-data, 0, -data.min())**2)
+    positive = np.log(np.clip(data, 0, data.max())**2)
+    negative = np.log(np.clip(-data, 0, -data.min())**2)
 
 d2 = np.empty(data.shape + (4,), dtype=np.ubyte)
 
@@ -86,6 +84,8 @@ w.addItem(v)
 
 ax = gl.GLAxisItem()
 w.addItem(ax)
+
+w.show()
 
 if __name__ == '__main__':
     pg.exec()

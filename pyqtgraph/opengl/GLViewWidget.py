@@ -8,6 +8,7 @@ from .. import Vector
 from .. import functions as fn
 from .. import getConfigOption
 from ..Qt import QtCore, QtGui, QtWidgets, QtOpenGL, QT_LIB, QtVersionInfo
+from ..Qt import isQObjectAlive
 from ..Qt import OpenGLConstants as GLC
 from ..Qt import OpenGLHelpers
 
@@ -47,6 +48,8 @@ class GLViewMixin:
         self._projectionStack = []
         self.default_vao = QtOpenGL.QOpenGLVertexArrayObject(self)
         self.glfn = None
+        self._shadersCache = {}
+        self._cleanup_connected = False
 
     def deviceWidth(self):
         dpr = self.devicePixelRatioF()
@@ -77,7 +80,7 @@ class GLViewMixin:
         self.items.append(item)
 
         if self.isValid():
-            item.initialize()
+            self._initializeItem(item)
                 
         item._setView(self)
         self.update()
@@ -88,15 +91,17 @@ class GLViewMixin:
         """
         self.items.remove(item)
         item._setView(None)
+        self.makeCurrent()
+        self._cleanupItem(item)
+        self.doneCurrent()
         self.update()
 
     def clear(self):
         """
         Remove all items from the scene.
         """
-        for item in self.items:
-            item._setView(None)
-        self.items = []
+        for item in self.items[:]:
+            self.removeItem(item)
         self.update()        
         
     def initializeGL(self):
@@ -118,16 +123,48 @@ class GLViewMixin:
                 f"pyqtgraph.opengl: Requires >= OpenGL 2.1; Found {fmt.version()}"
             )
 
-        # Core profile requires a non-default VAO
-        if fmt.profile() == QtGui.QSurfaceFormat.OpenGLContextProfile.CoreProfile:
-            if not self.default_vao.isCreated():
-                self.default_vao.create()
-                self.default_vao.bind()
+        ctx.aboutToBeDestroyed.connect(self.cleanupGL)
+        self._cleanup_connected = True
 
         for item in self.items:
-            if not item.isInitialized():
-                item.initialize()
-        
+            self._initializeItem(item)
+
+    def _initializeItem(self, item):
+        item.initializeGL()
+        for child in item.childItems():
+            self._initializeItem(child)
+
+    @QtCore.Slot()
+    def cleanupGL(self):
+        if not isQObjectAlive(self):
+            return
+        if (ctx := self.context()) is None:
+            return
+        if self._cleanup_connected:
+            ctx.aboutToBeDestroyed.disconnect(self.cleanupGL)
+            self._cleanup_connected = False
+
+        self.makeCurrent()
+        self.default_vao.destroy()
+        self._shadersCache.clear()
+        for child in self.items:
+            self._cleanupItem(child)
+        self.doneCurrent()
+
+    def hideEvent(self, evt):
+        # Window Manager hide/show are spontaneous events.
+        # hideEvent on program termination is non-spontaneous.
+        if not evt.spontaneous():
+            self.cleanupGL()
+
+        super().hideEvent(evt)
+
+    def _cleanupItem(self, item):
+        # caller's responsibility to makeCurrent()
+        item.cleanupGL()
+        for child in item.childItems():
+            self._cleanupItem(child)
+
     def setBackgroundColor(self, *args, **kwargs):
         """
         Set the background color of the widget. Accepts the same arguments as
@@ -262,6 +299,11 @@ class GLViewMixin:
                         GL.glLoadName(i._id)
                         self._itemNames[i._id] = i
 
+                    # in particular, Core profile requires a non-default VAO
+                    if self.format().version() >= (3, 0) and not self.default_vao.isCreated():
+                        # version 3.0 applies to both OpenGL Desktop and OpenGL ES
+                        self.default_vao.create()
+
                     # The GLGraphicsItem(s) making use of QPainter end
                     # up indirectly unbinding the default VAO, so we
                     # rebind it before each GLGraphicsItem.
@@ -301,7 +343,8 @@ class GLViewMixin:
                     eu.setZ(-azimuth-90)
                 if elevation is not None:
                     eu.setX(elevation-90)
-                self.opts['rotation'] = QtGui.QQuaternion.fromEulerAngles(eu)
+                # PySide6 (as of 6.11.2) does not support fromEulerAngles() taking Vector3D
+                self.opts['rotation'] = QtGui.QQuaternion.fromEulerAngles(eu.x(), eu.y(), eu.z())
             if rotation is not None:
                 self.opts['rotation'] = rotation
         else:

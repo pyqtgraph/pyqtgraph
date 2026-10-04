@@ -19,14 +19,26 @@ def getFunctions(context) -> QtOpenGL.QAbstractOpenGLFunctions:
     if QT_LIB.startswith("PySide"):
         glfn = context.extraFunctions()
 
-    elif QT_LIB in ["PyQt5", "PyQt6"]:
+    elif not context.isOpenGLES() and QT_LIB.startswith("PyQt") and QtVersionInfo >= (6, 0):
+        # VersionFunctionsFactory doesn't support ES
+        vp = QtOpenGL.QOpenGLVersionProfile()
+        if format.version() >= (4, 1):
+            vp.setVersion(4, 1)
+            vp.setProfile(QtGui.QSurfaceFormat.OpenGLContextProfile.CoreProfile)
+        else:
+            vp.setVersion(2, 1)
+        glfn = QtOpenGL.QOpenGLVersionFunctionsFactory.get(vp, context)
+
+    else:
         # PyQt5 has context.versionFunctions().
         #    however, when there are multiple GraphicsItems, the following bug occurs:
         #    all except one of the C++ objects of the returned versionFunctions() get
         #    deleted. i.e. in PyQt5, we are not able to cache the return value.
-        # Qt6 has QOpenGLVersionFunctionsFactory().
-        #    however with OpenGL ES: "versionFunctions: Not supported on OpenGL ES."
         # To overcome the above listed issues, we load the modules directly.
+
+        # Note: The GraphicsItems now all share the same context held in
+        #       GraphicsViewGLWidget, so technically we aren't affected by the not
+        #       being able to cache issue.
 
         # PyQt{5,6} only provides 2.0, 2.1, 4.1_Core, ES2.
         # ES2 module is present only if PyQt was compiled for GLES.
@@ -104,34 +116,9 @@ GLUNIFORM1FV_TYPE = ctypes.CFUNCTYPE(
     ctypes.c_void_p
 )
 
-def get_gl_uniform_1fv():
-    context = QtGui.QOpenGLContext.currentContext()
+def get_gl_uniform_1fv(context):
     func_ptr = context.getProcAddress(b"glUniform1fv")
     return GLUNIFORM1FV_TYPE(int(func_ptr))
-
-
-_handler_installed = False
-_prev_handler = None
-
-def message_handler(msg_type, context, message):
-    if msg_type == QtCore.QtMsgType.QtWarningMsg:
-        if "QOpenGLTexture" in message and "has not been destroyed" in message:
-            return
-
-    if _prev_handler is not None:
-        _prev_handler(msg_type, context, message)
-    else:
-        sys.stderr.write(f"{message}\n")
-
-
-def suppress_texture_warning():
-    global _handler_installed, _prev_handler
-    if _handler_installed:
-        return
-
-    _prev_handler = QtCore.qInstallMessageHandler(message_handler)
-    _handler_installed = True
-
 
 def upload_vbo(vbo: QtOpenGL.QOpenGLBuffer, arr) -> None:
     if arr is None:
@@ -145,3 +132,67 @@ def upload_vbo(vbo: QtOpenGL.QOpenGLBuffer, arr) -> None:
     else:
         vbo.write(0, arr, arr.nbytes)
     vbo.release()
+
+def compile_and_link(context, *,
+                     sources_core, sources_legacy,
+                     attributes: dict[str, int]
+                    ):
+
+    fmt = context.format()
+
+    if sources_core is None:
+        # we only have legacy shaders for GLMeshItem
+
+        if context.hasExtension(b'GL_ARB_ES2_compatibility'):
+            # we know that macOS OpenGL 4.1 Core has ARB_ES2_compatibility,
+            # so we can get it to run legacy shaders by marking the
+            # shaders as ES2.
+            # The explicit #undefs counteract QOpenGLShader::compileSourceCode,
+            # which predefines lowp/mediump/highp as empty macros when compiling
+            # for desktop OpenGL; that would mangle the precision statements
+            # inside "#ifdef GL_ES" blocks activated by "#version 100".
+            prefix = (
+                "#version 100\n"
+                "#undef lowp\n#undef mediump\n#undef highp\n"
+            )
+        else:
+            # if unmarked,
+            #   OpenGL Desktop treats it as #version 110
+            #   OpenGL ES treats it as #version 100
+            prefix = ""
+        sources = sources_legacy
+
+    elif context.isOpenGLES():
+        if fmt.version() >= (3, 0):
+            prefix = "#version 300 es\n"
+            sources = sources_core
+        else:
+            prefix = "#version 100\n"
+            sources = sources_legacy
+    else:
+        if fmt.version() >= (3, 1):
+            prefix = "#version 140\n"
+            sources = sources_core
+        else:
+            prefix = "#version 120\n"   # OpenGL 2.1
+            sources = sources_legacy
+
+    program = QtOpenGL.QOpenGLShaderProgram()
+    for shader_type, src in sources.items():
+        if not program.addShaderFromSourceCode(shader_type, prefix + src):
+            raise RuntimeError(program.log())
+
+    # for reasons that may vary across drivers, having vertex attribute
+    # array generic location 0 enabled (glEnableVertexAttribArray(0)) is
+    # required for rendering to take place.
+    # this only becomes an issue if we are using glVertexAttrib{1,4}f
+    # because that's when we *don't* call glEnableVertexAttribArray.
+    # since we always need vertex coordinates to come from arrays, it is
+    # sufficient for us to bind "a_position" explicitly to 0.
+    for name, pos in attributes.items():
+        program.bindAttributeLocation(name, pos)
+
+    if not program.link():
+        raise RuntimeError(program.log())
+
+    return program

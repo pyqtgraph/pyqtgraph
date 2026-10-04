@@ -1,14 +1,15 @@
 import numpy as np
 
 from ..MeshData import MeshData
+from ..GLGraphicsItem import GLGraphicsItem
 from .GLMeshItem import GLMeshItem
 from .GLLinePlotItem import GLLinePlotItem
 
 __all__ = ['GLSurfacePlotItem']
 
-class GLSurfacePlotItem(GLMeshItem):
+class GLSurfacePlotItem(GLGraphicsItem):
     """
-    **Bases:** :class:`GLMeshItem <pyqtgraph.opengl.GLMeshItem>`
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`
     
     Displays a surface plot on a regular x,y grid with optional wireframe overlay.
     """
@@ -22,6 +23,8 @@ class GLSurfacePlotItem(GLMeshItem):
         arguments are passed to setData().
         All other keyword arguments are passed to GLMeshItem.__init__().
         """
+        super().__init__()
+
         self._x = None
         self._y = None
         self._z = None
@@ -40,17 +43,16 @@ class GLSurfacePlotItem(GLMeshItem):
             if arg in kwargs:
                 surface_kwargs[arg] = kwargs.pop(arg)
 
-        super().__init__(meshdata=self._meshdata, **kwargs)
-
+        # draw lines after mesh
+        self.meshplot = GLMeshItem(parentItem=self, meshdata=self._meshdata, **kwargs)
         self.lineplot = GLLinePlotItem(parentItem=self, mode='lines', glOptions='translucent')
-        # in GLViewWidget.drawItemTree(), at the same depth value, child items
-        # come before the parent. make it such that our grid lines get drawn
-        # after the surface mesh.
-        self.lineplot.setDepthValue(self.depthValue() + 1)
         self.setParentItem(parentItem)
 
         self.setData(**surface_kwargs)
-        
+
+    def shader(self):
+        return self.meshplot.shader()
+
     def setData(self, **kwargs):
         """
         Update the data in this surface plot. 
@@ -108,7 +110,7 @@ class GLSurfacePlotItem(GLMeshItem):
         if self._z is None:
             return
         
-        self.setPolygonOffset(self._showGrid)
+        self.meshplot.setPolygonOffset(self._showGrid)
 
         updateMesh = False
         newVertexes = False
@@ -147,7 +149,7 @@ class GLSurfacePlotItem(GLMeshItem):
         ## Update MeshData
         if updateMesh:
             self._meshdata.setVertexes(self._vertexes.reshape(self._vertexes.shape[0]*self._vertexes.shape[1], 3))
-            self.meshDataChanged()
+            self.meshplot.meshDataChanged()
 
         # rebuild grid whenever mesh or parent changes
         self._update_grid()
