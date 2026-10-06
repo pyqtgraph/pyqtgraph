@@ -357,7 +357,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
             dpos = ev.pos() - ev.lastPos()
             self.autoAnchor(self.pos() + dpos)
 
-
+    @QtCore.Slot(object)
     def _itemChanged(self, item):
         for sample, label in self.items:
             if getattr(sample, 'item', None) is item:
