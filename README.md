@@ -91,6 +91,32 @@ The official documentation lives at [pyqtgraph.readthedocs.io](https://pyqtgraph
 The easiest way to get familiar with PyQtGraph is to browse through the examples; run
 `python -m pyqtgraph.examples` to launch the examples application.
 
+LLM Policy
+---------
+
+This project, like many other open source projects has been overwhelmed by the
+submission of LLM generated PRs of varying quality. At the time, the maintainers do not 
+see the need to implement an outright ban. That said, the automated nature of the
+creation of Issues and PRs is requiring a different kind of social contract between the
+contributors and maintainers.
+
+The bullets below should not be thought of as an all-encompassing policy, but a
+guideline that contributors who use LLM tools in their development workflow.
+
+* The text in pull requests and issues _must_ be created by a human.
+* Submission of LLM generated PRs that are clearly in the slop category will be met with
+  a ban. Ban duration is subject to the degree of eggregious violation. Multiple
+  violations would be met with a permanent ban.  Examples of "slop" PRs include:
+  * PRs with huge diffs that "fix" non-issues
+  * PRs with text claiming to fix an issue, but the linked issue is unrelated to the
+    diff
+  * PRs that do not do what the text claims
+* LLM generated code must be labeled as such. Ideally in the text of the PR/Issue, some
+  information about the prompt and model would be included.
+* LLM generated PRs need to be _very narrow_ in scope.
+* If there is a LLM generated diff that creates a "fix", a minimum reproducible example
+  (MRE) needs to be provided to demonstrate the issue.
+
 Benchmarking
 ------------
 
