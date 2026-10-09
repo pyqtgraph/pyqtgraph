@@ -17,7 +17,7 @@ from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 pg.setConfigOption('imageAxisOrder', 'row-major')
 
-import VideoTemplate_generic as ui_template
+import VideoTemplate as ui_template
 
 try:
     import cupy as cp
