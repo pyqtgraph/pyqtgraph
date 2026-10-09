@@ -3,7 +3,6 @@ from ..Parameter import PARAM_TYPES, registerParameterItemType
 from ... import functions as fn
 from ...Qt import QtCore, QtWidgets
 from ...SignalProxy import SignalProxy
-from ..ParameterItem import ParameterItem
 from . import BoolParameterItem, SimpleParameter
 from .basetypes import Emitter, GroupParameter, GroupParameterItem
 from .list import ListParameter
@@ -36,12 +35,8 @@ class ChecklistParameterItem(GroupParameterItem):
         self.metaBtns['default'] = self.makeCtrlButton()
         self.metaBtnLayout.addWidget(self.metaBtns['default'])
 
-    def treeWidgetChanged(self):
-        ParameterItem.treeWidgetChanged(self)
-        tw = self.treeWidget()
-        if tw is None:
-            return
-        tw.setItemWidget(self, 1, self.metaBtnWidget)
+    def valueColumnWidget(self):
+        return self.metaBtnWidget
 
     def selectAllClicked(self):
         # timer stop: see explanation on param.setToDefault()
