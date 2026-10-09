@@ -302,6 +302,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
                     try:
                         sample.item.sigPlotChanged.disconnect(self._itemChanged)
                     except (TypeError, RuntimeError):
+                        # the signal was never connected or the item is already deleted
                         pass
                 self.items.remove((sample, label))  # remove from itemlist
                 self._removeItemFromLayout(sample, label)
@@ -315,6 +316,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
                 try:
                     sample.item.sigPlotChanged.disconnect(self._itemChanged)
                 except (TypeError, RuntimeError):
+                    # the signal was never connected or the item is already deleted
                     pass
             self._removeItemFromLayout(sample, label)
 
