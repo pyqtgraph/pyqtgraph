@@ -1,4 +1,5 @@
 from ..Point import Point
+from ..Qt import QtCore
 
 __all__ = ['GraphicsWidgetAnchor']
 
@@ -93,6 +94,7 @@ class GraphicsWidgetAnchor(object):
             offset = itemPos - parentPos
             self.anchor(anchorPos, anchorPos, offset)
     
+    @QtCore.Slot()
     def __geometryChanged(self):
         if self.__parent is None:
             return
