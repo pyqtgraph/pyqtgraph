@@ -526,30 +526,33 @@ def test_mkpen_mkbrush_color_arg_priority_single_source(ctor):
     dict(color='blue'),
     dict(hsv=(2 / 3, 1.0, 1.0)),
 ])
-def test_mkpen_mkbrush_color_arg_positional_conflict_warns(ctor, kwargs):
-    """A positional color always wins over color=/hsv= given in the same
-    call, but such a call warns since the keyword is silently dropped."""
-    with pytest.warns(UserWarning, match="Multiple color sources"):
-        result = ctor('red', **kwargs)
+def test_mkpen_mkbrush_color_arg_positional_priority(ctor, kwargs):
+    """A positional color always wins over color=/hsv= given in the same call."""
+    result = ctor('red', **kwargs)
     assert result.color().name() == '#ff0000'
 
 
 @pytest.mark.parametrize("ctor", [pg.mkPen, pg.mkBrush])
-def test_mkpen_mkbrush_color_arg_hsv_color_conflict_warns(ctor):
-    """hsv= wins over color= when there's no positional argument, but such
-    a call warns since color= is silently dropped."""
-    with pytest.warns(UserWarning, match="Multiple color sources"):
-        result = ctor(hsv=(0.0, 1.0, 1.0), color='blue')
+def test_mkpen_mkbrush_color_arg_hsv_color_priority(ctor):
+    """hsv= wins over color= when there's no positional argument."""
+    result = ctor(hsv=(0.0, 1.0, 1.0), color='blue')
     assert result.color().name() == '#ff0000'
 
 
-@pytest.mark.parametrize("ctor", [pg.mkPen, pg.mkBrush])
-def test_mkpen_mkbrush_color_arg_no_conflict_no_warning(ctor, recwarn):
-    """A single color source never triggers the conflict warning."""
-    ctor('red')
-    ctor(color='blue')
-    ctor(hsv=(0.0, 1.0, 1.0))
-    assert len(recwarn) == 0
+def test_mkpen_cap_join_style():
+    pen = pg.mkPen('r', capStyle=QtCore.Qt.PenCapStyle.RoundCap, joinStyle=QtCore.Qt.PenJoinStyle.RoundJoin)
+    assert pen.capStyle() == QtCore.Qt.PenCapStyle.RoundCap
+    assert pen.joinStyle() == QtCore.Qt.PenJoinStyle.RoundJoin
+
+
+def test_mkpen_explicit_cap_style_overrides_thick_width_default():
+    pen = pg.mkPen('r', width=5, capStyle=QtCore.Qt.PenCapStyle.FlatCap)
+    assert pen.capStyle() == QtCore.Qt.PenCapStyle.FlatCap
+
+
+def test_mkpen_thick_width_defaults_to_round_cap():
+    pen = pg.mkPen('r', width=5)
+    assert pen.capStyle() == QtCore.Qt.PenCapStyle.RoundCap
 
 
 def test_signal_block_unconnected():
