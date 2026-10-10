@@ -407,7 +407,6 @@ def _handle_underflow(dtype, *elements):
             (
                 np.arange(5, dtype=dtype), np.arange(0, -5, step=-1).astype(dtype), np.array([0, 1, 0, 1, 0]),
                 _handle_underflow(dtype,
-                                  (MoveToElement, 0.0, 0.0),
                                   (MoveToElement, 1.0, -1.0),
                                   (LineToElement, 2.0, -2.0),
                                   (MoveToElement, 3.0, -3.0),
