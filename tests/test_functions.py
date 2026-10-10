@@ -383,7 +383,6 @@ def _handle_underflow(dtype, *elements):
                                   (LineToElement, 1.0, -1.0),
                                   (MoveToElement, 2.0, -2.0),
                                   (LineToElement, 3.0, -3.0),
-                                  (MoveToElement, 4.0, -4.0)
                                   )
             ) for dtype in _dtypes
         ),
@@ -391,7 +390,6 @@ def _handle_underflow(dtype, *elements):
         (
             np.arange(5), np.array([0, -1, np.nan, -3, -4]), 'finite', (
                 (MoveToElement, 0.0, 0.0),
-                (LineToElement, 1.0, -1.0),
                 (LineToElement, 1.0, -1.0),
                 (MoveToElement, 3.0, -3.0),
                 (LineToElement, 4.0, -4.0)
@@ -401,7 +399,6 @@ def _handle_underflow(dtype, *elements):
             np.array([0, 1, np.nan, 3, 4]), np.arange(0, -5, step=-1), 'finite', (
                 (MoveToElement, 0.0, 0.0),
                 (LineToElement, 1.0, -1.0),
-                (LineToElement, 1.0, -1.0),
                 (MoveToElement, 3.0, -3.0),
                 (LineToElement, 4.0, -4.0)
             )
@@ -410,7 +407,6 @@ def _handle_underflow(dtype, *elements):
             (
                 np.arange(5, dtype=dtype), np.arange(0, -5, step=-1).astype(dtype), np.array([0, 1, 0, 1, 0]),
                 _handle_underflow(dtype,
-                                  (MoveToElement, 0.0, 0.0),
                                   (MoveToElement, 1.0, -1.0),
                                   (LineToElement, 2.0, -2.0),
                                   (MoveToElement, 3.0, -3.0),
@@ -429,11 +425,8 @@ def _handle_underflow(dtype, *elements):
 def test_arrayToQPath(xs, ys, connect, expected):
     path = arrayToQPath(xs, ys, connect=connect)
     element = None
+    assert path.elementCount() == len(expected)
     for i in range(path.elementCount()):
-        # nan elements add two line-segments, for simplicity of test config
-        # we can ignore the second segment
-        if element is not None and (eq(element.x, np.nan) or eq(element.y, np.nan)):
-            continue
         element = path.elementAt(i)
         assert eq(expected[i], (element.type, element.x, element.y))
 
