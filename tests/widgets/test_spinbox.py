@@ -1,3 +1,6 @@
+import math
+import re
+
 import pytest
 
 import pyqtgraph as pg
@@ -121,7 +124,450 @@ def test_SpinBox_gui_set_value_german(expected, valueText, suffix):
     spinBox_gui_set_value_test(expected, valueText, suffix, locale=germanLocale)
 
 
+# Locale-formatted number input. Inputs come from a SpinBox's own display or
+# from the spec; expected values come from the typed number, a C-locale
+# SpinBox or float(), never from Qt's locale strings. A test is skipped when
+# this Qt build's data for its locale differs from what the case needs.
+
+DIRECTION_MARKS = ('\u200e', '\u200f', '\u061c')
+
+
+def _localeOrSkip(name, reason, check):
+    """Return the QLocale *name*, or skip when this Qt build's data fails *check*."""
+    locale = pg.QtCore.QLocale(name)
+    if locale.name() != name or not check(locale):
+        pytest.skip(f"{name}: {reason} in this Qt build")
+    return locale
+
+
+def _shown(value, locale, **opts):
+    """Return the text a SpinBox with *opts* in *locale* displays for *value*."""
+    return pg.SpinBox(value=value, locale=locale, **opts).text()
+
+
+def _enterText(sb, text):
+    """Put *text* in the editor, finish editing and return the committed value."""
+    sb.lineEdit().setText(text)
+    sb.editingFinishedEvent()
+    return sb.value()
+
+
+def _assertRejected(sb, text):
+    before = sb.value()
+    _enterText(sb, text)
+    assert sb.value() == before
+    assert sb.lineEdit().text() == text
+    assert sb.validate(text, 0)[0] == pg.QtGui.QValidator.State.Intermediate
+
+
+def _sameValue(value, expected):
+    if math.isnan(expected):
+        return math.isnan(value)
+    return value == expected
+
+
+def _otherExponentCase(locale, text):
+    exponent = locale.exponential()
+    if exponent.lower() in text:
+        return text.replace(exponent.lower(), exponent.upper())
+    return text.replace(exponent.upper(), exponent.lower())
+
+
+def _exponentPlusSignHasMark(locale):
+    plus = locale.positiveSign()
+    return any(mark in plus for mark in DIRECTION_MARKS) and plus in _shown(1500000, locale)
+
+
+def _commaAndDisplayedMinusSign(locale):
+    return locale.decimalPoint() == ',' and _shown(-1.5, locale) == '\u2212' + _shown(1.5, locale)
+
+
+def _arabicIndic(locale):
+    return locale.decimalPoint() == '\u066b' and locale.zeroDigit() == '\u0660'
+
+
+def _minusSignAndComma(locale):
+    return locale.negativeSign() == '\u2212' and locale.decimalPoint() == ','
+
+
+def _asciiDigitsAndPeriod(locale):
+    return locale.zeroDigit() == '0' and locale.decimalPoint() == '.'
+
+
+def _nonAsciiExponent(locale):
+    return locale.exponential() not in ('e', 'E')
+
+
+def _cyrillicExponent(locale):
+    return locale.exponential().lower() == '\u0435'
+
+
+SI = dict(suffix='V', siPrefix=True)
+
+
+@pytest.mark.parametrize("localeName, reason, check, value, opts, edit", [
+    # Decimal separator other than period or comma
+    pytest.param('ar_EG', "decimal separator is '.' or ',' or digits are ASCII",
+                 lambda loc: loc.decimalPoint() not in ('.', ',') and loc.zeroDigit() != '0',
+                 1.5, {}, None, id='decimal-separator-ar_EG'),
+    # Non-ASCII digits with a period separator
+    pytest.param('bn_BD', "decimal separator is not '.' or digits are ASCII",
+                 lambda loc: loc.decimalPoint() == '.' and not loc.zeroDigit().isascii(),
+                 1.5, {}, None, id='non-ascii-digits-bn_BD'),
+    # Minus signs other than a plain hyphen-minus
+    pytest.param('sv_SE', "minus sign is not U+2212", lambda loc: loc.negativeSign() == '\u2212',
+                 -1.5, {}, None, id='minus-sign-sv_SE'),
+    pytest.param('he_IL', "minus sign has no U+200E mark", lambda loc: '\u200e' in loc.negativeSign(),
+                 -1.5, {}, None, id='minus-sign-mark-he_IL'),
+    pytest.param('ar_EG', "minus sign has no U+061C mark", lambda loc: '\u061c' in loc.negativeSign(),
+                 -1.5, {}, None, id='minus-sign-mark-ar_EG'),
+    # Direction mark in the exponent's plus sign
+    pytest.param('he_IL', "no direction mark in the displayed exponent sign", _exponentPlusSignHasMark,
+                 1500000, {}, None, id='exponent-plus-mark-he_IL'),
+    pytest.param('ar_EG', "no direction mark in the displayed exponent sign", _exponentPlusSignHasMark,
+                 1500000, {}, None, id='exponent-plus-mark-ar_EG'),
+    # Exponent symbol other than e
+    pytest.param('sv_SE', "exponent symbol is e", _nonAsciiExponent,
+                 1500000, {}, None, id='exponent-symbol-sv_SE'),
+    pytest.param('sv_SE', "exponent symbol is e", _nonAsciiExponent,
+                 -0.0000015, {}, None, id='exponent-symbol-negative-sv_SE'),
+    pytest.param('uk_UA', "exponent symbol is e", _nonAsciiExponent,
+                 1500000, {}, None, id='exponent-symbol-uk_UA'),
+    pytest.param('uk_UA', "exponent symbol is e", _nonAsciiExponent,
+                 -0.0000015, {}, None, id='exponent-symbol-negative-uk_UA'),
+    # Exponent symbol in either letter case
+    pytest.param('uk_UA', "exponent symbol is ASCII or has no letter case",
+                 lambda loc: not loc.exponential().isascii() and loc.exponential().lower() != loc.exponential().upper(),
+                 1500000, {}, None, id='exponent-case-shown-uk_UA'),
+    pytest.param('uk_UA', "exponent symbol is ASCII or has no letter case",
+                 lambda loc: not loc.exponential().isascii() and loc.exponential().lower() != loc.exponential().upper(),
+                 1500000, {}, _otherExponentCase, id='exponent-case-other-uk_UA'),
+    # SI prefix and unit suffix
+    pytest.param('sv_SE', "minus sign and decimal separator are ASCII",
+                 lambda loc: not loc.negativeSign().isascii() or not loc.decimalPoint().isascii(),
+                 0.0015, SI, None, id='si-prefix-sv_SE'),
+    pytest.param('sv_SE', "minus sign and decimal separator are ASCII",
+                 lambda loc: not loc.negativeSign().isascii() or not loc.decimalPoint().isascii(),
+                 -0.0015, SI, None, id='si-prefix-negative-sv_SE'),
+    pytest.param('ar_EG', "minus sign and decimal separator are ASCII",
+                 lambda loc: not loc.negativeSign().isascii() or not loc.decimalPoint().isascii(),
+                 0.0015, SI, None, id='si-prefix-ar_EG'),
+    pytest.param('ar_EG', "minus sign and decimal separator are ASCII",
+                 lambda loc: not loc.negativeSign().isascii() or not loc.decimalPoint().isascii(),
+                 -0.0015, SI, None, id='si-prefix-negative-ar_EG'),
+    # Negative infinity when non-finite values are allowed
+    pytest.param('sv_SE', "minus sign is a hyphen-minus", lambda loc: loc.negativeSign() != '-',
+                 float('-inf'), dict(finite=False), None, id='negative-infinity-sv_SE'),
+    pytest.param('ar_EG', "minus sign is a hyphen-minus", lambda loc: loc.negativeSign() != '-',
+                 float('-inf'), dict(finite=False), None, id='negative-infinity-ar_EG'),
+    # Suffix containing the locale's exponent symbol
+    pytest.param('uk_UA', "exponent symbol is not a letter of the suffix",
+                 lambda loc: _cyrillicExponent(loc) and '\u0435' in 'метр',
+                 1500000, dict(suffix='метр'), None, id='suffix-with-exponent-symbol-uk_UA'),
+    # Prefix containing the locale's exponent symbol
+    pytest.param('uk_UA', "exponent symbol is not Cyrillic e", _cyrillicExponent,
+                 2.5, dict(prefix='Величина'), None, id='prefix-with-exponent-symbol-uk_UA'),
+    # Suffix containing the locale's decimal separator
+    pytest.param('de_DE', "decimal separator is not ','", lambda loc: loc.decimalPoint() == ',',
+                 2.5, dict(suffix='V,eff'), None, id='suffix-with-decimal-separator-de_DE'),
+])
+def test_SpinBox_reads_its_own_locale_display(localeName, reason, check, value, opts, edit):
+    locale = _localeOrSkip(localeName, reason, check)
+    text = _shown(value, locale, **opts)
+    if edit is not None:
+        text = edit(locale, text)
+    sb = pg.SpinBox(locale=locale, **opts)
+
+    sb.lineEdit().setText(text)
+    assert sb.validate(text, 0)[0] == pg.QtGui.QValidator.State.Acceptable, text
+    sb.editingFinishedEvent()
+    assert _sameValue(sb.value(), value), text
+
+
+@pytest.mark.parametrize("localeName, reason, check, text, opts, expected", [
+    # Int mode
+    pytest.param('sv_SE', "decimal separator is not ',' or the displayed minus sign is not U+2212",
+                 _commaAndDisplayedMinusSign, '−3', dict(int=True), -3, id='int-mode-sv_SE'),
+    pytest.param('sv_SE', "decimal separator is not ',' or the displayed minus sign is not U+2212",
+                 _commaAndDisplayedMinusSign, '−2,5', dict(int=True),
+                 lambda: _enterText(pg.SpinBox(int=True, locale=pg.QtCore.QLocale.c()), '-2.5'),
+                 id='int-mode-fraction-sv_SE'),
+    # Locale digits with an ASCII period
+    pytest.param('ar_EG', "decimal separator is not U+066B or digits are not Arabic-Indic", _arabicIndic,
+                 '١.٥', {}, 1.5, id='locale-digits-ascii-period-ar_EG'),
+    # Another script's digits in a locale with ASCII digits
+    pytest.param('en_US', "digits are not ASCII or decimal separator is not '.'", _asciiDigitsAndPeriod,
+                 '১.৫', {}, 1.5, id='other-script-digits-en_US'),
+    # ASCII signs in a locale with a different minus sign
+    pytest.param('sv_SE', "minus sign is not U+2212 or decimal separator is not ','", _minusSignAndComma,
+                 '-1,5', {}, -1.5, id='ascii-minus-sv_SE'),
+    pytest.param('sv_SE', "minus sign is not U+2212 or decimal separator is not ','", _minusSignAndComma,
+                 '+1,5', {}, 1.5, id='ascii-plus-sv_SE'),
+    # ASCII minus in a locale with direction marks
+    pytest.param('he_IL', "minus sign has no direction mark or decimal separator is not '.'",
+                 lambda loc: any(mark in loc.negativeSign() for mark in DIRECTION_MARKS) and loc.decimalPoint() == '.',
+                 '-1.5', {}, -1.5, id='ascii-minus-with-marks-he_IL'),
+    # ASCII non-finite values
+    pytest.param('sv_SE', "minus sign is a hyphen-minus", lambda loc: loc.negativeSign() != '-',
+                 '-inf', dict(finite=False), float('-inf'), id='ascii-negative-infinity-sv_SE'),
+    pytest.param('sv_SE', "minus sign is a hyphen-minus", lambda loc: loc.negativeSign() != '-',
+                 '+inf', dict(finite=False), float('inf'), id='ascii-positive-infinity-sv_SE'),
+    pytest.param('sv_SE', "minus sign is a hyphen-minus", lambda loc: loc.negativeSign() != '-',
+                 'nan', dict(finite=False), float('nan'), id='ascii-nan-sv_SE'),
+    # Period accepted where the separator is neither period nor comma
+    pytest.param('ar_EG', "decimal separator is '.' or ','", lambda loc: loc.decimalPoint() not in ('.', ','),
+                 '2.5', {}, 2.5, id='period-accepted-ar_EG'),
+    # ASCII exponent marker in a locale with a different exponent symbol
+    pytest.param('sv_SE', "exponent symbol is e or decimal separator is not ','",
+                 lambda loc: _nonAsciiExponent(loc) and loc.decimalPoint() == ',',
+                 '1,5e6', {}, 1500000, id='ascii-exponent-sv_SE'),
+])
+def test_SpinBox_reads_typed_text_in_locale(localeName, reason, check, text, opts, expected):
+    locale = _localeOrSkip(localeName, reason, check)
+    if callable(expected):
+        expected = expected()
+    sb = pg.SpinBox(locale=locale, **opts)
+
+    assert _sameValue(_enterText(sb, text), expected)
+
+
+@pytest.mark.parametrize("localeName, reason, check, text", [
+    # Period rejected alongside other locale symbols
+    pytest.param('sv_SE', "decimal separator is not ',' or the displayed minus sign is not U+2212",
+                 _commaAndDisplayedMinusSign, '−1.5', id='period-with-minus-sign-sv_SE'),
+    # Period rejected in a comma-decimal locale
+    pytest.param('de_DE', "decimal separator is not ','", lambda loc: loc.decimalPoint() == ',',
+                 '1.5', id='period-de_DE'),
+    # Comma rejected where the separator is neither period nor comma
+    pytest.param('ar_EG', "decimal separator is '.' or ','", lambda loc: loc.decimalPoint() not in ('.', ','),
+                 '2,5', id='comma-ar_EG'),
+])
+def test_SpinBox_rejects_text_in_locale(localeName, reason, check, text):
+    locale = _localeOrSkip(localeName, reason, check)
+    sb = pg.SpinBox(locale=locale)
+
+    _assertRejected(sb, text)
+    assert sb.value() == 0
+
+
+@pytest.mark.parametrize("localeName, reason, check, makeText, regex, accepts", [
+    # Arabic-Indic digits and decimal separator
+    pytest.param('ar_EG', "decimal separator is not U+066B or digits are not Arabic-Indic", _arabicIndic,
+                 lambda loc: _shown(1.5, loc), None, lambda text: text == '1.5', id='arabic-indic-ar_EG'),
+    # Minus sign other than hyphen-minus
+    pytest.param('sv_SE', "minus sign is not U+2212 or decimal separator is not ','", _minusSignAndComma,
+                 lambda loc: _shown(-1.5, loc), None, lambda text: text == '-1.5', id='minus-sign-sv_SE'),
+    # Exponent symbol other than e passed as ASCII
+    pytest.param('sv_SE', "exponent symbol is e", _nonAsciiExponent,
+                 lambda loc: _shown(1500000, loc), None,
+                 lambda text: text.isascii() and float(text) == 1500000, id='exponent-symbol-sv_SE'),
+    pytest.param('uk_UA', "exponent symbol is e", _nonAsciiExponent,
+                 lambda loc: _shown(1500000, loc), None,
+                 lambda text: text.isascii() and float(text) == 1500000, id='exponent-symbol-uk_UA'),
+    # ASCII text in a comma-decimal locale
+    pytest.param('de_DE', "decimal separator is not ','", lambda loc: loc.decimalPoint() == ',',
+                 lambda loc: '-1,5e6', None, lambda text: text == '-1.5e6', id='ascii-comma-de_DE'),
+    # ASCII exponent marker kept as typed
+    pytest.param('en_US', "decimal separator is not '.' or exponent symbol is not e",
+                 lambda loc: loc.decimalPoint() == '.' and loc.exponential() in ('e', 'E'),
+                 lambda loc: '1.5E6', None, lambda text: text == '1.5E6', id='ascii-exponent-en_US'),
+    # Another script's digits passed unchanged
+    pytest.param('en_US', "digits are not ASCII or decimal separator is not '.'", _asciiDigitsAndPeriod,
+                 lambda loc: '১.৫', None, lambda text: text == '১.৫', id='other-script-digits-en_US'),
+    # Custom regex together with a custom evalFunc
+    pytest.param('ar_EG', "decimal separator is not U+066B or digits are not Arabic-Indic", _arabicIndic,
+                 lambda loc: _shown(1.5, loc), re.compile(r'(?P<number>[^\sA-Za-z]+)'),
+                 lambda text: text == '1.5', id='custom-regex-ar_EG'),
+])
+def test_SpinBox_evalFunc_receives_ascii_number(localeName, reason, check, makeText, regex, accepts):
+    locale = _localeOrSkip(localeName, reason, check)
+    received = []
+
+    def evalFunc(text):
+        received.append(text)
+        return 1.0
+
+    if regex is None:
+        sb = pg.SpinBox(locale=locale, evalFunc=evalFunc)
+    else:
+        # locale before regex: setLocale replaces a regex that was set before it
+        sb = pg.SpinBox(locale=locale, regex=regex, evalFunc=evalFunc)
+        assert sb.opts['regex'] is regex
+    _enterText(sb, makeText(locale))
+
+    assert received
+    assert all(accepts(text) for text in received), received
+
+
+def test_SpinBox_custom_regex_sees_text_as_entered():
+    # Custom regex that requires the locale's minus sign
+    locale = _localeOrSkip('sv_SE', "minus sign is not U+2212 or decimal separator is not ','", _minusSignAndComma)
+    regex = re.compile('(?P<number>' + re.escape(locale.negativeSign()) + r'[^\sA-Za-z]+)')
+    # locale before regex: setLocale replaces a regex that was set before it
+    sb = pg.SpinBox(locale=locale, regex=regex)
+    assert sb.opts['regex'] is regex
+
+    assert _enterText(sb, _shown(-1.5, locale)) == -1.5
+
+
 
 def expect_failure_on_buggy_qt():
     if (6, 0) <= pg.Qt.QtVersionInfo < (6, 9):
         pytest.xfail("A known bug in Qt 6.0.0 - 6.8.x causes scientific notation with 'g' format to use capital 'E' for the exponent.")
+
+
+# Locale changes other than setLocale. Each trigger moves a SpinBox that was
+# created under the default locale *old* to the locale *new*, and returns the
+# objects that must stay alive until the test ends.
+
+def _englishAndGermanOrSkip():
+    english, german = pg.QtCore.QLocale('en_US'), pg.QtCore.QLocale('de_DE')
+    if english.decimalPoint() != '.' or german.decimalPoint() != ',':
+        pytest.skip("en_US or de_DE decimal separator differs in this Qt build")
+    return english, german
+
+
+def _moveToParent(default_locale, sb, old, new):
+    parent = pg.QtWidgets.QWidget()
+    parent.setLocale(new)
+    sb.setParent(parent)
+    return [parent]
+
+
+def _addToLayout(default_locale, sb, old, new):
+    parent = pg.QtWidgets.QWidget()
+    parent.setLocale(new)
+    layout = pg.QtWidgets.QHBoxLayout(parent)
+    layout.addWidget(sb)
+    return [parent, layout]
+
+
+def _changeParentLocale(default_locale, sb, old, new):
+    parent = pg.QtWidgets.QWidget()
+    parent.setLocale(old)
+    sb.setParent(parent)
+    parent.setLocale(new)
+    return [parent]
+
+
+def _changeApplicationLocale(default_locale, sb, old, new):
+    default_locale(new, applicationWide=True)
+    return []
+
+
+def _unsetOwnLocale(default_locale, sb, old, new):
+    sb.setLocale(old)
+    parent = pg.QtWidgets.QWidget()
+    parent.setLocale(new)
+    sb.setParent(parent)
+    sb.unsetLocale()
+    return [parent]
+
+
+@pytest.mark.parametrize("trigger, fromGerman", [
+    # Comma-decimal locale inherited after creation
+    pytest.param(_moveToParent, False, id='comma-inherited-setParent'),
+    pytest.param(_addToLayout, False, id='comma-inherited-layout'),
+    # Period-decimal locale inherited after creation
+    pytest.param(_moveToParent, True, id='period-inherited-setParent'),
+    # Parent locale changed after the SpinBox was added
+    pytest.param(_changeParentLocale, False, id='parent-locale-changed'),
+    # Application-wide locale change
+    pytest.param(_changeApplicationLocale, False, id='application-wide'),
+    # Locale unset on the SpinBox
+    pytest.param(_unsetOwnLocale, True, id='unsetLocale'),
+])
+def test_SpinBox_input_follows_locale_change(default_locale, trigger, fromGerman):
+    english, german = _englishAndGermanOrSkip()
+    old, new = (german, english) if fromGerman else (english, german)
+    default_locale(old)
+    sb = pg.SpinBox()
+    keepAlive = trigger(default_locale, sb, old, new)
+
+    assert _enterText(sb, '3' + new.decimalPoint() + '5') == 3.5
+    sb.setValue(0)
+    _assertRejected(sb, '3' + old.decimalPoint() + '5')
+
+
+@pytest.mark.parametrize("regex", [
+    # Custom regex kept when the locale changes
+    pytest.param(pg.functions.FLOAT_REGEX_PERIOD.pattern, id='pattern-string'),
+    pytest.param(pg.functions.FLOAT_REGEX_PERIOD, id='compiled-pattern'),
+])
+def test_SpinBox_keeps_custom_regex_when_locale_changes(default_locale, regex):
+    english, german = _englishAndGermanOrSkip()
+    default_locale(english)
+    sb = pg.SpinBox(regex=regex)
+    keepAlive = _moveToParent(default_locale, sb, english, german)
+
+    assert _enterText(sb, '3.5') == 3.5
+
+
+@pytest.mark.parametrize("trigger", [
+    # Locale set on the SpinBox is kept
+    pytest.param(_changeParentLocale, id='parent-locale-changed'),
+    pytest.param(_changeApplicationLocale, id='application-wide'),
+])
+def test_SpinBox_keeps_locale_set_on_it(default_locale, trigger):
+    english, german = _englishAndGermanOrSkip()
+    default_locale(english)
+    sb = pg.SpinBox(value=2.5)
+    sb.setLocale(english)
+    before = sb.text()
+    keepAlive = trigger(default_locale, sb, english, german)
+
+    assert sb.text() == before
+    sb.setValue(0)
+    assert _enterText(sb, '3.5') == 3.5
+    sb.setValue(0)
+    _assertRejected(sb, '3,5')
+
+
+REDISPLAY_TRIGGERS = [
+    pytest.param(_moveToParent, id='setParent'),
+    pytest.param(_addToLayout, id='layout'),
+    pytest.param(_changeParentLocale, id='parent-locale-changed'),
+    pytest.param(_changeApplicationLocale, id='application-wide'),
+    pytest.param(_unsetOwnLocale, id='unsetLocale'),
+]
+
+
+# Redisplay after a locale change
+@pytest.mark.parametrize("trigger", REDISPLAY_TRIGGERS)
+def test_SpinBox_redisplays_after_locale_change(default_locale, trigger):
+    english, german = _englishAndGermanOrSkip()
+    default_locale(english)
+    sb = pg.SpinBox(value=2.5)
+    emitted = []
+    sb.valueChanged.connect(lambda *args: emitted.append('valueChanged'))
+    sb.sigValueChanged.connect(lambda *args: emitted.append('sigValueChanged'))
+    sb.sigValueChanging.connect(lambda *args: emitted.append('sigValueChanging'))
+    keepAlive = trigger(default_locale, sb, english, german)
+
+    assert sb.text() == pg.SpinBox(value=2.5, locale=german).text()
+    assert sb.value() == 2.5
+    assert emitted == []
+
+
+# Redisplayed text can be edited
+@pytest.mark.parametrize("trigger", REDISPLAY_TRIGGERS)
+def test_SpinBox_redisplayed_text_can_be_edited(default_locale, trigger):
+    english, german = _englishAndGermanOrSkip()
+    default_locale(english)
+    sb = pg.SpinBox(value=2.5)
+    keepAlive = trigger(default_locale, sb, english, german)
+
+    assert _enterText(sb, pg.SpinBox(value=3.5, locale=german).text()) == 3.5
+
+
+# Finishing an unchanged edit keeps the unrounded value
+@pytest.mark.parametrize("trigger", REDISPLAY_TRIGGERS)
+def test_SpinBox_unchanged_edit_keeps_unrounded_value(default_locale, trigger):
+    english, german = _englishAndGermanOrSkip()
+    default_locale(english)
+    sb = pg.SpinBox(value=1.23456789)
+    keepAlive = trigger(default_locale, sb, english, german)
+    assert sb.text() == pg.SpinBox(value=1.23456789, locale=german).text()
+
+    sb.editingFinishedEvent()
+    assert sb.value() == 1.23456789
