@@ -114,8 +114,12 @@ class OpenGLState(QtCore.QObject):
 
         glwidget.doneCurrent()
 
-    def verticesChanged(self, curve):
+    def invalidate_cache(self):
         self.render_cache = None
+
+    @QtCore.Slot(object)
+    def verticesChanged(self, curve):
+        self.invalidate_cache()
 
 class PlotCurveItem(GraphicsObject):
     """
@@ -154,6 +158,7 @@ class PlotCurveItem(GraphicsObject):
         """
         GraphicsObject.__init__(self, kwargs.get('parent', None))
         self.clear()
+        self.glstate = None
 
         ## this is disastrous for performance.
         #self.setCacheMode(QtWidgets.QGraphicsItem.CacheMode.DeviceCoordinateCache)
@@ -177,7 +182,6 @@ class PlotCurveItem(GraphicsObject):
             self.opts['pen'] = fn.mkPen('w')
         self.setClickable(kwargs.get('clickable', False))
         self.setData(*args, **kwargs)
-        self.glstate = None
 
     def implements(self, interface=None):
         ints = ['plotData']
@@ -438,6 +442,8 @@ class PlotCurveItem(GraphicsObject):
         self.opts['fillLevel'] = level
         self.fillPath = None
         self._fillPathList = None
+        if self.glstate is not None:
+            self.glstate.invalidate_cache()
         self.invalidateBounds()
         self.update()
         
