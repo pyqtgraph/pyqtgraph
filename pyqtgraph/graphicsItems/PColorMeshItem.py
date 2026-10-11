@@ -4,7 +4,6 @@ import numpy as np
 
 from .. import Qt, colormap
 from .. import functions as fn
-from ..Qt import compat
 from ..Qt import OpenGLConstants as GLC
 from ..Qt import OpenGLHelpers
 from ..Qt import QtCore, QtGui, QtOpenGL, QT_LIB
@@ -518,20 +517,9 @@ class PColorMeshItem(GraphicsObject):
             vtx_array_shape = X.shape
         else:
             vtx_array_shape = Z.shape + (4,)
-        num_vtx_mesh = np.prod(vtx_array_shape)
         num_ind_mesh = np.prod(Z.shape) * 6
 
-        # resize (and invalidate) gpu buffers if needed.
-        # a reallocation can only occur together with a change in data.
-        # i.e. reallocation ==> change in data (render_cache is None)
         if DirtyFlag.DIM in dirty_bits:
-            glstate.m_vbo_pos.bind()
-            glstate.m_vbo_pos.allocate(num_vtx_mesh * 2 * 4)
-            glstate.m_vbo_pos.release()
-            glstate.m_vbo_lum.bind()
-            glstate.m_vbo_lum.allocate(num_vtx_mesh * 1 * 4)
-            glstate.m_vbo_lum.release()
-
             if glstate.flat_shading:
                 # let the bottom-left of each quad be its "anchor".
                 # then each quad is made up of 2 triangles
@@ -558,9 +546,7 @@ class PColorMeshItem(GraphicsObject):
                 dim2 = np.array([3, 2, 0, 1, 3, 0], dtype=np.uint32)[np.newaxis, np.newaxis, :]
                 buf_ind = dim0 + dim1 + dim2
 
-            glstate.m_vbo_ind.bind()
-            glstate.m_vbo_ind.allocate(buf_ind, buf_ind.nbytes)
-            glstate.m_vbo_ind.release()
+            OpenGLHelpers.upload_vbo(glstate.m_vbo_ind, buf_ind)
 
             dirty_bits &= ~DirtyFlag.DIM
 
@@ -582,9 +568,7 @@ class PColorMeshItem(GraphicsObject):
                 pos[..., 2, :] = XY[:-1, 1:, :]  # TL
                 pos[..., 3, :] = XY[1:, 1:, :]   # TR
 
-            glstate.m_vbo_pos.bind()
-            glstate.m_vbo_pos.write(0, pos, pos.nbytes)
-            glstate.m_vbo_pos.release()
+            OpenGLHelpers.upload_vbo(glstate.m_vbo_pos, pos)
 
             dirty_bits &= ~DirtyFlag.XY
 
@@ -596,9 +580,7 @@ class PColorMeshItem(GraphicsObject):
             else:
                 lum[..., :] = np.expand_dims(Z, axis=2)
 
-            glstate.m_vbo_lum.bind()
-            glstate.m_vbo_lum.write(0, lum, lum.nbytes)
-            glstate.m_vbo_lum.release()
+            OpenGLHelpers.upload_vbo(glstate.m_vbo_lum, lum)
 
             dirty_bits &= ~DirtyFlag.Z
 
@@ -618,8 +600,7 @@ class PColorMeshItem(GraphicsObject):
 
         program.setUniformValue("u_mvp", mvp)
 
-        NULL = compat.voidptr(0) if QT_LIB.startswith("PySide") else None
-        glfn.glDrawElements(GLC.GL_TRIANGLES, num_ind_mesh, GLC.GL_UNSIGNED_INT, NULL)
+        glfn.glDrawElements(GLC.GL_TRIANGLES, num_ind_mesh, GLC.GL_UNSIGNED_INT, OpenGLHelpers.NULL)
 
         glstate.m_vao.release()
 
@@ -697,12 +678,7 @@ class OpenGLState(QtCore.QObject):
 
         is_opengles = self.context.isOpenGLES()
         gl_version = self.context.format().version()
-        if not is_opengles and gl_version >= (3, 1):
-            moderngl = True
-        elif is_opengles and gl_version >= (3, 0):
-            moderngl = True
-        else:
-            moderngl = False
+        moderngl = gl_version >= ((3, 0) if is_opengles else (3, 1))
 
         if moderngl:
             self.flat_shading = True

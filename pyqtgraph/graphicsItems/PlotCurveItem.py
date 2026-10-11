@@ -49,10 +49,10 @@ class OpenGLState(QtCore.QObject):
     def __init__(self, parent):
         super().__init__(parent)
         self.context = None
-        self.vbo_nbytes = 0
         self.render_cache = None
         self.m_vao = QtOpenGL.QOpenGLVertexArrayObject(self)
         self.m_vbo = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
+        self.m_ibo = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.IndexBuffer)
 
     def setup(self, context):
         if self.context is context:
@@ -91,7 +91,7 @@ class OpenGLState(QtCore.QObject):
 
         self.m_vao.create()
         self.m_vbo.create()
-        self.vbo_nbytes = 0
+        # m_ibo is created only if needed
 
         self.m_vao.bind()
         self.m_vbo.bind()
@@ -105,17 +105,21 @@ class OpenGLState(QtCore.QObject):
         glwidget = self.parent()
         glwidget.makeCurrent()
 
+        self.m_ibo.destroy()
         self.m_vbo.destroy()
         self.m_vao.destroy()
 
         self.context = None
-        self.vbo_nbytes = 0
         self.render_cache = None
 
         glwidget.doneCurrent()
 
-    def verticesChanged(self, curve):
+    def invalidate_cache(self):
         self.render_cache = None
+
+    @QtCore.Slot(object)
+    def verticesChanged(self, curve):
+        self.invalidate_cache()
 
 class PlotCurveItem(GraphicsObject):
     """
@@ -154,6 +158,7 @@ class PlotCurveItem(GraphicsObject):
         """
         GraphicsObject.__init__(self, kwargs.get('parent', None))
         self.clear()
+        self.glstate = None
 
         ## this is disastrous for performance.
         #self.setCacheMode(QtWidgets.QGraphicsItem.CacheMode.DeviceCoordinateCache)
@@ -177,7 +182,6 @@ class PlotCurveItem(GraphicsObject):
             self.opts['pen'] = fn.mkPen('w')
         self.setClickable(kwargs.get('clickable', False))
         self.setData(*args, **kwargs)
-        self.glstate = None
 
     def implements(self, interface=None):
         ints = ['plotData']
@@ -438,6 +442,8 @@ class PlotCurveItem(GraphicsObject):
         self.opts['fillLevel'] = level
         self.fillPath = None
         self._fillPathList = None
+        if self.glstate is not None:
+            self.glstate.invalidate_cache()
         self.invalidateBounds()
         self.update()
         
@@ -916,7 +922,6 @@ class PlotCurveItem(GraphicsObject):
 
         x, y = self.getData()
         num_pts = len(x)
-        valid_pts = num_pts
 
         # minimum 2 pts to draw anything
         if num_pts < 2:
@@ -947,12 +952,9 @@ class PlotCurveItem(GraphicsObject):
         tr.translate(xc, yc)
         mvp = proj * QtGui.QMatrix4x4(tr)
 
-        vbo_nbytes_needed = num_pts * 2 * 4
-
         connect_kind = self.opts["connect"]
         if isinstance(connect_kind, np.ndarray):
             connect_kind = "array"
-            vbo_nbytes_needed = ((num_pts-1) * 2) * 2 * 4
 
         # filling is only supported for 'all' and 'finite'.
         # it requires an additional 2 * num_pts of storage
@@ -961,37 +963,34 @@ class PlotCurveItem(GraphicsObject):
         if connect_kind in ['all', 'finite']:
             if isinstance(self.opts['fillLevel'], (int, float)):
                 fillLevel = float(self.opts['fillLevel'])
-                vbo_nbytes_needed += (2 * num_pts) * 2 * 4
-
-        # resize (and invalidate) gpu buffers if needed.
-        # a reallocation can only occur together with a change in data.
-        # i.e. reallocation ==> change in data (render_cache is None)
-        if vbo_nbytes_needed != glstate.vbo_nbytes:
-            glstate.m_vbo.bind()
-            glstate.m_vbo.allocate(vbo_nbytes_needed)
-            glstate.m_vbo.release()
-            glstate.vbo_nbytes = vbo_nbytes_needed
 
         if glstate.render_cache is None:
-            buf = None
+            # note that buf_vtx is allocated to the number of supplied points,
+            # and not to the number of drawn points.
+            # this is so that changing the data but not its length doesn't
+            # trigger a vbo reallocation.
 
             if connect_kind == "pairs":
+                valid_pts = num_pts
                 glstate.render_cache = (xc, yc, valid_pts,)
 
-                buf = np.empty((valid_pts, 2), dtype=np.float32)
-                pos = buf
+                buf_vtx = np.empty((num_pts, 2), dtype=np.float32)
+                pos = buf_vtx[:valid_pts, :]
                 pos[:, 0] = x - xc
                 pos[:, 1] = y - yc
+                OpenGLHelpers.upload_vbo(glstate.m_vbo, buf_vtx)
+                del buf_vtx, pos
 
             elif connect_kind == "all":
+                valid_pts = num_pts
                 if not self.opts["skipFiniteCheck"]:
                     finite_mask = arraytoline._compute_finite_mask(x, y)
                     valid_pts = np.count_nonzero(finite_mask)
                 glstate.render_cache = (xc, yc, valid_pts,)
 
-                fill_pts = 0 if fillLevel is None else 2 * valid_pts
-                buf = np.empty((valid_pts + fill_pts, 2), dtype=np.float32)
-                pos = buf[:valid_pts, :]
+                fill_pts = 0 if fillLevel is None else 2 * num_pts
+                buf_vtx = np.empty((num_pts + fill_pts, 2), dtype=np.float32)
+                pos = buf_vtx[:valid_pts, :]
                 if valid_pts == num_pts:
                     pos[:, 0] = x - xc
                     pos[:, 1] = y - yc
@@ -1000,37 +999,67 @@ class PlotCurveItem(GraphicsObject):
                     pos[:, 1] = y[finite_mask] - yc
 
                 if fill_pts:
-                    fillpos = buf[valid_pts:, :]
+                    fillpos = buf_vtx[valid_pts:valid_pts + 2 * valid_pts, :]
                     fillpos[0::2, 0] = pos[:, 0]
                     fillpos[0::2, 1] = pos[:, 1]
                     fillpos[1::2, 0] = pos[:, 0]
                     fillpos[1::2, 1] = fillLevel - yc
+                    del fillpos
+
+                OpenGLHelpers.upload_vbo(glstate.m_vbo, buf_vtx)
+                del buf_vtx, pos
 
             elif connect_kind == "finite":
+                valid_pts = num_pts
                 finite_mask = arraytoline._compute_finite_mask(x, y)
                 sidx, slen = arraytoline._compute_finite_segments(finite_mask)
-                glstate.render_cache = (xc, yc, valid_pts, sidx.tolist(), slen.tolist())
 
-                fill_pts = 0 if fillLevel is None else 2 * valid_pts
-                buf = np.empty((valid_pts + fill_pts, 2), dtype=np.float32)
-                pos = buf[:valid_pts, :]
+                # decide whether to use GL_PRIMITIVE_RESTART
+                ctx = glstate.context
+                use_primitive_restart = (
+                    len(sidx) > 1
+                    and (ctx.format().version() >= ((3, 0) if ctx.isOpenGLES() else (3, 1)))
+                )
+                if use_primitive_restart and not (ctx.isOpenGLES() or ctx.format().version() >= (4, 3)):
+                    # PyQt provides only 2.1 and 4.1 Core functions.
+                    # So if for example our context is OpenGL 3.3 Core, the driver is capable,
+                    # but we don't have the binding for the function glPrimitiveRestartIndex
+                    if not hasattr(glf, 'glPrimitiveRestartIndex'):
+                        use_primitive_restart = False
+
+                glstate.render_cache = (xc, yc, valid_pts, sidx.tolist(), slen.tolist(), use_primitive_restart)
+
+                fill_pts = 0 if fillLevel is None else 2 * num_pts
+                buf_vtx = np.empty((num_pts + fill_pts, 2), dtype=np.float32)
+                pos = buf_vtx[:valid_pts, :]
                 pos[:, 0] = x - xc
                 pos[:, 1] = y - yc
 
                 if fill_pts:
-                    fillpos = buf[valid_pts:, :]
+                    fillpos = buf_vtx[valid_pts:valid_pts + 2 * valid_pts, :]
                     fillpos[0::2, 0] = pos[:, 0]
                     fillpos[0::2, 1] = pos[:, 1]
                     fillpos[1::2, 0] = pos[:, 0]
                     fillpos[1::2, 1] = fillLevel - yc
+                    del fillpos
+
+                OpenGLHelpers.upload_vbo(glstate.m_vbo, buf_vtx)
+                del buf_vtx, pos
+
+                if use_primitive_restart:
+                    buf_ind = np.arange(valid_pts, dtype=np.uint32)
+                    buf_ind[~finite_mask] = 0xFFFFFFFF
+                    OpenGLHelpers.upload_vbo(glstate.m_ibo, buf_ind)
+                    del buf_ind
 
             elif connect_kind == "array":
+                num_segments = num_pts - 1
                 mask = np.asarray(self.opts["connect"], dtype=bool)[:num_pts-1]
                 valid_pts = 2 * np.count_nonzero(mask)
                 glstate.render_cache = (xc, yc, valid_pts,)
 
-                buf = np.empty((valid_pts, 2), dtype=np.float32)
-                pos = buf
+                buf_vtx = np.empty((2 * num_segments, 2), dtype=np.float32)
+                pos = buf_vtx[:valid_pts, :]
                 xshift = x - xc
                 yshift = y - yc
                 pos[0::2, 0] = xshift[:-1][mask]
@@ -1038,11 +1067,8 @@ class PlotCurveItem(GraphicsObject):
                 pos[0::2, 1] = yshift[:-1][mask]
                 pos[1::2, 1] = yshift[1:][mask]
 
-            if buf is not None:
-                glstate.m_vbo.bind()
-                glstate.m_vbo.write(0, buf, buf.nbytes)
-                glstate.m_vbo.release()
-
+                OpenGLHelpers.upload_vbo(glstate.m_vbo, buf_vtx)
+                del buf_vtx, pos
 
         widget.setViewboxClip(view)
 
@@ -1065,7 +1091,7 @@ class PlotCurveItem(GraphicsObject):
                 *_, valid_pts = glstate.render_cache
                 glf.glDrawArrays(GLC.GL_TRIANGLE_STRIP, valid_pts, 2 * valid_pts)
             elif connect_kind == 'finite':
-                *_, valid_pts, sidx, slen = glstate.render_cache
+                *_, valid_pts, sidx, slen, _ = glstate.render_cache
                 for s, l in zip(sidx, slen):
                     glf.glDrawArrays(GLC.GL_TRIANGLE_STRIP, valid_pts + 2 * s, 2 * l)
 
@@ -1103,8 +1129,20 @@ class PlotCurveItem(GraphicsObject):
                     *_, valid_pts = glstate.render_cache
                     glf.glDrawArrays(GLC.GL_LINE_STRIP, 0, valid_pts)
                 case "finite":
-                    *_, sidx, slen = glstate.render_cache
-                    if hasattr(glf, "glMultiDrawArrays") and not glstate.context.isOpenGLES():
+                    *_, valid_pts, sidx, slen, use_primitive_restart = glstate.render_cache
+                    is_opengles = glstate.context.isOpenGLES()
+                    if use_primitive_restart:
+                        if is_opengles or glstate.context.format().version() >= (4, 3):
+                            primitive_restart = GLC.GL_PRIMITIVE_RESTART_FIXED_INDEX
+                        else:
+                            primitive_restart = GLC.GL_PRIMITIVE_RESTART
+                            glf.glPrimitiveRestartIndex(0xFFFFFFFF)
+                        glf.glEnable(primitive_restart)
+                        glstate.m_ibo.bind()
+                        glf.glDrawElements(GLC.GL_LINE_STRIP, valid_pts, GLC.GL_UNSIGNED_INT, OpenGLHelpers.NULL)
+                        glstate.m_ibo.release()
+                        glf.glDisable(primitive_restart)
+                    elif hasattr(glf, "glMultiDrawArrays") and not is_opengles:
                         glf.glMultiDrawArrays(GLC.GL_LINE_STRIP, sidx, slen, len(sidx))
                     else:
                         # PyQt{5,6} didn't include glMultiDrawArrays
