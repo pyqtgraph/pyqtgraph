@@ -1,9 +1,9 @@
 import ctypes
 import importlib
-import sys
 
-from . import QT_LIB, QtCore, QtGui, QtWidgets, QtOpenGL, QtVersionInfo
+from . import QT_LIB, QtGui, QtWidgets, QtOpenGL, QtVersionInfo
 from . import OpenGLConstants as GLC
+from . import compat
 
 if QtVersionInfo[0] >= 6:
     QtOpenGLWidgets = importlib.import_module(f"{QT_LIB}.QtOpenGLWidgets")
@@ -12,12 +12,24 @@ else:
 
 __all__ = ["getFunctions", "GraphicsViewGLWidget"]
 
+# for use with glDrawElements
+NULL = compat.voidptr(0) if QT_LIB.startswith("PySide") else None
+
 def getFunctions(context) -> QtOpenGL.QAbstractOpenGLFunctions:
     glfn = None
     format = context.format()
 
     if QT_LIB.startswith("PySide"):
-        glfn = context.extraFunctions()
+        if not context.isOpenGLES():
+            # Qt provides only up to OpenGL 4.5
+            # for whatever reason, asking for Compatibility Profile between (4.1, 4.3) fails
+            vp = QtOpenGL.QOpenGLVersionProfile()
+            vp.setVersion(*min(format.version(), (4, 1)))
+            if format.version() >= (3, 2):
+                vp.setProfile(QtGui.QSurfaceFormat.OpenGLContextProfile.CoreProfile)
+            glfn = QtOpenGL.QOpenGLVersionFunctionsFactory.get(vp, context)
+        else:
+            glfn = context.extraFunctions()
 
     elif not context.isOpenGLES() and QT_LIB.startswith("PyQt") and QtVersionInfo >= (6, 0):
         # VersionFunctionsFactory doesn't support ES
