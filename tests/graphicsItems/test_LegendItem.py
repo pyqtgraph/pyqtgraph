@@ -101,3 +101,14 @@ def test_legend_item_basics():
 
     legend.clear()
     assert legend.items == []
+
+
+def test_legend_updates_when_plot_data_changes():
+    legend = pg.LegendItem()
+    plot = pg.PlotDataItem([1, 2], [3, 4], name='Old Name')
+    legend.addItem(plot, name='Old Name')
+
+    plot.setData([1, 2], [4, 5], name='New Name')
+
+    assert legend.getLabel(plot).text == 'New Name'
+    legend.clear()
