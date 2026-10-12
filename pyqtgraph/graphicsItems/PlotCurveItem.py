@@ -1058,17 +1058,20 @@ class PlotCurveItem(GraphicsObject):
                 valid_pts = 2 * np.count_nonzero(mask)
                 glstate.render_cache = (xc, yc, valid_pts,)
 
-                buf_vtx = np.empty((2 * num_segments, 2), dtype=np.float32)
-                pos = buf_vtx[:valid_pts, :]
-                xshift = x - xc
-                yshift = y - yc
-                pos[0::2, 0] = xshift[:-1][mask]
-                pos[1::2, 0] = xshift[1:][mask]
-                pos[0::2, 1] = yshift[:-1][mask]
-                pos[1::2, 1] = yshift[1:][mask]
+                buf_vtx = np.empty((num_pts, 2), dtype=np.float32)
+                buf_vtx[:, 0] = x - xc
+                buf_vtx[:, 1] = y - yc
 
                 OpenGLHelpers.upload_vbo(glstate.m_vbo, buf_vtx)
-                del buf_vtx, pos
+                del buf_vtx
+
+                buf_ind = np.empty(2 * num_segments, dtype=np.uint32)
+                ind = np.arange(num_pts, dtype=np.uint32)
+                buf_ind[0:valid_pts:2] = ind[:-1][mask]
+                buf_ind[1:valid_pts:2] = ind[1:][mask]
+
+                OpenGLHelpers.upload_vbo(glstate.m_ibo, buf_ind)
+                del buf_ind, ind
 
         widget.setViewboxClip(view)
 
@@ -1122,7 +1125,7 @@ class PlotCurveItem(GraphicsObject):
             program.setUniformValue("u_color", pen.color())
 
             match connect_kind:
-                case "pairs" | "array":
+                case "pairs":
                     *_, valid_pts = glstate.render_cache
                     glf.glDrawArrays(GLC.GL_LINES, 0, valid_pts)
                 case "all":
@@ -1148,6 +1151,11 @@ class PlotCurveItem(GraphicsObject):
                         # PyQt{5,6} didn't include glMultiDrawArrays
                         for s, l in zip(sidx, slen):
                             glf.glDrawArrays(GLC.GL_LINE_STRIP, s, l)
+                case "array":
+                    *_, valid_pts = glstate.render_cache
+                    glstate.m_ibo.bind()
+                    glf.glDrawElements(GLC.GL_LINES, valid_pts, GLC.GL_UNSIGNED_INT, OpenGLHelpers.NULL)
+                    glstate.m_ibo.release()
 
         glstate.m_vao.release()
 
