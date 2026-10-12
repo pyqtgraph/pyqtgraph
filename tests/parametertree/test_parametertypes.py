@@ -7,7 +7,7 @@ import pyqtgraph.parametertree as pt
 from pyqtgraph.functions import eq
 from pyqtgraph.parametertree.utils import compare_parameters
 from pyqtgraph.parametertree.parameterTypes import ChecklistParameterItem
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 import pytest
 
@@ -317,6 +317,72 @@ def test_recreate_from_savestate():
     created2 = pt.Parameter.create(**state)
     assert pg.eq(state, created2.saveState())
     assert compare_parameters(created, created2)
+
+
+def _labelTexts(group):
+    return {child.name(): list(child.items.keys())[0].displayLabel.text() for child in group.children()}
+
+
+def _labelsInNewTree(default_locale, locale, children):
+    """Return the value labels that a ParameterTree created in *locale* shows for *children*."""
+    default_locale(locale)
+    group = pt.Parameter.create(name='params', type='group', children=[dict(c) for c in children])
+    tree = pt.ParameterTree()
+    tree.setParameters(group)
+    return _labelTexts(group)
+
+
+def _setWindowLocale(default_locale, tree, locale):
+    window = QtWidgets.QWidget()
+    QtWidgets.QVBoxLayout(window).addWidget(tree)
+    window.setLocale(locale)
+    return [window]
+
+
+def _setTreeLocale(default_locale, tree, locale):
+    tree.setLocale(locale)
+    return []
+
+
+def _setApplicationLocale(default_locale, tree, locale):
+    default_locale(locale, applicationWide=True)
+    return []
+
+
+FLOAT_CHILDREN = [dict(name='f', type='float', value=2.5)]
+
+
+@pytest.mark.parametrize("children, trigger", [
+    # Window locale changes
+    pytest.param(FLOAT_CHILDREN, _setWindowLocale, id='window-locale'),
+    # Tree locale set directly or changed application-wide
+    pytest.param(FLOAT_CHILDREN, _setTreeLocale, id='tree-setLocale'),
+    pytest.param(FLOAT_CHILDREN, _setApplicationLocale, id='application-wide'),
+    # Integer and SI-prefixed parameters
+    pytest.param([dict(name='i', type='int', value=-3),
+                  dict(name='s', type='float', value=0.0015, siPrefix=True, suffix='V')],
+                 _setTreeLocale, id='int-and-si-prefix'),
+])
+def test_numeric_labels_follow_locale_change(default_locale, children, trigger):
+    english, german = QtCore.QLocale('en_US'), QtCore.QLocale('de_DE')
+    if english.decimalPoint() != '.' or german.decimalPoint() != ',':
+        pytest.skip("en_US or de_DE decimal separator differs in this Qt build")
+    expected = _labelsInNewTree(default_locale, german, children)
+
+    default_locale(english)
+    group = pt.Parameter.create(name='params', type='group', children=[dict(c) for c in children])
+    tree = pt.ParameterTree()
+    tree.setParameters(group)
+    values = {child.name(): child.value() for child in group.children()}
+    emitted = []
+    group.sigTreeStateChanged.connect(lambda *args: emitted.append('sigTreeStateChanged'))
+    for child in group.children():
+        child.sigValueChanged.connect(lambda *args: emitted.append('sigValueChanged'))
+    keepAlive = trigger(default_locale, tree, german)
+
+    assert _labelTexts(group) == expected
+    assert {child.name(): child.value() for child in group.children()} == values
+    assert emitted == []
 
 
 # ---------------------------------------------------------------------------
