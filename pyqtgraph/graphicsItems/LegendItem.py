@@ -123,12 +123,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     def setOffset(self, offset):
         """Set the offset position relative to the parent."""
         self.opts['offset'] = offset
-
-        offset = Point(self.opts['offset'])
-        anchorx = 1 if offset[0] <= 0 else 0
-        anchory = 1 if offset[1] <= 0 else 0
-        anchor = (anchorx, anchory)
-        self.anchor(itemPos=anchor, parentPos=anchor, offset=offset)
+        self.anchorToOffsetCorner(Point(self.opts['offset']))
 
     def pen(self):
         """Get the QPen used to draw the border around the legend."""
@@ -194,11 +189,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """Set the parent."""
         ret = GraphicsWidget.setParentItem(self, p)
         if self.opts['offset'] is not None:
-            offset = Point(self.opts['offset'])
-            anchorx = 1 if offset[0] <= 0 else 0
-            anchory = 1 if offset[1] <= 0 else 0
-            anchor = (anchorx, anchory)
-            self.anchor(itemPos=anchor, parentPos=anchor, offset=offset)
+            self.anchorToOffsetCorner(Point(self.opts['offset']))
         return ret
 
     def addItem(self, item, name):
