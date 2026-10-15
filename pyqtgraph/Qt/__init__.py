@@ -8,6 +8,8 @@ This module exists to smooth out some of the differences between Qt versions.
 import importlib
 import os
 import platform
+import shutil
+import subprocess
 import sys
 from importlib import resources
 
@@ -63,9 +65,68 @@ class FailedImport(object):
         raise self.err
 
 
+def _findUicExecutable():
+    # Locate the uic console script shipped with the Qt bindings
+    # (e.g. "pyside6-uic"). `shutil.which` covers the case where the script
+    # directory is on PATH, while the explicit search next to the Python
+    # interpreter (and in its "Scripts" directory on Windows) covers
+    # installations where it is not.
+    name = QT_LIB.lower() + '-uic'
+    if sys.platform == 'win32':
+        name += '.exe'
+    bindir = os.path.dirname(sys.executable)
+    for candidate in (
+        os.path.join(bindir, name),
+        os.path.join(bindir, 'Scripts', name),
+    ):
+        if os.path.isfile(candidate):
+            return candidate
+    return shutil.which(name)
+
+
+def _loadUiTypeWithUic(uiFile):
+    # Reimplementation of QtUiTools.loadUiType() that invokes the uic
+    # executable directly. Used as a fallback for PySide6 >= 6.12.0, whose
+    # native implementation only looks for uic next to the Python
+    # interpreter.
+    import xml.etree.ElementTree as xml
+    parsed = xml.parse(uiFile)
+    widget_class = parsed.find('widget').get('class')
+    form_class = parsed.find('class').text
+
+    uic_executable = _findUicExecutable()
+    if uic_executable is None:
+        raise RuntimeError(
+            f"Could not find the '{QT_LIB.lower()}-uic' executable."
+        )
+    uipy = subprocess.check_output([uic_executable, uiFile])
+
+    namespace = {}
+    exec(compile(uipy, '<string>', 'exec'), namespace)
+
+    # fetch the base_class and form class based on their type in the
+    # xml from designer
+    form_class = namespace['Ui_%s' % form_class]
+    base_class = eval('QtWidgets.%s' % widget_class)
+
+    return form_class, base_class
+
+
 def _loadUiType(uiFile):
+    # Prefer the bindings' own implementation, but fall back to invoking uic
+    # ourselves. Since PySide6 6.12.0, the native loadUiType() only looks for
+    # the "pyside6-uic" executable next to the Python interpreter. Some
+    # installations (notably the Windows runners used by actions/setup-python)
+    # place it in a "Scripts" subdirectory instead, which makes the native
+    # lookup fail while the executable is still available.
     QtUiTools = importlib.import_module(QT_LIB + '.QtUiTools')
-    return QtUiTools.loadUiType(uiFile)
+    try:
+        uiType = QtUiTools.loadUiType(uiFile)
+    except Exception:
+        uiType = None
+    if uiType is not None:
+        return uiType
+    return _loadUiTypeWithUic(uiFile)
 
 
 # For historical reasons, pyqtgraph maintains a Qt4-ish interface back when
