@@ -116,7 +116,9 @@ def getFunctions(context) -> QtOpenGL.QAbstractOpenGLFunctions:
                 glfn = getattr(QtOpenGLFunctions, glfnname)()
             except (ModuleNotFoundError, AttributeError):
                 continue
-            glfn.initializeOpenGLFunctions()
+            if not glfn.initializeOpenGLFunctions():
+                glfn = None
+                continue
             break
 
     if glfn is None:
