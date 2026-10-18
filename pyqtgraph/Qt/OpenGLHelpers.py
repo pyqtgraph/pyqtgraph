@@ -1,7 +1,8 @@
 import ctypes
 import importlib
+import sys
 
-from . import QT_LIB, QtGui, QtWidgets, QtOpenGL, QtVersionInfo
+from . import QT_LIB, QtCore, QtGui, QtWidgets, QtOpenGL, QtVersionInfo
 from . import OpenGLConstants as GLC
 from . import compat
 
@@ -15,21 +16,64 @@ __all__ = ["getFunctions", "GraphicsViewGLWidget"]
 # for use with glDrawElements
 NULL = compat.voidptr(0) if QT_LIB.startswith("PySide") else None
 
+# OpenGL library is stdcall on Windows
+GLFUNCTYPE = ctypes.WINFUNCTYPE if sys.platform == "win32" else ctypes.CFUNCTYPE
+
+GLsizei = ctypes.c_int
+GLuint = ctypes.c_uint
+GLenum = ctypes.c_uint
+
+GLDRAWELEMENTS_TYPE = GLFUNCTYPE(
+    None,
+    GLenum,     # mode
+    GLsizei,    # count
+    GLenum,     # type
+    ctypes.c_void_p
+)
+
+GLPRIMITIVERESTARTINDEX_TYPE = GLFUNCTYPE(None, GLuint)
+
+OFFSET_PTR = lambda x : compat.voidptr(x, 0, False)
+
+def getDrawElements(ctx, glfn):
+    if QT_LIB.startswith("PySide"):
+        return glfn.glDrawElements, OFFSET_PTR
+    elif QtCore.PYQT_VERSION >= 0x60800:
+        return glfn.glDrawElements, OFFSET_PTR
+    else:
+        # PyQt < (6, 8)'s binding of glDrawElements crashes if
+        # a voidptr is passed in, so we will load it manually.
+        if not hasattr(glfn, '_glDrawElements_ctypes'):
+            proc_addr = ctx.getProcAddress(b"glDrawElements")
+            glfn._glDrawElements_ctypes = GLDRAWELEMENTS_TYPE(int(proc_addr))
+        return glfn._glDrawElements_ctypes, ctypes.c_void_p
+
+def getPrimitiveRestart(ctx, glfn):
+    is_opengles = ctx.isOpenGLES()
+    gl_version = ctx.format().version()
+    if gl_version >= ((3, 0) if is_opengles else (4, 3)):
+        primitive_restart = GLC.GL_PRIMITIVE_RESTART_FIXED_INDEX
+    elif not is_opengles and gl_version >= (3, 1):
+        if not hasattr(glfn, 'glPrimitiveRestartIndex'):
+            # this branch occurs for the following conditions:
+            # - PySide and (3, 1) <= gl_version <= (4, 2)
+            #   - because extraFunctions() does not include glPrimitiveRestartIndex
+            # - PyQt   and (3, 1) <= gl_version <= (4, 0)
+            #   - because PyQt only provides bindings for 2.1 and 4.1 Core
+            proc_addr = ctx.getProcAddress(b"glPrimitiveRestartIndex")
+            glfn.glPrimitiveRestartIndex = GLPRIMITIVERESTARTINDEX_TYPE(int(proc_addr))
+        glfn.glPrimitiveRestartIndex(0xFFFFFFFF)
+        primitive_restart = GLC.GL_PRIMITIVE_RESTART
+    else:
+        raise RuntimeError("OpenGL Primitive Restart not supported")
+    return primitive_restart
+
 def getFunctions(context) -> QtOpenGL.QAbstractOpenGLFunctions:
     glfn = None
     format = context.format()
 
     if QT_LIB.startswith("PySide"):
-        if not context.isOpenGLES():
-            # Qt provides only up to OpenGL 4.5
-            # for whatever reason, asking for Compatibility Profile between (4.1, 4.3) fails
-            vp = QtOpenGL.QOpenGLVersionProfile()
-            vp.setVersion(*min(format.version(), (4, 1)))
-            if format.version() >= (3, 2):
-                vp.setProfile(QtGui.QSurfaceFormat.OpenGLContextProfile.CoreProfile)
-            glfn = QtOpenGL.QOpenGLVersionFunctionsFactory.get(vp, context)
-        else:
-            glfn = context.extraFunctions()
+        glfn = context.extraFunctions()
 
     elif not context.isOpenGLES() and QT_LIB.startswith("PyQt") and QtVersionInfo >= (6, 0):
         # VersionFunctionsFactory doesn't support ES
@@ -72,7 +116,9 @@ def getFunctions(context) -> QtOpenGL.QAbstractOpenGLFunctions:
                 glfn = getattr(QtOpenGLFunctions, glfnname)()
             except (ModuleNotFoundError, AttributeError):
                 continue
-            glfn.initializeOpenGLFunctions()
+            if not glfn.initializeOpenGLFunctions():
+                glfn = None
+                continue
             break
 
     if glfn is None:
@@ -121,7 +167,7 @@ class GraphicsViewGLWidget(QtOpenGLWidgets.QOpenGLWidget):
         # the test will be disabled by QPainter.endNativePainting().
 
 
-GLUNIFORM1FV_TYPE = ctypes.CFUNCTYPE(
+GLUNIFORM1FV_TYPE = GLFUNCTYPE(
     None,             # Return type (void)
     ctypes.c_int,     # location
     ctypes.c_int,     # count
