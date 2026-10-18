@@ -151,6 +151,28 @@ def test_AxisItem_conditionalSIPrefix():
     assert "Time (s)" in bottom.labelString()
 
 
+def test_AxisItem_disableAutoSIPrefixAfterRange():
+    plot = pg.PlotWidget()
+    plot.setLabel("left", "I", units="A")
+    left = plot.getAxis("left")
+    left.setRange(1e-11, 25e-10)
+    assert left.autoSIPrefixScale == 1e9
+    assert "I (nA)" in left.labelString()
+
+    left.enableAutoSIPrefix(False)
+    assert left.autoSIPrefixScale == 1.0
+    assert "I (A)" in left.labelString()
+
+    # ranges set while the prefix is disabled do not bring it back
+    left.setRange(1e-6, 2e-6)
+    assert left.autoSIPrefixScale == 1.0
+    assert "I (A)" in left.labelString()
+
+    left.enableAutoSIPrefix(True)
+    assert left.autoSIPrefixScale == 1e6
+    assert "I (\u00b5A)" in left.labelString()
+
+
 def test_AxisItem_tickFont(monkeypatch):
     def collides(textSpecs):
         fontMetrics = pg.Qt.QtGui.QFontMetrics(font)
