@@ -6,7 +6,7 @@ several graphics items (all subclasses of :class:`GLGraphicsItem <pyqtgraph.open
 can be added to a view widget.
 
 **Note 1:** pyqtgraph.opengl is based on the deprecated OpenGL fixed-function pipeline. Although it is
-currently a functioning system, it is likely to be superceded in the future by `VisPy <http://vispy.org>`_.
+currently a functioning system, it is likely to be superseded in the future by `VisPy <http://vispy.org>`_.
 
 **Note 2:** use of this system requires python-opengl bindings. Linux users should install the python-opengl
 packages from their distribution. Windows/OSX users can download from `<http://pyopengl.sourceforge.net>`_.

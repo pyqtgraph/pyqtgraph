@@ -10,7 +10,7 @@ Python reload function that actually works (the way you expect it to)
   - Automatically decides which modules to update by comparing file modification times
  
 Does NOT:
-  - re-initialize exting instances, even if __init__ changes
+  - re-initialize existing instances, even if __init__ changes
   - update references to any module-level objects
     ie, this does not reload correctly:
         from module import someObject
