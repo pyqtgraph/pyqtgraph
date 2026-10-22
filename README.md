@@ -97,7 +97,7 @@ Benchmarking
 There is support for the `asv` benchmarking library. Should a user have cuda  installed
 on their system, they should edit `asv.conf.json` file, and add the entry
 `"cupy-cuda##x": [""]` to the `matrix.req` section (where `##` is the version of cuda is
-the version of cuda installed on your machine).  It relavent section should look like
+the version of cuda installed on your machine).  The relevant section should look like
 the the following.
 
 
