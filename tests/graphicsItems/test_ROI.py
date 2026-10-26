@@ -1,5 +1,6 @@
 import math
 import platform
+from unittest.mock import Mock
 
 import numpy as np
 import pytest
@@ -12,6 +13,39 @@ from tests.ui_testing import mouseClick, mouseDrag, mouseMove
 
 app = pg.mkQApp()
 pg.setConfigOption("mouseRateLimit", 0)
+
+
+@pytest.mark.parametrize("size", [(1, 1), (2, 3), (0.5, 0.25)])
+@pytest.mark.parametrize("closed", [False, True])
+@pytest.mark.parametrize("use_event", [False, True])
+def test_PolyLineROI_insert_after_scaling(size, closed, use_event):
+    roi = pg.PolyLineROI([(0, 0), (10, 10), (20, 0)], closed=closed)
+    roi.setSize(size)
+    roi.setPos((5, 7))
+    roi.setAngle(30)
+    segment = roi.segments[0]
+    start, end = [handle['item'] for handle in segment.handles]
+    positions = [pg.Point(handle.pos()) for handle in roi.getHandles()]
+    midpoint = (start.pos() + end.pos()) / 2
+    scene_midpoint = roi.mapToScene(midpoint)
+    segment_count = len(roi.segments)
+
+    if use_event:
+        event = Mock()
+        event.pos.return_value = segment.mapFromParent(midpoint)
+        roi.segmentClicked(segment, ev=event)
+    else:
+        roi.segmentClicked(segment, pos=midpoint)
+
+    inserted = segment.handles[1]['item']
+    np.testing.assert_allclose(tuple(inserted.pos()), tuple(midpoint))
+    np.testing.assert_allclose(pg.Point(inserted.scenePos()), pg.Point(scene_midpoint))
+    assert len(roi.getHandles()) == len(positions) + 1
+    assert len(roi.segments) == segment_count + 1
+    assert roi.segments[1].handles[0]['item'] is inserted
+    assert roi.segments[1].handles[1]['item'] is end
+    remaining = [tuple(handle.pos()) for handle in roi.getHandles() if handle is not inserted]
+    np.testing.assert_allclose(remaining, positions)
 
 
 @pytest.mark.parametrize("roi, name", [
