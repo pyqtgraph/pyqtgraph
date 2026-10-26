@@ -600,19 +600,19 @@ class InfLineLabel(TextItem):
     def mouseDragEvent(self, ev):
         if self.movable and ev.button() == QtCore.Qt.MouseButton.LeftButton:
             if ev.isStart():
-                self._moving = True
+                self.moving = True
                 self._cursorOffset = self._posToRel(ev.buttonDownPos())
                 self._startPosition = self.orthoPos
             ev.accept()
 
-            if not self._moving:
+            if not self.moving:
                 return
 
             rel = self._posToRel(ev.pos())
             self.orthoPos = fn.clip_scalar(self._startPosition + rel - self._cursorOffset, 0., 1.)
             self.updatePosition()
             if ev.isFinish():
-                self._moving = False
+                self.moving = False
 
     def mouseClickEvent(self, ev):
         if self.moving and ev.button() == QtCore.Qt.MouseButton.RightButton:
