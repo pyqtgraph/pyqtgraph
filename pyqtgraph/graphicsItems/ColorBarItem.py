@@ -171,11 +171,11 @@ class ColorBarItem(PlotItem):
     def setImageItem(self, img, insert_in=None):
         """
         Assigns an item or list of items to be represented and controlled.
-        Supported "image items": class:`~pyqtgraph.ImageItem`, class:`~pyqtgraph.PColorMeshItem`
+        Supported "image items": :class:`~pyqtgraph.ImageItem`, :class:`~pyqtgraph.PColorMeshItem`
 
         Parameters
         ----------
-        image: :class:`~pyqtgraph.ImageItem` or list of :class:`~pyqtgraph.ImageItem`
+        img: :class:`~pyqtgraph.ImageItem` or list of :class:`~pyqtgraph.ImageItem`
             Assigns one or more image items to this ColorBarItem.
             If a :class:`~pyqtgraph.ColorMap` is defined for ColorBarItem, this will be assigned to the 
             ImageItems. Otherwise, the ColorBarItem will attempt to retrieve a color map from the image items.
