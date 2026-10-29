@@ -224,3 +224,40 @@ def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
     axis = pg.AxisItem(orientation)
     axis.setLogMode(log)
     assert axis.logMode == expected
+def test_AxisItem_unitFormat_default_unchanged():
+    plot = pg.PlotWidget()
+    plot.setLabel("left", "voltage", units="V")
+    assert "voltage (V)" in plot.getAxis("left").labelString()
+
+
+def test_AxisItem_unitFormat_custom():
+    plot = pg.PlotWidget()
+    plot.setLabel("left", "voltage", units="V", unitFormat="{text} / {units}")
+    assert "voltage / V" in plot.getAxis("left").labelString()
+
+    plot.setLabel("left", "voltage", units="V", unitFormat="{text} in {units}")
+    assert "voltage in V" in plot.getAxis("left").labelString()
+
+
+def test_AxisItem_unitFormat_survives_si_prefix_change():
+    plot = pg.PlotWidget()
+    plot.setLabel("left", "voltage", units="V", unitFormat="{text} / {units}")
+    left = plot.getAxis("left")
+    left.setRange(0, 1e-3)          # small values  -> milli
+    assert "voltage / mV" in left.labelString()
+    left.setRange(0, 1e3)           # large values  -> kilo
+    assert "voltage / kV" in left.labelString()
+
+
+def test_AxisItem_unitFormat_persists_across_setLabel():
+    plot = pg.PlotWidget()
+    plot.setLabel("left", "voltage", units="V", unitFormat="{text} / {units}")
+    plot.setLabel("left", "current", units="A")   # no unitFormat given
+    assert "current / A" in plot.getAxis("left").labelString()
+
+
+@pytest.mark.parametrize("bad_format", ["{text} / {unit}", "{text} {}", "{text"])
+def test_AxisItem_unitFormat_invalid_raises(bad_format):
+    plot = pg.PlotWidget()
+    with pytest.raises(ValueError):
+        plot.setLabel("left", "voltage", units="V", unitFormat=bad_format)
