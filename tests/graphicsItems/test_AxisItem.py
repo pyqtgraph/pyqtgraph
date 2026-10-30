@@ -224,3 +224,34 @@ def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
     axis = pg.AxisItem(orientation)
     axis.setLogMode(log)
     assert axis.logMode == expected
+
+
+@pytest.mark.parametrize(
+    "unitFormat, expected",
+    [
+        (None, "voltage (V)"),
+        ("{text} / {units}", "voltage / V"),
+        ("{text} in {units}", "voltage in V"),
+        ("{text} [{units}]", "voltage [V]"),
+    ],
+)
+def test_AxisItem_unitFormat(unitFormat, expected):
+    axis = pg.AxisItem("left")
+    axis.setLabel("voltage", units="V", unitFormat=unitFormat)
+    assert f">{expected}<" in axis.labelString()
+
+
+def test_AxisItem_unitFormat_with_style():
+    axis = pg.AxisItem("left")
+    axis.setLabel("voltage", units="V", unitFormat="{text} / {units}", color="#FFF")
+    s = axis.labelString()
+    assert "voltage / V" in s
+    assert "color: #FFF" in s
+    assert "unitFormat" not in s
+
+
+def test_AxisItem_unitFormat_reset_to_default():
+    axis = pg.AxisItem("left")
+    axis.setLabel("voltage", units="V", unitFormat="{text} / {units}")
+    axis.setLabel("voltage", units="V")
+    assert "voltage (V)" in axis.labelString()
