@@ -439,6 +439,7 @@ class AxisItem(GraphicsWidget):
         text: str | None=None,
         units: str | None=None,
         unitPrefix: str | None=None,
+        unitFormat: str='{text} ({units})',
         siPrefixEnableRanges: tuple[tuple[float, float], ...] | None=None,
         unitPower: int | float=1,
         **kwargs
@@ -456,6 +457,9 @@ class AxisItem(GraphicsWidget):
             prepended based on the range of data displayed.
         unitPrefix : str
             An extra prefix to prepend to the units.
+        unitFormat : str, optional
+            A format string used to combine the label text and units. It may contain
+            ``{text}`` and ``{units}`` placeholders. Defaults to ``'{text} ({units})'``.
         siPrefixEnableRanges : tuple of tuple of float, float, optional
             The ranges in which automatic SI prefix scaling is enabled. Defaults to
             everywhere, unless units is empty, in which case it defaults to
@@ -481,6 +485,7 @@ class AxisItem(GraphicsWidget):
         self.labelText = text or ""
         self.labelUnits = units or ""
         self.labelUnitPrefix = unitPrefix or ""
+        self.labelUnitFormat = unitFormat
         self.unitPower = unitPower
         if kwargs:
             self.labelStyle = kwargs
@@ -545,11 +550,14 @@ class AxisItem(GraphicsWidget):
             if not self.autoSIPrefix or self.autoSIPrefixScale == 1.0:
                 units = ''
             else:
-                units = f'(x{1.0 / self.autoSIPrefixScale:g})'
+                units = f'x{1.0 / self.autoSIPrefixScale:g}'
         else:
-            units = f'({self.labelUnitPrefix}{self.labelUnits})'
+            units = f'{self.labelUnitPrefix}{self.labelUnits}'
 
-        s = f'{self.labelText} {units}'
+        if units:
+            s = self.labelUnitFormat.format(text=self.labelText, units=units)
+        else:
+            s = self.labelText
 
         style = ';'.join([f'{k}: {self.labelStyle[k]}' for k in self.labelStyle])
 
