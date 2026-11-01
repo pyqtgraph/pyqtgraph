@@ -7,6 +7,7 @@ import numpy as np
 from .. import debug as debug
 from .. import functions as fn
 from .. import getConfigOption
+from string import Formatter
 from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsWidget import GraphicsWidget
@@ -117,6 +118,7 @@ class AxisItem(GraphicsWidget):
         self.labelText = ""
         self.labelUnits = ""
         self.labelUnitPrefix = ""
+        self.labelUnitFormat = "{text} ({units})"
         self.unitPower = 1
         self.labelStyle = {}
         self._siPrefixEnableRanges = None
@@ -441,6 +443,7 @@ class AxisItem(GraphicsWidget):
         unitPrefix: str | None=None,
         siPrefixEnableRanges: tuple[tuple[float, float], ...] | None=None,
         unitPower: int | float=1,
+        unitFormat: str | None=None,
         **kwargs
     ):
         """
@@ -466,6 +469,15 @@ class AxisItem(GraphicsWidget):
             Supports positive, negative and non-integral powers.  Default is 1.
             Note: The power only affects the scaling, not the units themselves. For
             example, with units='m' and unitPower=2, the displayed units will still be 'm'.
+        unitFormat : str, optional
+            Template controlling how label text and units are displayed.
+            Supports the {text} and {units} placeholders.
+            Defaults to "{text} ({units})".
+            Examples:
+                "{text} / {units}"  -> "Voltage / V"
+                "{text} in {units}" -> "Voltage in V"
+            If omitted, the previously configured format is preserved.
+            Only applies when units are provided.
         **kwargs
             All extra keyword arguments become CSS style options for the ``<span>`` tag
             which will surround the axis label and units. Note that CSS attributes are
@@ -478,10 +490,17 @@ class AxisItem(GraphicsWidget):
 
             <span style="...args...">{text} (prefix{units})</span>
         """
+        if unitFormat is not None:
+            self._validateUnitFormat(unitFormat)
+
         self.labelText = text or ""
         self.labelUnits = units or ""
         self.labelUnitPrefix = unitPrefix or ""
         self.unitPower = unitPower
+
+        if unitFormat is not None:
+            self.labelUnitFormat = unitFormat
+
         if kwargs:
             self.labelStyle = kwargs
         self.setSIPrefixEnableRanges(siPrefixEnableRanges)
@@ -489,6 +508,31 @@ class AxisItem(GraphicsWidget):
         visible = bool(text or units)
         self.showLabel(visible)
         self._updateLabel()
+    
+    @staticmethod
+    def _validateUnitFormat(unitFormat: str) -> None:
+        if not isinstance(unitFormat, str):
+            raise TypeError("unitFormat must be a string")
+
+        try:
+            for _, field_name, format_spec, conversion in Formatter().parse(unitFormat):
+                if field_name is None:
+                    continue
+
+                if (
+                    field_name not in {"text", "units"}
+                    or format_spec
+                    or conversion is not None
+                ):
+                    raise ValueError("Unsupported format field")
+
+        except ValueError as exc:
+            raise ValueError(
+                "Invalid unitFormat: only {text} and {units} "
+                "placeholders are allowed, without attribute access "
+                "or format modifiers"
+            ) from exc
+
 
     def setSIPrefixEnableRanges(self, ranges=None):
         """
@@ -546,10 +590,15 @@ class AxisItem(GraphicsWidget):
                 units = ''
             else:
                 units = f'(x{1.0 / self.autoSIPrefixScale:g})'
-        else:
-            units = f'({self.labelUnitPrefix}{self.labelUnits})'
 
-        s = f'{self.labelText} {units}'
+            s = f'{self.labelText} {units}'
+        else:
+            units = f'{self.labelUnitPrefix}{self.labelUnits}'
+
+            s = self.labelUnitFormat.format(
+                text=self.labelText,
+                units=units,
+            )
 
         style = ';'.join([f'{k}: {self.labelStyle[k]}' for k in self.labelStyle])
 
