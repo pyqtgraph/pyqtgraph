@@ -224,3 +224,91 @@ def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
     axis = pg.AxisItem(orientation)
     axis.setLogMode(log)
     assert axis.logMode == expected
+
+
+@pytest.mark.parametrize("label_kwargs,expected", [
+    (dict(text="voltage", units="V"), ">voltage (V)<"),
+    (dict(units="V"), "> (V)<"),
+    (dict(text="Current"), ">Current <"),
+])
+def test_AxisItem_unitFormat_default(label_kwargs, expected):
+    axis = pg.AxisItem("left")
+    assert axis.labelUnitFormat == pg.AxisItem.DEFAULT_UNIT_FORMAT == "{text} ({units})"
+    axis.setLabel(**label_kwargs)
+    assert expected in axis.labelString()
+
+
+@pytest.mark.parametrize("unitFormat,expected", [
+    ("{text} / {units}", ">voltage / V<"),
+    ("{text} in {units}", ">voltage in V<"),
+    ("{text} [{units}]", ">voltage [V]<"),
+    ("{units}", ">V<"),
+    ("{text} {{{units}}}", ">voltage {V}<"),
+])
+def test_AxisItem_unitFormat_custom(unitFormat, expected):
+    axis = pg.AxisItem("left")
+    axis.setLabel("voltage", units="V", unitFormat=unitFormat)
+    assert expected in axis.labelString()
+
+
+def test_AxisItem_unitFormat_siPrefix():
+    axis = pg.AxisItem("left")
+    axis.setLabel("voltage", units="V", unitFormat="{text} / {units}")
+    axis.setRange(0, 1e-3)
+    assert ">voltage / mV<" in axis.labelString()
+    axis.setRange(0, 1e3)
+    assert ">voltage / kV<" in axis.labelString()
+
+
+def test_AxisItem_unitFormat_persists():
+    axis = pg.AxisItem("left", text="voltage", units="V", unitFormat="{text} / {units}")
+    assert ">voltage / V<" in axis.labelString()
+    # not passing unitFormat keeps the current one, like labelStyle
+    axis.setLabel("current", units="A")
+    assert ">current / A<" in axis.labelString()
+    axis.setLabel("current", units="A", unitFormat=pg.AxisItem.DEFAULT_UNIT_FORMAT)
+    assert ">current (A)<" in axis.labelString()
+
+
+@pytest.mark.parametrize("unitFormat,error", [
+    ("{text} / {unit}", ValueError),
+    ("{text} {}", ValueError),
+    ("{text} {0}", ValueError),
+    ("{text.upper} {units}", ValueError),
+    ("{text[0]} {units}", ValueError),
+    ("{text} {units!r}", ValueError),
+    ("{text} {units:>5}", ValueError),
+    ("{text", ValueError),
+    ("{text} }", ValueError),
+    (123, TypeError),
+])
+def test_AxisItem_unitFormat_invalid(unitFormat, error):
+    axis = pg.AxisItem("left")
+    axis.setLabel("voltage", units="V", unitFormat="{text} / {units}")
+    with pytest.raises(error, match="unitFormat"):
+        axis.setLabel("current", units="A", unitFormat=unitFormat)
+    # a rejected call leaves the label untouched
+    assert ">voltage / V<" in axis.labelString()
+
+
+def test_AxisItem_unitFormat_scaleFactor_unchanged():
+    # unitFormat only applies when units are set; the unit-less
+    # scale factor label keeps its current form
+    axis = pg.AxisItem("left")
+    axis.setLabel("count", unitFormat="{text} / {units}")
+    axis.setRange(0, 1e-3)
+    assert ">count (x0.001)<" in axis.labelString()
+
+
+def test_AxisItem_unitFormat_positional():
+    axis = pg.AxisItem("left")
+    axis.setLabel("x", "V", "", ((0, 1),), 1)
+    assert axis.getSIPrefixEnableRanges() == ((0, 1),)
+    assert ">x (V)<" in axis.labelString()
+
+    plot = pg.PlotItem()
+    plot.setLabels(left=("voltage", "V"), bottom=("time", "s", None, None, 1))
+    assert ">voltage (V)<" in plot.getAxis("left").labelString()
+    assert ">time (s)<" in plot.getAxis("bottom").labelString()
+    plot.setLabels(left=("voltage", "V", None, None, 1, "{text} / {units}"))
+    assert ">voltage / V<" in plot.getAxis("left").labelString()
