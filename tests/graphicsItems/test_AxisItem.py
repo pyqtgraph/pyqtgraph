@@ -301,4 +301,3 @@ def test_AxisItem_unitFormat_literal_braces():
     axis = pg.AxisItem("left")
     axis.setLabel("voltage", units="V", unitFormat="{text} {{{units}}}")
     assert "voltage {V}" in axis.labelString()
-    
