@@ -224,6 +224,8 @@ def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
     axis = pg.AxisItem(orientation)
     axis.setLogMode(log)
     assert axis.logMode == expected
+
+
 def test_AxisItem_unitFormat_default_unchanged():
     plot = pg.PlotWidget()
     plot.setLabel("left", "voltage", units="V")
@@ -256,8 +258,47 @@ def test_AxisItem_unitFormat_persists_across_setLabel():
     assert "current / A" in plot.getAxis("left").labelString()
 
 
-@pytest.mark.parametrize("bad_format", ["{text} / {unit}", "{text} {}", "{text"])
+@pytest.mark.parametrize(
+    "bad_format",
+    [
+        "{text} / {unit}",   # unknown field
+        "{text} {}",         # positional field
+        "{0}",               # numbered field
+        "{text",             # unbalanced brace
+        "{text.upper}",      # attribute access
+        "{text.foo}",        # attribute access (used to leak AttributeError)
+        "{text[0]}",         # index access
+        "{units!r}",         # conversion
+        "{units:>6}",        # format spec
+    ],
+)
 def test_AxisItem_unitFormat_invalid_raises(bad_format):
     plot = pg.PlotWidget()
     with pytest.raises(ValueError):
         plot.setLabel("left", "voltage", units="V", unitFormat=bad_format)
+
+
+def test_AxisItem_unitFormat_non_string_raises():
+    axis = pg.AxisItem("left")
+    with pytest.raises(TypeError):
+        axis.setLabel("voltage", units="V", unitFormat=123)
+
+
+def test_AxisItem_unitFormat_invalid_leaves_label_unchanged():
+    axis = pg.AxisItem("left")
+    axis.setLabel("voltage", units="V")
+    before = axis.labelString()
+
+    with pytest.raises(ValueError):
+        axis.setLabel("current", units="A", unitFormat="{bogus}")
+
+    assert axis.labelText == "voltage"
+    assert axis.labelUnits == "V"
+    assert axis.labelString() == before
+
+
+def test_AxisItem_unitFormat_literal_braces():
+    axis = pg.AxisItem("left")
+    axis.setLabel("voltage", units="V", unitFormat="{text} {{{units}}}")
+    assert "voltage {V}" in axis.labelString()
+    

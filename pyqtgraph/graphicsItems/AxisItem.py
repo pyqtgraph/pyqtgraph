@@ -1,3 +1,4 @@
+import string
 import sys
 import weakref
 from math import ceil, copysign, floor, frexp, isfinite, log10, sqrt
@@ -480,12 +481,24 @@ class AxisItem(GraphicsWidget):
             not always valid python arguments. Examples: ``color='#FFF'``,
             ``**{'font-size': '14pt'}``.
 
+        Raises
+        ------
+        TypeError
+            If ``unitFormat`` is not a str.
+        ValueError
+            If ``unitFormat`` uses anything other than ``{text}`` and ``{units}``.
+
         Notes
         -----
         The final text generated for the label will usually take the form::
 
             <span style="...args...">{text} (prefix{units})</span>
+
+        Use ``unitFormat`` to change how the text and units are combined.
         """
+        if unitFormat is not None:
+            unitFormat = self._validatedUnitFormat(unitFormat)
+
         self.labelText = text or ""
         self.labelUnits = units or ""
         self.labelUnitPrefix = unitPrefix or ""
@@ -493,7 +506,7 @@ class AxisItem(GraphicsWidget):
         if kwargs:
             self.labelStyle = kwargs
         if unitFormat is not None:
-            self.labelUnitFormat = self._validatedUnitFormat(unitFormat)
+            self.labelUnitFormat = unitFormat
         self.setSIPrefixEnableRanges(siPrefixEnableRanges)
         # Account empty string and `None` for units and text
         visible = bool(text or units)
@@ -502,16 +515,26 @@ class AxisItem(GraphicsWidget):
 
     @staticmethod
     def _validatedUnitFormat(unitFormat: str) -> str:
-        """Check that unitFormat only uses the {text} and {units} fields."""
+        """
+        Check that unitFormat only uses the plain fields {text} and {units}.
+        Attribute or index access (``{text.upper}``, ``{text[0]}``), conversions
+        (``{units!r}``) and format specs (``{units:>6}``) are rejected.
+        """
         if not isinstance(unitFormat, str):
             raise TypeError(f"unitFormat must be a str, not {type(unitFormat).__name__}")
+        invalid = ValueError(
+            f"Invalid unitFormat {unitFormat!r}: only the fields {{text}} and "
+            "{units} may be used; write {{ and }} for literal braces"
+        )
         try:
-            unitFormat.format(text="", units="")   # trial run with dummy values
-        except (KeyError, IndexError, ValueError) as exc:
-            raise ValueError(
-                f"Invalid unitFormat {unitFormat!r}: only the fields "
-                "{text} and {units} may be used"
-            ) from exc
+            parsed = list(string.Formatter().parse(unitFormat))
+        except ValueError:
+            raise invalid from None  # e.g. unbalanced braces such as "{text"
+        for _literal, field, spec, conversion in parsed:
+            if field is None:
+                continue  # plain text with no placeholder
+            if field not in ("text", "units") or spec or conversion:
+                raise invalid
         return unitFormat
 
     def setSIPrefixEnableRanges(self, ranges=None):
@@ -565,7 +588,6 @@ class AxisItem(GraphicsWidget):
         str
             The complete label string, including units and any prefixes.
         """
-
         if self.labelUnits == '':
             if not self.autoSIPrefix or self.autoSIPrefixScale == 1.0:
                 units = ''
@@ -573,7 +595,7 @@ class AxisItem(GraphicsWidget):
                 units = f'(x{1.0 / self.autoSIPrefixScale:g})'
             s = f'{self.labelText} {units}'
         else:
-            units = f'{self.labelUnitPrefix}{self.labelUnits}'   # e.g. "mV" (no brackets now)
+            units = f'{self.labelUnitPrefix}{self.labelUnits}'  # e.g. "mV"
             s = self.labelUnitFormat.format(text=self.labelText, units=units)
 
         style = ';'.join([f'{k}: {self.labelStyle[k]}' for k in self.labelStyle])
