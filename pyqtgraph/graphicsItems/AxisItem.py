@@ -27,6 +27,7 @@ class AxisItem(GraphicsWidget):
     ----------
     orientation : {'left', 'right', 'top', 'bottom'}
         The side of the plot the axis is attached to.
+        
     pen : QPen or None
         Pen used when drawing axis and (by default) ticks.
     textPen : QPen or None
