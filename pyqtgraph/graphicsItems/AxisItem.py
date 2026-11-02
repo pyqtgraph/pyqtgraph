@@ -117,6 +117,7 @@ class AxisItem(GraphicsWidget):
         self.labelText = ""
         self.labelUnits = ""
         self.labelUnitPrefix = ""
+        self.labelUnitFormat = ""
         self.unitPower = 1
         self.labelStyle = {}
         self._siPrefixEnableRanges = None
@@ -441,6 +442,7 @@ class AxisItem(GraphicsWidget):
         unitPrefix: str | None=None,
         siPrefixEnableRanges: tuple[tuple[float, float], ...] | None=None,
         unitPower: int | float=1,
+        unitFormat: str | None=None,
         **kwargs
     ):
         """
@@ -466,6 +468,12 @@ class AxisItem(GraphicsWidget):
             Supports positive, negative and non-integral powers.  Default is 1.
             Note: The power only affects the scaling, not the units themselves. For
             example, with units='m' and unitPower=2, the displayed units will still be 'm'.
+        unitFormat : str, optional
+            A template string controlling how the text and units are combined. It is
+            filled with ``str.format`` using the fields ``{text}`` and ``{units}``, where
+            ``{units}`` already includes any prefix. Defaults to ``'{text} ({units})'``,
+            giving labels such as ``voltage (V)``. For example, ``'{text} / {units}'``
+            produces ``voltage / V``. The format is only applied when units are present.
         **kwargs
             All extra keyword arguments become CSS style options for the ``<span>`` tag
             which will surround the axis label and units. Note that CSS attributes are
@@ -481,6 +489,7 @@ class AxisItem(GraphicsWidget):
         self.labelText = text or ""
         self.labelUnits = units or ""
         self.labelUnitPrefix = unitPrefix or ""
+        self.labelUnitFormat = unitFormat or ""
         self.unitPower = unitPower
         if kwargs:
             self.labelStyle = kwargs
@@ -545,11 +554,15 @@ class AxisItem(GraphicsWidget):
             if not self.autoSIPrefix or self.autoSIPrefixScale == 1.0:
                 units = ''
             else:
-                units = f'(x{1.0 / self.autoSIPrefixScale:g})'
+                units = f'x{1.0 / self.autoSIPrefixScale:g}'
         else:
-            units = f'({self.labelUnitPrefix}{self.labelUnits})'
+            units = f'{self.labelUnitPrefix}{self.labelUnits}'
 
-        s = f'{self.labelText} {units}'
+        if units == '':
+            s = self.labelText
+        else:
+            unitFormat = self.labelUnitFormat or '{text} ({units})'
+            s = unitFormat.format(text=self.labelText, units=units)
 
         style = ';'.join([f'{k}: {self.labelStyle[k]}' for k in self.labelStyle])
 
