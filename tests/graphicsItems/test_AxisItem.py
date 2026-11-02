@@ -224,3 +224,63 @@ def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
     axis = pg.AxisItem(orientation)
     axis.setLogMode(log)
     assert axis.logMode == expected
+
+@pytest.mark.parametrize(
+    "units_format, expected",
+    [
+        ("({})", "voltage (V)"),
+        ("/ {}", "voltage / V"),
+        ("in {}", "voltage in V"),
+        ("[{}]", "voltage [V]"),
+        ("- {}", "voltage - V"),
+    ],
+)
+def test_AxisItem_units_format(units_format, expected):
+    """Test configurable formatting of axis units."""
+    axis = pg.AxisItem("left")
+
+    axis.setLabel(
+        text="voltage",
+        units="V",
+        unitsFormat=units_format,
+    )
+
+    assert expected in axis.labelString()
+
+
+def test_AxisItem_units_format_default():
+    """Test that the default units format remains backward compatible."""
+    axis = pg.AxisItem("left")
+
+    axis.setLabel(text="voltage", units="V")
+
+    assert "voltage (V)" in axis.labelString()
+
+
+def test_AxisItem_units_format_without_units():
+    """Test that units formatting does not affect labels without units."""
+    axis = pg.AxisItem("left")
+
+    axis.setLabel(
+        text="voltage",
+        units=None,
+        unitsFormat="in {}",
+    )
+
+    assert "voltage" in axis.labelString()
+    assert "in" not in axis.labelString()
+
+
+def test_AxisItem_units_format_with_si_prefix():
+    """Test configurable units formatting with automatic SI prefixes."""
+    axis = pg.AxisItem("left")
+
+    axis.setLabel(
+        text="voltage",
+        units="V",
+        unitsFormat="in {}",
+    )
+
+    axis.setRange(0, 0.001)
+
+    assert "voltage in mV" in axis.labelString()
