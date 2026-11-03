@@ -1,7 +1,6 @@
 from ...Qt import QtCore
 from .action import ParameterControlledButton
 from .basetypes import GroupParameter, GroupParameterItem
-from ..ParameterItem import ParameterItem
 from ...Qt import QtCore, QtWidgets
 
 
@@ -22,12 +21,8 @@ class ActionGroupParameterItem(GroupParameterItem):
 
         super().__init__(param, depth)
 
-    def treeWidgetChanged(self):
-        ParameterItem.treeWidgetChanged(self)
-        tw = self.treeWidget()
-        if tw is None:
-            return
-        tw.setItemWidget(self, 1, self.itemWidget)
+    def valueColumnWidget(self):
+        return self.itemWidget
 
     def optsChanged(self, param, opts):
         if "button" in opts:

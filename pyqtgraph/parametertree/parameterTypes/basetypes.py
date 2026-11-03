@@ -362,10 +362,22 @@ class GroupParameterItem(ParameterItem):
         self.param.addNew(typ)
         self.addWidget.setCurrentIndex(0)
 
+    def valueColumnWidget(self):
+        """
+        Override to place a widget in column 1 of this item's row, instead of
+        spanning column 0 across the whole row (the default for a plain group
+        of children).
+        """
+        return None
+
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
         tw = self.treeWidget()
         if tw is None:
+            return
+        widget = self.valueColumnWidget()
+        if widget is not None:
+            tw.setItemWidget(self, 1, widget)
             return
         self.setFirstColumnSpanned(True)
         if self.addItem is not None:
