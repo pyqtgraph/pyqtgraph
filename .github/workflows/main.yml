@@ -157,6 +157,14 @@ jobs:
           - python-version: "3.14"
             qt-lib: "pyside"
             qt-version: "PySide6-Essentials"
+          - os: windows-11-arm
+            python-version: "3.14"
+            qt-lib: "pyqt"
+            qt-version: "PyQt6"
+          - os: windows-11-arm
+            python-version: "3.14"
+            qt-lib: "pyside"
+            qt-version: "PySide6-Essentials"
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -166,14 +174,40 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - name: "Install Windows-Mesa OpenGL DLL"
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && matrix.os != 'windows-11-arm'
         run: |
           curl -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/24.3.4/mesa3d-24.3.4-release-msvc.7z
           7z x mesa.7z -o*
           powershell.exe mesa\systemwidedeploy.cmd 1
+      - name: Install ARM64 Mesa llvmpipe
+        if: matrix.os == 'windows-11-arm'
+        shell: pwsh
+        working-directory: ${{ runner.temp }}
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/mmozeiko/build-mesa/releases/download/26.2.1/mesa-llvmpipe-arm64-26.2.1.7z" -OutFile mesa-arm64.7z
+          7z x mesa-arm64.7z -omesa-arm64 -y
+          Copy-Item mesa-arm64/opengl32.dll "$env:pythonLocation/opengl32sw.dll"
+      - name: Verify Native ARM64
+        if: matrix.os == 'windows-11-arm'
+        run: |
+          python -c "import platform; assert platform.machine().lower() in {'arm64', 'aarch64'}, platform.machine()"
       - name: Install Dependencies
         run: |
           python -m pip install -r .github/workflows/etc/requirements.txt ${{ matrix.qt-version }} . "coverage[toml]"
+      - name: Verify ARM64 Software OpenGL
+        if: matrix.os == 'windows-11-arm'
+        shell: pwsh
+        run: |
+          $glinfo = (python -m pyqtgraph.util.glinfo 2>&1) -join "`n"
+          Write-Host $glinfo
+          if ($LASTEXITCODE -ne 0) {
+            throw "glinfo exited with code $LASTEXITCODE"
+          }
+          foreach ($expected in @("VENDOR: Mesa", "RENDERER: llvmpipe", "VERSION:", "GLSL_VERSION:")) {
+            if ($glinfo -notmatch "(?m)^$expected") {
+              throw "glinfo did not report $expected"
+            }
+          }
       - name: "Install Linux VirtualDisplay"
         if: runner.os == 'Linux'
         run: |
@@ -235,6 +269,7 @@ jobs:
           if-no-files-found: ignore
     env:
       SCREENSHOT_DIR: screenshots
+      QT_OPENGL: ${{ matrix.os == 'windows-11-arm' && 'software' || '' }}
 
   tests-conda:
     runs-on: ${{ matrix.os }}
