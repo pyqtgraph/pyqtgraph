@@ -188,4 +188,3 @@ exclude = [ # don't report on objects that match any of these regex
 override_GL06 = [
   'Signals', # allow sections to start with "Signals"
 ]
-
