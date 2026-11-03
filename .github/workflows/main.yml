@@ -107,13 +107,13 @@ jobs:
       matrix:
         qt-lib: ["PyQt6", "PySide6-Essentials"]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
       - name: Setup Python
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
-      - name: Checkout
-        uses: actions/checkout@v7
       - name: Install Dependencies
         run: pip install -r .github/workflows/etc/requirements.txt ${{ matrix.qt-lib }}
       - name: Run pyright on the fully annotated files
