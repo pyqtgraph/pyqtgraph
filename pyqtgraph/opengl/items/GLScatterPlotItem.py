@@ -8,6 +8,7 @@ from ...Qt import QtGui, QtOpenGL
 from ...Qt import OpenGLConstants as GLC
 from ...Qt import OpenGLHelpers
 from ...Qt.OpenGLHelpers import upload_vbo
+from ... import functions as fn
 from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLScatterPlotItem']
@@ -77,6 +78,8 @@ class GLScatterPlotItem(GLGraphicsItem):
             if isinstance(color, np.ndarray):
                 color = np.ascontiguousarray(color, dtype=np.float32)
                 self.dirty_bits |= DirtyFlag.COLOR
+            if isinstance(color, str):
+                color = fn.mkColor(color)
             if isinstance(color, QtGui.QColor):
                 color = color.getRgbF()
             self.color = color
