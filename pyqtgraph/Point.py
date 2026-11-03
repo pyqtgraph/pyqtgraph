@@ -3,7 +3,6 @@ Point.py -  Extension of QPointF which adds a few missing methods.
 Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
-from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 from math import atan2, degrees, hypot
@@ -56,7 +55,7 @@ class Point(QtCore.QPointF):
         return 2
 
     # PySide6 stubs declare QPointF.__reduce__ as returning str
-    def __reduce__(self) -> tuple[type[Point], tuple[float, float]]:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def __reduce__(self) -> tuple[type["Point"], tuple[float, float]]:  # pyright: ignore[reportIncompatibleMethodOverride]
         return (Point, (self.x(), self.y()))
 
     def __getitem__(self, i: int) -> float:
@@ -79,43 +78,43 @@ class Point(QtCore.QPointF):
         else:
             raise IndexError("Point has no index %s" % str(i))
 
-    def __radd__(self, a: point_like) -> Point:
+    def __radd__(self, a: point_like) -> "Point":
         return self._math_('__radd__', a)
 
-    def __add__(self, a: point_like) -> Point:
+    def __add__(self, a: point_like) -> "Point":
         return self._math_('__add__', a)
 
-    def __rsub__(self, a: point_like) -> Point:
+    def __rsub__(self, a: point_like) -> "Point":
         return self._math_('__rsub__', a)
 
-    def __sub__(self, a: point_like) -> Point:
+    def __sub__(self, a: point_like) -> "Point":
         return self._math_('__sub__', a)
 
-    def __rmul__(self, a: point_like) -> Point:
+    def __rmul__(self, a: point_like) -> "Point":
         return self._math_('__rmul__', a)
 
-    def __mul__(self, a: point_like) -> Point:
+    def __mul__(self, a: point_like) -> "Point":
         return self._math_('__mul__', a)
 
-    def __rdiv__(self, a: point_like) -> Point:
+    def __rdiv__(self, a: point_like) -> "Point":
         return self._math_('__rdiv__', a)
 
-    def __div__(self, a: point_like) -> Point:
+    def __div__(self, a: point_like) -> "Point":
         return self._math_('__div__', a)
 
-    def __truediv__(self, a: point_like) -> Point:
+    def __truediv__(self, a: point_like) -> "Point":
         return self._math_('__truediv__', a)
 
-    def __rtruediv__(self, a: point_like) -> Point:
+    def __rtruediv__(self, a: point_like) -> "Point":
         return self._math_('__rtruediv__', a)
 
-    def __rpow__(self, a: point_like) -> Point:
+    def __rpow__(self, a: point_like) -> "Point":
         return self._math_('__rpow__', a)
 
-    def __pow__(self, a: point_like) -> Point:
+    def __pow__(self, a: point_like) -> "Point":
         return self._math_('__pow__', a)
 
-    def _math_(self, op: str, x: point_like) -> Point:
+    def _math_(self, op: str, x: point_like) -> "Point":
         if not isinstance(x, QtCore.QPointF):
             x = Point(x)
         return Point(getattr(self.x(), op)(x.x()), getattr(self.y(), op)(x.y()))
@@ -124,17 +123,17 @@ class Point(QtCore.QPointF):
         """Returns the vector length of this Point."""
         return hypot(self.x(), self.y())  # length
 
-    def norm(self) -> Point:
+    def norm(self) -> "Point":
         """Returns a vector in the same direction with unit length."""
         return self / self.length()
 
-    def angle(self, a: QtCore.QPointF | QtCore.QPoint, units: str = "degrees") -> float:
+    def angle(self, a: point_like, units: str = "degrees") -> float:
         """
         Returns the angle in degrees from the vector a to self.
 
         Parameters
         ----------
-        a : Point, QPointF or QPoint
+        a : point_like
             The Point to return the angle with
         units : str, optional
             The units with which to compute the angle with, "degrees" or "radians",
@@ -145,6 +144,8 @@ class Point(QtCore.QPointF):
         float
             The angle between two vectors
         """
+        if not isinstance(a, QtCore.QPointF):
+            a = Point(a)
         rads = atan2(self.y(), self.x()) - atan2(a.y(), a.x())
         if units == "radians":
             return rads
@@ -162,7 +163,7 @@ class Point(QtCore.QPointF):
             a = Point(a)
         return self.x() * a.y() - self.y() * a.x()
 
-    def proj(self, b: Point) -> Point:
+    def proj(self, b: "Point") -> "Point":
         """Return the projection of this vector onto the vector b"""
         b1 = b.norm()
         return self.dot(b1) * b1
@@ -176,7 +177,7 @@ class Point(QtCore.QPointF):
     def max(self) -> float:
         return max(self.x(), self.y())
 
-    def copy(self) -> Point:
+    def copy(self) -> "Point":
         return Point(self)
 
     def toQPoint(self) -> QtCore.QPoint:
