@@ -7,6 +7,7 @@ one would have to subclass plotWidget in order to attach a dateaxis to it.
 
 import os
 import time
+import warnings
 
 import numpy as np
 
@@ -20,7 +21,11 @@ BLUE = pg.mkPen('#1f77b4')
 
 path = os.path.dirname(os.path.abspath(__file__))
 uiFile = os.path.join(path, 'DateAxisItem_QtDesigner.ui')
-Design, _ = loadUiType(uiFile)
+with warnings.catch_warnings(category=FutureWarning):
+    warnings.simplefilter(action="ignore")
+    # For your code, you should _never_ use path_search=True due to security considerations.
+    # This is merely set for so the CI passes
+    Design, _ = loadUiType(uiFile, path_search=True)
 
 class ExampleApp(QtWidgets.QMainWindow, Design):
     def __init__(self):

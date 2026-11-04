@@ -11,6 +11,8 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
 
 pytest.importorskip("matplotlib")
+# silence warnings emitted from matplotlib
+pytestmark = pytest.mark.filterwarnings("ignore:.*AA_UseHighDpiPixmaps:DeprecationWarning:matplotlib")
 
 from pyqtgraph.widgets.MatplotlibWidget import MatplotlibWidget
 

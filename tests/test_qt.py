@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import pytest
 
@@ -15,7 +16,11 @@ def test_isQObjectAlive():
 
 def test_loadUiType():
     path = os.path.dirname(__file__)
-    formClass, baseClass = pg.Qt.loadUiType(os.path.join(path, 'uictest.ui'))
+    # path_search = True is _highly_ not recommended, toggling this to pass tests
+    # future versions of pyqtgraph will remove the Runtime importing of ui files
+    with warnings.catch_warnings():
+        warnings.simplefilter(action="ignore", category=FutureWarning)
+        formClass, baseClass = pg.Qt.loadUiType(os.path.join(path, 'uictest.ui'), path_search=True)
     w = baseClass()
     ui = formClass()
     ui.setupUi(w)

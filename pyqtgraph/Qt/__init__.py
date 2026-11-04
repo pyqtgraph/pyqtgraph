@@ -9,6 +9,8 @@ import importlib
 import os
 import platform
 import sys
+import textwrap
+import warnings
 from importlib import resources
 
 PYSIDE = 'PySide'
@@ -63,9 +65,15 @@ class FailedImport(object):
         raise self.err
 
 
-def _loadUiType(uiFile):
+def _loadUiType(uiFile, **kwargs):
+    warnings.warn(
+        textwrap.dedent(
+            """Qt recommends not using loadUiType for security considerations.  PyQtGraph will remove 
+            this functionality from future versions of the library."""
+        ), FutureWarning, stacklevel=2
+    )
     QtUiTools = importlib.import_module(QT_LIB + '.QtUiTools')
-    return QtUiTools.loadUiType(uiFile)
+    return QtUiTools.loadUiType(uiFile, **kwargs)
 
 
 # For historical reasons, pyqtgraph maintains a Qt4-ish interface back when
