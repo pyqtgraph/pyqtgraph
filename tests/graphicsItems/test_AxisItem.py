@@ -224,3 +224,45 @@ def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
     axis = pg.AxisItem(orientation)
     axis.setLogMode(log)
     assert axis.logMode == expected
+
+
+@pytest.mark.parametrize(
+    "unit_format, expected",
+    [
+        ("{text} ({units})", "Voltage (V)"),
+        ("{text} / {units}", "Voltage / V"),
+        ("{text} in {units}", "Voltage in V"),
+        ("{text} [{units}]", "Voltage [V]"),
+    ],
+)
+def test_AxisItem_configurable_unit_format(unit_format, expected):
+    """Test custom formatting of axis labels and their units."""
+    axis = pg.AxisItem("left")
+    axis.setLabel(
+        text="Voltage",
+        units="V",
+        unitFormat=unit_format,
+    )
+
+    assert expected in axis.labelString()
+
+
+def test_AxisItem_configurable_unit_format_empty_units():
+    """Test that an empty unit does not leave formatting separators."""
+    axis = pg.AxisItem("left")
+    axis.setLabel(
+        text="Voltage",
+        units="",
+        unitFormat="{text} / {units}",
+    )
+
+    assert "Voltage" in axis.labelString()
+    assert " / " not in axis.labelString()
+
+
+def test_AxisItem_configurable_unit_format_default():
+    """Test that the default unit format remains backward compatible."""
+    axis = pg.AxisItem("left")
+    axis.setLabel(text="Voltage", units="V")
+
+    assert "Voltage (V)" in axis.labelString()

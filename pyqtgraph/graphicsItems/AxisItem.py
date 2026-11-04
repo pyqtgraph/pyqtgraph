@@ -441,6 +441,7 @@ class AxisItem(GraphicsWidget):
         unitPrefix: str | None=None,
         siPrefixEnableRanges: tuple[tuple[float, float], ...] | None=None,
         unitPower: int | float=1,
+        unitFormat: str = "{text} ({units})",
         **kwargs
     ):
         """
@@ -461,11 +462,16 @@ class AxisItem(GraphicsWidget):
             everywhere, unless units is empty, in which case it defaults to
             ``((0., 1.), (1e9, inf))``.
         unitPower : int or float, optional
+
             The power to which the units are raised. For example, if units='m²', the
             unitPower should be 2. This ensures correct scaling when using SI prefixes.
             Supports positive, negative and non-integral powers.  Default is 1.
             Note: The power only affects the scaling, not the units themselves. For
             example, with units='m' and unitPower=2, the displayed units will still be 'm'.
+        unitFormat : str, optional
+            Format string used to combine the axis label and units.
+            Supports {text} and {units} placeholders.
+            Defaults to '{text} ({units})'.
         **kwargs
             All extra keyword arguments become CSS style options for the ``<span>`` tag
             which will surround the axis label and units. Note that CSS attributes are
@@ -478,10 +484,17 @@ class AxisItem(GraphicsWidget):
 
             <span style="...args...">{text} (prefix{units})</span>
         """
+        try:
+            unitFormat.format(text="", units="")
+        except (KeyError, IndexError, ValueError) as exc:
+            raise ValueError(
+                "unitFormat must use only {text} and {units} placeholders"
+            ) from exc
         self.labelText = text or ""
         self.labelUnits = units or ""
         self.labelUnitPrefix = unitPrefix or ""
         self.unitPower = unitPower
+        self.labelUnitFormat = unitFormat
         if kwargs:
             self.labelStyle = kwargs
         self.setSIPrefixEnableRanges(siPrefixEnableRanges)
@@ -547,9 +560,15 @@ class AxisItem(GraphicsWidget):
             else:
                 units = f'(x{1.0 / self.autoSIPrefixScale:g})'
         else:
-            units = f'({self.labelUnitPrefix}{self.labelUnits})'
+            units = f'{self.labelUnitPrefix}{self.labelUnits}'
 
-        s = f'{self.labelText} {units}'
+        if units:
+            s = self.labelUnitFormat.format(
+                text=self.labelText,
+                units=units
+            ).strip()
+        else:
+            s = self.labelText
 
         style = ';'.join([f'{k}: {self.labelStyle[k]}' for k in self.labelStyle])
 
