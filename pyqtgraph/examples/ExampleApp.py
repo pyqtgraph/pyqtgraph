@@ -14,7 +14,7 @@ from pyqtgraph.Qt import QT_LIB, QtCore, QtGui, QtWidgets
 path = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, path)
 
-import exampleLoaderTemplate_generic as ui_template
+import exampleLoaderTemplate as ui_template
 from syntax import PythonHighlighter, LightThemeColors, DarkThemeColors
 import utils
 
