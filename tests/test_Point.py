@@ -17,6 +17,13 @@ def test_Point_angle(p1, p2, angle):
 	p2 = pg.Point(*p2)
 	assert p2.angle(p1) == angle
 
+@pytest.mark.parametrize("p1, p2, angle", angles)
+def test_Point_angle_point_like(p1, p2, angle):
+	p2 = pg.Point(*p2)
+	assert p2.angle(p1) == angle
+	assert p2.angle(list(p1)) == angle
+	assert p2.angle(QtCore.QPoint(*p1)) == angle
+
 
 inits = [
 	(QtCore.QSizeF(1, 0), (1.0, 0.0)),
