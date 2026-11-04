@@ -224,3 +224,19 @@ def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
     axis = pg.AxisItem(orientation)
     axis.setLogMode(log)
     assert axis.logMode == expected
+
+
+def test_unitFormat():
+    axis = pg.AxisItem('left')
+    axis.setLabel('voltage', units='V')
+    assert 'voltage (V)' in axis.labelString()
+
+    axis.setLabel('voltage', units='V', unitFormat='{text} / {units}')
+    assert 'voltage / V' in axis.labelString()
+
+    axis.setLabel('voltage', units='V', unitFormat='{text} in {units}')
+    assert 'voltage in V' in axis.labelString()
+
+    # resetting restores the default
+    axis.setLabel('voltage', units='V')
+    assert 'voltage (V)' in axis.labelString()
