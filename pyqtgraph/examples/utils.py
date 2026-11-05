@@ -122,8 +122,6 @@ others = dict([
     ('DiffTreeWidget', 'DiffTreeWidget.py'),
     ('RemoteGraphicsView', 'RemoteGraphicsView.py'),
     ('contextMenu', 'contextMenu.py'),
-    ('designerExample', 'designerExample.py'),
-    ('DateAxisItem_QtDesigner', 'DateAxisItem_QtDesigner.py'),
     ('GraphicsScene', 'GraphicsScene.py'),
     ('MouseSelection', 'MouseSelection.py'),
 ])
