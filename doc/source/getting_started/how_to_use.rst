@@ -57,7 +57,7 @@ See the designer documentation for more information on promoting widgets. The "V
 HiDPI Displays
 --------------
 
-PyQtGraph has a method :func:`mkQApp <pyqtgraph.Qt.mkQApp>` that by default sets what we have tested to be the best combination of options to support hidpi displays, when in combination with non-hidpi secondary displays.  For your application, you may have instantiated ``QApplication`` yourself, in which case we advise setting these options *before* runing ``QApplication.exec_()``.  
+PyQtGraph has a method :func:`mkQApp <pyqtgraph.Qt.mkQApp>` that by default sets what we have tested to be the best combination of options to support hidpi displays, when in combination with non-hidpi secondary displays.  For your application, you may have instantiated ``QApplication`` yourself, in which case we advise setting these options *before* running ``QApplication.exec_()``.  
 
 For Qt6 bindings, this functionally "just works" without having to set any attributes.
 

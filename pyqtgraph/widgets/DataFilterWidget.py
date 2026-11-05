@@ -99,7 +99,7 @@ class DataFilterParameter(ptree.types.GroupParameter):
     
     def generateMask(self, data):
         """Return a boolean mask indicating whether each item in *data* passes
-        the filter critera.
+        the filter criteria.
         """
         mask = np.ones(len(data), dtype=bool)
         if len(data) == 0:

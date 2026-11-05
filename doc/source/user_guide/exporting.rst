@@ -9,8 +9,8 @@ Exporting from the GUI
 Any 2D graphics can be exported by right-clicking on the graphic, then selecting 'export' from the context menu. 
 This will display the export dialog in which the user must:
 
-#. Select an item (or the entire scene) to export. Selecting an item will cause the item to be hilighted in the original 
-   graphic window (but this hilight will not be displayed in the exported file). 
+#. Select an item (or the entire scene) to export. Selecting an item will cause the item to be highlighted in the original 
+   graphic window (but this highlight will not be displayed in the exported file). 
 #. Select an export format.
 #. Change any desired export options.
 #. Click the 'export' button.
@@ -41,7 +41,7 @@ Export Formats
 Exporting from the API
 ----------------------
 
-To export a file programatically, follow this example:
+To export a file programmatically, follow this example:
 
 .. code-block:: python
 
