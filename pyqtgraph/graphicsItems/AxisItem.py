@@ -823,7 +823,7 @@ class AxisItem(GraphicsWidget):
     def updateAutoSIPrefix(self):
         scale = 1.0
         prefix = ''
-        if self.label.isVisible():
+        if self.autoSIPrefix and self.label.isVisible():
             _range = 10**np.array(self.range) if self.logMode else self.range
             scaling_value = max(abs(_range[0]), abs(_range[1])) * self.scale
             if any(low <= scaling_value <= high for low, high in self.getSIPrefixEnableRanges()):
