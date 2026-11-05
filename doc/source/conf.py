@@ -97,6 +97,7 @@ napoleon_type_aliases = {
     'array_like': ':term:`array_like`',
     'color_like': ':obj:`~pyqtgraph.functions.color_like`',
     'point_like': ':obj:`~pyqtgraph.Point.point_like`',
+    'vector_like': ':obj:`~pyqtgraph.Vector.vector_like`',
 }
 
 # makes things far more legible

@@ -148,6 +148,7 @@ include = ["pyqtgraph"]
 # Add a file here once its annotations are complete.
 strict = [
   "pyqtgraph/Point.py",
+  "pyqtgraph/Vector.py",
 ]
 strictListInference = true
 strictDictionaryInference = true
