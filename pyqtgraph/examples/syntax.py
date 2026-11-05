@@ -157,9 +157,6 @@ class PythonHighlighter(QtGui.QSyntaxHighlighter):
             (r'"[^"\\]*(\\.[^"\\]*)*"', 0, 'string'),
             # Single-quoted string, possibly containing escape sequences
             (r"'[^'\\]*(\\.[^'\\]*)*'", 0, 'string'),
-
-            # From '#' until a newline
-            (r'#[^\n]*', 0, 'comment'),
         ]
         self.rules = rules
         self.searchText = None
@@ -208,6 +205,18 @@ class PythonHighlighter(QtGui.QSyntaxHighlighter):
                 if any(start < e and end > s for s, e in string_spans):
                     continue  # Skip overlapping with string
                 self.setFormat(start, end - start, format)
+
+        # Last of the inline rules: a comment runs from the first '#' outside
+        # any string to the end of the line. The start is located by scanning
+        # rather than by a '#[^\n]*' rule, since such a pattern matches from a
+        # '#' inside a string all the way past a real trailing comment, and the
+        # overlap check above would then discard the comment entirely.
+        for match in re.finditer('#', text):
+            start = match.start()
+            if any(s <= start < e for s, e in string_spans):
+                continue
+            self.setFormat(start, len(text) - start, self.styles['comment'])
+            break
 
         self.applySearchHighlight(text)
         self.setCurrentBlockState(0)
