@@ -544,7 +544,8 @@ class GLViewMixin:
             except KeyError:
                 self.keysPressed = {}
             self.evalKeyState()
-        
+    
+    @QtCore.Slot()
     def evalKeyState(self):
         speed = 2.0
         if len(self.keysPressed) > 0:
