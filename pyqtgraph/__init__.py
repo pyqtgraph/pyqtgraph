@@ -153,7 +153,7 @@ from .graphicsItems.HistogramLUTItem import *
 from .graphicsItems.ImageItem import *
 from .graphicsItems.InfiniteLine import *
 from .graphicsItems.IsocurveItem import *
-from .graphicsItems.ItemGroup import *
+from .graphicsItems.GroupItem import *
 from .graphicsItems.LabelItem import *
 from .graphicsItems.LegendItem import *
 from .graphicsItems.LinearRegionItem import *
@@ -214,6 +214,11 @@ from .widgets.TableWidget import *
 from .widgets.TreeWidget import *
 from .widgets.ValueLabel import *
 from .widgets.VerticalLabel import *
+
+from ._deprecated_names import RENAMED_SYMBOLS as _RENAMED_SYMBOLS
+from ._deprecation import renamed_attr_getattr as _renamed_attr_getattr
+
+__getattr__ = _renamed_attr_getattr(__name__, _RENAMED_SYMBOLS)
 
 ##############################################################
 ## PyQt and PySide both are prone to crashing on exit.
