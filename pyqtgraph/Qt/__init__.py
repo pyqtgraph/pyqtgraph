@@ -5,7 +5,6 @@ This module exists to smooth out some of the differences between Qt versions.
 * Allow you to import QtCore/QtGui from pyqtgraph.Qt without specifying which Qt wrapper
   you want to use.
 """
-import importlib
 import os
 import platform
 import sys
@@ -61,11 +60,6 @@ class FailedImport(object):
         
     def __getattr__(self, attr):
         raise self.err
-
-
-def _loadUiType(uiFile):
-    QtUiTools = importlib.import_module(QT_LIB + '.QtUiTools')
-    return QtUiTools.loadUiType(uiFile)
 
 
 # For historical reasons, pyqtgraph maintains a Qt4-ish interface back when
@@ -169,7 +163,6 @@ else:
 if QT_LIB in [PYSIDE2, PYSIDE6]:
     QtVersion = QtCore.__version__
     QtVersionInfo = QtCore.__version_info__
-    loadUiType = _loadUiType
     isQObjectAlive = shiboken.isValid
 
     compat.wrapinstance = shiboken.wrapInstance
@@ -192,8 +185,6 @@ if QT_LIB in [PYQT5, PYQT6]:
     
     def isQObjectAlive(obj):
         return not sip.isdeleted(obj)
-    
-    loadUiType = uic.loadUiType
 
     QtCore.Signal = QtCore.pyqtSignal
     QtCore.Slot = QtCore.pyqtSlot

@@ -4,7 +4,8 @@ import pyqtgraph as pg
 from pyqtgraph.exporters import MatplotlibExporter
 
 pytest.importorskip("matplotlib")
-
+# silence warnings emitted from matplotlib
+pytestmark = pytest.mark.filterwarnings("ignore:.*AA_UseHighDpiPixmaps:DeprecationWarning:matplotlib")
 
 app = pg.mkQApp()
 
