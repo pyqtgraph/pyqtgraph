@@ -224,3 +224,148 @@ def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
     axis = pg.AxisItem(orientation)
     axis.setLogMode(log)
     assert axis.logMode == expected
+
+@pytest.mark.parametrize(
+    "fmt, expected",
+    [
+        ("{text} / {units}", "Voltage / V"),
+        ("{text} in {units}", "Voltage in V"),
+        ("{text} [{units}]", "Voltage [V]"),
+    ],
+)
+def test_custom_format(qapp, fmt, expected):
+    axis = pg.AxisItem("left")
+    axis.setLabel(
+        "Voltage",
+        units="V",
+        unitFormat=fmt,
+    )
+    assert expected in axis.labelString()
+
+
+def test_default_format(qapp):
+    axis = pg.AxisItem("left")
+    axis.setLabel("Voltage", units="V")
+    assert "Voltage (V)" in axis.labelString()
+
+
+def test_invalid_format(qapp):
+    axis = pg.AxisItem("left")
+
+    with pytest.raises(ValueError):
+        axis.setLabel(
+            "Voltage",
+            units="V",
+            unitFormat="{unknown}",
+        )
+
+
+def test_format_persists(qapp):
+    axis = pg.AxisItem("left")
+    axis.setLabel(
+        "Voltage",
+        units="V",
+        unitFormat="{text} / {units}",
+    )
+    axis.setLabel("Current", units="A")
+
+    assert "Current / A" in axis.labelString()
+
+
+@pytest.mark.parametrize(
+    "invalid_format",
+    [
+        "{unknown}",
+        "{text",
+        "{text.__class__}",
+        "{units[0]}",
+        "{units:>10}",
+        "{text!r}",
+        "{}",
+    ],
+)
+def test_invalid_templates(qapp, invalid_format):
+    axis = pg.AxisItem("left")
+    axis.setLabel("Voltage", units="V")
+
+    previous = axis.labelString()
+
+    with pytest.raises(ValueError):
+        axis.setLabel(
+            "Current",
+            units="A",
+            unitFormat=invalid_format,
+        )
+
+    assert axis.labelString() == previous
+
+
+def test_invalid_type(qapp):
+    axis = pg.AxisItem("left")
+
+    with pytest.raises(TypeError):
+        axis.setLabel(
+            "Voltage",
+            units="V",
+            unitFormat=123,
+        )
+
+
+def test_without_units(qapp):
+    axis = pg.AxisItem("left")
+    axis.setLabel("Voltage")
+
+    assert "Voltage" in axis.labelString()
+    assert "Voltage (" not in axis.labelString()
+
+
+def test_style_preserved(qapp):
+    axis = pg.AxisItem("left")
+    axis.setLabel(
+        "Voltage",
+        units="V",
+        unitFormat="{text} / {units}",
+        color="red",
+    )
+
+    result = axis.labelString()
+    assert "Voltage / V" in result
+    assert "color: red" in result
+
+
+def test_format_state_preserved(qapp):
+    axis = pg.AxisItem("left")
+    axis.setLabel(
+        "Voltage",
+        units="V",
+        unitFormat="{text} / {units}",
+    )
+
+    previous_format = axis.labelUnitFormat
+
+    with pytest.raises(ValueError):
+        axis.setLabel(
+            "Current",
+            units="A",
+            unitFormat="{invalid}",
+        )
+
+    assert axis.labelUnitFormat == previous_format
+    assert "Voltage / V" in axis.labelString()
+
+    def test_empty_label_text(qapp):
+        axis = pg.AxisItem("left")
+        axis.setLabel("", units="V")
+
+        assert "> (V)</span>" in axis.labelString()
+
+    def test_custom_format_with_prefix(qapp):
+        axis = pg.AxisItem("left")
+        axis.setLabel(
+            "Voltage",
+            units="V",
+            unitPrefix="m",
+            unitFormat="{text} [{units}]",
+        )
+
+        assert "Voltage [mV]" in axis.labelString()

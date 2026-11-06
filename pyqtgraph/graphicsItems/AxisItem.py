@@ -1,6 +1,7 @@
 import sys
 import weakref
 from math import ceil, copysign, floor, frexp, isfinite, log10, sqrt
+from string import Formatter
 
 import numpy as np
 
@@ -10,6 +11,7 @@ from .. import getConfigOption
 from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsWidget import GraphicsWidget
+
 
 __all__ = ['AxisItem']
 
@@ -117,6 +119,7 @@ class AxisItem(GraphicsWidget):
         self.labelText = ""
         self.labelUnits = ""
         self.labelUnitPrefix = ""
+        self.labelUnitFormat = "{text} ({units})"
         self.unitPower = 1
         self.labelStyle = {}
         self._siPrefixEnableRanges = None
@@ -441,6 +444,7 @@ class AxisItem(GraphicsWidget):
         unitPrefix: str | None=None,
         siPrefixEnableRanges: tuple[tuple[float, float], ...] | None=None,
         unitPower: int | float=1,
+        unitFormat: str | None = None,
         **kwargs
     ):
         """
@@ -466,6 +470,11 @@ class AxisItem(GraphicsWidget):
             Supports positive, negative and non-integral powers.  Default is 1.
             Note: The power only affects the scaling, not the units themselves. For
             example, with units='m' and unitPower=2, the displayed units will still be 'm'.
+        unitFormat : str, optional
+            Custom format for the axis label using {text}
+            and {units} placeholders. Defaults to
+            "{text} ({units})". When omitted, the
+            previously configured format is preserved.
         **kwargs
             All extra keyword arguments become CSS style options for the ``<span>`` tag
             which will surround the axis label and units. Note that CSS attributes are
@@ -478,6 +487,11 @@ class AxisItem(GraphicsWidget):
 
             <span style="...args...">{text} (prefix{units})</span>
         """
+
+        if unitFormat is not None:
+            self._validateUnitFormat(unitFormat)
+            self.labelUnitFormat = unitFormat
+
         self.labelText = text or ""
         self.labelUnits = units or ""
         self.labelUnitPrefix = unitPrefix or ""
@@ -541,15 +555,19 @@ class AxisItem(GraphicsWidget):
         str
             The complete label string, including units and any prefixes.
         """
+
         if self.labelUnits == '':
             if not self.autoSIPrefix or self.autoSIPrefixScale == 1.0:
                 units = ''
             else:
                 units = f'(x{1.0 / self.autoSIPrefixScale:g})'
+            s = f'{self.labelText} {units}'
         else:
-            units = f'({self.labelUnitPrefix}{self.labelUnits})'
-
-        s = f'{self.labelText} {units}'
+            units = f'{self.labelUnitPrefix}{self.labelUnits}'
+            s = self.labelUnitFormat.format(
+                text=self.labelText,
+                units=units,
+            )
 
         style = ';'.join([f'{k}: {self.labelStyle[k]}' for k in self.labelStyle])
 
@@ -1781,3 +1799,24 @@ class AxisItem(GraphicsWidget):
         if lv is None:
             return
         return lv.mouseClickEvent(event)
+
+    @staticmethod
+    def _validateUnitFormat(unitFormat: str) -> None:
+        if not isinstance(unitFormat, str):
+            raise TypeError("unitFormat must be a string")
+
+        try:
+            fields = list(Formatter().parse(unitFormat))
+        except ValueError as exc:
+            raise ValueError("Invalid unitFormat") from exc
+
+        for _, field, spec, conversion in fields:
+            if field is not None and (
+                field not in ("text", "units")
+                or spec
+                or conversion is not None
+            ):
+                raise ValueError(
+                    "unitFormat supports only "
+                    "{text} and {units} placeholders"
+                )
