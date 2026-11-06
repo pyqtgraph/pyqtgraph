@@ -1,6 +1,7 @@
 import sys
 import weakref
 from math import ceil, copysign, floor, frexp, isfinite, log10, sqrt
+from string import Formatter
 
 import numpy as np
 
@@ -12,6 +13,24 @@ from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsWidget import GraphicsWidget
 
 __all__ = ['AxisItem']
+
+DEFAULT_LABEL_FORMAT = '{text} ({units})'
+
+
+def _formatLabel(labelFormat: str, text: str, units: str) -> str:
+    """Format a label using only literal text and the ``text``/``units`` fields."""
+    result = []
+    for literal, field, formatSpec, conversion in Formatter().parse(labelFormat):
+        result.append(literal)
+        if field is None:
+            continue
+        if field not in {"text", "units"} or formatSpec or conversion is not None:
+            raise ValueError(
+                "labelFormat only supports the {text} and {units} fields "
+                "without conversions or format specifications"
+            )
+        result.append(text if field == "text" else units)
+    return "".join(result)
 
 
 class AxisItem(GraphicsWidget):
@@ -118,6 +137,7 @@ class AxisItem(GraphicsWidget):
         self.labelUnits = ""
         self.labelUnitPrefix = ""
         self.unitPower = 1
+        self.labelFormat = DEFAULT_LABEL_FORMAT
         self.labelStyle = {}
         self._siPrefixEnableRanges = None
         self.setRange(0, 1)
@@ -441,6 +461,7 @@ class AxisItem(GraphicsWidget):
         unitPrefix: str | None=None,
         siPrefixEnableRanges: tuple[tuple[float, float], ...] | None=None,
         unitPower: int | float=1,
+        labelFormat: str | None=None,
         **kwargs
     ):
         """
@@ -466,6 +487,14 @@ class AxisItem(GraphicsWidget):
             Supports positive, negative and non-integral powers.  Default is 1.
             Note: The power only affects the scaling, not the units themselves. For
             example, with units='m' and unitPower=2, the displayed units will still be 'm'.
+        labelFormat : str, optional
+            Format string used to combine the label text and units. It may contain
+            ``{text}`` and ``{units}`` placeholders (without field access, conversions,
+            or format specifications). Defaults to ``'{text} ({units})'`` and is
+            preserved when omitted from later calls to ``setLabel``.
+            For example, ``'{text} / {units}'`` displays ``voltage / V``. It is only
+            used when units are set; the unitless scale note (for example, ``(x1000)``)
+            keeps its existing format.
         **kwargs
             All extra keyword arguments become CSS style options for the ``<span>`` tag
             which will surround the axis label and units. Note that CSS attributes are
@@ -478,6 +507,10 @@ class AxisItem(GraphicsWidget):
 
             <span style="...args...">{text} (prefix{units})</span>
         """
+        # Validate the template before changing any axis state.
+        if labelFormat is not None:
+            _formatLabel(labelFormat, "", "")
+            self.labelFormat = labelFormat
         self.labelText = text or ""
         self.labelUnits = units or ""
         self.labelUnitPrefix = unitPrefix or ""
@@ -546,10 +579,10 @@ class AxisItem(GraphicsWidget):
                 units = ''
             else:
                 units = f'(x{1.0 / self.autoSIPrefixScale:g})'
+            s = f'{self.labelText} {units}'
         else:
-            units = f'({self.labelUnitPrefix}{self.labelUnits})'
-
-        s = f'{self.labelText} {units}'
+            units = f'{self.labelUnitPrefix}{self.labelUnits}'
+            s = _formatLabel(self.labelFormat, self.labelText, units)
 
         style = ';'.join([f'{k}: {self.labelStyle[k]}' for k in self.labelStyle])
 

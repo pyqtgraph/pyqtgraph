@@ -151,6 +151,67 @@ def test_AxisItem_conditionalSIPrefix():
     assert "Time (s)" in bottom.labelString()
 
 
+@pytest.mark.parametrize(
+    "unit_format, expected",
+    [
+        ("{text} ({units})", "Voltage (mV)"),
+        ("{text} / {units}", "Voltage / mV"),
+        ("{text} in {units}", "Voltage in mV"),
+        ("{units}: {text}", "mV: Voltage"),
+        ("{text}", "Voltage"),
+        ("", ""),
+    ],
+)
+def test_AxisItem_labelFormat(unit_format, expected):
+    axis = pg.AxisItem("bottom")
+    axis.setLabel("Voltage", units="V", labelFormat=unit_format)
+    axis.labelUnitPrefix = "m"
+    label = axis.labelString()
+    if expected:
+        assert expected in label
+    else:
+        assert label.endswith("></span>")
+
+
+def test_AxisItem_labelFormat_without_units_keeps_scale_note():
+    axis = pg.AxisItem("bottom")
+    axis.setLabel("Voltage", labelFormat="{text} / {units}")
+    axis.autoSIPrefixScale = 0.001
+    assert "Voltage (x1000)" in axis.labelString()
+
+
+def test_AxisItem_labelFormat_is_preserved_when_omitted():
+    axis = pg.AxisItem("bottom")
+    axis.setLabel("Voltage", units="V", labelFormat="{text} / {units}")
+    axis.setLabel("Current", units="A")
+
+    assert axis.labelFormat == "{text} / {units}"
+    assert "Current / A" in axis.labelString()
+
+
+@pytest.mark.parametrize(
+    "label_format, exception",
+    [
+        ("{unknown}", ValueError),
+        ("{text.__class__}", ValueError),
+        ("{text!r}", ValueError),
+        ("{text:>100}", ValueError),
+        ("{text", ValueError),
+    ],
+)
+def test_AxisItem_invalid_labelFormat_does_not_change_label(label_format, exception):
+    axis = pg.AxisItem("bottom")
+    axis.setLabel("Original", units="V")
+
+    with pytest.raises(exception):
+        axis.setLabel("Replacement", units="A", labelFormat=label_format)
+
+    assert axis.labelText == "Original"
+    assert axis.labelUnits == "V"
+    assert axis.labelFormat == "{text} ({units})"
+    assert "Original (V)" in axis.labelString()
+
+
 def test_AxisItem_tickFont(monkeypatch):
     def collides(textSpecs):
         fontMetrics = pg.Qt.QtGui.QFontMetrics(font)
