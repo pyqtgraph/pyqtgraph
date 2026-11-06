@@ -240,14 +240,17 @@ class PlotCurveItem(GraphicsObject):
     def getData(self):
         return self.xData, self.yData
 
-    def dataBounds(self, ax, frac=1.0, orthoRange=None):
+    def dataBounds(self, ax, frac=1.0, orthoRange=None, data=None):
         ## Need this to run as fast as possible.
         ## check cache first:
-        cache = self._boundsCache[ax]
-        if cache is not None and cache[0] == (frac, orthoRange):
-            return cache[1]
+        if data is None:
+            cache = self._boundsCache[ax]
+            if cache is not None and cache[0] == (frac, orthoRange):
+                return cache[1]
+            (x, y) = self.getData()
+        else:
+            (x, y) = data
 
-        (x, y) = self.getData()
         if x is None or len(x) == 0:
             return (None, None)
 
@@ -314,7 +317,8 @@ class PlotCurveItem(GraphicsObject):
         if spen is not None and not spen.isCosmetic() and spen.style() != QtCore.Qt.PenStyle.NoPen:
             b = (b[0] - spen.widthF()*0.7072, b[1] + spen.widthF()*0.7072)
 
-        self._boundsCache[ax] = [(frac, orthoRange), b]
+        if data is None:
+            self._boundsCache[ax] = [(frac, orthoRange), b]
         return b
 
     def pixelPadding(self):

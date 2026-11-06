@@ -859,22 +859,35 @@ class ScatterPlotItem(GraphicsObject):
         self.bounds = [None, None]
         self.invalidate()
 
-    def dataBounds(self, ax, frac=1.0, orthoRange=None):
-        if frac >= 1.0 and orthoRange is None and self.bounds[ax] is not None:
-            return self.bounds[ax]
+    def dataBounds(self, ax, frac=1.0, orthoRange=None, data=None):
+        if data is None:
+            if frac >= 1.0 and orthoRange is None and self.bounds[ax] is not None:
+                return self.bounds[ax]
 
-        #self.prepareGeometryChange()
-        if self.data is None or len(self.data) == 0:
-            return (None, None)
+            #self.prepareGeometryChange()
+            if self.data is None or len(self.data) == 0:
+                return (None, None)
 
-        if ax == 0:
-            d = self.data['x']
-            d2 = self.data['y']
-        elif ax == 1:
-            d = self.data['y']
-            d2 = self.data['x']
+            if ax == 0:
+                d = self.data['x']
+                d2 = self.data['y']
+            elif ax == 1:
+                d = self.data['y']
+                d2 = self.data['x']
+            else:
+                raise ValueError("Invalid axis value")
         else:
-            raise ValueError("Invalid axis value")
+            x, y = data
+            if x is None or len(x) == 0:
+                return (None, None)
+            if ax == 0:
+                d = x
+                d2 = y
+            elif ax == 1:
+                d = y
+                d2 = x
+            else:
+                raise ValueError("Invalid axis value")
 
         if orthoRange is not None:
             mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
@@ -884,14 +897,18 @@ class ScatterPlotItem(GraphicsObject):
                 return (None, None)
 
         if frac >= 1.0:
-            self.bounds[ax] = (np.nanmin(d) - self._maxSpotWidth*0.7072, np.nanmax(d) + self._maxSpotWidth*0.7072)
-            return self.bounds[ax]
+            b = (float(np.nanmin(d) - self._maxSpotWidth*0.7072), float(np.nanmax(d) + self._maxSpotWidth*0.7072))
+            if data is None:
+                self.bounds[ax] = b
+            return b
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:
             mask = np.isfinite(d)
             d = d[mask]
-            return np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
+            if d.size == 0:
+                return (None, None)
+            return tuple(np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)]))
 
     def pixelPadding(self):
         return self._maxSpotPxWidth*0.7072

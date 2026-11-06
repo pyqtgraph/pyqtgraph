@@ -588,6 +588,7 @@ class PlotDataItem(GraphicsObject):
         # holds last clipping points of dynamic range limiter
         self._drlLastClip = (0.0, 0.0)
         self._adsLastValue = 1
+        self._boundsCache = [None, None]
         # self.clear()
         self.opts = {
             # defaults to 'all', unless overridden to 'finite' for log-scaling
@@ -1312,6 +1313,7 @@ class PlotDataItem(GraphicsObject):
         self._datasetDisplay = None
         # reset auto-downsample value
         self._adsLastValue   = 1
+        self._boundsCache = [None, None]
 
         profiler('set data')
 
@@ -1351,6 +1353,7 @@ class PlotDataItem(GraphicsObject):
         scatterArgs = {}
 
         if styleUpdate:  # repeat style arguments only when changed
+            self._boundsCache = [None, None]
             for k, v in [
                 ('pen', 'pen'),
                 ('shadowPen', 'shadowPen'),
@@ -1728,11 +1731,25 @@ class PlotDataItem(GraphicsObject):
             The maximum end of the range that the data occupies along the specified
             axis. ``None`` if there is no data.
         """
+        unclipped_data = None
+        if self.opts['clipToView']:
+            cache = self._boundsCache[ax]
+            if cache is not None and cache[0] == (frac, orthoRange):
+                return cache[1]
+            if self._datasetMapped is None and self._dataset is not None:
+                self._getDisplayDataset()
+            if self._datasetMapped is not None:
+                unclipped_data = (self._datasetMapped.x, self._datasetMapped.y)
+
         bounds: tuple[None, None] | tuple[float, float] = (None, None)
         if self.curve.isVisible():
-            bounds = self.curve.dataBounds(ax, frac, orthoRange)
+            bounds = self.curve.dataBounds(ax, frac, orthoRange, data=unclipped_data)
         if self.scatter.isVisible():
-            bounds2 = self.scatter.dataBounds(ax, frac, orthoRange)
+            scatter_data = unclipped_data
+            if scatter_data is not None and self.opts.get('stepMode') == "center":
+                sx, sy = scatter_data
+                scatter_data = (0.5 * (sx[:-1] + sx[1:]), sy)
+            bounds2 = self.scatter.dataBounds(ax, frac, orthoRange, data=scatter_data)
             bounds = (
                 min(
                     (i for i in [bounds2[0], bounds[0]] if i is not None), default=None
@@ -1741,6 +1758,10 @@ class PlotDataItem(GraphicsObject):
                     (i for i in [bounds2[1], bounds[1]] if i is not None), default=None
                 )
             )
+
+        if self.opts['clipToView']:
+            self._boundsCache[ax] = [(frac, orthoRange), bounds]
+
         return bounds
 
     def pixelPadding(self) -> int:
@@ -1766,6 +1787,7 @@ class PlotDataItem(GraphicsObject):
 
     def clear(self):
         self._dataset = self._datasetMapped = self._datasetDisplay = None
+        self._boundsCache = [None, None]
         self.curve.clear()
         self.scatter.clear()
 

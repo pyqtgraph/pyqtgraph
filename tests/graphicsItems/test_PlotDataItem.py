@@ -253,3 +253,41 @@ def test_dataBounds_curve_and_scatter():
     assert item.dataBounds(0)[1] == 10
 
     w.close()
+
+
+def test_autoRange_with_clipToView():
+    w = pg.PlotWidget()
+    x = np.arange(100000.0)
+    y = np.arange(100000.0)
+    item = w.plot(x, y)
+    item.setClipToView(True)
+    w.show()
+    vb = w.getViewBox()
+    vb.setXRange(10000, 11000, padding=0)
+    vb.autoRange()
+    xr, yr = vb.viewRange()
+    assert xr[0] <= 0 and xr[1] >= 99999
+    w.close()
+
+
+def test_dataBounds_with_clipToView():
+    w = pg.PlotWidget()
+    x = np.arange(100000.0)
+    y = np.arange(100000.0)
+    item = w.plot(x, y)
+    item.setClipToView(True)
+    w.show()
+    vb = w.getViewBox()
+    vb.setXRange(10000, 11000, padding=0)
+
+    # curve data should be clipped to the zoomed range
+    curve_x, _ = item.curve.getData()
+    assert len(curve_x) < 2000
+
+    # but PlotDataItem.dataBounds must return bounds for the full unclipped data
+    xbounds = item.dataBounds(0)
+    ybounds = item.dataBounds(1)
+    assert xbounds[0] == 0.0 and xbounds[1] == 99999.0
+    assert ybounds[0] == 0.0 and ybounds[1] == 99999.0
+
+    w.close()
