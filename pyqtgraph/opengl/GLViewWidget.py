@@ -365,7 +365,8 @@ class GLViewMixin:
         center = self.opts['center']
         dist = self.opts['distance']
         if self.opts['rotationMethod'] == "quaternion":
-            pos = Vector(center - self.opts['rotation'].rotatedVector(Vector(0,0,dist) ))
+            # the view matrix rotates world into eye space, so undo the rotation
+            pos = Vector(center + self.opts['rotation'].conjugated().rotatedVector(Vector(0,0,dist)))
         else:
             # using 'euler' rotation method
             elev = radians(self.opts['elevation'])
@@ -543,7 +544,8 @@ class GLViewMixin:
             except KeyError:
                 self.keysPressed = {}
             self.evalKeyState()
-        
+    
+    @QtCore.Slot()
     def evalKeyState(self):
         speed = 2.0
         if len(self.keysPressed) > 0:
