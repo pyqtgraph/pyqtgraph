@@ -1,6 +1,7 @@
 import sys
 import weakref
 from math import ceil, copysign, floor, frexp, isfinite, log10, sqrt
+from string import Formatter
 
 import numpy as np
 
@@ -10,7 +11,7 @@ from .. import getConfigOption
 from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
 from .GraphicsWidget import GraphicsWidget
-from string import Formatter
+
 
 __all__ = ['AxisItem']
 
@@ -567,9 +568,6 @@ class AxisItem(GraphicsWidget):
                 text=self.labelText,
                 units=units,
             )
-
-            if not self.labelText:
-                s = ' ' + s
 
         style = ';'.join([f'{k}: {self.labelStyle[k]}' for k in self.labelStyle])
 

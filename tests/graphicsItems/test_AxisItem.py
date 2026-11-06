@@ -353,3 +353,19 @@ def test_format_state_preserved(qapp):
     assert axis.labelUnitFormat == previous_format
     assert "Voltage / V" in axis.labelString()
 
+    def test_empty_label_text(qapp):
+        axis = pg.AxisItem("left")
+        axis.setLabel("", units="V")
+
+        assert "> (V)</span>" in axis.labelString()
+
+    def test_custom_format_with_prefix(qapp):
+        axis = pg.AxisItem("left")
+        axis.setLabel(
+            "Voltage",
+            units="V",
+            unitPrefix="m",
+            unitFormat="{text} [{units}]",
+        )
+
+        assert "Voltage [mV]" in axis.labelString()
