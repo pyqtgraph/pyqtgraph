@@ -69,7 +69,9 @@ nitpick_ignore_regex = [
     ("py:class", "numpy._typing._nested_sequence._NestedSequence"),
     ("py:class", "PYQT_SLOT"),
     ("py:class", "PYQT_SIGNAL"),
-    ("py:class", "QObjectT")
+    ("py:class", "QObjectT"),
+    ("py:class", "QtPointT|RowT"),  # type parameters in Transform3D
+    ("py:class", "numpy.float64"),  # numpy documents it as an alias, not a class
 ]
 
 # looks way better with pydata-sphinx-theme
