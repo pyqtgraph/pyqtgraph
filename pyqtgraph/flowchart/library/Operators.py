@@ -41,10 +41,10 @@ class BinOpNode(CtrlNode):
                 try:
                     fn = getattr(args['A'], name)
                     break
-                except AttributeError as e:
-                    pass
+                except AttributeError as exc:
+                    err = exc
             else:
-                raise e
+                raise err
         else:
             fn = getattr(args['A'], self.fn)
         out = fn(args['B'])
