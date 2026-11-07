@@ -1729,10 +1729,23 @@ class PlotDataItem(GraphicsObject):
             axis. ``None`` if there is no data.
         """
         bounds: tuple[None, None] | tuple[float, float] = (None, None)
+        # With clipToView, the display curve/scatter only hold the
+        # in-view subset, so autoRange() would shrink to it ("View All"
+        # stays zoomed, issue #3682). Ask for bounds of the full dataset
+        # instead; display clipping stays untouched.
+        full_data = None
+        if self.opts.get('clipToView', False) and self._dataset is not None:
+            (full_data_x, full_data_y) = self.getOriginalDataset()
+            if full_data_x is not None:
+                full_data = (full_data_x, full_data_y)
         if self.curve.isVisible():
-            bounds = self.curve.dataBounds(ax, frac, orthoRange)
+            bounds = self.curve.dataBounds(
+                ax, frac, orthoRange, data=full_data
+            )
         if self.scatter.isVisible():
-            bounds2 = self.scatter.dataBounds(ax, frac, orthoRange)
+            bounds2 = self.scatter.dataBounds(
+                ax, frac, orthoRange, data=full_data
+            )
             bounds = (
                 min(
                     (i for i in [bounds2[0], bounds[0]] if i is not None), default=None

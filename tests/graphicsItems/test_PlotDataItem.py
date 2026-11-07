@@ -253,3 +253,27 @@ def test_dataBounds_curve_and_scatter():
     assert item.dataBounds(0)[1] == 10
 
     w.close()
+
+def test_clipToView_autoRange_covers_full_data():
+    # Regression for #3682: with clipToView, the display data is
+    # clipped to the view, so autoRange() ("View All") must still
+    # cover the full dataset.
+    w = pg.PlotWidget()
+    item = pg.PlotDataItem(np.arange(100000.0), np.arange(100000.0))
+    w.addItem(item)
+    item.setClipToView(True)
+    w.show()
+    app = pg.mkQApp()
+    app.processEvents()
+
+    vb = w.getViewBox()
+    vb.setXRange(10000, 11000, padding=0)
+    app.processEvents()
+    vb.autoRange()
+    app.processEvents()
+
+    (x0, x1) = vb.viewRange()[0]
+    assert x0 < 10000
+    assert x1 > 11000
+
+    w.close()

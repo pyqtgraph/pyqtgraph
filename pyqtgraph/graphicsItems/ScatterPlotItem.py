@@ -859,20 +859,27 @@ class ScatterPlotItem(GraphicsObject):
         self.bounds = [None, None]
         self.invalidate()
 
-    def dataBounds(self, ax, frac=1.0, orthoRange=None):
-        if frac >= 1.0 and orthoRange is None and self.bounds[ax] is not None:
+    def dataBounds(self, ax, frac=1.0, orthoRange=None, data=None):
+        # Explicit data (e.g. the unclipped dataset, issue #3682) bypasses
+        # the cached display-data bounds.
+        if data is not None:
+            x, y = data
+        elif frac >= 1.0 and orthoRange is None and self.bounds[ax] is not None:
             return self.bounds[ax]
+        else:
+            x = self.data['x']
+            y = self.data['y']
 
         #self.prepareGeometryChange()
-        if self.data is None or len(self.data) == 0:
+        if x is None or len(x) == 0:
             return (None, None)
 
         if ax == 0:
-            d = self.data['x']
-            d2 = self.data['y']
+            d = x
+            d2 = y
         elif ax == 1:
-            d = self.data['y']
-            d2 = self.data['x']
+            d = y
+            d2 = x
         else:
             raise ValueError("Invalid axis value")
 
@@ -884,8 +891,10 @@ class ScatterPlotItem(GraphicsObject):
                 return (None, None)
 
         if frac >= 1.0:
-            self.bounds[ax] = (np.nanmin(d) - self._maxSpotWidth*0.7072, np.nanmax(d) + self._maxSpotWidth*0.7072)
-            return self.bounds[ax]
+            b = (float(np.nanmin(d) - self._maxSpotWidth*0.7072), float(np.nanmax(d) + self._maxSpotWidth*0.7072))
+            if data is None:
+                self.bounds[ax] = b
+            return b
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:

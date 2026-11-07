@@ -240,14 +240,17 @@ class PlotCurveItem(GraphicsObject):
     def getData(self):
         return self.xData, self.yData
 
-    def dataBounds(self, ax, frac=1.0, orthoRange=None):
+    def dataBounds(self, ax, frac=1.0, orthoRange=None, data=None):
         ## Need this to run as fast as possible.
-        ## check cache first:
+        ## check cache first. The cache key also records whether the caller
+        ## supplied explicit (e.g. unclipped) data, so a clipped display
+        ## subset is never returned for a full-data query (issue #3682).
+        cache_key = (frac, orthoRange, data is not None)
         cache = self._boundsCache[ax]
-        if cache is not None and cache[0] == (frac, orthoRange):
+        if cache is not None and cache[0] == cache_key:
             return cache[1]
 
-        (x, y) = self.getData()
+        (x, y) = data if data is not None else self.getData()
         if x is None or len(x) == 0:
             return (None, None)
 
@@ -314,7 +317,7 @@ class PlotCurveItem(GraphicsObject):
         if spen is not None and not spen.isCosmetic() and spen.style() != QtCore.Qt.PenStyle.NoPen:
             b = (b[0] - spen.widthF()*0.7072, b[1] + spen.widthF()*0.7072)
 
-        self._boundsCache[ax] = [(frac, orthoRange), b]
+        self._boundsCache[ax] = [cache_key, b]
         return b
 
     def pixelPadding(self):
