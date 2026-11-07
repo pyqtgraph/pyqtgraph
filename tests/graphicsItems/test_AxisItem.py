@@ -224,3 +224,28 @@ def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
     axis = pg.AxisItem(orientation)
     axis.setLogMode(log)
     assert axis.logMode == expected
+
+
+@pytest.mark.parametrize("orientation", ["left", "top"])
+def test_AxisItem_nudge_style_moves_label(orientation):
+    """`nudge` is exposed through setStyle instead of being hard-coded to 5."""
+    axis = pg.AxisItem(orientation)
+    axis.setStyle(nudge=12)
+    pos = axis.label.pos()
+    assert (pos.x() if orientation == "left" else pos.y()) == -12
+    axis.setStyle(nudge=2)
+    pos = axis.label.pos()
+    assert (pos.x() if orientation == "left" else pos.y()) == -2
+
+
+def test_AxisItem_nudge_defaults_to_five():
+    axis = pg.AxisItem("left")
+    assert axis.style["nudge"] == 5
+    axis.resizeEvent()
+    assert axis.label.pos().x() == -5
+
+
+def test_AxisItem_nudge_must_be_an_int():
+    axis = pg.AxisItem("left")
+    with pytest.raises(TypeError, match="Argument 'nudge' must be int"):
+        axis.setStyle(nudge=5.5)

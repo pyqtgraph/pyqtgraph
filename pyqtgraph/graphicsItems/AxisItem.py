@@ -79,6 +79,7 @@ class AxisItem(GraphicsWidget):
             'tickTextOffset': [5, 2],  ## (horizontal, vertical) spacing between text and axis
             'tickTextWidth': 30,  ## space reserved for tick text
             'tickTextHeight': 18,
+            'nudge': 5,  ## space between the axis line and its label, in pixels
             'autoExpandTextSpace': True,  ## automatically expand text space if needed
             'autoReduceTextSpace': True,
             'hideOverlappingLabels': hide_overlapping_labels,
@@ -170,6 +171,12 @@ class AxisItem(GraphicsWidget):
 
             tickTextHeight        ``int``
                                   Vertical space reserved for tick text in pixels.
+
+            nudge                 ``int``
+                                  Space between the axis line and the axis label in
+                                  pixels. Positive values move the label away from
+                                  the plot area; negative values move it closer.
+                                  Defaults to 5.
 
             autoExpandTextSpace   ``bool``
                                   Automatically expand text space if the tick strings
@@ -265,8 +272,9 @@ class AxisItem(GraphicsWidget):
                     'tickLength',
                     'tickTextOffset',
                     'tickTextWidth',
-                    'tickTextHeight'
-                ) and 
+                    'tickTextHeight',
+                    'nudge'
+                ) and
                 not isinstance(value, int)
             ):
                 raise TypeError(f"Argument '{kwd}' must be int")
@@ -288,6 +296,10 @@ class AxisItem(GraphicsWidget):
         self.picture = None
         self._adjustSize()
         self.update()
+        if 'nudge' in kwargs:
+            # The label position is only recomputed on resize, so apply the new
+            # offset now instead of waiting for the next layout pass.
+            self.resizeEvent()
 
     def close(self):
         self.scene().removeItem(self.label)
@@ -394,7 +406,7 @@ class AxisItem(GraphicsWidget):
 
     def resizeEvent(self, ev=None):
         # Set the position of the label
-        nudge = 5
+        nudge = self.style['nudge']
         # self.label is set to None on close, but resize events can still occur.
         if self.label is None:
             self.picture = None
