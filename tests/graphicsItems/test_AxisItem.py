@@ -151,6 +151,26 @@ def test_AxisItem_conditionalSIPrefix():
     assert "Time (s)" in bottom.labelString()
 
 
+def test_AxisItem_unitFormat():
+    plot = pg.PlotWidget()
+    left = plot.getAxis("left")
+
+    # Default format keeps the historical "text (units)" layout.
+    plot.setLabel("left", "voltage", units="V")
+    assert "voltage (V)" in left.labelString()
+
+    # A custom template combines text and units differently.
+    plot.setLabel("left", "voltage", units="V", unitFormat="{text} / {units}")
+    assert "voltage / V" in left.labelString()
+
+    plot.setLabel("left", "voltage", units="V", unitFormat="{text} in {units}")
+    assert "voltage in V" in left.labelString()
+
+    # With no units, only the text is shown regardless of unitFormat.
+    plot.setLabel("left", "time", unitFormat="{text} / {units}")
+    assert ">time<" in left.labelString()
+
+
 def test_AxisItem_tickFont(monkeypatch):
     def collides(textSpecs):
         fontMetrics = pg.Qt.QtGui.QFontMetrics(font)
