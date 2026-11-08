@@ -224,3 +224,82 @@ def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
     axis = pg.AxisItem(orientation)
     axis.setLogMode(log)
     assert axis.logMode == expected
+
+
+@pytest.mark.parametrize(
+    "unit_format, expected",
+    [
+        ("{text} / {units}", "Voltage / V"),
+        ("{text} in {units}", "Voltage in V"),
+        ("{text} [{units}]", "Voltage [V]"),
+    ],
+)
+def test_AxisItem_custom_unit_format(unit_format, expected):
+    axis = pg.AxisItem("left")
+
+    axis.setLabel(
+        "Voltage",
+        units="V",
+        unitFormat=unit_format,
+    )
+
+    assert expected in axis.labelString()
+
+
+def test_AxisItem_unit_format_with_si_prefix():
+    axis = pg.AxisItem("left")
+
+    axis.setLabel(
+        "Voltage",
+        units="V",
+        unitFormat="{text} / {units}",
+    )
+
+    axis.setRange(0, 1e-3)
+    assert "Voltage / mV" in axis.labelString()
+
+    axis.setRange(0, 1e3)
+    assert "Voltage / kV" in axis.labelString()
+
+
+def test_AxisItem_unit_format_persistence():
+    axis = pg.AxisItem("left")
+
+    axis.setLabel(
+        "Voltage",
+        units="V",
+        unitFormat="{text} / {units}",
+    )
+
+    # Update label without specifying a new format
+    axis.setLabel("Current", units="A")
+
+    assert "Current / A" in axis.labelString()
+
+
+@pytest.mark.parametrize(
+    "invalid_format",
+    [
+        "{unknown}",
+        "{text",
+        "{text.__class__}",
+    ],
+)
+def test_AxisItem_invalid_unit_format(invalid_format):
+    axis = pg.AxisItem("left")
+
+    axis.setLabel(
+        "Voltage",
+        units="V",
+        unitFormat="{text} / {units}",
+    )
+
+    with pytest.raises(ValueError, match="unitFormat"):
+        axis.setLabel(
+            "Current",
+            units="A",
+            unitFormat=invalid_format,
+        )
+
+    # Invalid input must not modify the existing label.
+    assert "Voltage / V" in axis.labelString()
