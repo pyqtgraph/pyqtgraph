@@ -40,6 +40,31 @@ def test_timeslide_snap():
     assert iv.playRate == speed
 
 
+def test_auto_histogram_range_setting_persists_across_frames():
+    frames = np.zeros((2, 10, 10))
+    frames[1] = 10
+    iv = pg.ImageView()
+    calls = []
+    original = iv.ui.histogram.setHistogramRange
+
+    def record_histogram_range(*args, **kwargs):
+        calls.append(args)
+        return original(*args, **kwargs)
+
+    iv.ui.histogram.setHistogramRange = record_histogram_range
+
+    try:
+        iv.setImage(frames, autoHistogramRange=False)
+        iv.setCurrentIndex(1)
+        assert calls == []
+
+        iv.setHistogramAutoRange(True)
+        iv.setCurrentIndex(0)
+        assert calls == [(0.0, 10.0)]
+    finally:
+        iv.close()
+
+
 def test_init_with_mode_and_imageitem():
     data = np.random.randint(256, size=(256, 256, 3))
     imgitem = pg.ImageItem(data)
