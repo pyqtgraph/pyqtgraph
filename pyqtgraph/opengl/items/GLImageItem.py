@@ -1,3 +1,6 @@
+import enum
+import textwrap
+
 import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
@@ -7,15 +10,19 @@ from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLImageItem']
 
+
+class DirtyFlag(enum.Flag):
+    POSITION = enum.auto()
+    TEXTURE = enum.auto()
+
+
 class GLImageItem(GLGraphicsItem):
     """
     **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem>`
     
     Displays image data as a textured quad.
     """
-    
-    _shaderProgram = None
-    
+
     def __init__(self, data, smooth=False, glOptions='translucent', parentItem=None):
         """
         ==============  =======================================================================================
@@ -27,21 +34,27 @@ class GLImageItem(GLGraphicsItem):
         """
         
         super().__init__()
-        OpenGLHelpers.suppress_texture_warning()
         self.setGLOptions(glOptions)
         self.smooth = smooth
-        self._needUpdate = False
+        self.data = None
         self.m_texture = QtOpenGL.QOpenGLTexture(QtOpenGL.QOpenGLTexture.Target.Target2D)
         self.m_vbo_position = QtOpenGL.QOpenGLBuffer(QtOpenGL.QOpenGLBuffer.Type.VertexBuffer)
+        self.dirty_bits = DirtyFlag(0)
+        self.dirty_bits |= DirtyFlag.POSITION
         self.setParentItem(parentItem)
         self.setData(data)
 
+    def cleanupGL(self):
+        self.m_texture.destroy()
+        self.m_vbo_position.destroy()
+        self.dirty_bits = DirtyFlag.POSITION | DirtyFlag.TEXTURE
+
     def setData(self, data):
         self.data = data
-        self._needUpdate = True
+        self.dirty_bits |= DirtyFlag.TEXTURE
         self.update()
 
-    def _updateTexture(self):
+    def _updateTexture(self, context):
         tex = self.m_texture
 
         data = np.ascontiguousarray(self.data.transpose((1,0,2)))
@@ -51,7 +64,6 @@ class GLImageItem(GLGraphicsItem):
             tex.destroy()
 
         if not tex.isCreated():
-            context = QtGui.QOpenGLContext.currentContext()
             if context.isOpenGLES() and context.format().version() <= (2, 0):
                 # PyQt5 on Windows with QT_OPENGL=angle emulates OpenGL ES 2.0
                 texfmt = QtOpenGL.QOpenGLTexture.TextureFormat.RGBAFormat
@@ -72,74 +84,55 @@ class GLImageItem(GLGraphicsItem):
             QtOpenGL.QOpenGLTexture.PixelType.UInt8,
             data)
 
-        x, y = self.data.shape[:2]
-        pos = np.array([
-            [0, 0, 0, 0],
-            [x, 0, 1, 0],
-            [0, y, 0, 1],
-            [x, y, 1, 1],
-        ], dtype=np.float32)
-        vbo = self.m_vbo_position
-        if not vbo.isCreated():
-            vbo.create()
-        vbo.bind()
-        vbo.allocate(pos, pos.nbytes)
-        vbo.release()
+    def shaderProgram(self, view):
+        klass = self.__class__
+        cache_key = f'{klass.__module__}.{klass.__qualname__}'
 
-    @staticmethod
-    def getShaderProgram():
-        klass = GLImageItem
+        shaders_cache = self.shadersCache(view=view)
 
-        if klass._shaderProgram is not None:
-            return klass._shaderProgram
+        if (program := shaders_cache.get(cache_key)) is None:
+            program = OpenGLHelpers.compile_and_link(
+                view.context(),
+                sources_core=SHADER_CORE,
+                sources_legacy=SHADER_LEGACY,
+                attributes=dict(a_position=0, a_texcoord=1),
+            )
+            shaders_cache[cache_key] = program
 
-        ctx = QtGui.QOpenGLContext.currentContext()
-        fmt = ctx.format()
-
-        if ctx.isOpenGLES():
-            if fmt.version() >= (3, 0):
-                glsl_version = "#version 300 es\n"
-                sources = SHADER_CORE
-            else:
-                glsl_version = ""
-                sources = SHADER_LEGACY
-        else:
-            if fmt.version() >= (3, 1):
-                glsl_version = "#version 140\n"
-                sources = SHADER_CORE
-            else:
-                glsl_version = ""
-                sources = SHADER_LEGACY
-
-        program = QtOpenGL.QOpenGLShaderProgram()
-        for shader_type, src in sources.items():
-            if not program.addShaderFromSourceCode(shader_type, glsl_version + src):
-                raise RuntimeError(program.log())
-
-        program.bindAttributeLocation("a_position", 0)
-        program.bindAttributeLocation("a_texcoord", 1)
-        if not program.link():
-            raise RuntimeError(program.log())
-
-        klass._shaderProgram = program
         return program
 
     def paint(self):
-        if self._needUpdate:
-            self._updateTexture()
-            self._needUpdate = False
-        
+        if self.data is None:
+            return
+
+        if (view := self.view()) is None:
+            return
         self.setupGLState()
+        context = view.context()
+        glfn = self.glFunctions(view=view)
 
         mat_mvp = self.mvpMatrix()
+        x, y = self.data.shape[:2]
+        mat_mvp.scale(x, y)
 
-        glfn = self.glFunctions()
 
-        program = self.getShaderProgram()
+        if DirtyFlag.POSITION in self.dirty_bits:
+            pos = np.array([
+                [0, 0, 0, 0],
+                [1, 0, 1, 0],
+                [0, 1, 0, 1],
+                [1, 1, 1, 1],
+            ], dtype=np.uint8) * 255
+            OpenGLHelpers.upload_vbo(self.m_vbo_position, pos)
+        if DirtyFlag.TEXTURE in self.dirty_bits:
+            self._updateTexture(context)
+        self.dirty_bits = DirtyFlag(0)
+
+        program = self.shaderProgram(view)
         loc_pos, loc_tex = 0, 1
         self.m_vbo_position.bind()
-        program.setAttributeBuffer(loc_pos, GLC.GL_FLOAT, 0*4, 2, 4*4)
-        program.setAttributeBuffer(loc_tex, GLC.GL_FLOAT, 2*4, 2, 4*4)
+        program.setAttributeBuffer(loc_pos, GLC.GL_UNSIGNED_BYTE, 0*1, 2, 4*1)
+        program.setAttributeBuffer(loc_tex, GLC.GL_UNSIGNED_BYTE, 2*1, 2, 4*1)
         self.m_vbo_position.release()
         enabled_locs = [loc_pos, loc_tex]
 
@@ -162,7 +155,7 @@ class GLImageItem(GLGraphicsItem):
 
 
 SHADER_LEGACY = {
-    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : textwrap.dedent("""
         uniform mat4 u_mvp;
         attribute vec4 a_position;
         attribute vec2 a_texcoord;
@@ -171,8 +164,8 @@ SHADER_LEGACY = {
             gl_Position = u_mvp * a_position;
             v_texcoord = a_texcoord;
         }
-    """,
-    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : """
+    """),
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : textwrap.dedent("""
         #ifdef GL_ES
         precision mediump float;
         #endif
@@ -182,11 +175,11 @@ SHADER_LEGACY = {
         {
             gl_FragColor = texture2D(u_texture, v_texcoord);
         }
-    """,
+    """),
 }
 
 SHADER_CORE = {
-    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : textwrap.dedent("""
         uniform mat4 u_mvp;
         in vec4 a_position;
         in vec2 a_texcoord;
@@ -195,8 +188,8 @@ SHADER_CORE = {
             gl_Position = u_mvp * a_position;
             v_texcoord = a_texcoord;
         }
-    """,
-    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : """
+    """),
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : textwrap.dedent("""
         #ifdef GL_ES
         precision mediump float;
         #endif
@@ -207,5 +200,5 @@ SHADER_CORE = {
         {
             fragColor = texture(u_texture, v_texcoord);
         }
-    """,
+    """),
 }

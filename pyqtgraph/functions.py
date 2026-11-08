@@ -7,15 +7,16 @@ Distributed under MIT/X11 license. See license.txt for more information.
 import decimal
 import math
 import re
-import struct
 import sys
 import warnings
 from collections import OrderedDict
-from typing import TypeAlias, TypedDict
+from collections.abc import Sequence
+from typing import Any, Literal, TypedDict, Unpack, overload
 
 import numpy as np
 
-from . import Qt, debug, getConfigOption, reload
+from . import Qt, debug, reload
+from .arraytoline import arrayToQPath
 from .Qt import QT_LIB, QtCore, QtGui
 from .util.cupy_helper import getCupy
 
@@ -45,18 +46,18 @@ __all__ = [
 
 
 Colors = {
-    'b': QtGui.QColor(0,0,255,255),
-    'g': QtGui.QColor(0,255,0,255),
-    'r': QtGui.QColor(255,0,0,255),
-    'c': QtGui.QColor(0,255,255,255),
-    'm': QtGui.QColor(255,0,255,255),
-    'y': QtGui.QColor(255,255,0,255),
-    'k': QtGui.QColor(0,0,0,255),
-    'w': QtGui.QColor(255,255,255,255),
-    'd': QtGui.QColor(150,150,150,255),
-    'l': QtGui.QColor(200,200,200,255),
-    's': QtGui.QColor(100,100,150,255),
-}  
+    'b': QtGui.QColor("#0000ff"),  # blue        QColor(0,0,255,255)
+    'g': QtGui.QColor("#00ff00"),  # green       QColor(0,255,0,255)
+    'r': QtGui.QColor("#ff0000"),  # red         QColor(255,0,0,255)
+    'c': QtGui.QColor("#00ffff"),  # cyan        QColor(0,255,255,255)
+    'm': QtGui.QColor("#ff00ff"),  # magenta     QColor(255,0,255,255)
+    'y': QtGui.QColor("#ffff00"),  # yellow      QColor(255,255,0,255)
+    'k': QtGui.QColor("#000000"),  # black       QColor(0,0,0,255)
+    'w': QtGui.QColor("#ffffff"),  # white       QColor(255,255,255,255)
+    'd': QtGui.QColor("#969696"),  # dark gray   QColor(150,150,150,255)
+    'l': QtGui.QColor("#c8c8c8"),  # light gray  QColor(200,200,200,255)
+    's': QtGui.QColor("#646496"),  # slate       QColor(100,100,150,255)
+}
 
 SI_PREFIXES = 'yzafpnµm kMGTPEZY'
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
@@ -82,17 +83,46 @@ class HueKeywordArgs(TypedDict):
     sat: int
     alpha: int
 
-color_like: TypeAlias = (
-    QtGui.QColor 
-    | str 
-    | float
-    | int
-    | tuple[int, int, int]
-    | tuple[int, int, int, int]
-    | tuple[float, float, float]
-    | tuple[float, float, float, float]
-    | tuple[int, HueKeywordArgs]
+type color_like = (
+    QtGui.QColor
+    | Literal["r", "g", "b", "c", "m", "y", "k", "w", "d", "l", "s"]
+    | str  # '#RGB', '#RGBA', '#RRGGBB', '#RRGGBBAA' or any SVG color name
+    | float  # grey scale; 0.0-1.0
+    | int  # color index; see :func:`intColor() <pyqtgraph.intColor>`
+    | tuple[int, int, int]  # R, G, B; 0-255
+    | tuple[int, int, int, int]  # R, G, B, A; 0-255
+    | tuple[int, HueKeywordArgs]  # see :func:`intColor() <pyqtgraph.intColor>`
 )
+"""Parameters, accepted by :func:`mkColor() <pyqtgraph.mkColor>`"""
+
+
+class BrushStyleKeywordArgs(TypedDict, total=False):
+    """Keyword arguments of :func:`mkBrush() <pyqtgraph.mkBrush>` that apply regardless of how its color is specified"""
+
+    style: QtCore.Qt.BrushStyle
+
+
+class BrushKeywordArgs(BrushStyleKeywordArgs, total=False):
+    """Keyword arguments accepted by :func:`mkBrush() <pyqtgraph.mkBrush>` alongside a positional/`color=` color"""
+
+    color: color_like
+
+
+class PenStyleKeywordArgs(TypedDict, total=False):
+    """Keyword arguments of :func:`mkPen() <pyqtgraph.mkPen>` that apply regardless of how its stroke is specified"""
+
+    width: float
+    cosmetic: bool
+    style: QtCore.Qt.PenStyle
+    dash: Sequence[float]
+    capStyle: QtCore.Qt.PenCapStyle
+    joinStyle: QtCore.Qt.PenJoinStyle
+
+
+class PenKeywordArgs(PenStyleKeywordArgs, total=False):
+    """Keyword arguments accepted by :func:`mkPen() <pyqtgraph.mkPen>` alongside a positional/`color=` color"""
+
+    color: color_like
 
 
 def siScale(x, minVal=1e-25, allowUnicode=True, power:int|float=1):
@@ -316,26 +346,42 @@ class Color(QtGui.QColor):
         return (self.red, self.green, self.blue, self.alpha)[ind]()
 
 
-def mkColor(*args) -> QtGui.QColor:
+@overload
+def mkColor(color: color_like, /) -> QtGui.QColor: ...
+@overload
+def mkColor(r: int, g: int, b: int, a: int = ..., /) -> QtGui.QColor: ...
+@overload
+def mkColor(
+    *, hsv: tuple[float, float, float] | tuple[float, float, float, float]
+) -> QtGui.QColor: ...
+def mkColor(
+    *args: Any,
+    hsv: tuple[float, float, float] | tuple[float, float, float, float] | None = None,
+) -> QtGui.QColor:
     """
-    Convenience function for constructing QColor from a variety of argument 
+    Convenience function for constructing QColor from a variety of argument
     types. Accepted arguments are:
-    
-    ================ ================================================
-     'c'             one of: r, g, b, c, m, y, k, w or an SVG color keyword
-     R, G, B, [A]    integers 0-255
-     (R, G, B, [A])  tuple of integers 0-255
-     float           greyscale, 0.0-1.0
-     int             see :func:`intColor() <pyqtgraph.intColor>`
-     (int, hues)     see :func:`intColor() <pyqtgraph.intColor>`
-     "#RGB"         
-     "#RGBA"         
-     "#RRGGBB"       
-     "#RRGGBBAA"     
-     QColor          QColor instance; makes a copy.
-    ================ ================================================
+
+    ==================== ================================================
+     'c'                  one of: r, g, b, c, m, y, k, w or an SVG color keyword
+     R, G, B, [A]         integers 0-255
+     (R, G, B, [A])       tuple of integers 0-255
+     float                greyscale, 0.0-1.0
+     int                  see :func:`intColor() <pyqtgraph.intColor>`
+     (int, hues)          see :func:`intColor() <pyqtgraph.intColor>`
+     "#RGB"
+     "#RGBA"
+     "#RRGGBB"
+     "#RRGGBBAA"
+     QColor               QColor instance; makes a copy.
+     hsv=(H, S, V, [A])   floats 0.0-1.0, via :func:`hsvColor() <pyqtgraph.hsvColor>`
+    ==================== ================================================
+
+    If `hsv=` is given, it takes priority and ``*args`` is ignored.
     """
-    err = lambda: 'Not sure how to make a color from "%s"' % str(args)
+    if hsv is not None:
+        return hsvColor(*hsv)
+    err = lambda: f'Not sure how to make a color from "{args}"'
     if len(args) == 1:
         if isinstance(args[0], str):
             c = args[0]
@@ -383,51 +429,125 @@ def mkColor(*args) -> QtGui.QColor:
         r, g, b, a = args
     else:
         raise TypeError(err())
-    args = [int(a) if np.isfinite(a) else 0 for a in (r, g, b, a)]
-    return QtGui.QColor(*args)
+    rgba = [int(a) if np.isfinite(a) else 0 for a in (r, g, b, a)]
+    return QtGui.QColor(*rgba)
 
 
-def mkBrush(*args, **kwargs):
+def _resolveColorArg(args, kwargs):
     """
-    | Convenience function for constructing Brush.
-    | This function always constructs a solid brush and accepts the same arguments as :func:`mkColor() <pyqtgraph.mkColor>`
-    | Calling mkBrush(None) returns an invisible brush.
+    Resolve a color-like argument the same way for mkPen/mkBrush. Exactly one
+    of the following is used — whichever is highest in this list and was
+    actually given; the rest are ignored entirely, even if also given:
+
+      1. A positional argument — one value, or several forming an
+         (R, G, B, [A]) tuple.
+      2. The `hsv=` keyword (e.g. ``hsv=(hue, sat, val, [alpha])``),
+         converted via :func:`mkColor`.
+      3. The `color=` keyword.
+
+    Returns a resolved QColor, or None if none of the three were given.
     """
-    if 'color' in kwargs:
-        color = kwargs['color']
-    elif len(args) == 1:
+    hsv = kwargs.get('hsv', None)
+    color = kwargs.get('color', None)
+
+    if len(args) == 1:
+        # a lone `None` means "no pen"/"no brush" (handled by the caller,
+        # via the single-arg branch above it) rather than an actual color
+        return None if args[0] is None else mkColor(args[0])
+    if len(args) > 1:
+        return mkColor(args)
+    if hsv is not None:
+        return mkColor(hsv=hsv)
+    if color is not None:
+        return mkColor(color)
+    return None
+
+
+@overload
+def mkBrush(brush: QtGui.QBrush | BrushKeywordArgs | None, /) -> QtGui.QBrush: ...
+@overload
+def mkBrush(c: color_like = ..., /, **kwargs: Unpack[BrushKeywordArgs]) -> QtGui.QBrush: ...
+@overload
+def mkBrush(
+    r: int, g: int, b: int, a: int = ..., /, **kwargs: Unpack[BrushKeywordArgs]
+) -> QtGui.QBrush: ...
+@overload
+def mkBrush(*, hsv: tuple[float, float, float] | tuple[float, float, float, float], **kwargs: Unpack[BrushStyleKeywordArgs]) -> QtGui.QBrush: ...
+def mkBrush(*args: Any, **kwargs: Any) -> QtGui.QBrush:
+    """
+    Convenience function for constructing QBrush.
+
+    Examples::
+
+        mkBrush(color)
+        mkBrush(color, style=QtCore.Qt.BrushStyle.Dense1Pattern)
+        mkBrush(hsv=(0.5, 1, 1))
+        mkBrush({'color': "#FF0", 'style': ...})
+        mkBrush(None)   # invisible (NoBrush)
+
+    In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`.
+    See :func:`_resolveColorArg` for how a positional color, `hsv=`, and `color=` are prioritized against each other.
+    Calling mkBrush() with no usable color argument returns a default brush (mirrors mkPen()).
+    """
+    style = kwargs.get('style', None)
+
+    if len(args) == 1:
         arg = args[0]
+        if isinstance(arg, dict):
+            return mkBrush(**arg)
         if arg is None:
             return QtGui.QBrush(QtCore.Qt.BrushStyle.NoBrush)
         elif isinstance(arg, QtGui.QBrush):
-            return QtGui.QBrush(arg)
-        else:
-            color = arg
-    elif len(args) > 1:
-        color = args
-    return QtGui.QBrush(mkColor(color))
+            return QtGui.QBrush(arg)  ## return a copy of this brush
+
+    color = _resolveColorArg(args, kwargs) or mkColor('l')
+    brush = QtGui.QBrush(color)
+    if style is not None:
+        brush.setStyle(style)
+    return brush
 
 
-def mkPen(*args, **kwargs) -> QtGui.QPen:
+@overload
+def mkPen(pen: QtGui.QPen | PenKeywordArgs | None, /) -> QtGui.QPen: ...
+@overload
+def mkPen(c: color_like = ..., /, **kwargs: Unpack[PenKeywordArgs]) -> QtGui.QPen: ...
+@overload
+def mkPen(
+    r: int, g: int, b: int, a: int = ..., /, **kwargs: Unpack[PenKeywordArgs]
+) -> QtGui.QPen: ...
+@overload
+def mkPen(*, hsv: tuple[float, float, float] | tuple[float, float, float, float], **kwargs: Unpack[PenStyleKeywordArgs]) -> QtGui.QPen: ...
+@overload
+def mkPen(*, brush: QtGui.QBrush, **kwargs: Unpack[PenStyleKeywordArgs]) -> QtGui.QPen: ...
+def mkPen(*args: Any, **kwargs: Any) -> QtGui.QPen:
     """
-    Convenience function for constructing QPen. 
-    
+    Convenience function for constructing QPen.
+
     Examples::
-    
+
         mkPen(color)
         mkPen(color, width=2)
         mkPen(cosmetic=False, width=4.5, color='r')
         mkPen({'color': "#FF0", width: 2})
         mkPen(None)   # (no pen)
-    
-    In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`    """
-    color = kwargs.get('color', None)
+        mkPen(hsv=(0.5, 1, 1))
+        mkPen(brush=mkBrush('r', style=QtCore.Qt.BrushStyle.Dense1Pattern))
+        mkPen('r', width=4, capStyle=QtCore.Qt.PenCapStyle.RoundCap, joinStyle=QtCore.Qt.PenJoinStyle.RoundJoin)
+
+    In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`.
+    See :func:`_resolveColorArg` for how a positional color, `hsv=`, and `color=` are prioritized against each other.
+
+    `brush=` takes an arbitrary :func:`QBrush() <pyqtgraph.mkBrush>` to stroke with (a pattern, gradient, or
+    texture, not just a solid color) and takes priority over any color source when given.
+    """
     width = kwargs.get('width', 1)
     style = kwargs.get('style', None)
     dash = kwargs.get('dash', None)
     cosmetic = kwargs.get('cosmetic', True)
-    hsv = kwargs.get('hsv', None)
-    
+    brush = kwargs.get('brush', None)
+    capStyle = kwargs.get('capStyle', None)
+    joinStyle = kwargs.get('joinStyle', None)
+
     if len(args) == 1:
         arg = args[0]
         if isinstance(arg, dict):
@@ -436,31 +556,28 @@ def mkPen(*args, **kwargs) -> QtGui.QPen:
             return QtGui.QPen(arg)  ## return a copy of this pen
         elif arg is None:
             style = QtCore.Qt.PenStyle.NoPen
-        else:
-            color = arg
-    if len(args) > 1:
-        color = args
-        
-    if color is None:
-        color = mkColor('l')
-    if hsv is not None:
-        color = hsvColor(*hsv)
-    else:
-        color = mkColor(color)
-        
-    pen = QtGui.QPen(QtGui.QBrush(color), width)
+
+    if brush is None:
+        color = _resolveColorArg(args, kwargs) or mkColor('l')
+        brush = QtGui.QBrush(color)
+
+    pen = QtGui.QPen(brush, width)
     pen.setCosmetic(cosmetic)
     if style is not None:
         pen.setStyle(style)
     if dash is not None:
         pen.setDashPattern(dash)
+    if joinStyle is not None:
+        pen.setJoinStyle(joinStyle)
 
-    # for width > 1.0, we are drawing many short segments to emulate a
-    # single polyline. the default SquareCap style causes artifacts.
-    # these artifacts can be avoided by using RoundCap.
-    # this does have a performance penalty, so enable it only
-    # for thicker line widths where the artifacts are visible.
-    if width > 4.0:
+    if capStyle is not None:
+        pen.setCapStyle(capStyle)
+    elif width > 4.0:
+        # for width > 1.0, we are drawing many short segments to emulate a
+        # single polyline. the default SquareCap style causes artifacts.
+        # these artifacts can be avoided by using RoundCap.
+        # this does have a performance penalty, so enable it only
+        # for thicker line widths where the artifacts are visible.
         pen.setCapStyle(QtCore.Qt.PenCapStyle.RoundCap)
 
     return pen
@@ -1828,307 +1945,9 @@ def downsample(data, n, axis=0, xvals='subsample', *, nanPolicy='propagate'):
         raise ValueError(f"Keyword argument {nanPolicy=} must be one of {'propagate', 'omit'}.")
     return d2
 
-def _compute_backfill_indices(isfinite):
-    # the presence of inf/nans result in an empty QPainterPath being generated
-    # this behavior started in Qt 5.12.3 and was introduced in this commit
-    # https://github.com/qt/qtbase/commit/c04bd30de072793faee5166cff866a4c4e0a9dd7
-    # We therefore replace non-finite values
-
-    # credit: Divakar https://stackoverflow.com/a/41191127/643629
-    mask = ~isfinite
-    idx = np.arange(len(isfinite))
-    idx[mask] = -1
-    np.maximum.accumulate(idx, out=idx)
-    first = np.searchsorted(idx, 0)
-    if first < len(isfinite):
-        # Replace all non-finite entries from beginning of arr with the first finite one
-        idx[:first] = first
-        return idx
-    else:
-        return None
-
-
-def _arrayToQPath_all(x, y, finiteCheck):
-    n = x.shape[0]
-    if n == 0:
-        return QtGui.QPainterPath()
-
-    finite_idx = None
-    if finiteCheck:
-        isfinite = np.isfinite(x) & np.isfinite(y)
-        if not isfinite.all():
-            finite_idx = isfinite.nonzero()[0]
-            n = len(finite_idx)
-
-    if n < 2:
-        return QtGui.QPainterPath()
-
-    chunksize = 10000
-    numchunks = (n + chunksize - 1) // chunksize
-    minchunks = 3
-
-    if numchunks < minchunks:
-        # too few chunks, batching would be a pessimization
-        poly = create_qpolygonf(n)
-        arr = ndarray_from_qpolygonf(poly)
-
-        if finite_idx is None:
-            arr[:, 0] = x
-            arr[:, 1] = y
-        else:
-            arr[:, 0] = x[finite_idx]
-            arr[:, 1] = y[finite_idx]
-
-        path = QtGui.QPainterPath()
-        path.reserve(n)
-        path.addPolygon(poly)
-        return path
-
-    # at this point, we have numchunks >= minchunks
-
-    path = QtGui.QPainterPath()
-    path.reserve(n)
-    subpoly = QtGui.QPolygonF()
-    subpath = QtGui.QPainterPath()
-    for idx in range(numchunks):
-        sl = slice(idx*chunksize, min((idx+1)*chunksize, n))
-        currsize = sl.stop - sl.start
-        if currsize != subpoly.size():
-            if hasattr(subpoly, 'resize'):
-                subpoly.resize(currsize)
-            else:
-                subpoly.fill(QtCore.QPointF(), currsize)
-        subarr = ndarray_from_qpolygonf(subpoly)
-        if finite_idx is None:
-            subarr[:, 0] = x[sl]
-            subarr[:, 1] = y[sl]
-        else:
-            fiv = finite_idx[sl]  # view
-            subarr[:, 0] = x[fiv]
-            subarr[:, 1] = y[fiv]
-        subpath.clear()
-        subpath.addPolygon(subpoly)
-        path.connectPath(subpath)
-    return path
-
-
-def _arrayToQPath_finite(x, y, isfinite=None):
-    n = x.shape[0]
-    if n == 0:
-        return QtGui.QPainterPath()
-
-    if isfinite is None:
-        isfinite = np.isfinite(x) & np.isfinite(y)
-
-    path = QtGui.QPainterPath()
-    path.reserve(n)
-
-    sidx = np.nonzero(~isfinite)[0] + 1
-    # note: the chunks are views
-    xchunks = np.split(x, sidx)
-    ychunks = np.split(y, sidx)
-    chunks = list(zip(xchunks, ychunks))
-
-    # create a single polygon able to hold the largest chunk
-    maxlen = max(len(chunk) for chunk in xchunks)
-    subpoly = create_qpolygonf(maxlen)
-    subarr = ndarray_from_qpolygonf(subpoly)
-
-    # resize and fill do not change the capacity
-    if hasattr(subpoly, 'resize'):
-        subpoly_resize = subpoly.resize
-    else:
-        # PyQt will be less efficient
-        subpoly_resize = lambda n, v=QtCore.QPointF() : subpoly.fill(v, n)
-
-    # notes:
-    # - we backfill the non-finite in order to get the same image as the
-    #   old codepath on the CI. somehow P1--P2 gets rendered differently
-    #   from P1--P2--P2
-    # - we do not generate MoveTo(s) that are not followed by a LineTo,
-    #   thus the QPainterPath can be different from the old codepath's
-
-    # all chunks except the last chunk have a trailing non-finite
-    for xchunk, ychunk in chunks[:-1]:
-        lc = len(xchunk)
-        if lc <= 1:
-            # len 1 means we have a string of non-finite
-            continue
-        subpoly_resize(lc)
-        subarr[:lc, 0] = xchunk
-        subarr[:lc, 1] = ychunk
-        subarr[lc-1] = subarr[lc-2] # fill non-finite with its neighbour
-        path.addPolygon(subpoly)
-
-    # handle last chunk, which is either all-finite or empty
-    for xchunk, ychunk in chunks[-1:]:
-        lc = len(xchunk)
-        if lc <= 1:
-            # can't draw a line with just 1 point
-            continue
-        subpoly_resize(lc)
-        subarr[:lc, 0] = xchunk
-        subarr[:lc, 1] = ychunk
-        path.addPolygon(subpoly)
-
-    return path
-
-
-def arrayToQPath(x, y, connect='all', finiteCheck=True):
-    """
-    Convert an array of x,y coordinates to QPainterPath as efficiently as
-    possible. The *connect* argument may be 'all', indicating that each point
-    should be connected to the next; 'pairs', indicating that each pair of
-    points should be connected, or an array of int32 values (0 or 1) indicating
-    connections.
-    
-    Parameters
-    ----------
-    x : np.ndarray
-        x-values to be plotted of shape (N,)
-    y : np.ndarray
-        y-values to be plotted, must be same length as `x` of shape (N,)
-    connect : {'all', 'pairs', 'finite', (N,) ndarray}, optional
-        Argument detailing how to connect the points in the path. `all` will 
-        have sequential points being connected.  `pairs` generates lines
-        between every other point.  `finite` only connects points that are
-        finite.  If an ndarray is passed, containing int32 values of 0 or 1,
-        only values with 1 will connect to the previous point.  Def
-    finiteCheck : bool, default True
-        When false, the check for finite values will be skipped, which can
-        improve performance. If nonfinite values are present in `x` or `y`,
-        an empty QPainterPath will be generated.
-    
-    Returns
-    -------
-    QPainterPath
-        QPainterPath object to be drawn
-    
-    Raises
-    ------
-    ValueError
-        Raised when the connect argument has an invalid value placed within.
-
-    Notes
-    -----
-    A QPainterPath is generated through one of two ways.  When the connect
-    parameter is 'all', a QPolygonF object is created, and
-    ``QPainterPath.addPolygon()`` is called.  For other connect parameters
-    a ``QDataStream`` object is created and the QDataStream >> QPainterPath
-    operator is used to pass the data.  The memory format is as follows
-
-    .. code-block:
-        numVerts(i4)
-        0(i4)   x(f8)   y(f8)    <-- 0 means this vertex does not connect
-        1(i4)   x(f8)   y(f8)    <-- 1 means this vertex connects to the previous vertex
-        ...
-        cStart(i4)   fillRule(i4)
-    
-    see: https://github.com/qt/qtbase/blob/dev/src/gui/painting/qpainterpath.cpp
-
-    All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
-    This binary format may change in future versions of Qt
-    """
-
-    n = x.shape[0]
-    if n == 0:
-        return QtGui.QPainterPath()
-
-    connect_array = None
-    if isinstance(connect, np.ndarray):
-        # make connect argument contain only str type
-        connect_array, connect = connect, 'array'
-
-    isfinite = None
-
-    if connect == 'finite':
-        if not finiteCheck:
-            # if user specified to skip finite check, then we skip the heuristic
-            return _arrayToQPath_finite(x, y)
-
-        # otherwise use a heuristic
-        # if non-finite aren't that many, then use_qpolyponf
-        isfinite = np.isfinite(x) & np.isfinite(y)
-        nonfinite_cnt = n - np.sum(isfinite)
-        all_isfinite = nonfinite_cnt == 0
-        if all_isfinite:
-            # delegate to connect='all'
-            connect = 'all'
-            finiteCheck = False
-        elif nonfinite_cnt / n < 2 / 100:
-            return _arrayToQPath_finite(x, y, isfinite)
-        else:
-            # delegate to connect=ndarray
-            # finiteCheck=True, all_isfinite=False
-            connect = 'array'
-            connect_array = isfinite
-
-    if connect == 'all':
-        return _arrayToQPath_all(x, y, finiteCheck)
-
-    path = QtGui.QPainterPath()
-    path.reserve(n)
-
-    if getConfigOption('enableExperimental'):
-        backstore = None
-        arr = Qt.internals.get_qpainterpath_element_array(path, n)
-    else:
-        if Qt.internals.qbytearray_leaks():
-            backstore = bytearray(4 + n*20 + 8) # initialized to zero
-            struct.pack_into('>i', backstore, 0, n)
-            # cStart, fillRule (Qt.FillRule.OddEvenFill)
-            struct.pack_into('>ii', backstore, 4+n*20, 0, 0)
-        else:
-            backstore = QtCore.QByteArray()
-            backstore.resize(4 + n*20 + 8)      # contents uninitialized
-            backstore.replace(0, 4, struct.pack('>i', n))
-            # cStart, fillRule (Qt.FillRule.OddEvenFill)
-            backstore.replace(4+n*20, 8, struct.pack('>ii', 0, 0))
-
-        arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
-            count=n, offset=4)
-
-    backfill_idx = None
-    if finiteCheck:
-        if isfinite is None:
-            isfinite = np.isfinite(x) & np.isfinite(y)
-            all_isfinite = np.all(isfinite)
-        if not all_isfinite:
-            backfill_idx = _compute_backfill_indices(isfinite)
-
-    if backfill_idx is None:
-        arr['x'] = x
-        arr['y'] = y
-    else:
-        arr['x'] = x[backfill_idx]
-        arr['y'] = y[backfill_idx]
-
-    # decide which points are connected by lines
-    if connect == 'pairs':
-        mask = 1                # by default connect every 2nd point to every 1st one
-        if finiteCheck and not all_isfinite:
-            mask = isfinite[:len(x)//2 * 2]             # ensure even number of points
-            mask = mask[0::2] & mask[1::2]              # don't connect non-finite pairs
-        arr['c'][0::2] = 0
-        arr['c'][1::2] = mask
-    elif connect == 'array':
-        # Let's call a point with either x or y being nan is an invalid point.
-        # A point will anyway not connect to an invalid point regardless of the
-        # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
-        # the next point of an invalid point.
-        arr['c'][:1] = 0  # the first vertex has no previous vertex to connect
-        arr['c'][1:] = connect_array[:-1]
-    else:
-        raise ValueError('connect argument must be "all", "pairs", "finite", or array')
-
-    if isinstance(backstore, QtCore.QByteArray):
-        ds = QtCore.QDataStream(backstore)
-        ds >> path
-    elif isinstance(backstore, bytearray):
-        qba = QtCore.QByteArray(backstore)  # a copy is made here
-        ds = QtCore.QDataStream(qba)
-        ds >> path
-    return path
+# arrayToQPath lives in arraytoline; re-exported here so that it stays
+# available as pyqtgraph.functions.arrayToQPath (and pyqtgraph.arrayToQPath)
+# with its documentation intact.
 
 def ndarray_from_qpolygonf(polyline):
     # polyline.data() will be None if the pointer was null.
@@ -2137,13 +1956,7 @@ def ndarray_from_qpolygonf(polyline):
     return np.frombuffer(vp, dtype=np.float64).reshape((-1, 2))
 
 def create_qpolygonf(size):
-    polyline = QtGui.QPolygonF()
-    if hasattr(polyline, 'resize'):
-        # (PySide) and (PyQt6 >= 6.3.1)
-        polyline.resize(size)
-    else:
-        polyline.fill(QtCore.QPointF(), size)
-    return polyline
+    return Qt.internals.QPolygonBuffer(size).qpolygon()
 
 def arrayToQPolygonF(x, y):
     """

@@ -110,6 +110,14 @@ cfg = {
         },
     },
 
+    'brush': {
+        'Brush Information': {
+            'type': 'str',
+            'value': 'Click the button to see options',
+            'readonly': True,
+        },
+    },
+
     'slider': {
         'step': {
             'type': 'float',

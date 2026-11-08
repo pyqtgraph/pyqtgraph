@@ -1,10 +1,13 @@
 import enum
 import math
+import textwrap
 
 import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
 from ...Qt import OpenGLConstants as GLC
+from ...Qt import OpenGLHelpers
+from ...Qt.OpenGLHelpers import upload_vbo
 from ..GLGraphicsItem import GLGraphicsItem
 
 __all__ = ['GLScatterPlotItem']
@@ -18,8 +21,6 @@ class DirtyFlag(enum.Flag):
 
 class GLScatterPlotItem(GLGraphicsItem):
     """Draws points at a list of 3D positions."""
-    
-    _shaderProgram = None
 
     def __init__(self, parentItem=None, **kwargs):
         super().__init__()
@@ -37,6 +38,12 @@ class GLScatterPlotItem(GLGraphicsItem):
 
         self.setParentItem(parentItem)
         self.setData(**kwargs)
+
+    def cleanupGL(self):
+        self.m_vbo_position.destroy()
+        self.m_vbo_color.destroy()
+        self.m_vbo_size.destroy()
+        self.dirty_bits = DirtyFlag.POSITION | DirtyFlag.COLOR | DirtyFlag.SIZE
 
     def setData(self, **kwargs):
         """
@@ -83,81 +90,47 @@ class GLScatterPlotItem(GLGraphicsItem):
         self.pxMode = kwargs.get('pxMode', self.pxMode)
         self.update()
 
-    def upload_vbo(self, vbo, arr):
-        if arr is None:
-            vbo.destroy()
-            return
-        if not vbo.isCreated():
-            vbo.create()
-        vbo.bind()
-        if vbo.size() != arr.nbytes:
-            vbo.allocate(arr, arr.nbytes)
-        else:
-            vbo.write(0, arr, arr.nbytes)
-        vbo.release()
+    def shaderProgram(self, view):
+        klass = self.__class__
+        cache_key = f'{klass.__module__}.{klass.__qualname__}'
 
-    @staticmethod
-    def getShaderProgram():
-        klass = GLScatterPlotItem
+        shaders_cache = self.shadersCache(view=view)
 
-        if klass._shaderProgram is not None:
-            return klass._shaderProgram
+        if (program := shaders_cache.get(cache_key)) is None:
+            program = OpenGLHelpers.compile_and_link(
+                view.context(),
+                sources_core=SHADER_CORE,
+                sources_legacy=SHADER_LEGACY,
+                attributes=dict(a_position=0, a_color=1, a_size=2),
+            )
+            shaders_cache[cache_key] = program
 
-        ctx = QtGui.QOpenGLContext.currentContext()
-        fmt = ctx.format()
-
-        if ctx.isOpenGLES():
-            if fmt.version() >= (3, 0):
-                glsl_version = "#version 300 es\n"
-                sources = SHADER_CORE
-            else:
-                glsl_version = "#version 100\n"
-                sources = SHADER_LEGACY
-        else:
-            if fmt.version() >= (3, 1):
-                glsl_version = "#version 140\n"
-                sources = SHADER_CORE
-            else:
-                glsl_version = "#version 120\n"
-                sources = SHADER_LEGACY
-
-        program = QtOpenGL.QOpenGLShaderProgram()
-        for shader_type, src in sources.items():
-            if not program.addShaderFromSourceCode(shader_type, glsl_version + src):
-                raise RuntimeError(program.log())
-
-        # bind generic vertex attribs 0, 1 and 2 to "a_position", "a_color"
-        # and "a_size" so that they definitely get enabled later.
-        program.bindAttributeLocation("a_position", 0)
-        program.bindAttributeLocation("a_color", 1)
-        program.bindAttributeLocation("a_size", 2)
-        if not program.link():
-            raise RuntimeError(program.log())
-
-        klass._shaderProgram = program
         return program
 
     def paint(self):
         if self.pos is None:
             return
 
+        if (view := self.view()) is None:
+            return
         self.setupGLState()
+        context = view.context()
+        glfn = self.glFunctions(view=view)
 
         mat_mvp = self.mvpMatrix()
         mat_modelview = self.modelViewMatrix()
 
-        view = self.view()
         tan_half_fov = math.tan(math.radians(0.5 * view.opts["fov"]))
 
-        context = QtGui.QOpenGLContext.currentContext()
-        glfn = self.glFunctions()
 
         if DirtyFlag.POSITION in self.dirty_bits:
-            self.upload_vbo(self.m_vbo_position, self.pos)
+            upload_vbo(self.m_vbo_position, self.pos)
         if DirtyFlag.COLOR in self.dirty_bits:
-            self.upload_vbo(self.m_vbo_color, self.color)
+            if isinstance(self.color, np.ndarray):
+                upload_vbo(self.m_vbo_color, self.color)
         if DirtyFlag.SIZE in self.dirty_bits:
-            self.upload_vbo(self.m_vbo_size, self.size)
+            if isinstance(self.size, np.ndarray):
+                upload_vbo(self.m_vbo_size, self.size)
         self.dirty_bits = DirtyFlag(0)
 
         if not context.isOpenGLES():
@@ -166,7 +139,7 @@ class GLScatterPlotItem(GLGraphicsItem):
 
             glfn.glEnable(GLC.GL_PROGRAM_POINT_SIZE)
 
-        program = self.getShaderProgram()
+        program = self.shaderProgram(view)
 
         enabled_locs = []
 
@@ -247,7 +220,7 @@ def _is_compatibility_profile(context):
 ##
 
 SHADER_LEGACY = {
-    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : textwrap.dedent("""
         uniform vec2 u_scale;
 
         uniform mat4 u_modelview;
@@ -274,8 +247,8 @@ SHADER_LEGACY = {
                 gl_PointSize /= pxSize;
             }
         }
-    """,
-    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : """
+    """),
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : textwrap.dedent("""
         #ifdef GL_ES
         precision mediump float;
         #endif
@@ -287,11 +260,11 @@ SHADER_LEGACY = {
             if (dot(xy, xy) <= 1.0) gl_FragColor = v_color;
             else discard;
         }
-    """
+    """)
 }
 
 SHADER_CORE = {
-    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : textwrap.dedent("""
         uniform vec2 u_scale;
 
         uniform mat4 u_modelview;
@@ -318,8 +291,8 @@ SHADER_CORE = {
                 gl_PointSize /= pxSize;
             }
         }
-    """,
-    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : """
+    """),
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : textwrap.dedent("""
         #ifdef GL_ES
         precision mediump float;
         #endif
@@ -332,5 +305,5 @@ SHADER_CORE = {
             if (dot(xy, xy) <= 1.0) fragColor = v_color;
             else discard;
         }
-    """
+    """)
 }

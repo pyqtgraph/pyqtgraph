@@ -13,7 +13,7 @@ from .. import functions as fn
 from ..debug import printExc
 from ..graphicsItems.GraphicsObject import GraphicsObject
 from ..Qt import QtCore, QtGui, QtWidgets
-from . import FlowchartCtrlTemplate_generic as FlowchartCtrlTemplate
+from . import FlowchartCtrlTemplate
 from . import FlowchartGraphicsView
 from .library import LIBRARY
 from .Node import Node

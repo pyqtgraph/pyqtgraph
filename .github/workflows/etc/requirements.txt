@@ -11,11 +11,14 @@ scipy==1.18.1
 numba==0.67.0; python_version == '3.12'
 
 # supplimental tools
-matplotlib==3.11.1
+matplotlib==3.11.2
 h5py==3.16.0
 
 # testing
-pytest==9.1.1
+pytest==9.2.0
 pytest-qt==4.5.0
 pytest-xdist==3.8.0
 pytest-xvfb==3.1.1; sys_platform == 'linux'
+
+# type checking
+pyright==1.1.414

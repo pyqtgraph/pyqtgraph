@@ -66,12 +66,12 @@ class SVGExporter(Exporter):
     def widthChanged(self):
         sr = self.getSourceRect()
         ar = sr.height() / sr.width()
-        self.params.param('height').setValue(self.params['width'] * ar, blockSignal=self.heightChanged)
+        self.params.param('height').setValue(self.params['width'] * ar, blockSlots=self.heightChanged)
         
     def heightChanged(self):
         sr = self.getSourceRect()
         ar = sr.width() / sr.height()
-        self.params.param('width').setValue(self.params['height'] * ar, blockSignal=self.widthChanged)
+        self.params.param('width').setValue(self.params['height'] * ar, blockSlots=self.widthChanged)
         
     def parameters(self):
         return self.params

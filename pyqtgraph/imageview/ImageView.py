@@ -29,7 +29,7 @@ from ..graphicsItems.ViewBox import ViewBox
 from ..graphicsItems.VTickGroup import VTickGroup
 from ..Qt import QtCore, QtGui, QtWidgets
 from ..SignalProxy import SignalProxy
-from . import ImageViewTemplate_generic as ui_template
+from . import ImageViewTemplate as ui_template
 
 try:
     from bottleneck import nanmax, nanmin
@@ -181,7 +181,8 @@ class ImageView(QtWidgets.QWidget):
             self.imageItem = ImageItem()
         else:
             self.imageItem = imageItem
-            self.setImage(imageItem.image, autoRange=False, autoLevels=False, transform=imageItem.transform())
+            if imageItem.image is not None:
+                self.setImage(imageItem.image, autoRange=False, autoLevels=False, transform=imageItem.transform())
         self.view.addItem(self.imageItem)
         self.currentIndex = 0
         

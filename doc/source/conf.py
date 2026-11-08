@@ -10,11 +10,11 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+import datetime
 import importlib.util
 import os
 import sys
 import time
-import datetime
 
 from sphinx.application import Sphinx
 
@@ -96,6 +96,8 @@ napoleon_type_aliases = {
     "np.ndarray": ":class:`numpy.ndarray`",
     'array_like': ':term:`array_like`',
     'color_like': ':obj:`~pyqtgraph.functions.color_like`',
+    'point_like': ':obj:`~pyqtgraph.Point.point_like`',
+    'vector_like': ':obj:`~pyqtgraph.Vector.vector_like`',
 }
 
 # makes things far more legible

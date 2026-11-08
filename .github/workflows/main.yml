@@ -98,7 +98,37 @@ jobs:
         run: pip install mypy
       - name: Run mypy
         run: mypy
-  
+
+  run-pyright:
+    name: pyright (${{ matrix.qt-lib }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - qt-lib: PyQt6
+            qt-packages: PyQt6
+          - qt-lib: PySide6
+            qt-packages: PySide6-Essentials
+          - qt-lib: PyQt5
+            # the stubs shipped with PyQt5 leave the Qt classes untyped
+            qt-packages: PyQt5 PyQt5-stubs==5.15.6.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install Dependencies
+        run: pip install -r .github/workflows/etc/requirements.txt ${{ matrix.qt-packages }}
+      - name: Run pyright on the fully annotated files
+        # the list of files is the `strict` setting of [tool.pyright] in pyproject.toml
+        run: |
+          files=$(python -c "import tomllib; print(' '.join(tomllib.load(open('pyproject.toml', 'rb'))['tool']['pyright']['strict']))")
+          pyright $files
+
   analyze:
     name: analyze
     runs-on: ubuntu-latest
@@ -120,14 +150,14 @@ jobs:
         run: |
           python -m pip install PyQt6 numpy scipy
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4.37.8
+        uses: github/codeql-action/init@v4.39.2
         with:
           languages: "python"
           queries: +security-and-quality
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v4.37.8
+        uses: github/codeql-action/autobuild@v4.39.2
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4.37.8
+        uses: github/codeql-action/analyze@v4.39.2
 
   tests-pip:
     runs-on: ${{ matrix.os }}

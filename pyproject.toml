@@ -144,6 +144,12 @@ exclude = '(Template|__init__.py)'
 [tool.pyright]
 pythonVersion = "3.12"
 include = ["pyqtgraph"]
+# Fully annotated files: checked in strict mode, and by the "run-pyright" CI job.
+# Add a file here once its annotations are complete.
+strict = [
+  "pyqtgraph/Point.py",
+  "pyqtgraph/Vector.py",
+]
 strictListInference = true
 strictDictionaryInference = true
 strictSetInference = true
@@ -183,4 +189,3 @@ exclude = [ # don't report on objects that match any of these regex
 override_GL06 = [
   'Signals', # allow sections to start with "Signals"
 ]
-

@@ -1,9 +1,12 @@
 import enum
+import textwrap
 
 import numpy as np
 
 from ...Qt import QtGui, QtOpenGL
 from ...Qt import OpenGLConstants as GLC
+from ...Qt import OpenGLHelpers
+from ...Qt.OpenGLHelpers import upload_vbo
 from ... import functions as fn
 from ..GLGraphicsItem import GLGraphicsItem
 
@@ -17,8 +20,6 @@ class DirtyFlag(enum.Flag):
 
 class GLLinePlotItem(GLGraphicsItem):
     """Draws line plots in 3D."""
-
-    _shaderProgram = None
 
     def __init__(self, parentItem=None, **kwargs):
         """All keyword arguments are passed to setData()"""
@@ -37,6 +38,11 @@ class GLLinePlotItem(GLGraphicsItem):
 
         self.setParentItem(parentItem)
         self.setData(**kwargs)
+
+    def cleanupGL(self):
+        self.m_vbo_position.destroy()
+        self.m_vbo_color.destroy()
+        self.dirty_bits = DirtyFlag.POSITION | DirtyFlag.COLOR
     
     def setData(self, **kwargs):
         """
@@ -85,76 +91,43 @@ class GLLinePlotItem(GLGraphicsItem):
 
         self.update()
 
-    def upload_vbo(self, vbo, arr):
-        if arr is None:
-            vbo.destroy()
-            return
-        if not vbo.isCreated():
-            vbo.create()
-        vbo.bind()
-        if vbo.size() != arr.nbytes:
-            vbo.allocate(arr, arr.nbytes)
-        else:
-            vbo.write(0, arr, arr.nbytes)
-        vbo.release()
+    def shaderProgram(self, view):
+        klass = self.__class__
+        cache_key = f'{klass.__module__}.{klass.__qualname__}'
 
-    @staticmethod
-    def getShaderProgram():
-        klass = GLLinePlotItem
+        shaders_cache = self.shadersCache(view=view)
 
-        if klass._shaderProgram is not None:
-            return klass._shaderProgram
+        if (program := shaders_cache.get(cache_key)) is None:
+            program = OpenGLHelpers.compile_and_link(
+                view.context(),
+                sources_core=SHADER_CORE,
+                sources_legacy=SHADER_LEGACY,
+                attributes=dict(a_position=0, a_color=1),
+            )
+            shaders_cache[cache_key] = program
 
-        ctx = QtGui.QOpenGLContext.currentContext()
-        fmt = ctx.format()
-
-        if ctx.isOpenGLES():
-            if fmt.version() >= (3, 0):
-                glsl_version = "#version 300 es\n"
-                sources = SHADER_CORE
-            else:
-                glsl_version = ""
-                sources = SHADER_LEGACY
-        else:
-            if fmt.version() >= (3, 1):
-                glsl_version = "#version 140\n"
-                sources = SHADER_CORE
-            else:
-                glsl_version = ""
-                sources = SHADER_LEGACY
-
-        program = QtOpenGL.QOpenGLShaderProgram()
-        for shader_type, src in sources.items():
-            if not program.addShaderFromSourceCode(shader_type, glsl_version + src):
-                raise RuntimeError(program.log())
-
-        # bind generic vertex attribs 0 and 1 to "a_position" and "a_color"
-        # so that they definitely get enabled later.
-        program.bindAttributeLocation("a_position", 0)
-        program.bindAttributeLocation("a_color", 1)
-        if not program.link():
-            raise RuntimeError(program.log())
-
-        klass._shaderProgram = program
         return program
 
     def paint(self):
         if self.pos is None:
             return
+
+        if (view := self.view()) is None:
+            return
         self.setupGLState()
+        context = view.context()
+        glfn = self.glFunctions(view=view)
 
         mat_mvp = self.mvpMatrix()
 
-        context = QtGui.QOpenGLContext.currentContext()
-        glfn = self.glFunctions()
-
         if DirtyFlag.POSITION in self.dirty_bits:
-            self.upload_vbo(self.m_vbo_position, self.pos)
+            upload_vbo(self.m_vbo_position, self.pos)
         if DirtyFlag.COLOR in self.dirty_bits:
-            self.upload_vbo(self.m_vbo_color, self.color)
+            if isinstance(self.color, np.ndarray):
+                upload_vbo(self.m_vbo_color, self.color)
         self.dirty_bits = DirtyFlag(0)
 
-        program = self.getShaderProgram()
+        program = self.shaderProgram(view)
 
         enabled_locs = []
 
@@ -216,7 +189,7 @@ class GLLinePlotItem(GLGraphicsItem):
 
 
 SHADER_LEGACY = {
-    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : textwrap.dedent("""
         uniform mat4 u_mvp;
         attribute vec4 a_position;
         attribute vec4 a_color;
@@ -225,8 +198,8 @@ SHADER_LEGACY = {
             v_color = a_color;
             gl_Position = u_mvp * a_position;
         }
-    """,
-    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : """
+    """),
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : textwrap.dedent("""
         #ifdef GL_ES
         precision mediump float;
         #endif
@@ -234,11 +207,11 @@ SHADER_LEGACY = {
         void main() {
             gl_FragColor = v_color;
         }
-    """,
+    """),
 }
 
 SHADER_CORE = {
-    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : """
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Vertex : textwrap.dedent("""
         uniform mat4 u_mvp;
         in vec4 a_position;
         in vec4 a_color;
@@ -247,8 +220,8 @@ SHADER_CORE = {
             v_color = a_color;
             gl_Position = u_mvp * a_position;
         }
-    """,
-    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : """
+    """),
+    QtOpenGL.QOpenGLShader.ShaderTypeBit.Fragment : textwrap.dedent("""
         #ifdef GL_ES
         precision mediump float;
         #endif
@@ -257,5 +230,5 @@ SHADER_CORE = {
         void main() {
             fragColor = v_color;
         }
-    """,
+    """),
 }

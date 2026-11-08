@@ -115,6 +115,8 @@ try:
     sys.stdout.flush()
     pg.Qt.QtCore.QTimer.singleShot(1000, pg.Qt.QtWidgets.QApplication.quit)
     pg.exec()
+    # close windows while the example's globals still exist
+    pg.Qt.QtWidgets.QApplication.closeAllWindows()
     names = [x for x in dir({1}) if not x.startswith('_')]
     for name in names:
         delattr({1}, name)

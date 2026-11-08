@@ -57,7 +57,7 @@ class GLGridPlaneItem(GLGraphicsItem):
         self.elevation_range: tuple | None = None
 
         self._mesh = GLMeshItem(
-            parentItem=self, computeNormals=False, polygonOffset=True
+            parentItem=self, smooth=False, computeNormals=False, polygonOffset=True
         )
 
         self._lineplot = GLLinePlotItem(

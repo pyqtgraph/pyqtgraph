@@ -3,7 +3,6 @@ from ..Parameter import PARAM_TYPES, registerParameterItemType
 from ... import functions as fn
 from ...Qt import QtCore, QtWidgets
 from ...SignalProxy import SignalProxy
-from ..ParameterItem import ParameterItem
 from . import BoolParameterItem, SimpleParameter
 from .basetypes import Emitter, GroupParameter, GroupParameterItem
 from .list import ListParameter
@@ -36,12 +35,8 @@ class ChecklistParameterItem(GroupParameterItem):
         self.metaBtns['default'] = self.makeCtrlButton()
         self.metaBtnLayout.addWidget(self.metaBtns['default'])
 
-    def treeWidgetChanged(self):
-        ParameterItem.treeWidgetChanged(self)
-        tw = self.treeWidget()
-        if tw is None:
-            return
-        tw.setItemWidget(self, 1, self.metaBtnWidget)
+    def valueColumnWidget(self):
+        return self.metaBtnWidget
 
     def selectAllClicked(self):
         # timer stop: see explanation on param.setToDefault()
@@ -227,7 +222,7 @@ class ChecklistParameter(GroupParameter):
         if 'delay' in opts:
             self.valChangingProxy.setDelay(opts['delay'])
 
-    def setValue(self, value, blockSignal=None):
+    def setValue(self, value, blockSignal=None, blockSlots=None):
         self.targetValue = value
         if not isinstance(value, list):
             value = [value]
@@ -249,8 +244,8 @@ class ChecklistParameter(GroupParameter):
         for chParam in self:
             checked = chParam.name() in names
             # Will emit at the end, so no problem discarding existing changes
-            chParam.setValue(checked, self._onChildChanging)
-        super().setValue(valueToSet, blockSignal)
+            chParam.setValue(checked, blockSlots=self._onChildChanging)
+        super().setValue(valueToSet, blockSignal, blockSlots)
 
     def _intersectionWithLimits(self, values: list):
         """

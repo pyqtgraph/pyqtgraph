@@ -1,5 +1,7 @@
 __all__ = ['GraphicsLayout']
 
+import warnings
+
 from .. import functions as fn
 from ..Qt import QtCore, QtWidgets
 from .GraphicsWidget import GraphicsWidget
@@ -42,6 +44,19 @@ class GraphicsLayout(GraphicsWidget):
         #ret = GraphicsWidget.resizeEvent(self, ev)
         #print self.pos(), self.mapToDevice(self.rect().topLeft())
         #return ret
+
+    @property
+    def layout(self):
+        warnings.warn(
+            """GraphicsLayout.layout access is deprecated and will be removed soon.  For
+            continuous access, access the layout via GraphicsLayout.layout_.  In future
+            versions of pyqtgraph, the layout will be accessed via
+            GraphicsLayout.layout(), matching the Qt API.
+            """,
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self.layout_
 
     def setBorder(self, *args, **kwargs):
         """

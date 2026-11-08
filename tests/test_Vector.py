@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 import pyqtgraph as pg
@@ -76,3 +77,14 @@ def test_Vector_interface():
     v1 = pg.Vector(1, 0)
     v2 = pg.Vector(1, 1)
     assert abs(v1.angle(v2) - 45) < 0.001
+
+
+@pytest.mark.parametrize("other", [
+    [1, 1],
+    (1, 1, 0),
+    np.array([1.0, 1.0]),
+    QtCore.QPointF(1, 1),
+])
+def test_Vector_angle_vector_like(other):
+    v = pg.Vector(1, 0)
+    assert abs(v.angle(other) - 45) < 0.001

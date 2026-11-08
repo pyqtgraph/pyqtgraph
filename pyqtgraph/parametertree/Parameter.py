@@ -2,6 +2,7 @@ import re
 import warnings
 import weakref
 from collections import OrderedDict
+from collections.abc import Iterable
 
 from .. import functions as fn
 from ..Qt import QtCore
@@ -374,17 +375,65 @@ class Parameter(QtCore.QObject):
                 return None
         return path
 
-    def setValue(self, value, blockSignal=None):
+    def setValue(self, value, blockSignal=None, blockSlots=None):
         """
         Set the value of this Parameter; return the actual value that was set.
         (this may be different from the value that was requested)
+
+        Parameters
+        ----------
+        value
+            The new value to set.
+        blockSignal : bool
+            If True, ``sigValueChanged`` will not be emitted at all.
+
+            .. deprecated:: 0.15.0
+                Passing a callable here to block a single slot is deprecated;
+                use ``blockSlots`` instead. Support for this will be removed
+                in a future release.
+        blockSlots : callable or iterable of callables, optional
+            One or more slots to temporarily disconnect from ``sigValueChanged``
+            before emitting it, then reconnect afterward. Use this to avoid
+            recursion when a slot connected to this parameter is itself
+            responsible for the value change. Slots that are not currently
+            connected are silently ignored (and are not reconnected).
         """
+        if callable(blockSignal):
+            warnings.warn(
+                "Passing a callable as `blockSignal` to Parameter.setValue() is "
+                "deprecated and will be removed in a future release. "
+                "Use `blockSlots` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            blockSlots = blockSignal
+            blockSignal = False
+
         value = self._interpretValue(value)
         if fn.eq(self.opts.get('value', None), value):
             return value
         self._modifiedSinceReset = True
         self.opts['value'] = value
-        if not blockSignal:
+
+        if blockSignal:
+            pass  # whole signal is suppressed; no need to disconnect individual slots
+        elif blockSlots:
+            slots = blockSlots if isinstance(blockSlots, Iterable) else [blockSlots]
+            for slot in slots:
+                if not callable(slot):
+                    raise TypeError(
+                        f"blockSlots must be a callable or an iterable of "
+                        f"callables, got {slot!r}"
+                    )
+            disconnected = [
+                slot for slot in slots if fn.disconnect(self.sigValueChanged, slot)
+            ]
+            try:
+                self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
+            finally:
+                for slot in disconnected:
+                    self.sigValueChanged.connect(slot)
+        else:
             self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
 
         return self.opts['value']
@@ -879,7 +928,10 @@ class Parameter(QtCore.QObject):
         self.sigOptionsChanged.emit(self, {'visible': s})
 
 
-    def treeChangeBlocker(self):
+    def treeChangeBlocker(self,
+                          keep: set[str] = None,
+                          dedupe=False,
+                          emitter: 'Parameter'=None):
         """
         Return an object that can be used to temporarily block and accumulate
         sigTreeStateChanged signals. This is meant to be used when numerous changes are 
@@ -892,8 +944,39 @@ class Parameter(QtCore.QObject):
                 param.addChild(...)
                 param.removeChild(...)
                 param.setValue(...)
+
+        If `keep` and/or `dedupe` are given, the accumulated changes are reduced
+        through :func:`coalesceTreeChanges` before being emitted:
+
+        * `keep` restricts the emitted changes to the given set of change-type
+          strings (e.g. ``{'value'}``).
+        * `dedupe` collapses repeated changes to the same (param, changeType) pair
+          down to only the most recent one -- useful for high-frequency updates
+          such as a slider drag::
+
+            with param.treeChangeBlocker(dedupe=True):
+                for v in drag_values:
+                    param.setValue(v)
+
+        * `emitter` lets the final signal be raised from a different Parameter than
+          the one the changes were made on -- e.g. so a whole tree looks like it
+          reported the change from its root::
+
+            with param.treeChangeBlocker(emitter=root):
+                param.setValue(...)
         """
-        return SignalBlocker(self.blockTreeChangeSignal, self.unblockTreeChangeSignal)
+        def exitFn():
+            self.blockTreeChangeEmit -= 1
+            if self.blockTreeChangeEmit == 0:
+                changes = self.treeStateChanges
+                self.treeStateChanges = []
+                if keep is not None or dedupe:
+                    changes = coalesceTreeChanges(changes, keep=keep, dedupe=dedupe)
+                if len(changes) > 0:
+                    target = self if emitter is None else emitter
+                    target.sigTreeStateChanged.emit(target, changes)
+
+        return SignalBlocker(self.blockTreeChangeSignal, exitFn)
 
     def blockTreeChangeSignal(self):
         """
@@ -944,4 +1027,37 @@ class SignalBlocker(object):
         
     def __exit__(self, exc_type, exc_value, tb):
         self.exitFn()
-    
+
+
+def coalesceTreeChanges(changes, keep: set[str] = None, dedupe=False):
+    """
+    Reduce a list of (param, changeType, data) tuples as delivered by
+    sigTreeStateChanged / accumulated in Parameter.treeStateChanges.
+
+    keep    : optional set of changeType enums( or strings) to retain (e.g. {'value', 'limits'}).
+              None keeps every change type.
+    dedupe  : if True, only the last entry for each (param, changeType) pair is kept,
+              in the position it last occurred. Dict-shaped payloads (e.g. 'options'
+              fragments like {'readonly': True}) are merged key-by-key instead of being
+              replaced outright, since each such fragment only carries the keys that
+              changed in that one call, not the full options state.
+    """
+    if keep is not None:
+        changes = [c for c in changes if c[1] in keep]
+
+    if not dedupe:
+        return changes
+
+    last = {}
+    order = []
+    for param, changeType, data in changes:
+        key = (param, changeType)
+        if key not in last:
+            order.append(key)
+            last[key] = data
+        elif isinstance(data, dict) and isinstance(last[key], dict):
+            last[key] = {**last[key], **data}
+        else:
+            last[key] = data
+    return [(p, t, last[(p, t)]) for (p, t) in order]
+

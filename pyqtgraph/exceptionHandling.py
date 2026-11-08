@@ -96,7 +96,7 @@ class ExceptionHandler(object):
 
             ## call original exception handler first (prints exception)
             global callbacks, clear_tracebacks
-            header = "===== %s =====" % str(time.strftime("%Y.%m.%d %H:%m:%S", time.localtime(time.time())))
+            header = "===== %s =====" % str(time.strftime("%Y.%m.%d %H:%M:%S", time.localtime(time.time())))
             try:
                 print(header)
             except Exception:

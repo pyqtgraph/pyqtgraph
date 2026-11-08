@@ -81,7 +81,11 @@ def reloadAll(prefix=None, debug=False):
             continue
 
         # if source file is newer than cache file, then it needs to be reloaded.
-        pyc = getattr(mod, '__cached__', py + 'c')
+        # Prefer ``__spec__.cached`` as ``__cached__`` is deprecated since
+        # Python 3.13 and is no longer set from Python 3.15 onwards (gh-97879).
+        pyc = getattr(getattr(mod, '__spec__', None), 'cached', None)
+        if pyc is None:
+            pyc = getattr(mod, '__cached__', py + 'c')
         if not os.path.isfile(pyc):
             ret[modName] = (False, 'code has no pyc file to compare')
             continue

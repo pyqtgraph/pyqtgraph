@@ -20,10 +20,10 @@ class QtEnumParameter(ListParameter):
         opts.update(limits=self.formattedLimits())
         super().__init__(**opts)
 
-    def setValue(self, value, blockSignal=None):
+    def setValue(self, value, blockSignal=None, blockSlots=None):
         if isinstance(value, str):
             value = self.enumMap[value]
-        super().setValue(value, blockSignal)
+        super().setValue(value, blockSignal, blockSlots)
 
     def formattedLimits(self):
         # Title-cased words without the ending substring for brevity

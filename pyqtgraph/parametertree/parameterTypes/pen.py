@@ -6,7 +6,7 @@ from ...Qt import QtCore, QtWidgets
 from ...SignalProxy import SignalProxy
 from ...widgets.PenPreviewLabel import PenPreviewLabel
 from . import GroupParameterItem
-from .basetypes import GroupParameter, Parameter, ParameterItem
+from .basetypes import GroupParameter, Parameter
 from .qtenum import QtEnumParameter
 
 
@@ -28,12 +28,8 @@ class PenParameterItem(GroupParameterItem):
         if "enabled" in opts or "readonly" in opts:
             self.updateCtrlButton()
 
-    def treeWidgetChanged(self):
-        ParameterItem.treeWidgetChanged(self)
-        tw = self.treeWidget()
-        if tw is None:
-            return
-        tw.setItemWidget(self, 1, self.itemWidget)
+    def valueColumnWidget(self):
+        return self.itemWidget
 
     def valueChanged(self, param, val):
         self.updateCtrlButton()
@@ -108,11 +104,11 @@ class PenParameter(GroupParameter):
     def _interpretValue(self, v):
         return self.mkPen(v)
 
-    def setValue(self, value, blockSignal=None):
+    def setValue(self, value, blockSignal=None, blockSlots=None):
         if not fn.eq(value, self.pen):
             value = self.mkPen(value)
             self.updateFromPen(self, value)
-        return super().setValue(self.pen, blockSignal)
+        return super().setValue(self.pen, blockSignal, blockSlots)
 
     def applyOptsToPen(self, **opts):
         # Transform opts into a value for the current pen

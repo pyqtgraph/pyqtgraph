@@ -383,7 +383,6 @@ def _handle_underflow(dtype, *elements):
                                   (LineToElement, 1.0, -1.0),
                                   (MoveToElement, 2.0, -2.0),
                                   (LineToElement, 3.0, -3.0),
-                                  (MoveToElement, 4.0, -4.0)
                                   )
             ) for dtype in _dtypes
         ),
@@ -391,7 +390,6 @@ def _handle_underflow(dtype, *elements):
         (
             np.arange(5), np.array([0, -1, np.nan, -3, -4]), 'finite', (
                 (MoveToElement, 0.0, 0.0),
-                (LineToElement, 1.0, -1.0),
                 (LineToElement, 1.0, -1.0),
                 (MoveToElement, 3.0, -3.0),
                 (LineToElement, 4.0, -4.0)
@@ -401,7 +399,6 @@ def _handle_underflow(dtype, *elements):
             np.array([0, 1, np.nan, 3, 4]), np.arange(0, -5, step=-1), 'finite', (
                 (MoveToElement, 0.0, 0.0),
                 (LineToElement, 1.0, -1.0),
-                (LineToElement, 1.0, -1.0),
                 (MoveToElement, 3.0, -3.0),
                 (LineToElement, 4.0, -4.0)
             )
@@ -410,7 +407,6 @@ def _handle_underflow(dtype, *elements):
             (
                 np.arange(5, dtype=dtype), np.arange(0, -5, step=-1).astype(dtype), np.array([0, 1, 0, 1, 0]),
                 _handle_underflow(dtype,
-                                  (MoveToElement, 0.0, 0.0),
                                   (MoveToElement, 1.0, -1.0),
                                   (LineToElement, 2.0, -2.0),
                                   (MoveToElement, 3.0, -3.0),
@@ -429,11 +425,8 @@ def _handle_underflow(dtype, *elements):
 def test_arrayToQPath(xs, ys, connect, expected):
     path = arrayToQPath(xs, ys, connect=connect)
     element = None
+    assert path.elementCount() == len(expected)
     for i in range(path.elementCount()):
-        # nan elements add two line-segments, for simplicity of test config
-        # we can ignore the second segment
-        if element is not None and (eq(element.x, np.nan) or eq(element.y, np.nan)):
-            continue
         element = path.elementAt(i)
         assert eq(expected[i], (element.type, element.x, element.y))
 
@@ -511,6 +504,49 @@ def test_colorDistance():
 def test_mkColor(test_input, expected):
     qcol: QtGui.QColor = pg.functions.mkColor(*test_input)
     assert list(qcol.getRgb()) == expected
+
+
+@pytest.mark.parametrize("ctor", [pg.mkPen, pg.mkBrush])
+def test_mkpen_mkbrush_color_arg_priority_single_source(ctor):
+    """mkPen/mkBrush resolve a lone color source (no conflict) identically."""
+    assert ctor('red').color().name() == '#ff0000'
+    assert ctor(color='blue').color().name() == '#0000ff'
+    assert ctor(hsv=(0.0, 1.0, 1.0)).color().name() == '#ff0000'
+
+
+@pytest.mark.parametrize("ctor", [pg.mkPen, pg.mkBrush])
+@pytest.mark.parametrize("kwargs", [
+    dict(color='blue'),
+    dict(hsv=(2 / 3, 1.0, 1.0)),
+])
+def test_mkpen_mkbrush_color_arg_positional_priority(ctor, kwargs):
+    """A positional color always wins over color=/hsv= given in the same call."""
+    result = ctor('red', **kwargs)
+    assert result.color().name() == '#ff0000'
+
+
+@pytest.mark.parametrize("ctor", [pg.mkPen, pg.mkBrush])
+def test_mkpen_mkbrush_color_arg_hsv_color_priority(ctor):
+    """hsv= wins over color= when there's no positional argument."""
+    result = ctor(hsv=(0.0, 1.0, 1.0), color='blue')
+    assert result.color().name() == '#ff0000'
+
+
+def test_mkpen_cap_join_style():
+    pen = pg.mkPen('r', capStyle=QtCore.Qt.PenCapStyle.RoundCap, joinStyle=QtCore.Qt.PenJoinStyle.RoundJoin)
+    assert pen.capStyle() == QtCore.Qt.PenCapStyle.RoundCap
+    assert pen.joinStyle() == QtCore.Qt.PenJoinStyle.RoundJoin
+
+
+def test_mkpen_explicit_cap_style_overrides_thick_width_default():
+    pen = pg.mkPen('r', width=5, capStyle=QtCore.Qt.PenCapStyle.FlatCap)
+    assert pen.capStyle() == QtCore.Qt.PenCapStyle.FlatCap
+
+
+def test_mkpen_thick_width_defaults_to_round_cap():
+    pen = pg.mkPen('r', width=5)
+    assert pen.capStyle() == QtCore.Qt.PenCapStyle.RoundCap
+
 
 def test_signal_block_unconnected():
     """Test that SignalBlock does not end up connecting an unconnected slot"""

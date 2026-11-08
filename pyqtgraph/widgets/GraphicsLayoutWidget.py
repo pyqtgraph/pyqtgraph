@@ -1,8 +1,9 @@
+__all__ = ['GraphicsLayoutWidget']
+
 from ..graphicsItems.GraphicsLayout import GraphicsLayout
 from ..Qt import mkQApp
 from .GraphicsView import GraphicsView
 
-__all__ = ['GraphicsLayoutWidget']
 class GraphicsLayoutWidget(GraphicsView):
     r"""
     Convenience class consisting of a :class:`GraphicsView 
