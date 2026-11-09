@@ -224,3 +224,57 @@ def test_AxisItem_setLogMode_one_arg(orientation, log, expected):
     axis = pg.AxisItem(orientation)
     axis.setLogMode(log)
     assert axis.logMode == expected
+
+
+def _label_text(axis):
+    # labelString() wraps the text in a styled <span>; strip it for comparison.
+    s = axis.labelString()
+    return s[s.index(">") + 1 : s.rindex("<")]
+
+
+def test_AxisItem_default_unit_format_unchanged():
+    axis = pg.AxisItem("left")
+    axis.setLabel("voltage", units="V")
+    assert _label_text(axis) == "voltage (V)"
+
+
+@pytest.mark.parametrize(
+    "fmt, expected",
+    [
+        ("{label} / {units}", "voltage / V"),
+        ("{label} in {units}", "voltage in V"),
+        ("{label} [{units}]", "voltage [V]"),
+    ],
+)
+def test_AxisItem_custom_unit_format(fmt, expected):
+    axis = pg.AxisItem("left")
+    axis.setLabel("voltage", units="V", unitFormat=fmt)
+    assert _label_text(axis) == expected
+
+
+def test_AxisItem_unit_format_with_si_prefix():
+    axis = pg.AxisItem("bottom")
+    axis.setLabel("voltage", units="V", unitFormat="{label} / {units}")
+    axis.setRange(0, 0.001)  # triggers the milli (m) SI prefix
+    assert _label_text(axis) == "voltage / mV"
+
+
+def test_AxisItem_unit_format_persists_and_no_units():
+    axis = pg.AxisItem("left")
+    axis.setUnitFormat("{label} / {units}")
+    axis.setLabel("time", units="s")  # format kept when unitFormat not passed
+    assert _label_text(axis) == "time / s"
+    axis.setLabel("count")  # no units -> bare label, no empty brackets
+    assert _label_text(axis) == "count"
+
+
+def test_AxisItem_invalid_unit_format():
+    axis = pg.AxisItem("left")
+    with pytest.raises(ValueError):
+        axis.setUnitFormat("{label} {unit}")
+
+
+def test_PlotItem_setLabel_forwards_unit_format():
+    plot = pg.PlotItem()
+    plot.setLabel("left", "voltage", units="V", unitFormat="{label} / {units}")
+    assert _label_text(plot.getAxis("left")) == "voltage / V"
