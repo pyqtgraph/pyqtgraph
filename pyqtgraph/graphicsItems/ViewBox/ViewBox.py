@@ -11,7 +11,7 @@ from ... import getConfigOption
 from ...Point import Point
 from ...Qt import QT_LIB, QtCore, QtGui, QtWidgets, isQObjectAlive
 from ..GraphicsWidget import GraphicsWidget
-from ..ItemGroup import ItemGroup
+from ..GroupItem import GroupItem
 
 __all__ = ['ViewBox']
 
@@ -37,10 +37,10 @@ class WeakList(object):
             i -= 1
 
 
-class ChildGroup(ItemGroup):
+class ChildGroup(GroupItem):
 
     def __init__(self, parent):
-        ItemGroup.__init__(self, parent)
+        GroupItem.__init__(self, parent)
 
         # Used as callback to inform ViewBox when items are added/removed from
         # the group.
@@ -54,7 +54,7 @@ class ChildGroup(ItemGroup):
         self._GraphicsObject__inform_view_on_change = False
 
     def itemChange(self, change, value):
-        ret = ItemGroup.itemChange(self, change, value)
+        ret = GroupItem.itemChange(self, change, value)
         if change in [
             QtWidgets.QGraphicsItem.GraphicsItemChange.ItemChildAddedChange,
             QtWidgets.QGraphicsItem.GraphicsItemChange.ItemChildRemovedChange,
@@ -1845,7 +1845,7 @@ class ViewBox(GraphicsWidget):
         else:
             br = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
 
-        g = ItemGroup()
+        g = GroupItem()
         g.setParentItem(self.childGroup)
         self.locateGroup = g
         g.box = QtWidgets.QGraphicsRectItem(br)

@@ -19,7 +19,7 @@ def test_legend_item_basics():
     assert legend.labelTextSize() == '9pt'
     assert legend.brush() == pg.mkBrush(None)
     assert legend.pen() == pg.mkPen(None)
-    assert legend.sampleType is pg.ItemSample
+    assert legend.sampleType is pg.SampleItem
 
     # Set brush
     # ----------------------------------------------------
