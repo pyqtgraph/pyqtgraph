@@ -60,6 +60,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         self.textValid = True  ## If false, we draw a red border
         self.setMinimumWidth(0)
         self._lastFontHeight = None
+        self._customRegex = False  ## True once a regex option has been passed to setOpts
         
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
         self.errorBox = ErrorBox(self.lineEdit())
@@ -183,17 +184,29 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                        * *siPrefix* - matches the SI prefix string
                        * *suffix* - matches the suffix string
                        
-                       Default depends on locale, and is either 
-                       ``pyqtgraph.functions.FLOAT_REGEX_PERIOD`` or
-                       ``pyqtgraph.functions.FLOAT_REGEX_COMMA``.
+                       The default follows the SpinBox's current locale, including after
+                       ``unsetLocale()``, reparenting, or a change of the parent's or the
+                       application's locale: ``pyqtgraph.functions.FLOAT_REGEX_COMMA`` when
+                       the decimal separator is a comma, otherwise
+                       ``pyqtgraph.functions.FLOAT_REGEX_PERIOD``. With the default regex, text
+                       written with the locale's own digits, decimal separator, signs and
+                       exponent symbol is accepted as displayed. A regex passed here is used as
+                       given: the text is not translated before matching, and the regex is kept
+                       after ``unsetLocale()``, reparenting, or a parent or application locale
+                       change.
         evalFunc       (callable) Function that converts a numerical string to a number,
                        preferrably a Decimal instance. This function handles only the numerical
                        of the text; it does not have access to the suffix or SI prefix.
+                       It receives the number as ASCII text, also with a custom regex: the
+                       locale's digits, decimal separator, signs and exponent symbol are
+                       replaced by ASCII digits, ``.``, ``-``, ``+`` and ``e``, and ``,`` by ``.``.
         compactHeight  (bool) if True, then set the maximum height of the spinbox based on the
                        height of its font. This allows more compact packing on platforms with
                        excessive widget decoration. Default is True.
         locale         (QtCore.QLocale) Sets the locale used for formatting and parsing numbers.
-                       Affects the decimal point behavior. Default is system locale.
+                       With the default regex, text written with the locale's number symbols
+                       is accepted. Default is the locale the widget inherits: its parent's,
+                       or the application default.
         ============== ========================================================================
         """
         #print opts
@@ -211,8 +224,9 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
                 pass   ## don't set value until bounds have been set
             elif k == 'format':
                 self.opts[k] = str(v)
-            elif k == 'regex' and isinstance(v, str):
-                self.opts[k] = re.compile(v)
+            elif k == 'regex':
+                self.opts[k] = re.compile(v) if isinstance(v, str) else v
+                self._customRegex = True
             elif k == 'locale':
                 self.setLocale(v)
             elif k in self.opts:
@@ -258,6 +272,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         super().setLocale(locale)
         # Update regex to match new locale decimal point
         self.opts['regex'] = fn.float_regex_for_locale(locale)
+        self._customRegex = False
         self.updateText()
 
     def setMaximum(self, m, update=True):
@@ -337,6 +352,14 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
     def focusInEvent(self, ev):
         super(SpinBox, self).focusInEvent(ev)
         self.selectNumber()
+
+    def changeEvent(self, ev):
+        super().changeEvent(ev)
+        if ev.type() == QtCore.QEvent.Type.LocaleChange:
+            # follow a locale inherited from a parent or the application
+            if not self._customRegex:
+                self.opts['regex'] = fn.float_regex_for_locale(self.locale())
+            self.updateText()
 
     def value(self):
         """
@@ -559,6 +582,40 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         self.updateText()
         return self.lineEdit().text()
 
+    def _asciiNumberText(self, text):
+        """Replace the number symbols of this SpinBox's locale in *text* with ASCII ones.
+
+        Parameters
+        ----------
+        text : str
+            Text written with the number symbols of ``self.locale()``.
+
+        Returns
+        -------
+        str
+            *text* with the locale's exponent symbol (in any letter case), minus
+            and plus signs, digits and decimal separator replaced by ``e``,
+            ``-``, ``+``, ASCII digits and ``.``. Symbols that are already ASCII,
+            including ``.`` and ``,``, are left for the regex to interpret.
+        """
+        locale = self.locale()
+        # the exponent goes first because some locales write it with their own digits
+        exponent = locale.exponential()
+        for form in (exponent, exponent.lower(), exponent.upper()):
+            if not form.isascii():
+                text = text.replace(form, 'e')
+        for sign, asciiSign in ((locale.negativeSign(), '-'), (locale.positiveSign(), '+')):
+            if not sign.isascii():
+                text = text.replace(sign, asciiSign)
+        zero = locale.zeroDigit()
+        if not zero.isascii():
+            for digit in range(10):
+                text = text.replace(chr(ord(zero) + digit), str(digit))
+        point = locale.decimalPoint()
+        if not point.isascii():
+            text = text.replace(point, '.')
+        return text
+
     def interpret(self):
         """Return value of text or False if text is invalid."""
         strn = self.lineEdit().text()
@@ -568,6 +625,15 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
         except AttributeError:
             strn = strn[len(self.opts['prefix']):]
         
+        if not self._customRegex:
+            # read the locale's number symbols as ASCII, keeping a trailing suffix as typed
+            configuredSuffix = self.opts['suffix']
+            stripped = strn.strip()
+            if configuredSuffix and stripped.endswith(configuredSuffix):
+                strn = self._asciiNumberText(stripped[:-len(configuredSuffix)]) + configuredSuffix
+            else:
+                strn = self._asciiNumberText(strn)
+
         # tokenize into numerical value, si prefix, and suffix
         try:
             val, siprefix, suffix = fn.siParse(strn, self.opts['regex'], suffix=self.opts['suffix'])
@@ -579,7 +645,7 @@ class SpinBox(QtWidgets.QAbstractSpinBox):
             return False
            
         # generate value
-        val = self.opts['evalFunc'](val.replace(',', '.')) #Ensure decimal point is '.'
+        val = self.opts['evalFunc'](self._asciiNumberText(val).replace(',', '.')) #Ensure decimal point is '.'
 
         if (self.opts['int'] or self.opts['finite']) and (isinf(val) or isnan(val)):
             return False
