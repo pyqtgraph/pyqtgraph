@@ -3,6 +3,7 @@ import numpy as np
 from ..Qt import QtGui
 from ..Qt.QtCore import QPointF, QRectF
 from .. import functions as fn
+from .. import getConfigOption
 from .GraphicsObject import GraphicsObject
 from .ScatterPlotItem import Symbols
 
@@ -56,7 +57,7 @@ class BoxplotItem(GraphicsObject):
             symbol=None,
             symbolSize=None,
             symbolPen=None,
-            symbolBrush=None
+            symbolBrush=getConfigOption('foreground')
         )
         self.setWhiskerFunc(IQR_1p5)
         self.setData(**opts)
