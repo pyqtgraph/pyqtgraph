@@ -165,7 +165,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # macos-15, not macos-latest: the macos-latest runners are macOS 26 Tahoe VMs without a GPU, so the only OpenGL is
+        # Apple's software renderer, and Qt says software GL on Tahoe (arm64) is "crashing in common operations" (qtbase
+        # qcocoaintegration.mm: "Detected software OpenGL backend, which is known to be broken on macOS Tahoe"). The jobs
+        # crashed or hung about half the time there, at random places. Move back once Tahoe runners render GL reliably.
+        os: [ubuntu-latest, windows-latest, macos-15]
         qt-lib: [pyqt, pyside]
         python-version: ["3.12", "3.13", "3.14"]
         include:
@@ -275,7 +279,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # macos-15, not macos-latest: the macos-latest runners are macOS 26 Tahoe VMs without a GPU, so the only OpenGL is
+        # Apple's software renderer, and Qt says software GL on Tahoe (arm64) is "crashing in common operations" (qtbase
+        # qcocoaintegration.mm: "Detected software OpenGL backend, which is known to be broken on macOS Tahoe"). The jobs
+        # crashed or hung about half the time there, at random places. Move back once Tahoe runners render GL reliably.
+        os: [ubuntu-latest, windows-latest, macos-15]
         qt-lib: [pyqt, pyside]
         include:
           - qt-lib: pyqt

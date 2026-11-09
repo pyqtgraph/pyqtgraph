@@ -424,8 +424,11 @@ class GLGridAxisItem(GLGraphicsItem):
         """Get the current view angle."""
         if not self.view():
             return 0.0, 0.0
-        camera_params = self.view().cameraParams()
-        azimuth, elevation = camera_params['azimuth'], camera_params['elevation']
+        # derive the angles from the camera position, which works for every rotation method
+        view = self.view()
+        rel = view.cameraPosition() - view.cameraParams()['center']
+        azimuth = np.degrees(np.arctan2(rel.y(), rel.x()))
+        elevation = np.degrees(np.arctan2(rel.z(), np.hypot(rel.x(), rel.y())))
         azimuth = np.mod(azimuth, 360.0)
         return azimuth, elevation
 
