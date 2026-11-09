@@ -8,6 +8,25 @@ from .GraphicsObject import GraphicsObject
 
 __all__ = ['BarGraphItem']
 
+
+def safe_log10(value):
+    """Return the np.nan if we receive zero when evaluating a value
+       with log10. This is a protection from -inf."""
+
+    if np.isscalar(value):
+        return np.log10(value) if value > 0 else np.nan
+
+    if not isinstance(value, np.ndarray):
+        value = np.array(value)
+
+    # Calculate log10 for valid values, replace with nans otherwise
+    index = value > 0
+    result = np.log10(value, where=index)
+    result[~index] = np.nan
+
+    return result
+
+
 class BarGraphItem(GraphicsObject):
     def __init__(self, **opts):
         """
@@ -48,6 +67,7 @@ class BarGraphItem(GraphicsObject):
             brush=None,
             pens=None,
             brushes=None,
+            logMode=[False, False],
         )
 
         if 'pen' not in opts:
@@ -70,6 +90,12 @@ class BarGraphItem(GraphicsObject):
         self.prepareGeometryChange()
         self.update()
         self.informViewBoundsChanged()
+
+    def setLogMode(self, x: bool, y: bool):
+        log_mode = [x, y]
+        if self.opts.get('logMode') == log_mode:
+            return
+        self.setOpts(logMode=log_mode)
 
     def _updatePenWidth(self, pen):
         no_pen = pen is None or pen.style() == QtCore.Qt.PenStyle.NoPen
@@ -181,6 +207,15 @@ class BarGraphItem(GraphicsObject):
 
         # here, all of x0, y0, x1, y1 are numpy objects,
         # BUT could possibly be numpy scalars
+        if self.opts["logMode"][1]:
+            y1 = safe_log10(y1)
+            if ~np.isscalar(y0):
+                y0 = safe_log10(y0)
+
+        if self.opts["logMode"][0]:
+            x1 = safe_log10(x1)
+            if ~np.isscalar(x0):
+                x0 = safe_log10(x0)
         return x0, y0, x1, y1
 
     def _prepareData(self):
@@ -190,10 +225,17 @@ class BarGraphItem(GraphicsObject):
             self._rectarray.resize(0)
             return
 
-        xmn, xmx = np.min(x0), np.max(x1)
-        ymn, ymx = np.min(y0), np.max(y1)
+        xmn, xmx = np.nanmin(x0), np.nanmax(x1)
+        ymn, ymx = np.nanmin(y0), np.nanmax(y1)
+        if np.isnan(xmn):
+            xmn = np.float64(0)
+        if np.isnan(xmx):
+            xmx = np.float64(0)
+        if np.isnan(ymn):
+            ymn = np.float64(0)
+        if np.isnan(ymx):
+            ymx = np.float64(0)
         self._dataBounds = (xmn, xmx), (ymn, ymx)
-
         self._rectarray.resize(max(x0.size, y0.size))
         memory = self._rectarray.ndarray()
         memory[:, 0] = x0
