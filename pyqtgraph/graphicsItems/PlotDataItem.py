@@ -1074,8 +1074,8 @@ class PlotDataItem(GraphicsObject):
 
         This setting can result in significant performance improvements.
 
-        The X data must be sorted in ascending order. Otherwise, the behaviour
-        is erratic.
+        The x-values of the data must be sorted in ascending order. Otherwise,
+        the behaviour is ill-defined.
 
         Parameters
         ----------
