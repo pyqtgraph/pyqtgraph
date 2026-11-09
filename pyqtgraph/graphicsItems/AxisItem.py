@@ -1,3 +1,4 @@
+import string
 import sys
 import weakref
 from math import ceil, copysign, floor, frexp, isfinite, log10, sqrt
@@ -119,6 +120,7 @@ class AxisItem(GraphicsWidget):
         self.labelUnitPrefix = ""
         self.unitPower = 1
         self.labelStyle = {}
+        self.labelUnitFormat = "{text} ({units})"
         self._siPrefixEnableRanges = None
         self.setRange(0, 1)
         self.setLabel(**args)
@@ -441,6 +443,7 @@ class AxisItem(GraphicsWidget):
         unitPrefix: str | None=None,
         siPrefixEnableRanges: tuple[tuple[float, float], ...] | None=None,
         unitPower: int | float=1,
+        unitFormat: str | None=None,
         **kwargs
     ):
         """
@@ -466,29 +469,73 @@ class AxisItem(GraphicsWidget):
             Supports positive, negative and non-integral powers.  Default is 1.
             Note: The power only affects the scaling, not the units themselves. For
             example, with units='m' and unitPower=2, the displayed units will still be 'm'.
+        unitFormat : str, optional
+            Template that combines the label text and units when units are set.
+            Must use the fields ``{text}`` and ``{units}`` (``{units}`` includes any
+            SI prefix, e.g. ``mV``). Default is ``'{text} ({units})'``. For example,
+            ``'{text} / {units}'`` produces ``voltage / mV`` (DIN 1313 style).
+            If not given, the previously set format is kept.
         **kwargs
             All extra keyword arguments become CSS style options for the ``<span>`` tag
             which will surround the axis label and units. Note that CSS attributes are
             not always valid python arguments. Examples: ``color='#FFF'``,
             ``**{'font-size': '14pt'}``.
 
+        Raises
+        ------
+        TypeError
+            If ``unitFormat`` is not a str.
+        ValueError
+            If ``unitFormat`` uses anything other than ``{text}`` and ``{units}``.
+
         Notes
         -----
         The final text generated for the label will usually take the form::
 
             <span style="...args...">{text} (prefix{units})</span>
+
+        Use ``unitFormat`` to change how the text and units are combined.
         """
+        if unitFormat is not None:
+            unitFormat = self._validatedUnitFormat(unitFormat)
+
         self.labelText = text or ""
         self.labelUnits = units or ""
         self.labelUnitPrefix = unitPrefix or ""
         self.unitPower = unitPower
         if kwargs:
             self.labelStyle = kwargs
+        if unitFormat is not None:
+            self.labelUnitFormat = unitFormat
         self.setSIPrefixEnableRanges(siPrefixEnableRanges)
         # Account empty string and `None` for units and text
         visible = bool(text or units)
         self.showLabel(visible)
         self._updateLabel()
+
+    @staticmethod
+    def _validatedUnitFormat(unitFormat: str) -> str:
+        """
+        Check that unitFormat only uses the plain fields {text} and {units}.
+        Attribute or index access (``{text.upper}``, ``{text[0]}``), conversions
+        (``{units!r}``) and format specs (``{units:>6}``) are rejected.
+        """
+        if not isinstance(unitFormat, str):
+            raise TypeError(f"unitFormat must be a str, not {type(unitFormat).__name__}")
+        invalid = ValueError(
+            f"Invalid unitFormat {unitFormat!r}: only the fields {{text}} and "
+            "{units} may be used; write {{ and }} for literal braces"
+        )
+        try:
+            parsed = list(string.Formatter().parse(unitFormat))
+        except ValueError:
+            raise invalid from None  # e.g. unbalanced braces such as "{text"
+        for _literal, field, spec, conversion in parsed:
+            if field is None:
+                continue  # plain text with no placeholder
+            if field not in ("text", "units") or spec or conversion:
+                raise invalid
+        return unitFormat
 
     def setSIPrefixEnableRanges(self, ranges=None):
         """
@@ -546,10 +593,10 @@ class AxisItem(GraphicsWidget):
                 units = ''
             else:
                 units = f'(x{1.0 / self.autoSIPrefixScale:g})'
+            s = f'{self.labelText} {units}'
         else:
-            units = f'({self.labelUnitPrefix}{self.labelUnits})'
-
-        s = f'{self.labelText} {units}'
+            units = f'{self.labelUnitPrefix}{self.labelUnits}'  # e.g. "mV"
+            s = self.labelUnitFormat.format(text=self.labelText, units=units)
 
         style = ';'.join([f'{k}: {self.labelStyle[k]}' for k in self.labelStyle])
 
