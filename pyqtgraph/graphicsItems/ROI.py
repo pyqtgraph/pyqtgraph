@@ -17,7 +17,6 @@ from math import atan2, cos, degrees, hypot, sin
 import numpy as np
 
 from .. import functions as fn
-
 from ..Point import Point
 from ..Qt import QtCore, QtGui, QtWidgets
 from ..SRTTransform import SRTTransform
@@ -2096,7 +2095,8 @@ class PolyLineROI(ROI):
         h2 = segment.handles[1]['item']
         
         i = self.segments.index(segment)
-        h3 = self.addFreeHandle(pos, index=self.indexOfHandle(h2))
+        # addFreeHandle expects coordinates relative to the ROI's size.
+        h3 = self.addFreeHandle(Point(pos) / self.size(), index=self.indexOfHandle(h2))
         self.addSegment(h3, h2, index=i+1)
         segment.replaceHandle(h2, h3)
         
