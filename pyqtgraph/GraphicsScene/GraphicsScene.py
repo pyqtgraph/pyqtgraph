@@ -254,48 +254,51 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     def sendHoverEvents(self, ev, exitOnly=False):
         ## if exitOnly, then just inform all previously hovered items that the mouse has left.
         
+        tracked = self.hoverItems
         if exitOnly:
-            acceptable=False
-            items = []
-            event = HoverEvent(None, acceptable)
+            event = HoverEvent(None, acceptable=False)
+            items = None
+            exited = list(tracked)
         else:
             acceptable = not ev.buttons()  ## if we are in mid-drag, do not allow items to accept the hover event.
             event = HoverEvent(ev, acceptable)
-            items = self.itemsNearEvent(event, hoverable=True)
+            items = self.itemsNearEvent(event, hoverable=True)  # in z-order
             self.sigMouseHover.emit(items)
-            
-        prevItems = list(self.hoverItems.keys())
-            
-        for item in items:
-            if hasattr(item, 'hoverEvent'):
-                event.currentItem = item
-                if item not in self.hoverItems:
-                    self.hoverItems[item] = None
-                    event.enter = True
-                else:
-                    prevItems.remove(item)
-                    event.enter = False
-                    
-                try:
-                    item.hoverEvent(event)
-                except:
-                    debug.printExc("Error sending hover event:")
-        
-        event.enter = False
-        event.exit = True
-        #print "hover exit items:", prevItems
-        for item in prevItems:
-            event.currentItem = item
-            try:
+            exited = [i for i in tracked if i not in set(items)]  # in enter-order
+
+        if exited:  # Send leave events first
+            event.exit = True
+            for item in reversed(exited):  # last in, first out
+                del tracked[item]
                 # NOTE: isQObjectAlive(item) was added for PySide6 where
                 #       verlet_chain_demo.py triggers a RuntimeError.
                 if isQObjectAlive(item) and item.scene() is self:
-                    item.hoverEvent(event)
-            except:
-                debug.printExc("Error sending hover exit event:")
-            finally:
-                del self.hoverItems[item]
-        
+                    event.currentItem = item
+                    try:
+                        item.hoverEvent(event)
+                    except Exception:
+                        debug.printExc("Error sending hover exit event:")
+
+        if items:  # Then send enter and move events in z-order
+            event.exit = False
+            for item in items:  # closest item first
+                if item in tracked:  # no enter or leave, just move
+                    event.enter = False
+                    event.currentItem = item
+                    try:
+                        item.hoverEvent(event)
+                    except Exception:
+                        debug.printExc("Error sending hover event:")
+                elif hasattr(item, "hoverEvent"):  # newly entered
+                    event.enter = True
+                    event.currentItem = item
+                    try:
+                        item.hoverEvent(event)
+                    except Exception:
+                        debug.printExc("Error sending hover enter event:")
+                    else:
+                        tracked[item] = None
+
         # Update last hover event unless:
         #   - mouse is dragging (move+buttons); in this case we want the dragged
         #     item to continue receiving events until the drag is over
