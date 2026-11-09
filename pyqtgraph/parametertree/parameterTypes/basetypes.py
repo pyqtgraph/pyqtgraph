@@ -441,6 +441,11 @@ class GroupParameter(Parameter):
 
     sigAddNew = QtCore.Signal(object, object)  # self, type
 
+    def value(self):
+        if not self.hasValue():
+            return None
+        return super().value()
+
     def addNew(self, typ=None):
         """
         This method is called when the user has requested to add a new item to the group.
