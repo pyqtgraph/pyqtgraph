@@ -507,6 +507,9 @@ class Flowchart(Node):
             
     def loadFile(self, fileName=None, startDir=None):
         """Load a flowchart (``*.fc``) file.
+
+        The file is parsed with the restricted config file evaluator, so
+        loading a flowchart cannot execute arbitrary code.
         """
         if fileName is None:
             if startDir is None:
