@@ -245,3 +245,18 @@ def test_dividebyzero():
     # must manually call imgitem.render here or the exception
     # will only exist on the Qt event loop
     imgitem.render()
+
+
+def test_setImage_empty_array():
+    empty = np.empty((0, 2), dtype=np.float32)
+
+    imgitem = pg.ImageItem()
+    imgitem.setImage(empty)
+    assert imgitem.image.shape == (0, 2)
+    assert imgitem.quickMinMax() == (0., 0.)
+    assert tuple(imgitem.getLevels()) == (0, 255)
+
+    imgitem = pg.ImageItem(np.random.normal(size=(10, 10)))
+    imgitem.setImage(empty)
+    assert imgitem.image.shape == (0, 2)
+    assert tuple(imgitem.getLevels()) == (0, 255)

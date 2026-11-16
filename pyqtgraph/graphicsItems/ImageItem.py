@@ -720,7 +720,7 @@ class ImageItem(GraphicsObject):
         """
 
         data = self.image
-        if data is None:
+        if data is None or data.size == 0:
             # image hasn't been set yet
             return 0., 0.
         targetSize = max(targetSize, 2) # keep at least 2 pixels
