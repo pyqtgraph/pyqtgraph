@@ -59,12 +59,24 @@ Colors = {
     's': QtGui.QColor("#646496"),  # slate       QColor(100,100,150,255)
 }
 
-SI_PREFIXES = 'yzafpnµm kMGTPEZY'
-SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
-SI_PREFIXES_INPUT = SI_PREFIXES + 'uμ'
-SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
-SI_PREFIX_EXPONENTS['u'] = -6
-SI_PREFIX_EXPONENTS['μ'] = -6
+SI_PREFIXES: str = "qryzafpnµm kMGTPEZYRQ"
+SI_PREFIXES_ASCII: str = "qryzafpnum kMGTPEZYRQ"
+_zero_power_index: int = SI_PREFIXES.index(" ")
+SI_PREFIXES_INPUT: str = "".join(
+    prefix
+    for prefix in set(SI_PREFIXES + SI_PREFIXES_ASCII + "μ")  # + Greek mu
+    if prefix.strip()
+)
+SI_PREFIX_EXPONENTS: dict[str, int] = {
+    prefix.strip(): ((i - _zero_power_index) * 3)
+    for i, prefix in enumerate(SI_PREFIXES)
+}
+SI_PREFIX_EXPONENTS["u"] = -6
+SI_PREFIX_EXPONENTS["μ"] = -6  # Greek mu
+SI_EXPONENT_PREFIXES: dict[int, dict[bool, str]] = {
+    ((i - _zero_power_index) * 3): {False: prefix_ascii.strip(), True: prefix.strip()}
+    for i, (prefix, prefix_ascii) in enumerate(zip(SI_PREFIXES, SI_PREFIXES_ASCII, strict=False))
+}
 
 #For comma as decimal separator
 FLOAT_REGEX_COMMA = re.compile(r'(?P<number>[+-]?((((\d+(,\d*)?)|(\d*,\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[' + SI_PREFIXES_INPUT + r']?)(?P<suffix>[^\s\d.,].*))?$')
@@ -125,16 +137,21 @@ class PenKeywordArgs(PenStyleKeywordArgs, total=False):
     color: color_like
 
 
-def siScale(x, minVal=1e-25, allowUnicode=True, power:int|float=1):
+def siScale(
+        x: decimal.Decimal | float,
+        minVal: float = 1e-31,
+        allowUnicode: bool = True,
+        power: int | float = 1,
+) -> tuple[float, str]:
     """
     Return the recommended scale factor and SI prefix string for x.
 
     Parameters
     ----------
-    x : float
+    x : float or Decimal
         The value to be scaled.
     minVal : float, optional
-        The minimum value considered for scaling. Default is 1e-25.
+        The minimum value considered for scaling. Default is 1e-31.
     allowUnicode : bool, optional
         Whether to allow Unicode SI prefixes. Default is True.
     power : int or float, optional
@@ -158,31 +175,24 @@ def siScale(x, minVal=1e-25, allowUnicode=True, power:int|float=1):
     
     if isinstance(x, decimal.Decimal):
         x = float(x)
-    try:
-        if not math.isfinite(x):
-            return(1, '')
-    except:
-        raise
+    if not math.isfinite(x) or power == 0.0:
+        return 1, ''
+    min_m: int = min(SI_EXPONENT_PREFIXES.keys())
+    max_m: int = max(SI_EXPONENT_PREFIXES.keys())
     if abs(x) < minVal:
         m = 0
     else:
         # log of x with base 1000^power
-        log1000x = math.log(abs(x))/(math.log(1000)*power)
-        if power > 0:
-            log1000x = math.floor(log1000x)
-        else:
-            log1000x = math.ceil(log1000x)
-        m = int(clip_scalar(log1000x, -9.0, 9.0))
+        log1000x = math.log10(abs(x)) / power / 3.0
+        log1000x = math.floor(log1000x) if power > 0 else math.ceil(log1000x)
+        m = int(clip_scalar(log1000x * 3, min_m - 3, max_m + 3))
     if m == 0:
         pref = ''
-    elif m < -8 or m > 8:
-        pref = 'e%d' % (m*3)
+    elif not (min_m < m < max_m):
+        pref = f'e{m:d}'
     else:
-        if allowUnicode:
-            pref = SI_PREFIXES[m+8]
-        else:
-            pref = SI_PREFIXES_ASCII[m+8]
-    m1 = -3*m*power
+        pref = SI_EXPONENT_PREFIXES[m][allowUnicode]
+    m1 = -m * power
     p = 10.**m1
     return (p, pref)
 
