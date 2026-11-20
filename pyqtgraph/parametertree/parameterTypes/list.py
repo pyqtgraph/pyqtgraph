@@ -105,7 +105,7 @@ class ListParameter(Parameter):
         self.forward, self.reverse = self.mapping(limits)
 
         Parameter.setLimits(self, limits)
-        if self.hasValue():
+        if self.hasValue() and not (self.isOptional() and self.value() is None):
             # 'value in limits' expression will break when reverse contains numpy array
             curVal = self.value()
             if len(self.reverse[0]) > 0 and not any(fn.eq(curVal, limVal) for limVal in self.reverse[0]):

@@ -168,6 +168,11 @@ class Parameter(QtCore.QObject):
                                      (default=False)
         removable                    If True, the user may remove this Parameter.
                                      (default=False)
+        optional                     If True, the value may be None regardless of the
+                                     parameter type, and ParameterTrees offer a button
+                                     to set it to None. (default=False)
+        noValueString                Text displayed in a ParameterTree when an optional
+                                     parameter's value is None. (default='None')
         expanded                     If True, the Parameter will initially be expanded in
                                      ParameterTrees: Its children will be visible.
                                      (default=True)
@@ -191,6 +196,8 @@ class Parameter(QtCore.QObject):
             'enabled': True,
             'renamable': False,
             'removable': False,
+            'optional': False,
+            'noValueString': 'None',
             'strictNaming': False,  # forces name to be usable as a python variable
             'expanded': True,
             'syncExpanded': False,
@@ -218,7 +225,7 @@ class Parameter(QtCore.QObject):
             self.opts['default'] = self.opts['value']
         value = self.opts.get('value', self.opts.get('default'))
         modified = 'value' in self.opts
-        if value is not None:
+        if value is not None or self.isOptional():
             self.setValue(value)
         self._modifiedSinceReset = modified
 
@@ -314,8 +321,9 @@ class Parameter(QtCore.QObject):
         try:
             if blockSignal is not None:
                 self.sigValueChanged.disconnect(blockSignal)
-            value = self._interpretValue(value)
-            if fn.eq(self.opts.get('value', None), value):
+            if not (value is None and self.isOptional()):
+                value = self._interpretValue(value)
+            if 'value' in self.opts and fn.eq(self.opts['value'], value):
                 return value
             self._modifiedSinceReset = True
             self.opts['value'] = value
@@ -327,6 +335,8 @@ class Parameter(QtCore.QObject):
         return self.opts['value']
 
     def _interpretValue(self, v):
+        """Convert *v* to this parameter's value type before it is set. Not called when
+        setting None on an optional parameter. May be overridden in subclasses."""
         return v
 
     def hasValue(self):
@@ -466,7 +476,8 @@ class Parameter(QtCore.QObject):
         """Set the default value for this parameter. If updatePristineValues is True, then
         any values that haven't been modified since the last time they were reset to default
         will be updated to the new default value (default: False)."""
-        if self.opts.get('default') == val:
+        # an optional parameter with no default may still be given a default of None
+        if self.opts.get('default') == val and ('default' in self.opts or not self.isOptional()):
             return
         self.opts['default'] = val
         if 'value' not in self.opts or (updatePristineValues and not self.valueModifiedSinceResetToDefault()):
@@ -482,7 +493,10 @@ class Parameter(QtCore.QObject):
             self._modifiedSinceReset = False
 
     def hasDefault(self):
-        """Returns True if this parameter has a default value."""
+        """Returns True if this parameter has a default value. None counts as a default
+        only for optional parameters."""
+        if self.isOptional():
+            return 'default' in self.opts
         return self.opts.get('default') is not None
         
     def valueIsDefault(self):
@@ -524,7 +538,15 @@ class Parameter(QtCore.QObject):
         """Set whether this Parameter's value may be edited by the user
         (this is the opposite of setWritable())."""
         self.setOpts(readonly=readonly)
-        
+
+    def isOptional(self):
+        """Return True if this parameter's value may be None."""
+        return self.opts['optional']
+
+    def setOptional(self, optional=True):
+        """Set whether this parameter's value may be None."""
+        self.setOpts(optional=optional)
+
     def setOpts(self, **opts):
         """
         Set any arbitrary options on this parameter.

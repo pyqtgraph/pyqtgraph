@@ -2,9 +2,42 @@ import builtins
 
 from ... import functions as fn
 from ... import icons
-from ...Qt import QtCore, QtWidgets
+from ...Qt import QtCore, QtGui, QtWidgets
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
+
+
+_NONE_ICON_CANVAS = 20  # px; matches the button, so the icon is never rescaled
+
+
+def _makeNoneIcon(diameter=9, lineWidth=.8, overshoot=.3, color=0.3):
+    """Antialiased empty-set (circle with slash) icon, drawn as vectors.
+
+    The canvas is a fixed _NONE_ICON_CANVAS px square. diameter is the circle's outer size,
+    lineWidth the pen width, and overshoot the length the slash extends past the circle's
+    bounding box corners, all in canvas px. color is anything pg.mkColor accepts; None uses
+    the palette's button text color.
+    """
+    scale = 4
+    c = _NONE_ICON_CANVAS
+    pm = QtGui.QPixmap(c * scale, c * scale)
+    pm.setDevicePixelRatio(scale)
+    pm.fill(QtCore.Qt.GlobalColor.transparent)
+    painter = QtGui.QPainter(pm)
+    painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+    if color is None:
+        color = QtWidgets.QApplication.palette().buttonText().color()
+    pen = QtGui.QPen(fn.mkColor(color), lineWidth)
+    pen.setCapStyle(QtCore.Qt.PenCapStyle.RoundCap)
+    painter.setPen(pen)
+    inset = lineWidth / 2
+    m = (c - diameter) / 2 + inset
+    r = QtCore.QRectF(m, m, diameter - lineWidth, diameter - lineWidth)
+    painter.drawEllipse(r)
+    painter.drawLine(QtCore.QPointF(r.left() - overshoot, r.bottom() + overshoot),
+                     QtCore.QPointF(r.right() + overshoot, r.top() - overshoot))
+    painter.end()
+    return QtGui.QIcon(pm)
 
 
 class WidgetParameterItem(ParameterItem):
@@ -14,6 +47,7 @@ class WidgetParameterItem(ParameterItem):
       * label in second column for displaying value
       * simple widget for editing value (displayed instead of label when item is selected)
       * button that resets value to default
+      * button that sets the value to None (shown only for optional parameters)
 
     This class can be subclassed by overriding makeWidget() to provide a custom widget.
     """
@@ -37,6 +71,7 @@ class WidgetParameterItem(ParameterItem):
             self.addChild(self.subItem)
 
         self.defaultBtn = self.makeDefaultButton()
+        self.noneBtn = self.makeNoneButton()
 
         self.displayLabel = QtWidgets.QLabel()
 
@@ -47,6 +82,7 @@ class WidgetParameterItem(ParameterItem):
             layout.addWidget(w, 1)
         layout.addWidget(self.displayLabel, 1)
         layout.addStretch(0)
+        layout.addWidget(self.noneBtn)
         layout.addWidget(self.defaultBtn)
         self.layoutWidget = QtWidgets.QWidget()
         self.layoutWidget.setLayout(layout)
@@ -59,7 +95,7 @@ class WidgetParameterItem(ParameterItem):
 
         ## update value shown in widget.
         opts = self.param.opts
-        if opts.get('value', None) is not None:
+        if opts.get('value', None) is not None or self.param.isOptional():
             self.valueChanged(self, opts['value'], force=True)
         else:
             ## no starting value was given; use whatever the widget has
@@ -124,16 +160,44 @@ class WidgetParameterItem(ParameterItem):
         defaultBtn.clicked.connect(self.defaultClicked)
         return defaultBtn
 
+    def makeNoneButton(self):
+        noneBtn = QtWidgets.QPushButton()
+        noneBtn.setIcon(_makeNoneIcon())
+        noneBtn.setIconSize(QtCore.QSize(_NONE_ICON_CANVAS, _NONE_ICON_CANVAS))
+        noneBtn.setToolTip('Set value to None')
+        noneBtn.setCheckable(True)
+        noneBtn.setAutoDefault(False)
+        noneBtn.setFixedWidth(20)
+        noneBtn.setFixedHeight(20)
+        noneBtn.clicked.connect(self.noneClicked)
+        return noneBtn
+
     def setFocus(self):
         self.showEditor()
 
     def isFocusable(self):
-        return self.param.opts['visible'] and self.param.opts['enabled'] and self.param.writable()
+        return (self.param.opts['visible'] and self.param.opts['enabled'] and self.param.writable()
+                and not self.valueIsNone())
+
+    def valueIsNone(self):
+        """Return True if this item is displaying an optional parameter whose value is None."""
+        return self.param.isOptional() and self.noneBtn.isChecked()
+
+    def widgetValue(self):
+        """Return the value entered by the user: the widget's value, or None if the
+        none button is checked."""
+        if self.valueIsNone():
+            return None
+        return self.widget.value()
 
     def valueChanged(self, param, val, force=False):
         ## called when the parameter's value has changed
         ParameterItem.valueChanged(self, param, val)
-        if force or not fn.eq(val, self.widget.value()):
+        isNone = val is None and self.param.isOptional()
+        if isNone != self.noneBtn.isChecked():
+            self.noneBtn.setChecked(isNone)
+            self.updateEditorVisible()
+        if not isNone and (force or not fn.eq(val, self.widget.value())):
             try:
                 if self.widget.sigChanged is not None:
                     self.widget.sigChanged.disconnect(self.widgetValueChanged)
@@ -157,21 +221,26 @@ class WidgetParameterItem(ParameterItem):
 
     def updateDisplayLabel(self, value=None):
         """Update the display label to reflect the value of the parameter."""
-        if value is None:
+        if self.valueIsNone():
+            value = self.param.opts['noValueString']
+        elif value is None:
             value = self.param.value()
         self.displayLabel.setText(str(value))
 
+    def updateNoneBtn(self):
+        self.noneBtn.setVisible(self.param.isOptional())
+        self.noneBtn.setEnabled(self.param.opts['enabled'] and self.param.writable())
+
     def widgetValueChanged(self):
         ## called when the widget's value has been changed by the user
-        val = self.widget.value()
-        self.param.setValue(val)
+        self.param.setValue(self.widgetValue())
 
     def widgetValueChanging(self, *args):
         """
         Called when the widget's value is changing, but not finalized.
         For example: editing text before pressing enter or changing focus.
         """
-        self.param.sigValueChanging.emit(self.param, self.widget.value())
+        self.param.sigValueChanging.emit(self.param, self.widgetValue())
 
     def selected(self, sel):
         """Called when this item has been selected (sel=True) OR deselected (sel=False)"""
@@ -179,10 +248,23 @@ class WidgetParameterItem(ParameterItem):
 
         if self.widget is None:
             return
-        if sel and self.param.writable():
+        self.updateEditorVisible(sel)
+
+    def updateEditorVisible(self, sel=None):
+        """Show the editor widget or the display label, depending on whether the item is
+        selected and whether its value is None."""
+        if sel is None:
+            sel = self.isSelected()
+        if self.valueIsNone():
+            self.hideEditor()
+            self.updateDisplayLabel()
+        elif sel and self.param.writable():
             self.showEditor()
         elif self.hideWidget:
             self.hideEditor()
+        else:
+            self.widget.show()
+            self.displayLabel.hide()
 
     def showEditor(self):
         self.widget.show()
@@ -220,6 +302,10 @@ class WidgetParameterItem(ParameterItem):
         self.param.setToDefault()
         self.updateDefaultBtn()
 
+    def noneClicked(self, checked):
+        self.updateEditorVisible()
+        self.widgetValueChanged()
+
     def optsChanged(self, param, opts):
         """Called when any options are changed that are not
         name, value, default, or limits"""
@@ -227,10 +313,15 @@ class WidgetParameterItem(ParameterItem):
 
         if 'enabled' in opts:
             self.updateDefaultBtn()
+            self.updateNoneBtn()
             self.widget.setEnabled(opts['enabled'])
+
+        if 'optional' in opts:
+            self.updateNoneBtn()
 
         if 'readonly' in opts:
             self.updateDefaultBtn()
+            self.updateNoneBtn()
 
             if opts['readonly']:
                 self.displayLabel.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)

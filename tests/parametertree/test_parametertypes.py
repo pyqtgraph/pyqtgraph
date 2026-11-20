@@ -236,3 +236,83 @@ def test_recreate_from_savestate():
     state = created.saveState()
     created2 = pt.Parameter.create(**state)
     assert pg.eq(state, created2.saveState())
+
+
+@pytest.mark.parametrize('spec', [
+    dict(type='float', value=1.5, suffix='V', siPrefix=True),
+    dict(type='int', value=3),
+    dict(type='str', value='abc'),
+    dict(type='bool', value=True),
+    dict(type='list', value='y', limits=['x', 'y', 'z']),
+    dict(type='color', value='r'),
+])
+def test_optional_param_item(spec):
+    param = pt.Parameter.create(name='p', optional=True, **spec)
+    tree = pt.ParameterTree()
+    tree.setParameters(param, showTop=True)
+    item = next(iter(param.items))
+    value = param.value()
+
+    assert item.noneBtn.isVisibleTo(tree)
+    assert not item.noneBtn.isChecked()
+
+    # user clicks the none button
+    item.noneBtn.click()
+    assert param.value() is None
+    assert not item.widget.isVisibleTo(tree)
+    assert item.displayLabel.text() == 'None'
+    assert not item.isFocusable()
+
+    # user clicks again; the widget's value comes back
+    item.noneBtn.click()
+    assert eq(param.value(), value)
+    assert not item.noneBtn.isChecked()
+
+    # programmatic None / not None updates the button
+    param.setValue(None)
+    assert item.noneBtn.isChecked()
+    assert item.widgetValue() is None
+    param.setValue(value)
+    assert not item.noneBtn.isChecked()
+    assert eq(item.widget.value(), param.value())
+
+
+def test_optional_param_none_default():
+    param = pt.Parameter.create(name='p', type='float', optional=True, default=None, noValueString='(unset)')
+    assert param.hasValue()
+    assert param.value() is None
+    assert param.hasDefault()
+    assert param.valueIsDefault()
+
+    tree = pt.ParameterTree()
+    tree.setParameters(param, showTop=True)
+    item = next(iter(param.items))
+    assert item.noneBtn.isChecked()
+    assert item.displayLabel.text() == '(unset)'
+
+    param.setValue(2.0)
+    assert param.valueModifiedSinceResetToDefault()
+    item.defaultBtn.click()
+    assert param.value() is None
+    assert item.noneBtn.isChecked()
+
+
+def test_optional_list_keeps_none():
+    param = pt.Parameter.create(name='p', type='list', limits=['a', 'b'], optional=True, value=None)
+    param.setLimits(['c', 'd'])
+    assert param.value() is None
+
+
+def test_non_optional_param():
+    param = pt.Parameter.create(name='p', type='float', value=1.0)
+    tree = pt.ParameterTree()
+    tree.setParameters(param, showTop=True)
+    item = next(iter(param.items))
+    assert not item.noneBtn.isVisibleTo(tree)
+    with pytest.raises(TypeError):
+        param.setValue(None)
+
+    param.setOptional(True)
+    assert item.noneBtn.isVisibleTo(tree)
+    param.setValue(None)
+    assert item.noneBtn.isChecked()

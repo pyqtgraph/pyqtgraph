@@ -564,3 +564,28 @@ def test_interact_existing_parent():
     assert outParam in parent.names.values()
     outParam.activate()
     assert lastValue == 5
+
+
+def test_optional_parameter():
+    p = Parameter.create(name='p', type='int', optional=True)
+    assert p.isOptional()
+    assert p.value() is None
+    assert not p.hasDefault()
+
+    p.setValue('4')
+    assert p.value() == 4
+    p.setValue(None)
+    assert p.value() is None
+
+    p.setDefault(None)
+    assert p.hasDefault()
+    p.setValue(3)
+    p.setToDefault()
+    assert p.value() is None
+
+    state = p.saveState()
+    p2 = Parameter.create(**state)
+    assert p2.isOptional() and p2.value() is None
+
+    q = Parameter.create(name='q', type='int', default=None)
+    assert not q.hasDefault()
