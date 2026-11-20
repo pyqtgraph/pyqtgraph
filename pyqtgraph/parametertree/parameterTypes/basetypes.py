@@ -2,9 +2,42 @@ import builtins
 
 from ... import functions as fn
 from ... import icons
-from ...Qt import QtCore, QtWidgets
+from ...Qt import QtCore, QtGui, QtWidgets
 from ..Parameter import Parameter
 from ..ParameterItem import ParameterItem
+
+
+_NONE_ICON_CANVAS = 20  # px; matches the button, so the icon is never rescaled
+
+
+def _makeNoneIcon(diameter=9, lineWidth=.8, overshoot=.3, color=0.3):
+    """Antialiased empty-set (circle with slash) icon, drawn as vectors.
+
+    The canvas is a fixed _NONE_ICON_CANVAS px square. diameter is the circle's outer size,
+    lineWidth the pen width, and overshoot the length the slash extends past the circle's
+    bounding box corners, all in canvas px. color is anything pg.mkColor accepts; None uses
+    the palette's button text color.
+    """
+    scale = 4
+    c = _NONE_ICON_CANVAS
+    pm = QtGui.QPixmap(c * scale, c * scale)
+    pm.setDevicePixelRatio(scale)
+    pm.fill(QtCore.Qt.GlobalColor.transparent)
+    painter = QtGui.QPainter(pm)
+    painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+    if color is None:
+        color = QtWidgets.QApplication.palette().buttonText().color()
+    pen = QtGui.QPen(fn.mkColor(color), lineWidth)
+    pen.setCapStyle(QtCore.Qt.PenCapStyle.RoundCap)
+    painter.setPen(pen)
+    inset = lineWidth / 2
+    m = (c - diameter) / 2 + inset
+    r = QtCore.QRectF(m, m, diameter - lineWidth, diameter - lineWidth)
+    painter.drawEllipse(r)
+    painter.drawLine(QtCore.QPointF(r.left() - overshoot, r.bottom() + overshoot),
+                     QtCore.QPointF(r.right() + overshoot, r.top() - overshoot))
+    painter.end()
+    return QtGui.QIcon(pm)
 
 
 class WidgetParameterItem(ParameterItem):
@@ -128,7 +161,9 @@ class WidgetParameterItem(ParameterItem):
         return defaultBtn
 
     def makeNoneButton(self):
-        noneBtn = QtWidgets.QPushButton('∅')
+        noneBtn = QtWidgets.QPushButton()
+        noneBtn.setIcon(_makeNoneIcon())
+        noneBtn.setIconSize(QtCore.QSize(_NONE_ICON_CANVAS, _NONE_ICON_CANVAS))
         noneBtn.setToolTip('Set value to None')
         noneBtn.setCheckable(True)
         noneBtn.setAutoDefault(False)
