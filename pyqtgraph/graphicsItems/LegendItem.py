@@ -196,6 +196,9 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         """
         Add a new entry to the legend.
 
+        If an entry for `item` is already present in the legend, its label is
+        updated in place instead of adding a duplicate entry.
+
         ==============  ========================================================
         **Arguments:**
         item            A :class:`~pyqtgraph.PlotDataItem` from which the line
@@ -205,17 +208,63 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         title           The title to display for this item. Simple HTML allowed.
         ==============  ========================================================
         """
-        label = LabelItem(name, color=self.opts['labelTextColor'],
-                          justify='left', size=self.opts['labelTextSize'])
         if isinstance(item, self.sampleType):
             sample = item
         else:
             sample = self.sampleType(item)
 
+        # Update the existing entry instead of adding a duplicate when the
+        # same item is added again (possibly with a different name).
+        for existingSample, existingLabel in self.items:
+            if existingSample.item is sample.item:
+                if existingLabel.text != name:
+                    existingLabel.setText(name)
+                    self.updateSize()
+                return
+
+        label = LabelItem(name, color=self.opts['labelTextColor'],
+                          justify='left', size=self.opts['labelTextSize'])
         sample.sigClicked.connect(self.sigSampleClicked)
 
         self.items.append((sample, label))
+        self._connectItem(sample.item)
         self._addItemToLayout(sample, label)
+        self.updateSize()
+
+    def _connectItem(self, item):
+        """Connect to the item's ``sigPlotChanged`` signal (if it has one) so
+        that the legend entry is refreshed when the item changes, e.g. when
+        :meth:`PlotDataItem.setData() <pyqtgraph.PlotDataItem.setData>` is
+        called with a new name or style."""
+        sig = getattr(item, 'sigPlotChanged', None)
+        if sig is not None:
+            sig.connect(self._onItemPlotChanged)
+
+    def _disconnectItem(self, item):
+        """Disconnect the slot connected by :meth:`_connectItem`."""
+        sig = getattr(item, 'sigPlotChanged', None)
+        if sig is None:
+            return
+        try:
+            sig.disconnect(self._onItemPlotChanged)
+        except (TypeError, RuntimeError):
+            # the connection may already be gone, e.g. if the sender was
+            # destroyed by Qt in the meantime
+            pass
+
+    def _onItemPlotChanged(self, item):
+        """Refresh the legend entry of an item that emitted ``sigPlotChanged``.
+
+        Keeps the label text in sync with the item's current name and
+        schedules a repaint of the sample so that style changes (pen, symbol,
+        brush, ...) become visible in the legend.
+        """
+        name = item.name() if callable(getattr(item, 'name', None)) else None
+        for sample, label in self.items:
+            if sample.item is item:
+                if name is not None and label.text != name:
+                    label.setText(name)
+                sample.update()
         self.updateSize()
 
     def _addItemToLayout(self, sample, label):
@@ -287,6 +336,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
         for sample, label in self.items:
             if sample.item is item or label.text == item:
                 self.items.remove((sample, label))  # remove from itemlist
+                self._disconnectItem(sample.item)
                 self._removeItemFromLayout(sample, label)
                 self.updateSize()  # redraw box
                 return  # return after first match
@@ -294,6 +344,7 @@ class LegendItem(GraphicsWidgetAnchor, GraphicsWidget):
     def clear(self):
         """Remove all items from the legend."""
         for sample, label in self.items:
+            self._disconnectItem(sample.item)
             self._removeItemFromLayout(sample, label)
 
         self.items = []
