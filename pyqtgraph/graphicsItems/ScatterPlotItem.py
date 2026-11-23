@@ -1002,10 +1002,11 @@ class ScatterPlotItem(GraphicsObject):
                 self.picture = QtGui.QPicture()
                 p2 = QtGui.QPainter(self.picture)
 
+                visible = self.data['visible']
                 for x, y, style in zip(
-                        self.data['x'],
-                        self.data['y'],
-                        zip(*self._style(['symbol', 'size', 'pen', 'brush'], scale=scale))
+                        self.data['x'][visible],
+                        self.data['y'][visible],
+                        zip(*self._style(['symbol', 'size', 'pen', 'brush'], idx=visible, scale=scale))
                 ):
                     p2.resetTransform()
                     p2.translate(x, y)

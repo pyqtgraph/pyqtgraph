@@ -67,6 +67,31 @@ def test_scatterplotitem():
     plot.close()
 
 
+def test_data_coordinate_point_visibility():
+    pg.mkQApp()
+    x = [10, 30, 50]
+    scatter = pg.ScatterPlotItem(
+        x=x, y=[10, 10, 10], pxMode=False, size=10, pen=None,
+        brush=[pg.mkBrush(c) for c in ('r', 'g', 'b')],
+    )
+
+    def rendered_colors():
+        image = QtGui.QImage(60, 20, QtGui.QImage.Format.Format_RGB32)
+        image.fill(pg.mkColor('k'))
+        painter = QtGui.QPainter(image)
+        try:
+            scatter.paint(painter, None, None)
+        finally:
+            painter.end()
+        return [image.pixelColor(px, 10) for px in x]
+
+    scatter.setPointsVisible([True, False, True])
+    assert rendered_colors() == [pg.mkColor(c) for c in ('r', 'k', 'b')]
+
+    scatter.setPointsVisible([False, True, True])
+    assert rendered_colors() == [pg.mkColor(c) for c in ('k', 'g', 'b')]
+
+
 def test_composition_mode():
     pg.mkQApp()
     source_over = QtGui.QPainter.CompositionMode.CompositionMode_SourceOver
