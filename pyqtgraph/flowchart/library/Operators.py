@@ -37,14 +37,15 @@ class BinOpNode(CtrlNode):
         
     def process(self, **args):
         if isinstance(self.fn, tuple):
+            err = None
             for name in self.fn:
                 try:
                     fn = getattr(args['A'], name)
                     break
                 except AttributeError as e:
-                    pass
+                    err = e
             else:
-                raise e
+                raise err
         else:
             fn = getattr(args['A'], self.fn)
         out = fn(args['B'])
