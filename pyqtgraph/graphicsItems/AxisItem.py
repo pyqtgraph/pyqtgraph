@@ -1026,7 +1026,7 @@ class AxisItem(GraphicsWidget):
         This overrides the behavior specified by
         :meth:`~pyqtgraph.AxisItem.tickSpacing`, :meth:`~pyqtgraph.AxisItem.tickValues`,
         and :meth:`~pyqtgraph.AxisItem.tickStrings`.
-        
+
         The format for *ticks* looks like::
 
             [
@@ -1042,16 +1042,25 @@ class AxisItem(GraphicsWidget):
                 ],
                 ...
             ]
-        
-        The two levels of major and minor ticks are expected. A third tier of additional
-        ticks is optional. If *ticks* is ``None``, then the default tick system will be
-        used.
+
+        Each outer element defines a tick level (typically major ticks first, followed
+        by minor and optional sub-minor levels). Any number of levels may be provided,
+        though tick labels are only drawn up to ``style['maxTextLevel']`` (default
+        ``2``). Passing ``[]`` hides all ticks, and passing ``None`` restores the
+        default automatic ticking system.
+
+        Each tick entry is a ``(value, label)`` tuple where ``label`` must be a
+        ``str`` (for example ``str(value)`` or ``""`` for an unlabeled tick). Passing a
+        non-string label such as an ``int`` or ``float`` raises a ``TypeError`` during
+        rendering.
 
         Parameters
         ----------
-        ticks : list of list of float, str or None
-            Explicitly set tick display information.
-        
+        ticks : list of list of tuple of (float, str), or None
+            Explicitly set tick display information as a list of tick levels, each
+            containing ``(value, label)`` tuples with numeric positions and string
+            labels, or ``None`` to restore automatic ticking.
+
         See Also
         --------
         :meth:`~pyqtgraph.AxisItem.tickSpacing`
@@ -1060,7 +1069,20 @@ class AxisItem(GraphicsWidget):
             How tick values are set.
         :meth:`~pyqtgraph.AxisItem.tickStrings`
             How tick strings are specified.
-        """        
+
+        Examples
+        --------
+        .. code-block:: python
+
+            # Major ticks with labels and unlabeled minor ticks
+            major = [(0, "0"), (1, "1"), (2, "2")]
+            minor = [(0.5, ""), (1.5, "")]
+            axis.setTicks([major, minor])
+            # Hide all ticks
+            axis.setTicks([])
+            # Restore automatic ticking
+            axis.setTicks(None)
+        """
 
         self._tickLevels = ticks
         self.picture = None
