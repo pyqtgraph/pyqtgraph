@@ -48,6 +48,30 @@ def test_AxisItem_viewUnlink():
     assert axis.linkedView() is None
 
 
+def test_AxisItem_tickStrings_si_prefix():
+    axis = pg.AxisItem("bottom")
+    values = [0, 1, 2]
+    axis.setRange(0, 2)
+
+    def tick_strings(values, spacing):
+        return axis.tickStrings(values, axis.autoSIPrefixScale * axis.scale, spacing)
+
+    assert tick_strings(values, 1) == ["0", "1", "2"]
+
+    axis.setLabel("Voltage", units="V")
+    assert "(V)" in axis.label.toPlainText()
+    assert tick_strings(values, 1) == ["0", "1", "2"]
+
+    values = [0, 1e-6, 2e-6]
+    axis.setRange(0, 2e-6)
+    assert "(µV)" in axis.label.toPlainText()
+    assert tick_strings(values, 1e-6) == ["0", "1", "2"]
+
+    axis.enableAutoSIPrefix(False)
+    assert "(V)" in axis.label.toPlainText()
+    assert tick_strings(values, 1e-6) == ["0", "1e-06", "2e-06"]
+
+
 @pytest.mark.parametrize("data", (
     [value * 1e-310 for value in range(1, 11)],
     [-1e-310, 0, 1e-310],
